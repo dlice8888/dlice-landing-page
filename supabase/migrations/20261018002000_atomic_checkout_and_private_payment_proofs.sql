@@ -20,7 +20,7 @@ begin
     if not found or v_product.unit_price_idr is null then raise exception 'product_unavailable_or_price_missing' using errcode='22023'; end if;
     select * into v_capacity from public.product_capacity where product_id=v_product.id and service_date=v_requested_date for update;
     if not found then raise exception 'capacity_not_configured' using errcode='22023'; end if;
-    if v_capacity.capacity-coalesce((select sum(r.quantity) from public.order_reservations r where r.product_id=v_product.id and r.service_date=v_requested_date and (r.status='held_for_verification' or (r.status='active' and r.expires_at>now())),0)<(v_item->>'quantity')::integer then raise exception 'capacity_exceeded' using errcode='22023'; end if;
+    if v_capacity.capacity-coalesce((select sum(r.quantity) from public.order_reservations r where r.product_id=v_product.id and r.service_date=v_requested_date and (r.status='held_for_verification' or (r.status='active' and r.expires_at>now()))),0)<(v_item->>'quantity')::integer then raise exception 'capacity_exceeded' using errcode='22023'; end if;
     v_subtotal := v_subtotal + v_product.unit_price_idr::bigint*(v_item->>'quantity')::integer;
   end loop;
   insert into public.orders(tracking_token_hash,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr)
