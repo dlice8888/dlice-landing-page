@@ -53,9 +53,10 @@ Deno.serve(async (req: Request) => {
   const action = safeText(body.action, 40);
 
   if (action === "list-products") {
-    const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active").eq("is_active", true).order("name");
+    const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
     if (error) return fail("Menu belum dapat dimuat.", 500, origin);
-    return json({ products: data ?? [] }, 200, origin);
+    const products = (data ?? []).map((p) => ({ ...p, image_url: p.image_path ? admin.storage.from("dlice-product-photos").getPublicUrl(p.image_path).data.publicUrl : null }));
+    return json({ products }, 200, origin);
   }
 
   if (action === "create-order") {
@@ -164,6 +165,9 @@ Deno.serve(async (req: Request) => {
     "admin-verify-payment": "orders",
     "admin-proof-url": "orders",
     "admin-configure-product": "catalog",
+    "admin-list-products": "catalog",
+    "admin-save-product": "catalog",
+    "admin-upload-product-photo": "catalog",
     "admin-list-staff": "staff",
     "admin-set-permissions": "staff",
   };
@@ -198,6 +202,57 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at)").order("created_at", { ascending: false }).limit(100);
     if (error) return fail("Daftar pesanan gagal dimuat.", 500, origin);
     return json({ orders: data ?? [], role: actor.profile.role }, 200, origin);
+  }
+
+  if (action === "admin-list-products") {
+    const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").order("display_order").order("name");
+    if (error) return fail("Katalog gagal dimuat.", 500, origin);
+    const products = (data ?? []).map((p) => ({ ...p, image_url: p.image_path ? admin.storage.from("dlice-product-photos").getPublicUrl(p.image_path).data.publicUrl : null }));
+    return json({ products }, 200, origin);
+  }
+
+  if (action === "admin-upload-product-photo") {
+    const mime = safeText(body.mime_type, 50);
+    const encoded = safeText(body.file_base64, 6_500_000);
+    const extByMime: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+    if (!extByMime[mime] || !encoded || encoded.length > 6_500_000) return fail("Foto harus JPG, PNG, atau WebP dan maksimal 4,5 MB.", 422, origin);
+    const binary = Uint8Array.from(atob(encoded.replace(/^data:[^,]+,/, "")), (ch) => ch.charCodeAt(0));
+    if (binary.byteLength > 4_500_000) return fail("Ukuran foto maksimal 4,5 MB.", 413, origin);
+    const path = `products/${crypto.randomUUID()}.${extByMime[mime]}`;
+    const { error } = await admin.storage.from("dlice-product-photos").upload(path, binary, { contentType: mime, upsert: false });
+    if (error) return fail("Foto gagal diunggah ke Storage.", 500, origin);
+    const image_url = admin.storage.from("dlice-product-photos").getPublicUrl(path).data.publicUrl;
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "upload_product_photo", entity_type: "product_photo", entity_id: path, metadata: { mime_type: mime, size_bytes: binary.byteLength } });
+    return json({ image_path: path, image_url }, 201, origin);
+  }
+
+  if (action === "admin-save-product") {
+    const id = safeText(body.id, 80);
+    const name = safeText(body.name, 120);
+    const slug = safeText(body.slug, 80).toLowerCase();
+    const description = safeText(body.description, 1000);
+    const category = safeText(body.category, 20);
+    const displayOrder = Number(body.display_order);
+    const priceRaw = body.unit_price_idr;
+    const price = priceRaw === null || priceRaw === "" || typeof priceRaw === "undefined" ? null : Number(priceRaw);
+    const isActive = body.is_active === true;
+    const badge = safeText(body.badge, 60) || null;
+    const imagePath = safeText(body.image_path, 500) || null;
+    if (name.length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !["fresh","pastry","other"].includes(category) || !Number.isInteger(displayOrder) || displayOrder < 0 || (price !== null && (!Number.isInteger(price) || price < 0 || price > 100000000))) return fail("Periksa nama, slug, kategori, urutan, dan harga produk.", 422, origin);
+    if (imagePath && (!imagePath.startsWith("products/") || imagePath.includes(".."))) return fail("Referensi foto tidak valid.", 422, origin);
+    const values = { name, slug, description: description || null, category, display_order: displayOrder, unit_price_idr: price, is_active: isActive, badge, image_path: imagePath };
+    let saved;
+    let error;
+    if (id) {
+      const result = await admin.from("products").update(values).eq("id", id).select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").maybeSingle();
+      saved = result.data; error = result.error;
+    } else {
+      const result = await admin.from("products").insert(values).select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").maybeSingle();
+      saved = result.data; error = result.error;
+    }
+    if (error || !saved) return fail(error?.code === "23505" ? "Slug produk sudah digunakan." : "Produk gagal disimpan.", error?.code === "23505" ? 409 : 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: id ? "update_product_catalog" : "create_product_catalog", entity_type: "product", entity_id: saved.id, metadata: { slug, category, display_order: displayOrder, is_active: isActive } });
+    return json({ product: { ...saved, image_url: saved.image_path ? admin.storage.from("dlice-product-photos").getPublicUrl(saved.image_path).data.publicUrl : null } }, 200, origin);
   }
 
   if (action === "admin-configure-product") {
