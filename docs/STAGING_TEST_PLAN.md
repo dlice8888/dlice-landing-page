@@ -67,3 +67,15 @@
 
 ## Pass criteria
 All mandatory checks above pass in Preview and staging, no unexpected duplicate payment records are created, no unhandled runtime errors appear, and the Owner explicitly approves production promotion.
+
+
+## Customer tracking by transaction ID
+- [ ] From the staging landing page, open “Lacak Pesanan” and confirm the ID input is available without a private token.
+- [ ] Submit a valid staging order ID with the correct last four digits of the ordering WhatsApp; confirm only that order’s summary, payment/operational statuses, and timeline appear.
+- [ ] Submit the same valid ID with incorrect last four digits; verify the response is generic and no order details are rendered.
+- [ ] Submit a nonexistent ID, malformed ID, impossible date (e.g. 32/13/2026), and blank verification digits; verify no order data is returned.
+- [ ] Confirm IDs from a different date cannot match an order number from another date; the backend query must scope order number to the WITA calendar day.
+- [ ] After lookup by ID, use manual refresh and wait for auto-refresh; confirm it reuses the same lookup credentials and refreshes the same order rather than losing the search context.
+- [ ] Verify the lookup API does not return the full customer WhatsApp number, customer name, internal notes, proof URL, or private tracking token.
+- [ ] Verify tracking by private token still works for existing customer links.
+- [ ] Run abuse/rate-limit checks before production; do not treat four-digit verification alone as sufficient protection against automated guessing.
