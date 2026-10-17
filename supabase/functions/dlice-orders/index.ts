@@ -33,7 +33,7 @@ const getAdmin = async (req: Request) => {
   if (!token) return null;
   const { data: userData, error: userError } = await authClient.auth.getUser(token);
   if (userError || !userData.user) return null;
-  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name").eq("user_id", userData.user.id).maybeSingle();
+  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
   return { user: userData.user, profile: { ...profile, permissions: profile.role === "owner" ? ["*"] : (Array.isArray(profile.permissions) ? profile.permissions : ["orders"]) } };
 };
