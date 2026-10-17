@@ -13,6 +13,17 @@
 - [ ] Choose a future service date and configure product capacity for each test menu.
 - [ ] Use a clearly identifiable test order/customer; do not delete historical staging orders.
 
+## Tracking and operations navigation
+- [ ] Open `track.html` using the private tracking link from a test order; verify invalid/missing tokens do not reveal order data.
+- [ ] Verify the tracking page displays the correct DLC transaction code, payment status, requested date/time, receiving method, item quantities, subtotal and localized status history.
+- [ ] Change an operational status in the staging Owner/staff page and confirm tracking reflects the latest status after manual refresh or the 45-second auto-refresh.
+- [ ] Verify desktop operations page uses a sidebar and mobile uses a horizontally scrollable compact menu; each menu opens the matching section.
+- [ ] Verify the dashboard counts match the staging order list; payment menu filters orders requiring payment action and operations menu filters active orders.
+- [ ] Sign in as staff with only `orders`; verify catalog, capacity, payment settings and staff management are hidden/unavailable as applicable.
+- [ ] Sign in as staff with only `catalog`; verify catalog access works but order/payment operations are not available.
+- [ ] Sign in as staff with `settings`; verify capacity menu is available only if the backend authorizes the related action.
+- [ ] Verify Owner can manage staff permissions and payment settings, while direct API calls by unauthorized staff are rejected (UI hiding alone is not sufficient).
+
 ## Customer checkout
 - [ ] Menu quantity changes update the summary and estimated total immediately.
 - [ ] Submit an order with multiple products; server response uses authoritative product prices and ID format `DLC-dd/mm/yyyy-xxxxx` in WITA.
