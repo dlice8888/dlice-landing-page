@@ -112,6 +112,19 @@ Deno.serve(async (req: Request) => {
     const key=`customer-order:${o.id}:${version}`,{data:existing}=await admin.from("notification_log").select("status").eq("idempotency_key",key).maybeSingle();if(!existing){const {error}=await admin.from("notification_log").insert({order_id:o.id,notification_type:"customer_order_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:"6285397710002",message_text:msg});if(error)return fail("Notifikasi gagal dicatat.",500,origin);}
     await admin.from("orders").update({final_whatsapp_requested_at:new Date().toISOString()}).eq("id",o.id);return json({ok:true,whatsapp_url:`https://wa.me/6285397710002?text=${encodeURIComponent(msg)}`,notification_status:existing?.status||"manual_action_required"},200,origin);
   }
+  if (action === "track-order-by-code") {
+    const code=safeText(body.transaction_code,30).toUpperCase(),last4=safeText(body.phone_last4,4);
+    const match=code.match(/^DLC-(\d{2})\/(\d{2})\/(\d{4})-(\d{5})$/);
+    if(!match||!/^\d{4}$/.test(last4))return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
+    const orderNumber=Number(match[4]),{data:o}=await admin.from("orders").select("id,order_number,created_at,requested_date,requested_time,receiving_method,delivery_address,payment_status,operational_status,product_subtotal_idr,customer_whatsapp").eq("order_number",orderNumber).maybeSingle();
+    const normalizedCode=o?formatTransactionCode(o.order_number,o.created_at):"";
+    const phoneDigits=String(o?.customer_whatsapp??"").replace(/\D/g,"");
+    if(!o||normalizedCode!==code||!phoneDigits.endsWith(last4))return fail("ID pesanan atau 4 digit WhatsApp tidak cocok.",404,origin);
+    const {data:history}=await admin.from("order_status_history").select("status_type,old_status,new_status,note,created_at").eq("order_id",o.id).order("created_at",{ascending:false}).limit(30);
+    const {data:items}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",o.id);
+    return json({order:{transaction_code:normalizedCode,requested_date:o.requested_date,requested_time:o.requested_time,receiving_method:o.receiving_method,delivery_address:o.delivery_address,payment_status:o.payment_status,operational_status:o.operational_status,product_subtotal_idr:o.product_subtotal_idr,items:items||[],updated_at:history?.[0]?.created_at||o.created_at,history:history||[]}},200,origin);
+  }
+
   if (action === "track-order") {
     const token=safeText(body.tracking_token,100);if(token.length!==64)return fail("Token tracking tidak valid.",422,origin);const hash=await sha256(token),{data:o}=await admin.from("orders").select("id,order_number,created_at,requested_date,requested_time,receiving_method,delivery_address,payment_status,operational_status,product_subtotal_idr").eq("tracking_token_hash",hash).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);
     const {data:history}=await admin.from("order_status_history").select("status_type,old_status,new_status,note,created_at").eq("order_id",o.id).order("created_at",{ascending:false}).limit(30);const {data:items}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",o.id);
