@@ -258,6 +258,7 @@ Deno.serve(async (req: Request) => {
     "admin-save-payment-settings": "settings",
     "admin-upload-qris": "settings",
     "admin-mark-notification-sent": "orders",
+    "admin-retry-payment-notification": "orders",
   };
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && actor.profile.role !== "owner" && !actor.profile.permissions.includes(requiredPermission)) {
