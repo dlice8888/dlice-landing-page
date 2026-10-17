@@ -20,8 +20,14 @@
 ### Batasan hasil audit
 - Vercel menunjukkan deployment produksi berstatus `READY`, domain `dlice.vercel.app`, dan commit Git yang sama dengan commit terbaru di `main`. Artinya deployment yang terdaftar mengarah ke perubahan terbaru tersebut.
 - Repository yang diperiksa tampak berupa landing page statis satu file HTML; alur pemesanan yang terlihat membangun pesan WhatsApp di browser.
-- Koneksi Supabase yang tersedia untuk audit tidak menampilkan project apa pun. Karena itu, status database Supabase, skema, RLS, Storage, dan Edge Functions belum dapat diverifikasi. Jangan menganggap komponen tersebut sudah tersedia sebelum project Supabase yang benar dapat diakses.
-- Audit ini berbasis kode repository dan metadata deployment yang dapat diakses; bukan klaim bahwa seluruh alur bisnis backend sudah diuji end-to-end.
+- Project Supabase baru dibuat: `dlice-production`, region Singapore (`ap-southeast-1`), ref `gdjlkrmlsurcdbwnmqgg`, status `ACTIVE_HEALTHY`.
+- Dua migration awal sudah diterapkan ke Supabase dan dicatat di repository: skema pemesanan privat serta indeks foreign key. Tabel operasional telah dibuat dengan RLS aktif dan akses `anon`/`authenticated` dicabut; akses aplikasi harus melalui operasi server-side tepercaya.
+- URL project dan publishable key sudah ditambahkan sebagai environment variables terenkripsi pada Vercel untuk Production, Preview, dan Development. Kode website saat ini masih HTML statis dan belum menggunakan variabel tersebut; jadi ini persiapan konfigurasi, bukan klaim integrasi end-to-end.
+- Commit migration terbaru sudah memicu deployment Vercel produksi berstatus `READY` dan terhubung ke repository `dlice8888/dlice-landing-page` pada branch `main`.
+- Belum ada data produk, harga, kapasitas, admin, atau pesanan yang dimasukkan. Belum ada Edge Function/API pemesanan, upload bukti pembayaran, admin panel, atau integrasi frontend ke database.
+- Advisor keamanan Supabase menunjukkan RLS aktif tanpa policy pada tabel privat. Ini disengaja untuk menolak akses langsung dari client pada tahap awal; kelak implementasi backend harus memakai jalur server-side tepercaya dan ditinjau ulang sebelum fitur dirilis. Advisor performa awal hanya melaporkan indeks baru belum dipakai karena belum ada trafik/data yang berarti.
+- Repository yang diperiksa tampak berupa landing page statis satu file HTML; alur pemesanan yang berjalan masih membangun pesan WhatsApp di browser.
+- Audit ini memverifikasi skema database, konfigurasi environment Vercel, dan status deployment. Namun alur pesanan belum diuji end-to-end karena kode aplikasi belum diintegrasikan dengan Supabase.
 
 ## 2. Tujuan lanjutan
 
