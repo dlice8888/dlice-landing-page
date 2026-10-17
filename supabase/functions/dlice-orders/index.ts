@@ -30,6 +30,8 @@ const sha256 = async (value: string) => {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join("");
 };
+const usernameEmail = (username: string) => `${username.toLowerCase()}@accounts.dlice.internal`;
+const validUsername = (username: string) => /^[a-zA-Z0-9._-]{3,32}$/.test(username);
 const randomToken = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return [...bytes].map((v) => v.toString(16).padStart(2, "0")).join("");
@@ -41,7 +43,7 @@ const getAdmin = async (req: Request) => {
   if (!token) return null;
   const { data: userData, error: userError } = await authClient.auth.getUser(token);
   if (userError || !userData.user) return null;
-  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions").eq("user_id", userData.user.id).maybeSingle();
+  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
   return { user: userData.user, profile: { ...profile, permissions: profile.role === "owner" ? ["*"] : (Array.isArray(profile.permissions) ? profile.permissions : ["orders"]) } };
 };
@@ -164,6 +166,23 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true, message: "Bukti tersimpan secara privat dan menunggu verifikasi admin." }, 200, origin);
   }
 
+  if (action === "admin-bootstrap-owner") {
+    const bootstrapSecret = Deno.env.get("D'LICE_OWNER_BOOTSTRAP_SECRET");
+    if (!bootstrapSecret || safeText(body.bootstrap_secret, 256) !== bootstrapSecret) return fail("Bootstrap tidak diizinkan.", 403, origin);
+    const { count, error: countError } = await admin.from("admin_profiles").select("user_id", { count: "exact", head: true }).eq("role", "owner");
+    if (countError) return fail("Status owner tidak dapat diperiksa.", 500, origin);
+    if ((count ?? 0) > 0) return fail("Akun owner sudah tersedia; bootstrap ditutup.", 409, origin);
+    const username = safeText(body.username, 32);
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Username bootstrap atau password tidak memenuhi kebijakan.", 422, origin);
+    const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username } });
+    if (createError || !created.user) return fail("Akun owner gagal dibuat.", 500, origin);
+    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "owner", display_name: "Owner D’Lice", is_active: true, permissions: ["*"] });
+    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail("Profil owner gagal dibuat.", 500, origin); }
+    await admin.from("admin_audit_logs").insert({ actor_user_id: created.user.id, action: "bootstrap_owner", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username } });
+    return json({ ok: true }, 201, origin);
+  }
+
   const actor = await getAdmin(req);
   if (!actor) return fail("Login admin diperlukan.", 401, origin);
 
@@ -177,6 +196,7 @@ Deno.serve(async (req: Request) => {
     "admin-save-product": "catalog",
     "admin-upload-product-photo": "catalog",
     "admin-list-staff": "staff",
+    "admin-create-staff": "staff",
     "admin-set-permissions": "staff",
   };
   const requiredPermission = permissionForAction[action];
@@ -186,9 +206,25 @@ Deno.serve(async (req: Request) => {
 
   if (action === "admin-list-staff") {
     if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengelola izin admin.", 403, origin);
-    const { data, error } = await admin.from("admin_profiles").select("user_id,role,display_name,is_active,permissions").order("created_at", { ascending: true });
+    const { data, error } = await admin.from("admin_profiles").select("user_id,username,role,display_name,is_active,permissions").order("created_at", { ascending: true });
     if (error) return fail("Daftar admin gagal dimuat.", 500, origin);
     return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff"] }, 200, origin);
+  }
+
+  if (action === "admin-create-staff") {
+    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat membuat akun admin.", 403, origin);
+    const username = safeText(body.username, 32);
+    const displayName = safeText(body.display_name, 120);
+    const password = typeof body.password === "string" ? body.password : "";
+    const permissions = body.permissions;
+    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff"]);
+    if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Username, nama, password (minimal 12 karakter), atau izin tidak valid.", 422, origin);
+    const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
+    if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
+    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
+    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail(profileError.code === "23505" ? "Username sudah digunakan." : "Profil admin gagal dibuat.", 500, origin); }
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "create_admin_account", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username, permissions: [...new Set(permissions)] } });
+    return json({ ok: true, username }, 201, origin);
   }
 
   if (action === "admin-set-permissions") {
