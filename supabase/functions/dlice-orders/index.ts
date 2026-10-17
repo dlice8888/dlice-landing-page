@@ -90,7 +90,7 @@ Deno.serve(async (req: Request) => {
     }
     const { data: products, error: productError } = await admin.from("products").select("id,slug,unit_price_idr,is_active").in("slug", normalized.map((i) => i.slug));
     if (productError || !products || products.length !== normalized.length) return fail("Ada menu yang tidak dikenal.", 422, origin);
-    if (products.some((p) => !p.is_active || p.unit_price_idr == null)) return fail("Harga menu belum dikonfigurasi admin. Silakan hubungi D’Lice melalui WhatsApp.", 409, origin);
+    if (products.some((p) => !p.is_active || p.unit_price_idr == null)) return fail("Harga menu belum ditetapkan. Silakan hubungi D’Lice melalui WhatsApp.", 409, origin);
     const items = normalized.map((item) => ({ product_id: products.find((p) => p.slug === item.slug)!.id, quantity: item.quantity }));
     const trackingToken = randomToken();
     const trackingHash = await sha256(trackingToken);
@@ -168,23 +168,23 @@ Deno.serve(async (req: Request) => {
 
   if (action === "admin-bootstrap-owner") {
     const bootstrapSecret = Deno.env.get("DLICE_OWNER_BOOTSTRAP_SECRET");
-    if (!bootstrapSecret || safeText(body.bootstrap_secret, 256) !== bootstrapSecret) return fail("Bootstrap tidak diizinkan.", 403, origin);
+    if (!bootstrapSecret || safeText(body.bootstrap_secret, 256) !== bootstrapSecret) return fail("Proses penyiapan awal akun tidak diizinkan.", 403, origin);
     const { count, error: countError } = await admin.from("admin_profiles").select("user_id", { count: "exact", head: true }).eq("role", "owner");
     if (countError) return fail("Status owner tidak dapat diperiksa.", 500, origin);
-    if ((count ?? 0) > 0) return fail("Akun owner sudah tersedia; bootstrap ditutup.", 409, origin);
+    if ((count ?? 0) > 0) return fail("Akun Pemilik sudah tersedia; proses penyiapan awal ditutup.", 409, origin);
     const username = safeText(body.username, 32);
     const password = typeof body.password === "string" ? body.password : "";
-    if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Username bootstrap atau password tidak memenuhi kebijakan.", 422, origin);
+    if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Nama pengguna atau kata sandi penyiapan awal tidak memenuhi ketentuan.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username } });
-    if (createError || !created.user) return fail("Akun owner gagal dibuat.", 500, origin);
+    if (createError || !created.user) return fail("Akun Pemilik gagal dibuat.", 500, origin);
     const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "owner", display_name: "Owner D’Lice", is_active: true, permissions: ["*"] });
-    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail("Profil owner gagal dibuat.", 500, origin); }
+    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail("Profil Pemilik gagal dibuat.", 500, origin); }
     await admin.from("admin_audit_logs").insert({ actor_user_id: created.user.id, action: "bootstrap_owner", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username } });
     return json({ ok: true }, 201, origin);
   }
 
   const actor = await getAdmin(req);
-  if (!actor) return fail("Login admin diperlukan.", 401, origin);
+  if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
 
   const permissionForAction: Record<string, string> = {
     "admin-list-orders": "orders",
@@ -201,24 +201,24 @@ Deno.serve(async (req: Request) => {
   };
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && actor.profile.role !== "owner" && !actor.profile.permissions.includes(requiredPermission)) {
-    return fail("Akses ditolak. Owner belum memberikan izin untuk bagian ini.", 403, origin);
+    return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
   if (action === "admin-list-staff") {
-    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengelola izin admin.", 403, origin);
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengelola izin staf.", 403, origin);
     const { data, error } = await admin.from("admin_profiles").select("user_id,username,role,display_name,is_active,permissions").order("created_at", { ascending: true });
-    if (error) return fail("Daftar admin gagal dimuat.", 500, origin);
+    if (error) return fail("Daftar staf gagal dimuat.", 500, origin);
     return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff"] }, 200, origin);
   }
 
   if (action === "admin-create-staff") {
-    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat membuat akun admin.", 403, origin);
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat membuat akun staf.", 403, origin);
     const username = safeText(body.username, 32);
     const displayName = safeText(body.display_name, 120);
     const password = typeof body.password === "string" ? body.password : "";
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff"]);
-    if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Username, nama, password (minimal 12 karakter), atau izin tidak valid.", 422, origin);
+    if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 12 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
     const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
@@ -228,16 +228,16 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-set-permissions") {
-    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengubah izin admin.", 403, origin);
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah izin akses staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff"]);
     if (!userId || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Daftar izin tidak valid.", 422, origin);
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
-    if (targetError || !target) return fail("Akun admin tidak ditemukan.", 404, origin);
-    if (target.role === "owner") return fail("Izin akun owner tidak dapat dibatasi melalui panel ini.", 409, origin);
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Izin akun Pemilik tidak dapat dibatasi melalui panel ini.", 409, origin);
     const { error } = await admin.from("admin_profiles").update({ permissions: [...new Set(permissions)] }).eq("user_id", userId);
-    if (error) return fail("Izin admin gagal disimpan.", 500, origin);
+    if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
     return json({ ok: true }, 200, origin);
   }
@@ -282,7 +282,7 @@ Deno.serve(async (req: Request) => {
     const isActive = body.is_active === true;
     const badge = safeText(body.badge, 60) || null;
     const imagePath = safeText(body.image_path, 500) || null;
-    if (name.length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !["fresh","pastry","other"].includes(category) || !Number.isInteger(displayOrder) || displayOrder < 0 || (price !== null && (!Number.isInteger(price) || price < 0 || price > 100000000))) return fail("Periksa nama, slug, kategori, urutan, dan harga produk.", 422, origin);
+    if (name.length < 2 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !["fresh","pastry","other"].includes(category) || !Number.isInteger(displayOrder) || displayOrder < 0 || (price !== null && (!Number.isInteger(price) || price < 0 || price > 100000000))) return fail("Periksa nama menu, kode internal, kategori, urutan, dan harga.", 422, origin);
     if (imagePath && (!imagePath.startsWith("products/") || imagePath.includes(".."))) return fail("Referensi foto tidak valid.", 422, origin);
     const values = { name, slug, description: description || null, category, display_order: displayOrder, unit_price_idr: price, is_active: isActive, badge, image_path: imagePath };
     let saved;
@@ -304,7 +304,7 @@ Deno.serve(async (req: Request) => {
     const price = Number(body.unit_price_idr);
     const date = safeText(body.service_date, 10);
     const capacity = Number(body.capacity);
-    if (!/^[a-z0-9-]+$/.test(slug) || !Number.isInteger(price) || price < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isInteger(capacity) || capacity < 0 || capacity > 10000) return fail("Harga/tanggal/kapasitas tidak valid.", 422, origin);
+    if (!/^[a-z0-9-]+$/.test(slug) || !Number.isInteger(price) || price < 0 || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isInteger(capacity) || capacity < 0 || capacity > 10000) return fail("Harga, tanggal, atau batas jumlah item tidak valid.", 422, origin);
     const { data: product, error: pError } = await admin.from("products").update({ unit_price_idr: price }).eq("slug", slug).select("id").single();
     if (pError || !product) return fail("Menu tidak ditemukan.", 404, origin);
     const { error: cError } = await admin.from("product_capacity").upsert({ product_id: product.id, service_date: date, capacity }, { onConflict: "product_id,service_date" });
@@ -326,7 +326,7 @@ Deno.serve(async (req: Request) => {
     const orderId = safeText(body.order_id, 80);
     const next = safeText(body.operational_status, 40);
     const allowed = ["received","confirmed","preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed","cancelled","delivery_issue"];
-    if (!allowed.includes(next)) return fail("Status operasional tidak valid.", 422, origin);
+    if (!allowed.includes(next)) return fail("Status pesanan tidak valid.", 422, origin);
     const { data: oldOrder } = await admin.from("orders").select("operational_status").eq("id", orderId).maybeSingle();
     if (!oldOrder) return fail("Pesanan tidak ditemukan.", 404, origin);
     const { error } = await admin.from("orders").update({ operational_status: next }).eq("id", orderId);
