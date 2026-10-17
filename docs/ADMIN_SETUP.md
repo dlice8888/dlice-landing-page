@@ -34,3 +34,26 @@ To add an admin, create their Auth user and insert a row in `admin_profiles` wit
 - WhatsApp confirmations are currently a deliberate manual action via a generated `wa.me` link. Fully automatic messages require approved WhatsApp Business API provider credentials, templates, and webhook/retry setup.
 - Before promotion, test valid and invalid checkout, price tampering, simultaneous checkout near capacity, expired reservations, on-time/late payment declaration, proof upload MIME/size, unauthorized admin calls, owner vs sales-admin access, duplicate payment verification, and notification retries.
 - Do not claim production-ready until the above QA passes and actual business prices, capacity, payment details, and admin account are configured.
+
+## Katalog produk dan foto Supabase
+
+Branch `feat/supabase-product-catalog` menyiapkan katalog yang dibaca website dari aksi publik `list-products`, beserta panel owner untuk mengelola produk. Migrasi `20261018005000_product_catalog_storage.sql` menambah metadata katalog tanpa mengubah atau menghapus tabel pesanan dan membuat bucket publik `dlice-product-photos` (JPG/PNG/WebP, maksimal 5 MB).
+
+Kolom katalog:
+- `image_path`: path objek dalam bucket foto produk; URL publik dibuat dari Storage.
+- `category`: `fresh`, `pastry`, atau `other`.
+- `display_order`: urutan menaik pada halaman menu.
+- `badge`: label opsional pada kartu produk.
+
+Panel admin menyediakan aksi `admin-list-products`, `admin-save-product`, dan `admin-upload-product-photo`. Semua aksi membutuhkan sesi admin yang valid dan izin `catalog`; owner selalu mendapat akses penuh. Unggah foto menggunakan Edge Function agar kunci service-role tidak pernah dikirim ke browser. Foto yang diunggah baru dipakai website setelah produk disimpan dengan `image_path` tersebut.
+
+### Prosedur staging
+
+1. Gunakan proyek Supabase staging terpisah untuk menguji migrasi dan Edge Function. Jangan deploy versi fungsi katalog ke proyek yang melayani produksi sebelum pengujian selesai, karena fungsi `dlice-orders` yang sama melayani checkout produksi.
+2. Terapkan migrasi dalam urutan setelah migrasi ordering/permissions yang sudah ada di branch.
+3. Deploy Edge Function `dlice-orders` dari branch ini ke proyek staging.
+4. Buka preview Vercel, masuk sebagai owner, unggah foto tiap produk, lalu simpan katalog.
+5. Verifikasi menu, filter, harga, checkout multi-menu, izin akun admin, dan order snapshot. Pastikan data order lama tetap ada.
+6. Setelah lulus, rencanakan rollout produksi secara terpisah. Jangan hapus foto lama di GitHub sampai semua foto yang diperlukan telah diunggah ke Storage dan halaman produksi diverifikasi.
+
+Catatan: migrasi hanya menambahkan kolom dan bucket; foto lama tidak otomatis dipindahkan oleh SQL. Foto perlu diunggah melalui panel admin agar file benar-benar berada di Supabase Storage.
