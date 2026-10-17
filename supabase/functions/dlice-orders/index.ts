@@ -309,7 +309,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-list-orders") {
-    const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at)").order("created_at", { ascending: false }).limit(100);
+    const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at),notification_log(id,notification_type,status,message_text,recipient_whatsapp,created_at)").order("created_at", { ascending: false }).limit(100);
     if (error) return fail("Daftar pesanan gagal dimuat.", 500, origin);
     const orders = (data ?? []).map((order) => ({ ...order, transaction_code: formatTransactionCode(order.order_number, order.created_at) }));
     return json({ orders, role: actor.profile.role, permissions: actor.profile.permissions }, 200, origin);
