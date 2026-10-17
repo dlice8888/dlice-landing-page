@@ -35,7 +35,7 @@ const getAdmin = async (req: Request) => {
   if (userError || !userData.user) return null;
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  return { user: userData.user, profile };
+  return { user: userData.user, profile: { ...profile, permissions: profile.role === "owner" ? ["*"] : (Array.isArray(profile.permissions) ? profile.permissions : ["orders"]) } };
 };
 
 Deno.serve(async (req: Request) => {
@@ -158,6 +158,42 @@ Deno.serve(async (req: Request) => {
   const actor = await getAdmin(req);
   if (!actor) return fail("Login admin diperlukan.", 401, origin);
 
+  const permissionForAction: Record<string, string> = {
+    "admin-list-orders": "orders",
+    "admin-update-status": "orders",
+    "admin-verify-payment": "orders",
+    "admin-proof-url": "orders",
+    "admin-configure-product": "catalog",
+    "admin-list-staff": "staff",
+    "admin-set-permissions": "staff",
+  };
+  const requiredPermission = permissionForAction[action];
+  if (requiredPermission && actor.profile.role !== "owner" && !actor.profile.permissions.includes(requiredPermission)) {
+    return fail("Akses ditolak. Owner belum memberikan izin untuk bagian ini.", 403, origin);
+  }
+
+  if (action === "admin-list-staff") {
+    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengelola izin admin.", 403, origin);
+    const { data, error } = await admin.from("admin_profiles").select("user_id,role,display_name,is_active,permissions").order("created_at", { ascending: true });
+    if (error) return fail("Daftar admin gagal dimuat.", 500, origin);
+    return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff"] }, 200, origin);
+  }
+
+  if (action === "admin-set-permissions") {
+    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengubah izin admin.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const permissions = body.permissions;
+    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff"]);
+    if (!userId || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Daftar izin tidak valid.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun admin tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Izin akun owner tidak dapat dibatasi melalui panel ini.", 409, origin);
+    const { error } = await admin.from("admin_profiles").update({ permissions: [...new Set(permissions)] }).eq("user_id", userId);
+    if (error) return fail("Izin admin gagal disimpan.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
+    return json({ ok: true }, 200, origin);
+  }
+
   if (action === "admin-list-orders") {
     const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at)").order("created_at", { ascending: false }).limit(100);
     if (error) return fail("Daftar pesanan gagal dimuat.", 500, origin);
@@ -165,7 +201,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-configure-product") {
-    if (actor.profile.role !== "owner") return fail("Hanya owner yang dapat mengubah harga dan kapasitas.", 403, origin);
     const slug = safeText(body.slug, 80);
     const price = Number(body.unit_price_idr);
     const date = safeText(body.service_date, 10);
@@ -207,7 +242,7 @@ Deno.serve(async (req: Request) => {
     const result = safeText(body.result, 20);
     const note = safeText(body.note, 500);
     if (!["paid","rejected"].includes(result)) return fail("Hasil verifikasi tidak valid.", 422, origin);
-    if (result === "paid" && actor.profile.role !== "owner" && actor.profile.role !== "sales_admin") return fail("Akses ditolak.", 403, origin);
+
     const { data: order } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id", orderId).maybeSingle();
     if (!order) return fail("Pesanan tidak ditemukan.", 404, origin);
     if (order.payment_status === "paid" || order.payment_status === "refunded") return fail("Status pembayaran ini tidak dapat ditimpa.", 409, origin);
