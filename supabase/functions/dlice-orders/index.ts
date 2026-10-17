@@ -128,7 +128,12 @@ Deno.serve(async (req: Request) => {
       const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
       if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
       await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
-      await admin.from("payment_records").insert({ order_id: order.id, method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, status: "pending_verification" });
+      const { data: existingPayment } = await admin.from("payment_records").select("id").eq("order_id", order.id).eq("status", "pending_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (existingPayment) {
+        await admin.from("payment_records").update({ method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr }).eq("id", existingPayment.id);
+      } else {
+        await admin.from("payment_records").insert({ order_id: order.id, method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, status: "pending_verification" });
+      }
       await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer declared payment via tracking token" });
       return json({ ok: true, message: "Pernyataan pembayaran tercatat. Kapasitas ditahan sambil menunggu pemeriksaan admin." }, 200, origin);
     }
