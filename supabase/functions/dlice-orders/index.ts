@@ -40,7 +40,7 @@ const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, 
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const formatTransactionCode = (orderNumber: number | string, createdAt: string) => {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Jakarta", day: "2-digit", month: "2-digit", year: "numeric",
+    timeZone: "Asia/Makassar", day: "2-digit", month: "2-digit", year: "numeric",
   }).formatToParts(new Date(createdAt));
   const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
   return `DLC-${part("day")}/${part("month")}/${part("year")}-${String(orderNumber).padStart(5, "0")}`;
