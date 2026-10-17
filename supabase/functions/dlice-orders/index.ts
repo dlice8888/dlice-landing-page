@@ -116,7 +116,12 @@ Deno.serve(async (req: Request) => {
     const code=safeText(body.transaction_code,30).toUpperCase(),last4=safeText(body.phone_last4,4);
     const match=code.match(/^DLC-(\d{2})\/(\d{2})\/(\d{4})-(\d{5})$/);
     if(!match||!/^\d{4}$/.test(last4))return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
-    const orderNumber=Number(match[4]),{data:o}=await admin.from("orders").select("id,order_number,created_at,requested_date,requested_time,receiving_method,delivery_address,payment_status,operational_status,product_subtotal_idr,customer_whatsapp").eq("order_number",orderNumber).maybeSingle();
+    const day=Number(match[1]),month=Number(match[2]),year=Number(match[3]),orderNumber=Number(match[4]);
+    const dateCheck=new Date(Date.UTC(year,month-1,day));
+    if(dateCheck.getUTCFullYear()!==year||dateCheck.getUTCMonth()!==month-1||dateCheck.getUTCDate()!==day)return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
+    const start=new Date(Date.UTC(year,month-1,day)-8*60*60*1000).toISOString();
+    const end=new Date(Date.UTC(year,month-1,day+1)-8*60*60*1000).toISOString();
+    const {data:o}=await admin.from("orders").select("id,order_number,created_at,requested_date,requested_time,receiving_method,delivery_address,payment_status,operational_status,product_subtotal_idr,customer_whatsapp").eq("order_number",orderNumber).gte("created_at",start).lt("created_at",end).maybeSingle();
     const normalizedCode=o?formatTransactionCode(o.order_number,o.created_at):"";
     const phoneDigits=String(o?.customer_whatsapp??"").replace(/\D/g,"");
     if(!o||normalizedCode!==code||!phoneDigits.endsWith(last4))return fail("ID pesanan atau 4 digit WhatsApp tidak cocok.",404,origin);
