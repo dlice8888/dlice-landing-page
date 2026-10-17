@@ -9,8 +9,16 @@ const admin = createClient(SUPABASE_URL, SERVICE_KEY ?? "", { auth: { persistSes
 const authClient = createClient(SUPABASE_URL, PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
 const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
+const isAllowedOrigin = (origin: string | null) => {
+  if (!origin) return true;
+  if (allowedOrigins.has(origin)) return true;
+  try {
+    const host = new URL(origin).hostname;
+    return host.startsWith("dlice-landing-page-") && host.endsWith(".vercel.app");
+  } catch { return false; }
+};
 const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin && allowedOrigins.has(origin) ? origin : "https://dlice.vercel.app",
+  "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "https://dlice.vercel.app",
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
@@ -42,7 +50,7 @@ Deno.serve(async (req: Request) => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
   if (req.method !== "POST") return fail("Metode tidak didukung.", 405, origin);
-  if (origin && !allowedOrigins.has(origin)) return fail("Origin tidak diizinkan.", 403, origin);
+  if (origin && !isAllowedOrigin(origin)) return fail("Origin tidak diizinkan.", 403, origin);
   if (!SERVICE_KEY || !PUBLIC_KEY) return fail("Konfigurasi server belum lengkap.", 500, origin);
   let body: Record<string, unknown>;
   try {
