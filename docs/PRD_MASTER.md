@@ -40,17 +40,17 @@ Mengubah formulir pemesanan saat ini menjadi alur penjualan yang konsisten dari 
 - Jika total berubah setelah struk dikonfirmasi, konfirmasi sebelumnya menjadi tidak berlaku dan pelanggan harus melihat serta menyetujui struk versi terbaru sebelum melanjutkan pembayaran.
 - Tampilkan dengan jelas bahwa simulasi total adalah harga produk. Ongkos delivery dari pihak ketiga tidak termasuk total pembayaran produk ke D’lice.
 
-### 3.2 Pop-up struk sebelum pembayaran
-- Sebelum pelanggan menuju langkah pembayaran, tampilkan modal/pop-up berbentuk struk yang mudah dibaca dan cocok untuk ponsel.
+### 3.2 Pop-up struk wajib pada langkah pembayaran dan upload bukti
+- Tampilkan modal/pop-up struk pada dua titik wajib: (1) sebelum pelanggan menyetujui pesanan/melanjutkan ke pembayaran, dan (2) sekali lagi saat pelanggan akan mengunggah bukti pembayaran atau mengirim konfirmasi bahwa pembayaran dilakukan. Pop-up kedua adalah pemeriksaan terakhir sebelum bukti dikaitkan ke pesanan.
 - Struk mencakup ID/nomor order, nama dan nomor WhatsApp pelanggan, setiap nama menu, jumlah, harga satuan, subtotal item, total harga produk, tanggal/waktu yang diminta, metode penerimaan, alamat jika delivery, catatan, dan versi/waktu ringkasan.
-- Pelanggan harus secara eksplisit mengonfirmasi bahwa rincian dan total benar sebelum melanjutkan.
-- Jika pelanggan menutup/membatalkan pop-up, jangan lanjutkan ke pembayaran seolah-olah sudah disetujui.
-- Jika kuantitas/menu atau detail yang memengaruhi pesanan diubah setelah konfirmasi, tandai struk lama sebagai kedaluwarsa, hitung ulang, lalu tampilkan struk versi baru untuk dikonfirmasi lagi.
-- Pesanan dan pembayaran harus merujuk ke snapshot versi struk yang sama. Jangan izinkan bukti pembayaran terikat pada total atau rincian yang sudah tidak berlaku.
-- Simpan riwayat perubahan/snapshot penting agar admin dapat mengetahui rincian mana yang dikonfirmasi pelanggan.
+- Pada setiap pop-up, pelanggan harus secara eksplisit mencentang/menekan tombol konfirmasi bahwa rincian, jumlah, dan total benar. Tombol upload bukti/pembayaran tidak boleh aktif sebelum konfirmasi struk pada versi terbaru.
+- Jika pelanggan menutup/membatalkan pop-up, jangan lanjutkan ke pembayaran/upload bukti seolah-olah sudah disetujui.
+- Jika kuantitas/menu atau detail yang memengaruhi pesanan diubah kapan pun—termasuk setelah struk pertama disetujui, saat pelanggan sudah memilih metode pembayaran, atau ketika berada di layar upload bukti—tandai persetujuan dan struk lama sebagai kedaluwarsa, hitung ulang total, tampilkan struk versi baru, dan wajibkan persetujuan ulang. Jangan menerima/mengaitkan bukti pembayaran ke snapshot yang sudah kedaluwarsa.
+- Pesanan, metode pembayaran, instruksi rekening/QRIS yang ditampilkan, bukti pembayaran, dan pembayaran harus merujuk ke snapshot/version yang konsisten. Server wajib menolak unggahan/konfirmasi bila versi struk sudah berubah atau harga total tidak cocok.
+- Simpan riwayat perubahan/snapshot, versi struk, waktu dan hasil persetujuan pelanggan agar admin dapat mengetahui rincian mana yang dikonfirmasi sebelum pembayaran dan sebelum upload bukti.
 
 ### 3.3 Tombol akhir dan WhatsApp admin
-- Setelah pelanggan mengonfirmasi struk dan menyelesaikan langkah-langkah yang diperlukan, tombol aksi paling bawah mengirim/membuka WhatsApp admin dengan satu pesan order yang telah dirangkai otomatis.
+- Setelah semua langkah pelanggan selesai—rincian dikonfirmasi, metode pembayaran dipilih, instruksi bank/QRIS ditampilkan sesuai pilihan, dan bukti pembayaran wajib berhasil diunggah serta terkait dengan order—tombol aksi paling bawah mengirim/membuka WhatsApp admin dengan satu pesan order yang dirangkai otomatis. Jika desain produk memerlukan pesan awal sebelum bukti pembayaran, pesan itu harus diberi label sebagai order menunggu pembayaran; jangan menyatakan pembayaran lunas.
 - Pesan memuat ID order, nama dan nomor pelanggan, rincian semua menu dan kuantitas, harga satuan/subtotal, total produk, metode pembayaran yang dipilih, tanggal/waktu, metode penerimaan, alamat jika delivery, catatan, serta status bukti pembayaran (jika sudah diunggah).
 - Gunakan ID order yang sama dengan database, struk, pembayaran, dan panel admin.
 - Pesan WhatsApp adalah notifikasi/kanal komunikasi, bukan sumber kebenaran transaksi. Kegagalan membuka WhatsApp tidak boleh menghapus order yang sudah tersimpan.
@@ -77,7 +77,7 @@ Cash tidak digunakan. Jangan menambahkan gateway atau metode lain tanpa keputusa
 - Owner dapat mengisi dan memperbarui nama bank, nama pemilik rekening, nomor rekening, serta petunjuk transfer yang diperlukan.
 - Owner dapat mengunggah/mengganti gambar QRIS dan melihat pratinjau sebelum menyimpan.
 - Perubahan data rekening atau QRIS harus tersimpan persisten dan ditampilkan pada checkout pelanggan sesuai metode yang dipilih.
-- Jika pelanggan memilih transfer bank, tampilkan detail rekening terbaru yang aktif. Jika pelanggan memilih QRIS, tampilkan gambar QRIS terbaru yang aktif.
+- Jika pelanggan memilih transfer bank, tampilkan detail rekening terbaru yang aktif; jika memilih QRIS, tampilkan gambar QRIS terbaru yang aktif. Setelah pilihan metode dibuat, tampilkan instruksi pembayaran yang sesuai dan ulangi pop-up struk pada langkah upload bukti. Tombol upload harus memastikan metode dan versi struk masih cocok.
 - Hanya Owner yang boleh mengubah/mengunggah informasi rekening dan QRIS; staf admin biasa tidak boleh mengubahnya kecuali izin eksplisit ditambahkan kemudian.
 - Gunakan penyimpanan file yang aman, validasi tipe/ukuran berkas, dan akses publik hanya untuk aset QRIS yang memang dimaksudkan untuk dilihat pelanggan. Jangan simpan rahasia di frontend.
 - Simpan snapshot metode dan instruksi pembayaran yang dipakai pada saat order dibuat/dikonfirmasi, atau versi konfigurasi pembayaran yang bisa diaudit, sehingga perubahan pengaturan Owner tidak mengubah diam-diam instruksi transaksi lama.
@@ -107,10 +107,11 @@ Cash tidak digunakan. Jangan menambahkan gateway atau metode lain tanpa keputusa
 
 ### 7.1 Verifikasi dan konfirmasi pembayaran
 - Staf admin yang memiliki izin dapat melihat pesanan dan bukti pembayaran serta menerima/menolak hasil verifikasi berdasarkan pemeriksaan yang sah.
-- Setelah pembayaran terverifikasi, sistem wajib menyediakan konfirmasi kepada pelanggan yang berisi status pembayaran, nomor order, jumlah yang diterima, metode pembayaran, waktu verifikasi, dan ringkasan pesanan.
-- Konfirmasi pembayaran kepada pelanggan harus menyertakan panduan cara memeriksa progress order melalui halaman pelacakan D’lice, dengan pengalaman/status yang familiar seperti aplikasi ojek online atau perusahaan logistik.
+- Setelah pembayaran terverifikasi, staf wajib melakukan aksi konfirmasi pelanggan dari panel admin. Konfirmasi wajib berisi status pembayaran terverifikasi, nomor order, jumlah yang diterima, metode pembayaran, waktu verifikasi, dan ringkasan pesanan.
+- Konfirmasi pembayaran wajib menyertakan tutorial singkat cara memeriksa progress order melalui halaman tracking D’lice dengan alur yang familiar seperti aplikasi ojek online/perusahaan logistik: buka tautan unik atau masukkan kode tracking, lihat status terakhir, waktu pembaruan, dan arti tahapan berikutnya.
 - Sertakan tautan/kode pelacakan unik yang sulit ditebak, langkah singkat membuka tautan atau memasukkan kode, dan arti status pesanan yang relevan.
-- Konfirmasi harus disiapkan/dikirim sebelum staf melanjutkan perubahan status operasional ke tahap berikutnya. Jika pengiriman gagal, catat kegagalan dan sediakan retry; jangan mengubah pembayaran menjadi tidak valid hanya karena notifikasi gagal.
+- Urutan wajib: (1) staf menyelesaikan verifikasi pembayaran, (2) sistem menyiapkan konfirmasi pembayaran beserta tutorial tracking dan tautan/kode order, (3) staf mengirim atau menjalankan aksi kirim konfirmasi ke pelanggan, (4) hasil kirim dicatat, baru (5) panel mengizinkan staf melanjutkan/memperbarui status operasional ke tahap berikutnya. Jika pengiriman gagal, status kegagalan harus terlihat dan tersedia retry; jangan diam-diam melewati kewajiban konfirmasi atau mengubah pembayaran menjadi tidak valid.
+- Saat staf hendak melanjutkan ke status operasional berikutnya, tampilkan ringkasan status dan konfirmasi ulang tindakan staf sebelum menyimpan perubahan. Catat aktor, waktu, status sebelum/sesudah, serta alasan jika perubahan khusus/pengecualian dilakukan. Pelanggan menerima konfirmasi pembayaran wajib satu kali setelah pembayaran terverifikasi; notifikasi untuk setiap perubahan status operasional tetap mengikuti kebijakan notifikasi yang disetujui dan tidak dikirim otomatis untuk semua status tanpa keputusan baru.
 - Simpan status notifikasi dan waktu/aktor yang mengirim. Retry harus idempoten agar pelanggan tidak menerima duplikat yang tidak perlu.
 - Jangan mengirim WhatsApp otomatis untuk setiap perubahan status operasional kecuali disetujui kemudian; persyaratan yang ada adalah satu konfirmasi setelah pembayaran terverifikasi, berisi instruksi tracking.
 
@@ -170,6 +171,9 @@ Status operasional dipisahkan dari status pembayaran:
 
 ## 13. Kriteria penerimaan
 - Total simulasi berubah segera setiap kali menu/kuantitas berubah tanpa perlu submit.
+- Pop-up struk wajib muncul sebelum lanjut ke pembayaran dan sekali lagi tepat sebelum upload bukti pembayaran; keduanya harus menampilkan rincian dan total terkini serta meminta persetujuan eksplisit.
+- Perubahan kuantitas/menu setelah persetujuan membatalkan persetujuan lama dan mewajibkan pop-up struk versi baru, termasuk bila pelanggan sudah berada di layar upload bukti.
+- Instruksi transfer bank atau QRIS yang terlihat cocok dengan metode yang dipilih dan dengan versi transaksi yang sedang dikonfirmasi.
 - Struk konfirmasi menunjukkan rincian dan total terkini; perubahan setelah konfirmasi mewajibkan konfirmasi struk versi baru.
 - Harga yang tersimpan dan dibayar cocok dengan snapshot struk yang disetujui, serta divalidasi ulang di server.
 - Order persisten memiliki ID DLC yang sama di struk, database, pembayaran, panel admin, tracking, dan WhatsApp.
@@ -177,7 +181,7 @@ Status operasional dipisahkan dari status pembayaran:
 - Owner dapat mengubah nomor rekening dan mengunggah/mengganti QRIS; checkout menampilkan instruksi sesuai metode pembayaran yang dipilih.
 - Pengaturan pembayaran hanya dapat diubah oleh Owner dan riwayat/versinya dapat diaudit.
 - Bukti pembayaran wajib, tetapi tidak otomatis menandai lunas.
-- Setelah pembayaran terverifikasi, pelanggan menerima konfirmasi pembayaran beserta tutorial tracking sebelum proses operasional diteruskan.
+- Setelah pembayaran terverifikasi, staf wajib mengirim konfirmasi pembayaran beserta tutorial tracking sebelum status operasional dapat diteruskan; setiap perubahan status oleh staf juga memerlukan konfirmasi ulang tindakan di panel dan audit log.
 - Reservasi 15 menit, penahanan setelah pernyataan/bukti sebelum tenggat, pelepasan reservasi, dan kasus pembayaran terlambat berjalan konsisten.
 - Kapasitas tidak terlampaui pada checkout bersamaan.
 - Status pembayaran dan status operasional terpisah.
@@ -188,7 +192,11 @@ Status operasional dipisahkan dari status pembayaran:
 
 ## 14. Skenario QA minimum
 - Mengubah kuantitas dari bagian atas form memperbarui total di semua bagian terkait.
-- Mengubah kuantitas setelah struk muncul membatalkan persetujuan lama dan memunculkan struk terbaru.
+- Mengubah kuantitas setelah struk muncul—termasuk pada layar upload bukti—membatalkan persetujuan lama dan memunculkan struk terbaru.
+- Melewati pop-up struk pada langkah upload bukti harus dicegah.
+- Memilih transfer bank menampilkan rekening aktif; memilih QRIS menampilkan gambar QRIS aktif.
+- Staf tidak dapat melanjutkan status operasional setelah verifikasi pembayaran sampai aksi konfirmasi pelanggan dan tutorial tracking dijalankan; kegagalan kirim harus tercatat.
+- Sebelum perubahan status operasional disimpan, staf harus mengonfirmasi ulang tindakan dan perubahan tercatat dalam audit log.
 - Mengirim pembayaran/bukti untuk snapshot struk yang sudah usang ditolak atau diarahkan ke konfirmasi ulang.
 - Checkout bersamaan untuk kapasitas produk/tanggal yang hampir penuh.
 - Reservasi kedaluwarsa tanpa aktivitas pembayaran.
