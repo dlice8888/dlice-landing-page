@@ -113,9 +113,10 @@ Deno.serve(async (req: Request) => {
     await admin.from("orders").update({final_whatsapp_requested_at:new Date().toISOString()}).eq("id",o.id);return json({ok:true,whatsapp_url:`https://wa.me/6285397710002?text=${encodeURIComponent(msg)}`,notification_status:existing?.status||"manual_action_required"},200,origin);
   }
   if (action === "track-order-by-code") {
-    const code=safeText(body.transaction_code,30).toUpperCase(),last4=safeText(body.phone_last4,4);
+    const code=safeText(body.transaction_code,30).toUpperCase();
+    const submittedPhone=normPhone(safeText(body.customer_whatsapp,30));
     const match=code.match(/^DLC-(\d{2})\/(\d{2})\/(\d{4})-(\d{5})$/);
-    if(!match||!/^\d{4}$/.test(last4))return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
+    if(!match||submittedPhone.length<9||submittedPhone.length>16)return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
     const day=Number(match[1]),month=Number(match[2]),year=Number(match[3]),orderNumber=Number(match[4]);
     const dateCheck=new Date(Date.UTC(year,month-1,day));
     if(dateCheck.getUTCFullYear()!==year||dateCheck.getUTCMonth()!==month-1||dateCheck.getUTCDate()!==day)return fail("ID pesanan atau data verifikasi tidak valid.",422,origin);
@@ -123,8 +124,8 @@ Deno.serve(async (req: Request) => {
     const end=new Date(Date.UTC(year,month-1,day+1)-8*60*60*1000).toISOString();
     const {data:o}=await admin.from("orders").select("id,order_number,created_at,requested_date,requested_time,receiving_method,delivery_address,payment_status,operational_status,product_subtotal_idr,customer_whatsapp").eq("order_number",orderNumber).gte("created_at",start).lt("created_at",end).maybeSingle();
     const normalizedCode=o?formatTransactionCode(o.order_number,o.created_at):"";
-    const phoneDigits=String(o?.customer_whatsapp??"").replace(/\D/g,"");
-    if(!o||normalizedCode!==code||!phoneDigits.endsWith(last4))return fail("ID pesanan atau 4 digit WhatsApp tidak cocok.",404,origin);
+    const savedPhone=normPhone(String(o?.customer_whatsapp??""));
+    if(!o||normalizedCode!==code||!savedPhone||savedPhone!==submittedPhone)return fail("ID pesanan atau nomor WhatsApp tidak cocok.",404,origin);
     const {data:history}=await admin.from("order_status_history").select("status_type,old_status,new_status,note,created_at").eq("order_id",o.id).order("created_at",{ascending:false}).limit(30);
     const {data:items}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",o.id);
     return json({order:{transaction_code:normalizedCode,requested_date:o.requested_date,requested_time:o.requested_time,receiving_method:o.receiving_method,delivery_address:o.delivery_address,payment_status:o.payment_status,operational_status:o.operational_status,product_subtotal_idr:o.product_subtotal_idr,items:items||[],updated_at:history?.[0]?.created_at||o.created_at,history:history||[]}},200,origin);
