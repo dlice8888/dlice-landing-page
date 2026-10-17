@@ -21,7 +21,7 @@
 - [ ] Verify the dashboard counts match the staging order list; payment menu filters orders requiring payment action and operations menu filters active orders.
 - [ ] Sign in as staff with only `orders`; verify catalog, capacity, payment settings and staff management are hidden/unavailable as applicable.
 - [ ] Sign in as staff with only `catalog`; verify catalog access works but order/payment operations are not available.
-- [ ] Sign in as staff with `settings`; verify capacity menu is available only if the backend authorizes the related action.
+- [ ] Sign in as staff with only `catalog`; verify menu and capacity access match the backend's `admin-configure-product` permission; staff without `catalog` must not access price/capacity changes.
 - [ ] Verify Owner can manage staff permissions and payment settings, while direct API calls by unauthorized staff are rejected (UI hiding alone is not sufficient).
 
 ## Customer checkout
