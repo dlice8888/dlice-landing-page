@@ -38,6 +38,13 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const formatTransactionCode = (orderNumber: number | string, createdAt: string) => {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jakarta", day: "2-digit", month: "2-digit", year: "numeric",
+  }).formatToParts(new Date(createdAt));
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `DLC-${part("day")}/${part("month")}/${part("year")}-${String(orderNumber).padStart(5, "0")}`;
+};
 const getAdmin = async (req: Request) => {
   const token = req.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return null;
@@ -115,9 +122,12 @@ Deno.serve(async (req: Request) => {
       const key = Object.keys(messages).find((k) => e.includes(k));
       return fail(messages[key ?? ""] ?? "Pesanan belum dapat dibuat. Periksa tanggal, menu, dan kapasitas.", 409, origin);
     }
+    const { data: orderMeta, error: orderMetaError } = await admin.from("orders").select("order_number,created_at").eq("id", created.order_id).single();
+    if (orderMetaError || !orderMeta) return fail("Pesanan tersimpan, tetapi kode transaksi belum dapat ditampilkan. Hubungi admin D’Lice.", 500, origin);
     const { data: lines } = await admin.from("order_items").select("product_name_snapshot,quantity,unit_price_idr,line_total_idr").eq("order_id", created.order_id);
+    const transactionCode = formatTransactionCode(orderMeta.order_number, orderMeta.created_at);
     return json({
-      order_id: created.order_id, order_number: created.order_id.slice(0, 8).toUpperCase(),
+      order_id: created.order_id, order_number: orderMeta.order_number, transaction_code: transactionCode,
       tracking_token: trackingToken, subtotal_idr: created.subtotal_idr,
       reservation_expires_at: created.reservation_expires_at, items: lines ?? [],
       message: "Pesanan tersimpan. Lanjutkan pembayaran dalam 15 menit; jika Anda menyatakan sudah membayar atau mengirim bukti sebelum tenggat, kapasitas akan ditahan sampai admin memeriksa.",
@@ -135,18 +145,15 @@ Deno.serve(async (req: Request) => {
     if (reservations.some((r) => r.status === "expired" || r.status === "released")) return fail("Reservasi sudah berakhir. Hubungi admin untuk memeriksa ketersediaan.", 409, origin);
     const allStillActive = reservations.every((r) => r.status === "active" && new Date(r.expires_at).getTime() > Date.now());
     if (action === "declare-payment") {
+      const { data: proofPayment, error: proofLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").not("proof_storage_path", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (proofLookupError) return fail("Status bukti pembayaran belum dapat diperiksa.", 500, origin);
+      if (!proofPayment?.proof_storage_path) return fail("Unggah bukti pembayaran terlebih dahulu. Bukti wajib tersedia sebelum pembayaran dapat diverifikasi.", 422, origin);
       if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Batas 15 menit telah lewat. Hubungi admin; jangan melakukan pembayaran baru sebelum dikonfirmasi.", 409, origin);
       const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
       if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
       await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
-      const { data: existingPayment } = await admin.from("payment_records").select("id").eq("order_id", order.id).eq("status", "pending_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (existingPayment) {
-        await admin.from("payment_records").update({ method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr }).eq("id", existingPayment.id);
-      } else {
-        await admin.from("payment_records").insert({ order_id: order.id, method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, status: "pending_verification" });
-      }
-      await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer declared payment via tracking token" });
-      return json({ ok: true, message: "Pernyataan pembayaran tercatat. Kapasitas ditahan sambil menunggu pemeriksaan admin." }, 200, origin);
+      await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer confirmed payment after uploading proof" });
+      return json({ ok: true, message: "Bukti pembayaran sudah tercatat dan menunggu pemeriksaan admin." }, 200, origin);
     }
     if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Reservasi sudah berakhir; hubungi admin sebelum mengunggah bukti.", 409, origin);
     const mime = safeText(body.mime_type, 50);
@@ -155,10 +162,16 @@ Deno.serve(async (req: Request) => {
     if (!extByMime[mime] || !encoded || encoded.length > 7_000_000) return fail("Format atau ukuran bukti tidak didukung (maksimal 5 MB).", 422, origin);
     const binary = Uint8Array.from(atob(encoded.replace(/^data:[^,]+,/, "")), (c) => c.charCodeAt(0));
     if (binary.byteLength > 5 * 1024 * 1024) return fail("Ukuran bukti maksimal 5 MB.", 413, origin);
+    const { data: existingPending, error: pendingLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (pendingLookupError) return fail("Data pembayaran belum dapat diperiksa.", 500, origin);
+    if (existingPending?.proof_storage_path) return json({ ok: true, message: "Bukti pembayaran sebelumnya sudah diterima dan menunggu verifikasi admin." }, 200, origin);
     const path = `${order.id}/${crypto.randomUUID()}.${extByMime[mime]}`;
     const { error: uploadError } = await admin.storage.from("dlice-payment-proofs").upload(path, binary, { contentType: mime, upsert: false });
     if (uploadError) return fail("Unggahan bukti gagal. Coba kembali.", 500, origin);
-    const { error: payError } = await admin.from("payment_records").insert({ order_id: order.id, method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, status: "pending_verification", proof_storage_path: path });
+    const paymentValues = { method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, proof_storage_path: path };
+    const { error: payError } = existingPending
+      ? await admin.from("payment_records").update(paymentValues).eq("id", existingPending.id)
+      : await admin.from("payment_records").insert({ order_id: order.id, ...paymentValues, status: "pending_verification" });
     if (payError) return fail("Bukti tersimpan tetapi pencatatan pembayaran gagal; hubungi admin dan jangan unggah ulang dulu.", 500, origin);
     await admin.from("order_reservations").update({ status: "held_for_verification", proof_received_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
     await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
@@ -245,7 +258,8 @@ Deno.serve(async (req: Request) => {
   if (action === "admin-list-orders") {
     const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at)").order("created_at", { ascending: false }).limit(100);
     if (error) return fail("Daftar pesanan gagal dimuat.", 500, origin);
-    return json({ orders: data ?? [], role: actor.profile.role, permissions: actor.profile.permissions }, 200, origin);
+    const orders = (data ?? []).map((order) => ({ ...order, transaction_code: formatTransactionCode(order.order_number, order.created_at) }));
+    return json({ orders, role: actor.profile.role, permissions: actor.profile.permissions }, 200, origin);
   }
 
   if (action === "admin-list-products") {
@@ -342,11 +356,12 @@ Deno.serve(async (req: Request) => {
     const note = safeText(body.note, 500);
     if (!["paid","rejected"].includes(result)) return fail("Hasil verifikasi tidak valid.", 422, origin);
 
-    const { data: order } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id", orderId).maybeSingle();
+    const { data: order } = await admin.from("orders").select("id,order_number,created_at,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id", orderId).maybeSingle();
     if (!order) return fail("Pesanan tidak ditemukan.", 404, origin);
     if (order.payment_status === "paid" || order.payment_status === "refunded") return fail("Status pembayaran ini tidak dapat ditimpa.", 409, origin);
-    const { data: payment } = await admin.from("payment_records").select("id").eq("order_id", orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();
+    const { data: payment } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();
     if (!payment) return fail("Tidak ada pembayaran yang menunggu verifikasi.", 409, origin);
+    if (result === "paid" && !payment.proof_storage_path) return fail("Pembayaran tidak dapat disetujui tanpa bukti unggahan dari customer.", 409, origin);
     const { error: paymentError } = await admin.from("payment_records").update({ status: result, verified_by: actor.user.id, verified_at: new Date().toISOString(), admin_note: note || null }).eq("id", payment.id);
     if (paymentError) return fail("Status pembayaran gagal diperbarui.", 500, origin);
     await admin.from("orders").update({ payment_status: result }).eq("id", orderId);
@@ -354,7 +369,7 @@ Deno.serve(async (req: Request) => {
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "verify_payment", entity_type: "order", entity_id: orderId, metadata: { result, payment_id: payment.id, note } });
     if (result === "paid") {
       await admin.from("order_reservations").update({ status: "consumed" }).eq("order_id", orderId).in("status", ["held_for_verification","active"]);
-      const msg = `Halo ${order.customer_name}, pembayaran pesanan D’Lice #${String(order.order_number).padStart(5,"0")} sudah diverifikasi. Total produk: Rp${Number(order.product_subtotal_idr).toLocaleString("id-ID")}. Tanggal: ${order.requested_date}, waktu: ${order.requested_time}. Penerimaan: ${order.receiving_method === "delivery" ? "Delivery — " + (order.delivery_address ?? "") : "Pickup"}. Terima kasih! 💗`;
+      const msg = `Halo ${order.customer_name}, pembayaran pesanan D’Lice ${formatTransactionCode(order.order_number, order.created_at)} sudah diverifikasi. Total produk: Rp${Number(order.product_subtotal_idr).toLocaleString("id-ID")}. Tanggal: ${order.requested_date}, waktu: ${order.requested_time}. Penerimaan: ${order.receiving_method === "delivery" ? "Delivery — " + (order.delivery_address ?? "") : "Pickup"}. Terima kasih! 💗`;
       const idempotencyKey = `payment-verified:${orderId}`;
       await admin.from("notification_log").upsert({ order_id: orderId, notification_type: "payment_verified_whatsapp", status: "manual_action_required", idempotency_key: idempotencyKey, recipient_whatsapp: order.customer_whatsapp, message_text: msg }, { onConflict: "idempotency_key", ignoreDuplicates: true });
       return json({ ok: true, whatsapp_url: `https://wa.me/${order.customer_whatsapp}?text=${encodeURIComponent(msg)}`, notification: "manual_action_required", message: "Pembayaran diverifikasi. Buka tautan WhatsApp untuk mengirim konfirmasi; pengiriman otomatis memerlukan kredensial WhatsApp Business API." }, 200, origin);
