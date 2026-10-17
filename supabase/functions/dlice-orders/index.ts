@@ -167,7 +167,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-bootstrap-owner") {
-    const bootstrapSecret = Deno.env.get("D'LICE_OWNER_BOOTSTRAP_SECRET");
+    const bootstrapSecret = Deno.env.get("DLICE_OWNER_BOOTSTRAP_SECRET");
     if (!bootstrapSecret || safeText(body.bootstrap_secret, 256) !== bootstrapSecret) return fail("Bootstrap tidak diizinkan.", 403, origin);
     const { count, error: countError } = await admin.from("admin_profiles").select("user_id", { count: "exact", head: true }).eq("role", "owner");
     if (countError) return fail("Status owner tidak dapat diperiksa.", 500, origin);
