@@ -341,8 +341,11 @@ Deno.serve(async (req: Request) => {
     const next = safeText(body.operational_status, 40);
     const allowed = ["received","confirmed","preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed","cancelled","delivery_issue"];
     if (!allowed.includes(next)) return fail("Status pesanan tidak valid.", 422, origin);
-    const { data: oldOrder } = await admin.from("orders").select("operational_status").eq("id", orderId).maybeSingle();
+    const { data: oldOrder } = await admin.from("orders").select("operational_status,payment_status").eq("id", orderId).maybeSingle();
     if (!oldOrder) return fail("Pesanan tidak ditemukan.", 404, origin);
+    if (["preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed"].includes(next) && oldOrder.payment_status !== "paid") {
+      return fail("Pesanan belum dapat diproses. Customer wajib mengunggah bukti pembayaran dan owner/admin harus memverifikasinya terlebih dahulu.", 409, origin);
+    }
     const { error } = await admin.from("orders").update({ operational_status: next }).eq("id", orderId);
     if (error) return fail("Status gagal diperbarui.", 500, origin);
     await admin.from("order_status_history").insert({ order_id: orderId, status_type: "operational", old_status: oldOrder.operational_status, new_status: next, changed_by: actor.user.id });
