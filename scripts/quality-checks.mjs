@@ -77,8 +77,8 @@ for (const file of [
 ]) {
   try {
     const sql = read(file);
-    if (!/revoke all on function[\\s\\S]*from public,\\s*anon,\\s*authenticated/i.test(sql)) fail(`${file}: function execute revocation missing`);
-    if (!/grant execute on function[\\s\\S]*to service_role/i.test(sql)) fail(`${file}: service_role execute grant missing`);
+    if (!/revoke all on function/i.test(sql) || !/from public,\s*anon,\s*authenticated/i.test(sql)) fail(`${file}: function execute revocation missing`);
+    if (!/grant execute on function/i.test(sql) || !/to service_role/i.test(sql)) fail(`${file}: service_role execute grant missing`);
     pass(`${file}: RPC grants checked`);
   } catch (error) { fail(`${file}: ${error.message}`); }
 }
