@@ -38,6 +38,14 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
+  const bucket = await sha256(`${scope}:${key}`);
+  const { data, error } = await admin.rpc("consume_rate_limit", { p_bucket_key: bucket, p_limit: limit, p_window_seconds: windowSeconds });
+  if (error) return null;
+  return data === true;
+};
+
 const formatTransactionCode = (orderNumber: number | string, createdAt: string) => {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Makassar", day: "2-digit", month: "2-digit", year: "numeric",
@@ -68,6 +76,39 @@ Deno.serve(async (req: Request) => {
     body = await req.json();
   } catch { return fail("Format permintaan tidak valid.", 400, origin); }
   const action = safeText(body.action, 40);
+
+  if (action === "admin-login") {
+    const username = safeText(body.username, 32).toLowerCase();
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!validUsername(username) || password.length < 1 || password.length > 128) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
+    const limited = await consumeRateLimit("admin-login", requestIp(req), 6, 15 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak percobaan login. Coba lagi dalam 15 menit.", 429, origin);
+    const { data, error } = await authClient.auth.signInWithPassword({ email: usernameEmail(username), password });
+    if (error || !data.session) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
+    const { data: profile } = await admin.from("admin_profiles").select("is_active").eq("user_id", data.user.id).maybeSingle();
+    if (!profile?.is_active) {
+      await authClient.auth.signOut();
+      return fail("Akun tidak aktif. Hubungi Owner.", 403, origin);
+    }
+    return json({ session: data.session }, 200, origin);
+  }
+
+  if (action === "track-order-by-code") {
+    const limited = await consumeRateLimit("track-order-by-code", requestIp(req), 8, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak percobaan pelacakan. Coba lagi dalam 10 menit.", 429, origin);
+  }
+  if (action === "track-order") {
+    const limited = await consumeRateLimit("track-order-token", requestIp(req), 20, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak permintaan tracking. Coba lagi dalam 10 menit.", 429, origin);
+  }
+  if (action === "create-order") {
+    const limited = await consumeRateLimit("create-order", requestIp(req), 10, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak permintaan pesanan. Coba lagi dalam 10 menit.", 429, origin);
+  }
 
   if (action === "list-products") {
     const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
