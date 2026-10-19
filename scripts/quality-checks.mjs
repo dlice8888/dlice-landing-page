@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import { spawnSync } from "node:child_process";
 import vm from "node:vm";
 
 const fail = (message) => { console.error("FAIL:", message); process.exitCode = 1; };
@@ -15,9 +17,19 @@ for (const file of ["index.html", "admin.html", "track.html"]) {
     const attrs = scripts[i][1] || "";
     const body = scripts[i][2] || "";
     if (/\bsrc\s*=/.test(attrs) || !body.trim()) continue;
-    const parseableBody = body.replace(/^\s*import\s+[^;]+;\s*/gm, "");
-    try { new vm.Script(parseableBody, { filename: `${file}#inline-script-${i + 1}` }); }
-    catch (error) { fail(`${file} inline script ${i + 1}: ${error.message}`); }
+    try {
+      if (/\btype\s*=\s*["']module["']/i.test(attrs)) {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dlice-js-check-"));
+        const tempFile = path.join(dir, "inline-module.mjs");
+        try {
+          fs.writeFileSync(tempFile, body, "utf8");
+          const result = spawnSync(process.execPath, ["--check", tempFile], { encoding: "utf8" });
+          if (result.status !== 0) fail(`${file} inline module ${i + 1}: ${result.stderr || result.stdout}`);
+        } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+      } else {
+        new vm.Script(body, { filename: `${file}#inline-script-${i + 1}` });
+      }
+    } catch (error) { fail(`${file} inline script ${i + 1}: ${error.message}`); }
   }
   pass(`${file}: HTML and inline JavaScript syntax checked`);
 }
