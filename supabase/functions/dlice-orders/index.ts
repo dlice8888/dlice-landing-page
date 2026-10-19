@@ -1,12 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://gdjlkrmlsurcdbwnmqgg.supabase.co";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
 const SERVICE_KEY = secretKeysRaw ? JSON.parse(secretKeysRaw)["default"] : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
 const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"] : Deno.env.get("SUPABASE_ANON_KEY");
-const admin = createClient(SUPABASE_URL, SERVICE_KEY ?? "", { auth: { persistSession: false } });
-const authClient = createClient(SUPABASE_URL, PUBLIC_KEY ?? "", { auth: { persistSession: false } });
+const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
+const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
 const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const isAllowedOrigin = (origin: string | null) => {
@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
   if (req.method !== "POST") return fail("Metode tidak didukung.", 405, origin);
   if (origin && !isAllowedOrigin(origin)) return fail("Origin tidak diizinkan.", 403, origin);
-  if (!SERVICE_KEY || !PUBLIC_KEY) return fail("Konfigurasi server belum lengkap.", 500, origin);
+  if (!SUPABASE_URL || !SERVICE_KEY || !PUBLIC_KEY) return fail("Konfigurasi server belum lengkap.", 500, origin);
   let body: Record<string, unknown>;
   try {
     const length = Number(req.headers.get("content-length") ?? "0");
