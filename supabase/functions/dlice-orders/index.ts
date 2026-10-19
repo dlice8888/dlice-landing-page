@@ -505,10 +505,8 @@ Deno.serve(async (req: Request) => {
     }
     if(oldOrder.payment_status==="paid"&&next!==oldOrder.operational_status){const {data:n}=await admin.from("notification_log").select("status").eq("order_id",orderId).eq("notification_type","payment_verified_whatsapp").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n||n.status!=="sent")return fail("Kirim konfirmasi pembayaran beserta tutorial tracking, lalu tandai terkirim sebelum memperbarui status.",409,origin);}
     if(["cancelled","delivery_issue"].includes(next)&&safeText(body.reason,500).length<4)return fail("Alasan wajib diisi untuk pembatalan/kendala.",422,origin);
-    const { error } = await admin.from("orders").update({ operational_status: next }).eq("id", orderId);
-    if (error) return fail("Status gagal diperbarui.", 500, origin);
-    await admin.from("order_status_history").insert({ order_id: orderId, status_type: "operational", old_status: oldOrder.operational_status, new_status: next, changed_by: actor.user.id, note: safeText(body.reason,500) || null });
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_order_status", entity_type: "order", entity_id: orderId, metadata: { old_status: oldOrder.operational_status, new_status: next, reason: safeText(body.reason,500) || null } });
+    const { data: applied, error } = await admin.rpc("admin_apply_operational_status_change", { p_order_id: orderId, p_actor_user_id: actor.user.id, p_next_status: next, p_reason: safeText(body.reason,500) });
+    if (error || applied !== true) return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan status terbaru.", 409, origin);
     return json({ ok: true }, 200, origin);
   }
 
