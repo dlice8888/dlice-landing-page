@@ -11,7 +11,7 @@
 1. Operational login now calls the Edge Function `admin-login`, rather than calling password sign-in directly from the browser. The endpoint validates username, applies account/IP rate limits, returns generic credential errors, and checks that the admin profile is active.
 2. A database-backed `consume_rate_limit` function and `request_rate_limits` table provide atomic, free rate limiting for admin login, ID tracking, token tracking, and order creation. The table has RLS enabled and grants only to `service_role`; raw IP/usernames are not stored (bucket keys are SHA-256 digests).
 3. Supabase URL no longer defaults to the production project if the environment variable is missing. The Edge Function fails closed when `SUPABASE_URL`, service key, or public key is absent.
-4. Payment verification now uses a single database transaction for payment/order status, status history, audit log, and reservation changes, preventing partial updates when one of those writes fails.
+4. Payment verification and operational status changes now use database transactions that atomically update status, history, audit log, and reservation state, preventing partial updates when one of those writes fails.
 5. Added privacy-preserving daily funnel aggregates. Only a fixed event name and server date are stored; no cookies, user IDs, phone numbers, order IDs, or IPs are stored. Owner/staff with `orders` permission can load a 30-day aggregate from the operational dashboard.
 6. Added security headers in `vercel.json`: MIME sniffing protection, referrer policy, frame denial, permissions policy, and HSTS.
 7. Added free GitHub Actions static quality checks for HTML inline JavaScript syntax, Edge Function security markers, migration guardrails, and Vercel JSON.
