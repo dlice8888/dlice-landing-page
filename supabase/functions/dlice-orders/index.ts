@@ -81,14 +81,16 @@ Deno.serve(async (req: Request) => {
     const username = safeText(body.username, 32).toLowerCase();
     const password = typeof body.password === "string" ? body.password : "";
     if (!validUsername(username) || password.length < 1 || password.length > 128) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
-    const limited = await consumeRateLimit("admin-login", requestIp(req), 6, 15 * 60);
-    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
-    if (!limited) return fail("Terlalu banyak percobaan login. Coba lagi dalam 15 menit.", 429, origin);
-    const { data, error } = await authClient.auth.signInWithPassword({ email: usernameEmail(username), password });
+    const ipLimit = await consumeRateLimit("admin-login-ip", requestIp(req), 20, 15 * 60);
+    const accountLimit = await consumeRateLimit("admin-login-account", username, 6, 15 * 60);
+    if (ipLimit === null || accountLimit === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!ipLimit || !accountLimit) return fail("Terlalu banyak percobaan login. Coba lagi dalam 15 menit.", 429, origin);
+    const loginClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data, error } = await loginClient.auth.signInWithPassword({ email: usernameEmail(username), password });
     if (error || !data.session) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
     const { data: profile } = await admin.from("admin_profiles").select("is_active").eq("user_id", data.user.id).maybeSingle();
     if (!profile?.is_active) {
-      await authClient.auth.signOut();
+      await loginClient.auth.signOut();
       return fail("Akun tidak aktif. Hubungi Owner.", 403, origin);
     }
     return json({ session: data.session }, 200, origin);
