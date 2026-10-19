@@ -58,7 +58,7 @@ begin
   insert into public.admin_audit_logs
     (actor_user_id, action, entity_type, entity_id, metadata)
   values
-    (p_actor_user_id, 'verify_payment', 'order', p_order_id,
+    (p_actor_user_id, 'verify_payment', 'order', p_order_id::text,
      jsonb_build_object('result',p_result,'payment_id',p_payment_id,'note',left(coalesce(p_note,''),500)));
 
   if p_result = 'paid' then
