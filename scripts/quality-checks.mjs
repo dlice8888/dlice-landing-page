@@ -15,7 +15,8 @@ for (const file of ["index.html", "admin.html", "track.html"]) {
     const attrs = scripts[i][1] || "";
     const body = scripts[i][2] || "";
     if (/\bsrc\s*=/.test(attrs) || !body.trim()) continue;
-    const parseableBody = body.replace(/^\\s*import\\s+[^;]+;\\s*/gm, "");\n    try { new vm.Script(parseableBody, { filename: `${file}#inline-script-${i + 1}` }); }
+    const parseableBody = body.replace(/^\s*import\s+[^;]+;\s*/gm, "");
+    try { new vm.Script(parseableBody, { filename: `${file}#inline-script-${i + 1}` }); }
     catch (error) { fail(`${file} inline script ${i + 1}: ${error.message}`); }
   }
   pass(`${file}: HTML and inline JavaScript syntax checked`);
