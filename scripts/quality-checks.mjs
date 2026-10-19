@@ -62,16 +62,24 @@ else pass("no obvious hard-coded service-role credential pattern");
 
 for (const file of [
   "supabase/migrations/20261019183939_add_free_rate_limiting.sql",
-  "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql",
-  "supabase/migrations/20261019185240_atomic_payment_verification.sql",
-  "supabase/migrations/20261019185240_atomic_payment_verification.sql",
-  "supabase/migrations/20261019185629_atomic_operational_status_changes.sql"
+  "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql"
 ]) {
   try {
     const sql = read(file);
     if (!/enable row level security/i.test(sql)) fail(`${file}: RLS not enabled`);
     if (!/revoke all.*anon.*authenticated/is.test(sql)) fail(`${file}: public role revocation missing`);
-    pass(`${file}: migration safety markers checked`);
+    pass(`${file}: RLS and grants markers checked`);
+  } catch (error) { fail(`${file}: ${error.message}`); }
+}
+for (const file of [
+  "supabase/migrations/20261019185240_atomic_payment_verification.sql",
+  "supabase/migrations/20261019185629_atomic_operational_status_changes.sql"
+]) {
+  try {
+    const sql = read(file);
+    if (!/revoke all on function[\\s\\S]*from public,\\s*anon,\\s*authenticated/i.test(sql)) fail(`${file}: function execute revocation missing`);
+    if (!/grant execute on function[\\s\\S]*to service_role/i.test(sql)) fail(`${file}: service_role execute grant missing`);
+    pass(`${file}: RPC grants checked`);
   } catch (error) { fail(`${file}: ${error.message}`); }
 }
 
