@@ -52,7 +52,7 @@ for (const [label, pattern] of [
   ["tracking rate limit", /consumeRateLimit\("track-order-by-code"/],
   ["database-backed rate limit RPC", /admin\.rpc\("consume_rate_limit"/],
   ["privacy-preserving funnel event action", /action === "record-funnel-event"/],
-  ["atomic payment verification RPC", /admin\\.rpc\\("admin_apply_payment_verification"/],
+  ["atomic payment verification RPC", /admin\.rpc\("admin_apply_payment_verification"/],
 ]) {
   if (pattern.test(edge)) pass(label); else fail(label);
 }
