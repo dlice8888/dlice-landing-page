@@ -47,8 +47,8 @@ if (/service_role\s*[:=]\s*["'][^"']+["']/i.test(edge)) fail("possible hard-code
 else pass("no obvious hard-coded service-role credential pattern");
 
 for (const file of [
-  "supabase/migrations/20261020090000_add_free_rate_limiting.sql",
-  "supabase/migrations/20261020093000_add_privacy_preserving_funnel_metrics.sql"
+  "supabase/migrations/20261019183939_add_free_rate_limiting.sql",
+  "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql"
 ]) {
   try {
     const sql = read(file);
