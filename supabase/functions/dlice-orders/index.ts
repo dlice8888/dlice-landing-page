@@ -110,6 +110,28 @@ Deno.serve(async (req: Request) => {
     if (!limited) return fail("Terlalu banyak permintaan pesanan. Coba lagi dalam 10 menit.", 429, origin);
   }
 
+  if (action === "record-funnel-event") {
+    const limited = await consumeRateLimit("funnel-events", requestIp(req), 120, 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia.", 503, origin);
+    if (!limited) return fail("Terlalu banyak event. Coba lagi nanti.", 429, origin);
+    const eventName = safeText(body.event_name, 40);
+    const allowedEvents = ["page_view","menu_view","add_to_order","checkout_start","order_created","proof_uploaded","whatsapp_click"];
+    if (!allowedEvents.includes(eventName)) return fail("Event tidak valid.", 422, origin);
+    const { error } = await admin.rpc("record_funnel_event", { p_event: eventName });
+    if (error) return fail("Event tidak dapat dicatat.", 500, origin);
+    return json({ ok: true }, 200, origin);
+  }
+
+  if (action === "admin-funnel-summary") {
+    const actor = await getAdmin(req);
+    if (!actor) return fail("Sesi operasional tidak valid.", 401, origin);
+    if (!actor.profile.permissions.includes("*") && !actor.profile.permissions.includes("orders")) return fail("Akses ringkasan tidak diizinkan.", 403, origin);
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data, error } = await admin.from("funnel_daily_metrics").select("metric_date,event_name,event_count").gte("metric_date", since).order("metric_date", { ascending: true });
+    if (error) return fail("Ringkasan funnel belum tersedia.", 500, origin);
+    return json({ since, metrics: data || [] }, 200, origin);
+  }
+
   if (action === "list-products") {
     const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
     if (error) return fail("Menu belum dapat dimuat.", 500, origin);
