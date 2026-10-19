@@ -60,7 +60,8 @@ else pass("no obvious hard-coded service-role credential pattern");
 
 for (const file of [
   "supabase/migrations/20261019183939_add_free_rate_limiting.sql",
-  "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql"
+  "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql",
+  "supabase/migrations/20261019185240_atomic_payment_verification.sql"
 ]) {
   try {
     const sql = read(file);
