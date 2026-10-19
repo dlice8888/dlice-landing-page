@@ -11,12 +11,13 @@
 1. Operational login now calls the Edge Function `admin-login`, rather than calling password sign-in directly from the browser. The endpoint validates username, applies account/IP rate limits, returns generic credential errors, and checks that the admin profile is active.
 2. A database-backed `consume_rate_limit` function and `request_rate_limits` table provide atomic, free rate limiting for admin login, ID tracking, token tracking, and order creation. The table has RLS enabled and grants only to `service_role`; raw IP/usernames are not stored (bucket keys are SHA-256 digests).
 3. Supabase URL no longer defaults to the production project if the environment variable is missing. The Edge Function fails closed when `SUPABASE_URL`, service key, or public key is absent.
-4. Added privacy-preserving daily funnel aggregates. Only a fixed event name and server date are stored; no cookies, user IDs, phone numbers, order IDs, or IPs are stored. Owner/staff with `orders` permission can load a 30-day aggregate from the operational dashboard.
-5. Added security headers in `vercel.json`: MIME sniffing protection, referrer policy, frame denial, permissions policy, and HSTS.
-6. Added free GitHub Actions static quality checks for HTML inline JavaScript syntax, Edge Function security markers, migration guardrails, and Vercel JSON.
-7. Landing page hero image has high fetch priority/async decoding; menu images use lazy loading/async decoding. A direct Google Maps reviews link is provided without inventing review content or paying for Places API.
-8. Existing catalog already reads from the Supabase `products` table and the order backend computes authoritative prices; keep that single-source-of-truth design.
-9. Existing tracking uses transaction ID + full ordering WhatsApp number or a private tracking token; this branch adds request rate limits to both lookup paths.
+4. Payment verification now uses a single database transaction for payment/order status, status history, audit log, and reservation changes, preventing partial updates when one of those writes fails.
+5. Added privacy-preserving daily funnel aggregates. Only a fixed event name and server date are stored; no cookies, user IDs, phone numbers, order IDs, or IPs are stored. Owner/staff with `orders` permission can load a 30-day aggregate from the operational dashboard.
+6. Added security headers in `vercel.json`: MIME sniffing protection, referrer policy, frame denial, permissions policy, and HSTS.
+7. Added free GitHub Actions static quality checks for HTML inline JavaScript syntax, Edge Function security markers, migration guardrails, and Vercel JSON.
+8. Landing page hero image has high fetch priority/async decoding; menu images use lazy loading/async decoding. A direct Google Maps reviews link is provided without inventing review content or paying for Places API.
+9. Existing catalog already reads from the Supabase `products` table and the order backend computes authoritative prices; keep that single-source-of-truth design.
+10. Existing tracking uses transaction ID + full ordering WhatsApp number or a private tracking token; this branch adds request rate limits to both lookup paths.
 
 ## Manual dashboard steps required
 ### Enable leaked-password protection (staging first)
