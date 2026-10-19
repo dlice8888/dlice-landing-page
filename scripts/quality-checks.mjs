@@ -52,6 +52,7 @@ for (const [label, pattern] of [
   ["tracking rate limit", /consumeRateLimit\("track-order-by-code"/],
   ["database-backed rate limit RPC", /admin\.rpc\("consume_rate_limit"/],
   ["privacy-preserving funnel event action", /action === "record-funnel-event"/],
+  ["atomic payment verification RPC", /admin\\.rpc\\("admin_apply_payment_verification"/],
 ]) {
   if (pattern.test(edge)) pass(label); else fail(label);
 }
@@ -61,6 +62,7 @@ else pass("no obvious hard-coded service-role credential pattern");
 for (const file of [
   "supabase/migrations/20261019183939_add_free_rate_limiting.sql",
   "supabase/migrations/20261019184047_add_privacy_preserving_funnel_metrics.sql",
+  "supabase/migrations/20261019185240_atomic_payment_verification.sql",
   "supabase/migrations/20261019185240_atomic_payment_verification.sql"
 ]) {
   try {
