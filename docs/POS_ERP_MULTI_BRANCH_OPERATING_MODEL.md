@@ -44,6 +44,7 @@ These are planning ranges, not fixed staffing orders. Start with demand-based sc
 - `reports`: read-only operational/financial summaries.
 - `audit`: read-only audit log access.
 - `hr`: staffing structure and job assignments.
+- Active job-position assignments contribute their `default_permissions` to the effective account permissions; module permissions are combined, while branch-level reads/writes still require an active assignment to that branch. The Owner's staff-permission screen can add explicit permissions.
 - Do not use client-side navigation hiding as an authorization boundary. Every Edge Function action must validate the bearer token, active profile, permission, branch assignment and server-computed amount.
 
 ## POS flow
