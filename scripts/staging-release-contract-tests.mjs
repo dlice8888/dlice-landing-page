@@ -7,7 +7,7 @@ const read = (file) => fs.readFileSync(file, "utf8");
 const edge = read("supabase/functions/dlice-orders/index.ts");
 const html = read("index.html");
 const track = read("track.html");
-const retention = read("supabase/migrations/20261021120000_safe_operational_retention_and_rpc_acl.sql");
+const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
   ["transaction IDs use the agreed DLC date/sequence format", /DLC-\$\{part\("day"\)\}\/\$\{part\("month"\)\}\/\$\{part\("year"\)\}-\$\{String\(orderNumber\)\.padStart\(5,\s*"0"\)\}/.test(edge)],

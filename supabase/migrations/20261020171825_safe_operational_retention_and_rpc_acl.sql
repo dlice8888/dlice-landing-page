@@ -33,16 +33,10 @@ begin
 end;
 $function$;
 
--- Functions are executable by PUBLIC by default. Keep maintenance and
--- business-state RPCs limited to the trusted service role.
 revoke all on function public.cleanup_operational_data() from public, anon, authenticated;
 grant execute on function public.cleanup_operational_data() to service_role;
-
--- set_updated_at is a trigger helper, not a public API. Existing triggers
--- continue to fire; callers must not invoke the helper directly.
 revoke all on function public.set_updated_at() from public, anon, authenticated;
 
--- Replace any prior copy of this named job, then schedule daily maintenance.
 select cron.unschedule(jobid)
 from cron.job
 where jobname = 'dlice-operational-retention';

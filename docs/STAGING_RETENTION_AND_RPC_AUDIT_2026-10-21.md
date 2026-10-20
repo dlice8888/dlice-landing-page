@@ -26,3 +26,7 @@ The staging audit found the order/payment/rate-limit business RPCs already restr
 4. Confirm the scheduled job's recent run appears in database logs.
 5. Re-run Security and Performance Advisors and review the changed findings.
 6. Do not apply this migration to production until staging acceptance is complete and the Owner explicitly approves release.
+
+## Migration history alignment
+
+Supabase staging recorded this migration as version `20261020171825`; the repository filename uses the same version prefix so the CLI migration ledger can reconcile with the applied staging migration. Keep this prefix unchanged unless a future migration is created.
