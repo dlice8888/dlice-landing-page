@@ -808,5 +808,285 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,purchase_order:data},200,origin);
   }
 
+
+  if (action === "erp-list-online-branches") {
+    const method=safeText(body.receiving_method,20);
+    if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
+    const city=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
+    let q=admin.from("branches").select("id,code,name,address,city,province,latitude,longitude,service_radius_km,pickup_enabled,delivery_enabled,daily_order_capacity").eq("status","active").eq("accepts_online_orders",true);
+    q=method==="pickup"?q.eq("pickup_enabled",true):q.eq("delivery_enabled",true);
+    const {data,error}=await q.order("name");
+    if(error)return fail("Cabang online belum dapat dimuat.",500,origin);
+    const branches=data||[];
+    const matched=city?branches.filter((b:any)=>String(b.city||"").toLowerCase()===city):[];
+    return json({branches,ip_city_match:matched.length===1?matched[0].id:null,selection_source:matched.length===1?"ip_estimate":"customer_choice",ip_location_hint:city||null,needs_customer_choice:matched.length!==1},200,origin);
+  }
+
+  if (action === "erp-list-fulfillment-orders") {
+    if(!hasPerm("orders")&&!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin fulfillment tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("orders").select("id,order_number,created_at,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status,operational_status,fulfillment_status,branch_id,branch_selection_source,branches(code,name),order_items(product_name_snapshot,quantity,line_total_idr)").order("created_at",{ascending:false}).limit(200);
+    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    const {data,error}=await q;if(error)return fail("Daftar fulfillment gagal dimuat.",500,origin);
+    return json({orders:data||[]},200,origin);
+  }
+
+  if (action === "erp-update-fulfillment") {
+    if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin fulfillment tidak diizinkan.",403,origin);
+    const id=safeText(body.order_id,80),next=safeText(body.fulfillment_status,30),note=safeText(body.notes,500);
+    const allowed=["accepted","preparing","ready","dispatched","fulfilled","failed","cancelled"];
+    if(!allowed.includes(next))return fail("Status fulfillment tidak valid.",422,origin);
+    const {data:old}=await admin.from("orders").select("id,branch_id,fulfillment_status,operational_status,payment_status").eq("id",id).maybeSingle();
+    if(!old)return fail("Pesanan tidak ditemukan.",404,origin);
+    if(!old.branch_id||!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const transitions:Record<string,string[]>={unassigned:["accepted","cancelled"],queued:["accepted","cancelled"],accepted:["preparing","cancelled","failed"],preparing:["ready","failed"],ready:["dispatched","fulfilled","cancelled"],dispatched:["fulfilled","failed"],failed:["accepted","cancelled"],fulfilled:[],cancelled:[]};
+    if(!(transitions[old.fulfillment_status]||[]).includes(next))return fail("Perubahan status fulfillment tidak diizinkan.",409,origin);
+    if(next==="fulfilled"&&!["paid","verified","settled"].includes(String(old.payment_status)))return fail("Pesanan belum memiliki status pembayaran yang disetujui.",409,origin);
+    const values:any={fulfillment_status:next,fulfillment_notes:note||null,updated_at:new Date().toISOString()};
+    if(next==="fulfilled")values.fulfilled_at=new Date().toISOString();
+    const {data,error}=await admin.from("orders").update(values).eq("id",id).eq("fulfillment_status",old.fulfillment_status).select("id,fulfillment_status,branch_id,fulfilled_at").maybeSingle();
+    if(error||!data)return fail("Status berubah atau gagal disimpan. Muat ulang.",409,origin);
+    await admin.from("order_status_history").insert({order_id:id,status_type:"operational",old_status:old.fulfillment_status,new_status:next,note:note||"Fulfillment status updated"});
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"order_fulfillment_"+next,entity_type:"order",entity_id:id,metadata:{branch_id:old.branch_id,previous_status:old.fulfillment_status}});
+    return json({ok:true,order:data},200,origin);
+  }
+
+  if (action === "erp-receive-purchase-order") {
+    if(!hasPerm("procurement")&&!hasPerm("inventory"))return fail("Izin penerimaan barang tidak diizinkan.",403,origin);
+    const id=safeText(body.purchase_order_id,80),receipt=safeText(body.receipt_number,60),items=body.items;
+    const {data:po}=await admin.from("purchase_orders").select("id,branch_id,status").eq("id",id).maybeSingle();
+    if(!po)return fail("Purchase order tidak ditemukan.",404,origin);
+    if(!await branchAccess(po.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.rpc("erp_receive_purchase_order",{p_purchase_order_id:id,p_receipt_number:receipt,p_items:items,p_actor_user_id:actor.user.id,p_supplier_delivery_reference:safeText(body.supplier_delivery_reference,120)||null,p_notes:safeText(body.notes,500)||null});
+    if(error)return fail(error.message.includes("over_receipt")?"Jumlah penerimaan melebihi sisa PO.":error.message.includes("purchase_order_not_receivable")?"PO belum berstatus ordered atau partially received.":"Penerimaan gagal. Periksa item dan jumlah.",409,origin);
+    return json(data,201,origin);
+  }
+
+  if (action === "erp-list-recipes") {
+    if(!hasPerm("production")&&!hasPerm("inventory")&&!hasPerm("reports"))return fail("Izin resep/produksi tidak diizinkan.",403,origin);
+    const {data,error}=await admin.from("recipes").select("id,product_id,version,yield_quantity,yield_unit,status,effective_from,effective_to,instructions,approved_by,approved_at,products(name,slug),recipe_ingredients(id,inventory_item_id,quantity_per_yield,unit,is_optional,inventory_items(name,sku))").order("product_id").order("version",{ascending:false}).limit(300);
+    if(error)return fail("Daftar resep gagal dimuat.",500,origin);
+    return json({recipes:data||[]},200,origin);
+  }
+
+  if (action === "erp-save-recipe") {
+    if(!hasPerm("production"))return fail("Izin produksi diperlukan.",403,origin);
+    const productId=safeText(body.product_id,80),yieldQty=Number(body.yield_quantity),yieldUnit=safeText(body.yield_unit,20),ingredients=body.ingredients;
+    if(!productId||!Number.isFinite(yieldQty)||yieldQty<=0||!yieldUnit||!Array.isArray(ingredients)||!ingredients.length||ingredients.length>100)return fail("Data resep tidak valid.",422,origin);
+    const {data:product}=await admin.from("products").select("id").eq("id",productId).maybeSingle();if(!product)return fail("Produk tidak ditemukan.",404,origin);
+    const cleaned=ingredients.map((x:any)=>({inventory_item_id:safeText(x?.inventory_item_id,80),quantity_per_yield:Number(x?.quantity_per_yield),unit:safeText(x?.unit,20),is_optional:x?.is_optional===true}));
+    if(cleaned.some((x:any)=>!x.inventory_item_id||!Number.isFinite(x.quantity_per_yield)||x.quantity_per_yield<=0||!x.unit)||new Set(cleaned.map((x:any)=>x.inventory_item_id)).size!==cleaned.length)return fail("Bahan resep duplikat atau jumlah tidak valid.",422,origin);
+    const {data:items}=await admin.from("inventory_items").select("id").in("id",cleaned.map((x:any)=>x.inventory_item_id)).eq("is_active",true);
+    if((items||[]).length!==cleaned.length)return fail("Ada bahan yang tidak aktif/tidak ditemukan.",422,origin);
+    const {data:latest}=await admin.from("recipes").select("version").eq("product_id",productId).order("version",{ascending:false}).limit(1).maybeSingle();
+    const {data:recipe,error}=await admin.from("recipes").insert({product_id:productId,version:Number(latest?.version||0)+1,yield_quantity:yieldQty,yield_unit:yieldUnit,status:"draft",instructions:safeText(body.instructions,2000)||null,created_by:actor.user.id}).select("*").single();
+    if(error||!recipe)return fail("Draft resep gagal dibuat.",409,origin);
+    const {error:ie}=await admin.from("recipe_ingredients").insert(cleaned.map((x:any)=>({...x,recipe_id:recipe.id})));
+    if(ie){await admin.from("recipes").delete().eq("id",recipe.id);return fail("Detail bahan resep gagal disimpan.",409,origin);}
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_recipe_draft_created",entity_type:"recipe",entity_id:recipe.id,metadata:{product_id:productId,version:recipe.version}});
+    return json({ok:true,recipe},201,origin);
+  }
+
+  if (action === "erp-activate-recipe") {
+    if(!isOwner&&!hasPerm("production"))return fail("Persetujuan Owner/produksi diperlukan.",403,origin);
+    const id=safeText(body.recipe_id,80);
+    const {data:r}=await admin.from("recipes").select("id,product_id,status").eq("id",id).maybeSingle();if(!r)return fail("Resep tidak ditemukan.",404,origin);
+    const {data:ingredients}=await admin.from("recipe_ingredients").select("id").eq("recipe_id",id);
+    if(!ingredients?.length)return fail("Resep tanpa bahan tidak dapat diaktifkan.",409,origin);
+    const {error:retireError}=await admin.from("recipes").update({status:"retired"}).eq("product_id",r.product_id).eq("status","active");
+    if(retireError)return fail("Versi resep aktif gagal dipensiunkan.",409,origin);
+    const {data,error}=await admin.from("recipes").update({status:"active",approved_by:actor.user.id,approved_at:new Date().toISOString()}).eq("id",id).eq("status","draft").select("*").maybeSingle();
+    if(error||!data)return fail("Draft resep gagal diaktifkan.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_recipe_activated",entity_type:"recipe",entity_id:id,metadata:{product_id:r.product_id}});
+    return json({ok:true,recipe:data},200,origin);
+  }
+
+  if (action === "erp-list-production-batches") {
+    if(!hasPerm("production")&&!hasPerm("inventory")&&!hasPerm("reports"))return fail("Izin produksi tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("production_batches").select("*,branches(code,name),recipes(version,yield_quantity,yield_unit,products(name)),production_consumptions(inventory_item_id,planned_quantity,actual_quantity,unit,inventory_items(name,sku))").order("created_at",{ascending:false}).limit(200);
+    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    const {data,error}=await q;if(error)return fail("Batch produksi gagal dimuat.",500,origin);
+    return json({batches:data||[]},200,origin);
+  }
+
+  if (action === "erp-create-production-batch") {
+    if(!hasPerm("production"))return fail("Izin produksi diperlukan.",403,origin);
+    const branchId=safeText(body.branch_id,80),recipeId=safeText(body.recipe_id,80),qty=Number(body.planned_quantity);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!Number.isFinite(qty)||qty<=0||qty>100000)return fail("Jumlah produksi tidak valid.",422,origin);
+    const {data:recipe}=await admin.from("recipes").select("id").eq("id",recipeId).eq("status","active").maybeSingle();if(!recipe)return fail("Pilih resep aktif.",409,origin);
+    const batchNo="BATCH-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
+    const {data,error}=await admin.from("production_batches").insert({batch_number:batchNo,branch_id:branchId,recipe_id:recipeId,planned_quantity:qty,status:"planned",notes:safeText(body.notes,500)||null}).select("*").single();
+    if(error||!data)return fail("Batch produksi gagal dibuat.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_production_batch_created",entity_type:"production_batch",entity_id:data.id,metadata:{branch_id:branchId,recipe_id:recipeId,planned_quantity:qty}});
+    return json({ok:true,batch:data},201,origin);
+  }
+
+  if (action === "erp-start-production-batch") {
+    if(!hasPerm("production"))return fail("Izin produksi diperlukan.",403,origin);
+    const id=safeText(body.batch_id,80),{data:old}=await admin.from("production_batches").select("id,branch_id,status").eq("id",id).maybeSingle();
+    if(!old)return fail("Batch tidak ditemukan.",404,origin);if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.from("production_batches").update({status:"in_progress",started_by:actor.user.id,started_at:new Date().toISOString()}).eq("id",id).eq("status","planned").select("*").maybeSingle();
+    if(error||!data)return fail("Batch sudah berubah status atau gagal dimulai.",409,origin);
+    return json({ok:true,batch:data},200,origin);
+  }
+
+  if (action === "erp-complete-production-batch") {
+    if(!hasPerm("production"))return fail("Izin produksi diperlukan.",403,origin);
+    const id=safeText(body.batch_id,80),good=Number(body.actual_good_quantity),waste=Number(body.waste_quantity||0),consumptions=body.actual_consumptions;
+    const {data:batch}=await admin.from("production_batches").select("id,branch_id").eq("id",id).maybeSingle();
+    if(!batch)return fail("Batch tidak ditemukan.",404,origin);if(!await branchAccess(batch.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.rpc("erp_complete_production_batch",{p_batch_id:id,p_actual_good_quantity:good,p_waste_quantity:waste,p_actual_consumptions:consumptions,p_actor_user_id:actor.user.id});
+    if(error)return fail(error.message.includes("insufficient_stock")?"Stok bahan baku tidak mencukupi.":error.message.includes("active_recipe_required")?"Resep aktif diperlukan.":"Penyelesaian batch gagal. Periksa konsumsi aktual dan status batch.",409,origin);
+    return json(data,200,origin);
+  }
+
+  if (action === "erp-list-settlements") {
+    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    const {data,error}=await admin.from("payment_settlements").select("*,payment_settlement_items(id,payment_record_id,pos_sale_id,amount_idr)").order("settlement_date",{ascending:false}).limit(300);
+    if(error)return fail("Settlement belum dapat dimuat.",500,origin);return json({settlements:data||[]},200,origin);
+  }
+
+  if (action === "erp-create-settlement") {
+    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const code=safeText(body.settlement_code,60),method=safeText(body.payment_method,30),date=safeText(body.settlement_date,10),gross=Number(body.gross_amount_idr),fee=Number(body.fee_amount_idr||0);
+    if(!code||!["bank_transfer","qris"].includes(method)||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isSafeInteger(gross)||gross<0||!Number.isSafeInteger(fee)||fee<0||fee>gross)return fail("Data settlement tidak valid.",422,origin);
+    const {data,error}=await admin.from("payment_settlements").insert({settlement_code:code,payment_method:method,provider_reference:safeText(body.provider_reference,120)||null,settlement_date:date,gross_amount_idr:gross,fee_amount_idr:fee,received_amount_idr:body.received_amount_idr==null?null:Number(body.received_amount_idr),notes:safeText(body.notes,500)||null}).select("*").single();
+    if(error||!data)return fail("Settlement gagal dibuat; kode mungkin sudah digunakan.",409,origin);
+    return json({ok:true,settlement:data},201,origin);
+  }
+
+  if (action === "erp-match-settlement") {
+    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const id=safeText(body.settlement_id,80),items=body.items;
+    if(!Array.isArray(items)||!items.length||items.length>500)return fail("Pilih transaksi untuk dicocokkan.",422,origin);
+    const {data:settlement}=await admin.from("payment_settlements").select("id,gross_amount_idr,fee_amount_idr,net_amount_idr,received_amount_idr,status").eq("id",id).maybeSingle();
+    if(!settlement)return fail("Settlement tidak ditemukan.",404,origin);
+    if(settlement.status!=="pending"&&settlement.status!=="disputed")return fail("Settlement tidak dapat dicocokkan pada status ini.",409,origin);
+    const clean=items.map((x:any)=>({payment_record_id:safeText(x?.payment_record_id,80)||null,pos_sale_id:safeText(x?.pos_sale_id,80)||null,amount_idr:Number(x?.amount_idr)}));
+    if(clean.some((x:any)=>(!x.payment_record_id&&!x.pos_sale_id)||!Number.isSafeInteger(x.amount_idr)||x.amount_idr<0))return fail("Detail pencocokan tidak valid.",422,origin);
+    const total=clean.reduce((n:number,x:any)=>n+x.amount_idr,0);
+    if(total!==Number(settlement.gross_amount_idr))return fail("Total pencocokan harus sama dengan nilai bruto settlement.",409,origin);
+    const {error}=await admin.from("payment_settlement_items").insert(clean.map((x:any)=>({...x,settlement_id:id})));
+    if(error)return fail("Transaksi mungkin sudah dicocokkan di settlement lain.",409,origin);
+    const received=settlement.received_amount_idr;
+    const next=received==null?"pending":Number(received)===Number(settlement.net_amount_idr)?"matched":"disputed";
+    const {data,error:ue}=await admin.from("payment_settlements").update({status:next,reconciled_by:actor.user.id,reconciled_at:new Date().toISOString()}).eq("id",id).in("status",["pending","disputed"]).select("*").maybeSingle();
+    if(ue||!data)return fail("Settlement berubah saat proses pencocokan.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_settlement_matched",entity_type:"payment_settlement",entity_id:id,metadata:{gross_amount_idr:total,matched_items:clean.length,status:next}});
+    return json({ok:true,settlement:data,matched_items:clean.length},200,origin);
+  }
+
+  if (action === "erp-create-refund") {
+    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const orderId=safeText(body.order_id,80)||null,paymentId=safeText(body.payment_record_id,80)||null,posId=safeText(body.pos_sale_id,80)||null,amount=Number(body.amount_idr),reason=safeText(body.reason,500);
+    if(!orderId&&!paymentId&&!posId||!Number.isSafeInteger(amount)||amount<=0||!reason)return fail("Data refund tidak valid.",422,origin);
+    const code="RFD-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
+    const {data,error}=await admin.from("refund_records").insert({refund_code:code,order_id:orderId,payment_record_id:paymentId,pos_sale_id:posId,branch_id:safeText(body.branch_id,80)||null,amount_idr:amount,reason,status:"requested",requested_by:actor.user.id}).select("*").single();
+    if(error||!data)return fail("Permintaan refund gagal dibuat.",409,origin);
+    return json({ok:true,refund:data},201,origin);
+  }
+
+  if (action === "erp-review-refund") {
+    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
+    const id=safeText(body.refund_id,80),next=safeText(body.status,20),note=safeText(body.external_reference,120);
+    if(!["approved","rejected"].includes(next))return fail("Keputusan refund tidak valid.",422,origin);
+    const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
+    if(!old)return fail("Refund tidak ditemukan.",404,origin);
+    if(old.requested_by===actor.user.id)return fail("Pemisahan tugas: pembuat refund tidak boleh menyetujui sendiri.",403,origin);
+    if(old.branch_id&&!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(old.status!=="requested")return fail("Refund bukan lagi menunggu keputusan.",409,origin);
+    const {data,error}=await admin.from("refund_records").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString(),external_reference:note||null}).eq("id",id).eq("status","requested").select("*").maybeSingle();
+    if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
+    return json({ok:true,refund:data},200,origin);
+  }
+
+  if (action === "erp-process-refund") {
+    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
+    const id=safeText(body.refund_id,80),reference=safeText(body.external_reference,120);
+    if(!reference)return fail("Referensi refund dari penyedia pembayaran wajib diisi.",422,origin);
+    const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
+    if(!old)return fail("Refund tidak ditemukan.",404,origin);
+    if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
+    if(old.requested_by===actor.user.id||old.reviewed_by===actor.user.id)return fail("Pemisahan tugas: pemohon atau penyetuju tidak boleh memproses refund sendiri.",403,origin);
+    const {data,error}=await admin.from("refund_records").update({status:"processed",processed_by:actor.user.id,processed_at:new Date().toISOString(),external_reference:reference}).eq("id",id).eq("status","approved").select("*").maybeSingle();
+    if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
+    return json({ok:true,refund:data},200,origin);
+  }
+
+  if (action === "erp-create-cash-reconciliation") {
+    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const branchId=safeText(body.branch_id,80),date=safeText(body.business_date,10),shiftId=safeText(body.shift_id,80)||null;
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return fail("Tanggal rekonsiliasi tidak valid.",422,origin);
+    const fields=["cash_expected_idr","cash_counted_idr","bank_expected_idr","bank_received_idr","qris_expected_idr","qris_received_idr"];
+    const values:any={};for(const key of fields){const n=Number(body[key]||0);if(!Number.isSafeInteger(n)||n<0)return fail("Nilai rekonsiliasi tidak valid.",422,origin);values[key]=n;}
+    const code="REC-"+date.replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
+    const {data,error}=await admin.from("cash_reconciliations").insert({reconciliation_code:code,branch_id:branchId,shift_id,business_date:date,...values,status:"submitted",prepared_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
+    if(error||!data)return fail("Rekonsiliasi gagal disimpan. Periksa duplikasi cabang/tanggal/shift.",409,origin);
+    return json({ok:true,reconciliation:data},201,origin);
+  }
+
+  if (action === "erp-review-cash-reconciliation") {
+    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
+    const id=safeText(body.id,80),decision=safeText(body.status,20);
+    if(!["approved","exception"].includes(decision))return fail("Status rekonsiliasi tidak valid.",422,origin);
+    const {data:old}=await admin.from("cash_reconciliations").select("id,branch_id,prepared_by,status").eq("id",id).maybeSingle();
+    if(!old)return fail("Rekonsiliasi tidak ditemukan.",404,origin);
+    if(old.prepared_by===actor.user.id)return fail("Pemisahan tugas: pembuat tidak boleh meninjau rekonsiliasi sendiri.",403,origin);
+    if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(old.status!=="submitted")return fail("Rekonsiliasi tidak menunggu tinjauan.",409,origin);
+    const {data,error}=await admin.from("cash_reconciliations").update({status:decision,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString()}).eq("id",id).eq("status","submitted").select("*").maybeSingle();
+    if(error||!data)return fail("Rekonsiliasi berubah saat ditinjau.",409,origin);
+    return json({ok:true,reconciliation:data},200,origin);
+  }
+
+  if (action === "erp-list-fiscal-periods") {
+    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    const {data,error}=await admin.from("fiscal_periods").select("*").order("starts_on",{ascending:false}).limit(100);
+    if(error)return fail("Periode fiskal gagal dimuat.",500,origin);return json({periods:data||[]},200,origin);
+  }
+
+  if (action === "erp-create-fiscal-period") {
+    if(!isOwner&&!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const code=safeText(body.period_code,40),start=safeText(body.starts_on,10),end=safeText(body.ends_on,10);
+    if(!code||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start)return fail("Periode fiskal tidak valid.",422,origin);
+    const {data,error}=await admin.from("fiscal_periods").insert({period_code:code,starts_on:start,ends_on:end,status:"open"}).select("*").single();
+    if(error||!data)return fail("Periode fiskal gagal dibuat atau kode sudah dipakai.",409,origin);return json({ok:true,period:data},201,origin);
+  }
+
+  if (action === "erp-close-fiscal-period" || action === "erp-reopen-fiscal-period") {
+    if(!isOwner)return fail("Hanya Owner yang dapat menutup atau membuka kembali periode fiskal.",403,origin);
+    const id=safeText(body.period_id,80),note=safeText(body.notes,500);
+    const {data:old}=await admin.from("fiscal_periods").select("*").eq("id",id).maybeSingle();if(!old)return fail("Periode fiskal tidak ditemukan.",404,origin);
+    const reopening=action==="erp-reopen-fiscal-period";
+    if(reopening&&old.status!=="closed")return fail("Hanya periode closed yang dapat dibuka kembali.",409,origin);
+    if(!reopening&&old.status!=="open")return fail("Hanya periode open yang dapat ditutup.",409,origin);
+    const values:any=reopening?{status:"reopened",reopened_by:actor.user.id,reopened_at:new Date().toISOString(),closing_notes:note||null}:{status:"closed",closed_by:actor.user.id,closed_at:new Date().toISOString(),closing_notes:note||null};
+    const {data,error}=await admin.from("fiscal_periods").update(values).eq("id",id).eq("status",old.status).select("*").maybeSingle();
+    if(error||!data)return fail("Periode fiskal berubah saat diproses.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:reopening?"erp_fiscal_period_reopened":"erp_fiscal_period_closed",entity_type:"fiscal_period",entity_id:id,metadata:{previous_status:old.status,notes:note}});
+    return json({ok:true,period:data},200,origin);
+  }
+
+  if (action === "erp-list-tax-settings") {
+    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    const {data,error}=await admin.from("tax_settings").select("*").order("effective_from",{ascending:false}).limit(200);
+    if(error)return fail("Pengaturan pajak gagal dimuat.",500,origin);return json({tax_settings:data||[]},200,origin);
+  }
+
+  if (action === "erp-save-tax-setting") {
+    if(!isOwner&&!hasPerm("finance"))return fail("Izin Owner/Finance diperlukan.",403,origin);
+    const code=safeText(body.tax_code,40),name=safeText(body.name,120),rate=Number(body.rate),from=safeText(body.effective_from,10),to=safeText(body.effective_to,10)||null,applies=safeText(body.applies_to,20);
+    if(!code||!name||!Number.isFinite(rate)||rate<0||rate>100||!/^\d{4}-\d{2}-\d{2}$/.test(from)||(to&&(!/^\d{4}-\d{2}-\d{2}$/.test(to)||to<from))||!["sales","purchase","both"].includes(applies))return fail("Konfigurasi pajak tidak valid.",422,origin);
+    const {data,error}=await admin.from("tax_settings").insert({tax_code:code,name,rate,inclusive:body.inclusive===true,applies_to:applies,effective_from:from,effective_to:to,is_active:true,created_by:actor.user.id}).select("*").single();
+    if(error||!data)return fail("Pengaturan pajak gagal disimpan; kode mungkin sudah ada.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_tax_setting_created",entity_type:"tax_setting",entity_id:data.id,metadata:{tax_code:code,rate,effective_from:from}});
+    return json({ok:true,tax_setting:data},201,origin);
+  }
+
   return fail("Aksi tidak dikenal.", 400, origin);
 });
