@@ -364,10 +364,8 @@ Deno.serve(async (req: Request) => {
     "admin-mark-notification-sent": "orders",
     "admin-retry-payment-notification": "orders",
     "erp-overview": "reports",
-    "erp-list-branches": "branches",
     "erp-save-branch": "branches",
     "erp-list-positions": "hr",
-    "erp-list-assignments": "staff",
     "erp-save-assignment": "staff",
     "erp-list-inventory": "inventory",
     "erp-save-inventory": "inventory",
@@ -376,7 +374,6 @@ Deno.serve(async (req: Request) => {
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
     "erp-create-pos-sale": "pos",
-    "erp-list-sales": "reports",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
@@ -593,6 +590,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-branches") {
+    if(!isOwner&&!["branches","pos","inventory","procurement","finance","reports","hr","staff"].some(hasPerm))return fail("Izin cabang tidak diizinkan.",403,origin);
     const ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("branches").select("id,code,name,status,address,city,province,timezone,opening_date,notes,created_at").order("code");
     if(!isOwner) q=ids?.length?q.in("id",ids):q.eq("id","00000000-0000-0000-0000-000000000000");
@@ -713,6 +711,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-sales") {
+    if(!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin laporan POS tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),since=safeText(body.since,10),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at,branches(code,name),pos_sale_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
