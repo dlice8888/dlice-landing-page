@@ -28,6 +28,54 @@ img{height:auto}
 @media(max-width:500px){.wrap{width:calc(100% - 32px)}.hero h1{font-size:clamp(39px,11vw,49px);line-height:1.04}.heroPhoto img{object-fit:contain}.products{grid-template-columns:1fr;gap:18px}.photo{height:auto;aspect-ratio:4/3}.pbody{padding:18px}.pbody h3{font-size:22px}.pbody p{font-size:13px;line-height:1.8}.pfoot{margin-top:14px}.orderForm input,.orderForm select,.orderForm textarea{font-size:16px}.multiOrderRow{padding:12px;gap:10px}.locationQR{flex-direction:column}.locationQR img{width:128px;height:128px}.qrCopy{max-width:none}.qrActions .btn{flex:1}.toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 @media(min-width:761px) and (max-width:1024px){.wrap{width:calc(100% - 48px)}.heroGrid{gap:26px}.photo{height:230px}.pbody{padding:17px}.pbody h3{font-size:20px}.orderCard{max-width:860px}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.motion-ready{opacity:1;transform:none}}
+
+/* UX/CX reconciliation: narrow phones, tablets, touch, keyboard and safe areas. */
+.wrap,.heroGrid,.storyGrid,.orderCard,.orderForm,.orderIntro,.product,.pbody,.locationCard,.locationQR{min-width:0}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible{scroll-margin-block:100px}
+.orderForm input,.orderForm select,.orderForm textarea{max-width:100%;font-size:16px}
+.orderForm input[type="date"],.orderForm input[type="time"]{min-height:48px}
+.orderForm button,.orderForm .btn{min-height:48px}
+.filter{min-height:44px;padding-inline:15px}
+.multiOrderRow>*{min-width:0}
+.multiMenuName{overflow-wrap:anywhere}
+.locationQR img{flex:0 0 auto}
+@media(min-width:761px) and (max-width:1024px){
+  .products{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .photo{height:auto;aspect-ratio:4/3}
+  .heroPhoto{min-height:390px}
+  .heroPhoto img{height:390px}
+  .navlinks{gap:16px}
+}
+@media(max-width:760px){
+  .navin{gap:10px}
+  .brand{min-width:0;gap:8px}
+  .brandLogo{flex:0 0 38px;width:38px;height:38px}
+  .staffLogin{min-height:44px;padding:10px 12px}
+  .orderForm input,.orderForm select,.orderForm textarea{font-size:16px}
+  .orderForm .multiOrderRow .menuQty{min-height:44px}
+  .locationCard .btn{min-height:48px}
+}
+@media(max-width:360px){
+  .wrap{width:calc(100% - 24px)}
+  .navin{height:62px}
+  .brand{font-size:19px}
+  .brandLogo{width:34px;height:34px;flex-basis:34px}
+  .nav .btn,.staffLogin{padding:9px 10px;font-size:10px}
+  .hero h1{font-size:clamp(36px,10.6vw,42px);letter-spacing:-1.6px}
+  .multiOrderRow{grid-template-columns:minmax(0,1fr) 82px}
+  .orderIntro h2{font-size:33px}
+  .copyright{overflow-wrap:anywhere}
+}
+@supports(padding:max(0px)){
+  .toast{bottom:max(16px,env(safe-area-inset-bottom,0px))}
+  .nav{padding-top:env(safe-area-inset-top,0px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .heroPhoto img{animation:none}
+  .motion-ready,.motion-ready.is-visible{opacity:1;transform:none;animation:none}
+}
+
 </style><script defer src="/assets/js/funnel-analytics.js"></script></head><body>
 <div class="announcement">MADE WITH LOVE ♡ FRESHLY MADE, BEAUTIFULLY PACKED — D’LICE</div><header class="nav"><div class="wrap navin"><a class="brand" href="#home"><img class="brandLogo" src="Logo.jpg" alt="Logo D’Lice"><span>D’Lice <small>BOX</small></span></a><nav class="navlinks"><a href="#menu">Menu</a><a href="#story">Cerita Kami</a><a href="#location">Lokasi</a><a href="track.html">Lacak Pesanan</a></nav><a class="staffLogin" href="admin.html#login" aria-label="Login operasional Owner dan staf">Login Operasional</a><a class="btn" href="#order">Pesan Sekarang ↗</a></div></header>
 <main><section class="hero" id="home"><div class="wrap heroGrid"><div><span class="eyebrow">A little taste of happiness</span><h1>Manisnya hari,<br><em>mulai dari</em><br>D’Lice.</h1><p class="lead">Dari es buah yang segar sampai pastry berlapis renyah dengan isian istimewa. Temukan little treat favoritmu — dibuat dengan cinta, untuk momen yang lebih manis.</p><div class="actions"><a class="btn" href="#menu">Jelajahi Menu ↓</a><a class="btn outline" href="#story">Cerita D’Lice</a></div><div class="note">♡ Fresh, fun & full of love. Teman manis di setiap momen.</div></div><div class="heroPhoto"><div class="float one">Freshly made<b>Made with love ♡</b></div><img id="heroProductImage" fetchpriority="high" decoding="async" alt="Foto menu D’Lice" style="background:#f3deda"><div class="float two">Your new favorite<b>Sweet little moments ✨</b></div></div></div></section>
