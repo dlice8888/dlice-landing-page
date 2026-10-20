@@ -288,8 +288,28 @@ Deno.serve(async (req: Request) => {
     const encoded = safeText(body.file_base64, 7_000_000);
     const extByMime: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
     if (!extByMime[mime] || !encoded || encoded.length > 7_000_000) return fail("Format atau ukuran bukti tidak didukung (maksimal 5 MB).", 422, origin);
-    const binary = Uint8Array.from(atob(encoded.replace(/^data:[^,]+,/, "")), (c) => c.charCodeAt(0));
+    let binary: Uint8Array;
+    try {
+      const payload = encoded.replace(/^data:[^,]+,/, "");
+      if (!payload || payload.length > 7_000_000 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+        return fail("Data bukti pembayaran tidak valid.", 422, origin);
+      }
+      binary = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
+    } catch {
+      return fail("Data bukti pembayaran tidak valid.", 422, origin);
+    }
+    if (binary.byteLength === 0) return fail("File bukti pembayaran kosong.", 422, origin);
     if (binary.byteLength > 5 * 1024 * 1024) return fail("Ukuran bukti maksimal 5 MB.", 413, origin);
+    const startsWith = (signature: number[]) => signature.every((byte, index) => binary[index] === byte);
+    const asciiAt = (offset: number, expected: string) =>
+      [...expected].every((char, index) => binary[offset + index] === char.charCodeAt(0));
+    const signatureMatches: Record<string, boolean> = {
+      "image/jpeg": startsWith([0xff, 0xd8, 0xff]),
+      "image/png": startsWith([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      "image/webp": asciiAt(0, "RIFF") && asciiAt(8, "WEBP"),
+      "application/pdf": asciiAt(0, "%PDF-"),
+    };
+    if (!signatureMatches[mime]) return fail("Isi file tidak sesuai dengan format bukti yang dipilih.", 422, origin);
     const { data: existingPending, error: pendingLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (pendingLookupError) return fail("Data pembayaran belum dapat diperiksa.", 500, origin);
     const path = `${order.id}/${crypto.randomUUID()}.${extByMime[mime]}`;
