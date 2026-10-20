@@ -60,7 +60,11 @@ const getAdmin = async (req: Request) => {
   if (userError || !userData.user) return null;
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  return { user: userData.user, profile: { ...profile, permissions: profile.role === "owner" ? ["*"] : (Array.isArray(profile.permissions) ? profile.permissions : ["orders"]) } };
+  if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
+  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active");
+  const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
+  const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : ["orders"];
+  return { user: userData.user, profile: { ...profile, permissions: [...new Set([...savedPermissions, ...rolePermissions])] } };
 };
 
 Deno.serve(async (req: Request) => {
@@ -667,6 +671,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-list-shifts") {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("pos_shifts").select("id,branch_id,opened_by,closed_by,opening_cash_idr,expected_cash_idr,counted_cash_idr,cash_variance_idr,status,opened_at,closed_at,notes,branches(code,name),admin_profiles!pos_shifts_opened_by_fkey(username,display_name)").order("opened_at",{ascending:false}).limit(100);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar shift gagal dimuat.",500,origin);
     return json({shifts:data||[]},200,origin);
@@ -714,6 +719,7 @@ Deno.serve(async (req: Request) => {
     if(!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin laporan POS tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),since=safeText(body.since,10),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at,branches(code,name),pos_sale_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     if(since)q=q.gte("created_at",since+"T00:00:00");
     const {data,error}=await q;if(error)return fail("Laporan POS gagal dimuat.",500,origin);
@@ -723,6 +729,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-list-expenses") {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("branch_expenses").select("id,expense_code,branch_id,category,description,amount_idr,payment_method,status,receipt_reference,created_by,reviewed_by,reviewed_at,created_at,branches(code,name),admin_profiles!branch_expenses_created_by_fkey(username,display_name)").order("created_at",{ascending:false}).limit(200);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar biaya gagal dimuat.",500,origin);
     return json({expenses:data||[]},200,origin);
@@ -750,7 +757,7 @@ Deno.serve(async (req: Request) => {
     if(next==="paid"&&old.status!=="approved")return fail("Biaya harus disetujui sebelum dibayar.",409,origin);
     if(next==="approved"&&old.status!=="pending_approval")return fail("Hanya biaya yang menunggu persetujuan yang dapat disetujui.",409,origin);
     if(next==="rejected"&&old.status!=="pending_approval")return fail("Hanya biaya yang menunggu persetujuan yang dapat ditolak.",409,origin);
-    const {data,error}=await admin.from("branch_expenses").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString(),receipt_reference:note?note.slice(0,120):undefined}).eq("id",id).eq("status",old.status).select("*").maybeSingle();
+    const {data,error}=await admin.from("branch_expenses").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString()}).eq("id",id).eq("status",old.status).select("*").maybeSingle();
     if(error||!data)return fail("Status biaya berubah; muat ulang.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_expense_"+next,entity_type:"branch_expense",entity_id:id,metadata:{amount_idr:old.amount_idr,note}});
     return json({ok:true,expense:data},200,origin);
@@ -759,6 +766,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-list-purchase-orders") {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("purchase_orders").select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at,branches(code,name),purchase_order_items(item_name_snapshot,quantity,unit_cost_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Purchase order gagal dimuat.",500,origin);
     return json({purchase_orders:data||[]},200,origin);
