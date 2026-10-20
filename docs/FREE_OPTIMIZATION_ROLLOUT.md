@@ -1,8 +1,8 @@
 # Free optimization rollout (staging only)
 
 ## Guardrails and cost
-- No paid integration, external analytics SDK, new Supabase project/branch, cron, or paid Vercel feature is introduced.
-- Code and database changes remain scoped to `feat/free-hardening-optimizations` and Supabase staging project `higoadrzxnhzbbwhdbmh`.
+- No paid integration, external analytics SDK, new Supabase project/branch, or paid Vercel feature is introduced. A daily retention job uses the built-in `pg_cron` extension on staging; its database workload counts against existing quotas.
+- Code and database changes are reviewed through staging-first PRs and applied to Supabase staging project `higoadrzxnhzbbwhdbmh` only; production is not changed without explicit Owner approval.
 - Production domain remains `https://dlice.vercel.app/`; production database/Edge Function changes are blocked until staging acceptance passes and Owner explicitly approves.
 - GitHub Actions uses dependency-free checks. Included quotas still apply; no third-party CI service is required.
 - Supabase Auth leaked-password protection cannot be toggled by the connected Supabase tools. Owner must enable it manually in staging first.
@@ -18,7 +18,7 @@
 8. Hero/menu image loading was optimized; Google Maps reviews link added without fake content or paid Places API.
 9. Supabase `products` is the catalog source of truth; backend calculates authoritative prices.
 10. Tracking paths have rate limiting.
-11. Added staging release checklist and dated RLS/grants/query-plan audit.
+11. Added staging release checklist and dated RLS/grants/query-plan audit. The follow-up retention/RPC migration safely cleans rate-limit rows older than 30 days and aggregate funnel metrics older than 730 days, while preserving orders, payments, proofs, notifications, and audit logs; it also restricts direct execution of the trigger helper.
 12. Vercel environment scopes were separated in the project configuration: `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are now Production-only for production Supabase, and separate Preview/Development values point to staging Supabase.
 
 ## Verified status on 2026-10-20
