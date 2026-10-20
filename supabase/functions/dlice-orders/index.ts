@@ -110,6 +110,18 @@ Deno.serve(async (req: Request) => {
     if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
     if (!limited) return fail("Terlalu banyak permintaan tracking. Coba lagi dalam 10 menit.", 429, origin);
   }
+
+  if (action === "list-online-branches") {
+    const method=safeText(body.receiving_method,20);
+    if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
+    const city=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
+    let q=admin.from("branches").select("id,code,name,address,city,province,pickup_enabled,delivery_enabled").eq("status","active").eq("accepts_online_orders",true);
+    q=method==="pickup"?q.eq("pickup_enabled",true):q.eq("delivery_enabled",true);
+    const {data,error}=await q.order("name");if(error)return fail("Cabang online belum dapat dimuat.",500,origin);
+    const branches=data||[],matched=city?branches.filter((b:any)=>String(b.city||"").toLowerCase()===city):[];
+    return json({branches,ip_city_match:matched.length===1?matched[0].id:null,selection_source:matched.length===1?"ip_estimate":"customer_choice",ip_location_hint:city||null,needs_customer_choice:matched.length!==1},200,origin);
+  }
+
   if (action === "create-order") {
     const limited = await consumeRateLimit("create-order", requestIp(req), 10, 10 * 60);
     if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
@@ -228,6 +240,22 @@ Deno.serve(async (req: Request) => {
     const { data: products, error: productError } = await admin.from("products").select("id,slug,unit_price_idr,is_active").in("slug", normalized.map((i) => i.slug));
     if (productError || !products || products.length !== normalized.length) return fail("Ada menu yang tidak dikenal.", 422, origin);
     if (products.some((p) => !p.is_active || p.unit_price_idr == null)) return fail("Harga menu belum ditetapkan. Silakan hubungi D’Lice melalui WhatsApp.", 409, origin);
+    const receivingMethodKey=receivingMethod;
+    const requestedBranchId=safeText(body.branch_id,80);
+    const cityHint=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
+    let branchQuery=admin.from("branches").select("id,city,status,accepts_online_orders,pickup_enabled,delivery_enabled,daily_order_capacity").eq("status","active").eq("accepts_online_orders",true);
+    branchQuery=receivingMethodKey==="pickup"?branchQuery.eq("pickup_enabled",true):branchQuery.eq("delivery_enabled",true);
+    const {data:eligibleBranches,error:branchError}=await branchQuery;
+    if(branchError)return fail("Cabang pemenuhan belum dapat diverifikasi.",503,origin);
+    const choices=eligibleBranches||[];
+    if(!choices.length)return fail("Belum ada cabang aktif yang dikonfigurasi untuk pesanan online. Silakan hubungi D’Lice.",409,origin);
+    const ipMatches=cityHint?choices.filter((b:any)=>String(b.city||"").toLowerCase()===cityHint):[];
+    const selectedBranchId=requestedBranchId||(ipMatches.length===1?ipMatches[0].id:(choices.length===1?choices[0].id:""));
+    if(!selectedBranchId)return json({error:"Pilih cabang pemenuhan untuk melanjutkan.",code:"branch_selection_required",branches:choices.map((b:any)=>({id:b.id,city:b.city})),ip_location_hint:cityHint||null},409,origin);
+    const chosen=choices.find((b:any)=>b.id===selectedBranchId);
+    if(!chosen)return fail("Cabang tidak aktif atau tidak melayani metode penerimaan ini.",422,origin);
+    const branchSelectionSource=ipMatches.length===1&&ipMatches[0].id===chosen.id?"ip_estimate":requestedBranchId?"customer_choice":"customer_choice";
+    if(receivingMethodKey==="delivery"&&(!deliveryAddress||deliveryAddress.length<8))return fail("Alamat delivery wajib diisi lengkap.",422,origin);
     const items = normalized.map((item) => ({ product_id: products.find((p) => p.slug === item.slug)!.id, quantity: item.quantity }));
     const trackingToken = randomToken();
     const trackingHash = await sha256(trackingToken);
@@ -235,7 +263,7 @@ Deno.serve(async (req: Request) => {
       p_order: {
         customer_name: customerName, customer_whatsapp: customerWhatsapp, requested_date: requestedDate,
         requested_time: requestedTime, receiving_method: receivingMethod, delivery_address: receivingMethod === "delivery" ? deliveryAddress : null,
-        customer_notes: notes || null,
+        customer_notes: notes || null, branch_id: selectedBranchId, branch_selection_source: branchSelectionSource,
       },
       p_items: items,
       p_tracking_token_hash: trackingHash,
@@ -808,19 +836,6 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,purchase_order:data},200,origin);
   }
 
-
-  if (action === "erp-list-online-branches") {
-    const method=safeText(body.receiving_method,20);
-    if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
-    const city=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
-    let q=admin.from("branches").select("id,code,name,address,city,province,latitude,longitude,service_radius_km,pickup_enabled,delivery_enabled,daily_order_capacity").eq("status","active").eq("accepts_online_orders",true);
-    q=method==="pickup"?q.eq("pickup_enabled",true):q.eq("delivery_enabled",true);
-    const {data,error}=await q.order("name");
-    if(error)return fail("Cabang online belum dapat dimuat.",500,origin);
-    const branches=data||[];
-    const matched=city?branches.filter((b:any)=>String(b.city||"").toLowerCase()===city):[];
-    return json({branches,ip_city_match:matched.length===1?matched[0].id:null,selection_source:matched.length===1?"ip_estimate":"customer_choice",ip_location_hint:city||null,needs_customer_choice:matched.length!==1},200,origin);
-  }
 
   if (action === "erp-list-fulfillment-orders") {
     if(!hasPerm("orders")&&!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin fulfillment tidak diizinkan.",403,origin);
