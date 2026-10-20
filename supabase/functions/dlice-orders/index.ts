@@ -111,6 +111,28 @@ Deno.serve(async (req: Request) => {
     if (!limited) return fail("Terlalu banyak permintaan tracking. Coba lagi dalam 10 menit.", 429, origin);
   }
 
+
+  if (action === "erp-save-branch-capacity") {
+    if(!isOwner&&!hasPerm("inventory"))return fail("Izin Owner/Inventory diperlukan.",403,origin);
+    const branchId=safeText(body.branch_id,80),productId=safeText(body.product_id,80),date=safeText(body.service_date,10),capacity=Number(body.capacity);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isInteger(capacity)||capacity<0||capacity>100000)return fail("Tanggal atau kapasitas tidak valid.",422,origin);
+    const {data:old}=await admin.from("branch_product_capacity").select("id,reserved_quantity").eq("branch_id",branchId).eq("product_id",productId).eq("service_date",date).maybeSingle();
+    if(old&&capacity<Number(old.reserved_quantity||0))return fail("Kapasitas tidak boleh lebih rendah dari jumlah reserved yang tersimpan.",409,origin);
+    const result=old?await admin.from("branch_product_capacity").update({capacity,updated_at:new Date().toISOString()}).eq("id",old.id).select("*").single():await admin.from("branch_product_capacity").insert({branch_id:branchId,product_id:productId,service_date:date,capacity,reserved_quantity:0}).select("*").single();
+    if(result.error||!result.data)return fail("Kapasitas cabang gagal disimpan.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_branch_capacity_saved",entity_type:"branch_product_capacity",entity_id:result.data.id,metadata:{branch_id:branchId,product_id:productId,service_date:date,capacity}});
+    return json({ok:true,capacity:result.data},200,origin);
+  }
+  if (action === "erp-list-branch-capacity") {
+    if(!hasPerm("branches")&&!hasPerm("inventory")&&!hasPerm("reports"))return fail("Izin kapasitas cabang tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,80),date=safeText(body.service_date,10);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("branch_product_capacity").select("*,branches(code,name),products(name,slug)").order("service_date",{ascending:true}).limit(500);
+    if(branchId)q=q.eq("branch_id",branchId);if(date)q=q.eq("service_date",date);
+    const {data,error}=await q;if(error)return fail("Kapasitas cabang gagal dimuat.",500,origin);return json({capacities:data||[]},200,origin);
+  }
+
   if (action === "list-online-branches") {
     const method=safeText(body.receiving_method,20);
     if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
