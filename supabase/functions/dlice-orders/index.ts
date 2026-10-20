@@ -611,6 +611,13 @@ Deno.serve(async (req: Request) => {
     return [...new Set((data || []).map((x: {branch_id:string}) => x.branch_id))];
   };
 
+  const hasFinanceHQ = async (): Promise<boolean> => {
+    if (isOwner) return true;
+    if (!hasPerm("finance")) return false;
+    const {data,error}=await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id",actor.user.id).eq("employment_status","active");
+    return !error && (data||[]).some((x:any)=>x.job_positions?.is_head_office===true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes("finance"));
+  };
+
   if (action === "erp-overview") {
     if (!hasPerm("reports") && !hasPerm("branches")) return fail("Akses ringkasan ERP tidak diizinkan.",403,origin);
     const [branches, planned, active, inventory, shifts, sales, expenses, purchaseOrders] = await Promise.all([
@@ -970,13 +977,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-settlements") {
-    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const {data,error}=await admin.from("payment_settlements").select("*,payment_settlement_items(id,payment_record_id,pos_sale_id,amount_idr)").order("settlement_date",{ascending:false}).limit(300);
     if(error)return fail("Settlement belum dapat dimuat.",500,origin);return json({settlements:data||[]},200,origin);
   }
 
   if (action === "erp-create-settlement") {
-    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const code=safeText(body.settlement_code,60),method=safeText(body.payment_method,30),date=safeText(body.settlement_date,10),gross=Number(body.gross_amount_idr),fee=Number(body.fee_amount_idr||0);
     if(!code||!["bank_transfer","qris"].includes(method)||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isSafeInteger(gross)||gross<0||!Number.isSafeInteger(fee)||fee<0||fee>gross)return fail("Data settlement tidak valid.",422,origin);
     const {data,error}=await admin.from("payment_settlements").insert({settlement_code:code,payment_method:method,provider_reference:safeText(body.provider_reference,120)||null,settlement_date:date,gross_amount_idr:gross,fee_amount_idr:fee,received_amount_idr:body.received_amount_idr==null?null:Number(body.received_amount_idr),notes:safeText(body.notes,500)||null}).select("*").single();
@@ -985,7 +992,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-match-settlement") {
-    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const id=safeText(body.settlement_id,80),items=body.items;
     if(!Array.isArray(items)||!items.length||items.length>500)return fail("Pilih transaksi untuk dicocokkan.",422,origin);
     const {data,error}=await admin.rpc("erp_match_payment_settlement",{p_settlement_id:id,p_items:items,p_actor_user_id:actor.user.id});
@@ -994,7 +1001,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-refunds") {
-    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const {data,error}=await admin.from("refund_records").select("*,branches(code,name),orders(order_number,customer_name),payment_records(method,status),pos_sales(transaction_code,total_idr)").order("requested_at",{ascending:false}).limit(300);
     if(error)return fail("Daftar refund gagal dimuat.",500,origin);
     return json({refunds:data||[]},200,origin);
@@ -1065,13 +1072,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-fiscal-periods") {
-    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const {data,error}=await admin.from("fiscal_periods").select("*").order("starts_on",{ascending:false}).limit(100);
     if(error)return fail("Periode fiskal gagal dimuat.",500,origin);return json({periods:data||[]},200,origin);
   }
 
   if (action === "erp-create-fiscal-period") {
-    if(!isOwner&&!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const code=safeText(body.period_code,40),start=safeText(body.starts_on,10),end=safeText(body.ends_on,10);
     if(!code||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start)return fail("Periode fiskal tidak valid.",422,origin);
     const {data,error}=await admin.from("fiscal_periods").insert({period_code:code,starts_on:start,ends_on:end,status:"open"}).select("*").single();
@@ -1093,13 +1100,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-tax-settings") {
-    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const {data,error}=await admin.from("tax_settings").select("*").order("effective_from",{ascending:false}).limit(200);
     if(error)return fail("Pengaturan pajak gagal dimuat.",500,origin);return json({tax_settings:data||[]},200,origin);
   }
 
   if (action === "erp-save-tax-setting") {
-    if(!isOwner&&!hasPerm("finance"))return fail("Izin Owner/Finance diperlukan.",403,origin);
+    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
     const code=safeText(body.tax_code,40),name=safeText(body.name,120),rate=Number(body.rate),from=safeText(body.effective_from,10),to=safeText(body.effective_to,10)||null,applies=safeText(body.applies_to,20);
     if(!code||!name||!Number.isFinite(rate)||rate<0||rate>100||!/^\d{4}-\d{2}-\d{2}$/.test(from)||(to&&(!/^\d{4}-\d{2}-\d{2}$/.test(to)||to<from))||!["sales","purchase","both"].includes(applies))return fail("Konfigurasi pajak tidak valid.",422,origin);
     const {data,error}=await admin.from("tax_settings").insert({tax_code:code,name,rate,inclusive:body.inclusive===true,applies_to:applies,effective_from:from,effective_to:to,is_active:true,created_by:actor.user.id}).select("*").single();
