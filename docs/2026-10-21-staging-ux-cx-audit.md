@@ -13,7 +13,7 @@
 - Staging Edge Function `dlice-orders` is ACTIVE at version 31 and has `verify_jwt=false`; inspect handler-level authorization, tracking-token validation, and per-action checks carefully because the platform JWT gate is disabled.
 - Staging migration history includes order/payment controls, rate limiting, privacy-preserving funnel metrics, RLS hardening, multi-branch POS/ERP, branch-routed checkout capacity, finance/refund/settlement guards, atomic recipe activation and deterministic production stock locking through `20261020202841`.
 - Current GitHub PR #22 is draft and adds checkout branch assignment/capacity, order fulfillment, purchase receiving, BOM/production, settlement, refunds, cash reconciliation, tax settings and fiscal-period controls. It lists full role-based browser E2E, negative cross-branch tests, concurrency tests and payment-proof lifecycle tests as outstanding.
-- Vercel preview deployments are READY for commits on `feat/staging-erp-workflows-api`; the newest observed deployment was built from commit `f762c688a7fba92e4bb201c86c4b89edbdb45c` (see Vercel metadata for exact SHA if rechecking).
+- Vercel preview deployments are READY for commits on `feat/staging-erp-workflows-api`; the newest observed deployment was built from commit `f762c688a7fba92f1a1c7d81d0deef407aea6774` (see Vercel metadata for exact SHA if rechecking).
 - Supabase Security Advisor issue reported by the staging release notes: leaked-password protection is disabled and requires enabling in Supabase Auth password security settings.
 - Figma account context reports Starter plan and a View seat, with Code Layers disabled. Direct canvas edits may be blocked by permissions; no claim of a Figma file being edited is made from this code change.
 
