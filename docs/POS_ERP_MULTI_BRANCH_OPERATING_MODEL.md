@@ -66,6 +66,9 @@ These are planning ranges, not fixed staffing orders. Start with demand-based sc
 - Daily reconciliation compares POS cash expected vs counted, QRIS/bank settlements, approved expenses and deposits.
 - Do not claim accounting/ERP parity with a full ERP suite until invoice numbering, tax treatment, refunds, procurement receiving, inventory valuation, and period closing have passed acceptance tests.
 
+## Indexing and performance notes
+The ERP foreign-key lookup columns are indexed in the follow-up migration to support branch filtering, joins, and referential integrity checks. Unused-index warnings are expected while staging has no POS/ERP transaction workload; do not remove those indexes until realistic query plans and load tests justify a change.
+
 ## Verification checklist
 - Migration history and 150 planned slots are present in staging only.
 - RLS is enabled and direct client grants are revoked on every ERP table.
