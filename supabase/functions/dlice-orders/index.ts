@@ -1001,9 +1001,11 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-refunds") {
-    if(!await hasFinanceHQ())return fail("Akses Finance Head Office diperlukan.",403,origin);
-    const {data,error}=await admin.from("refund_records").select("*,branches(code,name),orders(order_number,customer_name),payment_records(method,status),pos_sales(transaction_code,total_idr)").order("requested_at",{ascending:false}).limit(300);
-    if(error)return fail("Daftar refund gagal dimuat.",500,origin);
+    if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
+    const hq=await hasFinanceHQ(),ids=await branchIdsForActor().catch(()=>[]);
+    let q=admin.from("refund_records").select("*,branches(code,name),orders(order_number,customer_name),payment_records(method,status),pos_sales(transaction_code,total_idr)").order("requested_at",{ascending:false}).limit(300);
+    if(!hq)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    const {data,error}=await q;if(error)return fail("Daftar refund gagal dimuat.",500,origin);
     return json({refunds:data||[]},200,origin);
   }
 
