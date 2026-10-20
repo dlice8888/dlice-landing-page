@@ -273,6 +273,11 @@ Deno.serve(async (req: Request) => {
       const messages: Record<string, string> = {
         capacity_exceeded: "Maaf, kapasitas salah satu menu untuk tanggal tersebut sudah tidak mencukupi.",
         capacity_not_configured: "Kapasitas menu untuk tanggal tersebut belum dibuka. Silakan hubungi admin.",
+        branch_capacity_not_configured: "Kapasitas menu di cabang untuk tanggal tersebut belum dibuka. Silakan pilih tanggal lain atau hubungi admin.",
+        branch_capacity_exceeded: "Kapasitas cabang untuk menu/tanggal tersebut sudah penuh. Pilih cabang atau tanggal lain.",
+        branch_daily_capacity_exceeded: "Cabang sudah mencapai kapasitas pesanan pada tanggal tersebut. Pilih tanggal lain atau cabang lain.",
+        branch_not_online: "Cabang ini belum dibuka untuk menerima pesanan online.",
+        branch_method_unavailable: "Cabang tidak melayani metode penerimaan yang dipilih.",
         same_day_cutoff_passed: "Batas pemesanan hari ini pukul 18.00 WITA sudah lewat.",
         date_in_past: "Tanggal pesanan tidak boleh di masa lalu.",
         product_unavailable_or_price_missing: "Harga atau ketersediaan menu belum disiapkan.",
