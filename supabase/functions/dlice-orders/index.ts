@@ -1066,6 +1066,15 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,reconciliation:data},201,origin);
   }
 
+  if (action === "erp-list-cash-reconciliations") {
+    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
+    const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("cash_reconciliations").select("*,branches(code,name),pos_shifts(opened_at,closed_at,status)").order("business_date",{ascending:false}).limit(300);
+    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    const {data,error}=await q;if(error)return fail("Daftar rekonsiliasi gagal dimuat.",500,origin);return json({reconciliations:data||[]},200,origin);
+  }
+
   if (action === "erp-review-cash-reconciliation") {
     if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
     const id=safeText(body.id,80),decision=safeText(body.status,20);
