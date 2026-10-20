@@ -5,6 +5,9 @@
 - Production branch `main`, production Supabase `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` must not be changed before staging sign-off.
 - New ERP tables have RLS enabled and direct `anon` / `authenticated` table grants revoked. All access must pass through the authenticated Edge Function and server-side validation.
 
+## Migration history reconciliation
+The ERP foundation was applied to staging and recorded by Supabase as migration version `20261020193327` with name `multi_branch_pos_erp_foundation`. The repository migration filename intentionally matches that recorded version: `supabase/migrations/20261020193327_multi_branch_pos_erp_foundation.sql`. Do not re-apply this migration to staging; verify history before future schema work.
+
 ## 150-branch model
 The migration creates Head Office (`DLC-HQ`) and 150 **planned slots** (`DLC-B001`…`DLC-B150`). Slots are not falsely represented as operating branches; Owner must set location, status, timezone and opening date before launch. Existing customer orders remain global and unchanged in this foundation. Branch-level order routing must be introduced as a separate reviewed migration after the customer-order service has branch selection and fulfillment rules.
 
