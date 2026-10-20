@@ -978,21 +978,16 @@ Deno.serve(async (req: Request) => {
     if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
     const id=safeText(body.settlement_id,80),items=body.items;
     if(!Array.isArray(items)||!items.length||items.length>500)return fail("Pilih transaksi untuk dicocokkan.",422,origin);
-    const {data:settlement}=await admin.from("payment_settlements").select("id,gross_amount_idr,fee_amount_idr,net_amount_idr,received_amount_idr,status").eq("id",id).maybeSingle();
-    if(!settlement)return fail("Settlement tidak ditemukan.",404,origin);
-    if(settlement.status!=="pending"&&settlement.status!=="disputed")return fail("Settlement tidak dapat dicocokkan pada status ini.",409,origin);
-    const clean=items.map((x:any)=>({payment_record_id:safeText(x?.payment_record_id,80)||null,pos_sale_id:safeText(x?.pos_sale_id,80)||null,amount_idr:Number(x?.amount_idr)}));
-    if(clean.some((x:any)=>(!x.payment_record_id&&!x.pos_sale_id)||!Number.isSafeInteger(x.amount_idr)||x.amount_idr<0))return fail("Detail pencocokan tidak valid.",422,origin);
-    const total=clean.reduce((n:number,x:any)=>n+x.amount_idr,0);
-    if(total!==Number(settlement.gross_amount_idr))return fail("Total pencocokan harus sama dengan nilai bruto settlement.",409,origin);
-    const {error}=await admin.from("payment_settlement_items").insert(clean.map((x:any)=>({...x,settlement_id:id})));
-    if(error)return fail("Transaksi mungkin sudah dicocokkan di settlement lain.",409,origin);
-    const received=settlement.received_amount_idr;
-    const next=received==null?"pending":Number(received)===Number(settlement.net_amount_idr)?"matched":"disputed";
-    const {data,error:ue}=await admin.from("payment_settlements").update({status:next,reconciled_by:actor.user.id,reconciled_at:new Date().toISOString()}).eq("id",id).in("status",["pending","disputed"]).select("*").maybeSingle();
-    if(ue||!data)return fail("Settlement berubah saat proses pencocokan.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_settlement_matched",entity_type:"payment_settlement",entity_id:id,metadata:{gross_amount_idr:total,matched_items:clean.length,status:next}});
-    return json({ok:true,settlement:data,matched_items:clean.length},200,origin);
+    const {data,error}=await admin.rpc("erp_match_payment_settlement",{p_settlement_id:id,p_items:items,p_actor_user_id:actor.user.id});
+    if(error){const msg=error.message||"";return fail(msg.includes("settlement_gross_mismatch")?"Total transaksi tidak sama dengan bruto settlement.":msg.includes("settlement_amount_mismatch")?"Nominal transaksi berbeda dari catatan sumber.":msg.includes("payment_not_verified")?"Pembayaran online belum terverifikasi.":msg.includes("pos_sale_not_paid")?"Penjualan POS belum berstatus lunas.":msg.includes("duplicate key")?"Transaksi sudah dicocokkan di settlement lain.":"Pencocokan settlement gagal. Periksa transaksi dan statusnya.",409,origin);}
+    return json(data,200,origin);
+  }
+
+  if (action === "erp-list-refunds") {
+    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
+    const {data,error}=await admin.from("refund_records").select("*,branches(code,name),orders(order_number,customer_name),payment_records(method,status),pos_sales(transaction_code,total_idr)").order("requested_at",{ascending:false}).limit(300);
+    if(error)return fail("Daftar refund gagal dimuat.",500,origin);
+    return json({refunds:data||[]},200,origin);
   }
 
   if (action === "erp-create-refund") {
