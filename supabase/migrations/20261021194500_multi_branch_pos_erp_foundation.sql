@@ -222,3 +222,74 @@ begin
     execute format('revoke all on table public.%I from anon, authenticated', t);
   end loop;
 end $$;
+
+create or replace function public.erp_record_stock_movement(
+  p_branch_id uuid, p_inventory_item_id uuid, p_movement_type text,
+  p_quantity numeric, p_notes text, p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path = public as $$
+declare current_qty numeric(14,3); next_qty numeric(14,3); movement_id uuid;
+begin
+  if p_quantity is null or p_quantity <= 0 then raise exception 'invalid_quantity'; end if;
+  if p_movement_type not in ('opening_balance','receipt','issue','adjustment_in','adjustment_out','transfer_in','transfer_out','waste') then raise exception 'invalid_movement_type'; end if;
+  if not exists(select 1 from branches where id=p_branch_id and status='active') then raise exception 'branch_not_active'; end if;
+  perform 1 from inventory_items where id=p_inventory_item_id and is_active=true;
+  if not found then raise exception 'inventory_item_not_active'; end if;
+  insert into branch_inventory(branch_id,inventory_item_id,on_hand)
+    values(p_branch_id,p_inventory_item_id,0) on conflict(branch_id,inventory_item_id) do nothing;
+  select on_hand into current_qty from branch_inventory where branch_id=p_branch_id and inventory_item_id=p_inventory_item_id for update;
+  if p_movement_type in ('issue','adjustment_out','transfer_out','waste') then next_qty:=current_qty-p_quantity;
+  elsif p_movement_type='opening_balance' then
+    if current_qty<>0 then raise exception 'opening_balance_already_set'; end if;
+    next_qty:=p_quantity;
+  else next_qty:=current_qty+p_quantity; end if;
+  if next_qty < 0 then raise exception 'insufficient_stock'; end if;
+  update branch_inventory set on_hand=next_qty,updated_at=now() where branch_id=p_branch_id and inventory_item_id=p_inventory_item_id;
+  insert into stock_movements(branch_id,inventory_item_id,movement_type,quantity,notes,created_by)
+    values(p_branch_id,p_inventory_item_id,p_movement_type,p_quantity,left(coalesce(p_notes,''),500),p_actor_user_id) returning id into movement_id;
+  return jsonb_build_object('ok',true,'movement_id',movement_id,'previous_quantity',current_qty,'on_hand',next_qty);
+end $$;
+
+create or replace function public.erp_create_pos_sale(
+  p_branch_id uuid, p_shift_id uuid, p_items jsonb, p_payment_method text,
+  p_discount_idr bigint, p_customer_reference text, p_notes text, p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path = public as $$
+declare sh pos_shifts%rowtype; b branches%rowtype; item jsonb; p products%rowtype;
+  sale_id uuid; code text; qty integer; subtotal bigint:=0; discount bigint:=greatest(coalesce(p_discount_idr,0),0);
+  sale_total bigint; item_count integer:=0;
+begin
+  if p_payment_method not in ('cash','bank_transfer','qris') then raise exception 'invalid_payment_method'; end if;
+  if jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)=0 or jsonb_array_length(p_items)>50 then raise exception 'invalid_items'; end if;
+  select * into b from branches where id=p_branch_id and status='active';
+  if not found then raise exception 'branch_not_active'; end if;
+  select * into sh from pos_shifts where id=p_shift_id and branch_id=p_branch_id and opened_by=p_actor_user_id and status='open' for update;
+  if not found then raise exception 'open_shift_required'; end if;
+  for item in select * from jsonb_array_elements(p_items) loop
+    qty:=nullif(item->>'quantity','')::integer;
+    if qty is null or qty<1 or qty>1000 then raise exception 'invalid_quantity'; end if;
+    select * into p from products where slug=item->>'slug' and is_active=true;
+    if not found or p.unit_price_idr is null then raise exception 'product_unavailable'; end if;
+    subtotal:=subtotal+(p.unit_price_idr::bigint*qty);
+    item_count:=item_count+1;
+  end loop;
+  if discount>subtotal then raise exception 'discount_exceeds_subtotal'; end if;
+  sale_total:=subtotal-discount;
+  sale_id:=gen_random_uuid();
+  code:='POS-'||b.code||'-'||to_char(now() at time zone coalesce(b.timezone,'Asia/Jakarta'),'YYYYMMDD')||'-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,6));
+  insert into pos_sales(id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes)
+  values(sale_id,code,p_branch_id,p_shift_id,p_actor_user_id,subtotal,discount,sale_total,p_payment_method,'paid',left(coalesce(p_customer_reference,''),120),left(coalesce(p_notes,''),500));
+  for item in select * from jsonb_array_elements(p_items) loop
+    qty:=(item->>'quantity')::integer;
+    select * into p from products where slug=item->>'slug' and is_active=true;
+    insert into pos_sale_items(sale_id,product_id,product_name_snapshot,quantity,unit_price_idr,line_total_idr)
+    values(sale_id,p.id,p.name,qty,p.unit_price_idr,p.unit_price_idr::bigint*qty);
+  end loop;
+  if p_payment_method='cash' then update pos_shifts set expected_cash_idr=expected_cash_idr+sale_total where id=p_shift_id; end if;
+  insert into admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'pos_sale_created','pos_sale',sale_id::text,jsonb_build_object('branch_id',p_branch_id,'transaction_code',code,'total_idr',sale_total,'payment_method',p_payment_method));
+  return jsonb_build_object('ok',true,'sale_id',sale_id,'transaction_code',code,'subtotal_idr',subtotal,'discount_idr',discount,'total_idr',sale_total,'items_count',item_count);
+end $$;
+
+revoke all on function public.erp_record_stock_movement(uuid,uuid,text,numeric,text,uuid) from public, anon, authenticated;
+grant execute on function public.erp_record_stock_movement(uuid,uuid,text,numeric,text,uuid) to service_role;
+revoke all on function public.erp_create_pos_sale(uuid,uuid,jsonb,text,bigint,text,text,uuid) from public, anon, authenticated;
+grant execute on function public.erp_create_pos_sale(uuid,uuid,jsonb,text,bigint,text,text,uuid) to service_role;
