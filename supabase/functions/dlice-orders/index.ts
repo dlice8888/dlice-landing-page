@@ -291,7 +291,7 @@ Deno.serve(async (req: Request) => {
     let binary: Uint8Array;
     try {
       const payload = encoded.replace(/^data:[^,]+,/, "");
-      if (!payload || payload.length > 7_000_000 || !/^[A-Za-z0-9+/]*={0,2}$/.test(payload)) {
+      if (!payload || payload.length > 7_000_000 || !/^[A-Za-z0-9+\\/]*={0,2}$/.test(payload)) {
         return fail("Data bukti pembayaran tidak valid.", 422, origin);
       }
       binary = Uint8Array.from(atob(payload), (c) => c.charCodeAt(0));
