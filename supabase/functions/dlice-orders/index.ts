@@ -923,14 +923,8 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-activate-recipe") {
     if(!isOwner&&!hasPerm("production"))return fail("Persetujuan Owner/produksi diperlukan.",403,origin);
     const id=safeText(body.recipe_id,80);
-    const {data:r}=await admin.from("recipes").select("id,product_id,status").eq("id",id).maybeSingle();if(!r)return fail("Resep tidak ditemukan.",404,origin);
-    const {data:ingredients}=await admin.from("recipe_ingredients").select("id").eq("recipe_id",id);
-    if(!ingredients?.length)return fail("Resep tanpa bahan tidak dapat diaktifkan.",409,origin);
-    const {error:retireError}=await admin.from("recipes").update({status:"retired"}).eq("product_id",r.product_id).eq("status","active");
-    if(retireError)return fail("Versi resep aktif gagal dipensiunkan.",409,origin);
-    const {data,error}=await admin.from("recipes").update({status:"active",approved_by:actor.user.id,approved_at:new Date().toISOString()}).eq("id",id).eq("status","draft").select("*").maybeSingle();
-    if(error||!data)return fail("Draft resep gagal diaktifkan.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_recipe_activated",entity_type:"recipe",entity_id:id,metadata:{product_id:r.product_id}});
+    const {data,error}=await admin.rpc("erp_activate_recipe",{p_recipe_id:id,p_actor_user_id:actor.user.id});
+    if(error)return fail(error.message.includes("recipe_has_no_ingredients")?"Resep tanpa bahan tidak dapat diaktifkan.":error.message.includes("recipe_not_draft")?"Hanya draft resep yang dapat diaktifkan.":"Aktivasi resep gagal.",409,origin);
     return json({ok:true,recipe:data},200,origin);
   }
 
