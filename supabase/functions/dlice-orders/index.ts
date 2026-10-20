@@ -1010,10 +1010,17 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-create-refund") {
     if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
     const orderId=safeText(body.order_id,80)||null,paymentId=safeText(body.payment_record_id,80)||null,posId=safeText(body.pos_sale_id,80)||null,amount=Number(body.amount_idr),reason=safeText(body.reason,500);
-    if(!orderId&&!paymentId&&!posId||!Number.isSafeInteger(amount)||amount<=0||!reason)return fail("Data refund tidak valid.",422,origin);
+    if([orderId,paymentId,posId].filter(Boolean).length!==1||!Number.isSafeInteger(amount)||amount<=0||!reason)return fail("Pilih tepat satu sumber transaksi, jumlah, dan alasan refund.",422,origin);
+    let sourceBranchId:string|null=null;
+    if(orderId){const {data:o}=await admin.from("orders").select("id,branch_id").eq("id",orderId).maybeSingle();if(!o)return fail("Order sumber tidak ditemukan.",404,origin);sourceBranchId=o.branch_id;}
+    if(paymentId){const {data:p}=await admin.from("payment_records").select("id,order_id").eq("id",paymentId).maybeSingle();if(!p?.order_id)return fail("Payment record sumber tidak ditemukan atau bukan pembayaran order.",404,origin);if(orderId&&orderId!==p.order_id)return fail("Referensi order dan pembayaran tidak cocok.",422,origin);const {data:o}=await admin.from("orders").select("branch_id").eq("id",p.order_id).maybeSingle();sourceBranchId=o?.branch_id||null;}
+    if(posId){const {data:s}=await admin.from("pos_sales").select("id,branch_id,payment_status").eq("id",posId).maybeSingle();if(!s||s.payment_status!=="paid")return fail("Penjualan POS sumber tidak ditemukan atau belum lunas.",409,origin);sourceBranchId=s.branch_id;}
+    if(!sourceBranchId)return fail("Transaksi sumber belum memiliki cabang.",409,origin);
+    const suppliedBranch=safeText(body.branch_id,80);if(suppliedBranch&&suppliedBranch!==sourceBranchId)return fail("Cabang refund harus sama dengan cabang transaksi sumber.",422,origin);
+    if(!await hasFinanceHQ()&&!await branchAccess(sourceBranchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     const code="RFD-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
-    const {data,error}=await admin.from("refund_records").insert({refund_code:code,order_id:orderId,payment_record_id:paymentId,pos_sale_id:posId,branch_id:safeText(body.branch_id,80)||null,amount_idr:amount,reason,status:"requested",requested_by:actor.user.id}).select("*").single();
-    if(error||!data)return fail("Permintaan refund gagal dibuat.",409,origin);
+    const {data,error}=await admin.from("refund_records").insert({refund_code:code,order_id:orderId,payment_record_id:paymentId,pos_sale_id:posId,branch_id:sourceBranchId,amount_idr:amount,reason,status:"requested",requested_by:actor.user.id}).select("*").single();
+    if(error||!data)return fail(error?.message?.includes("refund_exceeds_remaining_balance")?"Jumlah refund melebihi sisa nilai transaksi.":"Permintaan refund gagal dibuat.",409,origin);
     return json({ok:true,refund:data},201,origin);
   }
 
@@ -1024,7 +1031,7 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.requested_by===actor.user.id)return fail("Pemisahan tugas: pembuat refund tidak boleh menyetujui sendiri.",403,origin);
-    if(old.branch_id&&!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(old.branch_id&&!await hasFinanceHQ()&&!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.status!=="requested")return fail("Refund bukan lagi menunggu keputusan.",409,origin);
     const {data,error}=await admin.from("refund_records").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString(),external_reference:note||null}).eq("id",id).eq("status","requested").select("*").maybeSingle();
     if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
