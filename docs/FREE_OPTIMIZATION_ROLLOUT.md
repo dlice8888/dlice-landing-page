@@ -5,57 +5,68 @@
 - All code and database changes are scoped to `feat/free-hardening-optimizations` and Supabase staging project `higoadrzxnhzbbwhdbmh`.
 - Production project `gdjlkrmlsurcdbwnmqgg` and production domain `https://dlice.vercel.app/` must not be modified until staging acceptance passes and Owner explicitly approves.
 - GitHub Actions uses a dependency-free static test job on GitHub-hosted runners. Check account quotas if the repository becomes private; no third-party CI service is required.
-- The app's Supabase Auth leaked-password protection setting cannot be changed through the connected Supabase tools available in this workflow. Owner must enable it manually in staging dashboard first and repeat in production only during an approved release.
+- Supabase Auth leaked-password protection cannot be toggled by the connected Supabase tools. Owner must enable it manually in staging first, then separately in production only during an approved release.
 
 ## Implemented in this branch
-1. Operational login now calls the Edge Function `admin-login`, rather than calling password sign-in directly from the browser. The endpoint validates username, applies account/IP rate limits, returns generic credential errors, and checks that the admin profile is active.
-2. A database-backed `consume_rate_limit` function and `request_rate_limits` table provide atomic, free rate limiting for admin login, ID tracking, token tracking, and order creation. The table has RLS enabled and grants only to `service_role`; raw IP/usernames are not stored (bucket keys are SHA-256 digests).
-3. Supabase URL no longer defaults to the production project if the environment variable is missing. The Edge Function fails closed when `SUPABASE_URL`, service key, or public key is absent.
-4. Payment verification and operational status changes now use database transactions that atomically update status, history, audit log, and reservation state, preventing partial updates when one of those writes fails.
-5. Added privacy-preserving daily funnel aggregates. Only a fixed event name and server date are stored; no cookies, user IDs, phone numbers, order IDs, or IPs are stored. Owner/staff with `orders` permission can load a 30-day aggregate from the operational dashboard.
-6. Added security headers in `vercel.json`: MIME sniffing protection, referrer policy, frame denial, permissions policy, and HSTS.
-7. Added free GitHub Actions static quality checks for HTML inline JavaScript syntax, Edge Function security markers, migration guardrails, and Vercel JSON.
-8. Landing page hero image has high fetch priority/async decoding; menu images use lazy loading/async decoding. A direct Google Maps reviews link is provided without inventing review content or paying for Places API.
-9. Existing catalog already reads from the Supabase `products` table and the order backend computes authoritative prices; keep that single-source-of-truth design.
-10. Existing tracking uses transaction ID + full ordering WhatsApp number or a private tracking token; this branch adds request rate limits to both lookup paths.
+1. Operational login uses Edge Function `admin-login`, not direct browser password sign-in. It validates username, applies account/IP rate limits, returns generic credential errors, and checks that the admin profile is active.
+2. Database-backed `consume_rate_limit` provides atomic limits for login, transaction-code tracking, token tracking, and order creation. Bucket keys are SHA-256 digests; raw IP/usernames are not stored. Old rate-limit buckets are cleaned opportunistically without a scheduled job.
+3. The Edge Function no longer defaults to a production Supabase URL if configuration is missing; it fails closed when required URL/service/public key configuration is absent.
+4. Payment verification and operational status changes use atomic database RPCs for state, history, audit log, and reservation changes.
+5. Daily funnel analytics stores only whitelisted event counts by date, without cookies, user IDs, phone numbers, order IDs, or IPs. Authorized operational users can view a 30-day aggregate.
+6. Security headers are configured in `vercel.json`: MIME sniffing protection, referrer policy, frame denial, permissions policy, and HSTS.
+7. GitHub Actions static checks run on every branch and PR; the workflow checks HTML inline JavaScript syntax, Edge Function security markers, migrations, Vercel JSON, and requires documentation changes when a PR changes migrations.
+8. Landing-page hero image uses high fetch priority/async decoding; menu images use lazy loading/async decoding. A direct Google Maps reviews link was added without inventing review content or paying for Places API.
+9. The catalog uses the Supabase `products` table as source of truth; the order backend calculates authoritative prices.
+10. Tracking uses transaction code + full ordering WhatsApp number or private tracking token, with request rate limits.
+11. Added `docs/STAGING_RELEASE_CHECKLIST.md` and `docs/STAGING_DATABASE_AUDIT_2026-10-20.md` to document acceptance gates, environment policy, RLS/grants, query plans, and index decisions.
+
+## Verified status on 2026-10-20
+- GitHub Actions `Free quality checks` passed for commit `fae6a4dfacaa54fd1a70a6a85a445835ce15b97f`.
+- Vercel created a READY preview for that exact commit: `https://dlice-landing-page-10ljbr75e-dlice8888-7332.vercel.app/`. READY means build/deployment completed, not that browser E2E passed.
+- Vercel project reports SSO protection enabled for deployments except custom domains. The preview still needs an actual Owner browser access check.
+- Staging Supabase read-only audit found service-role-only table grants for the inspected sensitive tables, and only one public read policy on active products.
+- Supabase security advisor still reports leaked-password protection disabled; this is not marked complete.
+- Staging query plans were captured. No indexes were added or removed because the database is very small and current query timings do not justify index changes. See the dated database audit.
+- Vercel environment variables `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` were observed with targets across production, preview, and development. These target scopes have **not** been changed because changing them without inspecting/confirming each environment's intended value risks altering production behavior. Strict variable separation remains a release blocker; review and split scopes in the Vercel dashboard after the staging acceptance plan is approved, without exposing decrypted values.
 
 ## Manual dashboard steps required
 ### Enable leaked-password protection (staging first)
 1. Open Supabase Dashboard for project `higoadrzxnhzbbwhdbmh`.
-2. Go to Authentication settings / Security (exact menu label may vary).
+2. Go to Authentication settings / Security or Password Security (menu labels may vary).
 3. Enable leaked-password protection and save.
-4. Test a normal Owner/staff login and the password policy using a test account; do not test with real customer credentials.
-5. After production is approved, repeat separately for production project `gdjlkrmlsurcdbwnmqgg`.
+4. Validate using test accounts only.
+5. Repeat in production only during an approved release.
+
+### Environment separation and repository controls
+- In Vercel, review variable names and target scopes without decrypting values. Split staging Preview/Development from Production only after confirming each intended project URL and publishable key. Do not remove/replace a variable until all consumers are checked.
+- GitHub branch protection / required checks are account-level repository settings and were not changed by the repository tools. Require `Free quality checks` for merges to protected branches.
+- Vercel reports SSO protection enabled for preview deployments except custom domains; confirm that the Owner can access the exact preview without broadly disabling protection.
 
 Do not change production settings while staging is being tested.
 
 ## RLS/grants audit result
-Read-only audit of staging showed RLS enabled on all listed public tables. Sensitive tables such as `orders`, `order_items`, `payment_records`, `payment_settings`, `notification_log`, `admin_profiles`, and `admin_audit_logs` have no direct `anon` or `authenticated` table grants in the inspected grant list; service-role grants are present for trusted Edge Function operations. This is intentional for the current server-mediated access model. Do not add broad RLS policies just to remove Advisor warnings. Recheck grants/policies after every schema change.
+Read-only staging audit showed RLS enabled on the inspected public tables. Sensitive tables such as `orders`, `order_items`, `payment_records`, `payment_settings`, `notification_log`, `admin_profiles`, `admin_audit_logs`, `funnel_daily_metrics`, and `request_rate_limits` had no direct `anon` or `authenticated` table grants in the inspected grant list; `service_role` grants were present. The only policy returned by `pg_policies` was public SELECT of active `products`. Advisor reports 12 RLS-enabled tables with no policies; given service-role-only grants, do not add broad policies just to silence this informational warning. Recheck grants and policies after schema changes.
 
-## Index audit result
-The staging dataset is small and many indexes report zero scans, while core indexes have been used (e.g. order item/order ID, payment/order ID, order number, tracking token). Do not delete indexes solely based on zero scans; index stats reset and low-volume tables make that signal unreliable. Capture real query plans and production query stats before any removal. The new rate-limit table has a timestamp index for periodic stale-row cleanup.
+## Index and performance audit
+Six indexes were reported unused at audit time, each roughly 8–16 kB. Core indexes were used, including order number, tracking token, order item/order ID, payment/order ID, reservation capacity/order ID, and notification/order ID. Four representative staging plans ran quickly (about 0.17–2.00 ms), but the dataset contains only seven orders and six payment records. No index was added or removed; low-volume staging statistics are not enough to justify production index changes. Capture plans and query statistics after representative traffic.
 
 ## End-to-end staging test checklist
-- [ ] Set up and test leaked-password protection in staging.
-- [ ] Login with correct Owner credentials; invalid password returns a generic error; repeated failures eventually return HTTP 429.
-- [ ] Confirm staff with limited permissions cannot use unauthorized backend actions.
-- [ ] Confirm valid tracking lookup works, wrong WhatsApp/nonexistent ID returns no order data, and repeated requests eventually return HTTP 429.
-- [ ] Confirm private-token tracking continues to work.
-- [ ] Create multi-menu order and verify authoritative totals, DLC transaction code, schedule, receiving method, and delivery address.
-- [ ] Confirm capacity/date reservation and 18:00 WITA cutoff behavior; run concurrent checkout tests before production.
-- [ ] Confirm proof upload/re-upload, payment verification, WhatsApp notification, and operational status gating.
-- [ ] Confirm the new dashboard funnel counts change after page view, menu view, add-to-order, checkout, successful order, proof upload, and WhatsApp click.
-- [ ] Verify anonymous/authenticated REST requests cannot read new metrics/rate-limit tables.
-- [ ] Verify security headers on the staging preview response.
-- [ ] Run GitHub Actions static checks and manually inspect the Preview deployment on desktop/mobile.
-- [ ] Review Supabase security/performance advisors after tests.
-- [ ] Owner approves promotion only after all mandatory checks pass.
+- [ ] Enable/test leaked-password protection in staging.
+- [ ] Test Owner login, generic invalid-password response, and HTTP 429 after repeated failures.
+- [ ] Confirm staff permission boundaries, logout, and expired session behavior.
+- [ ] Test valid/invalid tracking by transaction code + WhatsApp and by private token; invalid lookups reveal no order data and repeated requests hit HTTP 429.
+- [ ] Create a multi-menu order and verify server totals, `DLC-dd/mm/yyyy-xxxxx` code, WITA schedule, receiving method, and delivery address.
+- [ ] Test capacity conflicts and concurrent checkout; capacity must not be oversold.
+- [ ] Test receipt confirmation, bank/QRIS instructions, proof upload/re-upload, payment verification, notification idempotency, and fulfillment gates.
+- [ ] Test every operational transition, cancellation/delivery issue reason, and customer tracking.
+- [ ] Confirm funnel aggregates update and contain no customer identifiers.
+- [ ] Confirm anon/authenticated REST cannot read metrics/rate-limit tables.
+- [ ] Verify security headers and preview protection on the exact preview.
+- [ ] Inspect landing and checkout on mobile and desktop.
+- [ ] Review Supabase security/performance advisors and attach test evidence to PR.
+- [ ] Owner explicitly approves promotion only after all mandatory checks pass.
 
-## Index and performance queries
-Use read-only query plans on staging, e.g. `EXPLAIN (ANALYZE, BUFFERS) SELECT ...` for the actual orders-list, tracking lookup, order-items lookup, and payment queue queries. Never run `ANALYZE` or delete indexes on production as an optimization experiment without a separate change plan.
-
-## Known limitations / no-cost decisions
-- No Google Places API integration or auto-scrolling five-star review carousel is added because a reliable official reviews feed can require API credentials/billing and no verified review dataset was supplied. The site links to the official Google Maps destination instead; never fabricate reviews.
-- No external paid monitoring provider is introduced. Supabase/Vercel native logs and the aggregated dashboard are used; inspect available free-tier limits in each account.
-- Vercel preview protection and branch protection settings are account-level controls and must be checked in dashboards; no API setting exposed in this workflow could safely enforce them automatically.
-- Static CI is not a browser E2E test. The deployment must not be considered production-ready until the manual acceptance checklist passes.
+## No-cost limitations
+- No Google Places API integration or auto-scrolling five-star carousel was added because no verified review feed was supplied and official API use may require billing. The site links to Google Maps instead; never fabricate reviews.
+- No paid monitoring provider or external analytics SDK was added. Use native Supabase/Vercel logs and the privacy-safe aggregate dashboard; these still consume included free-tier quotas.
+- Static CI is not a browser E2E test. Do not mark the deployment production-ready until all manual acceptance checks pass.
