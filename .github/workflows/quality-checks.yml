@@ -27,6 +27,8 @@ jobs:
         run: node --version
       - name: Run dependency-free quality checks
         run: node scripts/quality-checks.mjs
+      - name: Run staging release contract tests
+        run: node scripts/staging-release-contract-tests.mjs
       - name: Require migration and documentation review
         shell: bash
         env:
