@@ -1,12 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "https://gdjlkrmlsurcdbwnmqgg.supabase.co";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
 const SERVICE_KEY = secretKeysRaw ? JSON.parse(secretKeysRaw)["default"] : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
 const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"] : Deno.env.get("SUPABASE_ANON_KEY");
-const admin = createClient(SUPABASE_URL, SERVICE_KEY ?? "", { auth: { persistSession: false } });
-const authClient = createClient(SUPABASE_URL, PUBLIC_KEY ?? "", { auth: { persistSession: false } });
+const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
+const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
 const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const isAllowedOrigin = (origin: string | null) => {
@@ -38,6 +38,14 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
+  const bucket = await sha256(`${scope}:${key}`);
+  const { data, error } = await admin.rpc("consume_rate_limit", { p_bucket_key: bucket, p_limit: limit, p_window_seconds: windowSeconds });
+  if (error) return null;
+  return data === true;
+};
+
 const formatTransactionCode = (orderNumber: number | string, createdAt: string) => {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Makassar", day: "2-digit", month: "2-digit", year: "numeric",
@@ -60,7 +68,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders(origin) });
   if (req.method !== "POST") return fail("Metode tidak didukung.", 405, origin);
   if (origin && !isAllowedOrigin(origin)) return fail("Origin tidak diizinkan.", 403, origin);
-  if (!SERVICE_KEY || !PUBLIC_KEY) return fail("Konfigurasi server belum lengkap.", 500, origin);
+  if (!SUPABASE_URL || !SERVICE_KEY || !PUBLIC_KEY) return fail("Konfigurasi server belum lengkap.", 500, origin);
   let body: Record<string, unknown>;
   try {
     const length = Number(req.headers.get("content-length") ?? "0");
@@ -68,6 +76,63 @@ Deno.serve(async (req: Request) => {
     body = await req.json();
   } catch { return fail("Format permintaan tidak valid.", 400, origin); }
   const action = safeText(body.action, 40);
+
+  if (action === "admin-login") {
+    const username = safeText(body.username, 32).toLowerCase();
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!validUsername(username) || password.length < 1 || password.length > 128) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
+    const ipLimit = await consumeRateLimit("admin-login-ip", requestIp(req), 20, 15 * 60);
+    const accountLimit = await consumeRateLimit("admin-login-account", username, 6, 15 * 60);
+    if (ipLimit === null || accountLimit === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!ipLimit || !accountLimit) return fail("Terlalu banyak percobaan login. Coba lagi dalam 15 menit.", 429, origin);
+    const loginClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data, error } = await loginClient.auth.signInWithPassword({ email: usernameEmail(username), password });
+    if (error || !data.session) return fail("Nama pengguna atau kata sandi tidak sesuai.", 401, origin);
+    const { data: profile } = await admin.from("admin_profiles").select("is_active").eq("user_id", data.user.id).maybeSingle();
+    if (!profile?.is_active) {
+      await loginClient.auth.signOut();
+      return fail("Akun tidak aktif. Hubungi Owner.", 403, origin);
+    }
+    return json({ session: data.session }, 200, origin);
+  }
+
+  if (action === "track-order-by-code") {
+    const limited = await consumeRateLimit("track-order-by-code", requestIp(req), 8, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak percobaan pelacakan. Coba lagi dalam 10 menit.", 429, origin);
+  }
+  if (action === "track-order") {
+    const limited = await consumeRateLimit("track-order-token", requestIp(req), 20, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak permintaan tracking. Coba lagi dalam 10 menit.", 429, origin);
+  }
+  if (action === "create-order") {
+    const limited = await consumeRateLimit("create-order", requestIp(req), 10, 10 * 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia. Coba lagi nanti.", 503, origin);
+    if (!limited) return fail("Terlalu banyak permintaan pesanan. Coba lagi dalam 10 menit.", 429, origin);
+  }
+
+  if (action === "record-funnel-event") {
+    const limited = await consumeRateLimit("funnel-events", requestIp(req), 120, 60);
+    if (limited === null) return fail("Layanan keamanan sementara tidak tersedia.", 503, origin);
+    if (!limited) return fail("Terlalu banyak event. Coba lagi nanti.", 429, origin);
+    const eventName = safeText(body.event_name, 40);
+    const allowedEvents = ["page_view","menu_view","add_to_order","checkout_start","order_created","proof_uploaded","whatsapp_click"];
+    if (!allowedEvents.includes(eventName)) return fail("Event tidak valid.", 422, origin);
+    const { error } = await admin.rpc("record_funnel_event", { p_event: eventName });
+    if (error) return fail("Event tidak dapat dicatat.", 500, origin);
+    return json({ ok: true }, 200, origin);
+  }
+
+  if (action === "admin-funnel-summary") {
+    const actor = await getAdmin(req);
+    if (!actor) return fail("Sesi operasional tidak valid.", 401, origin);
+    if (!actor.profile.permissions.includes("*") && !actor.profile.permissions.includes("orders")) return fail("Akses ringkasan tidak diizinkan.", 403, origin);
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data, error } = await admin.from("funnel_daily_metrics").select("metric_date,event_name,event_count").gte("metric_date", since).order("metric_date", { ascending: true });
+    if (error) return fail("Ringkasan funnel belum tersedia.", 500, origin);
+    return json({ since, metrics: data || [] }, 200, origin);
+  }
 
   if (action === "list-products") {
     const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
@@ -440,10 +505,8 @@ Deno.serve(async (req: Request) => {
     }
     if(oldOrder.payment_status==="paid"&&next!==oldOrder.operational_status){const {data:n}=await admin.from("notification_log").select("status").eq("order_id",orderId).eq("notification_type","payment_verified_whatsapp").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n||n.status!=="sent")return fail("Kirim konfirmasi pembayaran beserta tutorial tracking, lalu tandai terkirim sebelum memperbarui status.",409,origin);}
     if(["cancelled","delivery_issue"].includes(next)&&safeText(body.reason,500).length<4)return fail("Alasan wajib diisi untuk pembatalan/kendala.",422,origin);
-    const { error } = await admin.from("orders").update({ operational_status: next }).eq("id", orderId);
-    if (error) return fail("Status gagal diperbarui.", 500, origin);
-    await admin.from("order_status_history").insert({ order_id: orderId, status_type: "operational", old_status: oldOrder.operational_status, new_status: next, changed_by: actor.user.id, note: safeText(body.reason,500) || null });
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_order_status", entity_type: "order", entity_id: orderId, metadata: { old_status: oldOrder.operational_status, new_status: next, reason: safeText(body.reason,500) || null } });
+    const { data: applied, error } = await admin.rpc("admin_apply_operational_status_change", { p_order_id: orderId, p_actor_user_id: actor.user.id, p_next_status: next, p_reason: safeText(body.reason,500) });
+    if (error || applied !== true) return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan status terbaru.", 409, origin);
     return json({ ok: true }, 200, origin);
   }
 
@@ -452,9 +515,9 @@ Deno.serve(async (req: Request) => {
     const orderId=safeText(body.order_id,80),result=safeText(body.result,20),note=safeText(body.note,500);if(!["paid","rejected"].includes(result))return fail("Hasil verifikasi tidak valid.",422,origin);
     const {data:o}=await admin.from("orders").select("id,order_number,created_at,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
     const {data:p}=await admin.from("payment_records").select("id,proof_storage_path,method").eq("order_id",orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!p)return fail("Tidak ada pembayaran menunggu verifikasi.",409,origin);if(result==="paid"&&!p.proof_storage_path)return fail("Bukti pembayaran wajib tersedia.",409,origin);
-    const {error:pe}=await admin.from("payment_records").update({status:result,verified_by:actor.user.id,verified_at:new Date().toISOString(),admin_note:note||null}).eq("id",p.id);if(pe)return fail("Status pembayaran gagal diperbarui.",500,origin);await admin.from("orders").update({payment_status:result}).eq("id",orderId);await admin.from("order_status_history").insert({order_id:orderId,status_type:"payment",old_status:o.payment_status,new_status:result,changed_by:actor.user.id,note});await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"verify_payment",entity_type:"order",entity_id:orderId,metadata:{result,payment_id:p.id,note}});
-    if(result==="paid"){await admin.from("order_reservations").update({status:"consumed"}).eq("order_id",orderId).in("status",["held_for_verification","active"]);const token=randomToken(),hash=await sha256(token);await admin.from("orders").update({tracking_token_hash:hash}).eq("id",orderId);const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",orderId);const items=(lines||[]).map(i=>`• ${i.product_name_snapshot} × ${i.quantity} — Rp${Number(i.line_total_idr).toLocaleString("id-ID")}`).join("\n");const code=formatTransactionCode(o.order_number,o.created_at),publicBase=origin&&isAllowedOrigin(origin)?origin:"https://dlice.vercel.app",track=`${publicBase}/track.html?token=${token}`,method=p.method==="dlice_qris"?"QRIS D’Lice":"Transfer bank";const msg=`Halo ${o.customer_name}, pembayaran pesanan D’Lice ${code} sudah diverifikasi.\nTotal diterima: Rp${Number(o.product_subtotal_idr).toLocaleString("id-ID")}\nMetode: ${method}\nTanggal: ${o.requested_date}, ${o.requested_time} WITA\nPenerimaan: ${o.receiving_method==="delivery"?"Delivery — "+(o.delivery_address||""):"Pickup"}\nDetail:\n${items}\n\nTutorial cek progress seperti ojol/logistik: buka tautan pribadi berikut, lihat status terakhir dan waktu pembaruan, lalu cek riwayat status. Simpan tautan ini dan jangan bagikan ke orang lain:\n${track}\nJika bermasalah, kirim kode ${code} ke WhatsApp D’Lice. Terima kasih 💗`;const key=`payment-verified:${orderId}`;const {error:le}=await admin.from("notification_log").upsert({order_id:orderId,notification_type:"payment_verified_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:o.customer_whatsapp,message_text:msg},{onConflict:"idempotency_key",ignoreDuplicates:true});if(le)return fail("Pembayaran sudah terverifikasi, tetapi notifikasi gagal dicatat. Retry dari panel staf.",500,origin);return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Kirim konfirmasi beserta tautan tracking, lalu tandai pengiriman berhasil."},200,origin);}
-    await admin.from("order_reservations").update({status:"released",released_at:new Date().toISOString()}).eq("order_id",orderId).in("status",["held_for_verification","active"]);return json({ok:true,message:"Pembayaran ditolak; kapasitas dilepas."},200,origin);
+    const {data:applied,error:applyError}=await admin.rpc("admin_apply_payment_verification",{p_order_id:orderId,p_payment_id:p.id,p_actor_user_id:actor.user.id,p_result:result,p_note:note});if(applyError||applied!==true)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
+    if(result==="paid"){const token=randomToken(),hash=await sha256(token);await admin.from("orders").update({tracking_token_hash:hash}).eq("id",orderId);const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",orderId);const items=(lines||[]).map(i=>`• ${i.product_name_snapshot} × ${i.quantity} — Rp${Number(i.line_total_idr).toLocaleString("id-ID")}`).join("\n");const code=formatTransactionCode(o.order_number,o.created_at),publicBase=origin&&isAllowedOrigin(origin)?origin:"https://dlice.vercel.app",track=`${publicBase}/track.html?token=${token}`,method=p.method==="dlice_qris"?"QRIS D’Lice":"Transfer bank";const msg=`Halo ${o.customer_name}, pembayaran pesanan D’Lice ${code} sudah diverifikasi.\nTotal diterima: Rp${Number(o.product_subtotal_idr).toLocaleString("id-ID")}\nMetode: ${method}\nTanggal: ${o.requested_date}, ${o.requested_time} WITA\nPenerimaan: ${o.receiving_method==="delivery"?"Delivery — "+(o.delivery_address||""):"Pickup"}\nDetail:\n${items}\n\nTutorial cek progress seperti ojol/logistik: buka tautan pribadi berikut, lihat status terakhir dan waktu pembaruan, lalu cek riwayat status. Simpan tautan ini dan jangan bagikan ke orang lain:\n${track}\nJika bermasalah, kirim kode ${code} ke WhatsApp D’Lice. Terima kasih 💗`;const key=`payment-verified:${orderId}`;const {error:le}=await admin.from("notification_log").upsert({order_id:orderId,notification_type:"payment_verified_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:o.customer_whatsapp,message_text:msg},{onConflict:"idempotency_key",ignoreDuplicates:true});if(le)return fail("Pembayaran sudah terverifikasi, tetapi notifikasi gagal dicatat. Retry dari panel staf.",500,origin);return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Kirim konfirmasi beserta tautan tracking, lalu tandai pengiriman berhasil."},200,origin);}
+    return json({ok:true,message:"Pembayaran ditolak; riwayat, audit, dan kapasitas diperbarui dalam satu transaksi."},200,origin);
   }
 
   return fail("Aksi tidak dikenal.", 400, origin);
