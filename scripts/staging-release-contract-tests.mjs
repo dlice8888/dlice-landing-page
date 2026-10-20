@@ -7,6 +7,7 @@ const read = (file) => fs.readFileSync(file, "utf8");
 const edge = read("supabase/functions/dlice-orders/index.ts");
 const html = read("index.html");
 const track = read("track.html");
+const retention = read("supabase/migrations/20261021120000_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
   ["transaction IDs use the agreed DLC date/sequence format", /DLC-\$\{part\("day"\)\}\/\$\{part\("month"\)\}\/\$\{part\("year"\)\}-\$\{String\(orderNumber\)\.padStart\(5,\s*"0"\)\}/.test(edge)],
@@ -22,6 +23,11 @@ const checks = [
   ["server computes authoritative order totals from product data", /unit_price_idr|line_total_idr/.test(edge) && /create-order/.test(edge)],
   ["multi-item checkout controls exist in the customer page", /quantity|cart|items/i.test(html) && /order_items|product_id|quantity/.test(edge)],
   ["tracking page includes order lookup and status display", /track|tracking|transaction_code/i.test(track)],
+  ["retention only targets ephemeral rate limits and old aggregate metrics", /delete from public\.request_rate_limits[\s\S]*?updated_at < now\(\) - interval '30 days'[\s\S]*?delete from public\.funnel_daily_metrics[\s\S]*?metric_date < current_date - 730/.test(retention)],
+  ["retention function preserves orders, payments, proofs, notifications and audit logs", /orders_payment_proofs_notifications_audit_logs', 'preserved'/.test(retention) && !/delete from public\.(orders|order_items|payment_records|notification_log|admin_audit_logs)/.test(retention)],
+  ["cleanup RPC is not executable by public client roles", /revoke all on function public\.cleanup_operational_data\(\) from public, anon, authenticated;[\s\S]*?grant execute on function public\.cleanup_operational_data\(\) to service_role/.test(retention)],
+  ["retention job is scheduled once daily", /cron\.schedule\([\s\S]*?'dlice-operational-retention'[\s\S]*?'17 3 \* \* \*'/.test(retention)],
+  ["trigger helper is not a public callable API", /revoke all on function public\.set_updated_at\(\) from public, anon, authenticated/.test(retention)],
 ];
 
 for (const [label, ok] of checks) {
