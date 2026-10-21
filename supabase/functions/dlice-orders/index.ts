@@ -403,6 +403,12 @@ Deno.serve(async (req: Request) => {
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
   };
+  const hasHQPermission = async (permission: string): Promise<boolean> => {
+    if (actor.profile.role === "owner") return true;
+    if (!actor.profile.permissions.includes(permission)) return false;
+    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active");
+    return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
+  };
 
   const permissionForAction: Record<string, string> = {
     "admin-list-orders": "orders",
@@ -571,6 +577,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-configure-product") {
+    if (!await hasHQPermission("catalog")) return fail("Pengaturan kapasitas produk global memerlukan izin Catalog Head Office.", 403, origin);
     const slug = safeText(body.slug, 80);
     const price = Number(body.unit_price_idr);
     const date = safeText(body.service_date, 10);
@@ -725,6 +732,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-save-inventory") {
+    if (!await hasHQPermission("inventory")) return fail("Master item persediaan global memerlukan izin Inventory Head Office.",403,origin);
     const id=safeText(body.id,80),sku=safeText(body.sku,40).toUpperCase(),name=safeText(body.name,120),unit=safeText(body.unit,20)||"pcs",category=safeText(body.category,40)||"ingredients",minStock=Number(body.min_stock||0);
     if(!/^[A-Z0-9._-]{2,40}$/.test(sku)||!name||!Number.isFinite(minStock)||minStock<0)return fail("SKU, nama, atau minimum stok tidak valid.",422,origin);
     const values={sku,name,unit,category,min_stock:minStock,is_active:body.is_active!==false,updated_at:new Date().toISOString()};
@@ -933,7 +941,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-save-recipe") {
-    if(!hasPerm("production"))return fail("Izin produksi diperlukan.",403,origin);
+    if(!await hasHQPermission("production"))return fail("Pembuatan resep global memerlukan izin Production Head Office.",403,origin);
     const productId=safeText(body.product_id,80),yieldQty=Number(body.yield_quantity),yieldUnit=safeText(body.yield_unit,20),ingredients=body.ingredients;
     if(!productId||!Number.isFinite(yieldQty)||yieldQty<=0||!yieldUnit||!Array.isArray(ingredients)||!ingredients.length||ingredients.length>100)return fail("Data resep tidak valid.",422,origin);
     const {data:product}=await admin.from("products").select("id").eq("id",productId).maybeSingle();if(!product)return fail("Produk tidak ditemukan.",404,origin);
@@ -951,7 +959,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-activate-recipe") {
-    if(!isOwner&&!hasPerm("production"))return fail("Persetujuan Owner/produksi diperlukan.",403,origin);
+    if(!await hasHQPermission("production"))return fail("Aktivasi resep global memerlukan izin Production Head Office.",403,origin);
     const id=safeText(body.recipe_id,80);
     const {data,error}=await admin.rpc("erp_activate_recipe",{p_recipe_id:id,p_actor_user_id:actor.user.id});
     if(error)return fail(error.message.includes("recipe_has_no_ingredients")?"Resep tanpa bahan tidak dapat diaktifkan.":error.message.includes("recipe_not_draft")?"Hanya draft resep yang dapat diaktifkan.":"Aktivasi resep gagal.",409,origin);
