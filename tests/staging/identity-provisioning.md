@@ -8,12 +8,12 @@ In Supabase Dashboard for project `higoadrzxnhzbbwhdbmh` → Authentication → 
 
 | Fixture | Suggested email | Profile / branch scope |
 |---|---|---|
-| Owner | `qa-owner-20261021@example.invalid` | `owner`, global |
-| Branch A manager | `qa-manager-a-20261021@example.invalid` | `sales_admin`, QA-DLICE-A |
-| Branch B manager | `qa-manager-b-20261021@example.invalid` | `sales_admin`, QA-DLICE-B |
-| Cashier A | `qa-cashier-a-20261021@example.invalid` | `sales_admin`, POS only, QA-DLICE-A |
-| Insufficient-permission staff | `qa-no-permission-20261021@example.invalid` | `sales_admin`, empty permissions, QA-DLICE-A |
-| Inactive staff | `qa-inactive-20261021@example.invalid` | `sales_admin`, inactive, QA-DLICE-A |
+| Owner | `qa-owner-20261021@accounts.dlice.internal` | `owner`, global |
+| Branch A manager | `qa-manager-a-20261021@accounts.dlice.internal` | `sales_admin`, QA-DLICE-A |
+| Branch B manager | `qa-manager-b-20261021@accounts.dlice.internal` | `sales_admin`, QA-DLICE-B |
+| Cashier A | `qa-cashier-a-20261021@accounts.dlice.internal` | `sales_admin`, POS only, QA-DLICE-A |
+| Insufficient-permission staff | `qa-no-permission-20261021@accounts.dlice.internal` | `sales_admin`, empty permissions, QA-DLICE-A |
+| Inactive staff | `qa-inactive-20261021@accounts.dlice.internal` | `sales_admin`, inactive, QA-DLICE-A |
 
 Record each Auth user UUID. Never commit passwords, refresh tokens, access tokens, or the full user export.
 
@@ -86,3 +86,26 @@ Use the staging Auth login flow with the disposable email/password pairs to obta
 - Branch B capacity fixture: `90000000-0000-4000-8000-000000000601`
 
 These fixture branches are active for internal ERP tests only. Online checkout remains disabled on all three.
+
+
+## 5. Browser and CI smoke runner
+
+The staging branch now includes a manual GitHub Actions workflow at `.github/workflows/staging-p0-smoke.yml`. Before dispatching it:
+
+1. In GitHub → Settings → Environments, configure the `staging` environment (or remove the environment gate only if repository policy allows).
+2. Add these environment secrets to the `staging` environment. Never store access tokens in source files:
+   - `STAGING_SUPABASE_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co`
+   - `STAGING_SUPABASE_PUBLIC_KEY` — staging publishable/anon key only
+   - `STAGING_EDGE_FUNCTION_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders`
+   - `STAGING_TEST_OWNER_JWT`
+   - `STAGING_TEST_BRANCH_A_MANAGER_JWT`
+   - `STAGING_TEST_NO_PERMISSION_JWT`
+   - `STAGING_TEST_INACTIVE_STAFF_JWT`
+3. Add the current stable branch Preview alias to the staging Edge Function secret `DLICE_ALLOWED_ORIGINS`, preserving existing entries:
+   `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`
+   The current deployment-specific Preview URL is `https://dlice-landing-page-1u0n1aix1-dlice8888-7332.vercel.app`; use the stable branch alias as the browser target so subsequent deployments keep the same origin. Recheck the alias before running.
+4. In GitHub → Actions → **Staging P0 and browser smoke** → Run workflow, enter:
+   `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`
+5. Download the two workflow artifacts. The P0 job must have no FAIL or BLOCKED checks. A job that exits with code 2 means prerequisites are missing; do not report it as a pass.
+
+The browser job only checks Preview reachability, login shell, and desktop/mobile layout. It does not perform authenticated business transactions or replace the four cross-module acceptance tests.
