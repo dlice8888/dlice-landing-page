@@ -28,6 +28,18 @@ Target: Supabase staging `higoadrzxnhzbbwhdbmh` and the Vercel Preview for this 
 7. Run mobile/tablet/desktop browser acceptance on the Preview. A READY deployment is not a substitute for this test.
 8. Do not merge or deploy to production until all P0 checks pass and the Owner explicitly approves.
 
+## Runtime evidence collected on staging — 2026-10-22
+
+- Migration is applied to Supabase staging and recorded as version `20261021182634`; metadata query confirms RLS enabled, restrictive deny policy present, `anon` and `authenticated` SELECT privileges false, and `service_role` SELECT true.
+- Edge Function `dlice-orders` is ACTIVE at version 35 with the checklist actions deployed.
+- CORS preflight from the previously allowlisted PR #25 branch alias returns HTTP 200 with the exact matching `Access-Control-Allow-Origin`.
+- A preflight from an intentionally unlisted origin returns HTTP 403. The handler emits `https://dlice.vercel.app` as the fallback allow-origin header, which does not match the requesting origin, so browsers will still block it.
+- Calling a protected checklist action without an authenticated session returns HTTP 401.
+- Direct Data API access to `branch_operation_checklist_runs` with the publishable key returns HTTP 401 / permission denied, confirming there is no direct table read path.
+- Vercel Preview deployment for this branch is READY, but the deployment is protected by Vercel SSO. An unauthenticated fetch returns the Vercel login page, so no browser screenshot or interactive browser acceptance is claimed.
+- **Preview CORS blocker:** this branch's alias `https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app` currently returns HTTP 403 on CORS preflight. Add this exact HTTPS origin to the Supabase staging Edge Function secret `DLICE_ALLOWED_ORIGINS` before testing this branch's browser UI. The secret cannot be read or updated through the available connection, so this step has not been performed here.
+- Authenticated Owner/assigned-manager/wrong-branch/no-permission/inactive-user tests and full browser E2E remain blocked until the protected test credentials are provisioned and the Preview origin is allowlisted.
+
 ## Deliberate limits
 
 This slice is not a full SOP platform. It does not yet include configurable checklist templates, photo/file evidence, calibrated food-safety temperature capture, equipment-maintenance workflows, corrective-action assignment/verification, reminders, escalation, or a branch opening gate that automatically changes operating status. Those require separate domain slices and acceptance tests.
