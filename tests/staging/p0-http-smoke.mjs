@@ -123,7 +123,7 @@ for (const table of ["orders", "order_items", "payment_records", "pos_sales", "i
   const noRowUpdate = await request(`P0-RLS-UPDATE-${table}`, `${supabaseUrl}/rest/v1/${table}?id=eq.${badUuid}`, {
     method: "PATCH",
     headers: { ...headers, prefer: "return=minimal" },
-    body: JSON.stringify({ updated_at: "2000-01-01T00:00:00Z" }),
+    body: JSON.stringify({ id: badUuid }),
   });
   if (noRowUpdate) {
     const ok = [401, 403].includes(noRowUpdate.response.status);
