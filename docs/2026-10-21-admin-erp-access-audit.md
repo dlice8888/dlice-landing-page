@@ -60,7 +60,7 @@ Do not test by creating live customer orders without clearly identified staging 
 
 ## Remaining blockers before merge
 
-- `DLICE_ALLOWED_ORIGINS` must be set in **staging Supabase Edge Function secrets only** before deploying the new function. Exact current Preview URL and branch alias are listed in the PR review notes; do not put this secret in GitHub or Vercel environment variables.
+- `DLICE_ALLOWED_ORIGINS` must be set in **staging Supabase Edge Function secrets only** before deploying the new function. For this Preview build, use the exact origins `https://dlice-landing-page-8dpz60b1t-dlice8888-7332.vercel.app` and `https://dlice-landing-page-git-fix-staging-securi-5147fa-dlice8888-7332.vercel.app` (comma-separated, no trailing slashes) as the `DLICE_ALLOWED_ORIGINS` value in staging Supabase Edge Function Secrets. Do not put this secret in GitHub or Vercel environment variables.
 - Redeploy `dlice-orders` to staging after the secret is saved, then test CORS and the matrix above. The active runtime has not yet been replaced by the audited branch code.
 - Supabase Security Advisor still reports `auth_leaked_password_protection`. The feature is plan-dependent (Supabase documents availability on Pro and above); do not upgrade or add paid services under the no-cost constraint. Confirm whether it is available on the current staging plan.
 - Test the current Preview on desktop and mobile after the backend CORS configuration is ready. The Vercel deployment being READY only confirms the build/deployment, not browser acceptance.
