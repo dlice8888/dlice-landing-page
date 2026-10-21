@@ -2,20 +2,20 @@
 
 This procedure is intentionally manual because the connected Supabase tools do not expose Auth Admin user creation or token minting. Do not insert directly into `auth.users`, do not reuse real staff accounts, and never place passwords or JWTs in Git.
 
-## 1. Create six users in the STAGING Supabase project only
+## 1. Create disposable accounts through the D’Lice operational account workflow — STAGING only
 
-In Supabase Dashboard for project `higoadrzxnhzbbwhdbmh` → Authentication → Users, create unique disposable users and mark email as confirmed (no email delivery is needed for reserved test domains). Generate unique passwords and keep them in a local password manager. Suggested identifiers:
+Use the Owner/Head account in the staging ERP to create disposable test accounts with **username + password**, matching the actual D’Lice login model. Do not create test users manually through Supabase Authentication and do not require email addresses for this test procedure. Use unique test usernames and strong passwords; keep passwords in a local password manager. Suggested usernames:
 
-| Fixture | Suggested email | Profile / branch scope |
+| Fixture | Username | Profile / branch scope |
 |---|---|---|
-| Owner | `qa-owner-20261021@accounts.dlice.internal` | `owner`, global |
-| Branch A manager | `qa-manager-a-20261021@accounts.dlice.internal` | `sales_admin`, QA-DLICE-A |
-| Branch B manager | `qa-manager-b-20261021@accounts.dlice.internal` | `sales_admin`, QA-DLICE-B |
-| Cashier A | `qa-cashier-a-20261021@accounts.dlice.internal` | `sales_admin`, POS only, QA-DLICE-A |
-| Insufficient-permission staff | `qa-no-permission-20261021@accounts.dlice.internal` | `sales_admin`, empty permissions, QA-DLICE-A |
-| Inactive staff | `qa-inactive-20261021@accounts.dlice.internal` | `sales_admin`, inactive, QA-DLICE-A |
+| Owner | `qa-owner-20261021` | `owner`, global |
+| Branch A manager | `qa-manager-a-20261021` | `sales_admin`, QA-DLICE-A |
+| Branch B manager | `qa-manager-b-20261021` | `sales_admin`, QA-DLICE-B |
+| Cashier A | `qa-cashier-a-20261021` | `sales_admin`, POS only, QA-DLICE-A |
+| Insufficient-permission staff | `qa-no-permission-20261021` | `sales_admin`, empty permissions, QA-DLICE-A |
+| Inactive staff | `qa-inactive-20261021` | `sales_admin`, inactive, QA-DLICE-A |
 
-Record each Auth user UUID. Never commit passwords, refresh tokens, access tokens, or the full user export.
+Record each account’s internal Auth user UUID only for staging profile/assignment setup. Never commit passwords, refresh tokens, access tokens, or a full user export.
 
 ## 2. Create profile and branch assignments
 
@@ -73,9 +73,9 @@ commit;
 
 **Do not execute this template until all six placeholders are replaced with real UUIDs from the staging Auth Users page.** Never run it against production. The Owner profile is intentionally global; keep its credentials only in the password manager and revoke/delete the disposable user after acceptance testing.
 
-## 3. Obtain short-lived access tokens outside Git
+## 3. Obtain short-lived access tokens through username login
 
-Use the staging Auth login flow with the disposable email/password pairs to obtain access tokens. Export them only in the local runner shell as `TEST_STAFF_JWT` and `TEST_OWNER_JWT`; do not paste tokens into chat, issues, logs, or repository files. Use the Branch A manager token with `TEST_BRANCH_B_ID=90000000-0000-4000-8000-000000000002` to test cross-branch denial. The HTTP runner's results are not evidence until actually executed from a networked environment.
+The CI runner calls the staging Edge Function’s `admin-login` action with each disposable username/password and keeps the returned access tokens in process memory only. Do not manually export JWTs or paste credentials/tokens into chat, issues, logs, or repository files. Use the Branch A manager token with `TEST_BRANCH_B_ID=90000000-0000-4000-8000-000000000002` to test cross-branch denial. The HTTP runner's results are not evidence until actually executed from a networked environment.
 
 ## 4. Expected IDs
 
@@ -93,16 +93,16 @@ These fixture branches are active for internal ERP tests only. Online checkout r
 The staging branch now includes a manual GitHub Actions workflow at `.github/workflows/staging-p0-smoke.yml`. Before dispatching it:
 
 1. In GitHub → Settings → Environments, configure the `staging` environment (or remove the environment gate only if repository policy allows).
-2. Add these environment secrets to the `staging` environment. Never store access tokens in source files:
+2. Add these environment secrets to the `staging` environment. Account credentials are username/password pairs (not email/password). Never store access tokens in source files:
    - `STAGING_SUPABASE_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co`
    - `STAGING_SUPABASE_PUBLIC_KEY` — staging publishable/anon key only
    - `STAGING_EDGE_FUNCTION_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders`
-   - `STAGING_TEST_OWNER_EMAIL` and `STAGING_TEST_OWNER_PASSWORD`
-   - `STAGING_TEST_BRANCH_A_EMAIL` and `STAGING_TEST_BRANCH_A_PASSWORD`
-   - `STAGING_TEST_NO_PERMISSION_EMAIL` and `STAGING_TEST_NO_PERMISSION_PASSWORD`
-   - `STAGING_TEST_INACTIVE_EMAIL` and `STAGING_TEST_INACTIVE_PASSWORD`
+   - `STAGING_TEST_OWNER_USERNAME` and `STAGING_TEST_OWNER_PASSWORD`
+   - `STAGING_TEST_BRANCH_A_USERNAME` and `STAGING_TEST_BRANCH_A_PASSWORD`
+   - `STAGING_TEST_NO_PERMISSION_USERNAME` and `STAGING_TEST_NO_PERMISSION_PASSWORD`
+   - `STAGING_TEST_INACTIVE_USERNAME` and `STAGING_TEST_INACTIVE_PASSWORD`
 
-   The workflow uses `tests/staging/run-p0-with-login.mjs` to obtain short-lived tokens at runtime. Do not store bearer tokens as secrets; keep only disposable-user credentials in the protected GitHub `staging` environment.
+   The workflow uses `tests/staging/run-p0-with-login.mjs` to obtain short-lived tokens through the D’Lice `admin-login` action at runtime. Do not store bearer tokens as secrets; keep only disposable username/password credentials in the protected GitHub `staging` environment.
 3. Add the current stable branch Preview alias to the staging Edge Function secret `DLICE_ALLOWED_ORIGINS`, preserving existing entries:
    `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`
    The current deployment-specific Preview URL is `https://dlice-landing-page-1u0n1aix1-dlice8888-7332.vercel.app`; use the stable branch alias as the browser target so subsequent deployments keep the same origin. Recheck the alias before running.
