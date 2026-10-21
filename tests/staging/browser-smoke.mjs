@@ -13,7 +13,7 @@ if (!base) {
   process.exit(2);
 }
 const parsed = new URL(base);
-if (!parsed.hostname.endsWith(".vercel.app") || parsed.hostname === "dlice.vercel.app") {
+if (!parsed.hostname.endsWith(".vercel.app") || ["dlice.vercel.app", "dlice-landing-page.vercel.app"].includes(parsed.hostname)) {
   console.error("REFUSED: PREVIEW_URL must be a Vercel Preview host, not production.");
   process.exit(2);
 }
