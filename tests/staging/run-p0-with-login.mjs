@@ -58,8 +58,34 @@ process.env.TEST_NO_PERMISSION_STAFF_JWT = await tokenFor(
   process.env.STAGING_TEST_NO_PERMISSION_USERNAME,
   process.env.STAGING_TEST_NO_PERMISSION_PASSWORD,
 );
-process.env.TEST_INACTIVE_STAFF_JWT = await tokenFor(
-  "inactive staff",
+// The public username-login action correctly refuses inactive profiles. For this
+// negative test only, mint a normal staging Auth token using the internal synthetic
+// email mapping, then verify the Edge Function rejects the inactive profile.
+async function tokenForInactiveProfile(username, password) {
+  const base = process.env.SUPABASE_URL.replace(/\\/$/, "");
+  const internalEmail = `${username.toLowerCase()}@accounts.dlice.internal`;
+  let response;
+  try {
+    response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        apikey: process.env.SUPABASE_ANON_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ email: internalEmail, password }),
+    });
+  } catch {
+    console.error("BLOCKED: could not reach staging Auth for inactive-profile negative test.");
+    process.exit(2);
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || typeof body.access_token !== "string") {
+    console.error(`BLOCKED: could not obtain staging Auth token for inactive-profile negative test; Auth returned HTTP ${response.status}.`);
+    process.exit(2);
+  }
+  return body.access_token;
+}
+process.env.TEST_INACTIVE_STAFF_JWT = await tokenForInactiveProfile(
   process.env.STAGING_TEST_INACTIVE_USERNAME,
   process.env.STAGING_TEST_INACTIVE_PASSWORD,
 );
