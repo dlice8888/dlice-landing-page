@@ -42,6 +42,7 @@ jobs:
           }
           console.log("Preview target:", u.origin);
           console.log("origin=" + u.origin);
+          await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\\n"));
           NODE
       - name: Run P0 HTTP security checks
         env:
