@@ -8,7 +8,7 @@ const edge = read("supabase/functions/dlice-orders/index.ts");
 const html = read("index.html");
 const track = read("track.html");
 const erp = read("erp.html");
-const branchChecklistMigration = read("supabase/migrations/20261021182600_branch_operation_checklists.sql");
+const branchChecklistMigration = read("supabase/migrations/20261021182634_branch_operation_checklists.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
