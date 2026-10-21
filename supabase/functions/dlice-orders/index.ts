@@ -409,7 +409,6 @@ Deno.serve(async (req: Request) => {
     "admin-retry-payment-notification": "orders",
     "erp-overview": "reports",
     "erp-save-branch": "branches",
-    "erp-list-positions": "hr",
     "erp-save-assignment": "staff",
     "erp-list-inventory": "inventory",
     "erp-save-inventory": "inventory",
