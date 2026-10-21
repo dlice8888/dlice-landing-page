@@ -123,3 +123,35 @@ Do not merge PRs or change production until:
 - CI is green on the final head;
 - rollback and backup/restore evidence is attached;
 - Owner explicitly approves the merge/deployment.
+
+
+## Implementation update — staging fixture and HTTP runner (2026-10-21)
+
+Synthetic fixtures have been seeded in staging project `higoadrzxnhzbbwhdbmh` using `tests/staging/fixtures.sql`:
+- Branch `QA-DLICE-A`: active ERP fixture, `Asia/Jakarta`, online checkout disabled.
+- Branch `QA-DLICE-B`: active ERP fixture, `Asia/Makassar`, online checkout disabled.
+- Branch `QA-DLICE-C`: active ERP fixture, `Asia/Jayapura`, online checkout disabled.
+- Product `qa-staging-only-fixture`: inactive; not a sellable/public staging menu item.
+- Two synthetic ingredient items, one synthetic supplier, one draft recipe and two recipe ingredients.
+- Fixture UUIDs are deterministic and documented in the SQL file. No real customer/order data was created.
+
+The cleanup script is `tests/staging/fixtures-cleanup.sql`. It checks for key order/POS/PO/production/assignment references before deleting fixture records. Capture test evidence and run cleanup only after acceptance tests are complete.
+
+The HTTP harness is `tests/staging/p0-http-smoke.mjs`. It tests allowed/disallowed CORS, missing/invalid bearer tokens, and direct Data API access using only the public staging key. It does not use service-role credentials or intentionally perform successful business mutations. Run it from a networked runner with the current Preview origin and staging-only environment variables:
+```sh
+SUPABASE_URL=https://higoadrzxnhzbbwhdbmh.supabase.co \
+STAGING_EDGE_FUNCTION_URL=https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders \
+SUPABASE_ANON_KEY='<staging public anon/publishable key>' \
+ALLOWED_PREVIEW_ORIGIN='<current Vercel Preview origin>' \
+DISALLOWED_ORIGIN='https://dlice-p0-negative.invalid' \
+node tests/staging/p0-http-smoke.mjs
+```
+
+### Verified now vs still blocked
+
+- Verified through privileged SQL metadata: 26 listed internal ERP tables deny SELECT, INSERT, UPDATE and DELETE table privileges to both `anon` and `authenticated`. This is database privilege evidence, not proof of HTTP behavior.
+- Verified fixture state through staging SQL: three active ERP-only test branches with checkout disabled; fixture product inactive; recipe remains draft.
+- HTTP execution remains blocked in this session because the available runtime cannot resolve the Supabase API host (DNS/network unavailable). The runner is committed but its runtime result is not PASS.
+- Disposable Auth users/tokens (Owner, branch A, branch B, cashier, insufficient-permission, inactive profile) have not been provisioned by the connected tools. Do not fabricate JWTs or use real staff accounts.
+- Do not enable checkout on these fixture branches merely to test a boundary. A controlled clock/test seam or an explicitly isolated test branch is still required for 17:59/18:00/18:01 tests.
+- All four cross-module workflows remain **BLOCKED / NOT PASSED** until disposable identities and HTTP access are available and source-to-ledger reconciliation evidence is recorded.
