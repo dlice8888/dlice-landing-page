@@ -20,7 +20,7 @@ Target: Supabase staging `higoadrzxnhzbbwhdbmh` and the Vercel Preview for this 
 ## Staging rollout order
 
 1. Review CI and the SQL migration in this draft PR.
-2. Apply migration `20261021182600_branch_operation_checklists.sql` to the staging project only.
+2. Apply migration `20261021182634_branch_operation_checklists.sql` to the staging project only.
 3. Deploy the branch's `dlice-orders` Edge Function source to staging only.
 4. Verify table RLS and grants; verify no direct Data API access is possible.
 5. Run authenticated tests for Owner, assigned Branch A manager, wrong-branch manager, no-permission user, and inactive user.
