@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate Preview target
+        id: preview
         env:
           PREVIEW_URL: ${{ inputs.preview_url }}
         run: |
@@ -40,13 +41,14 @@ jobs:
             process.exit(2);
           }
           console.log("Preview target:", u.origin);
+          console.log("origin=" + u.origin);
           NODE
       - name: Run P0 HTTP security checks
         env:
           SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
           STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          ALLOWED_PREVIEW_ORIGIN: ${{ inputs.preview_url }}
+          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
           DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
           TEST_STAFF_JWT: ${{ secrets.STAGING_TEST_BRANCH_A_MANAGER_JWT }}
           TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
