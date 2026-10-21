@@ -1,0 +1,36 @@
+-- Cover the exact 34 foreign-key constraints reported by the staging Performance Advisor.
+-- These are missing leading-column indexes, not blanket duplicate indexes; existing covering indexes were excluded.
+CREATE INDEX IF NOT EXISTS branch_product_capacity_product_id_idx ON public.branch_product_capacity (product_id);
+CREATE INDEX IF NOT EXISTS cash_reconciliations_prepared_by_idx ON public.cash_reconciliations (prepared_by);
+CREATE INDEX IF NOT EXISTS cash_reconciliations_reviewed_by_idx ON public.cash_reconciliations (reviewed_by);
+CREATE INDEX IF NOT EXISTS cash_reconciliations_shift_id_idx ON public.cash_reconciliations (shift_id);
+CREATE INDEX IF NOT EXISTS finance_journal_entries_branch_id_idx ON public.finance_journal_entries (branch_id);
+CREATE INDEX IF NOT EXISTS finance_journal_entries_created_by_idx ON public.finance_journal_entries (created_by);
+CREATE INDEX IF NOT EXISTS finance_journal_entries_fiscal_period_id_idx ON public.finance_journal_entries (fiscal_period_id);
+CREATE INDEX IF NOT EXISTS finance_journal_entries_reverses_entry_id_idx ON public.finance_journal_entries (reverses_entry_id);
+CREATE INDEX IF NOT EXISTS fiscal_periods_closed_by_idx ON public.fiscal_periods (closed_by);
+CREATE INDEX IF NOT EXISTS fiscal_periods_reopened_by_idx ON public.fiscal_periods (reopened_by);
+CREATE INDEX IF NOT EXISTS payment_settlements_reconciled_by_idx ON public.payment_settlements (reconciled_by);
+CREATE INDEX IF NOT EXISTS production_batches_branch_id_idx ON public.production_batches (branch_id);
+CREATE INDEX IF NOT EXISTS production_batches_completed_by_idx ON public.production_batches (completed_by);
+CREATE INDEX IF NOT EXISTS production_batches_recipe_id_idx ON public.production_batches (recipe_id);
+CREATE INDEX IF NOT EXISTS production_batches_started_by_idx ON public.production_batches (started_by);
+CREATE INDEX IF NOT EXISTS production_consumptions_inventory_item_id_idx ON public.production_consumptions (inventory_item_id);
+CREATE INDEX IF NOT EXISTS production_consumptions_recorded_by_idx ON public.production_consumptions (recorded_by);
+CREATE INDEX IF NOT EXISTS production_consumptions_stock_movement_id_idx ON public.production_consumptions (stock_movement_id);
+CREATE INDEX IF NOT EXISTS purchase_receipt_items_inventory_item_id_idx ON public.purchase_receipt_items (inventory_item_id);
+CREATE INDEX IF NOT EXISTS purchase_receipt_items_purchase_order_item_id_idx ON public.purchase_receipt_items (purchase_order_item_id);
+CREATE INDEX IF NOT EXISTS purchase_receipt_items_receipt_id_idx ON public.purchase_receipt_items (receipt_id);
+CREATE INDEX IF NOT EXISTS purchase_receipts_branch_id_idx ON public.purchase_receipts (branch_id);
+CREATE INDEX IF NOT EXISTS purchase_receipts_received_by_idx ON public.purchase_receipts (received_by);
+CREATE INDEX IF NOT EXISTS recipe_ingredients_inventory_item_id_idx ON public.recipe_ingredients (inventory_item_id);
+CREATE INDEX IF NOT EXISTS recipes_approved_by_idx ON public.recipes (approved_by);
+CREATE INDEX IF NOT EXISTS recipes_created_by_idx ON public.recipes (created_by);
+CREATE INDEX IF NOT EXISTS refund_records_branch_id_idx ON public.refund_records (branch_id);
+CREATE INDEX IF NOT EXISTS refund_records_order_id_idx ON public.refund_records (order_id);
+CREATE INDEX IF NOT EXISTS refund_records_payment_record_id_idx ON public.refund_records (payment_record_id);
+CREATE INDEX IF NOT EXISTS refund_records_pos_sale_id_idx ON public.refund_records (pos_sale_id);
+CREATE INDEX IF NOT EXISTS refund_records_processed_by_idx ON public.refund_records (processed_by);
+CREATE INDEX IF NOT EXISTS refund_records_requested_by_idx ON public.refund_records (requested_by);
+CREATE INDEX IF NOT EXISTS refund_records_reviewed_by_idx ON public.refund_records (reviewed_by);
+CREATE INDEX IF NOT EXISTS tax_settings_created_by_idx ON public.tax_settings (created_by);
