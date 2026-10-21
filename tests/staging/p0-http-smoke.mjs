@@ -22,8 +22,6 @@
  *
  * Run: node tests/staging/p0-http-smoke.mjs
  */
-import assert from "node:assert/strict";
-
 const required = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "STAGING_EDGE_FUNCTION_URL", "ALLOWED_PREVIEW_ORIGIN", "DISALLOWED_ORIGIN"];
 const missing = required.filter((name) => !process.env[name]);
 if (missing.length) {
@@ -81,6 +79,16 @@ const noAuthPost = await request("P0-AUTH-01", edgeUrl, {
 if (noAuthPost) {
   const ok = noAuthPost.response.status === 401 && exactCors(noAuthPost.response, allowed) && corsNotWildcard(noAuthPost.response);
   record("P0-AUTH-01", ok, `POST without bearer status=${noAuthPost.response.status}, ACAO=${noAuthPost.headers.get("access-control-allow-origin")}`);
+}
+
+const invalidTokenPost = await request("P0-AUTH-02", edgeUrl, {
+  method: "POST",
+  headers: { origin: allowed, apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
+  body: JSON.stringify({ action: "erp-list-orders" }),
+});
+if (invalidTokenPost) {
+  const ok = invalidTokenPost.response.status === 401 && exactCors(invalidTokenPost.response, allowed) && corsNotWildcard(invalidTokenPost.response);
+  record("P0-AUTH-02", ok, `POST with invalid bearer status=${invalidTokenPost.response.status}, ACAO=${invalidTokenPost.headers.get("access-control-allow-origin")}`);
 }
 
 const deniedOptions = await request("P0-CORS-02", edgeUrl, {
