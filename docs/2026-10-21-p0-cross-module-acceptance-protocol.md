@@ -155,3 +155,15 @@ node tests/staging/p0-http-smoke.mjs
 - Disposable Auth users/tokens (Owner, branch A, branch B, cashier, insufficient-permission, inactive profile) have not been provisioned by the connected tools. Do not fabricate JWTs or use real staff accounts.
 - Do not enable checkout on these fixture branches merely to test a boundary. A controlled clock/test seam or an explicitly isolated test branch is still required for 17:59/18:00/18:01 tests.
 - All four cross-module workflows remain **BLOCKED / NOT PASSED** until disposable identities and HTTP access are available and source-to-ledger reconciliation evidence is recorded.
+
+
+## Follow-up runner and browser checks (2026-10-22)
+
+- `tests/staging/run-p0-with-login.mjs` now requests short-lived access tokens at runtime for Owner, Branch A manager, no-permission staff, and inactive staff. It never prints or persists bearer tokens.
+- `tests/staging/p0-http-smoke.mjs` now exits with code 2 when required identity checks are blocked. A partial run cannot be reported as PASS.
+- `tests/staging/browser-smoke.mjs` covers Preview reachability, ERP login shell on desktop/mobile, horizontal overflow, and a minimum mobile tap target. This is a UI smoke test only, not authenticated business workflow acceptance.
+- `.github/workflows/staging-p0-smoke.yml` is a manual GitHub Actions workflow. It is not auto-dispatched and has not yet been run. It requires the protected `staging` environment secrets described in `tests/staging/identity-provisioning.md`.
+- The current stable Vercel branch alias is `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`. Add this exact origin to staging Edge Function `DLICE_ALLOWED_ORIGINS` before the HTTP test. Preserve existing origins.
+- A Vercel deployment for the staging branch returned READY, and fetching `/erp.html` from its deployment URL returned HTTP 200. This is a reachability/source response check, not a Playwright browser PASS.
+
+No authenticated P0 test result or cross-module workflow has been recorded yet. Do not proceed to write-heavy business workflow tests until the P0 workflow exits zero with no BLOCKED checks.
