@@ -19,7 +19,18 @@ Record each account’s internal Auth user UUID only for staging profile/assignm
 
 ## 2. Create profile and branch assignments
 
-After replacing each `<..._USER_UUID>` placeholder with the UUID from the staging Auth Users page, run this SQL in the staging SQL editor only. It is idempotent for the profile rows and removes/recreates assignments only for these disposable users and QA fixture branches.
+After creating the accounts through the staging ERP, look up their existing IDs in the staging SQL editor by username (never use production):
+
+```sql
+select user_id, username, role, is_active
+from public.admin_profiles
+where username in (
+  'qa-owner-20261021', 'qa-manager-a-20261021', 'qa-manager-b-20261021',
+  'qa-cashier-a-20261021', 'qa-no-permission-20261021', 'qa-inactive-20261021'
+);
+```
+
+Replace each `<..._USER_UUID>` placeholder with the matching `user_id`, then run the SQL below in staging only. It is idempotent for the profile rows and removes/recreates assignments only for these disposable users and QA fixture branches.
 
 ```sql
 begin;
@@ -75,7 +86,7 @@ commit;
 
 ## 3. Obtain short-lived access tokens through username login
 
-The CI runner calls the staging Edge Function’s `admin-login` action with each disposable username/password and keeps the returned access tokens in process memory only. Do not manually export JWTs or paste credentials/tokens into chat, issues, logs, or repository files. Use the Branch A manager token with `TEST_BRANCH_B_ID=90000000-0000-4000-8000-000000000002` to test cross-branch denial. The HTTP runner's results are not evidence until actually executed from a networked environment.
+The CI runner calls the staging Edge Function’s `admin-login` action with the Owner, Branch A manager, and no-permission username/password pairs, keeping returned access tokens in process memory only. Because `admin-login` correctly blocks inactive accounts, the inactive-profile negative test obtains a normal staging Auth token using the app’s internal synthetic email mapping derived from that username; no email field or email secret is required. Do not manually export JWTs or paste credentials/tokens into chat, issues, logs, or repository files. Use the Branch A manager token with `TEST_BRANCH_B_ID=90000000-0000-4000-8000-000000000002` to test cross-branch denial. The HTTP runner's results are not evidence until actually executed from a networked environment.
 
 ## 4. Expected IDs
 
