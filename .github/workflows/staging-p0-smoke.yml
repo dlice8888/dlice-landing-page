@@ -51,14 +51,18 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
           DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
-          TEST_STAFF_JWT: ${{ secrets.STAGING_TEST_BRANCH_A_MANAGER_JWT }}
-          TEST_OWNER_JWT: ${{ secrets.STAGING_TEST_OWNER_JWT }}
-          TEST_NO_PERMISSION_STAFF_JWT: ${{ secrets.STAGING_TEST_NO_PERMISSION_JWT }}
-          TEST_INACTIVE_STAFF_JWT: ${{ secrets.STAGING_TEST_INACTIVE_STAFF_JWT }}
+          STAGING_TEST_OWNER_EMAIL: ${{ secrets.STAGING_TEST_OWNER_EMAIL }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_EMAIL: ${{ secrets.STAGING_TEST_BRANCH_A_EMAIL }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+          STAGING_TEST_NO_PERMISSION_EMAIL: ${{ secrets.STAGING_TEST_NO_PERMISSION_EMAIL }}
+          STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
+          STAGING_TEST_INACTIVE_EMAIL: ${{ secrets.STAGING_TEST_INACTIVE_EMAIL }}
+          STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
           TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
         run: |
           set -o pipefail
-          node tests/staging/p0-http-smoke.mjs 2>&1 | tee p0-http-results.log
+          node tests/staging/run-p0-with-login.mjs 2>&1 | tee p0-http-results.log
       - name: Upload P0 result log
         if: always()
         uses: actions/upload-artifact@v4
