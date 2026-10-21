@@ -132,7 +132,7 @@ Synthetic fixtures have been seeded in staging project `higoadrzxnhzbbwhdbmh` us
 - Branch `QA-DLICE-B`: active ERP fixture, `Asia/Makassar`, online checkout disabled.
 - Branch `QA-DLICE-C`: active ERP fixture, `Asia/Jayapura`, online checkout disabled.
 - Product `qa-staging-only-fixture`: inactive; not a sellable/public staging menu item.
-- Two synthetic ingredient items, one synthetic supplier, one draft recipe and two recipe ingredients.
+- Two synthetic ingredient items, one synthetic supplier, one draft recipe, two recipe ingredients, and one capacity row on Branch B so a cross-branch list test has a known expected result.
 - Fixture UUIDs are deterministic and documented in the SQL file. No real customer/order data was created.
 
 The cleanup script is `tests/staging/fixtures-cleanup.sql`. It checks for key order/POS/PO/production/assignment references before deleting fixture records. Capture test evidence and run cleanup only after acceptance tests are complete.
@@ -149,7 +149,7 @@ node tests/staging/p0-http-smoke.mjs
 
 ### Verified now vs still blocked
 
-- Verified through privileged SQL metadata: 26 listed internal ERP tables deny SELECT, INSERT, UPDATE and DELETE table privileges to both `anon` and `authenticated`. This is database privilege evidence, not proof of HTTP behavior.
+- Verified through privileged SQL metadata: all 24 existing tables in the explicit internal-ERP table check deny SELECT, INSERT, UPDATE and DELETE table privileges to both `anon` and `authenticated`. Two names in the initial candidate list were not present in `public`; this is database privilege evidence, not proof of HTTP behavior.
 - Verified fixture state through staging SQL: three active ERP-only test branches with checkout disabled; fixture product inactive; recipe remains draft.
 - HTTP execution remains blocked in this session because the available runtime cannot resolve the Supabase API host (DNS/network unavailable). The runner is committed but its runtime result is not PASS.
 - Disposable Auth users/tokens (Owner, branch A, branch B, cashier, insufficient-permission, inactive profile) have not been provisioned by the connected tools. Do not fabricate JWTs or use real staff accounts.
