@@ -7,6 +7,8 @@ const read = (file) => fs.readFileSync(file, "utf8");
 const edge = read("supabase/functions/dlice-orders/index.ts");
 const html = read("index.html");
 const track = read("track.html");
+const erp = read("erp.html");
+const branchChecklistMigration = read("supabase/migrations/20261022100000_branch_operation_checklists.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
@@ -31,6 +33,13 @@ const checks = [
   ["cleanup RPC is not executable by public client roles", /revoke all on function public\.cleanup_operational_data\(\) from public, anon, authenticated;[\s\S]*?grant execute on function public\.cleanup_operational_data\(\) to service_role/.test(retention)],
   ["retention job is scheduled once daily", /cron\.schedule\([\s\S]*?'dlice-operational-retention'[\s\S]*?'17 3 \* \* \*'/.test(retention)],
   ["trigger helper is not a public callable API", /revoke all on function public\.set_updated_at\(\) from public, anon, authenticated/.test(retention)],
+  ["branch checklist actions are explicitly permission-gated", /"erp-list-branch-checklists": "branches"[\s\S]*?"erp-start-branch-checklist": "branches"[\s\S]*?"erp-update-branch-checklist-item": "branches"[\s\S]*?"erp-complete-branch-checklist": "branches"/.test(edge)],
+  ["branch checklist actions verify active branch assignment", /const checklistContext = async[\s\S]{0,500}branchAccess\(branchId\)/.test(edge) && /if \(!await branchAccess\(run\.branch_id\)\)/.test(edge)],
+  ["branch checklist business date uses the branch timezone", /new Intl\.DateTimeFormat\("en-GB", \{[\s\S]{0,180}timeZone: branch\.timezone/.test(edge)],
+  ["branch checklist item updates use optimistic concurrency", /eq\("id", runId\)\.eq\("version", run\.version\)/.test(edge)],
+  ["critical checklist failures block completion", /criticalFailures = items\.filter\(\(item\) => item\.critical && item\.status !== "passed"\)/.test(edge) && /Checklist tertahan: semua item kritis/.test(edge)],
+  ["branch checklist table denies direct client access", /ALTER TABLE public\.branch_operation_checklist_runs ENABLE ROW LEVEL SECURITY/i.test(branchChecklistMigration) && /AS RESTRICTIVE FOR ALL TO anon, authenticated USING \(false\) WITH CHECK \(false\)/i.test(branchChecklistMigration) && /REVOKE ALL ON TABLE public\.branch_operation_checklist_runs FROM anon, authenticated/i.test(branchChecklistMigration)],
+  ["ERP workspace exposes opening/closing checklist view", /id="operationsView"/.test(erp) && /startOpeningChecklist/.test(erp) && /startClosingChecklist/.test(erp) && /erp-complete-branch-checklist/.test(erp)],
 ];
 
 for (const [label, ok] of checks) {
@@ -40,7 +49,7 @@ for (const [label, ok] of checks) {
 
 // Guard against accidental parse regressions in inline scripts while keeping
 // this test dependency-free; full browser E2E remains a separate release gate.
-for (const file of ["index.html", "admin.html", "track.html"]) {
+for (const file of ["index.html", "admin.html", "track.html", "erp.html"]) {
   const source = read(file);
   for (const [i, match] of [...source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].entries()) {
     const attrs = match[1] || "";
