@@ -1,6 +1,6 @@
 # D’Lice FnB OS — Staging Capability Audit & Implementation Register
-Date: 2026-10-21
-Baseline: GitHub PR #24 head `d30e59b5314472a8816053d308997428c8a87743`
+Audit refresh: 2026-10-22
+Code baseline: GitHub PR #25 head `02dd251faf43342ef5646a3eb04468349854c4a8`; PR #24 security/timezone base head `3f148185b8a8a9a4e1bbeeab38c8596f8cf646dd`
 Target environment: Supabase staging `higoadrzxnhzbbwhdbmh` + Vercel Preview only.
 Safety: do not merge or modify production without passing acceptance tests and explicit Owner approval.
 
@@ -10,15 +10,19 @@ Safety: do not merge or modify production without passing acceptance tests and e
 - **Not evidenced** means no sufficient evidence was found in the current staging schema/source audit.
 - **Test status** is tracked separately from implementation status. A READY Vercel build is not an end-to-end acceptance test.
 
-### Snapshot from live staging
-- Supabase staging is ACTIVE_HEALTHY; separate production project exists and must remain untouched.
-- Staging has 39 public base tables covering branches, users/admin profiles, orders/payments, POS sales/shifts, inventory/stock movements, recipes/production, suppliers/purchase orders/receipts, branch expenses, journals/fiscal periods, refunds/settlements, rate limits, and audit logs.
-- Staging has 15 public functions including atomic checkout/reservation, POS sale creation, recipe activation, production completion/consumption, PO receiving, stock movement, settlement matching, payment verification, and operational status changes.
-- 150 branch slots are seeded as planned; only HQ is explicitly seeded active in the foundation migration. Planned slots must not be counted as operational branches.
-- Security: 27 internal ERP tables have restrictive deny policies for anon/authenticated and 0 direct SELECT grants across those tables. Remaining Security Advisor warning: leaked-password protection disabled.
-- Performance: no missing-FK-index warning remains; 67 unused-index notices remain and should be assessed with representative workload, not dropped blindly.
-- PR #24 is OPEN, DRAFT, UNMERGED. Current head `d30e59b5314472a8816053d308997428c8a87743`; Vercel Preview is READY and latest commit CI status is success. CORS preflight/POST, timezone boundaries, role negative tests, and browser E2E remain unverified.
-- Figma account access currently reports Starter plan and View seat; no edit/code-layers capability is evidenced. Product Design workflow must be run in supported Work mode; this audit does not claim Figma files were modified.
+### Snapshot from live staging — refreshed 2026-10-22
+- Supabase staging project `higoadrzxnhzbbwhdbmh` (`dlice-staging`) is `ACTIVE_HEALTHY`, PostgreSQL 17.11, region `ap-southeast-1`. Production remains a separate environment and is out of scope for these changes.
+- Live public schema inspection returns **40 tables** (the previous 39-table snapshot is stale). All 40 reported tables have RLS enabled. Domains represented include catalog/orders/payments, admin identity/audit, branches/job positions/assignments, POS shifts/sales, inventory/stock ledger, suppliers/PO/receipts, recipe/production, expenses, settlements/refunds, fiscal periods/journal entries, rate limits and funnel metrics.
+- The live database exposes **15 public functions** including atomic checkout/reservation, POS sale creation, recipe activation, production completion/consumption, PO receiving, stock movement, settlement matching, payment verification and operational status changes. This proves database primitives exist, not that all workflows are connected or accepted.
+- Branch status counts from live SQL: **150 planned, 4 active**. The 150 planned slots are not 150 operating branches; live active count is only four and should be reconciled with the intended HQ/test-fixture model before any operational-readiness claim.
+- Key live row counts: orders 7; POS sales 0; inventory items 2; branch inventory 0; stock movements 0; purchase orders 0; production batches 0; finance journal entries 0. Empty operational ledgers mean schema coverage materially exceeds demonstrated workflow usage.
+- Security: previous audit verified 27/27 internal ERP tables had restrictive deny policies and zero direct client SELECT grants. All 40 tables now report RLS enabled, but that alone does not prove every table's policies/grants are correct; the full direct-API negative test is still required.
+- Supabase Security Advisor currently reports one warning: leaked-password protection disabled. Performance Advisor reports 67 unused-index notices; do not drop these without representative workload analysis.
+- Live Edge Function `dlice-orders` is ACTIVE at version 34 with `verify_jwt=false`; its handler must therefore continue enforcing JWT/session and role/scope checks itself. Source uses exact configured origin allowlisting through `DLICE_ALLOWED_ORIGINS`, but the secret value itself is not readable/independently verified in this audit.
+- Vercel Preview deployment for commit `02dd251faf43342ef5646a3eb04468349854c4a8` is **READY**. Stable branch alias: `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`. READY only proves deployment/build state; no browser flow or authenticated P0 runtime suite has passed yet.
+- GitHub PR #24 (security/timezone changes) and PR #25 (audit and username-based P0 test harness) are both **OPEN, DRAFT, UNMERGED**. Quality checks on the latest PR #25 head are successful; the manual `staging-p0-smoke.yml` workflow has not been dispatched.
+- P0 test harness now uses username/password variables matching D’Lice's `admin-login` model. Its required staging secrets and disposable test accounts still need to exist in GitHub Environment `staging`; do not put credentials or tokens in chat or source.
+- Figma identity check reports a Starter plan and a **View** seat, with code layers disabled. No D’Lice Figma file URL/node was provided in the current request, and this chat does not expose the Product Design Work-mode browser capture workflow; therefore this is a tool-access assessment, not a screenshot-based UX audit or a claim that Figma was changed.
 
 ## Provisional progress estimate
 **Approximately 25–30% functional scope coverage; 0% of the full 150-branch readiness gate is certified complete.**
