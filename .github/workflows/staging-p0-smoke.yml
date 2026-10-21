@@ -36,7 +36,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           const u = new URL(process.env.PREVIEW_URL);
-          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || u.hostname === "dlice.vercel.app") {
+          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || ["dlice.vercel.app", "dlice-landing-page.vercel.app"].includes(u.hostname)) {
             console.error("Refusing to test non-Preview URL:", u.origin);
             process.exit(2);
           }
