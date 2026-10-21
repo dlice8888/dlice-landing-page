@@ -97,10 +97,12 @@ The staging branch now includes a manual GitHub Actions workflow at `.github/wor
    - `STAGING_SUPABASE_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co`
    - `STAGING_SUPABASE_PUBLIC_KEY` — staging publishable/anon key only
    - `STAGING_EDGE_FUNCTION_URL` — `https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders`
-   - `STAGING_TEST_OWNER_JWT`
-   - `STAGING_TEST_BRANCH_A_MANAGER_JWT`
-   - `STAGING_TEST_NO_PERMISSION_JWT`
-   - `STAGING_TEST_INACTIVE_STAFF_JWT`
+   - `STAGING_TEST_OWNER_EMAIL` and `STAGING_TEST_OWNER_PASSWORD`
+   - `STAGING_TEST_BRANCH_A_EMAIL` and `STAGING_TEST_BRANCH_A_PASSWORD`
+   - `STAGING_TEST_NO_PERMISSION_EMAIL` and `STAGING_TEST_NO_PERMISSION_PASSWORD`
+   - `STAGING_TEST_INACTIVE_EMAIL` and `STAGING_TEST_INACTIVE_PASSWORD`
+
+   The workflow uses `tests/staging/run-p0-with-login.mjs` to obtain short-lived tokens at runtime. Do not store bearer tokens as secrets; keep only disposable-user credentials in the protected GitHub `staging` environment.
 3. Add the current stable branch Preview alias to the staging Edge Function secret `DLICE_ALLOWED_ORIGINS`, preserving existing entries:
    `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`
    The current deployment-specific Preview URL is `https://dlice-landing-page-1u0n1aix1-dlice8888-7332.vercel.app`; use the stable branch alias as the browser target so subsequent deployments keep the same origin. Recheck the alias before running.
