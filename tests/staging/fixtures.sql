@@ -35,6 +35,17 @@ on conflict (id) do update set
   display_order = excluded.display_order,
   badge = excluded.badge;
 
+insert into public.branch_product_capacity
+  (id, branch_id, product_id, service_date, capacity, reserved_quantity)
+values
+  ('90000000-0000-4000-8000-000000000601', '90000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000100', current_date, 7, 0)
+on conflict (id) do update set
+  branch_id = excluded.branch_id,
+  product_id = excluded.product_id,
+  service_date = excluded.service_date,
+  capacity = excluded.capacity,
+  reserved_quantity = 0;
+
 insert into public.inventory_items
   (id, sku, name, unit, category, min_stock, is_active)
 values
