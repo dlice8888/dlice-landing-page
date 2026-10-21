@@ -137,7 +137,7 @@ Synthetic fixtures have been seeded in staging project `higoadrzxnhzbbwhdbmh` us
 
 The cleanup script is `tests/staging/fixtures-cleanup.sql`. It checks for key order/POS/PO/production/assignment references before deleting fixture records. Capture test evidence and run cleanup only after acceptance tests are complete.
 
-The HTTP harness is `tests/staging/p0-http-smoke.mjs`. It tests allowed/disallowed CORS, missing/invalid bearer tokens, and direct Data API access using only the public staging key. It does not use service-role credentials or intentionally perform successful business mutations. Run it from a networked runner with the current Preview origin and staging-only environment variables:
+The disposable Auth identity procedure is `tests/staging/identity-provisioning.md`; it requires six disposable users to be created in the staging Auth dashboard before running its profile/assignment SQL. That provisioning has not yet been executed because the connected tools cannot create Auth users or mint access tokens.\n\nThe HTTP harness is `tests/staging/p0-http-smoke.mjs`. It tests allowed/disallowed CORS, missing/invalid bearer tokens, and direct Data API access using only the public staging key. It does not use service-role credentials or intentionally perform successful business mutations. Run it from a networked runner with the current Preview origin and staging-only environment variables:
 ```sh
 SUPABASE_URL=https://higoadrzxnhzbbwhdbmh.supabase.co \
 STAGING_EDGE_FUNCTION_URL=https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders \
