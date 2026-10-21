@@ -35,10 +35,15 @@ const edgeUrl = env.STAGING_EDGE_FUNCTION_URL;
 const anonKey = env.SUPABASE_ANON_KEY;
 const badUuid = "00000000-0000-0000-0000-000000000000";
 const results = [];
+const blocked = [];
 
 function record(id, ok, detail) {
   results.push({ id, status: ok ? "PASS" : "FAIL", detail });
   console.log(`${ok ? "PASS" : "FAIL"} ${id}: ${detail}`);
+}
+function block(id, detail) {
+  blocked.push({ id, detail });
+  console.log(`BLOCKED ${id}: ${detail}`);
 }
 async function request(id, url, options = {}) {
   try {
@@ -144,7 +149,7 @@ if (env.TEST_STAFF_JWT) {
     record("P0-AUTH-STAFF", ok, `staff token request status=${staff.response.status}; capture body for expected permission scope`);
   }
 } else {
-  console.log("BLOCKED P0-AUTH-STAFF: TEST_STAFF_JWT not supplied");
+  block("P0-AUTH-STAFF", "TEST_STAFF_JWT not supplied");
 }
 
 if (env.TEST_STAFF_JWT && env.TEST_BRANCH_B_ID) {
@@ -163,14 +168,47 @@ if (env.TEST_STAFF_JWT && env.TEST_BRANCH_B_ID) {
       `cross-branch status=${crossBranch.response.status}; response body must be empty/scoped or denied`);
   }
 } else {
-  console.log("BLOCKED P0-AUTH-CROSS-BRANCH: disposable staff JWT and TEST_BRANCH_B_ID required");
+  block("P0-AUTH-CROSS-BRANCH", "disposable Branch A manager JWT and TEST_BRANCH_B_ID required");
 }
 
-if (env.TEST_OWNER_JWT) {
-  console.log("INFO: Owner token supplied. Do not run privileged mutations in this smoke suite; use the acceptance protocol and reviewed disposable fixtures.");
+const noPermission = env.TEST_NO_PERMISSION_STAFF_JWT
+  ? await request("P0-AUTH-INSUFFICIENT-PERMISSION", edgeUrl, {
+      method: "POST",
+      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+      body: JSON.stringify({ action: "admin-funnel-summary" }),
+    })
+  : (block("P0-AUTH-INSUFFICIENT-PERMISSION", "TEST_NO_PERMISSION_STAFF_JWT not supplied"), null);
+if (noPermission) {
+  record("P0-AUTH-INSUFFICIENT-PERMISSION", noPermission.response.status === 403,
+    `no-permission staff status=${noPermission.response.status}; expected 403`);
+}
+
+const inactive = env.TEST_INACTIVE_STAFF_JWT
+  ? await request("P0-AUTH-INACTIVE-STAFF", edgeUrl, {
+      method: "POST",
+      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
+      body: JSON.stringify({ action: "admin-funnel-summary" }),
+    })
+  : (block("P0-AUTH-INACTIVE-STAFF", "TEST_INACTIVE_STAFF_JWT not supplied"), null);
+if (inactive) {
+  record("P0-AUTH-INACTIVE-STAFF", inactive.response.status === 401,
+    `inactive staff status=${inactive.response.status}; expected 401`);
+}
+
+const owner = env.TEST_OWNER_JWT
+  ? await request("P0-AUTH-OWNER-READ", edgeUrl, {
+      method: "POST",
+      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_OWNER_JWT}`, "content-type": "application/json" },
+      body: JSON.stringify({ action: "admin-funnel-summary" }),
+    })
+  : (block("P0-AUTH-OWNER-READ", "TEST_OWNER_JWT not supplied"), null);
+if (owner) {
+  record("P0-AUTH-OWNER-READ", owner.response.status === 200,
+    `Owner read status=${owner.response.status}; expected authorized 200`);
 }
 
 const failures = results.filter((result) => result.status === "FAIL");
-console.log(`\nSummary: ${results.filter((result) => result.status === "PASS").length} PASS, ${failures.length} FAIL, plus explicitly BLOCKED checks above.`);
+console.log(`\nSummary: ${results.filter((result) => result.status === "PASS").length} PASS, ${failures.length} FAIL, ${blocked.length} BLOCKED.`);
 if (failures.length) process.exit(1);
+if (blocked.length) process.exit(2);
 if (results.length === 0) process.exit(2);
