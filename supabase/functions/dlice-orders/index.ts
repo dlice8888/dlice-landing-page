@@ -66,8 +66,9 @@ const getAdmin = async (req: Request) => {
   if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
   const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active");
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
-  const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : ["orders"];
-  return { user: userData.user, profile: { ...profile, permissions: [...new Set([...savedPermissions, ...rolePermissions])] } };
+  const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
+  // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
+  return { user: userData.user, profile: { ...profile, permissions: [...new Set(savedPermissions)] } };
 };
 
 Deno.serve(async (req: Request) => {
@@ -390,6 +391,19 @@ Deno.serve(async (req: Request) => {
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
 
+  const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
+    if (actor.profile.role === "owner") return true;
+    if (!branchId) return false;
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    return !error && !!data?.length;
+  };
+  const actorBranchIds = async (): Promise<string[]> => {
+    if (actor.profile.role === "owner") return [];
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    if (error) throw new Error("Penugasan cabang gagal dimuat.");
+    return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
+  };
+
   const permissionForAction: Record<string, string> = {
     "admin-list-orders": "orders",
     "admin-update-status": "orders",
@@ -438,8 +452,8 @@ Deno.serve(async (req: Request) => {
 
   if(action==="admin-retry-payment-notification"){
     const orderId=safeText(body.order_id,80);
-    const {data:o}=await admin.from("orders").select("id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();
-    if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(o.payment_status!=="paid")return fail("Konfirmasi pembayaran hanya tersedia setelah pembayaran terverifikasi.",409,origin);
+    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();
+    if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(o.payment_status!=="paid")return fail("Konfirmasi pembayaran hanya tersedia setelah pembayaran terverifikasi.",409,origin);
     const {data:existing}=await admin.from("notification_log").select("status,message_text,recipient_whatsapp").eq("order_id",orderId).eq("notification_type","payment_verified_whatsapp").order("created_at",{ascending:false}).limit(1).maybeSingle();
     if(existing?.status==="sent")return fail("Konfirmasi pembayaran sudah tercatat terkirim.",409,origin);
     if(existing?.message_text)return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${existing.recipient_whatsapp}?text=${encodeURIComponent(existing.message_text)}`,notification:existing.status,message:"Buka ulang pesan konfirmasi yang tersimpan, lalu tandai terkirim setelah benar-benar dikirim."},200,origin);
@@ -452,13 +466,13 @@ Deno.serve(async (req: Request) => {
     if(error)return fail("Notifikasi tidak berhasil dibuat. Periksa log sebelum mencoba lagi.",500,origin);
     return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Konfirmasi pembayaran dibuat. Kirim pesan dan tandai terkirim setelah benar-benar terkirim."},200,origin);
   }
-  if(action==="admin-mark-notification-sent"){const orderId=safeText(body.order_id,80),type=safeText(body.notification_type,60);if(!orderId||!["payment_verified_whatsapp","customer_order_whatsapp"].includes(type))return fail("Notifikasi tidak valid.",422,origin);const {data:n}=await admin.from("notification_log").select("id").eq("order_id",orderId).eq("notification_type",type).order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n)return fail("Catatan notifikasi tidak ditemukan.",404,origin);const {error}=await admin.from("notification_log").update({status:"sent",sent_at:new Date().toISOString(),attempts:1,last_error:null}).eq("id",n.id);if(error)return fail("Status pengiriman gagal dicatat.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"mark_whatsapp_notification_sent",entity_type:"notification",entity_id:n.id,metadata:{order_id:orderId,notification_type:type}});return json({ok:true},200,origin);}
+  if(action==="admin-mark-notification-sent"){const orderId=safeText(body.order_id,80),type=safeText(body.notification_type,60);if(!orderId||!["payment_verified_whatsapp","customer_order_whatsapp"].includes(type))return fail("Notifikasi tidak valid.",422,origin);const {data:n}=await admin.from("notification_log").select("id,order_id").eq("order_id",orderId).eq("notification_type",type).order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n)return fail("Catatan notifikasi tidak ditemukan.",404,origin);const {data:notificationOrder}=await admin.from("orders").select("branch_id").eq("id",n.order_id).maybeSingle();if(!await actorCanAccessBranch(notificationOrder?.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);const {error}=await admin.from("notification_log").update({status:"sent",sent_at:new Date().toISOString(),attempts:1,last_error:null}).eq("id",n.id);if(error)return fail("Status pengiriman gagal dicatat.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"mark_whatsapp_notification_sent",entity_type:"notification",entity_id:n.id,metadata:{order_id:orderId,notification_type:type}});return json({ok:true},200,origin);}
 
   if (action === "admin-list-staff") {
     if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengelola izin staf.", 403, origin);
     const { data, error } = await admin.from("admin_profiles").select("user_id,username,role,display_name,is_active,permissions").order("created_at", { ascending: true });
     if (error) return fail("Daftar staf gagal dimuat.", 500, origin);
-    return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr"] }, 200, origin);
+    return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"] }, 200, origin);
   }
 
   if (action === "admin-create-staff") {
@@ -467,7 +481,7 @@ Deno.serve(async (req: Request) => {
     const displayName = safeText(body.display_name, 120);
     const password = typeof body.password === "string" ? body.password : "";
     const permissions = body.permissions;
-    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr"]);
+    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
     if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 12 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
@@ -481,7 +495,7 @@ Deno.serve(async (req: Request) => {
     if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah izin akses staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const permissions = body.permissions;
-    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr"]);
+    const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
     if (!userId || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Daftar izin tidak valid.", 422, origin);
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
@@ -493,7 +507,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-list-orders") {
-    const { data, error } = await admin.from("orders").select("id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,timezone,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at),notification_log(id,notification_type,status,message_text,recipient_whatsapp,created_at)").order("created_at", { ascending: false }).limit(100);
+    let query = admin.from("orders").select("id,branch_id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,timezone,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at),notification_log(id,notification_type,status,message_text,recipient_whatsapp,created_at)").order("created_at", { ascending: false }).limit(100);
+    if (actor.profile.role !== "owner") {
+      let ids: string[];
+      try { ids = await actorBranchIds(); } catch { return fail("Penugasan cabang gagal dimuat.", 503, origin); }
+      query = ids.length ? query.in("branch_id", ids) : query.eq("branch_id", "00000000-0000-0000-0000-000000000000");
+    }
+    const { data, error } = await query;
     if (error) return fail("Daftar pesanan gagal dimuat.", 500, origin);
     const orders = (data ?? []).map((order) => ({ ...order, transaction_code: formatTransactionCode(order.order_number, order.created_at, order.timezone) }));
     return json({ orders, role: actor.profile.role, permissions: actor.profile.permissions }, 200, origin);
@@ -567,6 +587,9 @@ Deno.serve(async (req: Request) => {
   if (action === "admin-proof-url") {
     const path = safeText(body.proof_storage_path, 500);
     if (!path || path.includes("..")) return fail("Path bukti tidak valid.", 422, origin);
+    const { data: proofRows, error: proofLookupError } = await admin.from("payment_records").select("order_id,orders(branch_id)").eq("proof_storage_path", path).limit(2);
+    if (proofLookupError || !proofRows?.length) return fail("Bukti pembayaran tidak ditemukan.", 404, origin);
+    if (!await actorCanAccessBranch((proofRows[0] as any).orders?.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     const { data, error } = await admin.storage.from("dlice-payment-proofs").createSignedUrl(path, 60);
     if (error || !data?.signedUrl) return fail("Bukti tidak dapat dibuka.", 404, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "view_payment_proof", entity_type: "payment_proof", entity_id: path, metadata: {} });
@@ -578,8 +601,9 @@ Deno.serve(async (req: Request) => {
     const next = safeText(body.operational_status, 40);
     const allowed = ["received","confirmed","preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed","cancelled","delivery_issue"];
     if (!allowed.includes(next)) return fail("Status pesanan tidak valid.", 422, origin);
-    const { data: oldOrder } = await admin.from("orders").select("operational_status,payment_status").eq("id", orderId).maybeSingle();
+    const { data: oldOrder } = await admin.from("orders").select("branch_id,operational_status,payment_status").eq("id", orderId).maybeSingle();
     if (!oldOrder) return fail("Pesanan tidak ditemukan.", 404, origin);
+    if (!await actorCanAccessBranch(oldOrder.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     if (["preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed"].includes(next) && oldOrder.payment_status !== "paid") {
       return fail("Pesanan belum dapat diproses. Customer wajib mengunggah bukti pembayaran dan owner/admin harus memverifikasinya terlebih dahulu.", 409, origin);
     }
@@ -593,7 +617,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "admin-verify-payment") {
     const orderId=safeText(body.order_id,80),result=safeText(body.result,20),note=safeText(body.note,500);if(!["paid","rejected"].includes(result))return fail("Hasil verifikasi tidak valid.",422,origin);
-    const {data:o}=await admin.from("orders").select("id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
+    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
     const {data:p}=await admin.from("payment_records").select("id,proof_storage_path,method").eq("order_id",orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!p)return fail("Tidak ada pembayaran menunggu verifikasi.",409,origin);if(result==="paid"&&!p.proof_storage_path)return fail("Bukti pembayaran wajib tersedia.",409,origin);
     const {data:applied,error:applyError}=await admin.rpc("admin_apply_payment_verification",{p_order_id:orderId,p_payment_id:p.id,p_actor_user_id:actor.user.id,p_result:result,p_note:note});if(applyError||applied!==true)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
     if(result==="paid"){const token=randomToken(),hash=await sha256(token);await admin.from("orders").update({tracking_token_hash:hash}).eq("id",orderId);const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",orderId);const items=(lines||[]).map(i=>`• ${i.product_name_snapshot} × ${i.quantity} — Rp${Number(i.line_total_idr).toLocaleString("id-ID")}`).join("\n");const code=formatTransactionCode(o.order_number,o.created_at,o.timezone),publicBase=origin&&isAllowedOrigin(origin)?origin:"https://dlice.vercel.app",track=`${publicBase}/track.html?token=${token}`,method=p.method==="dlice_qris"?"QRIS D’Lice":"Transfer bank";const msg=`Halo ${o.customer_name}, pembayaran pesanan D’Lice ${code} sudah diverifikasi.\nTotal diterima: Rp${Number(o.product_subtotal_idr).toLocaleString("id-ID")}\nMetode: ${method}\nTanggal: ${o.requested_date}, ${o.requested_time} waktu lokal cabang\nPenerimaan: ${o.receiving_method==="delivery"?"Delivery — "+(o.delivery_address||""):"Pickup"}\nDetail:\n${items}\n\nTutorial cek progress seperti ojol/logistik: buka tautan pribadi berikut, lihat status terakhir dan waktu pembaruan, lalu cek riwayat status. Simpan tautan ini dan jangan bagikan ke orang lain:\n${track}\nJika bermasalah, kirim kode ${code} ke WhatsApp D’Lice. Terima kasih 💗`;const key=`payment-verified:${orderId}`;const {error:le}=await admin.from("notification_log").upsert({order_id:orderId,notification_type:"payment_verified_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:o.customer_whatsapp,message_text:msg},{onConflict:"idempotency_key",ignoreDuplicates:true});if(le)return fail("Pembayaran sudah terverifikasi, tetapi notifikasi gagal dicatat. Retry dari panel staf.",500,origin);return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Kirim konfirmasi beserta tautan tracking, lalu tandai pengiriman berhasil."},200,origin);}
@@ -624,7 +648,7 @@ Deno.serve(async (req: Request) => {
   };
 
   if (action === "erp-overview") {
-    if (!hasPerm("reports") && !hasPerm("branches")) return fail("Akses ringkasan ERP tidak diizinkan.",403,origin);
+    if (!isOwner) return fail("Ringkasan lintas cabang hanya tersedia untuk Owner; gunakan laporan cabang untuk data operasional.",403,origin);
     const [branches, planned, active, inventory, shifts, sales, expenses, purchaseOrders] = await Promise.all([
       admin.from("branches").select("id",{count:"exact",head:true}),
       admin.from("branches").select("id",{count:"exact",head:true}).eq("status","planned"),
@@ -665,6 +689,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-positions") {
+    if (!hasPerm("hr") && !hasPerm("staff") && !hasPerm("branches")) return fail("Izin melihat master jabatan tidak diizinkan.", 403, origin);
     const {data,error}=await admin.from("job_positions").select("id,code,title,department,job_description,default_permissions,recommended_headcount_per_branch,is_head_office,is_active").eq("is_active",true).order("is_head_office",{ascending:false}).order("department").order("title");
     if(error)return fail("Daftar jabatan gagal dimuat.",500,origin);
     return json({positions:data||[]},200,origin);
@@ -1046,6 +1071,7 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
+    if(old.branch_id&&!await hasFinanceHQ()&&!await actorCanAccessBranch(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.requested_by===actor.user.id||old.reviewed_by===actor.user.id)return fail("Pemisahan tugas: pemohon atau penyetuju tidak boleh memproses refund sendiri.",403,origin);
     const {data,error}=await admin.from("refund_records").update({status:"processed",processed_by:actor.user.id,processed_at:new Date().toISOString(),external_reference:reference}).eq("id",id).eq("status","approved").select("*").maybeSingle();
     if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
@@ -1149,7 +1175,9 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),date=safeText(body.service_date,10);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     let q=admin.from("branch_product_capacity").select("*,branches(code,name),products(name,slug)").order("service_date",{ascending:true}).limit(500);
-    if(branchId)q=q.eq("branch_id",branchId);if(date)q=q.eq("service_date",date);
+    if(branchId) q=q.eq("branch_id",branchId);
+    else if(!isOwner){let ids:string[];try{ids=await actorBranchIds();}catch{return fail("Penugasan cabang gagal dimuat.",503,origin);}q=ids.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");}
+    if(date)q=q.eq("service_date",date);
     const {data,error}=await q;if(error)return fail("Kapasitas cabang gagal dimuat.",500,origin);return json({capacities:data||[]},200,origin);
   }
 
