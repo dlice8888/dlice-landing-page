@@ -1,0 +1,96 @@
+name: Staging P0 and browser smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact Vercel Preview URL for this staging branch (never production)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-p0-smoke
+  cancel-in-progress: false
+
+jobs:
+  p0-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Checkout staging test branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/fnb-os-staging-implementation-20261021
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate Preview target
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url }}
+        run: |
+          node --input-type=module <<'NODE'
+          const u = new URL(process.env.PREVIEW_URL);
+          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || u.hostname === "dlice.vercel.app") {
+            console.error("Refusing to test non-Preview URL:", u.origin);
+            process.exit(2);
+          }
+          console.log("Preview target:", u.origin);
+          NODE
+      - name: Run P0 HTTP security checks
+        env:
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          ALLOWED_PREVIEW_ORIGIN: ${{ inputs.preview_url }}
+          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
+          TEST_STAFF_JWT: ${{ secrets.STAGING_TEST_BRANCH_A_MANAGER_JWT }}
+          TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
+        run: |
+          set -o pipefail
+          node tests/staging/p0-http-smoke.mjs 2>&1 | tee p0-http-results.log
+      - name: Upload P0 result log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-p0-http-results
+          path: p0-http-results.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: Checkout staging test branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/fnb-os-staging-implementation-20261021
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run desktop and mobile browser smoke tests
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url }}
+        run: |
+          set -o pipefail
+          node tests/staging/browser-smoke.mjs 2>&1 | tee browser-smoke-results.log
+      - name: Upload browser result log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-browser-smoke-results
+          path: browser-smoke-results.log
+          if-no-files-found: ignore
+          retention-days: 14
