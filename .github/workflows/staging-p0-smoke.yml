@@ -52,6 +52,9 @@ jobs:
           ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
           DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
           TEST_STAFF_JWT: ${{ secrets.STAGING_TEST_BRANCH_A_MANAGER_JWT }}
+          TEST_OWNER_JWT: ${{ secrets.STAGING_TEST_OWNER_JWT }}
+          TEST_NO_PERMISSION_STAFF_JWT: ${{ secrets.STAGING_TEST_NO_PERMISSION_JWT }}
+          TEST_INACTIVE_STAFF_JWT: ${{ secrets.STAGING_TEST_INACTIVE_STAFF_JWT }}
           TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
         run: |
           set -o pipefail
