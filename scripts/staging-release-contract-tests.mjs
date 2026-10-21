@@ -38,7 +38,7 @@ const checks = [
   ["branch checklist business date uses the branch timezone", /new Intl\.DateTimeFormat\("en-GB", \{[\s\S]{0,180}timeZone: branch\.timezone/.test(edge)],
   ["branch checklist item updates use optimistic concurrency", /eq\("id", runId\)\.eq\("version", run\.version\)/.test(edge)],
   ["critical checklist failures block completion", /criticalFailures = items\.filter\(\(item\) => item\.critical && item\.status !== "passed"\)/.test(edge) && /Checklist tertahan: semua item kritis/.test(edge)],
-  ["branch checklist table denies direct client access", /ALTER TABLE public\.branch_operation_checklist_runs ENABLE ROW LEVEL SECURITY/i.test(branchChecklistMigration) && /AS RESTRICTIVE FOR ALL TO anon, authenticated USING \(false\) WITH CHECK \(false\)/i.test(branchChecklistMigration) && /REVOKE ALL ON TABLE public\.branch_operation_checklist_runs FROM anon, authenticated/i.test(branchChecklistMigration)],
+  ["branch checklist table denies direct client access", /ALTER TABLE public\.branch_operation_checklist_runs ENABLE ROW LEVEL SECURITY/i.test(branchChecklistMigration) && /AS RESTRICTIVE FOR ALL TO anon, authenticated\s+USING \(false\) WITH CHECK \(false\)/i.test(branchChecklistMigration) && /REVOKE ALL ON TABLE public\.branch_operation_checklist_runs FROM anon, authenticated/i.test(branchChecklistMigration)],
   ["ERP workspace exposes opening/closing checklist view", /id="operationsView"/.test(erp) && /startOpeningChecklist/.test(erp) && /startClosingChecklist/.test(erp) && /erp-complete-branch-checklist/.test(erp)],
 ];
 
