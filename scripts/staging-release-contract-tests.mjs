@@ -13,9 +13,9 @@ const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_tr
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const erpAuthorizationCoverage = () => {
-  const permissionMap = edge.match(/const permissionForAction:[\\s\\S]*?\\n  };/)?.[0] || "";
-  const centrallyGated = new Set([...permissionMap.matchAll(/"([^"]+)":\\s*"([^"]+)"/g)].map((match) => match[1]));
-  const actions = [...edge.matchAll(/if\\s*\\(\\s*action\\s*===\\s*"([^"]+)"\\s*\\)\\s*\\{/g)];
+  const permissionMap = edge.match(/const permissionForAction:[\s\S]*?\n  };/)?.[0] || "";
+  const centrallyGated = new Set([...permissionMap.matchAll(/"([^"]+)":\s*"([^"]+)"/g)].map((match) => match[1]));
+  const actions = [...edge.matchAll(/if\s*\(\s*action\s*===\s*"([^"]+)"\s*\)\s*\{/g)];
   const missing = [];
   for (let i = 0; i < actions.length; i++) {
     const action = actions[i][1];
@@ -23,7 +23,7 @@ const erpAuthorizationCoverage = () => {
     const start = actions[i].index;
     const end = i + 1 < actions.length ? actions[i + 1].index : edge.length;
     const block = edge.slice(start, end);
-    if (!/hasPerm\\(|isOwner\\b|hasHQPermission\\(|hasFinanceHQ\\(|actor\\.profile\\.role\\s*(?:!==|===)|isAdmin\\b/.test(block)) {
+    if (!/hasPerm\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
   }
