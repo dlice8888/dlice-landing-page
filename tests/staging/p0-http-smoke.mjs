@@ -118,7 +118,7 @@ if (deniedPost) {
 }
 
 // Check direct Data API reads and harmless no-row/invalid writes using only the public key.
-for (const table of ["orders", "order_items", "payment_records", "pos_sales", "inventory_items", "purchase_orders", "journal_entries"]) {
+for (const table of ["orders", "order_items", "payment_records", "pos_sales", "inventory_items", "purchase_orders", "finance_journal_entries"]) {
   const headers = { apikey: anonKey, authorization: `Bearer ${anonKey}`, "content-type": "application/json" };
   const read = await request(`P0-RLS-READ-${table}`, `${supabaseUrl}/rest/v1/${table}?select=*&limit=1`, { headers });
   if (read) {
