@@ -19,12 +19,13 @@ if (missing.length) {
 }
 const edgeUrl = process.env.STAGING_EDGE_FUNCTION_URL;
 const expectedStagingUrl = "https://higoadrzxnhzbbwhdbmh.supabase.co";
-if (process.env.SUPABASE_URL.replace(/\\/$/, "") !== expectedStagingUrl || !edgeUrl.startsWith(`${expectedStagingUrl}/functions/v1/dlice-orders`)) {
+const normalizedSupabaseUrl = process.env.SUPABASE_URL.endsWith("/") ? process.env.SUPABASE_URL.slice(0, -1) : process.env.SUPABASE_URL;
+if (normalizedSupabaseUrl !== expectedStagingUrl || !edgeUrl.startsWith(`${expectedStagingUrl}/functions/v1/dlice-orders`)) {
   console.error("BLOCKED: refusing to run P0 tests unless both Auth and Edge Function URLs target the known D’Lice staging project.");
   process.exit(2);
 }
 async function tokenFor(label, username, password) {
-  const base = process.env.SUPABASE_URL.replace(/\\/$/, "");
+  const base = process.env.SUPABASE_URL.endsWith("/") ? process.env.SUPABASE_URL.slice(0, -1) : process.env.SUPABASE_URL;
   const internalEmail = `${username.toLowerCase()}@accounts.dlice.internal`;
   let response;
   try {
