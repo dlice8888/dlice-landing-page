@@ -44,15 +44,23 @@ async function call(action, payload = {}, token = null) {
   return body;
 }
 const ownerUsername = process.env.STAGING_TEST_OWNER_USERNAME;
-const ownerLogin = await call("admin-login", {
-  username: ownerUsername,
-  password: process.env.STAGING_TEST_OWNER_PASSWORD,
-});
-const ownerToken = ownerLogin?.session?.access_token;
-if (typeof ownerToken !== "string") {
-  console.error("BLOCKED: Owner staging login did not return a session; QA provisioning stopped.");
-  process.exit(2);
+async function authPasswordToken(username, password, label) {
+  let response;
+  try {
+    response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { apikey: anonKey, "content-type": "application/json" },
+      body: JSON.stringify({ email: `${username.toLowerCase()}@accounts.dlice.internal`, password }),
+    });
+  } catch {
+    throw new Error(`Could not reach Supabase Auth for ${label}.`);
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || typeof body.access_token !== "string") throw new Error(`Supabase Auth could not verify ${label} credentials.`);
+  return body.access_token;
 }
+const ownerToken = await authPasswordToken(ownerUsername, process.env.STAGING_TEST_OWNER_PASSWORD, "Owner");
+
 const specs = [
   {
     key: "BRANCH_A", username: "qa_dlice_staging_branch_a",
@@ -101,25 +109,7 @@ for (const code of ["branch_manager", "cashier"]) {
   if (!positionByCode.has(code)) throw new Error(`Required active job position ${code} is missing.`);
 }
 async function ensureAuthPassword(spec) {
-  if (spec.active) {
-    const login = await call("admin-login", { username: spec.username, password: spec.password });
-    if (typeof login?.session?.access_token !== "string") throw new Error(`QA Auth verification failed for ${spec.label}.`);
-    return;
-  }
-  // Inactive profiles intentionally cannot use the D'Lice username-login action.
-  // Verify Supabase Auth itself can issue a token, then confirm the Edge Function denies the inactive profile.
-  let response;
-  try {
-    response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
-      method: "POST",
-      headers: { apikey: anonKey, "content-type": "application/json" },
-      body: JSON.stringify({ email: `${spec.username.toLowerCase()}@accounts.dlice.internal`, password: spec.password }),
-    });
-  } catch {
-    throw new Error("Could not reach Supabase Auth for inactive-profile credential verification.");
-  }
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || typeof body.access_token !== "string") throw new Error("Supabase Auth could not verify the inactive QA credentials.");
+  await authPasswordToken(spec.username, spec.password, spec.label);
 }
 for (const spec of specs) {
   const password = randomBytes(32).toString("base64url");
