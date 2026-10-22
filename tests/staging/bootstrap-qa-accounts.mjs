@@ -74,8 +74,10 @@ const specs = [
 const ownerLower = ownerUsername.toLowerCase();
 const seen = new Set();
 for (const spec of specs) {
-  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(spec.username || "") || (spec.password || "").length < 12 || (spec.password || "").length > 128) {
-    console.error(`BLOCKED: invalid username/password policy for ${spec.label}; usernames must be 3–32 allowed characters and passwords 12–128 characters.`);
+  const usernameFormatOk = /^[a-zA-Z0-9._-]{3,32}$/.test(spec.username || "");
+  const passwordLengthOk = (spec.password || "").length >= 12 && (spec.password || "").length <= 128;
+  if (!usernameFormatOk || !passwordLengthOk) {
+    console.error(`BLOCKED: invalid QA credential policy for ${spec.label}; username_format_ok=${usernameFormatOk}; password_length_ok=${passwordLengthOk}. Secret values are intentionally not printed.`);
     process.exit(2);
   }
   const normalized = spec.username.toLowerCase();
