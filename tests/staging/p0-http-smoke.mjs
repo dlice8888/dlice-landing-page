@@ -78,22 +78,20 @@ if (allowedOptions) {
 
 const noAuthPost = await request("P0-AUTH-01", edgeUrl, {
   method: "POST",
-  headers: { origin: allowed, apikey: anonKey, "content-type": "application/json" },
+  headers: { apikey: anonKey, "content-type": "application/json" },
   body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (noAuthPost) {
-  const ok = noAuthPost.response.status === 401 && exactCors(noAuthPost.response, allowed) && corsNotWildcard(noAuthPost.response);
-  record("P0-AUTH-01", ok, `POST without bearer status=${noAuthPost.response.status}, ACAO=${noAuthPost.headers.get("access-control-allow-origin")}`);
+  record("P0-AUTH-01", noAuthPost.response.status === 401, `POST without bearer status=${noAuthPost.response.status}; expected 401 independently of CORS`);
 }
 
 const invalidTokenPost = await request("P0-AUTH-02", edgeUrl, {
   method: "POST",
-  headers: { origin: allowed, apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
+  headers: { apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
   body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (invalidTokenPost) {
-  const ok = invalidTokenPost.response.status === 401 && exactCors(invalidTokenPost.response, allowed) && corsNotWildcard(invalidTokenPost.response);
-  record("P0-AUTH-02", ok, `POST with invalid bearer status=${invalidTokenPost.response.status}, ACAO=${invalidTokenPost.headers.get("access-control-allow-origin")}`);
+  record("P0-AUTH-02", invalidTokenPost.response.status === 401, `POST with invalid bearer status=${invalidTokenPost.response.status}; expected 401 independently of CORS`);
 }
 
 const deniedOptions = await request("P0-CORS-02", edgeUrl, {
@@ -145,12 +143,11 @@ if (env.P0_PUBLIC_ONLY !== "true") {
   if (env.TEST_STAFF_JWT) {
     const staff = await request("P0-AUTH-STAFF", edgeUrl, {
       method: "POST",
-      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
+      headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
       body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
     });
     if (staff) {
-      const ok = [200, 403].includes(staff.response.status);
-      record("P0-AUTH-STAFF", ok, `staff token request status=${staff.response.status}; capture body for expected permission scope`);
+      record("P0-AUTH-STAFF", staff.response.status === 200, `authorized branch staff status=${staff.response.status}; expected 200`);
     }
   } else {
     block("P0-AUTH-STAFF", "TEST_STAFF_JWT not supplied");
@@ -159,15 +156,14 @@ if (env.P0_PUBLIC_ONLY !== "true") {
   if (env.TEST_STAFF_JWT && env.TEST_BRANCH_B_ID) {
     const crossBranch = await request("P0-AUTH-CROSS-BRANCH", edgeUrl, {
       method: "POST",
-      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
+      headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
       body: JSON.stringify({ action: "erp-list-fulfillment-orders", branch_id: env.TEST_BRANCH_B_ID }),
     });
     if (crossBranch) {
-      const ok = [403, 200].includes(crossBranch.response.status);
+      const ok = crossBranch.response.status === 403;
       let parsed;
       try { parsed = JSON.parse(crossBranch.body); } catch {}
-      const noCrossBranchData = crossBranch.response.status === 403 ||
-        (crossBranch.response.status === 200 && Array.isArray(parsed?.orders) && parsed.orders.length === 0);
+      const noCrossBranchData = crossBranch.response.status === 403;
       record("P0-AUTH-CROSS-BRANCH", ok && noCrossBranchData,
         `cross-branch status=${crossBranch.response.status}; response body must be empty/scoped or denied`);
     }
@@ -178,7 +174,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
   const noPermission = env.TEST_NO_PERMISSION_STAFF_JWT
     ? await request("P0-AUTH-INSUFFICIENT-PERMISSION", edgeUrl, {
         method: "POST",
-        headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
         body: JSON.stringify({ action: "admin-funnel-summary" }),
       })
     : (block("P0-AUTH-INSUFFICIENT-PERMISSION", "TEST_NO_PERMISSION_STAFF_JWT not supplied"), null);
@@ -199,7 +195,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
     const deniedAction = env.TEST_NO_PERMISSION_STAFF_JWT
       ? await request(id, edgeUrl, {
           method: "POST",
-          headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+          headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
           body: JSON.stringify(payload),
         })
       : null;
@@ -209,7 +205,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
     const inactive = env.TEST_INACTIVE_STAFF_JWT
     ? await request("P0-AUTH-INACTIVE-STAFF", edgeUrl, {
         method: "POST",
-        headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
         body: JSON.stringify({ action: "admin-funnel-summary" }),
       })
     : (block("P0-AUTH-INACTIVE-STAFF", "TEST_INACTIVE_STAFF_JWT not supplied"), null);
@@ -221,7 +217,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
   const owner = env.TEST_OWNER_JWT
     ? await request("P0-AUTH-OWNER-READ", edgeUrl, {
         method: "POST",
-        headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_OWNER_JWT}`, "content-type": "application/json" },
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_OWNER_JWT}`, "content-type": "application/json" },
         body: JSON.stringify({ action: "admin-funnel-summary" }),
       })
     : (block("P0-AUTH-OWNER-READ", "TEST_OWNER_JWT not supplied"), null);
