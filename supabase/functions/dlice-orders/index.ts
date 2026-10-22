@@ -423,6 +423,7 @@ Deno.serve(async (req: Request) => {
     "admin-list-staff": "staff",
     "admin-create-staff": "staff",
     "admin-set-permissions": "staff",
+    "admin-set-active": "staff",
     "admin-payment-settings": "settings",
     "admin-save-payment-settings": "settings",
     "admin-upload-qris": "settings",
@@ -522,6 +523,21 @@ Deno.serve(async (req: Request) => {
     if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
     return json({ ok: true }, 200, origin);
+  }
+
+
+  if (action === "admin-set-active") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const isActive = body.is_active;
+    if (!userId || typeof isActive !== "boolean") return fail("Akun dan status aktif wajib ditentukan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Status akun Pemilik tidak dapat diubah melalui aksi ini.", 409, origin);
+    const { data: updated, error } = await admin.from("admin_profiles").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("user_id", userId).select("user_id,is_active").single();
+    if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
+    return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
   }
 
   if (action === "admin-list-orders") {
