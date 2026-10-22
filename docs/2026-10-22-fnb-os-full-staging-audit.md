@@ -13,7 +13,7 @@
 - P1 implementation branch: `feat/p1-stock-transfer-count-20261022`; see PR #27 for its current head and review history.
 - GitHub Actions: `Free quality checks` succeeded for that head; Vercel check succeeded.
 - Supabase staging: `dlice-staging`, project `higoadrzxnhzbbwhdbmh`, status `ACTIVE_HEALTHY`.
-- Supabase public schema: 41 tables returned; RLS enabled on all 41 in the current inventory.
+- Supabase public schema: 45 tables returned after the stock migration; RLS enabled on all 45 in the current inventory.
 - Latest applied migration: `20261022124132_stock_transfers_and_counts` (after `20261021182634_branch_operation_checklists`).
 - Edge Function `dlice-orders`: ACTIVE version 37; `verify_jwt=false`, with authentication expected to be enforced inside the function.
 - Vercel deployment for the P1 branch: READY; open the latest preview from [PR #27](https://github.com/dlice8888/dlice-landing-page/pull/27). Vercel status alone does not prove browser acceptance.
@@ -45,8 +45,8 @@
 
 ## Data and runtime facts
 
-- Current public table inventory contains 41 tables, all with RLS enabled.
-- Key operational tables currently show no representative business activity: `branch_assignments` (0), `branch_inventory` (0), `stock_movements` (0), `purchase_orders` (0), `purchase_receipts` (0), `pos_shifts` (0), `pos_sales` (0), `production_batches` (0), `payment_settlements` (0), `refund_records` (0), `cash_reconciliations` (0), `fiscal_periods` (0), and `finance_journal_entries` (0).
+- Current public table inventory contains 45 tables, all with RLS enabled. The four new stock-transfer/count tables were separately verified to have the restrictive deny policy and no direct anon/authenticated SELECT grants.
+- Key operational tables currently show no representative business activity: `branch_assignments` (0), `branch_inventory` (0), `stock_movements` (0), `purchase_orders` (0), `purchase_receipts` (0), `pos_shifts` (0), `pos_sales` (0), `production_batches` (0), `payment_settlements` (0), `refund_records` (0), `cash_reconciliations` (0), `fiscal_periods` (0), and `finance_journal_entries` (0), `stock_transfers` (0), `stock_transfer_items` (0), `stock_counts` (0), and `stock_count_items` (0).
 - Current inventory rows include 154 branch records. That count is not evidence that 150 branches are active, configured, assigned, or operationally ready.
 - Security Advisor has previously identified leaked-password protection as disabled. Recheck and resolve before production.
 - Performance Advisor has many unused-index notices on a low-activity staging workload. Do not drop indexes solely from that signal; assess representative query plans first.
