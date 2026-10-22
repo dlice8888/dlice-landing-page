@@ -214,3 +214,14 @@ begin
   return true;
 end; $function$
 
+
+revoke all on function public.erp_create_stock_transfer(text,uuid,uuid,jsonb,uuid,text,text) from public,anon,authenticated;
+revoke all on function public.erp_transition_stock_transfer(uuid,uuid,text) from public,anon,authenticated;
+revoke all on function public.erp_create_stock_count(text,uuid,jsonb,uuid,text,text) from public,anon,authenticated;
+revoke all on function public.erp_update_stock_count_item(uuid,uuid,numeric) from public,anon,authenticated;
+revoke all on function public.erp_post_stock_count(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.erp_create_stock_transfer(text,uuid,uuid,jsonb,uuid,text,text) to service_role;
+grant execute on function public.erp_transition_stock_transfer(uuid,uuid,text) to service_role;
+grant execute on function public.erp_create_stock_count(text,uuid,jsonb,uuid,text,text) to service_role;
+grant execute on function public.erp_update_stock_count_item(uuid,uuid,numeric) to service_role;
+grant execute on function public.erp_post_stock_count(uuid,uuid) to service_role;
