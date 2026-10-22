@@ -1,7 +1,7 @@
 name: Staging P0 and browser smoke
 
 on:
-  # Keep security tests manual so staging secrets are never exposed to arbitrary
+  # Security tests stay manual: staging secrets must not be exposed to arbitrary
   # feature-branch workflow revisions. Browser smoke uses no credentials/secrets.
   push:
     branches:
@@ -17,8 +17,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: staging-p0-smoke
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   p0-http:
@@ -49,7 +49,6 @@ jobs:
             process.exit(2);
           }
           console.log("Preview target:", u.origin);
-          console.log("origin=" + u.origin);
           await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
           NODE
       - name: Run P0 HTTP security checks
@@ -83,7 +82,8 @@ jobs:
   browser-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment: staging
+    # Intentionally no protected environment: this job has no secrets and should
+    # run unattended on a Preview-only branch push.
     steps:
       - name: Checkout staging test branch
         uses: actions/checkout@v4
