@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Obtain short-lived JWTs through the D'Lice username-based admin-login action,
- * then run the P0 suite in-process. Credentials/tokens are never printed.
+ * Obtain short-lived JWTs through Supabase Auth password grant for disposable staging identities,
+ * then run P0 authorization/CORS checks. Credentials/tokens are never printed.
  * Use only disposable staging usernames/passwords; never production credentials.
  */
 const required = [
@@ -24,25 +24,26 @@ if (process.env.SUPABASE_URL.replace(/\\/$/, "") !== expectedStagingUrl || !edge
   process.exit(2);
 }
 async function tokenFor(label, username, password) {
+  const base = process.env.SUPABASE_URL.replace(/\\/$/, "");
+  const internalEmail = `${username.toLowerCase()}@accounts.dlice.internal`;
   let response;
   try {
-    response = await fetch(edgeUrl, {
+    response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
       method: "POST",
       headers: {
         apikey: process.env.SUPABASE_ANON_KEY,
         "content-type": "application/json",
-        origin: process.env.ALLOWED_PREVIEW_ORIGIN,
       },
-      body: JSON.stringify({ action: "admin-login", username, password }),
+      body: JSON.stringify({ email: internalEmail, password }),
     });
-  } catch (error) {
-    console.error(`BLOCKED: could not reach staging username login for ${label}; check staging network and Edge Function URL.`);
+  } catch {
+    console.error(`BLOCKED: could not reach staging Auth for ${label}.`);
     process.exit(2);
   }
   const body = await response.json().catch(() => ({}));
-  const token = body?.session?.access_token;
+  const token = body?.access_token;
   if (!response.ok || typeof token !== "string") {
-    console.error(`BLOCKED: could not obtain short-lived token for ${label}; username login returned HTTP ${response.status}. Check the disposable staging account, password, status, and role setup.`);
+    console.error(`BLOCKED: could not obtain short-lived staging Auth token for ${label}; Auth returned HTTP ${response.status}.`);
     process.exit(2);
   }
   return token;
