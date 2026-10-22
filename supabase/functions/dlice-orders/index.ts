@@ -437,6 +437,13 @@ Deno.serve(async (req: Request) => {
     "erp-list-inventory": "inventory",
     "erp-save-inventory": "inventory",
     "erp-stock-movement": "inventory",
+    "erp-list-stock-transfers": "inventory",
+    "erp-create-stock-transfer": "inventory",
+    "erp-transition-stock-transfer": "inventory",
+    "erp-list-stock-counts": "inventory",
+    "erp-create-stock-count": "inventory",
+    "erp-update-stock-count-item": "inventory",
+    "erp-post-stock-count": "inventory",
     "erp-list-shifts": "pos",
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
@@ -892,6 +899,113 @@ Deno.serve(async (req: Request) => {
     const {data,error}=await admin.rpc("erp_record_stock_movement",{p_branch_id:branchId,p_inventory_item_id:itemId,p_movement_type:type,p_quantity:qty,p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id});
     if(error)return fail(error.message.includes("insufficient_stock")?"Stok tidak mencukupi.":error.message.includes("branch_not_active")?"Cabang belum aktif.":"Pergerakan stok gagal dicatat.",409,origin);
     return json(data,200,origin);
+  }
+
+
+  if (action === "erp-list-stock-transfers") {
+    const ids = await branchIdsForActor().catch(() => []);
+    const selectedBranch = safeText(body.branch_id, 80);
+    if (selectedBranch && !await branchAccess(selectedBranch)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    let sourceQuery = admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,requested_by,shipped_by,received_by,shipped_at,received_at,created_at,updated_at,source_branch:branches!stock_transfers_source_branch_id_fkey(code,name),destination_branch:branches!stock_transfers_destination_branch_id_fkey(code,name),stock_transfer_items(inventory_item_id,quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(250);
+    let destinationQuery = admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,requested_by,shipped_by,received_by,shipped_at,received_at,created_at,updated_at,source_branch:branches!stock_transfers_source_branch_id_fkey(code,name),destination_branch:branches!stock_transfers_destination_branch_id_fkey(code,name),stock_transfer_items(inventory_item_id,quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(250);
+    if (selectedBranch) { sourceQuery = sourceQuery.eq("source_branch_id", selectedBranch); destinationQuery = destinationQuery.eq("destination_branch_id", selectedBranch); }
+    else if (!isOwner) {
+      if (!ids?.length) return json({ transfers: [] }, 200, origin);
+      sourceQuery = sourceQuery.in("source_branch_id", ids);
+      destinationQuery = destinationQuery.in("destination_branch_id", ids);
+    }
+    const [source, destination] = await Promise.all([sourceQuery, destinationQuery]);
+    if (source.error || destination.error) return fail("Daftar transfer stok gagal dimuat.", 500, origin);
+    const unique = new Map<string, any>();
+    for (const row of [...(source.data || []), ...(destination.data || [])]) unique.set(row.id, row);
+    const transfers = [...unique.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 250);
+    return json({ transfers }, 200, origin);
+  }
+
+  if (action === "erp-create-stock-transfer") {
+    const sourceBranchId = safeText(body.source_branch_id, 80), destinationBranchId = safeText(body.destination_branch_id, 80);
+    const itemId = safeText(body.inventory_item_id, 80), quantity = Number(body.quantity);
+    if (!await branchAccess(sourceBranchId) || !await branchAccess(destinationBranchId)) return fail("Akses ke cabang asal dan tujuan wajib diberikan.", 403, origin);
+    if (!itemId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 100000000 || sourceBranchId === destinationBranchId) return fail("Cabang tujuan, item, dan jumlah transfer harus valid.", 422, origin);
+    const idempotencyKey = safeText(body.idempotency_key, 160);
+    if (idempotencyKey.length < 8) return fail("Kunci idempotensi transfer tidak valid.", 422, origin);
+    const transferNumber = safeText(body.transfer_number, 60) || "TRF-" + new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14) + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const { data, error } = await admin.rpc("erp_create_stock_transfer", {
+      p_transfer_number: transferNumber, p_source_branch_id: sourceBranchId, p_destination_branch_id: destinationBranchId,
+      p_items: [{ inventory_item_id: itemId, quantity }], p_actor_user_id: actor.user.id,
+      p_idempotency_key: idempotencyKey, p_notes: safeText(body.notes, 500) || null,
+    });
+    if (error) return fail(error.message.includes("inactive_or_missing_branch") ? "Cabang asal dan tujuan harus aktif." : error.message.includes("idempotency_key_payload_mismatch") ? "Kunci idempotensi telah digunakan untuk data berbeda." : "Transfer stok gagal dibuat.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_transfer_created", entity_type: "stock_transfer", entity_id: data?.id, metadata: { source_branch_id: sourceBranchId, destination_branch_id: destinationBranchId, item_id: itemId, quantity } });
+    return json({ ok: true, transfer: data }, 201, origin);
+  }
+
+  if (action === "erp-transition-stock-transfer") {
+    const transferId = safeText(body.transfer_id, 80), transition = safeText(body.transition, 20);
+    if (!transferId || !["ship", "receive", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
+    const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
+    if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
+    const branchToCheck = transition === "receive" ? transfer.destination_branch_id : transfer.source_branch_id;
+    if (!await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
+    if (transition === "cancel" && transfer.status !== "draft") return fail("Hanya transfer draft yang dapat dibatalkan.", 409, origin);
+    if (transition === "ship" && transfer.status !== "draft") return fail("Hanya transfer draft yang dapat dikirim.", 409, origin);
+    if (transition === "receive" && transfer.status !== "shipped") return fail("Transfer harus berstatus dikirim sebelum diterima.", 409, origin);
+    const { data, error } = await admin.rpc("erp_transition_stock_transfer", { p_transfer_id: transferId, p_actor_user_id: actor.user.id, p_transition: transition });
+    if (error) return fail(error.message.includes("insufficient_stock_for_transfer") ? "Stok cabang asal tidak mencukupi." : "Status transfer gagal diperbarui.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_transfer_" + transition, entity_type: "stock_transfer", entity_id: transferId, metadata: { transfer_number: transfer.transfer_number, source_branch_id: transfer.source_branch_id, destination_branch_id: transfer.destination_branch_id } });
+    return json({ ok: true, result: data }, 200, origin);
+  }
+
+  if (action === "erp-list-stock-counts") {
+    const ids = await branchIdsForActor().catch(() => []);
+    const selectedBranch = safeText(body.branch_id, 80);
+    if (selectedBranch && !await branchAccess(selectedBranch)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    let query = admin.from("stock_counts").select("id,count_number,branch_id,status,notes,counted_by,posted_by,posted_at,created_at,updated_at,branches(code,name),stock_count_items(id,inventory_item_id,expected_quantity,counted_quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(200);
+    if (selectedBranch) query = query.eq("branch_id", selectedBranch);
+    else if (!isOwner) query = ids?.length ? query.in("branch_id", ids) : query.eq("branch_id", "00000000-0000-0000-0000-000000000000");
+    const { data, error } = await query;
+    if (error) return fail("Daftar stock opname gagal dimuat.", 500, origin);
+    return json({ counts: data || [] }, 200, origin);
+  }
+
+  if (action === "erp-create-stock-count") {
+    const branchId = safeText(body.branch_id, 80), items = body.items;
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!Array.isArray(items) || items.length < 1 || items.length > 1000) return fail("Pilih item untuk stock opname.", 422, origin);
+    const cleanItems = items.map((item: any) => ({ inventory_item_id: safeText(item?.inventory_item_id, 80) }));
+    if (cleanItems.some((item: any) => !item.inventory_item_id) || new Set(cleanItems.map((item: any) => item.inventory_item_id)).size !== cleanItems.length) return fail("Item opname tidak valid atau duplikat.", 422, origin);
+    const idempotencyKey = safeText(body.idempotency_key, 160);
+    if (idempotencyKey.length < 8) return fail("Kunci idempotensi opname tidak valid.", 422, origin);
+    const countNumber = safeText(body.count_number, 60) || "CNT-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const { data, error } = await admin.rpc("erp_create_stock_count", { p_count_number: countNumber, p_branch_id: branchId, p_items: cleanItems, p_actor_user_id: actor.user.id, p_idempotency_key: idempotencyKey, p_notes: safeText(body.notes, 500) || null });
+    if (error) return fail(error.message.includes("inactive_or_missing_branch") ? "Stock opname hanya dapat dimulai pada cabang aktif." : "Stock opname gagal dibuat.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_created", entity_type: "stock_count", entity_id: data?.id, metadata: { branch_id: branchId, item_count: cleanItems.length } });
+    return json({ ok: true, count: data }, 201, origin);
+  }
+
+  if (action === "erp-update-stock-count-item") {
+    const countId = safeText(body.count_id, 80), itemId = safeText(body.item_id, 80), quantity = Number(body.counted_quantity);
+    if (!countId || !itemId || !Number.isFinite(quantity) || quantity < 0 || quantity > 100000000) return fail("Jumlah hasil hitung tidak valid.", 422, origin);
+    const { data: count } = await admin.from("stock_counts").select("id,branch_id,status").eq("id", countId).maybeSingle();
+    if (!count) return fail("Stock opname tidak ditemukan.", 404, origin);
+    if (!await branchAccess(count.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (count.status !== "draft") return fail("Stock opname yang sudah diposting tidak dapat diubah.", 409, origin);
+    const { data, error } = await admin.rpc("erp_update_stock_count_item", { p_count_id: countId, p_item_id: itemId, p_counted_quantity: quantity });
+    if (error || data !== true) return fail("Jumlah hasil hitung gagal disimpan.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_item_updated", entity_type: "stock_count", entity_id: countId, metadata: { item_id: itemId, counted_quantity: quantity } });
+    return json({ ok: true }, 200, origin);
+  }
+
+  if (action === "erp-post-stock-count") {
+    const countId = safeText(body.count_id, 80);
+    const { data: count } = await admin.from("stock_counts").select("id,branch_id,status").eq("id", countId).maybeSingle();
+    if (!count) return fail("Stock opname tidak ditemukan.", 404, origin);
+    if (!await branchAccess(count.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (count.status !== "draft") return fail("Stock opname sudah diposting atau tidak lagi berstatus draft.", 409, origin);
+    const { data, error } = await admin.rpc("erp_post_stock_count", { p_count_id: countId, p_actor_user_id: actor.user.id });
+    if (error) return fail(error.message.includes("stock_count_items_incomplete") ? "Isi semua jumlah aktual sebelum posting opname." : "Posting stock opname gagal.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_posted", entity_type: "stock_count", entity_id: countId, metadata: { branch_id: count.branch_id } });
+    return json({ ok: true, result: data }, 200, origin);
   }
 
   if (action === "erp-list-shifts") {
