@@ -4,12 +4,13 @@
  * D'Lice administrative actions. Never reads or exposes a service-role key.
  * Restricted to the known staging project; never point this at production.
  */
+import { randomBytes } from "node:crypto";
+import { appendFile } from "node:fs/promises";
+
 const required = [
   "STAGING_SUPABASE_URL", "STAGING_SUPABASE_PUBLIC_KEY", "STAGING_EDGE_FUNCTION_URL",
   "STAGING_TEST_OWNER_USERNAME", "STAGING_TEST_OWNER_PASSWORD",
-  "STAGING_TEST_BRANCH_A_USERNAME", "STAGING_TEST_BRANCH_A_PASSWORD",
-  "STAGING_TEST_NO_PERMISSION_USERNAME", "STAGING_TEST_NO_PERMISSION_PASSWORD",
-  "STAGING_TEST_INACTIVE_USERNAME", "STAGING_TEST_INACTIVE_PASSWORD",
+  "STAGING_TEST_BRANCH_A_USERNAME", "STAGING_TEST_NO_PERMISSION_USERNAME", "STAGING_TEST_INACTIVE_USERNAME",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
@@ -56,18 +57,18 @@ if (typeof ownerToken !== "string") {
 const specs = [
   {
     key: "BRANCH_A", username: process.env.STAGING_TEST_BRANCH_A_USERNAME,
-    password: process.env.STAGING_TEST_BRANCH_A_PASSWORD, active: true,
+    active: true,
     permissions: ["orders", "branches", "inventory", "pos", "finance", "procurement", "reports"],
     position: "branch_manager", branch: "DLC-B001", label: "Branch A Manager",
   },
   {
     key: "NO_PERMISSION", username: process.env.STAGING_TEST_NO_PERMISSION_USERNAME,
-    password: process.env.STAGING_TEST_NO_PERMISSION_PASSWORD, active: true,
+    active: true,
     permissions: [], position: "cashier", branch: "DLC-B001", label: "No-Permission Staff",
   },
   {
     key: "INACTIVE", username: process.env.STAGING_TEST_INACTIVE_USERNAME,
-    password: process.env.STAGING_TEST_INACTIVE_PASSWORD, active: false,
+    active: false,
     permissions: [], position: "cashier", branch: "DLC-B002", label: "Inactive Staff",
   },
 ];
@@ -75,9 +76,8 @@ const ownerLower = ownerUsername.toLowerCase();
 const seen = new Set();
 for (const spec of specs) {
   const usernameFormatOk = /^[a-zA-Z0-9._-]{3,32}$/.test(spec.username || "");
-  const passwordLengthOk = (spec.password || "").length >= 12 && (spec.password || "").length <= 128;
-  if (!usernameFormatOk || !passwordLengthOk) {
-    console.error(`BLOCKED: invalid QA credential policy for ${spec.label}; username_format_ok=${usernameFormatOk}; password_length_ok=${passwordLengthOk}. Secret values are intentionally not printed.`);
+  if (!usernameFormatOk) {
+    console.error(`BLOCKED: invalid QA username policy for ${spec.label}; username_format_ok=${usernameFormatOk}. Secret values are intentionally not printed.`);
     process.exit(2);
   }
   const normalized = spec.username.toLowerCase();
@@ -123,18 +123,20 @@ async function ensureAuthPassword(spec) {
   if (!response.ok || typeof body.access_token !== "string") throw new Error("Supabase Auth could not verify the inactive QA credentials.");
 }
 for (const spec of specs) {
+  const password = randomBytes(32).toString("base64url");
   let profile = staffByUsername.get(spec.username.toLowerCase());
   if (!profile) {
     await call("admin-create-staff", {
       username: spec.username,
       display_name: `STAGING QA — ${spec.label}`,
-      password: spec.password,
+      password,
       permissions: spec.permissions,
     }, ownerToken);
     const refreshed = await call("admin-list-staff", {}, ownerToken);
     profile = (refreshed.staff || []).find((user) => String(user.username).toLowerCase() === spec.username.toLowerCase());
   }
   if (!profile?.user_id || profile.role === "owner") throw new Error(`Could not safely identify the staging profile for ${spec.label}.`);
+  else if (staffByUsername.has(spec.username.toLowerCase())) await call("admin-reset-staff-password", { user_id: profile.user_id, password }, ownerToken);
   await call("admin-set-permissions", { user_id: profile.user_id, permissions: spec.permissions }, ownerToken);
   await call("admin-set-active", { user_id: profile.user_id, is_active: spec.active }, ownerToken);
   const branch = branchByCode.get(spec.branch);
@@ -147,7 +149,10 @@ for (const spec of specs) {
     starts_on: new Date().toISOString().slice(0, 10),
     ends_on: null,
   }, ownerToken);
-  await ensureAuthPassword(spec);
-  console.log(`PASS QA_ACCOUNT_CONFIGURED: ${spec.label}; active=${spec.active}; branch=${spec.branch}; permissions=${spec.permissions.length ? "explicit least-privilege" : "none"}`);
+  await ensureAuthPassword({ ...spec, password });
+  const passwordEnvKey = spec.key === "BRANCH_A" ? "STAGING_TEST_BRANCH_A_PASSWORD" : spec.key === "NO_PERMISSION" ? "STAGING_TEST_NO_PERMISSION_PASSWORD" : "STAGING_TEST_INACTIVE_PASSWORD";
+  console.log(`::add-mask::${password}`);
+  await appendFile(process.env.GITHUB_ENV, `${passwordEnvKey}=${password}\\n`);
+  console.log(`PASS QA_ACCOUNT_CONFIGURED: ${spec.label}; active=${spec.active}; branch=${spec.branch}; permissions=${spec.permissions.length ? "explicit least-privilege" : "none"}; password=ephemeral`);
 }
 console.log("PASS STAGING_QA_ACCOUNT_BOOTSTRAP: 3 QA profiles provisioned through Owner-only Edge Function actions; no service-role key or credentials printed.");
