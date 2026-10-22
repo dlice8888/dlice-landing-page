@@ -13,6 +13,7 @@ on:
       - feat/fnb-os-staging-implementation-20261021
     paths:
       - .github/workflows/staging-p0-smoke.yml
+      - tests/staging/run-p0-with-login.mjs
 
 permissions:
   contents: read
