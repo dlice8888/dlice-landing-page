@@ -154,7 +154,7 @@ for (const spec of specs) {
   await ensureAuthPassword({ ...spec, password });
   const passwordEnvKey = spec.key === "BRANCH_A" ? "STAGING_TEST_BRANCH_A_PASSWORD" : spec.key === "NO_PERMISSION" ? "STAGING_TEST_NO_PERMISSION_PASSWORD" : "STAGING_TEST_INACTIVE_PASSWORD";
   console.log(`::add-mask::${password}`);
-  await appendFile(process.env.GITHUB_ENV, `${passwordEnvKey}=${password}\\n`);
+  await appendFile(process.env.GITHUB_ENV, `${passwordEnvKey}=${password}\n`);
   console.log(`PASS QA_ACCOUNT_CONFIGURED: ${spec.label}; active=${spec.active}; branch=${spec.branch}; permissions=${spec.permissions.length ? "explicit least-privilege" : "none"}; password=ephemeral`);
 }
 console.log("PASS STAGING_QA_ACCOUNT_BOOTSTRAP: 3 QA profiles provisioned through Owner-only Edge Function actions; no service-role key or credentials printed.");
