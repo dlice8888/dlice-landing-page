@@ -46,9 +46,9 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
-          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
+          STAGING_TEST_BRANCH_A_USERNAME: qa_dlice_staging_branch_a
+          STAGING_TEST_NO_PERMISSION_USERNAME: qa_dlice_staging_no_permission
+          STAGING_TEST_INACTIVE_USERNAME: qa_dlice_staging_inactive
         run: node tests/staging/bootstrap-qa-accounts.mjs
       - name: Validate exact staging Preview target
         id: preview
@@ -74,9 +74,9 @@ jobs:
           DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
-          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
+          STAGING_TEST_BRANCH_A_USERNAME: qa_dlice_staging_branch_a
+          STAGING_TEST_NO_PERMISSION_USERNAME: qa_dlice_staging_no_permission
+          STAGING_TEST_INACTIVE_USERNAME: qa_dlice_staging_inactive
           TEST_BRANCH_B_ID: d8672046-7029-489b-9223-df07007cdc69
         run: |
           set -o pipefail
