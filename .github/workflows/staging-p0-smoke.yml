@@ -7,6 +7,12 @@ on:
         description: "Exact Vercel Preview URL for this staging branch (never production)"
         required: true
         type: string
+        default: "https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app"
+  push:
+    branches:
+      - feat/fnb-os-staging-implementation-20261021
+    paths:
+      - .github/workflows/staging-p0-smoke.yml
 
 permissions:
   contents: read
@@ -32,7 +38,7 @@ jobs:
       - name: Validate Preview target
         id: preview
         env:
-          PREVIEW_URL: ${{ inputs.preview_url }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
         run: |
           node --input-type=module <<'NODE'
           const u = new URL(process.env.PREVIEW_URL);
@@ -92,7 +98,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser smoke tests
         env:
-          PREVIEW_URL: ${{ inputs.preview_url }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
         run: |
           set -o pipefail
           node tests/staging/browser-smoke.mjs 2>&1 | tee browser-smoke-results.log
