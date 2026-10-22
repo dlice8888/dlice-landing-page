@@ -62,7 +62,7 @@ process.env.TEST_NO_PERMISSION_STAFF_JWT = await tokenFor(
 // negative test only, mint a normal staging Auth token using the internal synthetic
 // email mapping, then verify the Edge Function rejects the inactive profile.
 async function tokenForInactiveProfile(username, password) {
-  const base = process.env.SUPABASE_URL.replace(/\\/$/, "");
+  const base = process.env.SUPABASE_URL.replace(/\/$/, "");
   const internalEmail = `${username.toLowerCase()}@accounts.dlice.internal`;
   let response;
   try {
