@@ -96,4 +96,5 @@ process.env.TEST_INACTIVE_STAFF_JWT = await tokenForInactiveProfile(
 );
 
 // Keep bearer tokens in this process only; the test suite never prints them.
+await import("./timezone-cutoff-contract.mjs");
 await import("./p0-http-smoke.mjs");
