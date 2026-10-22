@@ -79,7 +79,7 @@ if (allowedOptions) {
 const noAuthPost = await request("P0-AUTH-01", edgeUrl, {
   method: "POST",
   headers: { origin: allowed, apikey: anonKey, "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (noAuthPost) {
   const ok = noAuthPost.response.status === 401 && exactCors(noAuthPost.response, allowed) && corsNotWildcard(noAuthPost.response);
@@ -89,7 +89,7 @@ if (noAuthPost) {
 const invalidTokenPost = await request("P0-AUTH-02", edgeUrl, {
   method: "POST",
   headers: { origin: allowed, apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (invalidTokenPost) {
   const ok = invalidTokenPost.response.status === 401 && exactCors(invalidTokenPost.response, allowed) && corsNotWildcard(invalidTokenPost.response);
@@ -109,7 +109,7 @@ if (deniedOptions) {
 const deniedPost = await request("P0-CORS-03", edgeUrl, {
   method: "POST",
   headers: { origin: denied, apikey: anonKey, "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (deniedPost) {
   const ok = deniedPost.response.status === 403 &&
@@ -146,7 +146,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
     const staff = await request("P0-AUTH-STAFF", edgeUrl, {
       method: "POST",
       headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
-      body: JSON.stringify({ action: "erp-list-orders" }),
+      body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
     });
     if (staff) {
       const ok = [200, 403].includes(staff.response.status);
@@ -160,14 +160,14 @@ if (env.P0_PUBLIC_ONLY !== "true") {
     const crossBranch = await request("P0-AUTH-CROSS-BRANCH", edgeUrl, {
       method: "POST",
       headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
-      body: JSON.stringify({ action: "erp-list-branch-capacity", branch_id: env.TEST_BRANCH_B_ID }),
+      body: JSON.stringify({ action: "erp-list-fulfillment-orders", branch_id: env.TEST_BRANCH_B_ID }),
     });
     if (crossBranch) {
       const ok = [403, 200].includes(crossBranch.response.status);
       let parsed;
       try { parsed = JSON.parse(crossBranch.body); } catch {}
       const noCrossBranchData = crossBranch.response.status === 403 ||
-        (crossBranch.response.status === 200 && Array.isArray(parsed?.capacities) && parsed.capacities.length === 0);
+        (crossBranch.response.status === 200 && Array.isArray(parsed?.orders) && parsed.orders.length === 0);
       record("P0-AUTH-CROSS-BRANCH", ok && noCrossBranchData,
         `cross-branch status=${crossBranch.response.status}; response body must be empty/scoped or denied`);
     }
@@ -187,7 +187,25 @@ if (env.P0_PUBLIC_ONLY !== "true") {
       `no-permission staff status=${noPermission.response.status}; expected 403`);
   }
   
-  const inactive = env.TEST_INACTIVE_STAFF_JWT
+
+  for (const [id, payload] of [
+    ["P0-AUTH-NO-PERMISSION-CATALOG", { action: "admin-save-product" }],
+    ["P0-AUTH-NO-PERMISSION-INVENTORY", { action: "erp-stock-movement" }],
+    ["P0-AUTH-NO-PERMISSION-POS", { action: "erp-open-shift" }],
+    ["P0-AUTH-NO-PERMISSION-FINANCE", { action: "erp-create-expense" }],
+    ["P0-AUTH-NO-PERMISSION-PROCUREMENT", { action: "erp-create-purchase-order" }],
+  ]) {
+    const deniedAction = env.TEST_NO_PERMISSION_STAFF_JWT
+      ? await request(id, edgeUrl, {
+          method: "POST",
+          headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      : null;
+    if (deniedAction) record(id, deniedAction.response.status === 403, `status=${deniedAction.response.status}; expected 403 before payload validation`);
+  }
+
+    const inactive = env.TEST_INACTIVE_STAFF_JWT
     ? await request("P0-AUTH-INACTIVE-STAFF", edgeUrl, {
         method: "POST",
         headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
