@@ -9,7 +9,7 @@ const html = read("index.html");
 const track = read("track.html");
 const erp = read("erp.html");
 const branchChecklistMigration = read("supabase/migrations/20261021182634_branch_operation_checklists.sql");
-const stockWorkflowMigration = read("supabase/migrations/20261022121503_stock_transfers_and_counts.sql");
+const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_transfers_and_counts.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
