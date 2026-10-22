@@ -10,7 +10,6 @@ import { appendFile } from "node:fs/promises";
 const required = [
   "STAGING_SUPABASE_URL", "STAGING_SUPABASE_PUBLIC_KEY", "STAGING_EDGE_FUNCTION_URL",
   "STAGING_TEST_OWNER_USERNAME", "STAGING_TEST_OWNER_PASSWORD",
-  "STAGING_TEST_BRANCH_A_USERNAME", "STAGING_TEST_NO_PERMISSION_USERNAME", "STAGING_TEST_INACTIVE_USERNAME",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
@@ -56,18 +55,18 @@ if (typeof ownerToken !== "string") {
 }
 const specs = [
   {
-    key: "BRANCH_A", username: process.env.STAGING_TEST_BRANCH_A_USERNAME,
+    key: "BRANCH_A", username: "qa_dlice_staging_branch_a",
     active: true,
     permissions: ["orders", "branches", "inventory", "pos", "finance", "procurement", "reports"],
     position: "branch_manager", branch: "DLC-B001", label: "Branch A Manager",
   },
   {
-    key: "NO_PERMISSION", username: process.env.STAGING_TEST_NO_PERMISSION_USERNAME,
+    key: "NO_PERMISSION", username: "qa_dlice_staging_no_permission",
     active: true,
     permissions: [], position: "cashier", branch: "DLC-B001", label: "No-Permission Staff",
   },
   {
-    key: "INACTIVE", username: process.env.STAGING_TEST_INACTIVE_USERNAME,
+    key: "INACTIVE", username: "qa_dlice_staging_inactive",
     active: false,
     permissions: [], position: "cashier", branch: "DLC-B002", label: "Inactive Staff",
   },
@@ -136,7 +135,10 @@ for (const spec of specs) {
     profile = (refreshed.staff || []).find((user) => String(user.username).toLowerCase() === spec.username.toLowerCase());
   }
   if (!profile?.user_id || profile.role === "owner") throw new Error(`Could not safely identify the staging profile for ${spec.label}.`);
-  else if (staffByUsername.has(spec.username.toLowerCase())) await call("admin-reset-staff-password", { user_id: profile.user_id, password }, ownerToken);
+  if (staffByUsername.has(spec.username.toLowerCase())) {
+    if (!String(profile.display_name || "").startsWith("STAGING QA — ")) throw new Error(`Refusing to modify a non-QA account matching the reserved test username for ${spec.label}.`);
+    await call("admin-reset-staff-password", { user_id: profile.user_id, password }, ownerToken);
+  }
   await call("admin-set-permissions", { user_id: profile.user_id, permissions: spec.permissions }, ownerToken);
   await call("admin-set-active", { user_id: profile.user_id, is_active: spec.active }, ownerToken);
   const branch = branchByCode.get(spec.branch);
