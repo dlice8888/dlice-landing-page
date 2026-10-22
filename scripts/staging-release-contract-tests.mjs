@@ -13,7 +13,7 @@ const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_tr
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const checks = [
-  ["CORS reflects only exact allowlisted origins and never falls back to a trusted origin", /const corsHeaders = \(origin: string \| null\) => \(\{[\s\S]{0,500}origin && isAllowedOrigin\(origin\) \? \{ "Access-Control-Allow-Origin": origin \} : \{\}/.test(edge) && !/"Access-Control-Allow-Origin": origin && isAllowedOrigin\(origin\) \? origin : "https:\/\/dlice\.vercel\.app"/.test(edge)],
+  ["CORS reflects only explicitly configured origins and never falls back to a trusted origin", /return configuredOrigins\.has\(origin\)/.test(edge) && !/const allowedOrigins = new Set/.test(edge) && /const corsHeaders = \(origin: string \| null\) => \(\{[\s\S]{0,500}origin && isAllowedOrigin\(origin\) \? \{ "Access-Control-Allow-Origin": origin \} : \{\}/.test(edge) && !/"Access-Control-Allow-Origin": origin && isAllowedOrigin\(origin\) \? origin : "https:\/\/dlice\.vercel\.app"/.test(edge)],
   ["CORS preflight and POST reject unapproved browser origins", /if \(req\.method === "OPTIONS"\)[\s\S]{0,180}if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge) && /if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge)],
 
   ["transaction IDs use the agreed DLC date/sequence format", /DLC-\$\{part\("day"\)\}\/\$\{part\("month"\)\}\/\$\{part\("year"\)\}-\$\{String\(orderNumber\)\.padStart\(5,\s*"0"\)\}/.test(edge)],
