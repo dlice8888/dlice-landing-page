@@ -83,6 +83,7 @@ jobs:
     # This job uses only the public anon/publishable key and runs no privileged writes.
     # Authenticated role/branch tests remain in the manual, protected p0-http job.
     runs-on: ubuntu-latest
+    environment: staging
     timeout-minutes: 8
     steps:
       - name: Checkout staging test branch
