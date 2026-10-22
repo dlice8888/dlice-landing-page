@@ -39,17 +39,17 @@ jobs:
       - name: Bootstrap disposable staging QA accounts
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
           STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
           STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
           STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
           STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
           STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
           STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
-        run: |
-          npm install --no-save @supabase/supabase-js
-          node tests/staging/bootstrap-qa-accounts.mjs
+        run: node tests/staging/bootstrap-qa-accounts.mjs
       - name: Validate Preview target
         id: preview
         env:
