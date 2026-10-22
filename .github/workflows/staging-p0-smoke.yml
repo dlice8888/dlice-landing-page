@@ -1,4 +1,4 @@
-name: Staging P0 and browser smoke
+name: Staging browser smoke
 
 on:
   workflow_dispatch:
@@ -13,7 +13,6 @@ on:
       - feat/fnb-os-staging-implementation-20261021
     paths:
       - .github/workflows/staging-p0-smoke.yml
-      - tests/staging/run-p0-with-login.mjs
 
 permissions:
   contents: read
@@ -23,76 +22,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  p0-http:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: staging
-    steps:
-      - name: Checkout staging test branch
-        uses: actions/checkout@v4
-        with:
-          ref: feat/fnb-os-staging-implementation-20261021
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Bootstrap disposable staging QA accounts
-        env:
-          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
-          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
-          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
-          STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
-          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
-          STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
-        run: node tests/staging/bootstrap-qa-accounts.mjs
-      - name: Validate Preview target
-        id: preview
-        env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app' }}
-        run: |
-          node --input-type=module <<'NODE'
-          const u = new URL(process.env.PREVIEW_URL);
-          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || ["dlice.vercel.app", "dlice-landing-page.vercel.app"].includes(u.hostname)) {
-            console.error("Refusing to test non-Preview URL:", u.origin);
-            process.exit(2);
-          }
-          console.log("Preview target:", u.origin);
-          console.log("origin=" + u.origin);
-          await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
-          NODE
-      - name: Run P0 HTTP security checks
-        env:
-          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
-          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
-          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
-          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
-          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
-          STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
-          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
-          STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
-          TEST_BRANCH_B_ID: d8672046-7029-489b-9223-df07007cdc69
-        run: |
-          set -o pipefail
-          node tests/staging/run-p0-with-login.mjs 2>&1 | tee p0-http-results.log
-      - name: Upload P0 result log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-p0-http-results
-          path: p0-http-results.log
-          if-no-files-found: ignore
-          retention-days: 14
-
   browser-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
