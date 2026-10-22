@@ -22,8 +22,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: staging-p0-http-security
-  cancel-in-progress: true
+  group: staging-p0-http-security-final
+  cancel-in-progress: false
 
 jobs:
   p0-http:
