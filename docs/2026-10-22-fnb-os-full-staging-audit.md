@@ -5,18 +5,18 @@
 - **Estimated existing staging capability: ~28% of the 18-domain blueprint.** This is an evidence-based scope estimate, not test coverage, completion percentage by LOC, or production-readiness certification.
 - **No domain is certified complete.** 15 domains have partial implementation evidence; CRM & Loyalty, Franchise & Expansion, and SaaS Tenant Management have no sufficient implementation evidence.
 - **Release posture: staging-only, not production-ready.** Do not merge to `main` or deploy production until the required end-to-end and security gates pass and the Owner explicitly approves.
-- The stock-transfer/cycle-count slice is currently in draft PR #27 and is **not part of the existing staging runtime yet**. The opening/closing checklist slice is deployed to staging; its authenticated browser acceptance is still incomplete.
+- The stock-transfer/cycle-count slice remains in draft PR #27. Its migration is now applied to staging as `20261022124132_stock_transfers_and_counts`, and `dlice-orders` was deployed to version 37. Authenticated role/branch E2E and browser acceptance remain incomplete.
 
 ## Evidence sources checked
 
 - GitHub repository: `dlice8888/dlice-landing-page`; default branch `main`.
-- Latest P1 draft head at audit time: `feat/p1-stock-transfer-count-20261022`, commit `a0480d56998babc061c13c6990a146fb4ed5711a`.
+- P1 implementation branch: `feat/p1-stock-transfer-count-20261022`; see PR #27 for its current head and review history.
 - GitHub Actions: `Free quality checks` succeeded for that head; Vercel check succeeded.
 - Supabase staging: `dlice-staging`, project `higoadrzxnhzbbwhdbmh`, status `ACTIVE_HEALTHY`.
 - Supabase public schema: 41 tables returned; RLS enabled on all 41 in the current inventory.
-- Latest applied migration: `20261021182634_branch_operation_checklists`.
-- Edge Function `dlice-orders`: ACTIVE version 35; `verify_jwt=false`, with authentication expected to be enforced inside the function.
-- Vercel deployment for the P1 branch: READY at https://dlice-landing-page-3n43pbhrx-dlice8888-7332.vercel.app ; Vercel status alone does not prove browser acceptance.
+- Latest applied migration: `20261022124132_stock_transfers_and_counts` (after `20261021182634_branch_operation_checklists`).
+- Edge Function `dlice-orders`: ACTIVE version 37; `verify_jwt=false`, with authentication expected to be enforced inside the function.
+- Vercel deployment for the P1 branch: READY; open the latest preview from [PR #27](https://github.com/dlice8888/dlice-landing-page/pull/27). Vercel status alone does not prove browser acceptance.
 - Figma account: Starter plan with View seat; Code Layers disabled. No Figma file URL/key was provided to establish a visual target, and direct canvas edits cannot be assumed.
 - Product Design screenshot-based audit is not complete in this standard chat context; the preview is protected by Vercel SSO and cannot be represented as visually audited from a READY status alone.
 
@@ -29,7 +29,7 @@
 | 3 | Order Management | Orders, items, reservations, status history and checkout guards | **Partial** — full multi-channel exception and fulfillment acceptance pending |
 | 4 | Kitchen & Production | Recipes, production batches/consumptions schema and server actions | **Partial** — no verified KDS station workflow, quality gates and production reconciliation |
 | 5 | Menu & Recipe Engineering | Products, recipes, ingredients, recipe activation | **Partial** — version distribution, effective dating, allergen and margin validation incomplete |
-| 6 | Inventory & Warehouse | Inventory items, branch inventory and stock movement tables | **Partial** — operational stock data absent; transfer/count implementation is in draft PR #27, not applied to staging |
+| 6 | Inventory & Warehouse | Inventory items, branch inventory and stock movement tables | **Partial** — operational stock data absent; transfer/count schema and server actions are now deployed, but no representative stock reconciliation E2E has passed |
 | 7 | Procurement & Supplier | Suppliers, purchase orders, receipts and receipt items | **Partial** — no representative PR→approval→PO→GRN→invoice/AP reconciliation |
 | 8 | Branch Operations | Checklist-run table and checklist actions deployed | **Partial** — role/branch browser acceptance and operational escalation gates pending |
 | 9 | Delivery & Fulfillment | Order fulfillment fields and queue logic | **Partial** — external courier booking, tracking, proof of delivery and cost reconciliation not verified |
@@ -50,7 +50,7 @@
 - Current inventory rows include 154 branch records. That count is not evidence that 150 branches are active, configured, assigned, or operationally ready.
 - Security Advisor has previously identified leaked-password protection as disabled. Recheck and resolve before production.
 - Performance Advisor has many unused-index notices on a low-activity staging workload. Do not drop indexes solely from that signal; assess representative query plans first.
-- The draft stock-transfer/count migration `20261022121503_stock_transfers_and_counts.sql` is not included in the applied migration list yet.
+- The stock-transfer/count migration is applied as `20261022124132_stock_transfers_and_counts`; the repository migration filename has been aligned to this exact version. SQL verification confirmed RLS enabled, restrictive deny policy present, no anon/authenticated SELECT grants, and service_role SELECT plus RPC EXECUTE only.
 
 ## Phased readiness estimate
 
