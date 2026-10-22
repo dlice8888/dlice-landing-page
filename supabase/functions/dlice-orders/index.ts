@@ -20,7 +20,10 @@ const isAllowedOrigin = (origin: string | null) => {
   return allowedOrigins.has(origin) || configuredOrigins.has(origin);
 };
 const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "https://dlice.vercel.app",
+  // Never emit a fallback Access-Control-Allow-Origin for a missing or denied origin.
+  // The request handler returns 403 for a denied browser origin; omitting this header
+  // also ensures the response cannot be read cross-origin by a browser.
+  ...(origin && isAllowedOrigin(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
