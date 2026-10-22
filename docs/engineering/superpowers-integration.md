@@ -1,13 +1,37 @@
 # Superpowers integration record
 
 - Upstream: https://github.com/obra/superpowers
-- Pinned upstream commit checked during preparation: `2ce8aa15d05bd57213e6f746f953aafb7ded7a8b`
+- Pinned upstream commit: `2ce8aa15d05bd57213e6f746f953aafb7ded7a8b` (Superpowers v7.0.1)
+- Submodule path: `tools/superpowers`
+- Submodule configuration: [`.gitmodules`](../../.gitmodules)
 - Project workflow rules: [`/AGENTS.md`](../../AGENTS.md)
 
-## Important status
+## What is committed
 
-This change adds repository-level engineering guardrails inspired by Superpowers. It does **not** contain a clone, Git submodule, or vendored copy of the upstream repository. The available GitHub operations in this session can commit files and open pull requests, but do not provide a way to run `git clone` or safely construct a submodule gitlink while preserving the current repository tree. Do not describe the upstream source as installed until a real clone/submodule has been added and verified.
+The integration branch now contains a real Git submodule gitlink at `tools/superpowers`, pinned to the upstream commit above, plus the `.gitmodules` configuration. This references the complete upstream repository without copying its files into the D’Lice website's own Git tree.
 
-## Recommended next step
+To initialize the source after cloning this repository, run:
 
-From a development environment with Git access, install the official Superpowers plugin for the coding-agent harness in use (the upstream README recommends per-harness installation). Keep the source upstream rather than copying a partial set of skills into the website. If the team specifically wants the source pinned inside this repository, add it as a Git submodule in a local Git checkout, commit both `.gitmodules` and the submodule gitlink, then verify a fresh clone with submodules enabled.
+```bash
+git clone --recurse-submodules https://github.com/dlice8888/dlice-landing-page.git
+```
+
+If you already cloned the repository without submodules:
+
+```bash
+git submodule update --init --recursive
+```
+
+To verify the pinned source:
+
+```bash
+git -C tools/superpowers rev-parse HEAD
+```
+
+Expected commit: `2ce8aa15d05bd57213e6f746f953aafb7ded7a8b`.
+
+## Scope and remaining verification
+
+The GitHub tree has been checked for the `.gitmodules` file and submodule pointer. The submodule itself is not expanded into ordinary files in the D’Lice repository, and this session has not performed a fresh local recursive clone or run the website build/test suite. Install the appropriate Superpowers plugin for the coding-agent harness separately if runtime skill activation is needed; a Git submodule alone does not activate agent skills automatically.
+
+This integration does not change website colors, priority text, Supabase settings, Vercel settings, secrets, billing plans, or production deployment. Do not merge the pull request or deploy without Owner approval and required checks.
