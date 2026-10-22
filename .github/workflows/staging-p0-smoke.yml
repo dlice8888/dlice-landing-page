@@ -1,6 +1,11 @@
 name: Staging P0 and browser smoke
 
 on:
+  # Keep security tests manual so staging secrets are never exposed to arbitrary
+  # feature-branch workflow revisions. Browser smoke uses no credentials/secrets.
+  push:
+    branches:
+      - feat/fnb-os-branch-ops-checklists-20261022
   workflow_dispatch:
     inputs:
       preview_url:
@@ -17,6 +22,9 @@ concurrency:
 
 jobs:
   p0-http:
+    # P0 uses staging secrets and therefore remains manual until workflow is
+    # dispatched from a trusted/default-branch workflow definition.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
@@ -92,7 +100,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser smoke tests
         env:
-          PREVIEW_URL: ${{ inputs.preview_url }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
         run: |
           set -o pipefail
           node tests/staging/browser-smoke.mjs 2>&1 | tee browser-smoke-results.log
