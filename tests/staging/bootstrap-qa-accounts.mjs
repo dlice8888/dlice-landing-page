@@ -1,117 +1,151 @@
 #!/usr/bin/env node
 /**
- * Idempotently provision disposable QA identities in Supabase STAGING only.
- * Never logs passwords, access tokens, or the service-role key.
+ * Idempotently provision disposable QA identities through the Owner-only
+ * D'Lice administrative actions. Never reads or exposes a service-role key.
+ * Restricted to the known staging project; never point this at production.
  */
-import { createClient } from "@supabase/supabase-js";
-
 const required = [
-  "STAGING_SUPABASE_URL", "STAGING_SUPABASE_SERVICE_ROLE_KEY",
+  "STAGING_SUPABASE_URL", "STAGING_SUPABASE_PUBLIC_KEY", "STAGING_EDGE_FUNCTION_URL",
+  "STAGING_TEST_OWNER_USERNAME", "STAGING_TEST_OWNER_PASSWORD",
   "STAGING_TEST_BRANCH_A_USERNAME", "STAGING_TEST_BRANCH_A_PASSWORD",
   "STAGING_TEST_NO_PERMISSION_USERNAME", "STAGING_TEST_NO_PERMISSION_PASSWORD",
   "STAGING_TEST_INACTIVE_USERNAME", "STAGING_TEST_INACTIVE_PASSWORD",
 ];
-const missing = required.filter((k) => !process.env[k]);
+const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
   console.error("BLOCKED: staging QA bootstrap is missing required environment variables:", missing.join(", "));
   process.exit(2);
 }
 const url = process.env.STAGING_SUPABASE_URL.replace(/\/$/, "");
-if (url !== "https://higoadrzxnhzbbwhdbmh.supabase.co") {
-  console.error("BLOCKED: refusing to create QA identities outside the known D’Lice staging Supabase project.");
+const expectedUrl = "https://higoadrzxnhzbbwhdbmh.supabase.co";
+const edgeUrl = new URL(process.env.STAGING_EDGE_FUNCTION_URL);
+if (url !== expectedUrl || edgeUrl.origin !== expectedUrl || edgeUrl.pathname !== "/functions/v1/dlice-orders") {
+  console.error("BLOCKED: refusing to provision QA identities outside the known D’Lice staging project and Edge Function.");
   process.exit(2);
 }
-const admin = createClient(url, process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
+const anonKey = process.env.STAGING_SUPABASE_PUBLIC_KEY;
+async function call(action, payload = {}, token = null) {
+  let response;
+  try {
+    response = await fetch(edgeUrl, {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ action, ...payload }),
+    });
+  } catch {
+    throw new Error(`Administrative action ${action} could not reach the staging Edge Function.`);
+  }
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`Administrative action ${action} failed with HTTP ${response.status}.`);
+  return body;
+}
+const ownerUsername = process.env.STAGING_TEST_OWNER_USERNAME;
+const ownerLogin = await call("admin-login", {
+  username: ownerUsername,
+  password: process.env.STAGING_TEST_OWNER_PASSWORD,
 });
+const ownerToken = ownerLogin?.session?.access_token;
+if (typeof ownerToken !== "string") {
+  console.error("BLOCKED: Owner staging login did not return a session; QA provisioning stopped.");
+  process.exit(2);
+}
 const specs = [
-  { key: "BRANCH_A", username: process.env.STAGING_TEST_BRANCH_A_USERNAME, password: process.env.STAGING_TEST_BRANCH_A_PASSWORD, active: true, permissions: null, position: "branch_manager", branch: "DLC-B001", label: "Branch A Manager" },
-  { key: "NO_PERMISSION", username: process.env.STAGING_TEST_NO_PERMISSION_USERNAME, password: process.env.STAGING_TEST_NO_PERMISSION_PASSWORD, active: true, permissions: [], position: "cashier", branch: "DLC-B001", label: "No-Permission Staff" },
-  { key: "INACTIVE", username: process.env.STAGING_TEST_INACTIVE_USERNAME, password: process.env.STAGING_TEST_INACTIVE_PASSWORD, active: false, permissions: [], position: "cashier", branch: "DLC-B002", label: "Inactive Staff" },
+  {
+    key: "BRANCH_A", username: process.env.STAGING_TEST_BRANCH_A_USERNAME,
+    password: process.env.STAGING_TEST_BRANCH_A_PASSWORD, active: true,
+    permissions: ["orders", "branches", "inventory", "pos", "finance", "procurement", "reports"],
+    position: "branch_manager", branch: "DLC-B001", label: "Branch A Manager",
+  },
+  {
+    key: "NO_PERMISSION", username: process.env.STAGING_TEST_NO_PERMISSION_USERNAME,
+    password: process.env.STAGING_TEST_NO_PERMISSION_PASSWORD, active: true,
+    permissions: [], position: "cashier", branch: "DLC-B001", label: "No-Permission Staff",
+  },
+  {
+    key: "INACTIVE", username: process.env.STAGING_TEST_INACTIVE_USERNAME,
+    password: process.env.STAGING_TEST_INACTIVE_PASSWORD, active: false,
+    permissions: [], position: "cashier", branch: "DLC-B002", label: "Inactive Staff",
+  },
 ];
-const ownerUsername = (process.env.STAGING_TEST_OWNER_USERNAME || "").toLowerCase();
+const ownerLower = ownerUsername.toLowerCase();
 const seen = new Set();
-for (const s of specs) {
-  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(s.username || "") || (s.password || "").length < 12 || (s.password || "").length > 128) {
-    console.error(`BLOCKED: invalid username/password policy for ${s.label}; usernames must be 3–32 allowed characters and passwords 12–128 characters.`);
+for (const spec of specs) {
+  if (!/^[a-zA-Z0-9._-]{3,32}$/.test(spec.username || "") || (spec.password || "").length < 12 || (spec.password || "").length > 128) {
+    console.error(`BLOCKED: invalid username/password policy for ${spec.label}; usernames must be 3–32 allowed characters and passwords 12–128 characters.`);
     process.exit(2);
   }
-  const u = s.username.toLowerCase();
-  if (u === ownerUsername || seen.has(u)) {
-    console.error("BLOCKED: QA usernames must be unique and must not match the Owner test username.");
+  const normalized = spec.username.toLowerCase();
+  if (normalized === ownerLower || seen.has(normalized)) {
+    console.error("BLOCKED: QA usernames must be unique and must not match the Owner username.");
     process.exit(2);
   }
-  seen.add(u);
+  seen.add(normalized);
 }
-const { data: profiles, error: profileReadError } = await admin.from("admin_profiles").select("user_id,role,username").eq("role", "owner");
-if (profileReadError || !profiles?.length) {
-  console.error("BLOCKED: could not identify an existing Owner profile for QA assignment audit fields.");
-  process.exit(2);
+const [staffResponse, branchResponse, positionResponse] = await Promise.all([
+  call("admin-list-staff", {}, ownerToken),
+  call("erp-list-branches", {}, ownerToken),
+  call("erp-list-positions", {}, ownerToken),
+]);
+const staffByUsername = new Map((staffResponse.staff || []).map((user) => [String(user.username).toLowerCase(), user]));
+const branchByCode = new Map((branchResponse.branches || []).map((branch) => [branch.code, branch]));
+const positionByCode = new Map((positionResponse.positions || []).map((position) => [position.code, position]));
+for (const code of ["DLC-B001", "DLC-B002"]) {
+  if (!branchByCode.has(code)) throw new Error(`Required staging QA branch ${code} is missing.`);
 }
-const ownerId = profiles[0].user_id;
-const { data: branches, error: branchesError } = await admin.from("branches").select("id,code").in("code", ["DLC-B001", "DLC-B002"]);
-if (branchesError) throw new Error("Could not read staging QA branches.");
-const branchIds = new Map((branches || []).map((b) => [b.code, b.id]));
-if (!branchIds.has("DLC-B001") || !branchIds.has("DLC-B002")) {
-  console.error("BLOCKED: expected staging test branches DLC-B001 and DLC-B002 are missing.");
-  process.exit(2);
+for (const code of ["branch_manager", "cashier"]) {
+  if (!positionByCode.has(code)) throw new Error(`Required active job position ${code} is missing.`);
 }
-const { data: positions, error: positionsError } = await admin.from("job_positions").select("id,code").in("code", ["branch_manager", "cashier"]);
-if (positionsError) throw new Error("Could not read staging job positions.");
-const positionIds = new Map((positions || []).map((p) => [p.code, p.id]));
-if (!positionIds.has("branch_manager") || !positionIds.has("cashier")) {
-  console.error("BLOCKED: required staging job positions are missing.");
-  process.exit(2);
-}
-async function findAuthUser(email) {
-  for (let page = 1; page <= 20; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw new Error("Could not inspect staging Auth users.");
-    const found = data.users.find((u) => (u.email || "").toLowerCase() === email);
-    if (found) return found;
-    if (data.users.length < 1000) return null;
+async function ensureAuthPassword(spec) {
+  if (spec.active) {
+    const login = await call("admin-login", { username: spec.username, password: spec.password });
+    if (typeof login?.session?.access_token !== "string") throw new Error(`QA Auth verification failed for ${spec.label}.`);
+    return;
   }
-  throw new Error("Staging Auth user pagination limit reached.");
-}
-for (const s of specs) {
-  const email = `${s.username.toLowerCase()}@accounts.dlice.internal`;
-  let user = await findAuthUser(email);
-  if (user) {
-    const { data, error } = await admin.auth.admin.updateUserById(user.id, {
-      password: s.password, email_confirm: true, ban_duration: "none",
+  // Inactive profiles intentionally cannot use the D'Lice username-login action.
+  // Verify Supabase Auth itself can issue a token, then confirm the Edge Function denies the inactive profile.
+  let response;
+  try {
+    response = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { apikey: anonKey, "content-type": "application/json" },
+      body: JSON.stringify({ email: `${spec.username.toLowerCase()}@accounts.dlice.internal`, password: spec.password }),
     });
-    if (error || !data.user) throw new Error(`Could not reconcile staging Auth account for ${s.label}.`);
-    user = data.user;
-  } else {
-    const { data, error } = await admin.auth.admin.createUser({
-      email, password: s.password, email_confirm: true,
-    });
-    if (error || !data.user) throw new Error(`Could not create staging Auth account for ${s.label}.`);
-    user = data.user;
+  } catch {
+    throw new Error("Could not reach Supabase Auth for inactive-profile credential verification.");
   }
-  const { error: upsertError } = await admin.from("admin_profiles").upsert({
-    user_id: user.id,
-    username: s.username,
-    role: "sales_admin",
-    display_name: `STAGING QA — ${s.label}`,
-    is_active: s.active,
-    permissions: s.permissions,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id" });
-  if (upsertError) throw new Error(`Could not configure staging profile for ${s.label}.`);
-  const branchId = branchIds.get(s.branch);
-  const jobPositionId = positionIds.get(s.position);
-  const { error: assignmentError } = await admin.from("branch_assignments").upsert({
-    branch_id: branchId,
-    user_id: user.id,
-    job_position_id: jobPositionId,
-    employment_status: s.active ? "active" : "inactive",
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || typeof body.access_token !== "string") throw new Error("Supabase Auth could not verify the inactive QA credentials.");
+}
+for (const spec of specs) {
+  let profile = staffByUsername.get(spec.username.toLowerCase());
+  if (!profile) {
+    await call("admin-create-staff", {
+      username: spec.username,
+      display_name: `STAGING QA — ${spec.label}`,
+      password: spec.password,
+      permissions: spec.permissions,
+    }, ownerToken);
+    const refreshed = await call("admin-list-staff", {}, ownerToken);
+    profile = (refreshed.staff || []).find((user) => String(user.username).toLowerCase() === spec.username.toLowerCase());
+  }
+  if (!profile?.user_id || profile.role === "owner") throw new Error(`Could not safely identify the staging profile for ${spec.label}.`);
+  await call("admin-set-permissions", { user_id: profile.user_id, permissions: spec.permissions }, ownerToken);
+  await call("admin-set-active", { user_id: profile.user_id, is_active: spec.active }, ownerToken);
+  const branch = branchByCode.get(spec.branch);
+  const position = positionByCode.get(spec.position);
+  await call("erp-save-assignment", {
+    branch_id: branch.id,
+    user_id: profile.user_id,
+    job_position_id: position.id,
+    employment_status: spec.active ? "active" : "inactive",
     starts_on: new Date().toISOString().slice(0, 10),
     ends_on: null,
-    assigned_by: ownerId,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "branch_id,user_id,job_position_id" });
-  if (assignmentError) throw new Error(`Could not configure branch assignment for ${s.label}.`);
-  console.log(`PASS QA_ACCOUNT_CONFIGURED: ${s.label}; active=${s.active}; branch=${s.branch}; permissions=${s.permissions === null ? "position defaults" : s.permissions.length ? "explicit limited" : "none"}`);
+  }, ownerToken);
+  await ensureAuthPassword(spec);
+  console.log(`PASS QA_ACCOUNT_CONFIGURED: ${spec.label}; active=${spec.active}; branch=${spec.branch}; permissions=${spec.permissions.length ? "explicit least-privilege" : "none"}`);
 }
-console.log("PASS STAGING_QA_ACCOUNT_BOOTSTRAP: 3 accounts reconciled; no credentials printed.");
+console.log("PASS STAGING_QA_ACCOUNT_BOOTSTRAP: 3 QA profiles provisioned through Owner-only Edge Function actions; no service-role key or credentials printed.");
