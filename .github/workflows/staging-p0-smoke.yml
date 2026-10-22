@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: staging-p0-smoke
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   p0-http:
