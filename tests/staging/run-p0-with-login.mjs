@@ -18,6 +18,11 @@ if (missing.length) {
   process.exit(2);
 }
 const edgeUrl = process.env.STAGING_EDGE_FUNCTION_URL;
+const expectedStagingUrl = "https://higoadrzxnhzbbwhdbmh.supabase.co";
+if (process.env.SUPABASE_URL.replace(/\\/$/, "") !== expectedStagingUrl || !edgeUrl.startsWith(`${expectedStagingUrl}/functions/v1/dlice-orders`)) {
+  console.error("BLOCKED: refusing to run P0 tests unless both Auth and Edge Function URLs target the known D’Lice staging project.");
+  process.exit(2);
+}
 async function tokenFor(label, username, password) {
   let response;
   try {
