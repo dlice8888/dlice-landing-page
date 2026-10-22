@@ -151,6 +151,7 @@ jobs:
       - name: Run desktop and mobile browser smoke tests
         env:
           PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -o pipefail
           node tests/staging/browser-smoke.mjs 2>&1 | tee browser-smoke-results.log
