@@ -70,7 +70,7 @@ try {
     const viewport = await mobile.evaluate(() => ({ width: window.innerWidth, scrollWidth: document.documentElement.scrollWidth }));
     assert.ok(viewport.width > 0);
     assert.ok(viewport.scrollWidth <= viewport.width + 1, `horizontal overflow: ${JSON.stringify(viewport)}`);
-    const tapTarget = await mobile.locator("button").first().evaluate((el) => {
+    const tapTarget = await mobile.locator("button:visible").first().evaluate((el) => {
       const r = el.getBoundingClientRect();
       return { width: r.width, height: r.height };
     });
