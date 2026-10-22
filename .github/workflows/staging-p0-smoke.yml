@@ -110,9 +110,10 @@ jobs:
           NODE
       - name: Run unauthenticated CORS and Data API checks
         env:
-          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          # Supabase URL and legacy anon key are public client configuration, not service-role credentials.
+          SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpZ29hZHJ6eG5oemJid2hkYm1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTQ1MTQsImV4cCI6MjEwNzgzMDUxNH0.YgP2SHOQMWt3C__Vjw1D0ZFKRBKrNHxNgfuQMfBnxnM
+          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
           ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
           DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
           P0_PUBLIC_ONLY: "true"
