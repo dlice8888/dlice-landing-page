@@ -1,0 +1,54 @@
+name: Verify Superpowers submodule
+
+on:
+  pull_request:
+    paths:
+      - ".gitmodules"
+      - "tools/superpowers"
+      - "AGENTS.md"
+      - "docs/engineering/superpowers-integration.md"
+      - ".github/workflows/verify-superpowers.yml"
+  push:
+    branches:
+      - main
+      - chore/integrate-superpowers
+    paths:
+      - ".gitmodules"
+      - "tools/superpowers"
+      - "AGENTS.md"
+      - "docs/engineering/superpowers-integration.md"
+      - ".github/workflows/verify-superpowers.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-submodule:
+    name: Verify pinned upstream checkout
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and initialize submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Verify pinned Superpowers commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"
+          actual="$(git -C tools/superpowers rev-parse HEAD)"
+          echo "Expected: $expected"
+          echo "Actual:   $actual"
+          test "$actual" = "$expected"
+
+      - name: Verify upstream source files are present
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f tools/superpowers/LICENSE
+          test -f tools/superpowers/README.md
+          test -f tools/superpowers/skills/using-superpowers/SKILL.md
+          git submodule status --recursive
