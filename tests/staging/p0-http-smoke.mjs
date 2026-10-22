@@ -194,6 +194,7 @@ if (env.P0_PUBLIC_ONLY !== "true") {
     ["P0-AUTH-NO-PERMISSION-POS", { action: "erp-open-shift" }],
     ["P0-AUTH-NO-PERMISSION-FINANCE", { action: "erp-create-expense" }],
     ["P0-AUTH-NO-PERMISSION-PROCUREMENT", { action: "erp-create-purchase-order" }],
+    ["P0-AUTH-NO-PERMISSION-STAFF-ADMIN", { action: "admin-set-active" }],
   ]) {
     const deniedAction = env.TEST_NO_PERMISSION_STAFF_JWT
       ? await request(id, edgeUrl, {
