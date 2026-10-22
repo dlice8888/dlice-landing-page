@@ -40,6 +40,7 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const todayDate = () => new Date().toISOString().slice(0, 10);
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -64,7 +65,7 @@ const getAdmin = async (req: Request) => {
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
   if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
-  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active");
+  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
   const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
   // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
@@ -394,19 +395,19 @@ Deno.serve(async (req: Request) => {
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!branchId) return false;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const actorBranchIds = async (): Promise<string[]> => {
     if (actor.profile.role === "owner") return [];
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!actor.profile.permissions.includes(permission)) return false;
-    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
   };
 
@@ -648,12 +649,12 @@ Deno.serve(async (req: Request) => {
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const branchAccess = async (branchId: string): Promise<boolean> => {
     if (isOwner) return true;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const branchIdsForActor = async (): Promise<string[] | null> => {
     if (isOwner) return null;
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: {branch_id:string}) => x.branch_id))];
   };
