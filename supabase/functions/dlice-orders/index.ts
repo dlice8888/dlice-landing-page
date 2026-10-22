@@ -942,16 +942,17 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-transition-stock-transfer") {
     const transferId = safeText(body.transfer_id, 80), transition = safeText(body.transition, 20);
-    if (!transferId || !["ship", "receive", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
+    if (!transferId || !["approve", "pick", "ship", "receive", "reconcile", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
     const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
     if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
-    const branchToCheck = transition === "receive" ? transfer.destination_branch_id : transfer.source_branch_id;
-    if (!await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
-    if (transition === "cancel" && transfer.status !== "draft") return fail("Hanya transfer draft yang dapat dibatalkan.", 409, origin);
-    if (transition === "ship" && transfer.status !== "draft") return fail("Hanya transfer draft yang dapat dikirim.", 409, origin);
-    if (transition === "receive" && transfer.status !== "shipped") return fail("Transfer harus berstatus dikirim sebelum diterima.", 409, origin);
+    if (transition === "approve" && !await hasHQPermission("inventory")) return fail("Persetujuan transfer memerlukan izin Inventory Head Office.", 403, origin);
+    const branchToCheck = ["receive", "reconcile"].includes(transition) ? transfer.destination_branch_id : transfer.source_branch_id;
+    if (transition !== "approve" && !await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
+    if (transition === "cancel" && !["draft", "approved", "picked"].includes(transfer.status)) return fail("Transfer hanya dapat dibatalkan sebelum dikirim.", 409, origin);
+    const expectedStatus: Record<string, string> = { approve: "draft", pick: "approved", ship: "picked", receive: "shipped", reconcile: "received" };
+    if (expectedStatus[transition] && transfer.status !== expectedStatus[transition] && transfer.status !== ({approve:"approved",pick:"picked",ship:"shipped",receive:"received",reconcile:"reconciled"} as Record<string,string>)[transition]) return fail("Tahap transfer belum sesuai. Muat ulang status terbaru.", 409, origin);
     const { data, error } = await admin.rpc("erp_transition_stock_transfer", { p_transfer_id: transferId, p_actor_user_id: actor.user.id, p_transition: transition });
-    if (error) return fail(error.message.includes("insufficient_stock_for_transfer") ? "Stok cabang asal tidak mencukupi." : "Status transfer gagal diperbarui.", 409, origin);
+    if (error) return fail(error.message.includes("insufficient_stock_for_transfer") ? "Stok cabang asal tidak mencukupi." : error.message.includes("stock_transfer_ledger_incomplete") ? "Ledger transfer belum lengkap; rekonsiliasi ditahan." : "Status transfer gagal diperbarui.", 409, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_transfer_" + transition, entity_type: "stock_transfer", entity_id: transferId, metadata: { transfer_number: transfer.transfer_number, source_branch_id: transfer.source_branch_id, destination_branch_id: transfer.destination_branch_id } });
     return json({ ok: true, result: data }, 200, origin);
   }
