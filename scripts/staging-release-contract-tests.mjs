@@ -12,6 +12,24 @@ const branchChecklistMigration = read("supabase/migrations/20261021182634_branch
 const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_transfers_and_counts.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
+const erpAuthorizationCoverage = () => {
+  const permissionMap = edge.match(/const permissionForAction:[\\s\\S]*?\\n  };/)?.[0] || "";
+  const centrallyGated = new Set([...permissionMap.matchAll(/"([^"]+)":\\s*"([^"]+)"/g)].map((match) => match[1]));
+  const actions = [...edge.matchAll(/if\\s*\\(\\s*action\\s*===\\s*"([^"]+)"\\s*\\)\\s*\\{/g)];
+  const missing = [];
+  for (let i = 0; i < actions.length; i++) {
+    const action = actions[i][1];
+    if (!action.startsWith("erp-") || centrallyGated.has(action)) continue;
+    const start = actions[i].index;
+    const end = i + 1 < actions.length ? actions[i + 1].index : edge.length;
+    const block = edge.slice(start, end);
+    if (!/hasPerm\\(|isOwner\\b|hasHQPermission\\(|hasFinanceHQ\\(|actor\\.profile\\.role\\s*(?:!==|===)|isAdmin\\b/.test(block)) {
+      missing.push(action);
+    }
+  }
+  return missing;
+};
+
 const checks = [
   ["CORS reflects only explicitly configured origins and never falls back to a trusted origin", /return configuredOrigins\.has\(origin\)/.test(edge) && !/const allowedOrigins = new Set/.test(edge) && /const corsHeaders = \(origin: string \| null\) => \(\{[\s\S]{0,500}origin && isAllowedOrigin\(origin\) \? \{ "Access-Control-Allow-Origin": origin \} : \{\}/.test(edge) && !/"Access-Control-Allow-Origin": origin && isAllowedOrigin\(origin\) \? origin : "https:\/\/dlice\.vercel\.app"/.test(edge)],
   ["CORS preflight and POST reject unapproved browser origins", /if \(req\.method === "OPTIONS"\)[\s\S]{0,180}if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge) && /if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge)],
@@ -37,6 +55,7 @@ const checks = [
   ["cleanup RPC is not executable by public client roles", /revoke all on function public\.cleanup_operational_data\(\) from public, anon, authenticated;[\s\S]*?grant execute on function public\.cleanup_operational_data\(\) to service_role/.test(retention)],
   ["retention job is scheduled once daily", /cron\.schedule\([\s\S]*?'dlice-operational-retention'[\s\S]*?'17 3 \* \* \*'/.test(retention)],
   ["trigger helper is not a public callable API", /revoke all on function public\.set_updated_at\(\) from public, anon, authenticated/.test(retention)],
+  ["every ERP action has a central permission mapping or explicit action-level authorization", erpAuthorizationCoverage().length === 0],
   ["branch checklist actions are explicitly permission-gated", /"erp-list-branch-checklists": "branches"[\s\S]*?"erp-start-branch-checklist": "branches"[\s\S]*?"erp-update-branch-checklist-item": "branches"[\s\S]*?"erp-complete-branch-checklist": "branches"/.test(edge)],
   ["branch checklist actions verify active branch assignment", /const checklistContext = async[\s\S]{0,500}branchAccess\(branchId\)/.test(edge) && /if \(!await branchAccess\(run\.branch_id\)\)/.test(edge)],
   ["branch checklist business date uses the branch timezone", /new Intl\.DateTimeFormat\("en-GB", \{[\s\S]{0,180}timeZone: branch\.timezone/.test(edge)],
