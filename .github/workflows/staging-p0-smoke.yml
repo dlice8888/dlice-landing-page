@@ -36,6 +36,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Bootstrap disposable staging QA accounts
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
+          STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
+          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
+          STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
+        run: |
+          npm install --no-save @supabase/supabase-js
+          node tests/staging/bootstrap-qa-accounts.mjs
       - name: Validate Preview target
         id: preview
         env:
@@ -66,7 +80,7 @@ jobs:
           STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
           STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
           STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
-          TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
+          TEST_BRANCH_B_ID: d8672046-7029-489b-9223-df07007cdc69
         run: |
           set -o pipefail
           node tests/staging/run-p0-with-login.mjs 2>&1 | tee p0-http-results.log
