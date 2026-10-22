@@ -8,7 +8,6 @@ const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"
 const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
 const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
-const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const configuredOrigins = new Set(
   (Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "")
     .split(",")
@@ -17,7 +16,7 @@ const configuredOrigins = new Set(
 );
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
-  return allowedOrigins.has(origin) || configuredOrigins.has(origin);
+  return configuredOrigins.has(origin);
 };
 const corsHeaders = (origin: string | null) => ({
   // Never emit a fallback Access-Control-Allow-Origin for a missing or denied origin.
