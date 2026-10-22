@@ -424,6 +424,7 @@ Deno.serve(async (req: Request) => {
     "admin-create-staff": "staff",
     "admin-set-permissions": "staff",
     "admin-set-active": "staff",
+    "admin-reset-staff-password": "staff",
     "admin-payment-settings": "settings",
     "admin-save-payment-settings": "settings",
     "admin-upload-qris": "settings",
@@ -538,6 +539,21 @@ Deno.serve(async (req: Request) => {
     if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
     return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
+  }
+
+
+  if (action === "admin-reset-staff-password") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!userId || password.length < 12 || password.length > 128) return fail("Akun dan kata sandi 12–128 karakter wajib diberikan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
+    const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
+    if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
+    return json({ ok: true, user_id: userId }, 200, origin);
   }
 
   if (action === "admin-list-orders") {
