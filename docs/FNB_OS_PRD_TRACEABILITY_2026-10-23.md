@@ -224,3 +224,43 @@ No cloud browser / visual screenshot capture or interactive browser automation i
 - Deployed only the staging Supabase Edge Function `dlice-orders`; live function reports version 51, ACTIVE, with `verify_jwt=false` preserved. Read-back confirms secret-only exact-origin parsing, no temporary hard-coded staging-origin fallback, and the PR #35 receipt-reconciliation action remains present.
 - Runtime CORS probes for the staging origin, an unlisted foreign origin, and missing Origin could not be executed from this environment: DNS resolution for `higoadrzxnhzbbwhdbmh.supabase.co` failed. Do not mark runtime CORS verification passed until these probes are rerun from a network that can reach the staging endpoint.
 - No production project, `main` branch, secrets, database rows, or QA data were modified by this rollout. GitHub Actions workflow dispatch and authenticated Vercel UI testing remain unavailable from the current connector/session.
+
+
+---
+
+## Current audit correction — 2026-10-23 15:37 UTC
+
+This section supersedes the earlier “runtime probes blocked by DNS” status above. That note remains historical, but is no longer the current result.
+
+### Verified live CORS results
+GitHub Actions run [39979764381](https://github.com/dlice8888/dlice-landing-page/actions/runs/39979764381), job `cors-probes`, completed successfully against the deployed staging Edge Function.
+
+| Scenario | Runtime observation | Status |
+|---|---|---|
+| Registered staging origin `https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app` | HTTP 200; ACAO exactly equals the Origin | PASS |
+| Foreign unlisted origin `https://cors-probe-foreign.invalid` | HTTP 403; no ACAO header | PASS |
+| Missing Origin | HTTP 200; no ACAO header | PASS |
+
+The runner log explicitly reports all three results and `PASS: all three runtime CORS probes passed.` The workflow does not print secret values.
+
+### Current staging snapshot
+- Supabase staging project `higoadrzxnhzbbwhdbmh` is `ACTIVE_HEALTHY`, PostgreSQL 17.
+- Read-only SQL verified 45 public base tables; RLS is enabled on all 45.
+- Live `dlice-orders` Edge Function is ACTIVE v51 with `verify_jwt=false` preserved. Read-back confirms exact-origin parsing exclusively from `DLICE_ALLOWED_ORIGINS`, no hard-coded origin fallback, and the Owner-only receipt reconciliation action.
+- Security Advisor: leaked-password protection disabled (WARN).
+- Performance Advisor: 69 unused-index findings; no indexes were removed.
+- PR #35 is merged to `staging` (merge commit `3dd5ee3462088702cf820926ceb642ca3395df13`). Its positive procurement workflow and independent receipt/stock-movement/audit assertions are present, but no positive E2E run/artifact has been retrieved; therefore procure-to-stock remains PARTIAL/GATE.
+- PR #31 remains Draft/open; its 21/21 role/authorization probes do not substitute for positive business E2E.
+- Vercel latest staging deployment is READY for commit `cf45d2593a1a199165b49ef96150ebb04c0756fc`. Project SSO protection is enabled for non-custom domains, so deployment readiness is not visual acceptance.
+- Figma account metadata indicates Starter/View seat and Code Layers disabled. Screenshot-based Product Design acceptance remains unverified.
+- Detailed per-feature evidence and gaps are tracked in `docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md`.
+
+### Progress interpretation
+Keep the conservative 31% feature-coverage baseline for cross-snapshot comparison. Closing CORS is a P0 infrastructure gate, not proof that business-domain features or cross-domain workflows are complete. No domain is certified fully complete and readiness for 150 live branches is not demonstrated.
+
+### Next Superpowers slices
+1. Finish positive procurement E2E and retain the sanitized artifact; verify PO state, receipt line, stock movement, balance delta and audit event.
+2. Finish order-to-cash lifecycle and reconciliation with disposable staging fixtures.
+3. Complete recipe/production consumption, stock transfer/count positive reconciliation and shift/cash close.
+4. Implement missing features in bounded vertical slices using Specify → Plan → Tests First → Implement → Verify → Review → Staging Deploy → Accept.
+5. Keep `main`, production Supabase and production Vercel deployment unchanged until the Owner explicitly approves promotion.
