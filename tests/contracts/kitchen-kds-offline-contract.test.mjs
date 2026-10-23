@@ -127,6 +127,9 @@ test("manual staging E2E covers POS, offline replay, KDS, recipe stock and recon
   assert.match(kdsE2E, /50, "Recipe must consume 50g flour/);
   assert.match(kdsE2E, /10, "Recipe must consume 10g second ingredient/);
   assert.match(kdsE2E, /finally/);
+  for (const action of ["erp-record-waste","erp-create-shift-handover","erp-acknowledge-shift-handover","erp-start-branch-checklist","erp-update-branch-checklist-item","erp-complete-branch-checklist"]) assert.match(kdsE2E, new RegExp(action));
+  assert.match(kdsE2E, /Waste ledger is idempotent/);
+  assert.match(kdsE2E, /Shift handover is acknowledged/);
   assert.match(kdsWorkflow, /workflow_dispatch/);
   assert.match(kdsWorkflow, /confirm_staging_mutations/);
   assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);
