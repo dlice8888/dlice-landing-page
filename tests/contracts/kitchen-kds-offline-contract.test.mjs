@@ -138,3 +138,10 @@ test("manual staging E2E covers POS, offline replay, KDS, recipe stock and recon
   assert.match(kdsWorkflow, /confirm_staging_mutations/);
   assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);
 });
+
+
+test("tenant onboarding fails closed until cross-tenant isolation is accepted", () => {
+  assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
+  assert.match(edge, /if \(action === "erp-create-tenant"\)[\s\S]{0,260}if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\);/);
+  assert.match(edge, /if \(action === "erp-invite-tenant-member"\)[\s\S]{0,280}if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\);/);
+});
