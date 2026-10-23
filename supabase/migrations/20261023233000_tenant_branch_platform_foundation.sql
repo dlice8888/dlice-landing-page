@@ -145,7 +145,8 @@ create table if not exists public.inventory_waste_events (
   reason_code text not null check (reason_code in ('expired','damaged','quality_reject','overproduction','spill','count_variance','other')),
   reason text not null check (length(trim(reason)) between 3 and 500),
   idempotency_key text not null check (length(idempotency_key) between 8 and 120),
-  payload_fingerprint text not null check (payload_fingerprint ~ '^[0-9a-f]{64}
+  payload_fingerprint text not null check (payload_fingerprint ~ '^[0-9a-f]{64}$'),
+  status text not null default 'posted' check (status in ('posted','pending_review','reversed')),
   created_by uuid not null references auth.users(id) on delete restrict,
   created_at timestamptz not null default now(),
   unique(branch_id,idempotency_key)
