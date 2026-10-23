@@ -62,7 +62,9 @@ create policy deny_direct_client_access_purchase_requisition_items
 
 revoke all on table public.purchase_requisitions from public, anon, authenticated;
 revoke all on table public.purchase_requisition_items from public, anon, authenticated;
+grant all on table public.purchase_requisitions, public.purchase_requisition_items to service_role;
 revoke all on sequence public.purchase_requisition_number_seq from public, anon, authenticated;
+grant usage, select on sequence public.purchase_requisition_number_seq to service_role;
 
 create or replace function public.erp_create_purchase_requisition(
   p_branch_id uuid,
@@ -150,6 +152,7 @@ declare
   line record;
   po_code text;
   total bigint := 0;
+  previous_status text;
 begin
   if p_requisition_id is null or p_actor_user_id is null then raise exception 'invalid_requisition_actor_or_id'; end if;
   if p_next_status not in ('submitted','approved','rejected','converted','cancelled') then raise exception 'invalid_requisition_transition'; end if;
@@ -200,6 +203,7 @@ begin
     return jsonb_build_object('requisition', to_jsonb(req), 'purchase_order', to_jsonb(po));
   end if;
 
+  previous_status := req.status;
   update public.purchase_requisitions
     set status = p_next_status,
         submitted_at = case when p_next_status = 'submitted' then now() else submitted_at end,
@@ -213,7 +217,7 @@ begin
   insert into public.admin_audit_logs(actor_user_id, action, entity_type, entity_id, metadata)
   values (p_actor_user_id, 'erp_purchase_requisition_' || p_next_status, 'purchase_requisition', req.id::text,
     jsonb_build_object('branch_id', req.branch_id, 'requisition_number', req.requisition_number,
-      'previous_status', case when p_next_status in ('submitted','cancelled') then 'draft' else 'submitted' end));
+      'previous_status', previous_status));
 
   return jsonb_build_object('requisition', to_jsonb(req));
 end;
