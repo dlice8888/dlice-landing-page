@@ -19,7 +19,7 @@
 - Static contract tests for schema/API/UI and a PR-triggered workflow.
 
 ### Not yet proven or complete
-- Migration has not been applied to Supabase staging from this branch, and Edge Function has not been deployed from this branch.
+- Staging deployment has since been completed: the KDS/platform migrations are applied and `dlice-orders` v56 is active. Source and staging runtime are not considered accepted until the positive-path E2E workflow and tenant isolation checks pass.
 - Positive E2E is not run: POS → payment → KDS → recipe stock → waste/shift reconciliation → reports.
 - Online checkout modifier selection is not yet wired through the customer checkout UI.
 - Tenant foundations are additive but **do not yet constitute complete tenant isolation**. Several legacy global catalogs, finance actions, audit queries, job-position templates, and permission checks still need tenant-aware scoping. Do not onboard a second live tenant until the isolation suite is implemented and accepted.
@@ -46,6 +46,13 @@
 | Audit | 100% of approval, stock, shift, waste, tenant and integration state changes include actor, timestamp, entity and source reference |
 
 Performance/RPO/RTO values are proposed test targets, not observed results or agreed production SLOs.
+
+## Tenant onboarding safety gate — 2026-10-24
+
+- The staging audit found 154 branch rows with non-null tenant IDs but only one tenant. This proves data mapping completeness for current rows, not cross-tenant isolation.
+- A fail-closed release gate is now present in the feature branch: `erp-create-tenant` and `erp-invite-tenant-member` return HTTP 423 until cross-tenant negative tests cover legacy catalog, finance, reporting, audit, permissions, and branch-scoped operations.
+- Contract test added first, then implementation added. The PR-triggered `Staging Kitchen KDS Offline Contract Tests` run for commit `b02d62fccb2991331838cd0c41db4e9914dad152` completed successfully.
+- Keep the gate disabled until isolation is proven end-to-end; do not create or onboard a second tenant meanwhile. This is a safety containment, not a claim that SaaS multi-tenancy is complete.
 
 ## Staging deployment checkpoint — 2026-10-24 17:56 UTC
 
