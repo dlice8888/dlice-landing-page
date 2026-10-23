@@ -47,6 +47,16 @@
 
 Performance/RPO/RTO values are proposed test targets, not observed results or agreed production SLOs.
 
+## Staging deployment checkpoint — 2026-10-24 17:56 UTC
+
+- Applied `kitchen_kds_idempotency_modifiers` to staging project `higoadrzxnhzbbwhdbmh` (remote migration version `20261023175347`).
+- Applied `tenant_branch_platform_foundation` to staging (remote migration version `20261023175514`).
+- Deployed `dlice-orders` Edge Function **v54** to staging. `verify_jwt=false` is preserved; custom per-action auth remains required.
+- Staging SQL verification: 10 tenant/platform tables present; all 17 new KDS/platform tables have RLS enabled; zero direct table grants to `anon` or `authenticated`; all 4 expected dispatch/stock/versioning triggers exist; product stock tracking and online order snapshot columns exist.
+- Contract/quality/CORS workflows passed on the pre-deployment commit. Re-run runtime CORS and CI against the post-deployment source commit; business E2E is still not accepted.
+- Supabase Security Advisor reports 17 `rls_enabled_no_policy` informational findings for the new internal tables. Direct client grants are zero by design; access is currently through the authenticated Edge Function using service-role access. These findings are not a substitute for the required cross-tenant authorization tests.
+- The tenant migration initially failed validation before any schema changes from that migration were applied; the malformed fingerprint constraint and orphaned duplicate fragment were corrected, then the migration applied successfully. Keep the migration contract guard in CI to prevent recurrence.
+
 ## Execution order / gates
 
 1. **Schema and contract CI:** run the new KDS/offline contract suite; correct SQL/TypeScript/HTML failures before database changes.
