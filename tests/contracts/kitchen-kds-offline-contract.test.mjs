@@ -161,3 +161,13 @@ test("legacy branch access helpers require active tenant membership before grant
   assert.match(branchListHelper[0], /tenant_id/);
   assert.match(branchListHelper[0], /status/, "membership must be active");
 });
+
+
+test("manual KDS E2E restores the temporary recipe activation after deactivating its QA product", () => {
+  assert.match(edge, /action === "erp-retire-recipe"/);
+  assert.match(edge, /erp-retire-recipe[\s\S]{0,900}stock_tracking_enabled/);
+  assert.match(edge, /erp-retire-recipe[\s\S]{0,1400}status:\s*"retired"/);
+  assert.match(kdsE2E, /recipeWasDraft/);
+  assert.match(kdsE2E, /erp-retire-recipe/);
+  assert.match(kdsE2E, /restoreQaProduct\(\)[\s\S]{0,500}retireQaRecipe/);
+});
