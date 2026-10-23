@@ -11,7 +11,7 @@
 - A database table, menu item, handler, green build, or auth-negative test alone does not earn full feature acceptance.
 
 ## Executive score
-**Current conservative coverage estimate: ~32% across 18 domains** (31% was the previous snapshot before the requisition slice). This is an engineering estimate, not a validated percentage of every PRD subfeature. This is a feature-coverage estimate from the staging traceability baseline, not percent complete and not readiness for 150 branches. The CORS runtime gate is now closed, but that infrastructure result does not complete any business workflow. No domain is certified fully complete.
+**Current conservative coverage estimate: ~31.4% across 18 domains** (previous baseline was ~31.1% before the requisition slice). This is the unweighted mean of the domain-level estimates shown below, not a validated count of all PRD subfeatures. This is an engineering estimate, not a validated percentage of every PRD subfeature. This is a feature-coverage estimate from the staging traceability baseline, not percent complete and not readiness for 150 branches. The CORS runtime gate is now closed, but that infrastructure result does not complete any business workflow. No domain is certified fully complete.
 
 ## 18-domain feature-by-feature register
 
