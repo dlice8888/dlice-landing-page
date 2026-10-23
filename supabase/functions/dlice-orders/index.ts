@@ -8,19 +8,26 @@ const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"
 const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
 const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
-const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const configuredOrigins = new Set(
   (Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "")
     .split(",")
     .map((value) => value.trim())
     .filter((value) => /^https:\/\/[a-z0-9.-]+(?::\d+)?$/.test(value)),
 );
+// One exact, temporary staging Preview origin is allowed only on this staging project.
+// Keep production fail-closed and never use hostname prefixes/suffixes or wildcard matching.
+if ((SUPABASE_URL ?? "").includes("higoadrzxnhzbbwhdbmh.supabase.co")) {
+  configuredOrigins.add("https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app");
+}
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
-  return allowedOrigins.has(origin) || configuredOrigins.has(origin);
+  return configuredOrigins.has(origin);
 };
 const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "https://dlice.vercel.app",
+  // Never emit a fallback Access-Control-Allow-Origin for a missing or denied origin.
+  // The request handler returns 403 for a denied browser origin; omitting this header
+  // also ensures the response cannot be read cross-origin by a browser.
+  ...(origin && isAllowedOrigin(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
