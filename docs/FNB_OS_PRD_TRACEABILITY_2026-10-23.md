@@ -7,6 +7,7 @@
 - Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
 - Edge Function `dlice-orders`: v54 ACTIVE, `verify_jwt=false` unchanged.
 - SQL checks passed: 17 new KDS/platform tables have RLS enabled, 0 direct table grants to `anon`/`authenticated`, 4 expected triggers present, 10 tenant/platform tables present, stock-tracking and order snapshot columns present.
+- Applied composite tenant/branch integrity constraints. Live staging mismatch checks returned 0 across warehouses, branch settings, handovers, waste, and integration outbox.
 - Contract CI and quality checks passed at the deployment checkpoint. This is not a substitute for the positive business E2E and cross-tenant negative tests.
 - Tenant support is a **foundation only**. Legacy global catalog/report/finance/audit actions are not yet comprehensively tenant-scoped. Do not onboard a second live tenant before that gate passes.
 - Backup/restore and integration workers are not operational yet; only metadata/outbox schema exists. No 150-branch load or recovery drill has run.
