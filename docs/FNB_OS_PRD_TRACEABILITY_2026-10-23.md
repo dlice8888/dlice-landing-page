@@ -3,6 +3,14 @@
 **Baseline:** GitHub `staging`, Supabase staging project `higoadrzxnhzbbwhdbmh`, Vercel Preview deployments, and currently accessible Figma account metadata.  
 **Production guardrail:** `main`, production Supabase project `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` are out of scope until all gates pass and Owner explicitly approves.
 
+## Latest staging deployment checkpoint — 2026-10-24
+- Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
+- Edge Function `dlice-orders`: v54 ACTIVE, `verify_jwt=false` unchanged.
+- SQL checks passed: 17 new KDS/platform tables have RLS enabled, 0 direct table grants to `anon`/`authenticated`, 4 expected triggers present, 10 tenant/platform tables present, stock-tracking and order snapshot columns present.
+- Contract CI and quality checks passed at the deployment checkpoint. This is not a substitute for the positive business E2E and cross-tenant negative tests.
+- Tenant support is a **foundation only**. Legacy global catalog/report/finance/audit actions are not yet comprehensively tenant-scoped. Do not onboard a second live tenant before that gate passes.
+- Backup/restore and integration workers are not operational yet; only metadata/outbox schema exists. No 150-branch load or recovery drill has run.
+
 ## How progress is scored
 These are evidence-based engineering estimates of PRD feature coverage, not the percentage of screens or database objects created. A feature is not "done" merely because a table, button, or handler exists. Full credit requires working behavior, permission/scope checks, meaningful positive and negative tests, auditability, and end-to-end reconciliation where applicable. Overall mean across 18 domains: **31% estimated coverage**. This is not production-readiness or 150-branch readiness.
 
