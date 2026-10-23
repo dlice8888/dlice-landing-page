@@ -64,3 +64,27 @@
 - Owner, branch manager, no-permission, and inactive test identities/secrets must be provisioned in GitHub Environment before authenticated P0/P1 E2E.
 - The new stock workflow migration and matching Edge Function version must be applied/deployed together; frontend-only deployment is not sufficient.
 - No evidence yet certifies 150-branch capacity, cross-tenant isolation, backup restore, or production readiness.
+
+
+## P1 slice — Purchase Requisition (PR #36, staging candidate)
+
+### Scope
+- Branch-scoped purchase requisition with multiple inventory item lines, requested quantities, estimated unit costs, purpose, needed-by date and notes.
+- State machine: `draft → submitted → approved/rejected`; approved requisitions can be converted to a draft purchase order; cancellation is auditable.
+- Owner-only approve/reject/convert; the requester or Owner may cancel; every API action requires the procurement permission and server-side branch authorization.
+- RLS is enabled on both new tables and direct `anon`/`authenticated` table access is revoked.
+- Service-role-only atomic RPCs create header + lines and transition/convert requisitions. Conversion snapshots item names/costs into PO lines and writes an audit event.
+
+### Tests-first and CI
+- Contract test: `tests/staging/procurement-requisition-contract.mjs`.
+- Workflow: `.github/workflows/procurement-requisition-contract.yml`.
+- Contract run [39982985731](https://github.com/dlice8888/dlice-landing-page/actions/runs/39982985731) completed successfully.
+- Free quality checks passed the runtime, dependency-free quality, and staging release-contract steps, but the release workflow correctly failed its migration documentation gate until this rollout note was added. Re-run CI after this commit.
+
+### Not yet accepted
+- PR #36 is a staging candidate, not yet deployed.
+- Apply `20261023170000_purchase_requisitions.sql` to Supabase staging only after PR CI is green.
+- Deploy the matching Edge Function source to staging only after the migration succeeds.
+- Run authenticated positive and negative tests for requester, Owner, no-procurement-permission user, wrong branch, inactive user, invalid transition, duplicate submit/retry, and conversion.
+- Reconcile requisition item totals to generated PO header/lines and confirm audit events.
+- Do not claim this slice complete from the contract test alone. No production resources are in scope.
