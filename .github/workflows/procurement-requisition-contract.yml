@@ -6,7 +6,8 @@ on:
     paths:
       - "tests/staging/procurement-requisition-contract.mjs"
       - "tests/staging/procurement-receiving-positive.mjs"
-      - "supabase/migrations/20261023170000_purchase_requisitions.sql"
+      - "supabase/migrations/20261023160257_purchase_requisitions.sql"
+      - "supabase/migrations/20261023160440_purchase_requisition_conversion_index.sql"
       - "supabase/functions/dlice-orders/index.ts"
       - "erp.html"
       - ".github/workflows/procurement-requisition-contract.yml"
@@ -14,7 +15,8 @@ on:
     branches: [staging]
     paths:
       - "tests/staging/procurement-requisition-contract.mjs"
-      - "supabase/migrations/20261023170000_purchase_requisitions.sql"
+      - "supabase/migrations/20261023160257_purchase_requisitions.sql"
+      - "supabase/migrations/20261023160440_purchase_requisition_conversion_index.sql"
       - "supabase/functions/dlice-orders/index.ts"
       - "erp.html"
       - ".github/workflows/procurement-requisition-contract.yml"
