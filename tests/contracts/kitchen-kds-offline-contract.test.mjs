@@ -150,8 +150,8 @@ test("tenant onboarding fails closed until cross-tenant isolation is accepted", 
 
 
 test("legacy branch access helpers require active tenant membership before granting access", () => {
-  const singleBranchHelper = edge.match(/const actorCanAccessBranch = async[\\s\\S]*?\\n  };/);
-  const branchListHelper = edge.match(/const actorBranchIds = async[\\s\\S]*?\\n  };/);
+  const singleBranchHelper = edge.match(/const actorCanAccessBranch = async[\s\S]*?\n  };/);
+  const branchListHelper = edge.match(/const actorBranchIds = async[\s\S]*?\n  };/);
   assert.ok(singleBranchHelper, "legacy single-branch authorization helper must exist");
   assert.ok(branchListHelper, "legacy branch-list authorization helper must exist");
   assert.match(singleBranchHelper[0], /tenant_memberships/);
