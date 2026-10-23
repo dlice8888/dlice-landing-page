@@ -167,7 +167,7 @@ create table if not exists public.order_stock_consumptions (
 create index if not exists order_stock_consumptions_branch_idx on public.order_stock_consumptions(branch_id,consumed_at desc);
 
 create or replace function public.dlice_consume_order_recipe_stock()
-returns trigger language plpgsql security invoker set search_path=public as $
+returns trigger language plpgsql security invoker set search_path=public as $$
 declare marker uuid; sold record; recipe_row public.recipes%rowtype; ingredient public.recipe_ingredients%rowtype;
   consumption numeric(14,3); available_qty numeric(14,3);
 begin
@@ -210,7 +210,7 @@ begin
   values('order_recipe_stock_consumed','order',new.id::text,jsonb_build_object('branch_id',new.branch_id,'order_number',new.order_number));
   return new;
 end;
-$;
+$$;
 drop trigger if exists dlice_order_recipe_stock_consumption on public.orders;
 create trigger dlice_order_recipe_stock_consumption
 after insert or update of payment_status,operational_status,fulfillment_status on public.orders
