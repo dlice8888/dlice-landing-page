@@ -264,3 +264,19 @@ Keep the conservative 31% feature-coverage baseline for cross-snapshot compariso
 3. Complete recipe/production consumption, stock transfer/count positive reconciliation and shift/cash close.
 4. Implement missing features in bounded vertical slices using Specify → Plan → Tests First → Implement → Verify → Review → Staging Deploy → Accept.
 5. Keep `main`, production Supabase and production Vercel deployment unchanged until the Owner explicitly approves promotion.
+
+
+---
+
+## Latest staging verification — 2026-10-23 16:10 UTC
+
+- CORS runtime workflow [39984466037](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984466037) passed against `dlice-orders` v53:
+  - registered staging origin: HTTP 200 and exact `Access-Control-Allow-Origin`;
+  - foreign unlisted origin: HTTP 403 and no ACAO;
+  - missing `Origin`: HTTP 200 and no ACAO.
+- Purchase Requisition was merged to staging (PR #36); the read-only Owner-only reconciliation action is deployed in v53.
+- Requisition tables are RLS-enabled with direct `anon`/`authenticated` SELECT denied. Remote migration versions are `20261023160257` and `20261023160440`, with matching migration filenames in source.
+- PR #39 contract suite passed at run [39984465957](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465957); quality checks passed at [39984465988](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465988).
+- The positive procurement E2E harness now covers requisition → approval → PO → GRN → stock movement → balance/audit reconciliation, but remains a manually dispatched workflow and has not yet run. Do not mark procure-to-stock accepted until its sanitized artifact is inspected.
+- Latest Supabase read-only audit: 47/47 public base tables have RLS; no RLS-disabled public base tables. Security Advisor still warns leaked-password protection is disabled; Performance Advisor shows 74 unused-index suggestions and no longer reports the converted-PO FK as unindexed.
+- No production/main changes. Vercel screenshot/interaction acceptance remains unverified due SSO protection; use an authorized authenticated browser session.
