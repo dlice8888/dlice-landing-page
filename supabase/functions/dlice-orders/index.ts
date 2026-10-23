@@ -1212,6 +1212,9 @@ Deno.serve(async (req: Request) => {
     if (["approved", "rejected", "converted"].includes(next) && !isOwner) {
       return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Owner.", 403, origin);
     }
+    if (["approved", "rejected"].includes(next) && old.requested_by === actor.user.id) {
+      return fail("Pembuat requisition tidak boleh menyetujui atau menolak requisition sendiri.", 403, origin);
+    }
     if (next === "cancelled" && !isOwner && old.requested_by !== actor.user.id) {
       return fail("Hanya pembuat requisition atau Owner yang dapat membatalkan.", 403, origin);
     }
