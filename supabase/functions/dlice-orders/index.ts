@@ -729,6 +729,7 @@ Deno.serve(async (req: Request) => {
 
 
   if (action === "erp-list-tenants") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin tenant tidak diizinkan.",403,origin);
     const tenantIds=await tenantIdsForActor().catch(()=>[]);
     if(!tenantIds.length)return fail("Keanggotaan tenant aktif diperlukan.",403,origin);
     const {data,error}=await admin.from("tenants").select("id,slug,legal_name,status,plan_code,settings,created_at,updated_at,tenant_memberships(user_id,role,status)").in("id",tenantIds).order("legal_name");
@@ -746,6 +747,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-tenant-memberships") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin keanggotaan tenant tidak diizinkan.",403,origin);
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)").eq("user_id",actor.user.id).eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
     return json({memberships:data||[]},200,origin);
@@ -764,6 +766,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-invite-tenant-member") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin undangan tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),email=safeText(body.email,254).toLowerCase(),role=safeText(body.role,40);
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
     if(!tenantId||!/^\S+@\S+\.\S+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
@@ -777,6 +780,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-accept-tenant-invite") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin aktivasi keanggotaan tenant tidak diizinkan.",403,origin);
     const token=safeText(body.invite_token,100),tokenHash=await sha256(token),email=String(actor.user.email||"").toLowerCase();
     if(token.length<32||!email)return fail("Token undangan atau email akun tidak valid.",422,origin);
     const {data:invite,error}=await admin.from("tenant_invites").select("*").eq("token_hash",tokenHash).eq("status","pending").maybeSingle();
@@ -792,6 +796,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-branch-settings") {
+    if(!hasPerm("branches")&&!hasPerm("finance")&&!hasPerm("inventory")&&!isOwner)return fail("Izin konfigurasi cabang tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     const {data,error}=await admin.from("branch_settings").select("*").eq("branch_id",branchId).is("effective_to",null).order("category").order("setting_key");
@@ -887,6 +892,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-integrations") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin integrasi tenant tidak diizinkan.",403,origin);
     const tenantIds=await tenantIdsForActor().catch(()=>[]);
     if(!tenantIds.length)return fail("Keanggotaan tenant aktif diperlukan.",403,origin);
     const {data,error}=await admin.from("integration_connections").select("id,tenant_id,provider,display_name,status,config,last_success_at,last_error_at,last_error_code,created_at,updated_at").in("tenant_id",tenantIds).order("provider");
@@ -895,6 +901,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-save-integration") {
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin integrasi tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),provider=safeText(body.provider,60).toLowerCase(),displayName=safeText(body.display_name,120),status=safeText(body.status,20)||"disabled",config=body.config&&typeof body.config==="object"&&!Array.isArray(body.config)?body.config:{};
     if(!/^[a-z0-9][a-z0-9_-]{1,60}$/.test(provider)||displayName.length<2||!["disabled","pending","active","degraded","revoked"].includes(status))return fail("Konfigurasi integrasi tidak valid.",422,origin);
     const {data:membership}=await admin.from("tenant_memberships").select("role").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
