@@ -6,6 +6,11 @@ on:
     paths:
       - ".github/workflows/staging-runtime-cors-probes.yml"
       - "supabase/functions/dlice-orders/index.ts"
+  pull_request:
+    branches: [staging]
+    paths:
+      - ".github/workflows/staging-runtime-cors-probes.yml"
+      - "supabase/functions/dlice-orders/index.ts"
   workflow_dispatch:
 
 permissions:
