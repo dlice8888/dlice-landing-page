@@ -95,3 +95,12 @@ Performance/RPO/RTO values are proposed test targets, not observed results or ag
 - Do not mark offline sales as paid/accepted locally.
 - Do not enable `stock_tracking_enabled` until the active recipe, units, opening balance and stock ledger have been reviewed.
 - Tenant migration assigns existing branches and existing admin profiles to the single default D’Lice tenant. Creating another tenant is not proof that all old data is isolated from it.
+
+
+## Follow-up: KDS E2E fixture cleanup hardening — 2026-10-24
+
+- Live read-only preflight confirmed the fixed QA branch/product/recipe/ingredient IDs exist; the QA product is inactive and the recipe starts in `draft`.
+- Review found that the E2E script activated the recipe but did not restore that temporary state. Added a guarded `erp-retire-recipe` action for Production Head Office, which only retires an active recipe after its product is inactive and stock tracking is disabled; draft/retired recipes are handled idempotently.
+- Updated `tests/staging/kds-pos-stock-positive.mjs` to remember whether the recipe started as draft and retire it during `finally` cleanup after restoring the product. Cleanup failures are recorded in `cleanup_errors`.
+- Added a contract test for the new route and cleanup sequence. Deployed staging Edge Function `dlice-orders` as **v59 ACTIVE**, preserving `verify_jwt=false`; fetched deployed source confirms the new route is present.
+- The manual KDS/POS and procurement E2E workflows remain unexecuted. Do not infer business acceptance from deployment or static contracts; inspect the sanitized artifacts after manually dispatching both workflows.
