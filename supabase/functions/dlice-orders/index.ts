@@ -400,14 +400,31 @@ Deno.serve(async (req: Request) => {
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!branchId) return false;
+    const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
+    if (branchError || !branch?.tenant_id) return false;
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships").select("role").eq("tenant_id", branch.tenant_id).eq("user_id", actor.user.id).eq("status", "active").maybeSingle();
+    if (membershipError || !membership) return false;
+    if (["tenant_owner", "tenant_admin"].includes(String(membership.role))) return true;
     const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const actorBranchIds = async (): Promise<string[]> => {
     if (actor.profile.role === "owner") return [];
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
-    if (error) throw new Error("Penugasan cabang gagal dimuat.");
-    return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
+    const { data: memberships, error: membershipError } = await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id", actor.user.id).eq("status", "active");
+    if (membershipError) throw new Error("Keanggotaan tenant gagal dimuat.");
+    const membershipRows = memberships || [];
+    const tenantIds = [...new Set(membershipRows.map((x: { tenant_id: string }) => x.tenant_id))];
+    if (!tenantIds.length) return [];
+    const ownerTenantIds = [...new Set(membershipRows.filter((x: { role: string }) => ["tenant_owner", "tenant_admin"].includes(String(x.role))).map((x: { tenant_id: string }) => x.tenant_id))];
+    const assigned = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
+    if (assigned.error) throw new Error("Penugasan cabang gagal dimuat.");
+    const assignedIds = [...new Set((assigned.data || []).map((x: { branch_id: string }) => x.branch_id))];
+    const [ownedBranches, assignedBranches] = await Promise.all([
+      ownerTenantIds.length ? admin.from("branches").select("id").in("tenant_id", ownerTenantIds) : Promise.resolve({ data: [], error: null }),
+      assignedIds.length ? admin.from("branches").select("id,tenant_id").in("id", assignedIds).in("tenant_id", tenantIds) : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (ownedBranches.error || assignedBranches.error) throw new Error("Pemetaan tenant-cabang gagal dimuat.");
+    return [...new Set([...(ownedBranches.data || []).map((x: { id: string }) => x.id), ...(assignedBranches.data || []).map((x: { id: string }) => x.id)])];
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
