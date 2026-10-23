@@ -18,6 +18,7 @@
 - Staging Edge Function `dlice-orders` is now v54, preserving `verify_jwt=false` and the custom authorization layer.
 - Added KDS ticket dispatch/transition, idempotent POS/offline replay, opt-in recipe stock tracking, tenant memberships/invites, branch settings, warehouses, waste ledger, shift handover, integration/outbox metadata and backup/restore metadata.
 - 17 new internal tables have RLS enabled and no direct grants to `anon` or `authenticated`.
+- Composite foreign keys enforce tenant/branch consistency on branch-scoped platform records; current staging mismatch checks returned 0 for warehouses, branch settings, handovers, waste, and integration outbox.
 - **Acceptance is still PARTIAL/GATE:** no authenticated POS→payment→KDS→stock→report reconciliation, offline fault-injection E2E, cross-tenant negative suite, real restore drill, provider sandbox delivery, visual QA, or 150-branch load/recovery run. No second live tenant should be onboarded yet.
 - The overall ~31.4% estimate is intentionally unchanged until meaningful end-to-end acceptance evidence exists.
 
