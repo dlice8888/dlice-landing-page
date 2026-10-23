@@ -101,7 +101,7 @@ async function loadPR(){
  $('prList').innerHTML=purchaseRequisitions.map(r=>{
   const lines=(r.purchase_requisition_items||[]).map(i=>esc(i.item_name_snapshot)+' × '+Number(i.quantity).toLocaleString('id-ID')+' · '+money(i.estimated_line_total_idr)).join(' · ');
   const buttons=(r.status==='draft'?'<button data-pr-id="'+esc(r.id)+'" data-pr-next="submitted">Ajukan</button>':'')+
-   (r.status==='submitted'&&isOwner()?'<button data-pr-id="'+esc(r.id)+'" data-pr-next="approved">Setujui</button><button class="secondary" data-pr-id="'+esc(r.id)+'" data-pr-next="rejected">Tolak</button>':'')+
+   (r.status==='submitted'&&isOwner()&&r.requested_by!==session.user.id?'<button data-pr-id="'+esc(r.id)+'" data-pr-next="approved">Setujui</button><button class="secondary" data-pr-id="'+esc(r.id)+'" data-pr-next="rejected">Tolak</button>':'')+
    (r.status==='approved'&&isOwner()?'<button data-pr-id="'+esc(r.id)+'" data-pr-next="converted">Buat PO</button>':'')+
    (['draft','submitted'].includes(r.status)&&(isOwner()||r.requested_by===session.user.id)?'<button class="secondary" data-pr-id="'+esc(r.id)+'" data-pr-next="cancelled">Batalkan</button>':'');
   return '<div class="listitem"><div><strong>'+esc(r.requisition_number)+' <span class="pill '+(['approved','converted'].includes(r.status)?'good':(['rejected','cancelled'].includes(r.status)?'warn':'info'))+'">'+esc(labels[r.status]||r.status)+'</span></strong><small>'+esc(r.purpose)+' · '+(r.needed_by?'Dibutuhkan '+esc(r.needed_by):'Tanpa tanggal kebutuhan')+'</small><small>'+lines+'</small><small>Estimasi '+money(r.estimated_total_idr)+(r.converted_purchase_order_id?' · PO ID '+esc(r.converted_purchase_order_id):'')+'</small></div><div class="actions">'+buttons+'</div></div>';
