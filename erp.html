@@ -136,7 +136,7 @@ $('createStockCount').onclick=async()=>{const btn=$('createStockCount');if(!bran
 $('loadStockCounts').onclick=()=>loadStockCounts().catch(e=>note(e.message,true));
 $('movementForm').onsubmit=async e=>{e.preventDefault();try{const d=await call('erp-stock-movement',{branch_id:branchId(),inventory_item_id:$('movementItem').value,movement_type:$('movementType').value,quantity:Number($('movementQty').value),notes:$('movementNotes').value});$('movementResult').textContent='Stok berhasil diperbarui. Saldo baru: '+Number(d.on_hand).toLocaleString('id-ID');note('Pergerakan stok dicatat.');await loadInventory()}catch(e){$('movementResult').textContent=e.message;note(e.message,true)}};
 $('addPRLine').onclick=()=>{prLineIds.push(prNextLineId++);renderPRLines()};
-document.querySelectorAll('[data-pr-remove]').forEach(b=>b.onclick=()=>{if(prLineIds.length>1){prLineIds=prLineIds.filter(id=>String(id)!==b.dataset.prRemove);renderPRLines()}});
+$('prLines').onclick=e=>{const b=e.target.closest('[data-pr-remove]');if(b&&prLineIds.length>1){prLineIds=prLineIds.filter(id=>String(id)!==b.dataset.prRemove);renderPRLines()}};
 $('prForm').onsubmit=async e=>{
  e.preventDefault();
  try{
