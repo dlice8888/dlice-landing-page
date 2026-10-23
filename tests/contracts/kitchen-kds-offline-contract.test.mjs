@@ -14,7 +14,7 @@ test("KDS tickets are branch-scoped, source-linked, versioned and idempotent", (
   assert.match(migration, /unique index[^;]*kitchen_tickets_order_unique/i);
   assert.match(migration, /unique index[^;]*kitchen_tickets_pos_sale_unique/i);
   assert.match(migration, /enable row level security/i);
-  assert.match(migration, /revoke all on table public\.kitchen_tickets from anon, authenticated/i);
+  assert.match(migration, /revoke all on table public\.%I from anon, authenticated/i);
 });
 
 test("order and POS events create KDS tickets without duplicating a source", () => {
@@ -68,7 +68,7 @@ test("tenant membership, branch settings, warehouse, waste, handover and integra
     assert.match(platform, new RegExp("'"+table+"'", "i"));
   }
   assert.match(platform, /enable row level security/i);
-  assert.match(platform, /revoke all on table public\.%I from anon,authenticated/i);
+  assert.match(migration, /revoke all on table public\.%I from anon, authenticated/i);
   assert.match(edge, /tenant_memberships/);
   assert.match(edge, /erp-record-waste/);
   assert.match(edge, /erp-create-shift-handover/);
