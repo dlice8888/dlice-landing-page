@@ -5,7 +5,8 @@
 
 ## Latest staging deployment checkpoint — 2026-10-24
 - Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
-- Edge Function `dlice-orders`: v55 ACTIVE, `verify_jwt=false` unchanged.
+- Edge Function `dlice-orders`: v56 ACTIVE, `verify_jwt=false` unchanged.
+- Added branch-scoped waste-event reconciliation to inspect event, stock movement and audit linkage.
 - Applied deferred POS→KDS dispatch trigger and verified it is `DEFERRABLE INITIALLY DEFERRED`; this prevents a ticket from being created before POS sale items exist.
 - Added branch-scoped `erp-reconcile-pos-sale` and a manual positive E2E workflow for POS payment/idempotency/offline replay/KDS/recipe stock/report reconciliation. Workflow remains **not run**.
 - SQL checks passed: 17 new KDS/platform tables have RLS enabled, 0 direct table grants to `anon`/`authenticated`, 4 expected triggers present, 10 tenant/platform tables present, stock-tracking and order snapshot columns present.
