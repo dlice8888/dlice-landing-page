@@ -1,6 +1,6 @@
 # D’Lice FnB OS — Staging Capability Audit & Implementation Register
-Audit refresh: 2026-10-22
-Code baseline: GitHub PR #25 head `02dd251faf43342ef5646a3eb04468349854c4a8`; PR #24 security/timezone base head `3f148185b8a8a9a4e1bbeeab38c8596f8cf646dd`
+Audit refresh: 2026-10-22 (inventory transfer/count implementation pass)
+Code baseline: branch `feat/fnb-os-branch-ops-checklists-20261022`, latest commit `c0ec8cdd44a687934274ca698d7840c2b4ee8236`; stacked on PR #25 / PR #24 security-timezone work
 Target environment: Supabase staging `higoadrzxnhzbbwhdbmh` + Vercel Preview only.
 Safety: do not merge or modify production without passing acceptance tests and explicit Owner approval.
 
@@ -17,16 +17,17 @@ Safety: do not merge or modify production without passing acceptance tests and e
 - Branch status counts from live SQL: **150 planned, 4 active**. The 150 planned slots are not 150 operating branches; live active count is only four and should be reconciled with the intended HQ/test-fixture model before any operational-readiness claim.
 - Key live row counts: orders 7; POS sales 0; inventory items 2; branch inventory 0; stock movements 0; purchase orders 0; production batches 0; finance journal entries 0. Empty operational ledgers mean schema coverage materially exceeds demonstrated workflow usage.
 - Security: previous audit verified 27/27 internal ERP tables had restrictive deny policies and zero direct client SELECT grants. All 40 tables now report RLS enabled, but that alone does not prove every table's policies/grants are correct; the full direct-API negative test is still required.
-- Supabase Security Advisor currently reports one warning: leaked-password protection disabled. Performance Advisor reports 67 unused-index notices; do not drop these without representative workload analysis.
-- Live Edge Function `dlice-orders` is ACTIVE at version 35 with `verify_jwt=false`; its handler must therefore continue enforcing JWT/session and role/scope checks itself. Source uses exact configured origin allowlisting through `DLICE_ALLOWED_ORIGINS`, but the secret value itself is not readable/independently verified in this audit.
-- Vercel Preview deployment for commit `02dd251faf43342ef5646a3eb04468349854c4a8` is **READY**. Stable branch alias: `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`. READY only proves deployment/build state; no browser flow or authenticated P0 runtime suite has passed yet.
-- GitHub PR #24 (security/timezone changes) and PR #25 (audit and username-based P0 test harness) are both **OPEN, DRAFT, UNMERGED**. Quality checks on the latest PR #25 head are successful; the manual `staging-p0-smoke.yml` workflow has not been dispatched.
-- The first Branch Operations slice is deployed in staging: checklist-run table is protected by RLS/restrictive deny policy, direct table SELECT is denied, and missing-session calls return 401. Authenticated branch-scope acceptance remains pending.
+- Supabase Security Advisor currently reports one warning: leaked-password protection disabled. Performance Advisor reports 72 unused-index notices and 9 unindexed foreign-key notices (including 7 foreign keys in stock transfer/count tables); do not drop or add indexes blindly—review expected joins, deletion/update patterns, write amplification, and representative workload first.
+- Live Edge Function `dlice-orders` is ACTIVE at version 39 with `verify_jwt=false`; its handler must therefore continue enforcing JWT/session and role/scope checks itself. Version 38 adds authenticated, permission-gated stock transfer and stock-count actions. Source uses exact configured origin allowlisting through `DLICE_ALLOWED_ORIGINS`, but the secret value itself is not readable/independently verified in this audit.
+- Vercel Preview deployment for commit `c0ec8cdd44a687934274ca698d7840c2b4ee8236` is **READY**. Stable branch alias: `https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app`. The alias remains blocked by staging CORS until the exact origin is added to `DLICE_ALLOWED_ORIGINS`; SSO protection also means browser acceptance has not been run here. READY only proves deployment/build state; no browser flow or authenticated P0 runtime suite has passed yet.
+- GitHub PR #24 (security/timezone changes) and PR #25 (audit and username-based P0 test harness) are both **OPEN, DRAFT, UNMERGED**. Quality checks on the latest branch head are successful; the manual `staging-p0-smoke.yml` workflow has not been dispatched.
+- Branch Operations opening/closing checklist slice is deployed in staging: checklist-run table is protected by RLS/restrictive deny policy, direct table SELECT is denied, and missing-session calls return 401. Authenticated branch-scope acceptance remains pending.
+- Inventory transfer/count tables and RPCs exist in staging migration `20261022124132_stock_transfers_and_counts`; their source migration was restored to the feature branch to eliminate database/source drift. The ERP UI now exposes draft → ship → receive transfer handling plus stock-count snapshots, actual-count entry, and ledger posting. A follow-up migration `20261022130135_stock_transfer_approval_pick_reconcile` now implements Draft → Approved → Picked → Shipped → Received → Reconciled (with cancellation before shipment); approval requires Head Office inventory permission. Authenticated branch-scope acceptance remains pending.
 - P0 test harness now uses username/password variables matching D’Lice's `admin-login` model. Its required staging secrets and disposable test accounts still need to exist in GitHub Environment `staging`; do not put credentials or tokens in chat or source.
 - Figma identity check reports a Starter plan and a **View** seat, with code layers disabled. No D’Lice Figma file URL/node was provided in the current request, and this chat does not expose the Product Design Work-mode browser capture workflow; therefore this is a tool-access assessment, not a screenshot-based UX audit or a claim that Figma was changed.
 
 ## Provisional progress estimate
-**Approximately 25–30% functional scope coverage; 0% of the full 150-branch readiness gate is certified complete.**
+**Approximately 29–31% functional scope coverage; 0% of the full 150-branch readiness gate is certified complete.**
 This is an evidence-based planning estimate, not a test pass rate. The core foundation exists, but many blueprint subfeatures and cross-domain reconciliations are absent or unverified. Recalculate after each acceptance batch using the acceptance register.
 
 ## 18-domain matrix
@@ -37,7 +38,7 @@ This is an evidence-based planning estimate, not a test pass rate. The core foun
 | 3 | Order Management | Orders/items, reservations, status history, payment records, branch capacity and cutoff logic | Partial | Channel adapters, exception queue, customer history, assignment escalation, notifications and verified status transitions |
 | 4 | Kitchen & Production | Recipes, production batches/consumptions, completion RPC and waste quantities | Partial | KDS/station tickets, priority/SLA queue, prep list, quality gate, traceable made-to-order vs batch workflow |
 | 5 | Menu & Recipe Engineering | Products, recipes, recipe ingredients, recipe activation/version-related safeguards | Partial | Variants/modifiers, unit conversion/yield, costing/margin, allergen data, effective-dated versions and branch pricing/availability |
-| 6 | Inventory & Warehouse | Inventory items, branch inventory, stock movements, production consumption, receipt workflow | Partial | Warehouse/location, batch/expiry/FEFO, reservations/blocked stock, transfer state machine, stock counts and valuation |
+| 6 | Inventory & Warehouse | Inventory items, branch balances, stock ledger, receipts/production consumption, plus staging stock-transfer and stock-count tables/RPCs and ERP UI (draft → shipped → received; count snapshot → actual quantities → posting) | Partial (improved) | Full Approved/Picked/Reconciled transfer workflow, warehouse/location and batch/expiry/FEFO, reservations/blocked stock, valuation, and authenticated branch-scope runtime tests |
 | 7 | Procurement & Supplier | Suppliers, purchase orders/items, receipts/items and atomic receiving | Partial | PR, price lists/contracts, tiered approvals, supplier invoice, three-way match, returns and supplier scorecards |
 | 8 | Branch Operations | Branch directory/status, assignments, POS shift/cash reconciliation, and a new daily opening/closing checklist slice (migration + Edge Function v35 deployed to staging) | Partial (improved) | Checklist runtime with authenticated roles is not yet proven; configurable templates, task assignment, photo evidence, corrective actions, equipment maintenance and branch audits remain |
 | 9 | Delivery & Fulfillment | Fulfillment/status UI and branch order scope exist | Partial | Courier quote/booking/tracking/POD, exception handling, delivery cost reconciliation and tested routing |
@@ -81,3 +82,18 @@ For each workflow, tests must verify database before/after state, duplicate/retr
 - Secrets must stay in the correct environment; never commit service-role keys.
 - No paid plan or paid integration is enabled without explicit approval.
 - No production migration, secret, deployment, alias promotion, or merge is performed without passing acceptance and explicit Owner approval.
+
+
+## Implementation pass — stock transfers and stock counts (2026-10-22)
+- Git branch: `feat/fnb-os-branch-ops-checklists-20261022`; changes remain under draft PR #26.
+- Edge Function source now maps seven inventory actions to the `inventory` permission. Transfer listing is scoped to assigned branches; create/ship/cancel checks source-branch access; receive checks destination-branch access. Mutations call existing atomic RPCs and write audit events.
+- ERP inventory workspace now contains a transfer form/list and a cycle-count workspace. Transfer posting decrements the source only at ship time and increments destination only on receipt. Count posting compares the counted amount to current locked balance and records the difference in `stock_movements`.
+- Verification so far: GitHub Free quality checks passed for UI commit `c82e848a6929be641aa4ca0bacb33a95a787ef91` and Edge Function source commit `4eb60f5a7bec2d5c9bd934021e7fc82e18a534b0`; staging Edge Function is ACTIVE at version 38.
+- Not yet certified: authenticated Owner/branch manager/wrong-branch tests, real transfer/count workflow with disposable fixtures, browser/mobile acceptance, and preview CORS for the latest branch alias. Do not infer these from CI or deployment state.
+
+
+### Follow-up migration — full stock transfer state machine
+- Staging migration `20261022130135_stock_transfer_approval_pick_reconcile` applied successfully. Live check confirms the status constraint now accepts `draft`, `approved`, `picked`, `shipped`, `received`, `reconciled`, and `cancelled`.
+- `dlice-orders` deployed to staging as version 39. Approval is restricted to Owner / Inventory Head Office permission; pick/ship check source-branch assignment, receive/reconcile check destination-branch assignment. All transitions use the transactional RPC and are audited.
+- Latest preview for commit `d39dcb0ed7da0a0e02859ac0d34f419f1739b0af` is READY; GitHub quality checks passed for the UI and Edge Function implementation commits. This does not replace authenticated end-to-end testing.
+- No stock transfer or stock-count records were created as part of implementation; the new tables are empty, so no operational balances were altered during this work.
