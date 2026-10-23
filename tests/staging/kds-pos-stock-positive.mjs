@@ -163,6 +163,7 @@ async function main() {
   managerUserId = await userId(managerToken);
 
   // Activate the fixture only for this run. finally restores it to inactive.
+  productTouched = true;
   await call("admin-save-product", {
     id: productId,
     name: "[TEST ONLY] Staging QA Fixture Product",
@@ -175,14 +176,13 @@ async function main() {
     badge: "STAGING TEST ONLY",
     image_path: null,
   }, ownerToken);
-  productTouched = true;
 
   const recipes = await call("erp-list-recipes", {}, ownerToken);
   const recipe = (recipes.recipes || []).find((row) => row.id === recipeId);
   assert.ok(recipe, "Fixed QA recipe must exist");
   if (recipe.status !== "active") await call("erp-activate-recipe", { recipe_id: recipeId }, ownerToken);
-  await call("erp-set-product-stock-tracking", { product_id: productId, enabled: true }, ownerToken);
   trackingTouched = true;
+  await call("erp-set-product-stock-tracking", { product_id: productId, enabled: true }, ownerToken);
   pass("QA fixture product has active recipe and stock tracking");
 
   // Ensure deterministic positive stock for the two QA recipe ingredients.
