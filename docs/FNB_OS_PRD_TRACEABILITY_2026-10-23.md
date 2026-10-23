@@ -84,3 +84,45 @@ Use small vertical slices; do not start 18 modules in parallel.
 5. Leaked-password protection remains an explicit security warning; don't silently upgrade a paid plan.
 6. Do not invent missing business rules, external provider credentials, legal/payroll/tax policy, or tenant billing behavior. Capture these as implementation prerequisites before the affected feature is enabled.
 7. UI changes must preserve the existing palette and priority copy, and must honor reduced-motion settings.
+
+
+---
+
+## Execution follow-up — 2026-10-23 (Owner-authorized staging checks)
+
+### Scope and safety
+- Owner explicitly authorized staging CORS verification and the positive procurement E2E, with QA records retained.
+- No production database, production Edge Function, `main`, production Vercel deployment, or production secrets were changed.
+- No secret values were read into the report or emitted in logs.
+
+### CORS runtime probe — current deployed staging function
+Target: `https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders`, current deployed function version **50**, `verify_jwt=false`. Preflight probes were executed against the live staging endpoint using HTTP `OPTIONS`.
+
+| Probe | Observed result | Interpretation |
+|---|---|---|
+| Exact current staging Preview origin | HTTP 200; exact `Access-Control-Allow-Origin` echoed | Pass for the currently deployed runtime |
+| Unlisted foreign origin (`https://dlice-p0-negative.invalid`) | HTTP 403; no `Access-Control-Allow-Origin` | Pass for rejection/no ACAO |
+| Missing `Origin` | HTTP 200; no `Access-Control-Allow-Origin` | Pass for no fallback ACAO |
+
+**Important limitation:** this verifies the current deployed version 50, whose source still contains a temporary exact-origin staging fallback. It does **not** verify PR #32's secret-only candidate because PR #32 remains Draft and that candidate is not deployed to staging. The secret-only runtime gate remains **OPEN** until the candidate is deployed under the approved staging release procedure and these probes are repeated against it. Do not mark PR #32 accepted from this result.
+
+### Procurement positive-path E2E — blocked, not run
+- Current staging database baseline before E2E: `purchase_orders=0`, `purchase_receipts=0`, `branch_inventory=0`, `stock_movements=0`.
+- Current deployed `dlice-orders` version 50 has not been verified to contain PR #35's purchase-order-line ID fix.
+- PR #35's candidate contains the contract test and a staging-only workflow for `QA-DLICE-A` / `QA-DLICE-FLOUR`, quantity 7, retaining QA-prefixed records.
+- The positive E2E workflow and script are present on PR #35's draft head, but not on the current `staging` branch. The test's prerequisite is deployment of the updated Edge Function to staging. No merge or staging deployment was authorized as part of this execution request; bypassing the draft/review gate would violate the release guardrail.
+
+Therefore the positive E2E was **not executed**, and no QA rows were written. This is a deliberate safety block, not a test pass. Resume only after the reviewed PR #35 candidate is approved for staging deployment, then run the workflow with `confirm_staging_mutations=true` and verify PO state transitions, receipt quantity, stock balance delta, stock movement, and audit event from runtime/database evidence.
+
+### Superpowers gate ledger
+1. **Specify / Plan:** PRD traceability and bounded procurement slice already documented.
+2. **Tests first:** procurement API/UI contract test exists on PR #35; its previously reported CI run passed. That is a contract check, not business E2E.
+3. **Verify CORS:** current-runtime probes passed; secret-only candidate verification remains open.
+4. **Verify procurement E2E:** blocked pending reviewed staging deployment of the candidate; no data mutation occurred.
+5. **Review / merge:** PR #32 and PR #35 remain Draft. Keep `main` and production untouched.
+6. **Traceability:** retain the 18-domain matrix and 31% estimated feature-coverage baseline; do not increase coverage based on preflight probes or unexecuted E2E. No domain is certified complete.
+
+### Next required actions
+- Review PR #32 and confirm the staging secret is saved without exposing its value; deploy the secret-only candidate to staging only through the approved PR/review path, then rerun the three CORS probes.
+- Review PR #35, deploy its Edge Function candidate to staging through the approved path, then run the positive procurement E2E and attach run/artifact IDs plus ledger reconciliation.
+- Keep the 18-domain matrix evidence-driven. Follow up on UI/browser design QA separately; deployment HTTP 200 is not visual acceptance.
