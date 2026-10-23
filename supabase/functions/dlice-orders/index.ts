@@ -17,8 +17,7 @@ const configuredOrigins = new Set(
 // One exact, temporary staging Preview origin is allowed only on this staging project.
 // Keep production fail-closed and never use hostname prefixes/suffixes or wildcard matching.
 if ((SUPABASE_URL ?? "").includes("higoadrzxnhzbbwhdbmh.supabase.co")) {
-  configuredOrigins.add("https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app");
-  configuredOrigins.add("https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app");
+  configuredOrigins.add("https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app");
 }
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
