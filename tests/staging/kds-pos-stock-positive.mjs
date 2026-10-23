@@ -54,6 +54,7 @@ const evidence = {
 let ownerToken = "";
 let managerToken = "";
 let managerUserId = "";
+let ownerUserId = "";
 let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
@@ -111,6 +112,33 @@ function pass(name, details = {}) {
   console.log(`PASS ${name}`);
 }
 
+
+async function ensureChecklist(checklistType) {
+  const listed = await call("erp-list-branch-checklists", { branch_id: branchId }, managerToken);
+  let run = (listed.runs || []).find((row) => row.checklist_type === checklistType);
+  if (!run) {
+    const started = await call("erp-start-branch-checklist", { branch_id: branchId, checklist_type: checklistType }, managerToken);
+    run = started.run;
+  }
+  assert.ok(run?.id, `${checklistType} checklist must exist`);
+  if (run.status !== "completed") {
+    for (const item of (run.items || [])) {
+      if (item.status !== "passed") {
+        await call("erp-update-branch-checklist-item", {
+          run_id: run.id,
+          item_key: item.key,
+          item_status: "passed",
+          notes: `AUTOMATED QA E2E checklist ${checklistType}; ${suffix}`,
+        }, managerToken);
+      }
+    }
+    const completed = await call("erp-complete-branch-checklist", { run_id: run.id }, managerToken);
+    const latest = completed.run || completed;
+    assert.equal(latest.status || completed.status, "completed", `${checklistType} checklist must complete with all critical checks passed`);
+  }
+  pass(`Branch ${checklistType} checklist completes with critical checks passed`, { checklist_id: run.id });
+}
+
 async function restoreQaProduct() {
   if (!ownerToken) return;
   if (trackingTouched) {
@@ -161,6 +189,9 @@ async function main() {
   ownerToken = await tokenFor(process.env.STAGING_TEST_OWNER_USERNAME, process.env.STAGING_TEST_OWNER_PASSWORD, "Owner");
   managerToken = await tokenFor(process.env.STAGING_TEST_BRANCH_A_USERNAME, process.env.STAGING_TEST_BRANCH_A_PASSWORD, "Branch A manager");
   managerUserId = await userId(managerToken);
+  ownerUserId = await userId(ownerToken);
+  await ensureChecklist("opening");
+  await ensureChecklist("closing");
 
   // Activate the fixture only for this run. finally restores it to inactive.
   productTouched = true;
@@ -289,6 +320,44 @@ async function main() {
     second_ingredient_before: beforeSecond, second_ingredient_after: afterSecond,
   });
 
+  const wasteKey = `qa-waste-${suffix}`;
+  const wastePayload = { branch_id: branchId, inventory_item_id: flourId, quantity: 1, reason_code: "other", reason: note, idempotency_key: wasteKey };
+  const waste = await call("erp-record-waste", wastePayload, ownerToken);
+  assert.ok(waste.waste_id, "Waste event must be recorded");
+  const wasteReplay = await call("erp-record-waste", wastePayload, ownerToken);
+  assert.equal(wasteReplay.waste_id, waste.waste_id);
+  assert.equal(wasteReplay.replayed, true);
+  await expectStatus("erp-record-waste", { ...wastePayload, quantity: 2 }, ownerToken, 409);
+  const afterWasteInventory = await call("erp-list-inventory", { branch_id: branchId }, managerToken);
+  assert.equal(Number((afterFlour - balanceOf(afterWasteInventory, flourId)).toFixed(3)), 1, "Waste must deduct exactly one additional gram");
+  assert.equal(Number((afterSecond - balanceOf(afterWasteInventory, secondIngredientId)).toFixed(3)), 0, "Waste must not alter the unrelated ingredient");
+  pass("Waste ledger is idempotent and decrements the matching stock only", { waste_id: waste.waste_id });
+
+  const currentShifts = await call("erp-list-shifts", { branch_id: branchId }, managerToken);
+  const currentShift = (currentShifts.shifts || []).find((row) => row.id === shift.id);
+  const handovers = await call("erp-list-shift-handovers", { branch_id: branchId }, managerToken);
+  let handover = (handovers.handovers || []).find((row) => row.shift_id === shift.id);
+  if (!handover) {
+    const created = await call("erp-create-shift-handover", {
+      shift_id: shift.id,
+      incoming_user_id: ownerUserId,
+      cash_counted_idr: Math.max(0, Math.round(Number(currentShift?.expected_cash_idr || 0))),
+      pending_orders: [],
+      waste_summary: [{ waste_id: waste.waste_id, inventory_item_id: flourId, quantity: 1, reason_code: "other" }],
+      open_issues: "",
+      notes: `AUTOMATED QA E2E handover; ${suffix}`,
+    }, managerToken);
+    handover = created.handover;
+  }
+  assert.ok(handover?.id, "Shift handover must exist");
+  if (handover.status === "submitted") {
+    const ack = await call("erp-acknowledge-shift-handover", { handover_id: handover.id, decision: "acknowledged" }, ownerToken);
+    handover = ack.handover;
+  }
+  assert.equal(handover.status, "acknowledged", "Incoming user must acknowledge the shift handover");
+  assert.notEqual(handover.outgoing_user_id, handover.incoming_user_id);
+  pass("Shift handover is acknowledged by a different user", { handover_id: handover.id });
+
   const sales = await call("erp-list-sales", { branch_id: branchId }, managerToken);
   assert.equal((sales.sales || []).filter((row) => row.id === saleId).length, 1, "Sales report must show exactly one sale");
   const reconciliation = await call("erp-reconcile-pos-sale", { branch_id: branchId, sale_id: saleId }, ownerToken);
@@ -310,8 +379,11 @@ async function main() {
   evidence.sale_id = saleId;
   evidence.transaction_code = sale.transaction_code;
   evidence.ticket_id = ticket.id;
+  evidence.waste_id = waste.waste_id;
+  evidence.handover_id = handover.id;
   evidence.stock_before = { flour_g: beforeFlour, second_ingredient_g: beforeSecond };
-  evidence.stock_after = { flour_g: afterFlour, second_ingredient_g: afterSecond };
+  evidence.stock_after_sale = { flour_g: afterFlour, second_ingredient_g: afterSecond };
+  evidence.stock_after_waste = { flour_g: balanceOf(afterWasteInventory, flourId), second_ingredient_g: balanceOf(afterWasteInventory, secondIngredientId) };
 }
 
 try {
