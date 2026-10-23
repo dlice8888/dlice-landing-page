@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const migration = readFileSync("supabase/migrations/20261023232000_kitchen_kds_idempotency_modifiers.sql", "utf8");
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 const platform = readFileSync("supabase/migrations/20261023233000_tenant_branch_platform_foundation.sql", "utf8");
+const ui = readFileSync("erp.html", "utf8");
 
 test("KDS tickets are branch-scoped, source-linked, versioned and idempotent", () => {
   assert.match(migration, /create table if not exists public\.kitchen_tickets/i);
@@ -73,4 +74,13 @@ test("tenant membership, branch settings, warehouse, waste, handover and integra
   assert.match(edge, /erp-create-shift-handover/);
   assert.match(edge, /erp-save-branch-setting/);
   assert.match(edge, /erp-create-tenant/);
+});
+
+test("ERP UI exposes KDS, offline replay, modifiers, substitutions, waste and handover controls", () => {
+  for (const id of ["loadKitchenTickets","syncOfflineSales","modifierForm","substitutionForm","stockTrackingForm","wasteForm","handoverForm","tenantForm","tenantInviteForm","branchSettingForm","integrationForm","backupRunForm"]) {
+    assert.match(ui, new RegExp('id="' + id + '"'));
+  }
+  assert.match(ui, /indexedDB\.open\(OFFLINE_DB/);
+  assert.match(ui, /TRANSAKSI BELUM DIKONFIRMASI SERVER/);
+  assert.match(ui, /erp-sync-offline-operation/);
 });
