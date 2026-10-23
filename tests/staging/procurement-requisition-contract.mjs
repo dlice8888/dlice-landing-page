@@ -18,6 +18,7 @@ assert.match(edge, /"erp-transition-purchase-requisition"\s*:\s*"procurement"/);
 assert.match(edge, /action === "erp-list-purchase-requisitions"/);
 assert.match(edge, /action === "erp-create-purchase-requisition"/);
 assert.match(edge, /action === "erp-transition-purchase-requisition"/);
+assert.match(edge, /action === "erp-reconcile-purchase-requisition"/);
 assert.match(edge, /erp_create_purchase_requisition/);
 assert.match(edge, /erp_transition_purchase_requisition/);
 assert.match(edge, /old\.requested_by === actor\.user\.id/);
