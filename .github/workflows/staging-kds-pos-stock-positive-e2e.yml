@@ -1,0 +1,45 @@
+name: Staging KDS POS Stock and Offline Recovery E2E
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_mutations:
+        description: "Confirm this activates the QA-only product temporarily and writes QA-prefixed POS/KDS/stock records to staging"
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: staging-kds-pos-stock-positive-e2e
+  cancel-in-progress: false
+jobs:
+  kds-pos-stock:
+    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024') && inputs.confirm_staging_mutations }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run POS → payment → KDS → recipe stock → report and offline replay E2E
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+        run: node tests/staging/kds-pos-stock-positive.mjs
+      - name: Upload sanitized KDS/POS/stock reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kds-pos-stock-reconciliation-${{ github.run_id }}
+          path: artifacts/kds-pos-stock-reconciliation.json
+          if-no-files-found: warn
+          retention-days: 30

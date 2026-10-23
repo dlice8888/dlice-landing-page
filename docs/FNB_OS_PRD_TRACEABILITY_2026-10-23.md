@@ -3,15 +3,27 @@
 **Baseline:** GitHub `staging`, Supabase staging project `higoadrzxnhzbbwhdbmh`, Vercel Preview deployments, and currently accessible Figma account metadata.  
 **Production guardrail:** `main`, production Supabase project `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` are out of scope until all gates pass and Owner explicitly approves.
 
+## Latest staging deployment checkpoint — 2026-10-24
+- Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
+- Edge Function `dlice-orders`: **v59 ACTIVE**, `verify_jwt=false` unchanged. v58 adds active tenant-membership checks to legacy branch authorization helpers and keeps tenant creation/invitation fail-closed with HTTP 423.
+- Added branch-scoped waste-event reconciliation to inspect event, stock movement and audit linkage.
+- Applied deferred POS→KDS dispatch trigger and verified it is `DEFERRABLE INITIALLY DEFERRED`; this prevents a ticket from being created before POS sale items exist.
+- Added branch-scoped `erp-reconcile-pos-sale` and a manual positive E2E workflow for POS payment/idempotency/offline replay/KDS/recipe stock/report reconciliation. Workflow remains **not run**.
+- SQL checks passed: 17 new KDS/platform tables have RLS enabled, 0 direct table grants to `anon`/`authenticated`, 4 expected triggers present, 10 tenant/platform tables present, stock-tracking and order snapshot columns present.
+- Applied composite tenant/branch integrity constraints. Live staging mismatch checks returned 0 across warehouses, branch settings, handovers, waste, and integration outbox.
+- Contract CI and quality checks passed at the deployment checkpoint. This is not a substitute for the positive business E2E and cross-tenant negative tests.
+- Tenant support is a **foundation only**. Legacy global catalog/report/finance/audit actions are not yet comprehensively tenant-scoped. Do not onboard a second live tenant before that gate passes.
+- Backup/restore and integration workers are not operational yet; only metadata/outbox schema exists. No 150-branch load or recovery drill has run.
+
 ## How progress is scored
 These are evidence-based engineering estimates of PRD feature coverage, not the percentage of screens or database objects created. A feature is not "done" merely because a table, button, or handler exists. Full credit requires working behavior, permission/scope checks, meaningful positive and negative tests, auditability, and end-to-end reconciliation where applicable. Overall mean across 18 domains: **31% estimated coverage**. This is not production-readiness or 150-branch readiness.
 
 Status: **Partial** = some implementation exists; **Gate** = blocked by runtime, integration, or acceptance evidence; **Not implemented** = no sufficient implementation evidence found; **Unverified** = needs a real browser/fixture test.
 
 ## Executive summary
-- Supabase staging is `ACTIVE_HEALTHY` (PostgreSQL 17), with 38 recorded migrations through `20261023003006_revoke_direct_client_access_stock_workflows`.
-- 45 public tables have RLS enabled. Several operational tables have no real business rows yet, so schema presence is not proof of complete workflows.
-- Edge Function `dlice-orders` is ACTIVE v50 and has `verify_jwt=false`; the function implements custom per-action authentication/authorization, but public endpoint hardening still depends on the runtime CORS gate. Current deployed source still has a temporary project-ID-guarded staging origin fallback. PR #32 removes that fallback but remains Draft and is not deployed.
+- Supabase staging is `ACTIVE_HEALTHY` (PostgreSQL 17) at the latest verified checkpoint; migration inventory and schema counts should be refreshed before any production release.
+- 17 new KDS/platform tables have RLS enabled and no direct grants to `anon`/`authenticated`; this is an intentional server-side-only boundary, not proof of cross-tenant API isolation.
+- Edge Function `dlice-orders` is ACTIVE **v59** and has `verify_jwt=false`; protected actions use custom per-action authentication/authorization. Runtime CORS probes passed after v58 deployment. Tenant creation/invitation remain fail-closed until cross-tenant negative tests pass.
 - PR #31 is Draft. Its reported acceptance suite is 21 PASS / 0 FAIL for role/scope and negative probes only. It explicitly does not establish positive-path business E2E.
 - Vercel Preview build for commit `576d0781281ea826d19824990cd1668190d1ab46` is READY. This does not deploy Supabase functions.
 - Security Advisor: leaked-password protection disabled. Performance Advisor: 69 unused-index findings; do not bulk-drop them.
@@ -280,3 +292,18 @@ Keep the conservative 31% feature-coverage baseline for cross-snapshot compariso
 - The positive procurement E2E harness now covers requisition → approval → PO → GRN → stock movement → balance/audit reconciliation, but remains a manually dispatched workflow and has not yet run. Do not mark procure-to-stock accepted until its sanitized artifact is inspected.
 - Latest Supabase read-only audit: 47/47 public base tables have RLS; no RLS-disabled public base tables. Security Advisor still warns leaked-password protection is disabled; Performance Advisor shows 74 unused-index suggestions and no longer reports the converted-PO FK as unindexed.
 - No production/main changes. Vercel screenshot/interaction acceptance remains unverified due SSO protection; use an authorized authenticated browser session.
+
+
+---
+
+## Latest read-only staging audit — 2026-10-24 (post-v59)
+
+- Supabase project `higoadrzxnhzbbwhdbmh` reports `ACTIVE_HEALTHY`, PostgreSQL 17. Edge Function `dlice-orders` is v59 ACTIVE and `verify_jwt=false`. The guarded `erp-retire-recipe` cleanup route is deployed; it only retires an active recipe after its product is inactive and stock tracking is disabled.
+- Remote migration inventory contains 42 versions through `20261023180455_kds_pos_deferred_dispatch`; the four KDS/platform migrations and two procurement migrations are present.
+- Tenant mapping check: 154 branches, zero with null `tenant_id`, but only **one distinct tenant**. This verifies mapping completeness only; it does not test isolation between tenants.
+- Business acceptance data check: `kitchen_tickets`, `pos_idempotency_requests`, `offline_sync_receipts`, `order_stock_consumptions`, `inventory_waste_events`, and `purchase_requisitions` each contain **zero rows** at audit time. Therefore neither positive KDS/POS/stock E2E nor procurement-to-stock acceptance can be inferred from current data.
+- Read-only ACL/policy check: all inspected public base tables have RLS enabled. The 17 internal tables flagged by Security Advisor have zero direct table privileges for `anon` and `authenticated`; this is intentional server-side-only access, but must be paired with runtime authorization tests. The legacy `products` table intentionally grants client SELECT only under its “Public can read active Dlice products” policy; INSERT/UPDATE/DELETE are not granted. Because the catalog is still global rather than tenant-keyed, this remains a multi-tenant isolation limitation.
+- Security Advisor still reports 17 `rls_enabled_no_policy` INFO findings and one `auth_leaked_password_protection` WARN. No Auth configuration was changed during this audit.
+- The fixed QA fixture preflight confirmed the branch, product, recipe and both ingredient IDs exist; the product is inactive and the recipe starts in draft. The E2E harness now restores that temporary recipe activation in `finally` and records cleanup failures.
+- Workflow definitions were re-read: KDS/POS E2E allows `staging` or `feat/staging-kds-offline-tenant-20261024`; procurement E2E allows only `staging`. Both require `confirm_staging_mutations=true` and GitHub Environment `staging` credentials. The available GitHub connector has no workflow-dispatch operation, so no run or artifact is claimed.
+- Release decision: keep tenant creation/invitation at HTTP 423, keep PR #40 Draft, and do not promote to production until positive E2E artifacts, cross-tenant negative tests, browser fault injection, backup/restore, visual QA, and staged 150-branch load evidence are reviewed.

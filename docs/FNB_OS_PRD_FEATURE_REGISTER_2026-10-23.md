@@ -13,6 +13,17 @@
 ## Executive score
 **Current conservative coverage estimate: ~31.4% across 18 domains** (previous baseline was ~31.1% before the requisition slice). This is the unweighted mean of the domain-level estimates shown below, not a validated count of all PRD subfeatures. This is an engineering estimate, not a validated percentage of every PRD subfeature. This is a feature-coverage estimate from the staging traceability baseline, not percent complete and not readiness for 150 branches. The CORS runtime gate is now closed, but that infrastructure result does not complete any business workflow. No domain is certified fully complete.
 
+## Latest staging checkpoint — 2026-10-24
+- Applied the KDS/modifier/idempotency/recipe-stock migration and tenant/branch platform foundation to Supabase staging.
+- Staging Edge Function `dlice-orders` is now v56, preserving `verify_jwt=false` and the custom authorization layer.
+- Waste events now have a branch-scoped read/reconciliation endpoint that exposes the matching stock movement and audit trail.
+- Fixed POS KDS timing with a deferred trigger; added a branch-scoped sale/KDS/stock/audit reconciliation action and a manual positive E2E workflow for the core acceptance path. The workflow is prepared but not yet run.
+- Added KDS ticket dispatch/transition, idempotent POS/offline replay, opt-in recipe stock tracking, tenant memberships/invites, branch settings, warehouses, waste ledger, shift handover, integration/outbox metadata and backup/restore metadata.
+- 17 new internal tables have RLS enabled and no direct grants to `anon` or `authenticated`.
+- Composite foreign keys enforce tenant/branch consistency on branch-scoped platform records; current staging mismatch checks returned 0 for warehouses, branch settings, handovers, waste, and integration outbox.
+- **Acceptance is still PARTIAL/GATE:** no authenticated POS→payment→KDS→stock→report reconciliation, offline fault-injection E2E, cross-tenant negative suite, real restore drill, provider sandbox delivery, visual QA, or 150-branch load/recovery run. No second live tenant should be onboarded yet.
+- The overall ~31.4% estimate is intentionally unchanged until meaningful end-to-end acceptance evidence exists.
+
 ## 18-domain feature-by-feature register
 
 ### 1. Executive Command Center — baseline 20%
