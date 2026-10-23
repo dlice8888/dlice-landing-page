@@ -10,7 +10,7 @@ const track = read("track.html");
 const erp = read("erp.html");
 const branchChecklistMigration = read("supabase/migrations/20261021182634_branch_operation_checklists.sql");
 const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_transfers_and_counts.sql");
-const stockWorkflowAccessMigration = read("supabase/migrations/20261023003000_revoke_direct_client_access_stock_workflows.sql");
+const stockWorkflowAccessMigration = read("supabase/migrations/20261023003006_revoke_direct_client_access_stock_workflows.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const erpAuthorizationCoverage = () => {
