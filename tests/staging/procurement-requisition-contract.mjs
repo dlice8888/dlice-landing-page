@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const migration = await readFile("supabase/migrations/20261023170000_purchase_requisitions.sql", "utf8");
+const migration = await readFile("supabase/migrations/20261023160257_purchase_requisitions.sql", "utf8");
 const edge = await readFile("supabase/functions/dlice-orders/index.ts", "utf8");
 const ui = await readFile("erp.html", "utf8");
 const e2e = await readFile("tests/staging/procurement-receiving-positive.mjs", "utf8");
