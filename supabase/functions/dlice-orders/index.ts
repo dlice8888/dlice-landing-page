@@ -459,6 +459,7 @@ Deno.serve(async (req: Request) => {
     "erp-list-purchase-requisitions": "procurement",
     "erp-create-purchase-requisition": "procurement",
     "erp-transition-purchase-requisition": "procurement",
+    "erp-reconcile-purchase-requisition": "procurement",
     "erp-list-purchase-orders": "procurement",
     "erp-create-purchase-order": "procurement",
     "erp-update-purchase-order": "procurement",
@@ -1140,6 +1141,48 @@ Deno.serve(async (req: Request) => {
     if(error||!data)return fail("Status biaya berubah; muat ulang.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_expense_"+next,entity_type:"branch_expense",entity_id:id,metadata:{amount_idr:old.amount_idr,note}});
     return json({ok:true,expense:data},200,origin);
+  }
+
+  if (action === "erp-reconcile-purchase-requisition") {
+    if (!isOwner) return fail("Rekonsiliasi requisition hanya dapat diakses Owner.", 403, origin);
+    const id = safeText(body.id, 80);
+    if (!id) return fail("ID requisition wajib diisi.", 422, origin);
+    const { data: requisition, error: reqError } = await admin.from("purchase_requisitions")
+      .select("id,requisition_number,branch_id,status,purpose,needed_by,notes,estimated_total_idr,requested_by,approved_by,rejected_by,converted_purchase_order_id,submitted_at,approved_at,rejected_at,converted_at,created_at,updated_at")
+      .eq("id", id).maybeSingle();
+    if (reqError || !requisition) return fail("Purchase requisition tidak ditemukan.", 404, origin);
+    if (!await branchAccess(requisition.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const [lines, audit] = await Promise.all([
+      admin.from("purchase_requisition_items")
+        .select("id,requisition_id,inventory_item_id,item_name_snapshot,quantity,estimated_unit_cost_idr,estimated_line_total_idr,notes")
+        .eq("requisition_id", requisition.id).order("created_at", { ascending: true }),
+      admin.from("admin_audit_logs")
+        .select("id,action,entity_type,entity_id,metadata,created_at")
+        .eq("entity_type", "purchase_requisition").eq("entity_id", requisition.id)
+        .order("created_at", { ascending: true }),
+    ]);
+    if (lines.error || audit.error) return fail("Rekonsiliasi requisition/audit gagal dimuat.", 500, origin);
+    let purchaseOrder = null;
+    let purchaseOrderItems = [];
+    if (requisition.converted_purchase_order_id) {
+      const { data: po, error: poError } = await admin.from("purchase_orders")
+        .select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at")
+        .eq("id", requisition.converted_purchase_order_id).maybeSingle();
+      if (poError || !po) return fail("PO hasil konversi tidak ditemukan.", 409, origin);
+      const { data: poLines, error: poLinesError } = await admin.from("purchase_order_items")
+        .select("id,purchase_order_id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr")
+        .eq("purchase_order_id", po.id).order("id", { ascending: true });
+      if (poLinesError) return fail("Detail PO hasil konversi gagal dimuat.", 500, origin);
+      purchaseOrder = po;
+      purchaseOrderItems = poLines || [];
+    }
+    return json({
+      requisition,
+      items: lines.data || [],
+      purchase_order: purchaseOrder,
+      purchase_order_items: purchaseOrderItems,
+      audit_events: audit.data || [],
+    }, 200, origin);
   }
 
   if (action === "erp-list-purchase-requisitions") {
