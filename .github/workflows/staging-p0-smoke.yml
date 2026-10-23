@@ -7,11 +7,10 @@ on:
         description: "Exact Vercel Preview URL for this staging branch (never production)"
         required: true
         type: string
-        default: "https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app"
+        default: "https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app"
   push:
     branches:
-      - feat/fnb-os-staging-implementation-20261021
-      - feat/p1-stock-transfer-count-20261022
+      - staging
     paths:
       - .github/workflows/staging-p0-smoke.yml
       - erp.html
@@ -35,7 +34,7 @@ jobs:
       - name: Checkout staging test branch
         uses: actions/checkout@v4
         with:
-          ref: feat/p1-stock-transfer-count-20261022
+          ref: staging
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -47,7 +46,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser smoke tests
         env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app' }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app' }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -o pipefail
