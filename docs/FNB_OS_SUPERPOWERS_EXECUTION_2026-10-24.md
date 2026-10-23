@@ -52,7 +52,8 @@ Performance/RPO/RTO values are proposed test targets, not observed results or ag
 - Applied `kitchen_kds_idempotency_modifiers` to staging project `higoadrzxnhzbbwhdbmh` (remote migration version `20261023175347`).
 - Applied `tenant_branch_platform_foundation` to staging (remote migration version `20261023175514`).
 - Applied `tenant_branch_integrity_constraints` to staging; composite foreign keys now enforce tenant↔branch consistency for warehouses, branch settings, shift handovers, waste events, integration outbox, and branch inventory↔warehouse mapping.
-- Deployed `dlice-orders` Edge Function **v55** to staging. `verify_jwt=false` is preserved; custom per-action auth remains required.
+- Deployed `dlice-orders` Edge Function **v56** to staging. `verify_jwt=false` is preserved; custom per-action auth remains required.
+- Added `erp-list-waste-events` so waste events can be reconciled to stock movements and audit records.
 - Applied `kds_pos_deferred_dispatch` (remote migration version `20261023180455`). POS KDS dispatch now runs as a deferred constraint trigger so the ticket snapshots sale lines after the POS transaction writes items/modifiers/substitutions.
 - Added `erp-reconcile-pos-sale`, a branch-scoped reconciliation response joining sale lines, KDS ticket/items, stock movements, current balances, and audit events.
 - Added manual workflow `.github/workflows/staging-kds-pos-stock-positive-e2e.yml` and script `tests/staging/kds-pos-stock-positive.mjs`. It covers POS paid sale, same-key replay, changed-payload rejection, offline replay after commit, KDS lifecycle, exact recipe stock consumption, report presence, reconciliation and QA fixture cleanup. **It has not been dispatched yet** because it requires an explicit manual staging-mutation confirmation and environment credentials.
