@@ -5,7 +5,7 @@
 
 ## Latest staging deployment checkpoint — 2026-10-24
 - Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
-- Edge Function `dlice-orders`: v56 ACTIVE, `verify_jwt=false` unchanged.
+- Edge Function `dlice-orders`: **v58 ACTIVE**, `verify_jwt=false` unchanged. v58 adds active tenant-membership checks to legacy branch authorization helpers and keeps tenant creation/invitation fail-closed with HTTP 423.
 - Added branch-scoped waste-event reconciliation to inspect event, stock movement and audit linkage.
 - Applied deferred POS→KDS dispatch trigger and verified it is `DEFERRABLE INITIALLY DEFERRED`; this prevents a ticket from being created before POS sale items exist.
 - Added branch-scoped `erp-reconcile-pos-sale` and a manual positive E2E workflow for POS payment/idempotency/offline replay/KDS/recipe stock/report reconciliation. Workflow remains **not run**.
@@ -21,9 +21,9 @@ These are evidence-based engineering estimates of PRD feature coverage, not the 
 Status: **Partial** = some implementation exists; **Gate** = blocked by runtime, integration, or acceptance evidence; **Not implemented** = no sufficient implementation evidence found; **Unverified** = needs a real browser/fixture test.
 
 ## Executive summary
-- Supabase staging is `ACTIVE_HEALTHY` (PostgreSQL 17), with 38 recorded migrations through `20261023003006_revoke_direct_client_access_stock_workflows`.
-- 45 public tables have RLS enabled. Several operational tables have no real business rows yet, so schema presence is not proof of complete workflows.
-- Edge Function `dlice-orders` is ACTIVE v50 and has `verify_jwt=false`; the function implements custom per-action authentication/authorization, but public endpoint hardening still depends on the runtime CORS gate. Current deployed source still has a temporary project-ID-guarded staging origin fallback. PR #32 removes that fallback but remains Draft and is not deployed.
+- Supabase staging is `ACTIVE_HEALTHY` (PostgreSQL 17) at the latest verified checkpoint; migration inventory and schema counts should be refreshed before any production release.
+- 17 new KDS/platform tables have RLS enabled and no direct grants to `anon`/`authenticated`; this is an intentional server-side-only boundary, not proof of cross-tenant API isolation.
+- Edge Function `dlice-orders` is ACTIVE **v58** and has `verify_jwt=false`; protected actions use custom per-action authentication/authorization. Runtime CORS probes passed after v58 deployment. Tenant creation/invitation remain fail-closed until cross-tenant negative tests pass.
 - PR #31 is Draft. Its reported acceptance suite is 21 PASS / 0 FAIL for role/scope and negative probes only. It explicitly does not establish positive-path business E2E.
 - Vercel Preview build for commit `576d0781281ea826d19824990cd1668190d1ab46` is READY. This does not deploy Supabase functions.
 - Security Advisor: leaked-password protection disabled. Performance Advisor: 69 unused-index findings; do not bulk-drop them.
