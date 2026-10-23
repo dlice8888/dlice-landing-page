@@ -327,6 +327,10 @@ async function main() {
   assert.equal(wasteReplay.waste_id, waste.waste_id);
   assert.equal(wasteReplay.replayed, true);
   await expectStatus("erp-record-waste", { ...wastePayload, quantity: 2 }, ownerToken, 409);
+  const wasteLedger = await call("erp-list-waste-events", { branch_id: branchId }, ownerToken);
+  assert.ok((wasteLedger.events || []).some((event) => event.id === waste.waste_id && Number(event.quantity) === 1));
+  assert.ok((wasteLedger.stock_movements || []).some((movement) => movement.reference_id === waste.waste_id && movement.movement_type === "waste" && Number(movement.quantity) === 1));
+  assert.ok((wasteLedger.audit_events || []).some((event) => event.entity_id === waste.waste_id && event.action === "inventory_waste_posted"));
   const afterWasteInventory = await call("erp-list-inventory", { branch_id: branchId }, managerToken);
   assert.equal(Number((afterFlour - balanceOf(afterWasteInventory, flourId)).toFixed(3)), 1, "Waste must deduct exactly one additional gram");
   assert.equal(Number((afterSecond - balanceOf(afterWasteInventory, secondIngredientId)).toFixed(3)), 0, "Waste must not alter the unrelated ingredient");
