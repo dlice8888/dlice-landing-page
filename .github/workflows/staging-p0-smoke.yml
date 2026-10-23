@@ -1,0 +1,57 @@
+name: Staging browser smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact Vercel Preview URL for this staging branch (never production)"
+        required: true
+        type: string
+        default: "https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app"
+  push:
+    branches:
+      - feat/fnb-os-staging-implementation-20261021
+    paths:
+      - .github/workflows/staging-p0-smoke.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-p0-smoke
+  cancel-in-progress: true
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: Checkout staging test branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/fnb-os-staging-implementation-20261021
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Run desktop and mobile browser smoke tests
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app' }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          set -o pipefail
+          node tests/staging/browser-smoke.mjs 2>&1 | tee browser-smoke-results.log
+      - name: Upload browser result log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-browser-smoke-results
+          path: browser-smoke-results.log
+          if-no-files-found: ignore
+          retention-days: 14

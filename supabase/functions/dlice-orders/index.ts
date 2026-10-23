@@ -8,19 +8,24 @@ const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"
 const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
 const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
-const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const configuredOrigins = new Set(
   (Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "")
     .split(",")
     .map((value) => value.trim())
     .filter((value) => /^https:\/\/[a-z0-9.-]+(?::\d+)?$/.test(value)),
 );
+// One exact, temporary staging Preview origin is allowed only on this staging project.
+// Keep production fail-closed and never use hostname prefixes/suffixes or wildcard matching.
+if ((SUPABASE_URL ?? "").includes("higoadrzxnhzbbwhdbmh.supabase.co")) {
+  configuredOrigins.add("https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app");
+}
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
-  return allowedOrigins.has(origin) || configuredOrigins.has(origin);
+  return configuredOrigins.has(origin);
 };
 const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "https://dlice.vercel.app",
+  // Never emit a fallback ACAO header for a missing or denied origin.
+  ...(origin && isAllowedOrigin(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
@@ -40,6 +45,7 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const todayDate = () => new Date().toISOString().slice(0, 10);
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -64,7 +70,7 @@ const getAdmin = async (req: Request) => {
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
   if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
-  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active");
+  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
   const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
   // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
@@ -394,19 +400,19 @@ Deno.serve(async (req: Request) => {
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!branchId) return false;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const actorBranchIds = async (): Promise<string[]> => {
     if (actor.profile.role === "owner") return [];
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!actor.profile.permissions.includes(permission)) return false;
-    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
   };
 
@@ -422,17 +428,30 @@ Deno.serve(async (req: Request) => {
     "admin-list-staff": "staff",
     "admin-create-staff": "staff",
     "admin-set-permissions": "staff",
+    "admin-set-active": "staff",
+    "admin-reset-staff-password": "staff",
     "admin-payment-settings": "settings",
     "admin-save-payment-settings": "settings",
     "admin-upload-qris": "settings",
     "admin-mark-notification-sent": "orders",
     "admin-retry-payment-notification": "orders",
     "erp-overview": "reports",
+    "erp-list-branch-checklists": "branches",
+    "erp-start-branch-checklist": "branches",
+    "erp-update-branch-checklist-item": "branches",
+    "erp-complete-branch-checklist": "branches",
     "erp-save-branch": "branches",
     "erp-save-assignment": "staff",
     "erp-list-inventory": "inventory",
     "erp-save-inventory": "inventory",
     "erp-stock-movement": "inventory",
+    "erp-list-stock-transfers": "inventory",
+    "erp-create-stock-transfer": "inventory",
+    "erp-transition-stock-transfer": "inventory",
+    "erp-list-stock-counts": "inventory",
+    "erp-create-stock-count": "inventory",
+    "erp-update-stock-count-item": "inventory",
+    "erp-post-stock-count": "inventory",
     "erp-list-shifts": "pos",
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
@@ -491,7 +510,7 @@ Deno.serve(async (req: Request) => {
     if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 12 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
-    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
+    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "sales_admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
     if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail(profileError.code === "23505" ? "Username sudah digunakan." : "Profil admin gagal dibuat.", 500, origin); }
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "create_admin_account", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username, permissions: [...new Set(permissions)] } });
     return json({ ok: true, username }, 201, origin);
@@ -510,6 +529,36 @@ Deno.serve(async (req: Request) => {
     if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
     return json({ ok: true }, 200, origin);
+  }
+
+
+  if (action === "admin-set-active") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const isActive = body.is_active;
+    if (!userId || typeof isActive !== "boolean") return fail("Akun dan status aktif wajib ditentukan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Status akun Pemilik tidak dapat diubah melalui aksi ini.", 409, origin);
+    const { data: updated, error } = await admin.from("admin_profiles").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("user_id", userId).select("user_id,is_active").single();
+    if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
+    return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
+  }
+
+
+  if (action === "admin-reset-staff-password") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!userId || password.length < 12 || password.length > 128) return fail("Akun dan kata sandi 12–128 karakter wajib diberikan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
+    const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
+    if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
+    return json({ ok: true, user_id: userId }, 200, origin);
   }
 
   if (action === "admin-list-orders") {
@@ -637,12 +686,12 @@ Deno.serve(async (req: Request) => {
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const branchAccess = async (branchId: string): Promise<boolean> => {
     if (isOwner) return true;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const branchIdsForActor = async (): Promise<string[] | null> => {
     if (isOwner) return null;
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: {branch_id:string}) => x.branch_id))];
   };
@@ -668,6 +717,145 @@ Deno.serve(async (req: Request) => {
     ]);
     const todaySales=(sales.data||[]).reduce((n: number,x: {total_idr:number})=>n+Number(x.total_idr||0),0);
     return json({branches:branches.count||0,planned_branches:planned.count||0,active_branches:active.count||0,inventory_items:inventory.count||0,open_shifts:shifts.count||0,today_sales_idr:todaySales,pending_expenses:expenses.count||0,open_purchase_orders:purchaseOrders.count||0},200,origin);
+  }
+
+  const branchChecklistTemplates: Record<string, { key: string; label: string; critical: boolean }[]> = {
+    opening: [
+      { key: "cleanliness", label: "Area layanan dan produksi bersih", critical: true },
+      { key: "equipment", label: "Peralatan utama aman dan berfungsi", critical: true },
+      { key: "cold_storage", label: "Suhu penyimpanan dingin diperiksa dan sesuai SOP", critical: true },
+      { key: "stock_critical", label: "Bahan kritis tersedia dan belum kedaluwarsa", critical: true },
+      { key: "cash_drawer", label: "Kas awal dihitung dan dicatat", critical: false },
+      { key: "staff_ready", label: "Kehadiran dan kesiapan staf dikonfirmasi", critical: false },
+      { key: "production_station", label: "Stasiun produksi dan alat sanitasi siap", critical: true },
+    ],
+    closing: [
+      { key: "cash_reconciliation", label: "Kasir dan selisih kas direkonsiliasi", critical: true },
+      { key: "waste", label: "Waste, produk rusak, dan bahan terbuang dicatat", critical: true },
+      { key: "stock_secure", label: "Stok disimpan aman dan bahan kedaluwarsa dipisahkan", critical: true },
+      { key: "equipment_off", label: "Peralatan dimatikan sesuai SOP", critical: true },
+      { key: "cleaning", label: "Pembersihan dan sanitasi akhir selesai", critical: true },
+      { key: "incidents", label: "Insiden dan tindak lanjut dicatat", critical: false },
+      { key: "premises_secure", label: "Pintu, penyimpanan, dan area kerja diamankan", critical: true },
+    ],
+  };
+
+  const checklistContext = async (branchId: string) => {
+    if (!branchId) return { error: fail("Cabang wajib dipilih.", 422, origin) };
+    if (!await branchAccess(branchId)) return { error: fail("Akses cabang tidak diizinkan.", 403, origin) };
+    const { data: branch, error } = await admin.from("branches").select("id,status,timezone").eq("id", branchId).maybeSingle();
+    if (error) return { error: fail("Cabang gagal dimuat.", 500, origin) };
+    if (!branch) return { error: fail("Cabang tidak ditemukan.", 404, origin) };
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: branch.timezone || "Asia/Jakarta",
+      year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date());
+    const part = (name: string) => parts.find((p) => p.type === name)?.value || "";
+    return { branch, businessDate: `${part("year")}-${part("month")}-${part("day")}` };
+  };
+
+  if (action === "erp-list-branch-checklists") {
+    const branchId = safeText(body.branch_id, 80);
+    const context = await checklistContext(branchId);
+    if ("error" in context) return context.error;
+    const { data, error } = await admin.from("branch_operation_checklist_runs")
+      .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
+      .eq("branch_id", branchId).eq("business_date", context.businessDate)
+      .order("checklist_type");
+    if (error) return fail("Checklist cabang gagal dimuat.", 500, origin);
+    return json({ business_date: context.businessDate, timezone: context.branch.timezone, branch_status: context.branch.status, runs: data || [], templates: Object.keys(branchChecklistTemplates) }, 200, origin);
+  }
+
+  if (action === "erp-start-branch-checklist") {
+    const branchId = safeText(body.branch_id, 80);
+    const checklistType = safeText(body.checklist_type, 20);
+    if (!Object.prototype.hasOwnProperty.call(branchChecklistTemplates, checklistType)) return fail("Jenis checklist tidak valid.", 422, origin);
+    const context = await checklistContext(branchId);
+    if ("error" in context) return context.error;
+    if (context.branch.status !== "active") return fail("Checklist operasional hanya dapat dimulai pada cabang berstatus aktif.", 409, origin);
+    const { data: existing, error: existingError } = await admin.from("branch_operation_checklist_runs")
+      .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
+      .eq("branch_id", branchId).eq("business_date", context.businessDate).eq("checklist_type", checklistType).maybeSingle();
+    if (existingError) return fail("Status checklist gagal diperiksa.", 500, origin);
+    if (existing) return json({ run: existing, existing: true }, 200, origin);
+    const items = branchChecklistTemplates[checklistType].map((item) => ({
+      ...item, status: "pending", notes: "", checked_by: null, checked_at: null,
+    }));
+    const { data: run, error } = await admin.from("branch_operation_checklist_runs").insert({
+      branch_id: branchId, business_date: context.businessDate, checklist_type: checklistType,
+      template_version: 1, items, status: "in_progress", started_by: actor.user.id,
+    }).select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at").single();
+    if (error) {
+      if (error.code === "23505") {
+        const { data: raced } = await admin.from("branch_operation_checklist_runs")
+          .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
+          .eq("branch_id", branchId).eq("business_date", context.businessDate).eq("checklist_type", checklistType).maybeSingle();
+        if (raced) return json({ run: raced, existing: true }, 200, origin);
+      }
+      return fail("Checklist gagal dimulai.", 500, origin);
+    }
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_started", entity_type: "branch_operation_checklist_run", entity_id: run.id, metadata: { branch_id: branchId, checklist_type: checklistType, business_date: context.businessDate } });
+    return json({ run, existing: false }, 201, origin);
+  }
+
+  if (action === "erp-update-branch-checklist-item") {
+    const runId = safeText(body.run_id, 80);
+    const itemKey = safeText(body.item_key, 80);
+    const itemStatus = safeText(body.item_status, 20);
+    const itemNotes = safeText(body.notes, 500);
+    if (!runId || !itemKey || !["passed", "failed", "skipped"].includes(itemStatus)) return fail("Data item checklist tidak valid.", 422, origin);
+    if (itemStatus === "failed" && itemNotes.length < 3) return fail("Catatan wajib diisi untuk item yang gagal.", 422, origin);
+    const { data: run, error } = await admin.from("branch_operation_checklist_runs")
+      .select("id,branch_id,business_date,checklist_type,items,status,version")
+      .eq("id", runId).maybeSingle();
+    if (error) return fail("Checklist gagal dimuat.", 500, origin);
+    if (!run) return fail("Checklist tidak ditemukan.", 404, origin);
+    if (!await branchAccess(run.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (run.status === "completed") return fail("Checklist yang sudah selesai tidak dapat diubah.", 409, origin);
+    const items = Array.isArray(run.items) ? run.items as { key: string; status: string; critical: boolean; notes?: string; checked_by?: string | null; checked_at?: string | null }[] : [];
+    if (!items.some((item) => item.key === itemKey)) return fail("Item checklist tidak ditemukan.", 404, origin);
+    const now = new Date().toISOString();
+    const updatedItems = items.map((item) => item.key === itemKey ? { ...item, status: itemStatus, notes: itemNotes, checked_by: actor.user.id, checked_at: now } : item);
+    const { data: updated, error: updateError } = await admin.from("branch_operation_checklist_runs")
+      .update({ items: updatedItems, version: Number(run.version || 1) + 1, updated_at: now })
+      .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
+    if (updateError) return fail("Item checklist gagal disimpan.", 500, origin);
+    if (!updated) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_item_updated", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { checklist_type: run.checklist_type, business_date: run.business_date, item_key: itemKey, item_status: itemStatus } });
+    return json({ ok: true, version: updated.version }, 200, origin);
+  }
+
+  if (action === "erp-complete-branch-checklist") {
+    const runId = safeText(body.run_id, 80);
+    if (!runId) return fail("Checklist wajib dipilih.", 422, origin);
+    const { data: run, error } = await admin.from("branch_operation_checklist_runs")
+      .select("id,branch_id,business_date,checklist_type,items,status,version")
+      .eq("id", runId).maybeSingle();
+    if (error) return fail("Checklist gagal dimuat.", 500, origin);
+    if (!run) return fail("Checklist tidak ditemukan.", 404, origin);
+    if (!await branchAccess(run.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (run.status === "completed") return json({ ok: true, status: "completed" }, 200, origin);
+    const items = Array.isArray(run.items) ? run.items as { key: string; label: string; status: string; critical: boolean; notes?: string }[] : [];
+    if (!items.length || items.some((item) => item.status === "pending")) return fail("Semua item harus diperiksa sebelum checklist diselesaikan.", 422, origin);
+    if (items.some((item) => item.status === "failed" && !(item.notes || "").trim())) return fail("Item gagal wajib memiliki catatan.", 422, origin);
+    const criticalFailures = items.filter((item) => item.critical && item.status !== "passed");
+    const now = new Date().toISOString();
+    if (criticalFailures.length) {
+      const { data: blocked, error: blockError } = await admin.from("branch_operation_checklist_runs")
+        .update({ status: "blocked", version: Number(run.version || 1) + 1, updated_at: now })
+        .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
+      if (blockError) return fail("Status checklist gagal diperbarui.", 500, origin);
+      if (!blocked) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
+      await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_blocked", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { checklist_type: run.checklist_type, business_date: run.business_date, failed_critical_items: criticalFailures.map((item) => item.key) } });
+      return fail("Checklist tertahan: semua item kritis harus berstatus lulus.", 409, origin);
+    }
+    const { data: completed, error: completeError } = await admin.from("branch_operation_checklist_runs")
+      .update({ status: "completed", completed_by: actor.user.id, completed_at: now, version: Number(run.version || 1) + 1, updated_at: now })
+      .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
+    if (completeError) return fail("Checklist gagal diselesaikan.", 500, origin);
+    if (!completed) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_completed", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { branch_id: run.branch_id, checklist_type: run.checklist_type, business_date: run.business_date } });
+    return json({ ok: true, status: "completed", completed_at: now }, 200, origin);
   }
 
   if (action === "erp-list-branches") {
@@ -749,6 +937,114 @@ Deno.serve(async (req: Request) => {
     const {data,error}=await admin.rpc("erp_record_stock_movement",{p_branch_id:branchId,p_inventory_item_id:itemId,p_movement_type:type,p_quantity:qty,p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id});
     if(error)return fail(error.message.includes("insufficient_stock")?"Stok tidak mencukupi.":error.message.includes("branch_not_active")?"Cabang belum aktif.":"Pergerakan stok gagal dicatat.",409,origin);
     return json(data,200,origin);
+  }
+
+
+  if (action === "erp-list-stock-transfers") {
+    const ids = await branchIdsForActor().catch(() => []);
+    const selectedBranch = safeText(body.branch_id, 80);
+    if (selectedBranch && !await branchAccess(selectedBranch)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    let sourceQuery = admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,requested_by,shipped_by,received_by,shipped_at,received_at,created_at,updated_at,source_branch:branches!stock_transfers_source_branch_id_fkey(code,name),destination_branch:branches!stock_transfers_destination_branch_id_fkey(code,name),stock_transfer_items(inventory_item_id,quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(250);
+    let destinationQuery = admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status,notes,requested_by,shipped_by,received_by,shipped_at,received_at,created_at,updated_at,source_branch:branches!stock_transfers_source_branch_id_fkey(code,name),destination_branch:branches!stock_transfers_destination_branch_id_fkey(code,name),stock_transfer_items(inventory_item_id,quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(250);
+    if (selectedBranch) { sourceQuery = sourceQuery.eq("source_branch_id", selectedBranch); destinationQuery = destinationQuery.eq("destination_branch_id", selectedBranch); }
+    else if (!isOwner) {
+      if (!ids?.length) return json({ transfers: [] }, 200, origin);
+      sourceQuery = sourceQuery.in("source_branch_id", ids);
+      destinationQuery = destinationQuery.in("destination_branch_id", ids);
+    }
+    const [source, destination] = await Promise.all([sourceQuery, destinationQuery]);
+    if (source.error || destination.error) return fail("Daftar transfer stok gagal dimuat.", 500, origin);
+    const unique = new Map<string, any>();
+    for (const row of [...(source.data || []), ...(destination.data || [])]) unique.set(row.id, row);
+    const transfers = [...unique.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 250);
+    return json({ transfers }, 200, origin);
+  }
+
+  if (action === "erp-create-stock-transfer") {
+    const sourceBranchId = safeText(body.source_branch_id, 80), destinationBranchId = safeText(body.destination_branch_id, 80);
+    const itemId = safeText(body.inventory_item_id, 80), quantity = Number(body.quantity);
+    if (!await branchAccess(sourceBranchId) || !await branchAccess(destinationBranchId)) return fail("Akses ke cabang asal dan tujuan wajib diberikan.", 403, origin);
+    if (!itemId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 100000000 || sourceBranchId === destinationBranchId) return fail("Cabang tujuan, item, dan jumlah transfer harus valid.", 422, origin);
+    const idempotencyKey = safeText(body.idempotency_key, 160);
+    if (idempotencyKey.length < 8) return fail("Kunci idempotensi transfer tidak valid.", 422, origin);
+    const transferNumber = safeText(body.transfer_number, 60) || "TRF-" + new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14) + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const { data, error } = await admin.rpc("erp_create_stock_transfer", {
+      p_transfer_number: transferNumber, p_source_branch_id: sourceBranchId, p_destination_branch_id: destinationBranchId,
+      p_items: [{ inventory_item_id: itemId, quantity }], p_actor_user_id: actor.user.id,
+      p_idempotency_key: idempotencyKey, p_notes: safeText(body.notes, 500) || null,
+    });
+    if (error) return fail(error.message.includes("inactive_or_missing_branch") ? "Cabang asal dan tujuan harus aktif." : error.message.includes("idempotency_key_payload_mismatch") ? "Kunci idempotensi telah digunakan untuk data berbeda." : "Transfer stok gagal dibuat.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_transfer_created", entity_type: "stock_transfer", entity_id: data?.id, metadata: { source_branch_id: sourceBranchId, destination_branch_id: destinationBranchId, item_id: itemId, quantity } });
+    return json({ ok: true, transfer: data }, 201, origin);
+  }
+
+  if (action === "erp-transition-stock-transfer") {
+    const transferId = safeText(body.transfer_id, 80), transition = safeText(body.transition, 20);
+    if (!transferId || !["approve", "pick", "ship", "receive", "reconcile", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
+    const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
+    if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
+    if (transition === "approve" && !await hasHQPermission("inventory")) return fail("Persetujuan transfer memerlukan izin Inventory Head Office.", 403, origin);
+    const branchToCheck = ["receive", "reconcile"].includes(transition) ? transfer.destination_branch_id : transfer.source_branch_id;
+    if (transition !== "approve" && !await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
+    if (transition === "cancel" && !["draft", "approved", "picked"].includes(transfer.status)) return fail("Transfer hanya dapat dibatalkan sebelum dikirim.", 409, origin);
+    const expectedStatus: Record<string, string> = { approve: "draft", pick: "approved", ship: "picked", receive: "shipped", reconcile: "received" };
+    if (expectedStatus[transition] && transfer.status !== expectedStatus[transition] && transfer.status !== ({approve:"approved",pick:"picked",ship:"shipped",receive:"received",reconcile:"reconciled"} as Record<string,string>)[transition]) return fail("Tahap transfer belum sesuai. Muat ulang status terbaru.", 409, origin);
+    const { data, error } = await admin.rpc("erp_transition_stock_transfer", { p_transfer_id: transferId, p_actor_user_id: actor.user.id, p_transition: transition });
+    if (error) return fail(error.message.includes("insufficient_stock_for_transfer") ? "Stok cabang asal tidak mencukupi." : error.message.includes("stock_transfer_ledger_incomplete") ? "Ledger transfer belum lengkap; rekonsiliasi ditahan." : "Status transfer gagal diperbarui.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_transfer_" + transition, entity_type: "stock_transfer", entity_id: transferId, metadata: { transfer_number: transfer.transfer_number, source_branch_id: transfer.source_branch_id, destination_branch_id: transfer.destination_branch_id } });
+    return json({ ok: true, result: data }, 200, origin);
+  }
+
+  if (action === "erp-list-stock-counts") {
+    const ids = await branchIdsForActor().catch(() => []);
+    const selectedBranch = safeText(body.branch_id, 80);
+    if (selectedBranch && !await branchAccess(selectedBranch)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    let query = admin.from("stock_counts").select("id,count_number,branch_id,status,notes,counted_by,posted_by,posted_at,created_at,updated_at,branches(code,name),stock_count_items(id,inventory_item_id,expected_quantity,counted_quantity,inventory_items(sku,name,unit))").order("created_at", { ascending: false }).limit(200);
+    if (selectedBranch) query = query.eq("branch_id", selectedBranch);
+    else if (!isOwner) query = ids?.length ? query.in("branch_id", ids) : query.eq("branch_id", "00000000-0000-0000-0000-000000000000");
+    const { data, error } = await query;
+    if (error) return fail("Daftar stock opname gagal dimuat.", 500, origin);
+    return json({ counts: data || [] }, 200, origin);
+  }
+
+  if (action === "erp-create-stock-count") {
+    const branchId = safeText(body.branch_id, 80), items = body.items;
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!Array.isArray(items) || items.length < 1 || items.length > 1000) return fail("Pilih item untuk stock opname.", 422, origin);
+    const cleanItems = items.map((item: any) => ({ inventory_item_id: safeText(item?.inventory_item_id, 80) }));
+    if (cleanItems.some((item: any) => !item.inventory_item_id) || new Set(cleanItems.map((item: any) => item.inventory_item_id)).size !== cleanItems.length) return fail("Item opname tidak valid atau duplikat.", 422, origin);
+    const idempotencyKey = safeText(body.idempotency_key, 160);
+    if (idempotencyKey.length < 8) return fail("Kunci idempotensi opname tidak valid.", 422, origin);
+    const countNumber = safeText(body.count_number, 60) || "CNT-" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
+    const { data, error } = await admin.rpc("erp_create_stock_count", { p_count_number: countNumber, p_branch_id: branchId, p_items: cleanItems, p_actor_user_id: actor.user.id, p_idempotency_key: idempotencyKey, p_notes: safeText(body.notes, 500) || null });
+    if (error) return fail(error.message.includes("inactive_or_missing_branch") ? "Stock opname hanya dapat dimulai pada cabang aktif." : "Stock opname gagal dibuat.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_created", entity_type: "stock_count", entity_id: data?.id, metadata: { branch_id: branchId, item_count: cleanItems.length } });
+    return json({ ok: true, count: data }, 201, origin);
+  }
+
+  if (action === "erp-update-stock-count-item") {
+    const countId = safeText(body.count_id, 80), itemId = safeText(body.item_id, 80), quantity = Number(body.counted_quantity);
+    if (!countId || !itemId || !Number.isFinite(quantity) || quantity < 0 || quantity > 100000000) return fail("Jumlah hasil hitung tidak valid.", 422, origin);
+    const { data: count } = await admin.from("stock_counts").select("id,branch_id,status").eq("id", countId).maybeSingle();
+    if (!count) return fail("Stock opname tidak ditemukan.", 404, origin);
+    if (!await branchAccess(count.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (count.status !== "draft") return fail("Stock opname yang sudah diposting tidak dapat diubah.", 409, origin);
+    const { data, error } = await admin.rpc("erp_update_stock_count_item", { p_count_id: countId, p_item_id: itemId, p_counted_quantity: quantity });
+    if (error || data !== true) return fail("Jumlah hasil hitung gagal disimpan.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_item_updated", entity_type: "stock_count", entity_id: countId, metadata: { item_id: itemId, counted_quantity: quantity } });
+    return json({ ok: true }, 200, origin);
+  }
+
+  if (action === "erp-post-stock-count") {
+    const countId = safeText(body.count_id, 80);
+    const { data: count } = await admin.from("stock_counts").select("id,branch_id,status").eq("id", countId).maybeSingle();
+    if (!count) return fail("Stock opname tidak ditemukan.", 404, origin);
+    if (!await branchAccess(count.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (count.status !== "draft") return fail("Stock opname sudah diposting atau tidak lagi berstatus draft.", 409, origin);
+    const { data, error } = await admin.rpc("erp_post_stock_count", { p_count_id: countId, p_actor_user_id: actor.user.id });
+    if (error) return fail(error.message.includes("stock_count_items_incomplete") ? "Isi semua jumlah aktual sebelum posting opname." : "Posting stock opname gagal.", 409, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "stock_count_posted", entity_type: "stock_count", entity_id: countId, metadata: { branch_id: count.branch_id } });
+    return json({ ok: true, result: data }, 200, origin);
   }
 
   if (action === "erp-list-shifts") {

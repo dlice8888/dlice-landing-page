@@ -1,0 +1,169 @@
+# P0 and Cross-Module Acceptance Protocol — Staging Only
+Date: 2026-10-21
+Environment: Supabase staging project `higoadrzxnhzbbwhdbmh`, Vercel Preview only.
+Related audit: `docs/2026-10-21-fnb-os-staging-capability-audit.md`.
+Do not run against production. Use synthetic fixtures only; do not create real customer orders.
+
+## Live baseline verified
+- 39 public tables and 15 public functions are present in staging.
+- Key ERP tables inspected (orders, order_items, payment_records, POS, inventory, recipe/production, purchasing, journals, admin_profiles, branch_assignments) all have RLS enabled and one policy. For internal ERP tables, that policy is the restrictive `deny_direct_client_access`; `FORCE ROW LEVEL SECURITY` is false. This is acceptable only if the client has no direct table grants and all access routes through the audited Edge Function/service-role layer.
+- Planned branch slots are not active test branches: first 10 inspected are `planned`, `accepts_online_orders=false`. Do not treat the 150 planned slots as live operational branches.
+- Current CORS OPTIONS/POST and authenticated role-negative cases have not been executed in this audit session because there are no disposable test identities/tokens supplied in the connected context. Do not mark these tests passed from schema inspection.
+- No production changes performed.
+
+## Test identity matrix (create only in staging)
+Prepare unique disposable identities:
+1. Owner
+2. Branch A manager with active assignment to A
+3. Branch B manager with active assignment to B
+4. Cashier A with POS permission only
+5. Staff A with explicit empty/insufficient permission array
+6. Inactive staff profile
+7. Unauthenticated caller
+Use separate identities for requester and approver to test separation of duties. Record IDs, branch IDs, timestamp, HTTP status, response body with secrets redacted, and before/after row counts.
+
+## P0 negative-access gate
+| Test | Action | Expected | Evidence |
+|---|---|---|---|
+| P0-AUTH-01 | Call each admin/ERP action without bearer token | 401; no write | Request/response + row-count diff |
+| P0-AUTH-02 | Expired/invalid token | 401; no write | Request/response + row-count diff |
+| P0-AUTH-03 | Inactive profile | 401; no write | Request/response + row-count diff |
+| P0-AUTH-04 | Valid staff, missing action permission | 403; no write | Request/response + row-count diff |
+| P0-AUTH-05 | Branch A identity requests Branch B order/proof/refund/shift/inventory/capacity | 403 or empty scoped result; no write | Request/response + row-count diff |
+| P0-AUTH-06 | Permission but no active branch assignment | no branch data; writes denied | Request/response + row-count diff |
+| P0-AUTH-07 | Branch staff attempts global catalog/recipe/inventory master write | 403 | Request/response + row-count diff |
+| P0-AUTH-08 | Refund requester attempts to approve/process own refund | 403 | Request/response + refund state |
+| P0-RLS-01 | Use anon/authenticated Data API key to SELECT/INSERT/UPDATE/DELETE internal ERP tables | denied/no rows changed | HTTP responses + row-count diff |
+| P0-AUTH-09 | Owner uses authorized global action | allowed only after validation | request/response + audit row |
+
+**Important:** SQL executed through the privileged database connector is not evidence that anonymous/authenticated API access is denied. P0-RLS-01 must use the public Data API with an anon key and, separately, a normal authenticated user's access token. Never use service-role keys in client tests.
+
+## CORS acceptance gate
+Run from a client or runner outside the Supabase connector. Use the actual current Preview origin from the Vercel deployment metadata and the configured stable branch alias. Do not hardcode an old per-deployment URL as permanent configuration.
+
+For each origin:
+- Allowed origin OPTIONS request must return 2xx and exact `Access-Control-Allow-Origin` equal to the request origin.
+- Allowed origin POST without bearer token must return 401, not a CORS denial, and must not mutate data.
+- Deliberately unlisted HTTPS origin OPTIONS and POST must return 403.
+- Unlisted origin must never receive its own value in `Access-Control-Allow-Origin`.
+- `Access-Control-Allow-Origin: *` is forbidden.
+Record response status and CORS headers. Do not mark complete based on source inspection alone.
+
+## Timezone/cutoff acceptance gate
+The database checkout RPC derives local date/time from each active branch timezone. Use active staging fixtures only and inject or safely control a deterministic clock in the test harness; do not wait for actual local 17:59/18:00 unless a controlled clock is unavailable.
+- Asia/Jakarta, Asia/Makassar, Asia/Jayapura: same-day checkout before 18:00 local is allowed only if branch/product capacity and all other checks pass.
+- At exactly 18:00 local and after, same-day checkout returns `same_day_cutoff_passed`.
+- Previous branch-local date returns `date_in_past`.
+- Order stores the expected branch timezone and transaction code date matches that timezone.
+- Failed checkout leaves no order, order_items, or reservations behind.
+- Concurrent checkouts cannot exceed branch/product capacity.
+- Test pickup/delivery restrictions and delivery address validation.
+If the clock cannot be controlled safely, mark the exact boundary test BLOCKED rather than using a guessed result.
+
+## Workflow 1 — Order-to-Cash
+1. Create synthetic order with known branch, items, expected prices and idempotency/correlation key.
+2. Verify order creation alone leaves payment as unpaid/pending; never infer payment from order existence.
+3. Apply a valid staging payment confirmation via the supported action; reject forged/invalid payment proof.
+4. Verify branch assignment and fulfillment state transitions, with an audit/status-history entry for each transition.
+5. Process the order into kitchen/fulfillment.
+6. Apply stock consumption only at the configured consumption point and exactly once; retry the same event and confirm no duplicate movement.
+7. Verify revenue/payment/settlement/journal entries use the correct branch, business date and amount.
+8. Compare order total, verified payment, refund balance, stock movements and journal totals. Cleanup synthetic fixtures using reviewed cleanup tooling.
+Pass only when all totals reconcile and duplicate processing has no additional effect.
+
+## Workflow 2 — Procure-to-Pay
+1. Create a synthetic supplier and PR/PO for a known quantity and unit cost.
+2. Submit and approve with separate identities; requester cannot approve their own request.
+3. Receive part of the PO, verify GRN quantity and stock movement once.
+4. Retry the same receipt request/correlation key; inventory must not increment again.
+5. Receive remaining quantity and verify ordered, received and outstanding amounts.
+6. Match supplier invoice to PO + accepted receipt; block quantity/price variance outside configured tolerance.
+7. Verify AP and journal entries after approval/payment; reconcile stock ledger, receipt lines and finance entries.
+Pass only when PO, GRN, stock and finance totals reconcile.
+
+## Workflow 3 — Forecast-to-Production
+1. Create synthetic forecast/demand for a branch and service date.
+2. Select the effective recipe/BOM version and calculate ingredient requirement using explicit units/yield.
+3. Compare requirement with available, reserved, expired/blocked and on-hand stock.
+4. Block or create a replenishment/transfer task for shortages; do not silently permit negative stock.
+5. Create a batch, record actual good output, ingredient consumption and waste.
+6. Retry completion; it must not duplicate output or ingredient consumption.
+7. Verify finished quantity, waste, inventory ledger, batch record and food-cost calculation.
+Pass only when theoretical versus actual variance is visible and traceable.
+
+## Workflow 4 — Record-to-Report
+1. Create synthetic POS sale, payment, purchase receipt, operating expense and (if supported) refund records.
+2. Verify every journal source is linked to the originating business record and branch.
+3. Validate debits equal credits for each journal entry; reject zero/negative/invalid entries and closed-period postings.
+4. Reconcile cash drawer, verified payments, settlement, receipts, stock and expense totals.
+5. Close a disposable test fiscal period; confirm subsequent posting is blocked or requires an audited adjustment period.
+6. Produce branch-level totals and compare to source ledgers; do not claim group consolidation until tenant/company dimensions are proven.
+Pass only when source-to-ledger totals reconcile and closed periods cannot be silently changed.
+
+## Evidence template
+For each test record:
+- Test ID and build commit
+- Staging project ID and Preview URL
+- Fixture identifiers (synthetic only)
+- Actor identity/role/branch scope
+- Request/action and sanitized payload
+- Expected result and actual HTTP/RPC result
+- Before/after counts and financial/stock totals
+- Audit event/status-history reference
+- Pass / Fail / Blocked, tester, timestamp
+- Cleanup confirmation
+
+## Release gate
+Do not merge PRs or change production until:
+- all P0 negative-access tests pass;
+- CORS allowlist tests pass against current Preview and an unlisted origin;
+- timezone and capacity tests pass;
+- all four cross-module workflows reconcile;
+- desktop/mobile authenticated browser acceptance is recorded;
+- CI is green on the final head;
+- rollback and backup/restore evidence is attached;
+- Owner explicitly approves the merge/deployment.
+
+
+## Implementation update — staging fixture and HTTP runner (2026-10-21)
+
+Synthetic fixtures have been seeded in staging project `higoadrzxnhzbbwhdbmh` using `tests/staging/fixtures.sql`:
+- Branch `QA-DLICE-A`: active ERP fixture, `Asia/Jakarta`, online checkout disabled.
+- Branch `QA-DLICE-B`: active ERP fixture, `Asia/Makassar`, online checkout disabled.
+- Branch `QA-DLICE-C`: active ERP fixture, `Asia/Jayapura`, online checkout disabled.
+- Product `qa-staging-only-fixture`: inactive; not a sellable/public staging menu item.
+- Two synthetic ingredient items, one synthetic supplier, one draft recipe, two recipe ingredients, and one capacity row on Branch B so a cross-branch list test has a known expected result.
+- Fixture UUIDs are deterministic and documented in the SQL file. No real customer/order data was created.
+
+The cleanup script is `tests/staging/fixtures-cleanup.sql`. It checks for key order/POS/PO/production/assignment references before deleting fixture records. Capture test evidence and run cleanup only after acceptance tests are complete.
+
+The disposable Auth identity procedure is `tests/staging/identity-provisioning.md`; it requires six disposable users to be created in the staging Auth dashboard before running its profile/assignment SQL. That provisioning has not yet been executed because the connected tools cannot create Auth users or mint access tokens.\n\nThe HTTP harness is `tests/staging/p0-http-smoke.mjs`. It tests allowed/disallowed CORS, missing/invalid bearer tokens, and direct Data API access using only the public staging key. It does not use service-role credentials or intentionally perform successful business mutations. Run it from a networked runner with the current Preview origin and staging-only environment variables:
+```sh
+SUPABASE_URL=https://higoadrzxnhzbbwhdbmh.supabase.co \
+STAGING_EDGE_FUNCTION_URL=https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders \
+SUPABASE_ANON_KEY='<staging public anon/publishable key>' \
+ALLOWED_PREVIEW_ORIGIN='<current Vercel Preview origin>' \
+DISALLOWED_ORIGIN='https://dlice-p0-negative.invalid' \
+node tests/staging/p0-http-smoke.mjs
+```
+
+### Verified now vs still blocked
+
+- Verified through privileged SQL metadata: all 24 existing tables in the explicit internal-ERP table check deny SELECT, INSERT, UPDATE and DELETE table privileges to both `anon` and `authenticated`. Two names in the initial candidate list were not present in `public`; this is database privilege evidence, not proof of HTTP behavior.
+- Verified fixture state through staging SQL: three active ERP-only test branches with checkout disabled; fixture product inactive; recipe remains draft.
+- HTTP execution remains blocked in this session because the available runtime cannot resolve the Supabase API host (DNS/network unavailable). The runner is committed but its runtime result is not PASS.
+- Disposable Auth users/tokens (Owner, branch A, branch B, cashier, insufficient-permission, inactive profile) have not been provisioned by the connected tools. Do not fabricate JWTs or use real staff accounts.
+- Do not enable checkout on these fixture branches merely to test a boundary. A controlled clock/test seam or an explicitly isolated test branch is still required for 17:59/18:00/18:01 tests.
+- All four cross-module workflows remain **BLOCKED / NOT PASSED** until disposable identities and HTTP access are available and source-to-ledger reconciliation evidence is recorded.
+
+
+## Follow-up runner and browser checks (2026-10-22)
+
+- `tests/staging/run-p0-with-login.mjs` now requests short-lived access tokens at runtime for Owner, Branch A manager, no-permission staff, and inactive staff. It never prints or persists bearer tokens.
+- `tests/staging/p0-http-smoke.mjs` now exits with code 2 when required identity checks are blocked. A partial run cannot be reported as PASS.
+- `tests/staging/browser-smoke.mjs` covers Preview reachability, ERP login shell on desktop/mobile, horizontal overflow, and a minimum mobile tap target. This is a UI smoke test only, not authenticated business workflow acceptance.
+- `.github/workflows/staging-p0-smoke.yml` is a manual GitHub Actions workflow. It is not auto-dispatched and has not yet been run. It requires the protected `staging` environment secrets described in `tests/staging/identity-provisioning.md`.
+- The current stable Vercel branch alias is `https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app`. Add this exact origin to staging Edge Function `DLICE_ALLOWED_ORIGINS` before the HTTP test. Preserve existing origins.
+- A Vercel deployment for the staging branch returned READY, and fetching `/erp.html` from its deployment URL returned HTTP 200. This is a reachability/source response check, not a Playwright browser PASS.
+
+No authenticated P0 test result or cross-module workflow has been recorded yet. Do not proceed to write-heavy business workflow tests until the P0 workflow exits zero with no BLOCKED checks.
