@@ -5,6 +5,7 @@ on:
     branches: [feat/staging-purchase-requisitions-20261023]
     paths:
       - "tests/staging/procurement-requisition-contract.mjs"
+      - "tests/staging/procurement-receiving-positive.mjs"
       - "supabase/migrations/20261023170000_purchase_requisitions.sql"
       - "supabase/functions/dlice-orders/index.ts"
       - "erp.html"
