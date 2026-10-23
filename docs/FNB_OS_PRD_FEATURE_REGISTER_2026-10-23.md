@@ -11,7 +11,7 @@
 - A database table, menu item, handler, green build, or auth-negative test alone does not earn full feature acceptance.
 
 ## Executive score
-**Conservative coverage baseline: 31% across 18 domains.** This is a feature-coverage estimate from the staging traceability baseline, not percent complete and not readiness for 150 branches. The CORS runtime gate is now closed, but that infrastructure result does not complete any business workflow. No domain is certified fully complete.
+**Current conservative coverage estimate: ~32% across 18 domains** (31% was the previous snapshot before the requisition slice). This is an engineering estimate, not a validated percentage of every PRD subfeature. This is a feature-coverage estimate from the staging traceability baseline, not percent complete and not readiness for 150 branches. The CORS runtime gate is now closed, but that infrastructure result does not complete any business workflow. No domain is certified fully complete.
 
 ## 18-domain feature-by-feature register
 
@@ -105,12 +105,12 @@
 | Adjustments with reasons/approvals/audit | PARTIAL | Restricted workflow/audit foundations exist; risk thresholds and full review trail missing. |
 | PO receipt → stock ledger → balance reconciliation | PARTIAL / GATE | Receipt-reconciliation endpoint exists; positive procurement workflow has not been run. |
 
-### 7. Procurement & Supplier — baseline 35%
+### 7. Procurement & Supplier — baseline 40% (requisition slice implemented; E2E pending)
 | PRD feature | Current status | Evidence / acceptance still needed |
 |---|---|---|
 | Supplier directory | PARTIAL | Supplier master exists. |
 | Supplier price lists, contracts and price history | NOT EVIDENCED | No verified contract/effective price lifecycle. |
-| Purchase requisition from branch/warehouse/central kitchen | NOT EVIDENCED | PR workflow is a priority implementation gap. |
+| Purchase requisition from branch/warehouse/central kitchen | PARTIAL | PR #36 adds branch-scoped multi-line requisitions, draft/submit/Owner approve-or-reject/convert-to-PO, service-role-only atomic RPCs, audit trail, and ERP UI. Positive runtime E2E has not yet run; warehouse/central-kitchen consolidation remains missing. |
 | Consolidated demand across branches | NOT EVIDENCED | Multi-branch buying/consolidation missing. |
 | Purchase order draft, submit, approval, ordered | PARTIAL | PO state transitions exist; positive-path test still needed. |
 | Approval limits by value/category | PARTIAL | Approval actions exist; configurable thresholds/delegation not proven. |
@@ -317,3 +317,15 @@
 - Vercel Preview is READY; the project enables SSO protection for non-custom domains. The fetched HTML response is not a substitute for screenshot-based visual acceptance.
 - Figma account metadata reports Starter/View seat, with Code Layers disabled. Product Design screenshot audit must be run from a supported Work/browser session with authorized access; do not mark design QA passed without current screenshots.
 - Production \`main\`, production Supabase and production deployment remain untouched.
+
+
+## Latest staging implementation snapshot — 2026-10-23 16:06 UTC
+
+- PR #36 merged to `staging` at `c1c61e2706397576e560d0274d84034959de118f`. It adds the Purchase Requisition workflow and is deployed in Supabase Edge Function `dlice-orders` v52.
+- Remote migration history records `purchase_requisitions` as version `20261023160257` and `purchase_requisition_conversion_index` as version `20261023160440`. Source migration filenames now match those remote versions.
+- Public base tables increased from 45 to 47; both new requisition tables have RLS enabled, and read-only privilege checks confirm `anon` and `authenticated` cannot SELECT either table directly.
+- Contract CI run [39983296168](https://github.com/dlice8888/dlice-landing-page/actions/runs/39983296168) passed; the latest run after self-approval guard also passed the contract and free quality checks. This is static/contract evidence, not live requisition E2E.
+- The positive procurement workflow has been extended to exercise branch-manager requisition creation/submission, non-Owner approval denial, Owner approval, PO conversion, PO ordering, GRN, stock movement and audit reconciliation. It requires Owner and Branch A manager disposable credentials in the protected GitHub `staging` environment and is deliberately manual because it writes retained QA records. It has not yet been dispatched.
+- Supabase Security Advisor still warns that leaked-password protection is disabled. Performance Advisor no longer reports an unindexed FK for the converted PO reference after the targeted index migration; 74 unused-index suggestions remain and were not bulk-dropped.
+- The previous CORS runtime run 39979764381 passed against the earlier deployed function v51. Version 52 read-back confirms the secret-only CORS logic is preserved; a distinct post-v52 runtime result has not been retrieved, so do not relabel v52 runtime CORS as freshly verified.
+- Vercel and Figma screenshot-based UX acceptance remain unverified. No production deployment, `main` changes, or real business data were part of this slice.
