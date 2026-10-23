@@ -138,6 +138,26 @@ async function main() {
   assert.ok(po?.id, "Approved requisition must generate a purchase order");
   assert.equal(po.status, "draft");
   assert.equal(Number(po.subtotal_idr), quantity * 150);
+  const reqReconciled = await call("erp-reconcile-purchase-requisition", { id: requisition.id }, ownerToken);
+  assert.equal(reqReconciled.requisition?.id, requisition.id);
+  assert.equal(reqReconciled.requisition?.status, "converted");
+  assert.equal(reqReconciled.purchase_order?.id, po.id);
+  assert.equal(reqReconciled.purchase_order_items?.length, 1);
+  assert.equal(reqReconciled.purchase_order_items[0].inventory_item_id, inventoryItemId);
+  assert.equal(Number(reqReconciled.purchase_order_items[0].quantity), quantity);
+  assert.equal(Number(reqReconciled.purchase_order_items[0].line_total_idr), quantity * 150);
+  const reqAudits = reqReconciled.audit_events || [];
+  const reqAuditActions = reqAudits.map((event) => event.action);
+  for (const action of [
+    "erp_purchase_requisition_created",
+    "erp_purchase_requisition_submitted",
+    "erp_purchase_requisition_approved",
+    "erp_purchase_requisition_converted_to_po",
+  ]) assert.ok(reqAuditActions.includes(action), `Missing requisition audit event: ${action}`);
+  assert.equal(reqAudits.length, 4, "Requisition must have one audit event per lifecycle transition");
+  assert.ok(reqAudits.every((event) => event.entity_type === "purchase_requisition" && event.entity_id === requisition.id));
+  assert.equal(reqAudits.find((event) => event.action === "erp_purchase_requisition_converted_to_po")?.metadata?.purchase_order_id, po.id);
+  console.log("PASS P2P-05R requisition -> PO lines -> lifecycle audit reconciliation");
   console.log("PASS P2P-05 approved requisition converts to draft PO");
 
   await call("erp-update-purchase-order", { id: po.id, status: "submitted" }, ownerToken);
@@ -205,6 +225,7 @@ async function main() {
     inventory_item_id: inventoryItemId,
     purchase_requisition_id: requisition.id,
     purchase_requisition_number: requisition.requisition_number,
+    requisition_audit_events: reqAudits.map((a) => ({ id: a.id, action: a.action, entity_type: a.entity_type, entity_id: a.entity_id, metadata: a.metadata })),
     purchase_order_id: po.id,
     purchase_order_number: po.po_number,
     receipt_id: received.receipt_id,
@@ -215,6 +236,8 @@ async function main() {
     stock_movements: movements.map((m) => ({ id: m.id, branch_id: m.branch_id, inventory_item_id: m.inventory_item_id, movement_type: m.movement_type, quantity: Number(m.quantity) })),
     audit_events: audits.map((a) => ({ id: a.id, action: a.action, entity_type: a.entity_type, entity_id: a.entity_id, metadata: a.metadata })),
     assertions: {
+      requisition_lifecycle_audit_reconciled: true,
+      requisition_converts_to_matching_po: true,
       receipt_matches_po: true,
       receipt_line_matches_expected_item_and_quantity: true,
       stock_movement_matches_receipt: true,
