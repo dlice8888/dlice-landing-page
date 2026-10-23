@@ -6,6 +6,7 @@ const migration = readFileSync("supabase/migrations/20261023232000_kitchen_kds_i
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 const platform = readFileSync("supabase/migrations/20261023233000_tenant_branch_platform_foundation.sql", "utf8");
 const tenantIntegrity = readFileSync("supabase/migrations/20261023180000_tenant_branch_integrity_constraints.sql", "utf8");
+const posDispatch = readFileSync("supabase/migrations/20261023181000_kds_pos_deferred_dispatch.sql", "utf8");
 const ui = readFileSync("erp.html", "utf8");
 
 test("KDS tickets are branch-scoped, source-linked, versioned and idempotent", () => {
@@ -99,4 +100,10 @@ test("tenant and branch identifiers are constrained consistently by composite fo
   assert.match(tenantIntegrity, /foreign key\(tenant_id,branch_id\) references public\.branches\(tenant_id,id\)/i);
   assert.match(tenantIntegrity, /foreign key\(branch_id,warehouse_id\) references public\.warehouses\(branch_id,id\)/i);
   assert.match(tenantIntegrity, /integration_outbox_tenant_branch_fkey/i);
+});
+
+test("POS KDS dispatch is deferred until sale lines and snapshots are written", () => {
+  assert.match(posDispatch, /create constraint trigger dlice_kitchen_ticket_from_pos_sale/i);
+  assert.match(posDispatch, /deferrable initially deferred/i);
+  assert.match(posDispatch, /execute function public\.dlice_dispatch_kitchen_ticket/i);
 });
