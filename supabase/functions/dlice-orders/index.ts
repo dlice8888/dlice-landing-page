@@ -1824,6 +1824,24 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,recipe},201,origin);
   }
 
+  if (action === "erp-retire-recipe") {
+    if(!await hasHQPermission("production"))return fail("Retiring a recipe requires Production Head Office permission.",403,origin);
+    const id=safeText(body.recipe_id,80);
+    if(!id)return fail("Recipe ID is required.",422,origin);
+    const {data:recipe,error:recipeError}=await admin.from("recipes").select("id,product_id,status").eq("id",id).maybeSingle();
+    if(recipeError||!recipe)return fail("Recipe not found.",404,origin);
+    if(recipe.status==="retired")return json({ok:true,recipe_id:id,status:"retired",unchanged:true},200,origin);
+    if(recipe.status==="draft")return json({ok:true,recipe_id:id,status:"draft",unchanged:true},200,origin);
+    if(recipe.status!=="active")return fail("Only an active recipe can be retired.",409,origin);
+    const {data:product,error:productError}=await admin.from("products").select("is_active,stock_tracking_enabled").eq("id",recipe.product_id).maybeSingle();
+    if(productError||!product)return fail("Recipe product not found.",404,origin);
+    if(product.is_active||product.stock_tracking_enabled)return fail("Deactivate the product and disable stock tracking before retiring its recipe.",409,origin);
+    const {data:retired,error:retireError}=await admin.from("recipes").update({status:"retired"}).eq("id",id).eq("status","active").select("id,status").maybeSingle();
+    if(retireError||!retired)return fail("Recipe retirement failed; refresh and reconcile its state.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_recipe_retired",entity_type:"recipe",entity_id:id,metadata:{product_id:recipe.product_id,reason:"qa_fixture_cleanup"}});
+    return json({ok:true,recipe_id:id,status:"retired"},200,origin);
+  }
+
   if (action === "erp-activate-recipe") {
     if(!await hasHQPermission("production"))return fail("Aktivasi resep global memerlukan izin Production Head Office.",403,origin);
     const id=safeText(body.recipe_id,80);
