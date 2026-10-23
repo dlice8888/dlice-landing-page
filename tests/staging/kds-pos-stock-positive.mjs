@@ -191,6 +191,13 @@ async function main() {
   managerUserId = await userId(managerToken);
   ownerUserId = await userId(ownerToken);
 
+  // Preflight fixture identity and state before any write; refuse to mutate a product that is already active.
+  const catalog = await call("admin-list-products", {}, ownerToken);
+  const fixtureProduct = (catalog.products || []).find((row) => row.id === productId);
+  assert.ok(fixtureProduct, "Fixed QA product must exist in the staging catalog");
+  assert.equal(fixtureProduct.slug, productSlug, "QA product ID must still map to the expected QA-only slug");
+  assert.equal(fixtureProduct.is_active, false, "Refuse to run if the QA fixture product is already active");
+
   // Safe negative runtime checks: malformed payloads ensure a broken gate cannot create data.
   await expectStatus("erp-create-tenant", { slug: "x", legal_name: "QA" }, ownerToken, 423);
   await expectStatus("erp-invite-tenant-member", {
@@ -220,6 +227,18 @@ async function main() {
   const recipes = await call("erp-list-recipes", {}, ownerToken);
   const recipe = (recipes.recipes || []).find((row) => row.id === recipeId);
   assert.ok(recipe, "Fixed QA recipe must exist");
+  assert.equal(recipe.product_id, productId, "QA recipe must belong to the inactive QA fixture product");
+  const recipeIngredients = (recipe.recipe_ingredients || []).map((row) => ({
+    inventory_item_id: row.inventory_item_id,
+    quantity_per_yield: Number(row.quantity_per_yield),
+    unit: row.unit,
+    is_optional: row.is_optional,
+  })).sort((a, b) => a.inventory_item_id.localeCompare(b.inventory_item_id));
+  assert.deepEqual(recipeIngredients, [
+    { inventory_item_id: flourId, quantity_per_yield: 500, unit: "g", is_optional: false },
+    { inventory_item_id: secondIngredientId, quantity_per_yield: 100, unit: "g", is_optional: false },
+  ].sort((a, b) => a.inventory_item_id.localeCompare(b.inventory_item_id)),
+  "QA recipe ingredients and units must match the reviewed 500g/100g fixture before stock writes");
   if (recipe.status !== "active") await call("erp-activate-recipe", { recipe_id: recipeId }, ownerToken);
   trackingTouched = true;
   await call("erp-set-product-stock-tracking", { product_id: productId, enabled: true }, ownerToken);
