@@ -112,6 +112,10 @@ test("POS KDS dispatch is deferred until sale lines and snapshots are written", 
 
 test("POS reconciliation cross-checks sale lines, KDS, stock ledger, balances and audit", () => {
   assert.match(edge, /action === "erp-reconcile-pos-sale"/);
+  assert.match(edge, /action === "erp-list-waste-events"/);
+  assert.match(edge, /inventory_waste_posted/);
+  assert.match(kdsE2E, /erp-list-waste-events/);
+  assert.match(kdsE2E, /inventory_waste_posted/);
   assert.match(edge, /reference_type","pos_sale"/);
   assert.match(edge, /stock_movements/);
   assert.match(edge, /kitchen_ticket_items/);
