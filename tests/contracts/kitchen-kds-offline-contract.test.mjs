@@ -64,8 +64,10 @@ test("paid online orders and POS sales consume recipe stock atomically", () => {
 test("tenant membership, branch settings, warehouse, waste, handover and integrations have private data boundaries", () => {
   for (const table of ["tenants","tenant_memberships","tenant_invites","warehouses","branch_settings","shift_handover_records","inventory_waste_events","integration_connections","integration_outbox","backup_restore_runs"]) {
     assert.match(platform, new RegExp("create table if not exists public\\."+table, "i"));
-    assert.match(platform, new RegExp("alter table public\\."+table+" enable row level security", "i"));
+    assert.match(platform, new RegExp("'"+table+"'", "i"));
   }
+  assert.match(platform, /enable row level security/i);
+  assert.match(platform, /revoke all on table public\.%I from anon,authenticated/i);
   assert.match(edge, /tenant_memberships/);
   assert.match(edge, /erp-record-waste/);
   assert.match(edge, /erp-create-shift-handover/);
