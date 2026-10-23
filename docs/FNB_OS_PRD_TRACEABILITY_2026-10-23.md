@@ -292,3 +292,17 @@ Keep the conservative 31% feature-coverage baseline for cross-snapshot compariso
 - The positive procurement E2E harness now covers requisition → approval → PO → GRN → stock movement → balance/audit reconciliation, but remains a manually dispatched workflow and has not yet run. Do not mark procure-to-stock accepted until its sanitized artifact is inspected.
 - Latest Supabase read-only audit: 47/47 public base tables have RLS; no RLS-disabled public base tables. Security Advisor still warns leaked-password protection is disabled; Performance Advisor shows 74 unused-index suggestions and no longer reports the converted-PO FK as unindexed.
 - No production/main changes. Vercel screenshot/interaction acceptance remains unverified due SSO protection; use an authorized authenticated browser session.
+
+
+---
+
+## Latest read-only staging audit — 2026-10-24 (post-v58)
+
+- Supabase project `higoadrzxnhzbbwhdbmh` reports `ACTIVE_HEALTHY`, PostgreSQL 17. Edge Function `dlice-orders` is v58 ACTIVE and `verify_jwt=false`.
+- Remote migration inventory contains 42 versions through `20261023180455_kds_pos_deferred_dispatch`; the four KDS/platform migrations and two procurement migrations are present.
+- Tenant mapping check: 154 branches, zero with null `tenant_id`, but only **one distinct tenant**. This verifies mapping completeness only; it does not test isolation between tenants.
+- Business acceptance data check: `kitchen_tickets`, `pos_idempotency_requests`, `offline_sync_receipts`, `order_stock_consumptions`, `inventory_waste_events`, and `purchase_requisitions` each contain **zero rows** at audit time. Therefore neither positive KDS/POS/stock E2E nor procurement-to-stock acceptance can be inferred from current data.
+- Read-only ACL/policy check: all inspected public base tables have RLS enabled. The 17 internal tables flagged by Security Advisor have zero direct table privileges for `anon` and `authenticated`; this is intentional server-side-only access, but must be paired with runtime authorization tests. The legacy `products` table intentionally grants client SELECT only under its “Public can read active Dlice products” policy; INSERT/UPDATE/DELETE are not granted. Because the catalog is still global rather than tenant-keyed, this remains a multi-tenant isolation limitation.
+- Security Advisor still reports 17 `rls_enabled_no_policy` INFO findings and one `auth_leaked_password_protection` WARN. No Auth configuration was changed during this audit.
+- Workflow definitions were re-read: KDS/POS E2E allows `staging` or `feat/staging-kds-offline-tenant-20261024`; procurement E2E allows only `staging`. Both require `confirm_staging_mutations=true` and GitHub Environment `staging` credentials. The available GitHub connector has no workflow-dispatch operation, so no run or artifact is claimed.
+- Release decision: keep tenant creation/invitation at HTTP 423, keep PR #40 Draft, and do not promote to production until positive E2E artifacts, cross-tenant negative tests, browser fault injection, backup/restore, visual QA, and staged 150-branch load evidence are reviewed.
