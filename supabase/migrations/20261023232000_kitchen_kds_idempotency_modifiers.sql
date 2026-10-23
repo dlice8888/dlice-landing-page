@@ -256,7 +256,7 @@ begin
 
   -- Existing atomic POS routine remains the source of truth for shift, branch, price and payment checks.
   result := public.erp_create_pos_sale(p_branch_id,p_shift_id,
-    (select jsonb_agg(jsonb_build_object('slug',x->>'slug','quantity',x->>'quantity')) from jsonb_array_elements(p_items) x),
+    (select jsonb_agg(jsonb_build_object('slug',items.value->>'slug','quantity',items.value->>'quantity')) from jsonb_array_elements(p_items) as items(value)),
     p_payment_method,p_discount_idr,p_customer_reference,p_notes,p_actor_user_id);
 
   -- Apply selected modifiers to line totals and preserve the exact sale-time selection.
