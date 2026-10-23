@@ -51,6 +51,7 @@ Performance/RPO/RTO values are proposed test targets, not observed results or ag
 
 - Applied `kitchen_kds_idempotency_modifiers` to staging project `higoadrzxnhzbbwhdbmh` (remote migration version `20261023175347`).
 - Applied `tenant_branch_platform_foundation` to staging (remote migration version `20261023175514`).
+- Applied `tenant_branch_integrity_constraints` to staging; composite foreign keys now enforce tenant↔branch consistency for warehouses, branch settings, shift handovers, waste events, integration outbox, and branch inventory↔warehouse mapping.
 - Deployed `dlice-orders` Edge Function **v54** to staging. `verify_jwt=false` is preserved; custom per-action auth remains required.
 - Staging SQL verification: 10 tenant/platform tables present; all 17 new KDS/platform tables have RLS enabled; zero direct table grants to `anon` or `authenticated`; all 4 expected dispatch/stock/versioning triggers exist; product stock tracking and online order snapshot columns exist.
 - Contract/quality/CORS workflows passed on the pre-deployment commit. Re-run runtime CORS and CI against the post-deployment source commit; business E2E is still not accepted.
