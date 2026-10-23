@@ -1144,7 +1144,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-list-purchase-orders") {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
-    let q=admin.from("purchase_orders").select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at,branches(code,name),purchase_order_items(item_name_snapshot,quantity,unit_cost_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
+    let q=admin.from("purchase_orders").select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at,branches(code,name),purchase_order_items(id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Purchase order gagal dimuat.",500,origin);
@@ -1227,6 +1227,33 @@ Deno.serve(async (req: Request) => {
     const {data,error}=await admin.rpc("erp_receive_purchase_order",{p_purchase_order_id:id,p_receipt_number:receipt,p_items:items,p_actor_user_id:actor.user.id,p_supplier_delivery_reference:safeText(body.supplier_delivery_reference,120)||null,p_notes:safeText(body.notes,500)||null});
     if(error)return fail(error.message.includes("over_receipt")?"Jumlah penerimaan melebihi sisa PO.":error.message.includes("purchase_order_not_receivable")?"PO belum berstatus ordered atau partially received.":"Penerimaan gagal. Periksa item dan jumlah.",409,origin);
     return json(data,201,origin);
+  }
+
+  if (action === "erp-reconcile-purchase-receipt") {
+    if (!isOwner) return fail("Rekonsiliasi penerimaan hanya dapat diakses Owner.",403,origin);
+    const receiptId=safeText(body.receipt_id,80),purchaseOrderId=safeText(body.purchase_order_id,80);
+    if(!receiptId||!purchaseOrderId)return fail("ID receipt dan purchase order wajib diisi.",422,origin);
+    const {data:receipt,error:receiptError}=await admin.from("purchase_receipts")
+      .select("id,receipt_number,purchase_order_id,branch_id,status,received_by,created_at")
+      .eq("id",receiptId).eq("purchase_order_id",purchaseOrderId).maybeSingle();
+    if(receiptError||!receipt)return fail("Receipt tidak ditemukan untuk purchase order ini.",404,origin);
+    if(!await branchAccess(receipt.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const [lines,audit]=await Promise.all([
+      admin.from("purchase_receipt_items").select("id,receipt_id,purchase_order_item_id,inventory_item_id,quantity_received,unit_cost_idr").eq("receipt_id",receipt.id),
+      admin.from("admin_audit_logs").select("id,action,entity_type,entity_id,metadata,created_at").eq("entity_type","purchase_receipt").eq("entity_id",receipt.id).eq("action","erp_purchase_receipt_posted")
+    ]);
+    if(lines.error||audit.error)return fail("Rekonsiliasi receipt/audit gagal dimuat.",500,origin);
+    const itemIds=[...new Set((lines.data||[]).map((x:any)=>x.inventory_item_id))];
+    let movements:any[]=[];
+    if(itemIds.length){
+      const {data,error}=await admin.from("stock_movements")
+        .select("id,branch_id,inventory_item_id,movement_type,quantity,notes,created_by,created_at")
+        .eq("branch_id",receipt.branch_id).eq("movement_type","receipt").in("inventory_item_id",itemIds)
+        .ilike("notes", "%receipt "+receipt.receipt_number+"%");
+      if(error)return fail("Rekonsiliasi stock movement gagal dimuat.",500,origin);
+      movements=data||[];
+    }
+    return json({receipt,receipt_items:lines.data||[],stock_movements:movements,audit_events:audit.data||[]},200,origin);
   }
 
   if (action === "erp-list-recipes") {

@@ -1,0 +1,44 @@
+name: Staging procurement positive-path E2E
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_mutations:
+        description: "Confirm this writes QA-prefixed records to QA-DLICE-A in staging only"
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: staging-procurement-positive-e2e
+  cancel-in-progress: false
+jobs:
+  purchase-to-stock:
+    if: ${{ github.ref == 'refs/heads/staging' && inputs.confirm_staging_mutations }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run positive P2P E2E against the fixed staging project and QA fixtures
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+        run: node tests/staging/procurement-receiving-positive.mjs
+
+      - name: Upload sanitized procurement reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procurement-reconciliation-${{ github.run_id }}
+          path: artifacts/procurement-reconciliation.json
+          if-no-files-found: warn
+          retention-days: 30
