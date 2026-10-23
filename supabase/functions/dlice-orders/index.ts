@@ -1451,6 +1451,54 @@ Deno.serve(async (req: Request) => {
     return json({receipt,receipt_items:lines.data||[],stock_movements:movements,audit_events:audit.data||[]},200,origin);
   }
 
+
+  if (action === "erp-list-product-modifiers") {
+    if(!await hasHQPermission("production"))return fail("Akses Production Head Office diperlukan untuk modifier menu.",403,origin);
+    const productId=safeText(body.product_id,80);
+    let q=admin.from("product_modifiers").select("*,products(name,slug)").order("product_id").order("modifier_group").order("name").limit(500);
+    if(productId)q=q.eq("product_id",productId);
+    const {data,error}=await q;if(error)return fail("Modifier menu belum tersedia. Pastikan migrasi modifier sudah diterapkan.",503,origin);
+    return json({modifiers:data||[]},200,origin);
+  }
+
+  if (action === "erp-save-product-modifier") {
+    if(!await hasHQPermission("production"))return fail("Akses Production Head Office diperlukan untuk mengubah modifier.",403,origin);
+    const id=safeText(body.modifier_id,80),productId=safeText(body.product_id,80),group=safeText(body.modifier_group,60),code=safeText(body.modifier_code,40).toLowerCase(),name=safeText(body.name,100),delta=Number(body.price_delta_idr||0);
+    if(!productId||!group||!name||!/^[a-z0-9][a-z0-9_-]{0,39}$/.test(code)||!Number.isSafeInteger(delta)||delta < -100000000||delta > 100000000)return fail("Data modifier tidak valid.",422,origin);
+    const {data:product}=await admin.from("products").select("id").eq("id",productId).maybeSingle();if(!product)return fail("Produk tidak ditemukan.",404,origin);
+    const values={product_id:productId,modifier_group:group,modifier_code:code,name,price_delta_idr:delta,is_required:body.is_required===true,is_active:body.is_active!==false,updated_at:new Date().toISOString()};
+    const result=id?await admin.from("product_modifiers").update(values).eq("id",id).select("*").maybeSingle():await admin.from("product_modifiers").insert(values).select("*").single();
+    if(result.error||!result.data)return fail("Modifier gagal disimpan; periksa duplikasi kode dalam grup.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:id?"erp_product_modifier_updated":"erp_product_modifier_created",entity_type:"product_modifier",entity_id:result.data.id,metadata:{product_id:productId,modifier_group:group,modifier_code:code,is_active:values.is_active}});
+    return json({ok:true,modifier:result.data},id?200:201,origin);
+  }
+
+  if (action === "erp-list-recipe-substitutions") {
+    if(!hasHQPermission("production"))return fail("Akses Production Head Office diperlukan untuk substitusi resep.",403,origin);
+    const ingredientId=safeText(body.recipe_ingredient_id,80);
+    let q=admin.from("recipe_substitutions").select("*,recipe_ingredients(recipe_id,inventory_item_id,unit,inventory_items(name,sku)),inventory_items:substitute_inventory_item_id(name,sku,unit)").order("created_at",{ascending:false}).limit(500);
+    if(ingredientId)q=q.eq("recipe_ingredient_id",ingredientId);
+    const {data,error}=await q;if(error)return fail("Daftar substitusi belum tersedia. Pastikan migrasi sudah diterapkan.",503,origin);
+    return json({substitutions:data||[]},200,origin);
+  }
+
+  if (action === "erp-save-recipe-substitution") {
+    if(!await hasHQPermission("production"))return fail("Hanya Production Head Office yang dapat menyetujui substitusi bahan.",403,origin);
+    const ingredientId=safeText(body.recipe_ingredient_id,80),substituteId=safeText(body.substitute_inventory_item_id,80),factor=Number(body.quantity_factor||1),active=body.is_active!==false;
+    if(!ingredientId||!substituteId||!Number.isFinite(factor)||factor<=0||factor>1000)return fail("Data substitusi tidak valid.",422,origin);
+    const {data:ingredient}=await admin.from("recipe_ingredients").select("id,inventory_item_id,unit,recipes!inner(status)").eq("id",ingredientId).maybeSingle();
+    if(!ingredient)return fail("Bahan resep tidak ditemukan.",404,origin);
+    const {data:base}=await admin.from("inventory_items").select("id,unit,is_active").eq("id",ingredient.inventory_item_id).maybeSingle();
+    const {data:sub}=await admin.from("inventory_items").select("id,unit,is_active").eq("id",substituteId).maybeSingle();
+    if(!base?.is_active||!sub?.is_active||base.id===sub.id)return fail("Bahan pengganti tidak valid atau tidak aktif.",422,origin);
+    if(base.unit!==sub.unit)return fail("Satuan bahan dan pengganti harus sama; konversi satuan perlu didefinisikan sebelum aktivasi.",422,origin);
+    const values={recipe_ingredient_id:ingredientId,substitute_inventory_item_id:substituteId,quantity_factor:factor,is_active:active,approved_by:actor.user.id,approved_at:new Date().toISOString()};
+    const result=await admin.from("recipe_substitutions").upsert(values,{onConflict:"recipe_ingredient_id,substitute_inventory_item_id"}).select("*").single();
+    if(result.error||!result.data)return fail("Substitusi resep gagal disimpan.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_recipe_substitution_approved",entity_type:"recipe_substitution",entity_id:result.data.id,metadata:{recipe_ingredient_id:ingredientId,substitute_inventory_item_id:substituteId,quantity_factor:factor,is_active:active}});
+    return json({ok:true,substitution:result.data},200,origin);
+  }
+
   if (action === "erp-list-recipes") {
     if(!hasPerm("production")&&!hasPerm("inventory")&&!hasPerm("reports"))return fail("Izin resep/produksi tidak diizinkan.",403,origin);
     const {data,error}=await admin.from("recipes").select("id,product_id,version,yield_quantity,yield_unit,status,effective_from,effective_to,instructions,approved_by,approved_at,products(name,slug),recipe_ingredients(id,inventory_item_id,quantity_per_yield,unit,is_optional,inventory_items(name,sku))").order("product_id").order("version",{ascending:false}).limit(300);
