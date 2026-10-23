@@ -252,11 +252,3 @@ end $$;
 revoke all on function public.dlice_version_branch_setting() from public,anon,authenticated;
 revoke all on function public.erp_record_inventory_waste(uuid,uuid,numeric,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.erp_record_inventory_waste(uuid,uuid,numeric,text,text,uuid,text) to service_role;
-),
-  status text not null default 'posted' check (status in ('posted','pending_review','reversed')),
-  created_by uuid not null references auth.users(id) on delete restrict,
-  created_at timestamptz not null default now(),
-  unique(branch_id,idempotency_key)
-);
-create index if not exists inventory_waste_branch_created_idx on public.inventory_waste_events(branch_id,created_at desc);
-
