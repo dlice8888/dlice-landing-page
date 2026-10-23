@@ -1373,6 +1373,29 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,replayed:false,receipt,result},201,origin);
   }
 
+
+  if (action === "erp-reconcile-pos-sale") {
+    if(!isOwner&&!hasPerm("reports"))return fail("Izin laporan/reconciliaton POS diperlukan.",403,origin);
+    const saleId=safeText(body.sale_id,80),branchId=safeText(body.branch_id,80);
+    if(!saleId||!branchId)return fail("ID transaksi dan cabang wajib diisi.",422,origin);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:sale,error:saleError}=await admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at").eq("id",saleId).eq("branch_id",branchId).maybeSingle();
+    if(saleError)return fail("Rekonsiliasi transaksi POS gagal dimuat.",503,origin);
+    if(!sale)return fail("Transaksi POS tidak ditemukan di cabang ini.",404,origin);
+    const [itemsResult,ticketResult,movementsResult]=await Promise.all([
+      admin.from("pos_sale_items").select("id,product_id,product_name_snapshot,quantity,unit_price_idr,line_total_idr,modifier_snapshot,substitution_snapshot").eq("sale_id",saleId).order("id"),
+      admin.from("kitchen_tickets").select("id,ticket_number,branch_id,status,version,created_at,served_at,kitchen_ticket_items(id,product_name_snapshot,quantity,modifier_snapshot,substitution_snapshot,status)").eq("pos_sale_id",saleId).maybeSingle(),
+      admin.from("stock_movements").select("id,inventory_item_id,movement_type,quantity,reference_type,reference_id,notes,created_at").eq("branch_id",branchId).eq("reference_type","pos_sale").eq("reference_id",saleId).order("created_at")
+    ]);
+    if(itemsResult.error||ticketResult.error||movementsResult.error)return fail("Detail rekonsiliasi POS/KDS/stok gagal dimuat.",503,origin);
+    const entityIds=[saleId,...(ticketResult.data?.id?[ticketResult.data.id]:[])];
+    const {data:audit,error:auditError}=await admin.from("admin_audit_logs").select("actor_user_id,action,entity_type,entity_id,metadata,created_at").in("entity_id",entityIds).order("created_at");
+    if(auditError)return fail("Audit trail rekonsiliasi tidak tersedia.",503,origin);
+    const {data:balances,error:balanceError}=await admin.from("branch_inventory").select("inventory_item_id,on_hand,updated_at").eq("branch_id",branchId);
+    if(balanceError)return fail("Saldo stok rekonsiliasi tidak tersedia.",503,origin);
+    return json({ok:true,sale,items:itemsResult.data||[],kitchen_ticket:ticketResult.data||null,stock_movements:movementsResult.data||[],stock_balances:balances||[],audit_events:audit||[]},200,origin);
+  }
+
   if (action === "erp-list-sales") {
     if(!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin laporan POS tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),since=safeText(body.since,10),ids=await branchIdsForActor().catch(()=>[]);
