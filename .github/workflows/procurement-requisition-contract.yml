@@ -1,0 +1,34 @@
+name: Procurement requisition contract
+
+on:
+  push:
+    branches: [staging, feat/staging-purchase-requisitions-20261023]
+    paths:
+      - "tests/staging/procurement-requisition-contract.mjs"
+      - "tests/staging/procurement-receiving-positive.mjs"
+      - "supabase/migrations/20261023170000_purchase_requisitions.sql"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "erp.html"
+      - ".github/workflows/procurement-requisition-contract.yml"
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/staging/procurement-requisition-contract.mjs"
+      - "supabase/migrations/20261023170000_purchase_requisitions.sql"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "erp.html"
+      - ".github/workflows/procurement-requisition-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify purchase requisition API/UI/database contract
+        run: node --check tests/staging/procurement-receiving-positive.mjs && node tests/staging/procurement-requisition-contract.mjs
