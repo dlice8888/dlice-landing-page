@@ -126,3 +126,37 @@ Therefore the positive E2E was **not executed**, and no QA rows were written. Th
 - Review PR #32 and confirm the staging secret is saved without exposing its value; deploy the secret-only candidate to staging only through the approved PR/review path, then rerun the three CORS probes.
 - Review PR #35, deploy its Edge Function candidate to staging through the approved path, then run the positive procurement E2E and attach run/artifact IDs plus ledger reconciliation.
 - Keep the 18-domain matrix evidence-driven. Follow up on UI/browser design QA separately; deployment HTTP 200 is not visual acceptance.
+
+
+---
+
+## Follow-up review and UI smoke — 2026-10-23 (second pass)
+
+### PR review and staging deployment gates
+- PR #32 head `576d0781281ea826d19824990cd1668190d1ab46`: exact-origin parser removes the source-code fallback. Vercel deployment status is success, but this is a web preview status, not an Edge Function deploy. GitHub reports the PR as Draft/open and no submitted PR reviews were found.
+- PR #35 head `d281128200d2b1bb4b21aab765326e53a497538e`: contract CI run [39957326074](https://github.com/dlice8888/dlice-landing-page/actions/runs/39957326074) is completed/success; this validates the source contract only. The PR remains Draft/open and no submitted PR reviews were found.
+- The deployed staging `dlice-orders` remains version 50. Its source includes the temporary staging fallback and does not yet contain the PR #35 PO-line selection change.
+- Secret-presence limitation: the available connected Supabase tools expose function source/inventory and SQL, but no metadata-only Edge Function secret-presence check. I did not read or print any secret values. Therefore `DLICE_ALLOWED_ORIGINS` saved-state remains **unverified**, not assumed present.
+- Workflow-dispatch limitation: the available GitHub connector has no `workflow_dispatch` action. The positive E2E was not launched and no QA rows were written. Do not deploy or merge around the absent review/secret checks.
+- Gate comments were added to both PR discussions, with the exact evidence needed to continue: [PR #32](https://github.com/dlice8888/dlice-landing-page/pull/32) and [PR #35](https://github.com/dlice8888/dlice-landing-page/pull/35).
+
+### Responsive / browser acceptance smoke
+The existing staging Preview host `https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app` returned HTTP 200 and HTML content type for `/`, `/erp.html`, `/admin.html`, and `/track.html`. These requests were simple HTTP fetches; the responses had similar sizes and may be served through SPA/fallback routing. This proves reachability only.
+
+No cloud browser / visual screenshot capture or interactive browser automation is available in this chat surface, so there is no evidence yet for mobile/tablet/desktop layout, overflow, tap target geometry, keyboard navigation, focus visibility, reduced motion at runtime, or real form behavior. The prior source-based responsive/accessibility notes remain **unverified in browser**, not passed. Do not call this a visual QA pass.
+
+### 18-domain PRD evidence status
+- The 18-domain matrix and 31% estimated coverage baseline remain unchanged.
+- Procurement & Supplier (domain 7) remains **Partial / E2E blocked** until the deployed candidate completes the PO → approval → receiving → stock balance → stock movement → audit event path with persisted runtime evidence.
+- Quality, Compliance & Security (domain 18) remains **Partial / CORS candidate gate open** until secret presence is confirmed safely and the secret-only candidate passes runtime probes.
+- Admin, Identity & Access Control (domain 15) remains **Partial**; the 21 negative/role probes are not a substitute for comprehensive positive-path acceptance.
+- Responsive UI/CX remains **Unverified** pending screenshots and interactive tests in a real browser at mobile, tablet, and desktop breakpoints.
+- No domain coverage was increased in this pass. HTTP 200, Vercel build success, and contract CI success are not evidence of full workflow acceptance.
+
+### Next safe sequence
+1. Have an authorized reviewer review PR #32 and #35; keep both Draft until accepted.
+2. Confirm the staging Edge Function secret exists through Supabase dashboard/approved secret metadata workflow without revealing its value.
+3. Merge/deploy candidates to the staging branch/project through the normal reviewed path only; then repeat CORS probes on the new runtime.
+4. Dispatch the positive procurement workflow from GitHub Actions UI on branch `staging` with `confirm_staging_mutations=true`; save the run URL/artifacts and reconcile PO, receipt, inventory delta, stock movement, and audit event.
+5. Switch to a Work session with cloud browser access to capture and test `/`, `/erp.html`, `/admin.html`, and `/track.html` at mobile/tablet/desktop sizes before marking responsive acceptance passed.
+6. Keep `main`, production Supabase `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` unchanged.
