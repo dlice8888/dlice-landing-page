@@ -360,6 +360,7 @@ async function main() {
   assert.equal(handover.status, "acknowledged", "Incoming user must acknowledge the shift handover");
   assert.notEqual(handover.outgoing_user_id, handover.incoming_user_id);
   pass("Shift handover is acknowledged by a different user", { handover_id: handover.id });
+  await closeCreatedShift();
   await ensureChecklist("closing");
 
   const sales = await call("erp-list-sales", { branch_id: branchId }, managerToken);
