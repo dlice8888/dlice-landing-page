@@ -32,7 +32,7 @@ create table if not exists public.recipe_substitutions (
   recipe_ingredient_id uuid not null references public.recipe_ingredients(id) on delete restrict,
   substitute_inventory_item_id uuid not null references public.inventory_items(id) on delete restrict,
   quantity_factor numeric(14,6) not null default 1 check (quantity_factor > 0 and quantity_factor <= 1000),
-  is_active boolean not null default true,
+  is_active boolean not null default false,
   approved_by uuid references auth.users(id) on delete restrict,
   approved_at timestamptz,
   created_at timestamptz not null default now(),
@@ -233,6 +233,9 @@ begin
 
   select coalesce(sum(line_total_idr),0) into adjusted_subtotal
   from public.pos_sale_items where sale_id=(result->>'sale_id')::uuid;
+  if adjusted_subtotal < (select discount_idr from public.pos_sales where id=(result->>'sale_id')::uuid) then
+    raise exception 'discount_exceeds_subtotal_after_modifiers';
+  end if;
   update public.pos_sales set subtotal_idr=adjusted_subtotal,
     total_idr=adjusted_subtotal-discount_idr
   where id=(result->>'sale_id')::uuid;
@@ -271,7 +274,7 @@ begin
           select * into substitution from public.recipe_substitutions
           where recipe_ingredient_id=ingredient.id
             and substitute_inventory_item_id=(requested_substitution->>'substitute_inventory_item_id')::uuid
-            and is_active=true for share;
+            and is_active=true and approved_by is not null and approved_at is not null for share;
           if not found then raise exception 'invalid_recipe_substitution'; end if;
           chosen_inventory_id := substitution.substitute_inventory_item_id;
           consumption := round(consumption * substitution.quantity_factor,3);
@@ -288,13 +291,19 @@ begin
         if available_qty < consumption then raise exception 'insufficient_stock'; end if;
         update public.branch_inventory set on_hand=on_hand-consumption,updated_at=now()
         where branch_id=p_branch_id and inventory_item_id=chosen_inventory_id;
-        insert into public.stock_movements(branch_id,inventory_item_id,movement_type,quantity,notes,created_by)
-        values(p_branch_id,chosen_inventory_id,'issue',consumption,
+        insert into public.stock_movements(branch_id,inventory_item_id,movement_type,quantity,reference_type,reference_id,notes,created_by)
+        values(p_branch_id,chosen_inventory_id,'issue',consumption,'pos_sale',(result->>'sale_id')::uuid,
           left('POS sale '||(result->>'transaction_code')||'; recipe '||recipe_row.id,500),p_actor_user_id);
       end loop;
       update public.pos_sale_items set substitution_snapshot=substitutions_snapshot where id=sold.id;
     end if;
   end loop;
+
+  update public.kitchen_ticket_items kti set
+    modifier_snapshot=psi.modifier_snapshot,
+    substitution_snapshot=psi.substitution_snapshot
+  from public.kitchen_tickets kt, public.pos_sale_items psi
+  where kt.pos_sale_id=(result->>'sale_id')::uuid and kti.kitchen_ticket_id=kt.id and kti.pos_sale_item_id=psi.id;
 
   result := result || jsonb_build_object(
     'subtotal_idr',adjusted_subtotal,
