@@ -88,3 +88,12 @@
 - Run authenticated positive and negative tests for requester, Owner, no-procurement-permission user, wrong branch, inactive user, invalid transition, duplicate submit/retry, and conversion.
 - Reconcile requisition item totals to generated PO header/lines and confirm audit events.
 - Do not claim this slice complete from the contract test alone. No production resources are in scope.
+
+
+## Post-deploy advisor follow-up — 2026-10-23
+
+- Staging PR #36 merged as `c1c61e2706397576e560d0274d84034959de118f`; migration `20261023170000_purchase_requisitions.sql` applied to staging as migration version `20261023160257`.
+- `purchase_requisitions` and `purchase_requisition_items` are both RLS-enabled; read-only privilege checks confirm neither `anon` nor `authenticated` can SELECT them directly.
+- Edge Function `dlice-orders` deployed to staging v52 with the three requisition actions; `verify_jwt=false` is preserved and custom per-action authentication/authorization remains in force.
+- Supabase Performance Advisor identified an unindexed FK on `purchase_requisitions.converted_purchase_order_id`. Migration `20261023160430_purchase_requisition_conversion_index.sql` adds the targeted partial index. This is a targeted fix; no unused indexes were dropped.
+- The contract CI passed, but runtime requisition E2E (authenticated create/submit/approve/convert, generated PO/lines, audit and branch isolation) is still required before marking the slice accepted.
