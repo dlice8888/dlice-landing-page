@@ -265,7 +265,7 @@ begin
     from public.pos_sale_items si join public.products p on p.id=si.product_id
     where si.sale_id=(result->>'sale_id')::uuid order by si.id
   loop
-    select x into input_item from jsonb_array_elements(p_items) x where x->>'slug'=sold.slug limit 1;
+    select items.value into input_item from jsonb_array_elements(p_items) as items(value) where items.value->>'slug'=sold.slug limit 1;
     selected_modifiers := '[]'::jsonb;
     modifier_delta := 0;
     if input_item is not null and jsonb_typeof(input_item->'modifiers')='array' then
@@ -273,7 +273,7 @@ begin
         select * into modifier_row from public.product_modifiers
         where product_id=sold.product_id and modifier_code=modifier->>'code' and is_active=true for share;
         if not found then raise exception 'invalid_modifier'; end if;
-        if exists(select 1 from jsonb_array_elements(selected_modifiers) x where x->>'code'=modifier_row.modifier_code) then
+        if exists(select 1 from jsonb_array_elements(selected_modifiers) as selected(value) where selected.value->>'code'=modifier_row.modifier_code) then
           raise exception 'duplicate_modifier';
         end if;
         modifier_delta := modifier_delta + modifier_row.price_delta_idr;
@@ -286,7 +286,7 @@ begin
     if exists(
       select 1 from public.product_modifiers required_modifier
       where required_modifier.product_id=sold.product_id and required_modifier.is_active and required_modifier.is_required
-        and not exists(select 1 from jsonb_array_elements(selected_modifiers) chosen where chosen->>'group'=required_modifier.modifier_group)
+        and not exists(select 1 from jsonb_array_elements(selected_modifiers) as chosen(value) where chosen.value->>'group'=required_modifier.modifier_group)
     ) then raise exception 'required_modifier_missing'; end if;
     adjusted_unit := sold.unit_price_idr::bigint + modifier_delta;
     if adjusted_unit < 0 or adjusted_unit > 2147483647 then raise exception 'modifier_price_out_of_range'; end if;
@@ -331,8 +331,8 @@ begin
         consumption := round((sold.quantity::numeric * ingredient.quantity_per_yield / recipe_row.yield_quantity),3);
         requested_substitution := null;
         if input_item is not null and jsonb_typeof(input_item->'substitutions')='array' then
-          select x into requested_substitution from jsonb_array_elements(input_item->'substitutions') x
-          where x->>'recipe_ingredient_id'=ingredient.id::text limit 1;
+          select requested.value into requested_substitution from jsonb_array_elements(input_item->'substitutions') as requested(value)
+          where requested.value->>'recipe_ingredient_id'=ingredient.id::text limit 1;
         end if;
         if requested_substitution is not null then
           select * into substitution from public.recipe_substitutions
