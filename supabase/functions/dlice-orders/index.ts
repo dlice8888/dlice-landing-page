@@ -1647,6 +1647,25 @@ Deno.serve(async (req: Request) => {
   }
 
 
+
+  if (action === "erp-set-product-stock-tracking") {
+    if(!await hasHQPermission("production"))return fail("Akses Production Head Office diperlukan untuk mengubah pelacakan stok.",403,origin);
+    const productId=safeText(body.product_id,80),enabled=body.enabled===true;
+    if(!productId)return fail("Produk wajib dipilih.",422,origin);
+    const {data:product}=await admin.from("products").select("id,slug,stock_tracking_enabled").eq("id",productId).maybeSingle();
+    if(!product)return fail("Produk tidak ditemukan.",404,origin);
+    if(enabled){
+      const {data:recipe}=await admin.from("recipes").select("id").eq("product_id",productId).eq("status","active").limit(1).maybeSingle();
+      if(!recipe)return fail("Aktifkan dan validasi resep terlebih dahulu sebelum pelacakan stok dinyalakan.",409,origin);
+      const {data:ingredients}=await admin.from("recipe_ingredients").select("id").eq("recipe_id",recipe.id);
+      if(!ingredients?.length)return fail("Resep aktif belum memiliki bahan.",409,origin);
+    }
+    const {data:updated,error}=await admin.from("products").update({stock_tracking_enabled:enabled,updated_at:new Date().toISOString()}).eq("id",productId).select("id,slug,stock_tracking_enabled").single();
+    if(error||!updated)return fail("Konfigurasi pelacakan stok gagal disimpan.",409,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"product_stock_tracking_changed",entity_type:"product",entity_id:productId,metadata:{stock_tracking_enabled:enabled}});
+    return json({ok:true,product:updated},200,origin);
+  }
+
   if (action === "erp-list-product-modifiers") {
     if(!await hasHQPermission("production"))return fail("Akses Production Head Office diperlukan untuk modifier menu.",403,origin);
     const productId=safeText(body.product_id,80);
