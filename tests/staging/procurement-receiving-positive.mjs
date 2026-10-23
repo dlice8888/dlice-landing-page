@@ -6,6 +6,7 @@
  * these variables at production.
  */
 import assert from "node:assert/strict";
+import { mkdir, writeFile } from "node:fs/promises";
 
 const required = [
   "STAGING_SUPABASE_URL",
@@ -105,7 +106,63 @@ async function main() {
   }, token);
   assert.equal(received.purchase_order_status, "received", "PO must become fully received");
   assert.equal(received.lines_received, 1, "Exactly one receipt line must post");
+  assert.ok(received.receipt_id, "Receipt ID must be returned for independent reconciliation");
   console.log("PASS P2P-04 GRN posts and PO reaches received");
+
+  const reconciled = await call("erp-reconcile-purchase-receipt", {
+    receipt_id: received.receipt_id,
+    purchase_order_id: po.id,
+  }, token);
+  assert.equal(reconciled.receipt?.id, received.receipt_id, "Reconciled receipt ID must match response");
+  assert.equal(reconciled.receipt?.receipt_number, receiptNumber, "Receipt number must match test input");
+  assert.equal(reconciled.receipt?.purchase_order_id, po.id, "Receipt must reference this PO");
+  assert.equal(reconciled.receipt?.status, "posted", "Receipt must be posted");
+  assert.equal(reconciled.receipt_items?.length, 1, "Exactly one receipt item must exist");
+  const receiptLine = reconciled.receipt_items[0];
+  assert.equal(receiptLine.receipt_id, received.receipt_id);
+  assert.equal(receiptLine.inventory_item_id, inventoryItemId, "Receipt line must match QA flour item");
+  assert.equal(Number(receiptLine.quantity_received), quantity, "Receipt line quantity must match expected quantity");
+  const movements = reconciled.stock_movements || [];
+  assert.equal(movements.length, 1, "Exactly one receipt stock movement must match this receipt");
+  assert.equal(movements[0].branch_id, branchId);
+  assert.equal(movements[0].inventory_item_id, inventoryItemId);
+  assert.equal(movements[0].movement_type, "receipt");
+  assert.equal(Number(movements[0].quantity), quantity, "Stock movement quantity must match receipt line");
+  assert.ok(movements[0].notes.includes(receiptNumber), "Stock movement notes must identify this receipt");
+  const audits = reconciled.audit_events || [];
+  assert.equal(audits.length, 1, "Exactly one receipt-posted audit event must exist");
+  assert.equal(audits[0].action, "erp_purchase_receipt_posted");
+  assert.equal(audits[0].entity_type, "purchase_receipt");
+  assert.equal(audits[0].entity_id, received.receipt_id);
+  assert.equal(audits[0].metadata?.receipt_number, receiptNumber);
+  assert.equal(audits[0].metadata?.purchase_order_id, po.id);
+  assert.equal(Number(audits[0].metadata?.lines), 1);
+  console.log("PASS P2P-04R receipt -> stock movement -> audit reconciliation");
+
+  await mkdir("artifacts", { recursive: true });
+  await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify({
+    schema_version: 1,
+    result: "passed",
+    generated_at: new Date().toISOString(),
+    environment: "staging",
+    branch_id: branchId,
+    inventory_item_id: inventoryItemId,
+    purchase_order_id: po.id,
+    purchase_order_number: po.po_number,
+    receipt_id: received.receipt_id,
+    receipt_number: receiptNumber,
+    expected_quantity: quantity,
+    previous_on_hand: previous,
+    receipt_line: { id: receiptLine.id, inventory_item_id: receiptLine.inventory_item_id, quantity_received: Number(receiptLine.quantity_received) },
+    stock_movements: movements.map((m) => ({ id: m.id, branch_id: m.branch_id, inventory_item_id: m.inventory_item_id, movement_type: m.movement_type, quantity: Number(m.quantity) })),
+    audit_events: audits.map((a) => ({ id: a.id, action: a.action, entity_type: a.entity_type, entity_id: a.entity_id, metadata: a.metadata })),
+    assertions: {
+      receipt_matches_po: true,
+      receipt_line_matches_expected_item_and_quantity: true,
+      stock_movement_matches_receipt: true,
+      audit_event_matches_receipt: true,
+    },
+  }, null, 2) + "\\n", { mode: 0o600 });
 
   const after = await call("erp-list-inventory", { branch_id: branchId }, token);
   const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
