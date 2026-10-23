@@ -190,6 +190,16 @@ async function main() {
   managerToken = await tokenFor(process.env.STAGING_TEST_BRANCH_A_USERNAME, process.env.STAGING_TEST_BRANCH_A_PASSWORD, "Branch A manager");
   managerUserId = await userId(managerToken);
   ownerUserId = await userId(ownerToken);
+
+  // Safe negative runtime checks: malformed payloads ensure a broken gate cannot create data.
+  await expectStatus("erp-create-tenant", { slug: "x", legal_name: "QA" }, ownerToken, 423);
+  await expectStatus("erp-invite-tenant-member", {
+    tenant_id: "00000000-0000-4000-8000-000000000001",
+    email: "not-an-email",
+    role: "viewer",
+  }, ownerToken, 423);
+  pass("Tenant creation and invitation fail closed until cross-tenant isolation is accepted");
+
   await ensureChecklist("opening");
 
   // Activate the fixture only for this run. finally restores it to inactive.
