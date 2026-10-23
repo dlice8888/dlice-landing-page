@@ -19,7 +19,7 @@
 - Static contract tests for schema/API/UI and a PR-triggered workflow.
 
 ### Not yet proven or complete
-- Staging deployment has since been completed: the KDS/platform migrations are applied and `dlice-orders` v57 is active; tenant creation/invitation is fail-closed until isolation acceptance. Source and staging runtime are not considered accepted until the positive-path E2E workflow and tenant isolation checks pass.
+- Staging deployment has since been completed: the KDS/platform migrations are applied and `dlice-orders` v58 is active; tenant creation/invitation is fail-closed until isolation acceptance. Source and staging runtime are not considered accepted until the positive-path E2E workflow and tenant isolation checks pass.
 - Positive E2E is not run: POS → payment → KDS → recipe stock → waste/shift reconciliation → reports.
 - Online checkout modifier selection is not yet wired through the customer checkout UI.
 - Tenant foundations are additive but **do not yet constitute complete tenant isolation**. Several legacy global catalogs, finance actions, audit queries, job-position templates, and permission checks still need tenant-aware scoping. Do not onboard a second live tenant until the isolation suite is implemented and accepted.
@@ -47,6 +47,13 @@
 
 Performance/RPO/RTO values are proposed test targets, not observed results or agreed production SLOs.
 
+## Legacy branch authorization hardening — 2026-10-24
+
+- Static review found legacy helpers `actorCanAccessBranch` and `actorBranchIds` used branch assignments without checking active tenant membership.
+- Tests First: a contract assertion was added, the first CI run failed because the test regex was over-escaped (not because the authorization change failed), then the regex was corrected. The latest PR CI run passed the KDS/offline contract, Free Quality Checks, both procurement contracts, and CORS probes.
+- Both legacy helpers now fail closed unless the actor has an active membership in the branch's tenant; tenant owners/admins are scoped to branches belonging to their own tenant. Platform Owner retains the existing platform-wide bypass.
+- Deployed the reviewed feature-branch Edge Function to staging as **v58 ACTIVE**. Runtime CORS probes passed after deployment. The manual positive-path business E2E and authenticated negative cross-tenant tests remain required; static contracts are not substitutes for them.
+
 ## Tenant onboarding safety gate — 2026-10-24
 
 - The staging audit found 154 branch rows with non-null tenant IDs but only one tenant. This proves data mapping completeness for current rows, not cross-tenant isolation.
@@ -60,7 +67,7 @@ Performance/RPO/RTO values are proposed test targets, not observed results or ag
 - Applied `kitchen_kds_idempotency_modifiers` to staging project `higoadrzxnhzbbwhdbmh` (remote migration version `20261023175347`).
 - Applied `tenant_branch_platform_foundation` to staging (remote migration version `20261023175514`).
 - Applied `tenant_branch_integrity_constraints` to staging; composite foreign keys now enforce tenant↔branch consistency for warehouses, branch settings, shift handovers, waste events, integration outbox, and branch inventory↔warehouse mapping.
-- Deployed `dlice-orders` Edge Function **v57** to staging after the fail-closed tenant onboarding guard was added. `verify_jwt=false` is preserved; custom per-action auth remains required. `verify_jwt=false` is preserved; custom per-action auth remains required.
+- Deployed `dlice-orders` Edge Function **v58** to staging after the fail-closed tenant onboarding guard was added. `verify_jwt=false` is preserved; custom per-action auth remains required. `verify_jwt=false` is preserved; custom per-action auth remains required.
 - Added `erp-list-waste-events` so waste events can be reconciled to stock movements and audit records.
 - Applied `kds_pos_deferred_dispatch` (remote migration version `20261023180455`). POS KDS dispatch now runs as a deferred constraint trigger so the ticket snapshots sale lines after the POS transaction writes items/modifiers/substitutions.
 - Added `erp-reconcile-pos-sale`, a branch-scoped reconciliation response joining sale lines, KDS ticket/items, stock movements, current balances, and audit events.
