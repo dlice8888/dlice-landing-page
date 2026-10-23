@@ -97,3 +97,15 @@
 - Edge Function `dlice-orders` deployed to staging v52 with the three requisition actions; `verify_jwt=false` is preserved and custom per-action authentication/authorization remains in force.
 - Supabase Performance Advisor identified an unindexed FK on `purchase_requisitions.converted_purchase_order_id`. Migration `20261023160440_purchase_requisition_conversion_index.sql` adds the targeted partial index. This is a targeted fix; no unused indexes were dropped.
 - The contract CI passed, but runtime requisition E2E (authenticated create/submit/approve/convert, generated PO/lines, audit and branch isolation) is still required before marking the slice accepted.
+
+
+## Latest verification — 2026-10-23 16:10 UTC
+
+- Staging migration versions `20261023160257` (purchase requisitions) and `20261023160440` (converted-PO FK index) are applied; the source migration filenames match these remote versions.
+- Edge Function `dlice-orders` is ACTIVE v53 with requisition create/list/transition and Owner-only reconciliation actions; `verify_jwt=false` is unchanged. The function read-back retains secret-only CORS and no hard-coded origin fallback.
+- Runtime CORS run [39984466037](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984466037) passed against v53 for exact registered origin, foreign-origin denial, and missing-Origin behavior.
+- Contract run [39984465957](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465957) and quality run [39984465988](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465988) passed. Test PR #39 was merged at `17571890d29e2fe9f4410cb57f53de073427b9f5`.
+- The manual positive procurement workflow now requires Owner + Branch A manager disposable credentials and verifies requisition creation/submission, non-Owner approval denial, Owner approval, conversion to PO, requisition lifecycle audit, PO receiving, stock movement, and balance delta. **It has not been dispatched yet**; the feature remains gated until its sanitized artifact is inspected.
+- Database check: 47/47 public base tables have RLS; the two requisition tables have no direct `anon`/`authenticated` SELECT access. Performance Advisor no longer reports the converted-PO FK as unindexed; 74 unused-index suggestions remain. Do not bulk-drop them without workload evidence.
+- Security Advisor still warns that leaked-password protection is disabled. This is a platform Auth configuration decision, not silently changed during this slice.
+- No production/main changes. Responsive screenshot/interaction acceptance remains pending because the Preview is SSO-protected and no authorized browser session is available here.
