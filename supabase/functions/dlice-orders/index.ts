@@ -727,6 +727,24 @@ Deno.serve(async (req: Request) => {
   };
 
 
+
+  if (action === "erp-list-tenants") {
+    const tenantIds=await tenantIdsForActor().catch(()=>[]);
+    if(!tenantIds.length)return fail("Keanggotaan tenant aktif diperlukan.",403,origin);
+    const {data,error}=await admin.from("tenants").select("id,slug,legal_name,status,plan_code,settings,created_at,updated_at,tenant_memberships(user_id,role,status)").in("id",tenantIds).order("legal_name");
+    if(error)return fail("Daftar tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
+    return json({tenants:data||[]},200,origin);
+  }
+
+  if (action === "erp-list-backup-restore-runs") {
+    const tenantIds=await tenantIdsForActor().catch(()=>[]);
+    if(!tenantIds.length&&!isOwner)return fail("Keanggotaan tenant aktif diperlukan.",403,origin);
+    let q=admin.from("backup_restore_runs").select("id,tenant_id,run_type,status,artifact_reference,started_by,started_at,completed_at,verified_at,restored_at,checksum_sha256,error_code,notes,created_at").order("created_at",{ascending:false}).limit(100);
+    if(tenantIds.length)q=q.in("tenant_id",tenantIds);else q=q.is("tenant_id",null);
+    const {data,error}=await q;if(error)return fail("Riwayat backup/restore belum tersedia.",503,origin);
+    return json({runs:data||[]},200,origin);
+  }
+
   if (action === "erp-list-tenant-memberships") {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)").eq("user_id",actor.user.id).eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
