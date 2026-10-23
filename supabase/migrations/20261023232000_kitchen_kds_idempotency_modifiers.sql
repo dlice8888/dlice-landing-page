@@ -157,6 +157,65 @@ create trigger dlice_kitchen_ticket_from_order
 after insert or update of payment_status, operational_status, fulfillment_status on public.orders
 for each row execute function public.dlice_dispatch_kitchen_ticket();
 
+
+create table if not exists public.order_stock_consumptions (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null unique references public.orders(id) on delete restrict,
+  branch_id uuid not null references public.branches(id) on delete restrict,
+  consumed_at timestamptz not null default now()
+);
+create index if not exists order_stock_consumptions_branch_idx on public.order_stock_consumptions(branch_id,consumed_at desc);
+
+create or replace function public.dlice_consume_order_recipe_stock()
+returns trigger language plpgsql security invoker set search_path=public as $
+declare marker uuid; sold record; recipe_row public.recipes%rowtype; ingredient public.recipe_ingredients%rowtype;
+  consumption numeric(14,3); available_qty numeric(14,3);
+begin
+  if new.payment_status<>'paid'
+     or not (new.operational_status in ('confirmed','preparing') or new.fulfillment_status in ('accepted','preparing')) then
+    return new;
+  end if;
+  if new.branch_id is null then raise exception 'order_branch_required_for_stock'; end if;
+  insert into public.order_stock_consumptions(order_id,branch_id)
+  values(new.id,new.branch_id) on conflict(order_id) do nothing returning id into marker;
+  if marker is null then return new; end if;
+  for sold in
+    select oi.id,oi.product_id,oi.quantity,p.name,p.stock_tracking_enabled
+    from public.order_items oi join public.products p on p.id=oi.product_id
+    where oi.order_id=new.id order by oi.product_id,oi.id
+  loop
+    if sold.stock_tracking_enabled then
+      select * into recipe_row from public.recipes
+      where product_id=sold.product_id and status='active'
+      order by version desc limit 1 for share;
+      if not found then raise exception 'active_recipe_required'; end if;
+      for ingredient in select ri.* from public.recipe_ingredients ri
+        where ri.recipe_id=recipe_row.id order by ri.inventory_item_id,ri.id
+      loop
+        consumption:=round(sold.quantity::numeric*ingredient.quantity_per_yield/recipe_row.yield_quantity,3);
+        insert into public.branch_inventory(branch_id,inventory_item_id,on_hand)
+        values(new.branch_id,ingredient.inventory_item_id,0) on conflict(branch_id,inventory_item_id) do nothing;
+        select on_hand into available_qty from public.branch_inventory
+        where branch_id=new.branch_id and inventory_item_id=ingredient.inventory_item_id for update;
+        if available_qty<consumption then raise exception 'insufficient_stock'; end if;
+        update public.branch_inventory set on_hand=on_hand-consumption,updated_at=now()
+        where branch_id=new.branch_id and inventory_item_id=ingredient.inventory_item_id;
+        insert into public.stock_movements(branch_id,inventory_item_id,movement_type,quantity,reference_type,reference_id,notes,created_by)
+        values(new.branch_id,ingredient.inventory_item_id,'issue',consumption,'order',new.id,
+          left('Order '||new.order_number::text||'; recipe '||recipe_row.id,500),null);
+      end loop;
+    end if;
+  end loop;
+  insert into public.admin_audit_logs(action,entity_type,entity_id,metadata)
+  values('order_recipe_stock_consumed','order',new.id::text,jsonb_build_object('branch_id',new.branch_id,'order_number',new.order_number));
+  return new;
+end;
+$;
+drop trigger if exists dlice_order_recipe_stock_consumption on public.orders;
+create trigger dlice_order_recipe_stock_consumption
+after insert or update of payment_status,operational_status,fulfillment_status on public.orders
+for each row execute function public.dlice_consume_order_recipe_stock();
+
 create or replace function public.erp_create_pos_sale_idempotent(
   p_branch_id uuid, p_shift_id uuid, p_items jsonb, p_payment_method text,
   p_discount_idr bigint, p_customer_reference text, p_notes text,
@@ -224,6 +283,11 @@ begin
         ));
       end loop;
     end if;
+    if exists(
+      select 1 from public.product_modifiers required_modifier
+      where required_modifier.product_id=sold.product_id and required_modifier.is_active and required_modifier.is_required
+        and not exists(select 1 from jsonb_array_elements(selected_modifiers) chosen where chosen->>'group'=required_modifier.modifier_group)
+    ) then raise exception 'required_modifier_missing'; end if;
     adjusted_unit := sold.unit_price_idr::bigint + modifier_delta;
     if adjusted_unit < 0 or adjusted_unit > 2147483647 then raise exception 'modifier_price_out_of_range'; end if;
     update public.pos_sale_items set unit_price_idr=adjusted_unit::integer,
@@ -377,13 +441,14 @@ $$;
 do $$
 declare t text;
 begin
-  foreach t in array array['product_modifiers','recipe_substitutions','kitchen_tickets','kitchen_ticket_items','pos_idempotency_requests','offline_sync_receipts'] loop
+  foreach t in array array['product_modifiers','recipe_substitutions','kitchen_tickets','kitchen_ticket_items','pos_idempotency_requests','offline_sync_receipts','order_stock_consumptions'] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('revoke all on table public.%I from anon, authenticated',t);
   end loop;
 end $$;
 
 revoke all on function public.dlice_dispatch_kitchen_ticket() from public,anon,authenticated;
+revoke all on function public.dlice_consume_order_recipe_stock() from public,anon,authenticated;
 revoke all on function public.erp_create_pos_sale_idempotent(uuid,uuid,jsonb,text,bigint,text,text,uuid,text) from public,anon,authenticated;
 revoke all on function public.erp_transition_kitchen_ticket(uuid,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.erp_create_pos_sale_idempotent(uuid,uuid,jsonb,text,bigint,text,text,uuid,text) to service_role;
