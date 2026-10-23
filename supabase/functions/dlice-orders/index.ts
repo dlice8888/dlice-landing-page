@@ -8,19 +8,24 @@ const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"
 const admin = createClient(SUPABASE_URL ?? "", SERVICE_KEY ?? "", { auth: { persistSession: false } });
 const authClient = createClient(SUPABASE_URL ?? "", PUBLIC_KEY ?? "", { auth: { persistSession: false } });
 
-const allowedOrigins = new Set(["https://dlice.vercel.app", "https://dlice-landing-page.vercel.app"]);
 const configuredOrigins = new Set(
   (Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "")
     .split(",")
     .map((value) => value.trim())
     .filter((value) => /^https:\/\/[a-z0-9.-]+(?::\d+)?$/.test(value)),
 );
+// One exact, temporary staging Preview origin is allowed only on this staging project.
+// Keep production fail-closed and never use hostname prefixes/suffixes or wildcard matching.
+if ((SUPABASE_URL ?? "").includes("higoadrzxnhzbbwhdbmh.supabase.co")) {
+  configuredOrigins.add("https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app");
+}
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
-  return allowedOrigins.has(origin) || configuredOrigins.has(origin);
+  return configuredOrigins.has(origin);
 };
 const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "https://dlice.vercel.app",
+  // Never emit a fallback ACAO header for a missing or denied origin.
+  ...(origin && isAllowedOrigin(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
   "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-requested-with",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
@@ -40,6 +45,7 @@ const randomToken = () => {
 };
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
+const todayDate = () => new Date().toISOString().slice(0, 10);
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -64,7 +70,7 @@ const getAdmin = async (req: Request) => {
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
   if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
-  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active");
+  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
   const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
   // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
@@ -394,19 +400,19 @@ Deno.serve(async (req: Request) => {
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!branchId) return false;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const actorBranchIds = async (): Promise<string[]> => {
     if (actor.profile.role === "owner") return [];
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: { branch_id: string }) => x.branch_id))];
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
     if (!actor.profile.permissions.includes(permission)) return false;
-    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
   };
 
@@ -422,6 +428,8 @@ Deno.serve(async (req: Request) => {
     "admin-list-staff": "staff",
     "admin-create-staff": "staff",
     "admin-set-permissions": "staff",
+    "admin-set-active": "staff",
+    "admin-reset-staff-password": "staff",
     "admin-payment-settings": "settings",
     "admin-save-payment-settings": "settings",
     "admin-upload-qris": "settings",
@@ -502,7 +510,7 @@ Deno.serve(async (req: Request) => {
     if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 12 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
-    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
+    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "sales_admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
     if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail(profileError.code === "23505" ? "Username sudah digunakan." : "Profil admin gagal dibuat.", 500, origin); }
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "create_admin_account", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username, permissions: [...new Set(permissions)] } });
     return json({ ok: true, username }, 201, origin);
@@ -521,6 +529,36 @@ Deno.serve(async (req: Request) => {
     if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
     return json({ ok: true }, 200, origin);
+  }
+
+
+  if (action === "admin-set-active") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const isActive = body.is_active;
+    if (!userId || typeof isActive !== "boolean") return fail("Akun dan status aktif wajib ditentukan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Status akun Pemilik tidak dapat diubah melalui aksi ini.", 409, origin);
+    const { data: updated, error } = await admin.from("admin_profiles").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("user_id", userId).select("user_id,is_active").single();
+    if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
+    return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
+  }
+
+
+  if (action === "admin-reset-staff-password") {
+    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const password = typeof body.password === "string" ? body.password : "";
+    if (!userId || password.length < 12 || password.length > 128) return fail("Akun dan kata sandi 12–128 karakter wajib diberikan.", 422, origin);
+    const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
+    const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
+    if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
+    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
+    return json({ ok: true, user_id: userId }, 200, origin);
   }
 
   if (action === "admin-list-orders") {
@@ -648,12 +686,12 @@ Deno.serve(async (req: Request) => {
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const branchAccess = async (branchId: string): Promise<boolean> => {
     if (isOwner) return true;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").limit(1);
+    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error && !!data?.length;
   };
   const branchIdsForActor = async (): Promise<string[] | null> => {
     if (isOwner) return null;
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active");
+    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (error) throw new Error("Penugasan cabang gagal dimuat.");
     return [...new Set((data || []).map((x: {branch_id:string}) => x.branch_id))];
   };

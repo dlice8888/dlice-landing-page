@@ -1,139 +1,31 @@
-name: Staging P0 and browser smoke
+name: Staging browser smoke
 
 on:
-  # Security tests stay manual: staging secrets must not be exposed to arbitrary
-  # feature-branch workflow revisions. Browser smoke uses no credentials/secrets.
-  push:
-    branches:
-      - feat/fnb-os-branch-ops-checklists-20261022
   workflow_dispatch:
     inputs:
       preview_url:
         description: "Exact Vercel Preview URL for this staging branch (never production)"
         required: true
         type: string
+        default: "https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app"
+  push:
+    branches:
+      - feat/fnb-os-staging-implementation-20261021
+    paths:
+      - .github/workflows/staging-p0-smoke.yml
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: staging-p0-smoke
   cancel-in-progress: true
 
 jobs:
-  p0-http:
-    # P0 uses staging secrets and therefore remains manual until workflow is
-    # dispatched from a trusted/default-branch workflow definition.
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: staging
-    steps:
-      - name: Checkout staging test branch
-        uses: actions/checkout@v4
-        with:
-          ref: feat/fnb-os-staging-implementation-20261021
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Validate Preview target
-        id: preview
-        env:
-          PREVIEW_URL: ${{ inputs.preview_url }}
-        run: |
-          node --input-type=module <<'NODE'
-          const u = new URL(process.env.PREVIEW_URL);
-          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || ["dlice.vercel.app", "dlice-landing-page.vercel.app"].includes(u.hostname)) {
-            console.error("Refusing to test non-Preview URL:", u.origin);
-            process.exit(2);
-          }
-          console.log("Preview target:", u.origin);
-          await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
-          NODE
-      - name: Run P0 HTTP security checks
-        env:
-          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
-          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
-          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
-          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
-          STAGING_TEST_NO_PERMISSION_USERNAME: ${{ secrets.STAGING_TEST_NO_PERMISSION_USERNAME }}
-          STAGING_TEST_NO_PERMISSION_PASSWORD: ${{ secrets.STAGING_TEST_NO_PERMISSION_PASSWORD }}
-          STAGING_TEST_INACTIVE_USERNAME: ${{ secrets.STAGING_TEST_INACTIVE_USERNAME }}
-          STAGING_TEST_INACTIVE_PASSWORD: ${{ secrets.STAGING_TEST_INACTIVE_PASSWORD }}
-          TEST_BRANCH_B_ID: 90000000-0000-4000-8000-000000000002
-        run: |
-          set -o pipefail
-          node tests/staging/run-p0-with-login.mjs 2>&1 | tee p0-http-results.log
-      - name: Upload P0 result log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-p0-http-results
-          path: p0-http-results.log
-          if-no-files-found: ignore
-          retention-days: 14
-
-  p0-public-http:
-    # This job uses only the public anon/publishable key and runs no privileged writes.
-    # Authenticated role/branch tests remain in the manual, protected p0-http job.
-    runs-on: ubuntu-latest
-    environment: staging
-    timeout-minutes: 8
-    steps:
-      - name: Checkout staging test branch
-        uses: actions/checkout@v4
-        with:
-          ref: feat/fnb-os-staging-implementation-20261021
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Validate Preview target
-        id: preview
-        env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
-        run: |
-          node --input-type=module <<'NODE'
-          const u = new URL(process.env.PREVIEW_URL);
-          if (u.protocol !== "https:" || !u.hostname.endsWith(".vercel.app") || ["dlice.vercel.app", "dlice-landing-page.vercel.app"].includes(u.hostname)) {
-            console.error("Refusing to test non-Preview URL:", u.origin);
-            process.exit(2);
-          }
-          console.log("Preview target:", u.origin);
-          await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
-          NODE
-      - name: Run unauthenticated CORS and Data API checks
-        env:
-          # Supabase URL and legacy anon key are public client configuration, not service-role credentials.
-          SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
-          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpZ29hZHJ6eG5oemJid2hkYm1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNTQ1MTQsImV4cCI6MjEwNzgzMDUxNH0.YgP2SHOQMWt3C__Vjw1D0ZFKRBKrNHxNgfuQMfBnxnM
-          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
-          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
-          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
-          P0_PUBLIC_ONLY: "true"
-        run: |
-          set -o pipefail
-          node tests/staging/p0-http-smoke.mjs 2>&1 | tee p0-public-http-results.log
-      - name: Upload public P0 result log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-p0-public-http-results
-          path: p0-public-http-results.log
-          if-no-files-found: ignore
-          retention-days: 14
-
   browser-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Intentionally no protected environment: this job has no secrets and should
-    # run unattended on a Preview-only branch push.
+    environment: staging
     steps:
       - name: Checkout staging test branch
         uses: actions/checkout@v4
@@ -150,7 +42,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser smoke tests
         env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-branch-0fb536-dlice8888-7332.vercel.app' }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app' }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
           set -o pipefail

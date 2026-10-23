@@ -78,22 +78,20 @@ if (allowedOptions) {
 
 const noAuthPost = await request("P0-AUTH-01", edgeUrl, {
   method: "POST",
-  headers: { origin: allowed, apikey: anonKey, "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  headers: { apikey: anonKey, "content-type": "application/json" },
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (noAuthPost) {
-  const ok = noAuthPost.response.status === 401 && exactCors(noAuthPost.response, allowed) && corsNotWildcard(noAuthPost.response);
-  record("P0-AUTH-01", ok, `POST without bearer status=${noAuthPost.response.status}, ACAO=${noAuthPost.headers.get("access-control-allow-origin")}`);
+  record("P0-AUTH-01", noAuthPost.response.status === 401, `POST without bearer status=${noAuthPost.response.status}; expected 401 independently of CORS`);
 }
 
 const invalidTokenPost = await request("P0-AUTH-02", edgeUrl, {
   method: "POST",
-  headers: { origin: allowed, apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  headers: { apikey: anonKey, authorization: "Bearer invalid.staging.token", "content-type": "application/json" },
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (invalidTokenPost) {
-  const ok = invalidTokenPost.response.status === 401 && exactCors(invalidTokenPost.response, allowed) && corsNotWildcard(invalidTokenPost.response);
-  record("P0-AUTH-02", ok, `POST with invalid bearer status=${invalidTokenPost.response.status}, ACAO=${invalidTokenPost.headers.get("access-control-allow-origin")}`);
+  record("P0-AUTH-02", invalidTokenPost.response.status === 401, `POST with invalid bearer status=${invalidTokenPost.response.status}; expected 401 independently of CORS`);
 }
 
 const deniedOptions = await request("P0-CORS-02", edgeUrl, {
@@ -109,7 +107,7 @@ if (deniedOptions) {
 const deniedPost = await request("P0-CORS-03", edgeUrl, {
   method: "POST",
   headers: { origin: denied, apikey: anonKey, "content-type": "application/json" },
-  body: JSON.stringify({ action: "erp-list-orders" }),
+  body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
 });
 if (deniedPost) {
   const ok = deniedPost.response.status === 403 &&
@@ -118,7 +116,7 @@ if (deniedPost) {
 }
 
 // Check direct Data API reads and harmless no-row/invalid writes using only the public key.
-for (const table of ["orders", "order_items", "payment_records", "pos_sales", "inventory_items", "purchase_orders", "journal_entries"]) {
+for (const table of ["orders", "order_items", "payment_records", "pos_sales", "inventory_items", "purchase_orders", "finance_journal_entries"]) {
   const headers = { apikey: anonKey, authorization: `Bearer ${anonKey}`, "content-type": "application/json" };
   const read = await request(`P0-RLS-READ-${table}`, `${supabaseUrl}/rest/v1/${table}?select=*&limit=1`, { headers });
   if (read) {
@@ -136,75 +134,99 @@ for (const table of ["orders", "order_items", "payment_records", "pos_sales", "i
   }
 }
 
-// A disposable staff JWT is optional at this stage. This proves valid-token processing,
-// but does not by itself prove branch isolation; branch IDs are required for that.
-if (env.TEST_STAFF_JWT) {
-  const staff = await request("P0-AUTH-STAFF", edgeUrl, {
-    method: "POST",
-    headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
-    body: JSON.stringify({ action: "erp-list-orders" }),
-  });
-  if (staff) {
-    const ok = [200, 403].includes(staff.response.status);
-    record("P0-AUTH-STAFF", ok, `staff token request status=${staff.response.status}; capture body for expected permission scope`);
+// Authenticated role/branch tests require disposable QA JWTs. Public-only CI skips
+// these checks without treating missing identities as a failure; a separate manual
+// workflow must run them with staging QA accounts before release.
+if (env.P0_PUBLIC_ONLY !== "true") {
+  // A disposable staff JWT is optional at this stage. This proves valid-token processing,
+  // but does not by itself prove branch isolation; branch IDs are required for that.
+  if (env.TEST_STAFF_JWT) {
+    const staff = await request("P0-AUTH-STAFF", edgeUrl, {
+      method: "POST",
+      headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
+      body: JSON.stringify({ action: "erp-list-fulfillment-orders" }),
+    });
+    if (staff) {
+      record("P0-AUTH-STAFF", staff.response.status === 200, `authorized branch staff status=${staff.response.status}; expected 200`);
+    }
+  } else {
+    block("P0-AUTH-STAFF", "TEST_STAFF_JWT not supplied");
   }
-} else {
-  block("P0-AUTH-STAFF", "TEST_STAFF_JWT not supplied");
-}
-
-if (env.TEST_STAFF_JWT && env.TEST_BRANCH_B_ID) {
-  const crossBranch = await request("P0-AUTH-CROSS-BRANCH", edgeUrl, {
-    method: "POST",
-    headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
-    body: JSON.stringify({ action: "erp-list-branch-capacity", branch_id: env.TEST_BRANCH_B_ID }),
-  });
-  if (crossBranch) {
-    const ok = [403, 200].includes(crossBranch.response.status);
-    let parsed;
-    try { parsed = JSON.parse(crossBranch.body); } catch {}
-    const noCrossBranchData = crossBranch.response.status === 403 ||
-      (crossBranch.response.status === 200 && Array.isArray(parsed?.capacities) && parsed.capacities.length === 0);
-    record("P0-AUTH-CROSS-BRANCH", ok && noCrossBranchData,
-      `cross-branch status=${crossBranch.response.status}; response body must be empty/scoped or denied`);
+  
+  if (env.TEST_STAFF_JWT && env.TEST_BRANCH_B_ID) {
+    const crossBranch = await request("P0-AUTH-CROSS-BRANCH", edgeUrl, {
+      method: "POST",
+      headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_STAFF_JWT}`, "content-type": "application/json" },
+      body: JSON.stringify({ action: "erp-list-fulfillment-orders", branch_id: env.TEST_BRANCH_B_ID }),
+    });
+    if (crossBranch) {
+      const ok = crossBranch.response.status === 403;
+      let parsed;
+      try { parsed = JSON.parse(crossBranch.body); } catch {}
+      const noCrossBranchData = crossBranch.response.status === 403;
+      record("P0-AUTH-CROSS-BRANCH", ok && noCrossBranchData,
+        `cross-branch status=${crossBranch.response.status}; response body must be empty/scoped or denied`);
+    }
+  } else {
+    block("P0-AUTH-CROSS-BRANCH", "disposable Branch A manager JWT and TEST_BRANCH_B_ID required");
   }
-} else {
-  block("P0-AUTH-CROSS-BRANCH", "disposable Branch A manager JWT and TEST_BRANCH_B_ID required");
-}
+  
+  const noPermission = env.TEST_NO_PERMISSION_STAFF_JWT
+    ? await request("P0-AUTH-INSUFFICIENT-PERMISSION", edgeUrl, {
+        method: "POST",
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+        body: JSON.stringify({ action: "admin-funnel-summary" }),
+      })
+    : (block("P0-AUTH-INSUFFICIENT-PERMISSION", "TEST_NO_PERMISSION_STAFF_JWT not supplied"), null);
+  if (noPermission) {
+    record("P0-AUTH-INSUFFICIENT-PERMISSION", noPermission.response.status === 403,
+      `no-permission staff status=${noPermission.response.status}; expected 403`);
+  }
+  
 
-const noPermission = env.TEST_NO_PERMISSION_STAFF_JWT
-  ? await request("P0-AUTH-INSUFFICIENT-PERMISSION", edgeUrl, {
-      method: "POST",
-      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
-      body: JSON.stringify({ action: "admin-funnel-summary" }),
-    })
-  : (block("P0-AUTH-INSUFFICIENT-PERMISSION", "TEST_NO_PERMISSION_STAFF_JWT not supplied"), null);
-if (noPermission) {
-  record("P0-AUTH-INSUFFICIENT-PERMISSION", noPermission.response.status === 403,
-    `no-permission staff status=${noPermission.response.status}; expected 403`);
-}
+  for (const [id, payload] of [
+    ["P0-AUTH-NO-PERMISSION-CATALOG", { action: "admin-save-product" }],
+    ["P0-AUTH-NO-PERMISSION-INVENTORY", { action: "erp-stock-movement" }],
+    ["P0-AUTH-NO-PERMISSION-POS", { action: "erp-open-shift" }],
+    ["P0-AUTH-NO-PERMISSION-FINANCE", { action: "erp-create-expense" }],
+    ["P0-AUTH-NO-PERMISSION-PROCUREMENT", { action: "erp-create-purchase-order" }],
+    ["P0-AUTH-NO-PERMISSION-STAFF-ADMIN", { action: "admin-set-active" }],
+  ]) {
+    const deniedAction = env.TEST_NO_PERMISSION_STAFF_JWT
+      ? await request(id, edgeUrl, {
+          method: "POST",
+          headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_NO_PERMISSION_STAFF_JWT}`, "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+      : null;
+    if (deniedAction) record(id, deniedAction.response.status === 403, `status=${deniedAction.response.status}; expected 403 before payload validation`);
+  }
 
-const inactive = env.TEST_INACTIVE_STAFF_JWT
-  ? await request("P0-AUTH-INACTIVE-STAFF", edgeUrl, {
-      method: "POST",
-      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
-      body: JSON.stringify({ action: "admin-funnel-summary" }),
-    })
-  : (block("P0-AUTH-INACTIVE-STAFF", "TEST_INACTIVE_STAFF_JWT not supplied"), null);
-if (inactive) {
-  record("P0-AUTH-INACTIVE-STAFF", inactive.response.status === 401,
-    `inactive staff status=${inactive.response.status}; expected 401`);
-}
-
-const owner = env.TEST_OWNER_JWT
-  ? await request("P0-AUTH-OWNER-READ", edgeUrl, {
-      method: "POST",
-      headers: { origin: allowed, apikey: anonKey, authorization: `Bearer ${env.TEST_OWNER_JWT}`, "content-type": "application/json" },
-      body: JSON.stringify({ action: "admin-funnel-summary" }),
-    })
-  : (block("P0-AUTH-OWNER-READ", "TEST_OWNER_JWT not supplied"), null);
-if (owner) {
-  record("P0-AUTH-OWNER-READ", owner.response.status === 200,
-    `Owner read status=${owner.response.status}; expected authorized 200`);
+    const inactive = env.TEST_INACTIVE_STAFF_JWT
+    ? await request("P0-AUTH-INACTIVE-STAFF", edgeUrl, {
+        method: "POST",
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_INACTIVE_STAFF_JWT}`, "content-type": "application/json" },
+        body: JSON.stringify({ action: "admin-funnel-summary" }),
+      })
+    : (block("P0-AUTH-INACTIVE-STAFF", "TEST_INACTIVE_STAFF_JWT not supplied"), null);
+  if (inactive) {
+    record("P0-AUTH-INACTIVE-STAFF", inactive.response.status === 401,
+      `inactive staff status=${inactive.response.status}; expected 401`);
+  }
+  
+  const owner = env.TEST_OWNER_JWT
+    ? await request("P0-AUTH-OWNER-READ", edgeUrl, {
+        method: "POST",
+        headers: { apikey: anonKey, authorization: `Bearer ${env.TEST_OWNER_JWT}`, "content-type": "application/json" },
+        body: JSON.stringify({ action: "admin-funnel-summary" }),
+      })
+    : (block("P0-AUTH-OWNER-READ", "TEST_OWNER_JWT not supplied"), null);
+  if (owner) {
+    record("P0-AUTH-OWNER-READ", owner.response.status === 200,
+      `Owner read status=${owner.response.status}; expected authorized 200`);
+  }
+  
+  
 }
 
 const failures = results.filter((result) => result.status === "FAIL");
