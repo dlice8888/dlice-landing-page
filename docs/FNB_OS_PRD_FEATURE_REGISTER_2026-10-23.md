@@ -321,11 +321,23 @@
 
 ## Latest staging implementation snapshot — 2026-10-23 16:06 UTC
 
-- PR #36 merged to `staging` at `c1c61e2706397576e560d0274d84034959de118f`. It adds the Purchase Requisition workflow and is deployed in Supabase Edge Function `dlice-orders` v52.
+- PR #36 merged to `staging` at `c1c61e2706397576e560d0274d84034959de118f`. It adds the Purchase Requisition workflow; the Owner-only reconciliation action is also deployed in Supabase Edge Function `dlice-orders` v53.
 - Remote migration history records `purchase_requisitions` as version `20261023160257` and `purchase_requisition_conversion_index` as version `20261023160440`. Source migration filenames now match those remote versions.
 - Public base tables increased from 45 to 47; both new requisition tables have RLS enabled, and read-only privilege checks confirm `anon` and `authenticated` cannot SELECT either table directly.
 - Contract CI run [39983296168](https://github.com/dlice8888/dlice-landing-page/actions/runs/39983296168) passed; the latest run after self-approval guard also passed the contract and free quality checks. This is static/contract evidence, not live requisition E2E.
 - The positive procurement workflow has been extended to exercise branch-manager requisition creation/submission, non-Owner approval denial, Owner approval, PO conversion, PO ordering, GRN, stock movement and audit reconciliation. It requires Owner and Branch A manager disposable credentials in the protected GitHub `staging` environment and is deliberately manual because it writes retained QA records. It has not yet been dispatched.
 - Supabase Security Advisor still warns that leaked-password protection is disabled. Performance Advisor no longer reports an unindexed FK for the converted PO reference after the targeted index migration; 74 unused-index suggestions remain and were not bulk-dropped.
-- The previous CORS runtime run 39979764381 passed against the earlier deployed function v51. Version 52 read-back confirms the secret-only CORS logic is preserved; a distinct post-v52 runtime result has not been retrieved, so do not relabel v52 runtime CORS as freshly verified.
+- Runtime CORS run [39984466037](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984466037) passed against deployed function v53: registered staging origin HTTP 200 with exact ACAO; foreign origin HTTP 403 without ACAO; missing Origin HTTP 200 without ACAO.
 - Vercel and Figma screenshot-based UX acceptance remain unverified. No production deployment, `main` changes, or real business data were part of this slice.
+
+
+## Latest verification addendum — 2026-10-23 16:10 UTC
+
+- Staging Edge Function `dlice-orders` v53 is ACTIVE, `verify_jwt=false` remains preserved, source hash `f3eb25d25c4ea04c5839eb516686e9002e34d616d623b389ca9908139f182f9a`. Read-back confirms secret-only CORS, no hard-coded origin fallback, and the Owner-only requisition reconciliation action.
+- CORS runtime run [39984466037](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984466037) completed PASS for all three required scenarios on v53.
+- Contract run [39984465957](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465957) and quality run [39984465988](https://github.com/dlice8888/dlice-landing-page/actions/runs/39984465988) passed. Test PR #39 was merged at `17571890d29e2fe9f4410cb57f53de073427b9f5`.
+- The manual positive P2P workflow now covers branch-manager PR creation/submission, non-Owner approval denial, Owner approval, PO conversion, lifecycle audit reconciliation, PO ordering, GRN, stock movement, and balance delta. **The manual E2E has not been dispatched**, so requisition-to-stock remains PARTIAL/GATE.
+- Current public base tables: 47; RLS enabled: 47; RLS disabled: 0. New requisition tables have no direct SELECT grant to `anon` or `authenticated`.
+- Migration filenames now align with remote migration versions `20261023160257` and `20261023160440`. Targeted index `purchase_requisitions_converted_po_idx` is present.
+- Security Advisor still warns leaked-password protection is disabled. Performance Advisor reports 74 unused-index suggestions; no unused indexes were dropped.
+- Production/main remain unchanged. UI visual acceptance remains blocked by Vercel SSO protection in this chat context and requires an authenticated browser session.
