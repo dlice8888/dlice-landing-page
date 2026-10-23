@@ -103,7 +103,7 @@ create table if not exists public.branch_settings (
 create index if not exists branch_settings_lookup_idx on public.branch_settings(tenant_id,branch_id,category,setting_key,effective_from desc);
 
 create or replace function public.dlice_version_branch_setting()
-returns trigger language plpgsql security invoker set search_path=public as $
+returns trigger language plpgsql security invoker set search_path=public as $$
 begin
   update public.branch_settings
   set effective_to=case when effective_from<new.effective_from then new.effective_from-1 else effective_from end
@@ -111,7 +111,7 @@ begin
     and effective_to is null and version<new.version;
   return new;
 end;
-$;
+$$;
 drop trigger if exists dlice_branch_setting_versioning on public.branch_settings;
 create trigger dlice_branch_setting_versioning
 before insert on public.branch_settings
