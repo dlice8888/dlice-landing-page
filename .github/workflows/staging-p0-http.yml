@@ -6,10 +6,11 @@ on:
         description: "Exact Vercel Preview URL for this staging branch (never production)"
         required: true
         type: string
-        default: "https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app"
+        default: "https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app"
   push:
     branches:
       - feat/fnb-os-staging-implementation-20261021
+      - feat/p1-stock-transfer-count-20261022
     paths:
       - .github/workflows/staging-p0-http.yml
       - tests/staging/run-p0-with-login.mjs
@@ -34,7 +35,7 @@ jobs:
       - name: Checkout staging security test branch
         uses: actions/checkout@v4
         with:
-          ref: feat/fnb-os-staging-implementation-20261021
+          ref: feat/p1-stock-transfer-count-20261022
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -53,11 +54,11 @@ jobs:
       - name: Validate exact staging Preview target
         id: preview
         env:
-          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app' }}
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app' }}
         run: |
           node --input-type=module <<'NODE'
           const u = new URL(process.env.PREVIEW_URL);
-          const expectedHost = "dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app";
+          const expectedHost = "dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app";
           if (u.protocol !== "https:" || u.origin !== `https://${expectedHost}`) {
             console.error("Refusing to test a non-approved staging Preview origin:", u.origin);
             process.exit(2);
