@@ -15,7 +15,8 @@
 
 ## Latest staging checkpoint — 2026-10-24
 - Applied the KDS/modifier/idempotency/recipe-stock migration and tenant/branch platform foundation to Supabase staging.
-- Staging Edge Function `dlice-orders` is now v55, preserving `verify_jwt=false` and the custom authorization layer.
+- Staging Edge Function `dlice-orders` is now v56, preserving `verify_jwt=false` and the custom authorization layer.
+- Waste events now have a branch-scoped read/reconciliation endpoint that exposes the matching stock movement and audit trail.
 - Fixed POS KDS timing with a deferred trigger; added a branch-scoped sale/KDS/stock/audit reconciliation action and a manual positive E2E workflow for the core acceptance path. The workflow is prepared but not yet run.
 - Added KDS ticket dispatch/transition, idempotent POS/offline replay, opt-in recipe stock tracking, tenant memberships/invites, branch settings, warehouses, waste ledger, shift handover, integration/outbox metadata and backup/restore metadata.
 - 17 new internal tables have RLS enabled and no direct grants to `anon` or `authenticated`.
