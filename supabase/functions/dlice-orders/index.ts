@@ -456,6 +456,9 @@ Deno.serve(async (req: Request) => {
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
+    "erp-list-purchase-requisitions": "procurement",
+    "erp-create-purchase-requisition": "procurement",
+    "erp-transition-purchase-requisition": "procurement",
     "erp-list-purchase-orders": "procurement",
     "erp-create-purchase-order": "procurement",
     "erp-update-purchase-order": "procurement",
@@ -1137,6 +1140,100 @@ Deno.serve(async (req: Request) => {
     if(error||!data)return fail("Status biaya berubah; muat ulang.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_expense_"+next,entity_type:"branch_expense",entity_id:id,metadata:{amount_idr:old.amount_idr,note}});
     return json({ok:true,expense:data},200,origin);
+  }
+
+  if (action === "erp-list-purchase-requisitions") {
+    const branchId = safeText(body.branch_id, 80);
+    const ids = await branchIdsForActor().catch(() => []);
+    let q = admin.from("purchase_requisitions")
+      .select("id,requisition_number,branch_id,status,purpose,needed_by,notes,estimated_total_idr,requested_by,approved_by,rejected_by,converted_purchase_order_id,submitted_at,approved_at,rejected_at,converted_at,created_at,updated_at,branches(code,name),purchase_requisition_items(id,inventory_item_id,item_name_snapshot,quantity,estimated_unit_cost_idr,estimated_line_total_idr,notes)")
+      .order("created_at", { ascending: false }).limit(200);
+    if (branchId && !await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (branchId) q = q.eq("branch_id", branchId);
+    else if (!isOwner) q = ids?.length ? q.in("branch_id", ids) : q.eq("branch_id", "00000000-0000-0000-0000-000000000000");
+    const { data, error } = await q;
+    if (error) return fail("Purchase requisition gagal dimuat.", 500, origin);
+    return json({ purchase_requisitions: data || [] }, 200, origin);
+  }
+
+  if (action === "erp-create-purchase-requisition") {
+    const branchId = safeText(body.branch_id, 80);
+    const purpose = safeText(body.purpose, 200);
+    const neededBy = safeText(body.needed_by, 10);
+    const items = body.items;
+    if (!branchId || !await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (purpose.length < 3) return fail("Tujuan pembelian minimal 3 karakter.", 422, origin);
+    if (neededBy && !/^\d{4}-\d{2}-\d{2}$/.test(neededBy)) return fail("Tanggal kebutuhan tidak valid.", 422, origin);
+    if (!Array.isArray(items) || items.length < 1 || items.length > 100) return fail("Tambahkan 1–100 item kebutuhan.", 422, origin);
+    const cleaned = [];
+    for (const item of items) {
+      const inventoryItemId = safeText(item?.inventory_item_id, 80);
+      const quantity = Number(item?.quantity);
+      const unitCost = Number(item?.estimated_unit_cost_idr ?? 0);
+      if (!inventoryItemId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 100000 ||
+          !Number.isFinite(unitCost) || unitCost < 0 || unitCost > 1000000000) {
+        return fail("Item, jumlah, atau estimasi harga tidak valid.", 422, origin);
+      }
+      cleaned.push({
+        inventory_item_id: inventoryItemId,
+        quantity,
+        estimated_unit_cost_idr: Math.round(unitCost),
+        notes: safeText(item?.notes, 250) || null,
+      });
+    }
+    const { data, error } = await admin.rpc("erp_create_purchase_requisition", {
+      p_branch_id: branchId,
+      p_items: cleaned,
+      p_requested_by: actor.user.id,
+      p_purpose: purpose,
+      p_needed_by: neededBy || null,
+      p_notes: safeText(body.notes, 500) || null,
+    });
+    if (error) {
+      const message = error.message || "";
+      const status = /not_found|not_active|invalid_requisition|invalid_purchase_requisition/i.test(message) ? 422 : 409;
+      return fail("Purchase requisition gagal dibuat. Periksa cabang, item, dan jumlah.", status, origin);
+    }
+    return json(data, 201, origin);
+  }
+
+  if (action === "erp-transition-purchase-requisition") {
+    const id = safeText(body.id, 80);
+    const next = safeText(body.status, 20);
+    const supplierId = safeText(body.supplier_id, 80) || null;
+    if (!id || !["submitted", "approved", "rejected", "converted", "cancelled"].includes(next)) {
+      return fail("ID atau status requisition tidak valid.", 422, origin);
+    }
+    const { data: old, error: oldError } = await admin.from("purchase_requisitions")
+      .select("id,status,branch_id,requested_by,requisition_number")
+      .eq("id", id).maybeSingle();
+    if (oldError || !old) return fail("Purchase requisition tidak ditemukan.", 404, origin);
+    if (!await branchAccess(old.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (["approved", "rejected", "converted"].includes(next) && !isOwner) {
+      return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Owner.", 403, origin);
+    }
+    if (["approved", "rejected"].includes(next) && old.requested_by === actor.user.id) {
+      return fail("Pembuat requisition tidak boleh menyetujui atau menolak requisition sendiri.", 403, origin);
+    }
+    if (next === "cancelled" && !isOwner && old.requested_by !== actor.user.id) {
+      return fail("Hanya pembuat requisition atau Owner yang dapat membatalkan.", 403, origin);
+    }
+    if (supplierId) {
+      const { data: supplier } = await admin.from("suppliers").select("id").eq("id", supplierId).eq("is_active", true).maybeSingle();
+      if (!supplier) return fail("Supplier tidak ditemukan atau tidak aktif.", 404, origin);
+    }
+    const { data, error } = await admin.rpc("erp_transition_purchase_requisition", {
+      p_requisition_id: id,
+      p_next_status: next,
+      p_actor_user_id: actor.user.id,
+      p_supplier_id: supplierId,
+    });
+    if (error) {
+      const message = error.message || "";
+      const status = /not_found/i.test(message) ? 404 : /not_allowed|invalid_requisition_transition/i.test(message) ? 409 : 422;
+      return fail("Transisi purchase requisition gagal. Muat ulang dan periksa statusnya.", status, origin);
+    }
+    return json({ ok: true, ...data }, 200, origin);
   }
 
   if (action === "erp-list-purchase-orders") {
