@@ -1,0 +1,61 @@
+name: Staging runtime CORS probes
+
+on:
+  push:
+    branches: [staging]
+    paths:
+      - ".github/workflows/staging-runtime-cors-probes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cors-probes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe exact allowed, denied, and absent origins
+        env:
+          FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
+          ALLOWED_ORIGIN: https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app
+          FOREIGN_ORIGIN: https://cors-probe-foreign.invalid
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+
+          probe() {
+            local label="$1" origin_mode="$2" origin_value="$3"
+            local headers="$tmp/$label.headers" body="$tmp/$label.body"
+            local -a args=(-sS --max-time 25 -D "$headers" -o "$body" -w '%{http_code}' -X OPTIONS
+              "$FUNCTION_URL"
+              -H 'Access-Control-Request-Method: POST'
+              -H 'Access-Control-Request-Headers: authorization, apikey, content-type')
+            if [[ "$origin_mode" == "set" ]]; then args+=(-H "Origin: $origin_value"); fi
+            local status
+            status="$(curl "${args[@]}")"
+            local acao
+            acao="$(awk 'BEGIN{IGNORECASE=1} /^access-control-allow-origin:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print}' "$headers" | tail -n1)"
+            printf '%s status=%s ACAO=%s\n' "$label" "$status" "${acao:-<absent>}"
+            printf '%s' "$status" > "$tmp/$label.status"
+            printf '%s' "$acao" > "$tmp/$label.acao"
+          }
+
+          probe allowed set "$ALLOWED_ORIGIN"
+          probe foreign set "$FOREIGN_ORIGIN"
+          probe absent absent ''
+
+          allowed_status="$(cat "$tmp/allowed.status")"
+          allowed_acao="$(cat "$tmp/allowed.acao")"
+          foreign_status="$(cat "$tmp/foreign.status")"
+          foreign_acao="$(cat "$tmp/foreign.acao")"
+          absent_acao="$(cat "$tmp/absent.acao")"
+
+          [[ "$allowed_status" =~ ^2[0-9][0-9]$ ]] || { echo 'FAIL: registered origin did not receive an allowed HTTP status'; exit 1; }
+          [[ "$allowed_acao" == "$ALLOWED_ORIGIN" ]] || { echo 'FAIL: ACAO does not exactly match registered origin'; exit 1; }
+          [[ "$foreign_status" == "403" ]] || { echo 'FAIL: foreign origin was not rejected with HTTP 403'; exit 1; }
+          [[ -z "$foreign_acao" ]] || { echo 'FAIL: foreign origin received ACAO'; exit 1; }
+          [[ -z "$absent_acao" ]] || { echo 'FAIL: request without Origin received fallback ACAO'; exit 1; }
+          echo 'PASS: all three runtime CORS probes passed.'
