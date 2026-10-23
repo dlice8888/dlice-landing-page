@@ -84,3 +84,11 @@ test("ERP UI exposes KDS, offline replay, modifiers, substitutions, waste and ha
   assert.match(ui, /TRANSAKSI BELUM DIKONFIRMASI SERVER/);
   assert.match(ui, /erp-sync-offline-operation/);
 });
+
+test("tenant migration has balanced SQL dollar quotes and no duplicated table declarations", () => {
+  assert.equal((platform.match(/\$\$/g) || []).length % 2, 0, "PL/pgSQL dollar quotes must be balanced");
+  assert.doesNotMatch(platform, /as \$\n/, "PL/pgSQL function body must use a valid dollar-quote delimiter");
+  assert.doesNotMatch(platform, /payload_fingerprint ~ '\^\[0-9a-f\]\{64\} check/, "waste idempotency fingerprint constraint must be complete");
+  const declarations = [...platform.matchAll(/create table if not exists public\.(\w+)/gi)].map(m => m[1]);
+  assert.equal(new Set(declarations).size, declarations.length, "each platform table should be declared once per migration");
+});
