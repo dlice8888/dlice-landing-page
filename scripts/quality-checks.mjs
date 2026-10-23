@@ -8,7 +8,7 @@ const fail = (message) => { console.error("FAIL:", message); process.exitCode = 
 const pass = (message) => console.log("PASS:", message);
 const read = (file) => fs.readFileSync(file, "utf8");
 
-for (const file of ["index.html", "admin.html", "track.html"]) {
+for (const file of ["index.html", "admin.html", "track.html", "erp.html"]) {
   if (!fs.existsSync(file)) { fail(`Missing ${file}`); continue; }
   const html = read(file);
   if (!html.toLowerCase().includes("<!doctype html")) fail(`${file}: missing doctype`);
