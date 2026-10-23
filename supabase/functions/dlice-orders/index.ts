@@ -685,16 +685,38 @@ Deno.serve(async (req: Request) => {
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
   const isOwner = actor.profile.role === "owner";
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
-  const branchAccess = async (branchId: string): Promise<boolean> => {
-    if (isOwner) return true;
-    const { data, error } = await admin.from("branch_assignments").select("id").eq("branch_id", branchId).eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
-    return !error && !!data?.length;
+  const tenantIdsForActor = async (): Promise<string[]> => {
+    const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
+    if(error)throw new Error("Keanggotaan tenant gagal dimuat.");
+    return [...new Set((data||[]).map((x:{tenant_id:string})=>x.tenant_id))];
   };
-  const branchIdsForActor = async (): Promise<string[] | null> => {
-    if (isOwner) return null;
-    const { data, error } = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
-    if (error) throw new Error("Penugasan cabang gagal dimuat.");
-    return [...new Set((data || []).map((x: {branch_id:string}) => x.branch_id))];
+  const branchAccess = async (branchId: string): Promise<boolean> => {
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return false;
+    const {data:membership,error:membershipError}=await admin.from("tenant_memberships").select("role").eq("tenant_id",branch.tenant_id).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
+    if(membershipError||!membership)return false;
+    if(["tenant_owner","tenant_admin"].includes(String(membership.role)))return true;
+    const {data,error}=await admin.from("branch_assignments").select("id").eq("branch_id",branchId).eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
+    return !error&&!!data?.length;
+  };
+  const branchIdsForActor = async (): Promise<string[]> => {
+    const {data:memberships,error:membershipError}=await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id",actor.user.id).eq("status","active");
+    if(membershipError)throw new Error("Keanggotaan tenant gagal dimuat.");
+    const membershipsList=memberships||[],tenantIds=[...new Set(membershipsList.map((x:any)=>x.tenant_id))];
+    if(!tenantIds.length)return [];
+    const ownerTenantIds=membershipsList.filter((x:any)=>["tenant_owner","tenant_admin"].includes(String(x.role))).map((x:any)=>x.tenant_id);
+    const owned=ownerTenantIds.length?await admin.from("branches").select("id").in("tenant_id",ownerTenantIds):{data:[],error:null};
+    if(owned.error)throw new Error("Cabang tenant gagal dimuat.");
+    const assigned=await admin.from("branch_assignments").select("branch_id").eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
+    if(assigned.error)throw new Error("Penugasan cabang gagal dimuat.");
+    const assignedIds=[...new Set((assigned.data||[]).map((x:any)=>x.branch_id))];
+    let assignedInTenant:string[]=[];
+    if(assignedIds.length){
+      const rows=await admin.from("branches").select("id,tenant_id").in("id",assignedIds).in("tenant_id",tenantIds);
+      if(rows.error)throw new Error("Pemetaan tenant-cabang gagal dimuat.");
+      assignedInTenant=(rows.data||[]).map((x:any)=>x.id);
+    }
+    return [...new Set([...(owned.data||[]).map((x:any)=>x.id),...assignedInTenant])];
   };
 
   const hasFinanceHQ = async (): Promise<boolean> => {
@@ -863,7 +885,7 @@ Deno.serve(async (req: Request) => {
     if(!isOwner&&!["branches","pos","inventory","procurement","finance","reports","hr","staff"].some(hasPerm))return fail("Izin cabang tidak diizinkan.",403,origin);
     const ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("branches").select("id,code,name,status,address,city,province,timezone,opening_date,notes,created_at").order("code");
-    if(!isOwner) q=ids?.length?q.in("id",ids):q.eq("id","00000000-0000-0000-0000-000000000000");
+    q=ids?.length?q.in("id",ids):q.eq("id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;
     if(error)return fail("Daftar cabang gagal dimuat.",500,origin);
     return json({branches:data||[]},200,origin);
@@ -1052,7 +1074,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("pos_shifts").select("id,branch_id,opened_by,closed_by,opening_cash_idr,expected_cash_idr,counted_cash_idr,cash_variance_idr,status,opened_at,closed_at,notes,branches(code,name),admin_profiles!pos_shifts_opened_by_fkey(username,display_name)").order("opened_at",{ascending:false}).limit(100);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar shift gagal dimuat.",500,origin);
     return json({shifts:data||[]},200,origin);
   }
@@ -1106,7 +1128,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),status=safeText(body.status,20),ids=await branchIdsForActor().catch(()=>[]);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     let q=admin.from("kitchen_tickets").select("id,ticket_number,branch_id,order_id,pos_sale_id,status,version,priority,notes,created_at,accepted_at,started_at,ready_at,served_at,branches(code,name),kitchen_ticket_items(id,product_id,product_name_snapshot,quantity,modifier_snapshot,substitution_snapshot,notes,status)").order("priority").order("created_at").limit(300);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     if(status){if(!["queued","accepted","preparing","ready","served","cancelled","blocked"].includes(status))return fail("Status KDS tidak valid.",422,origin);q=q.eq("status",status);}
     const {data,error}=await q;if(error)return fail("Antrean kitchen belum dapat dimuat. Pastikan migrasi KDS sudah diterapkan.",503,origin);
     return json({tickets:data||[]},200,origin);
@@ -1158,7 +1180,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),since=safeText(body.since,10),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at,branches(code,name),pos_sale_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     if(since)q=q.gte("created_at",since+"T00:00:00");
     const {data,error}=await q;if(error)return fail("Laporan POS gagal dimuat.",500,origin);
     return json({sales:data||[]},200,origin);
@@ -1168,7 +1190,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("branch_expenses").select("id,expense_code,branch_id,category,description,amount_idr,payment_method,status,receipt_reference,created_by,reviewed_by,reviewed_at,created_at,branches(code,name),admin_profiles!branch_expenses_created_by_fkey(username,display_name)").order("created_at",{ascending:false}).limit(200);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar biaya gagal dimuat.",500,origin);
     return json({expenses:data||[]},200,origin);
   }
@@ -1251,7 +1273,7 @@ Deno.serve(async (req: Request) => {
       .order("created_at", { ascending: false }).limit(200);
     if (branchId && !await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     if (branchId) q = q.eq("branch_id", branchId);
-    else if (!isOwner) q = ids?.length ? q.in("branch_id", ids) : q.eq("branch_id", "00000000-0000-0000-0000-000000000000");
+    else q = ids?.length ? q.in("branch_id", ids) : q.eq("branch_id", "00000000-0000-0000-0000-000000000000");
     const { data, error } = await q;
     if (error) return fail("Purchase requisition gagal dimuat.", 500, origin);
     return json({ purchase_requisitions: data || [] }, 200, origin);
@@ -1341,7 +1363,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     let q=admin.from("purchase_orders").select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at,branches(code,name),purchase_order_items(id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Purchase order gagal dimuat.",500,origin);
     return json({purchase_orders:data||[]},200,origin);
   }
@@ -1388,7 +1410,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     let q=admin.from("orders").select("id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status,operational_status,fulfillment_status,branch_id,branch_selection_source,branches(code,name),order_items(product_name_snapshot,quantity,line_total_idr)").order("created_at",{ascending:false}).limit(200);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar fulfillment gagal dimuat.",500,origin);
     return json({orders:data||[]},200,origin);
   }
@@ -1537,7 +1559,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     let q=admin.from("production_batches").select("*,branches(code,name),recipes(version,yield_quantity,yield_unit,products(name)),production_consumptions(inventory_item_id,planned_quantity,actual_quantity,unit,inventory_items(name,sku))").order("created_at",{ascending:false}).limit(200);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Batch produksi gagal dimuat.",500,origin);
     return json({batches:data||[]},200,origin);
   }
@@ -1670,7 +1692,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     let q=admin.from("cash_reconciliations").select("*,branches(code,name),pos_shifts(opened_at,closed_at,status)").order("business_date",{ascending:false}).limit(300);
-    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;if(error)return fail("Daftar rekonsiliasi gagal dimuat.",500,origin);return json({reconciliations:data||[]},200,origin);
   }
 
