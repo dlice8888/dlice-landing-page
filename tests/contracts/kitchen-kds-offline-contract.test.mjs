@@ -7,6 +7,8 @@ const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 const platform = readFileSync("supabase/migrations/20261023233000_tenant_branch_platform_foundation.sql", "utf8");
 const tenantIntegrity = readFileSync("supabase/migrations/20261023180000_tenant_branch_integrity_constraints.sql", "utf8");
 const posDispatch = readFileSync("supabase/migrations/20261023181000_kds_pos_deferred_dispatch.sql", "utf8");
+const kdsE2E = readFileSync("tests/staging/kds-pos-stock-positive.mjs", "utf8");
+const kdsWorkflow = readFileSync(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", "utf8");
 const ui = readFileSync("erp.html", "utf8");
 
 test("KDS tickets are branch-scoped, source-linked, versioned and idempotent", () => {
@@ -115,4 +117,17 @@ test("POS reconciliation cross-checks sale lines, KDS, stock ledger, balances an
   assert.match(edge, /kitchen_ticket_items/);
   assert.match(edge, /audit_events/);
   assert.match(edge, /branchAccess\(branchId\)/);
+});
+
+test("manual staging E2E covers POS, offline replay, KDS, recipe stock and reconciliation", () => {
+  for (const action of ["erp-create-pos-sale","erp-sync-offline-operation","erp-list-kitchen-tickets","erp-transition-kitchen-ticket","erp-list-sales","erp-reconcile-pos-sale"]) {
+    assert.match(kdsE2E, new RegExp(action));
+  }
+  assert.match(kdsE2E, /idempotent_replay/);
+  assert.match(kdsE2E, /50, "Recipe must consume 50g flour/);
+  assert.match(kdsE2E, /10, "Recipe must consume 10g second ingredient/);
+  assert.match(kdsE2E, /finally/);
+  assert.match(kdsWorkflow, /workflow_dispatch/);
+  assert.match(kdsWorkflow, /confirm_staging_mutations/);
+  assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);
 });
