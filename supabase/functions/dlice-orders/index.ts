@@ -43,6 +43,9 @@ const randomToken = () => {
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const todayDate = () => new Date().toISOString().slice(0, 10);
+// Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
+// Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
+const TENANT_ISOLATION_RELEASED = false;
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -754,6 +757,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-create-tenant") {
+    if (!TENANT_ISOLATION_RELEASED) return fail("Tenant onboarding is paused until cross-tenant isolation tests pass.", 423, origin);
     if(!isOwner)return fail("Hanya Owner platform yang dapat membuat tenant baru.",403,origin);
     const slug=safeText(body.slug,60).toLowerCase(),legalName=safeText(body.legal_name,180);
     if(!/^[a-z0-9][a-z0-9-]{1,60}$/.test(slug)||legalName.length<2)return fail("Slug atau nama legal tenant tidak valid.",422,origin);
@@ -766,6 +770,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-invite-tenant-member") {
+    if (!TENANT_ISOLATION_RELEASED) return fail("Tenant onboarding is paused until cross-tenant isolation tests pass.", 423, origin);
     if(!hasPerm("branches")&&!isOwner)return fail("Izin undangan tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),email=safeText(body.email,254).toLowerCase(),role=safeText(body.role,40);
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
