@@ -10,6 +10,7 @@ const track = read("track.html");
 const erp = read("erp.html");
 const branchChecklistMigration = read("supabase/migrations/20261021182634_branch_operation_checklists.sql");
 const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_transfers_and_counts.sql");
+const stockWorkflowAccessMigration = read("supabase/migrations/20261023003006_revoke_direct_client_access_stock_workflows.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
 
 const erpAuthorizationCoverage = () => {
@@ -31,7 +32,7 @@ const erpAuthorizationCoverage = () => {
 };
 
 const checks = [
-  ["CORS allowlist is sourced only from DLICE_ALLOWED_ORIGINS and compares complete origins", /Deno\.env\.get\("DLICE_ALLOWED_ORIGINS"\)/.test(edge) && /return configuredOrigins\.has\(origin\)/.test(edge) && !/\.endsWith\(|\.startsWith\(|new URL\(origin\)/.test(edge)],
+  ["CORS allowlist is sourced only from DLICE_ALLOWED_ORIGINS and compares complete origins", /const configuredOrigins = new Set\([\s\S]*?Deno\.env\.get\("DLICE_ALLOWED_ORIGINS"\)[\s\S]*?\);/.test(edge) && /const isAllowedOrigin = \(origin: string \| null\) => \{\s*if \(!origin\) return true;\s*return configuredOrigins\.has\(origin\);\s*\};/.test(edge) && !/\.endsWith\(|\.startsWith\(|new URL\(origin\)/.test(edge.match(/const isAllowedOrigin[\s\S]*?\n\};/)?.[0] || "")],
   ["inactive or missing admin profiles cannot establish an operational session", /authClient\.auth\.getUser\(token\)/.test(edge) && /if \(error \|\| !profile\?\.is_active\) return null/.test(edge) && /const actor = await getAdmin\(req\);[\s\S]{0,120}if \(!actor\) return fail\("Silakan masuk terlebih dahulu/.test(edge)],
   ["CORS reflects only explicitly configured origins and never falls back to a trusted origin", /return configuredOrigins\.has\(origin\)/.test(edge) && !/const allowedOrigins = new Set/.test(edge) && /const corsHeaders = \(origin: string \| null\) => \(\{[\s\S]{0,500}origin && isAllowedOrigin\(origin\) \? \{ "Access-Control-Allow-Origin": origin \} : \{\}/.test(edge) && !/"Access-Control-Allow-Origin": origin && isAllowedOrigin\(origin\) \? origin : "https:\/\/dlice\.vercel\.app"/.test(edge)],
   ["CORS preflight and POST reject unapproved browser origins", /if \(req\.method === "OPTIONS"\)[\s\S]{0,180}if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge) && /if \(origin && !isAllowedOrigin\(origin\)\) return fail\("Origin tidak diizinkan\.", 403, origin\)/.test(edge)],
@@ -67,9 +68,9 @@ const checks = [
   ["ERP workspace exposes opening/closing checklist view", /id="operationsView"/.test(erp) && /startOpeningChecklist/.test(erp) && /startClosingChecklist/.test(erp) && /erp-complete-branch-checklist/.test(erp)],
   ["stock transfer and count actions are permission-gated", /"erp-create-stock-transfer": "inventory"/.test(edge) && /"erp-post-stock-count": "inventory"/.test(edge)],
   ["stock transfer transitions are atomic and branch-scoped", /erp_transition_stock_transfer/.test(edge) && /branchAccess\(branchId\)/.test(edge) && /for update/.test(stockWorkflowMigration)],
-  ["stock transfer and count tables deny direct client access", /alter table public\.stock_transfers enable row level security/i.test(stockWorkflowMigration) && /deny_direct_client_access on public\.stock_counts/i.test(stockWorkflowMigration) && /revoke all on public\.stock_transfers, public\.stock_transfer_items, public\.stock_counts, public\.stock_count_items from anon, authenticated/i.test(stockWorkflowMigration)],
+  ["stock transfer and count tables deny direct client access", /alter table public\.stock_transfers enable row level security/i.test(stockWorkflowMigration) && /deny_direct_client_access on public\.stock_counts/i.test(stockWorkflowMigration) && /revoke all privileges on table[\s\S]*public\.stock_transfers,[\s\S]*public\.stock_transfer_items,[\s\S]*public\.stock_counts,[\s\S]*public\.stock_count_items[\s\S]*from public, anon, authenticated/i.test(stockWorkflowAccessMigration)],
   ["stock count posting writes variance movements atomically", /erp_post_stock_count/.test(stockWorkflowMigration) && /stock_movements/.test(stockWorkflowMigration) && /adjustment_in/.test(stockWorkflowMigration) && /adjustment_out/.test(stockWorkflowMigration)],
-  ["stock workflow UI exposes transfer and opname", /id="stockTransferForm"/.test(erp) && /id="stockCountForm"/.test(erp) && /erp-transition-stock-transfer/.test(erp) && /erp-post-stock-count/.test(erp)],
+  ["stock workflow UI exposes transfer and opname", /id="stockTransferForm"/.test(erp) && /id="createStockCount"/.test(erp) && /id="stockCountList"/.test(erp) && /erp-transition-stock-transfer/.test(erp) && /erp-post-stock-count/.test(erp)],
 ];
 
 for (const [label, ok] of checks) {

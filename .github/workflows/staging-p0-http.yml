@@ -1,0 +1,92 @@
+name: Staging P0 HTTP security
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact Vercel Preview URL for this staging branch (never production)"
+        required: true
+        type: string
+        default: "https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app"
+  push:
+    branches:
+      - feat/fnb-os-staging-implementation-20261021
+      - feat/p1-stock-transfer-count-20261022
+    paths:
+      - .github/workflows/staging-p0-http.yml
+      - tests/staging/run-p0-with-login.mjs
+      - tests/staging/p0-http-smoke.mjs
+      - tests/staging/bootstrap-qa-accounts.mjs
+      - tests/staging/timezone-cutoff-contract.mjs
+      - supabase/functions/dlice-orders/index.ts
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-p0-http-security-final
+  cancel-in-progress: false
+
+jobs:
+  p0-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Checkout staging security test branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/p1-stock-transfer-count-20261022
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Provision disposable QA identities through Owner-only actions
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: qa_dlice_staging_branch_a
+          STAGING_TEST_NO_PERMISSION_USERNAME: qa_dlice_staging_no_permission
+          STAGING_TEST_INACTIVE_USERNAME: qa_dlice_staging_inactive
+        run: node tests/staging/bootstrap-qa-accounts.mjs
+      - name: Validate exact staging Preview target
+        id: preview
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app' }}
+        run: |
+          node --input-type=module <<'NODE'
+          const u = new URL(process.env.PREVIEW_URL);
+          const expectedHost = "dlice-landing-page-git-feat-p1-stock-tran-9999c8-dlice8888-7332.vercel.app";
+          if (u.protocol !== "https:" || u.origin !== `https://${expectedHost}`) {
+            console.error("Refusing to test a non-approved staging Preview origin:", u.origin);
+            process.exit(2);
+          }
+          console.log("Approved staging Preview origin:", u.origin);
+          await import("node:fs/promises").then(({ appendFile }) => appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
+          NODE
+      - name: Run P0 HTTP security and WIB/WITA/WIT contract checks
+        env:
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
+          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: qa_dlice_staging_branch_a
+          STAGING_TEST_NO_PERMISSION_USERNAME: qa_dlice_staging_no_permission
+          STAGING_TEST_INACTIVE_USERNAME: qa_dlice_staging_inactive
+          TEST_BRANCH_B_ID: d8672046-7029-489b-9223-df07007cdc69
+        run: |
+          set -o pipefail
+          node tests/staging/run-p0-with-login.mjs 2>&1 | tee p0-http-results.log
+      - name: Upload P0 result log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-p0-http-results
+          path: p0-http-results.log
+          if-no-files-found: ignore
+          retention-days: 14
