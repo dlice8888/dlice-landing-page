@@ -215,3 +215,12 @@ No cloud browser / visual screenshot capture or interactive browser automation i
 - Supabase still reports deployed `dlice-orders` version 50. Its source has the new reconciliation action in GitHub staging but the live function has not been deployed. PR #32 remains Draft because secret presence cannot be checked with the available Supabase connector; no secret value was read. Do not deploy or claim CORS probes until an authorized operator confirms secret presence without revealing its value.
 - No GitHub workflow-dispatch action is available in the current connector, so no manual E2E run URL or reconciliation artifact exists yet. Do not use a service-role key in CI or bypass Vercel Deployment Protection.
 - No production or `main` changes; no staging QA rows written by this work.
+
+
+## CORS secret-only rollout — 2026-10-23
+
+- Owner confirmed `DLICE_ALLOWED_ORIGINS` is configured across Supabase, Vercel, and GitHub; no secret value was requested or exposed.
+- PR #32 was marked ready and merged directly to `staging` per Owner instruction. Merge commit: `e7fd6fe5f379354648ff3db290eb96583937c788`.
+- Deployed only the staging Supabase Edge Function `dlice-orders`; live function reports version 51, ACTIVE, with `verify_jwt=false` preserved. Read-back confirms secret-only exact-origin parsing, no temporary hard-coded staging-origin fallback, and the PR #35 receipt-reconciliation action remains present.
+- Runtime CORS probes for the staging origin, an unlisted foreign origin, and missing Origin could not be executed from this environment: DNS resolution for `higoadrzxnhzbbwhdbmh.supabase.co` failed. Do not mark runtime CORS verification passed until these probes are rerun from a network that can reach the staging endpoint.
+- No production project, `main` branch, secrets, database rows, or QA data were modified by this rollout. GitHub Actions workflow dispatch and authenticated Vercel UI testing remain unavailable from the current connector/session.
