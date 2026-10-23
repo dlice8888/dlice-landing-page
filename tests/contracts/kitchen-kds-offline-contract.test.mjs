@@ -147,3 +147,17 @@ test("tenant onboarding fails closed until cross-tenant isolation is accepted", 
   assert.match(edge, /if \(action === "erp-create-tenant"\)[\s\S]{0,260}if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\);/);
   assert.match(edge, /if \(action === "erp-invite-tenant-member"\)[\s\S]{0,280}if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\);/);
 });
+
+
+test("legacy branch access helpers require active tenant membership before granting access", () => {
+  const singleBranchHelper = edge.match(/const actorCanAccessBranch = async[\\s\\S]*?\\n  };/);
+  const branchListHelper = edge.match(/const actorBranchIds = async[\\s\\S]*?\\n  };/);
+  assert.ok(singleBranchHelper, "legacy single-branch authorization helper must exist");
+  assert.ok(branchListHelper, "legacy branch-list authorization helper must exist");
+  assert.match(singleBranchHelper[0], /tenant_memberships/);
+  assert.match(singleBranchHelper[0], /tenant_id/);
+  assert.match(singleBranchHelper[0], /status/, "membership must be active");
+  assert.match(branchListHelper[0], /tenant_memberships/);
+  assert.match(branchListHelper[0], /tenant_id/);
+  assert.match(branchListHelper[0], /status/, "membership must be active");
+});
