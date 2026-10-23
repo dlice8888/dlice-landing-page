@@ -205,3 +205,13 @@ No cloud browser / visual screenshot capture or interactive browser automation i
 - Supabase connector inventory has no secret metadata action. GitHub connector inventory has no workflow_dispatch action. No approved deployment route or authenticated Vercel browser identity was available in this execution, so no Edge Function deploy, secret change, positive E2E run, or QA data write occurred.
 - Browser audit using Playwright against the Preview was blocked by Vercel Deployment Protection: all attempted paths rendered the Vercel login/protection page, not the product. No product screenshots are accepted as evidence; UI/browser acceptance remains unverified.
 - Production/main remains untouched; estimated PRD coverage remains 31%, not increased.
+
+
+## Direct implementation update — 2026-10-23
+
+- Per Owner instruction, PR #35 was merged directly to `staging` without waiting for human review. Merge commit: `3dd5ee3462088702cf820926ceb642ca3395df13`. The merged code adds an Owner-only, branch-scoped read-only receipt reconciliation action, independent assertions for receipt line / stock movement / audit event, and a sanitized JSON artifact upload in the manual E2E workflow.
+- CI on the final PR head `cc523b62190a020464b7a66558a72fc7b0c8ec47` completed successfully for Free quality checks and Procurement receiving contract. This is not a positive runtime procurement E2E.
+- Staging Vercel deployment `https://dlice-landing-page-3fgtwibm4-dlice8888-7332.vercel.app` is READY for merge commit `3dd5ee3462088702cf820926ceb642ca3395df13`; authenticated UI acceptance is still blocked by Deployment Protection.
+- Supabase still reports deployed `dlice-orders` version 50. Its source has the new reconciliation action in GitHub staging but the live function has not been deployed. PR #32 remains Draft because secret presence cannot be checked with the available Supabase connector; no secret value was read. Do not deploy or claim CORS probes until an authorized operator confirms secret presence without revealing its value.
+- No GitHub workflow-dispatch action is available in the current connector, so no manual E2E run URL or reconciliation artifact exists yet. Do not use a service-role key in CI or bypass Vercel Deployment Protection.
+- No production or `main` changes; no staging QA rows written by this work.
