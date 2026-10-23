@@ -14,6 +14,11 @@ const configuredOrigins = new Set(
     .map((value) => value.trim())
     .filter((value) => /^https:\/\/[a-z0-9.-]+(?::\d+)?$/.test(value)),
 );
+// One exact, temporary staging Preview origin is allowed only on this staging project.
+// Keep production fail-closed and never use hostname prefixes/suffixes or wildcard matching.
+if ((SUPABASE_URL ?? "").includes("higoadrzxnhzbbwhdbmh.supabase.co")) {
+  configuredOrigins.add("https://dlice-landing-page-git-feat-fnb-os-stagin-f4a8a6-dlice8888-7332.vercel.app");
+}
 const isAllowedOrigin = (origin: string | null) => {
   if (!origin) return true;
   return configuredOrigins.has(origin);
