@@ -160,3 +160,35 @@ No cloud browser / visual screenshot capture or interactive browser automation i
 4. Dispatch the positive procurement workflow from GitHub Actions UI on branch `staging` with `confirm_staging_mutations=true`; save the run URL/artifacts and reconcile PO, receipt, inventory delta, stock movement, and audit event.
 5. Switch to a Work session with cloud browser access to capture and test `/`, `/erp.html`, `/admin.html`, and `/track.html` at mobile/tablet/desktop sizes before marking responsive acceptance passed.
 6. Keep `main`, production Supabase `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` unchanged.
+
+
+---
+
+## Execution attempt 3 — deployment protection and release blockers (2026-10-23)
+
+### PR and reviewer state
+- Fresh metadata check: PR #32 is open, Draft, not merged, and `mergeable=false`; PR #35 is open, Draft, not merged, and `mergeable=false`.
+- Both PRs have zero submitted reviews and no requested reviewers. No reviewer identity was provided or discoverable from the task context, so no reviewer was invented and neither PR was self-approved.
+- Existing gate comments are posted on [PR #32](https://github.com/dlice8888/dlice-landing-page/pull/32) and [PR #35](https://github.com/dlice8888/dlice-landing-page/pull/35). Await authorized human review.
+
+### Secret verification and runtime deployment
+- Available Supabase connector inventory has no secret-list/metadata-only action. No secret value was read, logged, or inferred. `DLICE_ALLOWED_ORIGINS` presence/saved state remains **unverified**.
+- Current staging Edge Function inventory still reports `dlice-orders` version 50. Its source contains the temporary hard-coded staging origin fallback. PR #32 is not deployed to this runtime.
+- No deployment was attempted: the required secret-state gate and authorized PR review are outstanding. Repeating the three probes against version 50 would not verify the new candidate, so the candidate-runtime probes were not repeated/misreported as a pass.
+
+### Procurement positive E2E
+- PR #35 includes `.github/workflows/staging-procurement-positive-e2e.yml` on its PR head, but it is not on the current staging branch.
+- The available GitHub connector does not expose a workflow-dispatch action. No direct dispatch API was available through the connected actions, so `confirm_staging_mutations=true` was not submitted and no positive E2E was started.
+- The previously observed staging baseline remained zero for `purchase_orders`, `purchase_receipts`, `branch_inventory`, and `stock_movements`; this audit wrote no QA rows. PO approval/receiving/stock/audit reconciliation is **not proven**.
+- Manual continuation after approved deployment: GitHub Actions → **Staging procurement positive-path E2E** → branch `staging` → set `confirm_staging_mutations=true` → Run workflow. Save run URL/artifact IDs, then independently reconcile PO state, receipt quantity, inventory before/after, stock movement, and audit event.
+
+### Real-browser responsive smoke — blocked by Vercel protection
+- A headless Playwright Chromium browser was installed in an isolated audit sandbox and attempted to navigate to `/`, `/erp.html`, `/admin.html`, and `/track.html` at mobile (390×844), tablet (768×1024), and desktop (1440×900) viewports with reduced-motion emulation.
+- All four paths returned HTTP 200 but rendered the **Vercel Login / Deployment Protection page**, not the application. Thus the initial HTTP 200 checks were false-positive reachability evidence for app acceptance. No valid application layout, interaction, tap target, or accessibility conclusions can be drawn from those pages.
+- The browser automation sandbox had no Vercel CLI identity, `VERCEL_OIDC_TOKEN`, or `VERCEL_TOKEN`. Deployment protection was not disabled or bypassed. Screenshots captured by the browser are protection-page screenshots and are not accepted as product UI evidence.
+- Required next step: run browser tests from an authenticated Work/browser session or an approved Vercel Trusted Sources path scoped to this Preview. Then recapture the app's actual UI at all three viewport sizes, test horizontal overflow, nav/forms/buttons, keyboard focus, reduced motion, and console/network errors. Never loosen protection just to make the audit pass.
+
+### Acceptance impact
+- No PR was merged, no Edge Function deployed, no secrets changed, and no procurement QA data written.
+- The 18-domain matrix remains at the 31% estimated coverage baseline; domain 7 Procurement, domain 18 Security, and responsive UI/CX remain blocked/unverified.
+- Production `main`, Supabase project `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` remain untouched.
