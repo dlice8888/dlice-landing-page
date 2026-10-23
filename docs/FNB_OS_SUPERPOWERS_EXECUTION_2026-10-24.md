@@ -19,7 +19,7 @@
 - Static contract tests for schema/API/UI and a PR-triggered workflow.
 
 ### Not yet proven or complete
-- Staging deployment has since been completed: the KDS/platform migrations are applied and `dlice-orders` v56 is active. Source and staging runtime are not considered accepted until the positive-path E2E workflow and tenant isolation checks pass.
+- Staging deployment has since been completed: the KDS/platform migrations are applied and `dlice-orders` v57 is active; tenant creation/invitation is fail-closed until isolation acceptance. Source and staging runtime are not considered accepted until the positive-path E2E workflow and tenant isolation checks pass.
 - Positive E2E is not run: POS → payment → KDS → recipe stock → waste/shift reconciliation → reports.
 - Online checkout modifier selection is not yet wired through the customer checkout UI.
 - Tenant foundations are additive but **do not yet constitute complete tenant isolation**. Several legacy global catalogs, finance actions, audit queries, job-position templates, and permission checks still need tenant-aware scoping. Do not onboard a second live tenant until the isolation suite is implemented and accepted.
@@ -53,13 +53,14 @@ Performance/RPO/RTO values are proposed test targets, not observed results or ag
 - A fail-closed release gate is now present in the feature branch: `erp-create-tenant` and `erp-invite-tenant-member` return HTTP 423 until cross-tenant negative tests cover legacy catalog, finance, reporting, audit, permissions, and branch-scoped operations.
 - Contract test added first, then implementation added. The PR-triggered `Staging Kitchen KDS Offline Contract Tests` run for commit `b02d62fccb2991331838cd0c41db4e9914dad152` completed successfully.
 - Keep the gate disabled until isolation is proven end-to-end; do not create or onboard a second tenant meanwhile. This is a safety containment, not a claim that SaaS multi-tenancy is complete.
+- The PR-triggered contract suite now asserts that the staging E2E script checks both create-tenant and invite-member actions return HTTP 423 using malformed payloads, so a broken gate cannot create test tenant data. Static CI, KDS/offline contract, procurement contracts, and CORS probes passed for commit `16976e9f454388f18229df6c3d86ee7e0bd04f2f`; authenticated runtime assertions still await the manual staging workflow.
 
 ## Staging deployment checkpoint — 2026-10-24 17:56 UTC
 
 - Applied `kitchen_kds_idempotency_modifiers` to staging project `higoadrzxnhzbbwhdbmh` (remote migration version `20261023175347`).
 - Applied `tenant_branch_platform_foundation` to staging (remote migration version `20261023175514`).
 - Applied `tenant_branch_integrity_constraints` to staging; composite foreign keys now enforce tenant↔branch consistency for warehouses, branch settings, shift handovers, waste events, integration outbox, and branch inventory↔warehouse mapping.
-- Deployed `dlice-orders` Edge Function **v56** to staging. `verify_jwt=false` is preserved; custom per-action auth remains required.
+- Deployed `dlice-orders` Edge Function **v57** to staging after the fail-closed tenant onboarding guard was added. `verify_jwt=false` is preserved; custom per-action auth remains required. `verify_jwt=false` is preserved; custom per-action auth remains required.
 - Added `erp-list-waste-events` so waste events can be reconciled to stock movements and audit records.
 - Applied `kds_pos_deferred_dispatch` (remote migration version `20261023180455`). POS KDS dispatch now runs as a deferred constraint trigger so the ticket snapshots sale lines after the POS transaction writes items/modifiers/substitutions.
 - Added `erp-reconcile-pos-sale`, a branch-scoped reconciliation response joining sale lines, KDS ticket/items, stock movements, current balances, and audit events.
