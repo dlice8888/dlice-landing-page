@@ -192,3 +192,16 @@ No cloud browser / visual screenshot capture or interactive browser automation i
 - No PR was merged, no Edge Function deployed, no secrets changed, and no procurement QA data written.
 - The 18-domain matrix remains at the 31% estimated coverage baseline; domain 7 Procurement, domain 18 Security, and responsive UI/CX remain blocked/unverified.
 - Production `main`, Supabase project `gdjlkrmlsurcdbwnmqgg`, and `https://dlice.vercel.app/` remain untouched.
+
+
+---
+
+## Release-gate correction — 2026-10-23 22:11 WIB
+
+- PR #32 and PR #35 were moved out of Draft to make review available; PR #32 was then deliberately returned to Draft because its explicit secret-confirmation safety condition remains unmet. Current intended state: PR #32 Draft; PR #35 ready for authorized review; neither merged.
+- PR #32: new comment https://github.com/dlice8888/dlice-landing-page/pull/32#issuecomment-6368151709 records that the staging secret presence is unverified, the deployed function is still version 50, and candidate-runtime CORS probes must follow approved deployment.
+- PR #35: new comment https://github.com/dlice8888/dlice-landing-page/pull/35#issuecomment-6368152559 identifies an acceptance gap in the positive E2E harness: it verifies receipt and inventory delta but does not independently reconcile stock movement and audit event. Those assertions/artifacts must be added before claiming complete reconciliation.
+- Both PRs still have no submitted human review. No reviewer username/team was supplied, and no Code Owners file was found at the checked repository paths; no reviewer was invented or self-approval submitted.
+- Supabase connector inventory has no secret metadata action. GitHub connector inventory has no workflow_dispatch action. No approved deployment route or authenticated Vercel browser identity was available in this execution, so no Edge Function deploy, secret change, positive E2E run, or QA data write occurred.
+- Browser audit using Playwright against the Preview was blocked by Vercel Deployment Protection: all attempted paths rendered the Vercel login/protection page, not the product. No product screenshots are accepted as evidence; UI/browser acceptance remains unverified.
+- Production/main remains untouched; estimated PRD coverage remains 31%, not increased.
