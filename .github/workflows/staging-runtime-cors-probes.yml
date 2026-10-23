@@ -6,11 +6,15 @@ on:
     paths:
       - ".github/workflows/staging-runtime-cors-probes.yml"
       - "supabase/functions/dlice-orders/index.ts"
+      - "tests/staging/procurement-requisition-contract.mjs"
+      - "tests/staging/procurement-receiving-positive.mjs"
   pull_request:
     branches: [staging]
     paths:
       - ".github/workflows/staging-runtime-cors-probes.yml"
       - "supabase/functions/dlice-orders/index.ts"
+      - "tests/staging/procurement-requisition-contract.mjs"
+      - "tests/staging/procurement-receiving-positive.mjs"
   workflow_dispatch:
 
 permissions:
