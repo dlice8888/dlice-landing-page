@@ -5,7 +5,7 @@
 
 ## Latest staging deployment checkpoint — 2026-10-24
 - Supabase staging project `higoadrzxnhzbbwhdbmh`: migrations `kitchen_kds_idempotency_modifiers` and `tenant_branch_platform_foundation` applied.
-- Edge Function `dlice-orders`: **v58 ACTIVE**, `verify_jwt=false` unchanged. v58 adds active tenant-membership checks to legacy branch authorization helpers and keeps tenant creation/invitation fail-closed with HTTP 423.
+- Edge Function `dlice-orders`: **v59 ACTIVE**, `verify_jwt=false` unchanged. v58 adds active tenant-membership checks to legacy branch authorization helpers and keeps tenant creation/invitation fail-closed with HTTP 423.
 - Added branch-scoped waste-event reconciliation to inspect event, stock movement and audit linkage.
 - Applied deferred POS→KDS dispatch trigger and verified it is `DEFERRABLE INITIALLY DEFERRED`; this prevents a ticket from being created before POS sale items exist.
 - Added branch-scoped `erp-reconcile-pos-sale` and a manual positive E2E workflow for POS payment/idempotency/offline replay/KDS/recipe stock/report reconciliation. Workflow remains **not run**.
@@ -23,7 +23,7 @@ Status: **Partial** = some implementation exists; **Gate** = blocked by runtime,
 ## Executive summary
 - Supabase staging is `ACTIVE_HEALTHY` (PostgreSQL 17) at the latest verified checkpoint; migration inventory and schema counts should be refreshed before any production release.
 - 17 new KDS/platform tables have RLS enabled and no direct grants to `anon`/`authenticated`; this is an intentional server-side-only boundary, not proof of cross-tenant API isolation.
-- Edge Function `dlice-orders` is ACTIVE **v58** and has `verify_jwt=false`; protected actions use custom per-action authentication/authorization. Runtime CORS probes passed after v58 deployment. Tenant creation/invitation remain fail-closed until cross-tenant negative tests pass.
+- Edge Function `dlice-orders` is ACTIVE **v59** and has `verify_jwt=false`; protected actions use custom per-action authentication/authorization. Runtime CORS probes passed after v58 deployment. Tenant creation/invitation remain fail-closed until cross-tenant negative tests pass.
 - PR #31 is Draft. Its reported acceptance suite is 21 PASS / 0 FAIL for role/scope and negative probes only. It explicitly does not establish positive-path business E2E.
 - Vercel Preview build for commit `576d0781281ea826d19824990cd1668190d1ab46` is READY. This does not deploy Supabase functions.
 - Security Advisor: leaked-password protection disabled. Performance Advisor: 69 unused-index findings; do not bulk-drop them.
@@ -296,13 +296,14 @@ Keep the conservative 31% feature-coverage baseline for cross-snapshot compariso
 
 ---
 
-## Latest read-only staging audit — 2026-10-24 (post-v58)
+## Latest read-only staging audit — 2026-10-24 (post-v59)
 
-- Supabase project `higoadrzxnhzbbwhdbmh` reports `ACTIVE_HEALTHY`, PostgreSQL 17. Edge Function `dlice-orders` is v58 ACTIVE and `verify_jwt=false`.
+- Supabase project `higoadrzxnhzbbwhdbmh` reports `ACTIVE_HEALTHY`, PostgreSQL 17. Edge Function `dlice-orders` is v59 ACTIVE and `verify_jwt=false`. The guarded `erp-retire-recipe` cleanup route is deployed; it only retires an active recipe after its product is inactive and stock tracking is disabled.
 - Remote migration inventory contains 42 versions through `20261023180455_kds_pos_deferred_dispatch`; the four KDS/platform migrations and two procurement migrations are present.
 - Tenant mapping check: 154 branches, zero with null `tenant_id`, but only **one distinct tenant**. This verifies mapping completeness only; it does not test isolation between tenants.
 - Business acceptance data check: `kitchen_tickets`, `pos_idempotency_requests`, `offline_sync_receipts`, `order_stock_consumptions`, `inventory_waste_events`, and `purchase_requisitions` each contain **zero rows** at audit time. Therefore neither positive KDS/POS/stock E2E nor procurement-to-stock acceptance can be inferred from current data.
 - Read-only ACL/policy check: all inspected public base tables have RLS enabled. The 17 internal tables flagged by Security Advisor have zero direct table privileges for `anon` and `authenticated`; this is intentional server-side-only access, but must be paired with runtime authorization tests. The legacy `products` table intentionally grants client SELECT only under its “Public can read active Dlice products” policy; INSERT/UPDATE/DELETE are not granted. Because the catalog is still global rather than tenant-keyed, this remains a multi-tenant isolation limitation.
 - Security Advisor still reports 17 `rls_enabled_no_policy` INFO findings and one `auth_leaked_password_protection` WARN. No Auth configuration was changed during this audit.
+- The fixed QA fixture preflight confirmed the branch, product, recipe and both ingredient IDs exist; the product is inactive and the recipe starts in draft. The E2E harness now restores that temporary recipe activation in `finally` and records cleanup failures.
 - Workflow definitions were re-read: KDS/POS E2E allows `staging` or `feat/staging-kds-offline-tenant-20261024`; procurement E2E allows only `staging`. Both require `confirm_staging_mutations=true` and GitHub Environment `staging` credentials. The available GitHub connector has no workflow-dispatch operation, so no run or artifact is claimed.
 - Release decision: keep tenant creation/invitation at HTTP 423, keep PR #40 Draft, and do not promote to production until positive E2E artifacts, cross-tenant negative tests, browser fault injection, backup/restore, visual QA, and staged 150-branch load evidence are reviewed.
