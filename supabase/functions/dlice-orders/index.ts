@@ -817,6 +817,22 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,setting},201,origin);
   }
 
+
+  if (action === "erp-list-waste-events") {
+    if(!hasPerm("inventory")&&!hasPerm("reports")&&!isOwner)return fail("Izin Inventory/Reports diperlukan.",403,origin);
+    const branchId=safeText(body.branch_id,80);
+    if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:events,error}=await admin.from("inventory_waste_events").select("id,tenant_id,branch_id,inventory_item_id,quantity,reason_code,reason,idempotency_key,payload_fingerprint,status,created_by,created_at,inventory_items(sku,name,unit)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(200);
+    if(error)return fail("Daftar waste belum tersedia.",503,origin);
+    const ids=(events||[]).map((event:any)=>event.id);
+    const [movementResult,auditResult]=ids.length?await Promise.all([
+      admin.from("stock_movements").select("id,inventory_item_id,movement_type,quantity,reference_type,reference_id,created_by,created_at,notes").eq("branch_id",branchId).eq("reference_type","inventory_waste").in("reference_id",ids),
+      admin.from("admin_audit_logs").select("actor_user_id,action,entity_type,entity_id,metadata,created_at").in("entity_id",ids)
+    ]):[{data:[],error:null},{data:[],error:null}];
+    if(movementResult.error||auditResult.error)return fail("Ledger/audit waste gagal dimuat.",503,origin);
+    return json({events:events||[],stock_movements:movementResult.data||[],audit_events:auditResult.data||[]},200,origin);
+  }
+
   if (action === "erp-record-waste") {
     if(!hasPerm("inventory"))return fail("Izin Inventory diperlukan untuk mencatat waste.",403,origin);
     const branchId=safeText(body.branch_id,80),itemId=safeText(body.inventory_item_id,80),quantity=Number(body.quantity),reasonCode=safeText(body.reason_code,30),reason=safeText(body.reason,500),key=safeText(body.idempotency_key,120);
