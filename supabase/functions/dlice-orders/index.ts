@@ -1088,11 +1088,69 @@ Deno.serve(async (req: Request) => {
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(!Array.isArray(items)||!items.length||items.length>50)return fail("Pilih minimal satu menu.",422,origin);
     if(!Number.isFinite(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.",403,origin);
-    const cleanItems=items.map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity)}));
-    if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000))return fail("Item atau jumlah tidak valid.",422,origin);
-    const {data,error}=await admin.rpc("erp_create_pos_sale",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id});
-    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":"Transaksi POS gagal. Periksa shift dan item.",409,origin);
-    return json(data,201,origin);
+    const cleanItems=items.map((x:any)=>({
+      slug:safeText(x?.slug,80),quantity:Number(x?.quantity),
+      modifiers:Array.isArray(x?.modifiers)?x.modifiers.map((m:any)=>({code:safeText(m?.code,40)})) : [],
+      substitutions:Array.isArray(x?.substitutions)?x.substitutions.map((sub:any)=>({recipe_ingredient_id:safeText(sub?.recipe_ingredient_id,80),substitute_inventory_item_id:safeText(sub?.substitute_inventory_item_id,80)})) : []
+    }));
+    if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
+    const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+    const {data,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey});
+    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":"Transaksi POS gagal. Periksa shift, resep, stok, dan item.",409,origin);
+    return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
+  }
+
+
+  if (action === "erp-list-kitchen-tickets") {
+    if(!hasPerm("production")&&!hasPerm("pos")&&!hasPerm("orders"))return fail("Izin KDS tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,80),status=safeText(body.status,20),ids=await branchIdsForActor().catch(()=>[]);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("kitchen_tickets").select("id,ticket_number,branch_id,order_id,pos_sale_id,status,version,priority,notes,created_at,accepted_at,started_at,ready_at,served_at,branches(code,name),kitchen_ticket_items(id,product_id,product_name_snapshot,quantity,modifier_snapshot,substitution_snapshot,notes,status)").order("priority").order("created_at").limit(300);
+    if(branchId)q=q.eq("branch_id",branchId);else if(!isOwner)q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
+    if(status){if(!["queued","accepted","preparing","ready","served","cancelled","blocked"].includes(status))return fail("Status KDS tidak valid.",422,origin);q=q.eq("status",status);}
+    const {data,error}=await q;if(error)return fail("Antrean kitchen belum dapat dimuat. Pastikan migrasi KDS sudah diterapkan.",503,origin);
+    return json({tickets:data||[]},200,origin);
+  }
+
+  if (action === "erp-transition-kitchen-ticket") {
+    if(!hasPerm("production")&&!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin KDS tidak diizinkan.",403,origin);
+    const ticketId=safeText(body.ticket_id,80),next=safeText(body.status,20),note=safeText(body.notes,500);
+    if(!ticketId||!["accepted","preparing","ready","served","cancelled","blocked"].includes(next))return fail("Perubahan status KDS tidak valid.",422,origin);
+    const {data:ticket,error:ticketError}=await admin.from("kitchen_tickets").select("id,branch_id,status,version").eq("id",ticketId).maybeSingle();
+    if(ticketError)return fail("KDS belum siap. Pastikan migrasi KDS sudah diterapkan.",503,origin);
+    if(!ticket)return fail("Tiket kitchen tidak ditemukan.",404,origin);
+    if(!await branchAccess(ticket.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.rpc("erp_transition_kitchen_ticket",{p_ticket_id:ticketId,p_next_status:next,p_actor_user_id:actor.user.id,p_notes:note||null});
+    if(error)return fail(error.message.includes("kitchen_ticket_transition_invalid")?"Perubahan status KDS tidak diizinkan dari status saat ini.":"Status tiket kitchen gagal disimpan.",409,origin);
+    return json(data,200,origin);
+  }
+
+  if (action === "erp-sync-offline-operation") {
+    if(!hasPerm("pos"))return fail("Izin POS diperlukan untuk sinkronisasi offline.",403,origin);
+    const deviceId=safeText(body.device_id,120),operationId=safeText(body.client_operation_id,120),operation=body.operation as Record<string,unknown>;
+    if(!deviceId||operationId.length<8||operationId.length>120||!operation||typeof operation!=="object"||Array.isArray(operation))return fail("Data sinkronisasi offline tidak valid.",422,origin);
+    if(safeText(operation.type,30)!=="pos-sale")return fail("Jenis operasi offline belum didukung.",422,origin);
+    const branchId=safeText(operation.branch_id,80),shiftId=safeText(operation.shift_id,80);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const fingerprint=await sha256(JSON.stringify(operation));
+    const {data:prior,error:priorError}=await admin.from("offline_sync_receipts").select("id,branch_id,actor_user_id,client_operation_id,payload_fingerprint,result").eq("device_id",deviceId).eq("client_operation_id",operationId).maybeSingle();
+    if(priorError)return fail("Penerimaan sinkronisasi offline belum tersedia. Pastikan migrasi sudah diterapkan.",503,origin);
+    if(prior){
+      if(prior.actor_user_id!==actor.user.id||prior.branch_id!==branchId||prior.payload_fingerprint!==fingerprint)return fail("ID operasi offline sudah dipakai untuk payload berbeda.",409,origin);
+      return json({ok:true,replayed:true,result:prior.result},200,origin);
+    }
+    const items=Array.isArray(operation.items)?(operation.items as any[]).map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers:[],substitutions:Array.isArray(x?.substitutions)?x.substitutions:[]})): [];
+    if(!items.length||items.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000))return fail("Item transaksi offline tidak valid.",422,origin);
+    const key="offline-"+operationId;
+    const {data:result,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:safeText(operation.payment_method,20),p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key});
+    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
+    const {data:receipt,error:receiptError}=await admin.from("offline_sync_receipts").insert({branch_id:branchId,actor_user_id:actor.user.id,device_id:deviceId,client_operation_id:operationId,operation_type:"pos-sale",payload_fingerprint:fingerprint,result}).select("id,client_operation_id,synced_at").single();
+    if(receiptError){
+      const {data:retry}=await admin.from("offline_sync_receipts").select("actor_user_id,branch_id,payload_fingerprint,result").eq("device_id",deviceId).eq("client_operation_id",operationId).maybeSingle();
+      if(retry&&retry.actor_user_id===actor.user.id&&retry.branch_id===branchId&&retry.payload_fingerprint===fingerprint)return json({ok:true,replayed:true,result:retry.result},200,origin);
+      return fail("Transaksi diproses dengan kunci idempoten, tetapi tanda terima sinkronisasi perlu diulang.",503,origin);
+    }
+    return json({ok:true,replayed:false,receipt,result},201,origin);
   }
 
   if (action === "erp-list-sales") {
