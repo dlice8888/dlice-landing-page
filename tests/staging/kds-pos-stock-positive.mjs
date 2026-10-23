@@ -191,7 +191,6 @@ async function main() {
   managerUserId = await userId(managerToken);
   ownerUserId = await userId(ownerToken);
   await ensureChecklist("opening");
-  await ensureChecklist("closing");
 
   // Activate the fixture only for this run. finally restores it to inactive.
   productTouched = true;
@@ -357,6 +356,7 @@ async function main() {
   assert.equal(handover.status, "acknowledged", "Incoming user must acknowledge the shift handover");
   assert.notEqual(handover.outgoing_user_id, handover.incoming_user_id);
   pass("Shift handover is acknowledged by a different user", { handover_id: handover.id });
+  await ensureChecklist("closing");
 
   const sales = await call("erp-list-sales", { branch_id: branchId }, managerToken);
   assert.equal((sales.sales || []).filter((row) => row.id === saleId).length, 1, "Sales report must show exactly one sale");
