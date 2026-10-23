@@ -33,3 +33,12 @@ jobs:
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
         run: node tests/staging/procurement-receiving-positive.mjs
+
+      - name: Upload sanitized procurement reconciliation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: procurement-reconciliation-${{ github.run_id }}
+          path: artifacts/procurement-reconciliation.json
+          if-no-files-found: warn
+          retention-days: 30
