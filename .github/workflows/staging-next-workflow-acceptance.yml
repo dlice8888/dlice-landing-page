@@ -1,0 +1,59 @@
+name: Staging next workflow acceptance
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - .github/workflows/staging-next-workflow-acceptance.yml
+      - tests/staging/next-workflow-acceptance.mjs
+      - supabase/functions/dlice-orders/index.ts
+      - supabase/migrations/**
+  push:
+    branches: [staging]
+    paths:
+      - .github/workflows/staging-next-workflow-acceptance.yml
+      - tests/staging/next-workflow-acceptance.mjs
+      - supabase/functions/dlice-orders/index.ts
+      - supabase/migrations/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-next-workflow-acceptance
+  cancel-in-progress: false
+
+jobs:
+  role-scoped-acceptance:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: staging
+    steps:
+      - name: Checkout candidate staging changes
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Provision disposable QA identities through Owner-only actions
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+        run: node tests/staging/bootstrap-qa-accounts.mjs
+      - name: Verify P2P, O2C, stock and finance role/branch gates without business mutations
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: qa_dlice_staging_branch_a
+          STAGING_TEST_NO_PERMISSION_USERNAME: qa_dlice_staging_no_permission
+          STAGING_TEST_INACTIVE_USERNAME: qa_dlice_staging_inactive
+          TEST_BRANCH_B_ID: d8672046-7029-489b-9223-df07007cdc69
+        run: node tests/staging/next-workflow-acceptance.mjs
