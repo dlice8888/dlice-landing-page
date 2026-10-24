@@ -302,7 +302,7 @@ async function main() {
   }, managerToken);
   const saleId = sale.sale_id || sale.result?.sale_id;
   assert.ok(saleId, "POS sale must return a sale ID");
-  assert.equal(sale.payment_status || "paid", "paid");
+  assert.equal(sale.payment_status, "paid", "POS response must explicitly report paid status");
   pass("POS sale commits with paid status", { sale_id: saleId, transaction_code: sale.transaction_code });
 
   const directReplay = await call("erp-create-pos-sale", { ...operation, idempotency_key: operationId }, managerToken);
@@ -315,7 +315,7 @@ async function main() {
   }, managerToken, 409);
   pass("POS idempotency replays exactly once and rejects changed payload");
 
-  // Simulate a response lost after server commit: replay the exact operation through the offline sync API.
+  // Idempotent offline-sync replay coverage only. Real browser/network fault injection is a separate acceptance gate.
   const synced = await call("erp-sync-offline-operation", {
     device_id: deviceId,
     client_operation_id: operationId,
@@ -445,7 +445,9 @@ try {
   await restoreQaProduct();
   await retireQaRecipe();
   if (evidence.cleanup_errors.length) {
-    evidence.status = evidence.status === "PASS" ? "PASS_WITH_CLEANUP_WARNING" : evidence.status;
+    evidence.status = "FAIL";
+    evidence.error = [evidence.error, "Cleanup failures: " + evidence.cleanup_errors.join("; ")].filter(Boolean).join("\n");
+    process.exitCode = 1;
   }
   await mkdir("artifacts", { recursive: true });
   await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2));
