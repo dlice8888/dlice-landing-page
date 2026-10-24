@@ -31,7 +31,7 @@ for (const table of serverOnlyTables) {
   assert.match(
     migration,
     new RegExp(
-      `create policy deny_direct_client_access on public\\.${escaped}\\s+for all to anon, authenticated\\s+using \\(false\\) with check \\(false\\)`,
+      `create policy deny_direct_client_access on public\\.${escaped}\\s+for all to anon, authenticated\\s+using \\(false\\)\\s+with check \\(false\\)`,
       "i",
     ),
     `Expected explicit deny policy for public.${table}`,
