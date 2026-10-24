@@ -215,6 +215,10 @@ async function main() {
   assert.equal(Number(audits[0].metadata?.lines), 1);
   console.log("PASS P2P-04R receipt -> stock movement -> audit reconciliation");
 
+  const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
+  const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
+  assert.ok(Math.abs((current - previous) - quantity) < 0.0001,
+    `Stock ledger delta must be ${quantity}; observed ${current - previous}`);
   await mkdir("artifacts", { recursive: true });
   await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify({
     schema_version: 1,
@@ -245,15 +249,19 @@ async function main() {
     },
   }, null, 2) + "\\n", { mode: 0o600 });
 
-  const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
-  const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
-  assert.ok(Math.abs((current - previous) - quantity) < 0.0001,
-    `Stock ledger delta must be ${quantity}; observed ${current - previous}`);
   console.log("PASS P2P-05 stock balance delta matches receipt quantity");
   console.log(`PASS P2P E2E complete; PO ${po.po_number}; receipt ${receiptNumber}; QA branch only.`);
 }
 
-main().catch((error) => {
-  console.error("FAIL P2P positive-path E2E:", error.message);
+main().catch(async (error) => {
+  console.error("FAIL P2P positive-path E2E:", error.stack || error.message);
   process.exitCode = 1;
+  await mkdir("artifacts", { recursive: true });
+  await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify({
+    schema_version: 1,
+    result: "failed",
+    generated_at: new Date().toISOString(),
+    environment: "staging",
+    error: String(error?.stack || error),
+  }, null, 2), { mode: 0o600 });
 });
