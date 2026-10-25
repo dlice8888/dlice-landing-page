@@ -120,32 +120,6 @@ function pass(name, details = {}) {
 }
 
 
-async function ensureChecklist(checklistType) {
-  const listed = await call("erp-list-branch-checklists", { branch_id: branchId }, managerToken);
-  let run = (listed.runs || []).find((row) => row.checklist_type === checklistType);
-  if (!run) {
-    const started = await call("erp-start-branch-checklist", { branch_id: branchId, checklist_type: checklistType }, managerToken);
-    run = started.run;
-  }
-  assert.ok(run?.id, `${checklistType} checklist must exist`);
-  if (run.status !== "completed") {
-    for (const item of (run.items || [])) {
-      if (item.status !== "passed") {
-        await call("erp-update-branch-checklist-item", {
-          run_id: run.id,
-          item_key: item.key,
-          item_status: "passed",
-          notes: `AUTOMATED QA E2E checklist ${checklistType}; ${suffix}`,
-        }, managerToken);
-      }
-    }
-    const completed = await call("erp-complete-branch-checklist", { run_id: run.id }, managerToken);
-    const latest = completed.run || completed;
-    assert.equal(latest.status || completed.status, "completed", `${checklistType} checklist must complete with all critical checks passed`);
-  }
-  pass(`Branch ${checklistType} checklist completes with critical checks passed`, { checklist_id: run.id });
-}
-
 async function restoreQaProduct() {
   if (!ownerToken) return;
   if (trackingTouched) {
@@ -208,8 +182,6 @@ async function main() {
   assert.ok(fixtureProduct, "Fixed QA product must exist in the staging catalog");
   assert.equal(fixtureProduct.slug, productSlug, "QA product ID must still map to the expected QA-only slug");
   assert.equal(fixtureProduct.is_active, false, "Refuse to run if the QA fixture product is already active");
-
-  await ensureChecklist("opening");
 
   // Activate the fixture only for this run. finally restores it to inactive.
   productTouched = true;
@@ -351,25 +323,8 @@ async function main() {
     second_ingredient_before: beforeSecond, second_ingredient_after: afterSecond,
   });
 
-  const wasteKey = `qa-waste-${suffix}`;
-  const wastePayload = { branch_id: branchId, inventory_item_id: flourId, quantity: 1, reason_code: "other", reason: note, idempotency_key: wasteKey };
-  const waste = await call("erp-record-waste", wastePayload, ownerToken);
-  assert.ok(waste.waste_id, "Waste event must be recorded");
-  const wasteReplay = await call("erp-record-waste", wastePayload, ownerToken);
-  assert.equal(wasteReplay.waste_id, waste.waste_id);
-  assert.equal(wasteReplay.replayed, true);
-  await expectStatus("erp-record-waste", { ...wastePayload, quantity: 2 }, ownerToken, 409);
-  const wasteLedger = await call("erp-list-waste-events", { branch_id: branchId }, ownerToken);
-  assert.ok((wasteLedger.events || []).some((event) => event.id === waste.waste_id && Number(event.quantity) === 1));
-  assert.ok((wasteLedger.stock_movements || []).some((movement) => movement.reference_id === waste.waste_id && movement.movement_type === "waste" && Number(movement.quantity) === 1));
-  assert.ok((wasteLedger.audit_events || []).some((event) => event.entity_id === waste.waste_id && event.action === "inventory_waste_posted"));
-  const afterWasteInventory = await call("erp-list-inventory", { branch_id: branchId }, managerToken);
-  assert.equal(Number((afterFlour - balanceOf(afterWasteInventory, flourId)).toFixed(3)), 1, "Waste must deduct exactly one additional gram");
-  assert.equal(Number((afterSecond - balanceOf(afterWasteInventory, secondIngredientId)).toFixed(3)), 0, "Waste must not alter the unrelated ingredient");
-  pass("Waste ledger is idempotent and decrements the matching stock only", { waste_id: waste.waste_id });
-
-  // Shift handover is covered by its dedicated contract tests; this vertical slice uses the existing Owner identity only.
-  await ensureChecklist("closing");
+  // Close only the shift created by this run; waste and checklist workflows have separate tests.
+  await closeCreatedShift();
 
   const sales = await call("erp-list-sales", { branch_id: branchId }, managerToken);
   assert.equal((sales.sales || []).filter((row) => row.id === saleId).length, 1, "Sales report must show exactly one sale");
@@ -392,10 +347,8 @@ async function main() {
   evidence.sale_id = saleId;
   evidence.transaction_code = sale.transaction_code;
   evidence.ticket_id = ticket.id;
-  evidence.waste_id = waste.waste_id;
   evidence.stock_before = { flour_g: beforeFlour, second_ingredient_g: beforeSecond };
   evidence.stock_after_sale = { flour_g: afterFlour, second_ingredient_g: afterSecond };
-  evidence.stock_after_waste = { flour_g: balanceOf(afterWasteInventory, flourId), second_ingredient_g: balanceOf(afterWasteInventory, secondIngredientId) };
 }
 
 try {
