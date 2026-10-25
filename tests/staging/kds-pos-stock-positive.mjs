@@ -449,9 +449,12 @@ try {
   await restoreQaProduct();
   await retireQaRecipe();
   if (evidence.cleanup_errors.length) {
-    evidence.status = evidence.status === "PASS" ? "PASS_WITH_CLEANUP_WARNING" : evidence.status;
+    evidence.status = "FAIL";
+    evidence.error = [evidence.error, "QA fixture cleanup failed; inspect cleanup_errors before rerun."]
+      .filter(Boolean).join(" ");
+    process.exitCode = 1;
   }
   await mkdir("artifacts", { recursive: true });
-  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2));
+  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "\\n");
   console.log(`E2E evidence status: ${evidence.status}`);
 }
