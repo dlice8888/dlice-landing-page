@@ -39,12 +39,12 @@ const receiptNumber = `QA-RCV-${suffix}`;
 const note = `AUTOMATED QA E2E; procurement receiving; ${suffix}`;
 const anon = process.env.STAGING_SUPABASE_PUBLIC_KEY;
 
-async function tokenFor(username, password, label) {
+function authEmail(identity) {\n  const value = String(identity || "").trim().toLowerCase();\n  // Accept a complete email for any provisioned staging identity; retain legacy username support.\n  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;\n}\n\nasync function tokenFor(username, password, label) {
   const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: anon, "content-type": "application/json" },
     body: JSON.stringify({
-      email: `${username.toLowerCase()}@accounts.dlice.internal`,
+      email: authEmail(username),
       password,
     }),
   });
@@ -52,7 +52,7 @@ async function tokenFor(username, password, label) {
   if (response.status !== 200 || typeof body.access_token !== "string") {
     const code = String(body.error_code || body.code || body.error || "auth_error")
       .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
-    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Restore the dedicated temporary staging identity and verify its secret; no business-flow assertions ran.`);
+    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Check the configured staging identity email/username, password, and required role/branch membership; no business-flow assertions ran.`);
   }
   return body.access_token;
 }
@@ -94,7 +94,7 @@ async function main() {
   const managerToken = await tokenFor(
     process.env.STAGING_TEST_BRANCH_A_USERNAME,
     process.env.STAGING_TEST_BRANCH_A_PASSWORD,
-    "Branch A manager",
+    "configured staging branch manager",
   );
   const before = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
   const previous = Number(before.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
