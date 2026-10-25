@@ -67,6 +67,16 @@ jobs:
           STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
           STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
         run: node tests/staging/kds-pos-stock-positive.mjs
+      - name: Validate reconciliation artifact even when the E2E fails
+        if: always()
+        run: |
+          mkdir -p artifacts
+          file=artifacts/kds-pos-stock-reconciliation.json
+          if [ ! -s "$file" ] || ! node -e 'const fs=require("node:fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (!x || typeof x !== "object" || typeof x.status !== "string") process.exit(1)' "$file" 2>/dev/null; then
+            printf '{"schema_version":1,"status":"FAIL","stage":"artifact_validation","reason":"missing_or_invalid_reconciliation_artifact","workflow":"kds-pos-stock"}\n' > "$file"
+            echo "::error title=Reconciliation artifact invalid::A missing or invalid KDS/POS/stock artifact was replaced with explicit FAIL evidence."
+            exit 1
+          fi
       - name: Upload sanitized KDS/POS/stock reconciliation evidence
         if: always()
         uses: actions/upload-artifact@v4
