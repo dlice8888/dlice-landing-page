@@ -60,7 +60,13 @@ let trackingTouched = false;
 let productTouched = false;
 let recipeWasDraft = false;
 
-function authEmail(identity) {\n  const value = String(identity || "").trim().toLowerCase();\n  // Accept a complete email for any provisioned staging identity; retain legacy username support.\n  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;\n}\n\nasync function tokenFor(username, password, label) {
+function authEmail(identity) {
+  const value = String(identity || "").trim().toLowerCase();
+  // Accept a complete email for any provisioned staging identity; retain legacy username support.
+  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;
+}
+
+async function tokenFor(username, password, label) {
   const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: anon, "content-type": "application/json" },
@@ -455,6 +461,7 @@ try {
     process.exitCode = 1;
   }
   await mkdir("artifacts", { recursive: true });
-  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "\n");
+  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "
+");
   console.log(`E2E evidence status: ${evidence.status}`);
 }
