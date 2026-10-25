@@ -25,6 +25,35 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Preflight staging configuration before any business-flow mutation
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+        run: |
+          set +x
+          missing=0
+          for key in STAGING_SUPABASE_URL STAGING_SUPABASE_PUBLIC_KEY STAGING_EDGE_FUNCTION_URL STAGING_TEST_OWNER_USERNAME STAGING_TEST_OWNER_PASSWORD STAGING_TEST_BRANCH_A_USERNAME STAGING_TEST_BRANCH_A_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error title=STAGING PREFLIGHT BLOCKED::$key is missing; no business-flow mutations may run."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            mkdir -p artifacts
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"required_staging_secret_missing","workflow":"procurement"}\n' > artifacts/procurement-reconciliation.json
+            exit 2
+          fi
+          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ] || [ "$STAGING_EDGE_FUNCTION_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders" ]; then
+            echo "::error title=STAGING PREFLIGHT BLOCKED::Staging URL does not match the fixed staging project."
+            mkdir -p artifacts
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"procurement"}\n' > artifacts/procurement-reconciliation.json
+            exit 2
+          fi
       - name: Run positive P2P E2E against the fixed staging project and QA fixtures
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
