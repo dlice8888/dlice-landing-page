@@ -167,11 +167,10 @@ test("legacy branch access helpers require active tenant membership before grant
 });
 
 
-test("manual KDS E2E restores the temporary recipe activation after deactivating its QA product", () => {
-  assert.match(edge, /action === "erp-retire-recipe"/);
-  assert.match(edge, /erp-retire-recipe[\s\S]{0,900}stock_tracking_enabled/);
-  assert.match(edge, /erp-retire-recipe[\s\S]{0,1400}status:\s*"retired"/);
-  assert.match(kdsE2E, /recipeWasDraft/);
-  assert.match(kdsE2E, /erp-retire-recipe/);
-  assert.match(kdsE2E, /restoreQaProduct\(\)[\s\S]{0,500}retireQaRecipe/);
+test("staging KDS E2E keeps the QA recipe reusable and deactivates its product fixture", () => {
+  assert.match(kdsE2E, /async function restoreQaProduct\(\)/);
+  assert.match(kdsE2E, /erp-set-product-stock-tracking[\s\S]{0,160}enabled: false/);
+  assert.match(kdsE2E, /is_active: false/);
+  assert.match(kdsE2E, /assert\.ok\(\["draft", "active"\]\.includes\(recipe\.status\)/);
+  assert.doesNotMatch(kdsE2E, /recipeWasDraft|retireQaRecipe|erp-retire-recipe/);
 });
