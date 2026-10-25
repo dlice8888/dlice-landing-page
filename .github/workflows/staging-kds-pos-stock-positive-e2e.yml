@@ -1,12 +1,12 @@
 name: Staging KDS POS Stock and Offline Recovery E2E
 on:
-  workflow_dispatch:
-    inputs:
-      confirm_staging_mutations:
-        description: "Confirm this activates the QA-only product temporarily and writes QA-prefixed POS/KDS/stock records to staging"
-        required: true
-        type: boolean
-        default: false
+  push:
+    branches:
+      - feat/staging-kds-offline-tenant-20261024
+      - fix/auto-run-staging-pos-kds-e2e
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - "tests/staging/kds-pos-stock-positive.mjs"
   schedule:
     # Daily 09:17 WIB. Scheduled runs are restricted to the repository default branch (staging).
     - cron: "17 2 * * *"
@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   kds-pos-stock:
-    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024') && (github.event_name == 'schedule' || inputs.confirm_staging_mutations == true) }}
+    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024' || github.ref == 'refs/heads/fix/auto-run-staging-pos-kds-e2e') && (github.event_name == 'schedule' || github.event_name == 'push') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: staging
