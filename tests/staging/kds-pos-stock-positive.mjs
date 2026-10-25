@@ -60,17 +60,17 @@ let trackingTouched = false;
 let productTouched = false;
 let recipeWasDraft = false;
 
-async function tokenFor(username, password, label) {
+function authEmail(identity) {\n  const value = String(identity || "").trim().toLowerCase();\n  // Accept a complete email for any provisioned staging identity; retain legacy username support.\n  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;\n}\n\nasync function tokenFor(username, password, label) {
   const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: anon, "content-type": "application/json" },
-    body: JSON.stringify({ email: `${username.toLowerCase()}@accounts.dlice.internal`, password }),
+    body: JSON.stringify({ email: authEmail(username), password }),
   });
   const body = await response.json().catch(() => ({}));
   if (response.status !== 200 || typeof body.access_token !== "string") {
     const code = String(body.error_code || body.code || body.error || "auth_error")
       .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
-    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Restore the dedicated temporary staging identity and verify its secret; no business-flow assertions ran.`);
+    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Check the configured staging identity email/username, password, and required role/branch membership; no business-flow assertions ran.`);
   }
   return body.access_token;
 }
@@ -202,7 +202,7 @@ async function closeCreatedShift() {
 
 async function main() {
   ownerToken = await tokenFor(process.env.STAGING_TEST_OWNER_USERNAME, process.env.STAGING_TEST_OWNER_PASSWORD, "Owner");
-  managerToken = await tokenFor(process.env.STAGING_TEST_BRANCH_A_USERNAME, process.env.STAGING_TEST_BRANCH_A_PASSWORD, "Branch A manager");
+  managerToken = await tokenFor(process.env.STAGING_TEST_BRANCH_A_USERNAME, process.env.STAGING_TEST_BRANCH_A_PASSWORD, "configured staging branch manager");
   managerUserId = await userId(managerToken);
   ownerUserId = await userId(ownerToken);
 
@@ -287,7 +287,7 @@ async function main() {
     shift = opened.shift;
     createdShiftId = shift.id;
   }
-  assert.ok(shift?.id, "An open QA shift must be available to the Branch A manager");
+  assert.ok(shift?.id, "An open QA shift must be available to the configured staging branch manager");
 
   const operation = {
     type: "pos-sale",
