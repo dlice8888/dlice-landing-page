@@ -39,18 +39,27 @@ const receiptNumber = `QA-RCV-${suffix}`;
 const note = `AUTOMATED QA E2E; procurement receiving; ${suffix}`;
 const anon = process.env.STAGING_SUPABASE_PUBLIC_KEY;
 
+function authEmail(identity) {
+  const value = String(identity || "").trim().toLowerCase();
+  // Accept a complete email for any provisioned staging identity; retain legacy username support.
+  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;
+}
+
 async function tokenFor(username, password, label) {
   const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: anon, "content-type": "application/json" },
     body: JSON.stringify({
-      email: `${username.toLowerCase()}@accounts.dlice.internal`,
+      email: authEmail(username),
       password,
     }),
   });
   const body = await response.json().catch(() => ({}));
-  assert.equal(response.status, 200, `${label} QA token must be issued by staging Auth`);
-  assert.equal(typeof body.access_token, "string", `${label} token must be present`);
+  if (response.status !== 200 || typeof body.access_token !== "string") {
+    const code = String(body.error_code || body.code || body.error || "auth_error")
+      .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
+    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Check the configured staging identity email/username, password, and required role/branch membership; no business-flow assertions ran.`);
+  }
   return body.access_token;
 }
 
@@ -91,7 +100,7 @@ async function main() {
   const managerToken = await tokenFor(
     process.env.STAGING_TEST_BRANCH_A_USERNAME,
     process.env.STAGING_TEST_BRANCH_A_PASSWORD,
-    "Branch A manager",
+    "configured staging branch manager",
   );
   const before = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
   const previous = Number(before.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
@@ -243,7 +252,8 @@ async function main() {
       stock_movement_matches_receipt: true,
       audit_event_matches_receipt: true,
     },
-  }, null, 2) + "\\n", { mode: 0o600 });
+  }, null, 2) + "
+", { mode: 0o600 });
 
   const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
   const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
@@ -253,7 +263,17 @@ async function main() {
   console.log(`PASS P2P E2E complete; PO ${po.po_number}; receipt ${receiptNumber}; QA branch only.`);
 }
 
-main().catch((error) => {
-  console.error("FAIL P2P positive-path E2E:", error.message);
+main().catch(async (error) => {
+  const blocked = String(error?.message || "").startsWith("STAGING_AUTH_BLOCKED:");
+  console.error(blocked ? error.message : "FAIL P2P positive-path E2E:", blocked ? "" : error.message);
   process.exitCode = 1;
+  await mkdir("artifacts", { recursive: true });
+  await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify({
+    schema_version: 1,
+    result: blocked ? "blocked" : "failed",
+    generated_at: new Date().toISOString(),
+    environment: "staging",
+    stage: blocked ? "authentication" : "business_flow",
+    error: blocked ? String(error.message) : String(error?.stack || error),
+  }, null, 2), { mode: 0o600 });
 });

@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   purchase-to-stock:
-    if: ${{ github.ref == 'refs/heads/staging' && inputs.confirm_staging_mutations }}
+    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024') && inputs.confirm_staging_mutations }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
@@ -25,17 +25,56 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Preflight staging configuration before any business-flow mutation
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
+          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
+          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+        run: |
+          set +x
+          missing=0
+          for key in STAGING_TEST_OWNER_USERNAME STAGING_TEST_OWNER_PASSWORD STAGING_TEST_BRANCH_A_USERNAME STAGING_TEST_BRANCH_A_PASSWORD; do
+            if [ -z "${!key}" ]; then
+              echo "::error title=STAGING PREFLIGHT BLOCKED::$key is missing; no business-flow mutations may run."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            mkdir -p artifacts
+            printf '{"schema_version":1,"result":"blocked","stage":"preflight","reason":"temporary_qa_auth_not_provisioned","environment":"staging"}\n' > artifacts/procurement-reconciliation.json
+            exit 2
+          fi
+          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ] || [ "$STAGING_EDGE_FUNCTION_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders" ]; then
+            echo "::error title=STAGING PREFLIGHT BLOCKED::Staging URL does not match the fixed staging project."
+            mkdir -p artifacts
+            printf '{"schema_version":1,"result":"blocked","stage":"preflight","reason":"staging_target_mismatch","environment":"staging"}\n' > artifacts/procurement-reconciliation.json
+            exit 2
+          fi
       - name: Run positive P2P E2E against the fixed staging project and QA fixtures
         env:
-          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
           STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
           STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
         run: node tests/staging/procurement-receiving-positive.mjs
 
+      - name: Validate reconciliation artifact even when the E2E fails
+        if: always()
+        run: |
+          mkdir -p artifacts
+          file=artifacts/procurement-reconciliation.json
+          if [ ! -s "$file" ] || ! node -e 'const fs=require("node:fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (!x || typeof x !== "object" || typeof x.result !== "string") process.exit(1)' "$file" 2>/dev/null; then
+            printf '{"schema_version":1,"result":"failed","stage":"artifact_validation","reason":"missing_or_invalid_reconciliation_artifact","environment":"staging"}\n' > "$file"
+            echo "::error title=Reconciliation artifact invalid::A missing or invalid procurement artifact was replaced with explicit failed evidence."
+            exit 1
+          fi
       - name: Upload sanitized procurement reconciliation evidence
         if: always()
         uses: actions/upload-artifact@v4

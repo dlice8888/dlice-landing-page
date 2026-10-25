@@ -1,0 +1,29 @@
+name: Staging Kitchen KDS Offline Contract Tests
+
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/dlice-orders/index.ts'
+      - 'tests/contracts/kitchen-kds-offline-contract.test.mjs'
+      - '.github/workflows/staging-kitchen-kds-contract.yml'
+  push:
+    branches: [staging]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/dlice-orders/index.ts'
+      - 'tests/contracts/kitchen-kds-offline-contract.test.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  kitchen-kds-offline-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test tests/contracts/kitchen-kds-offline-contract.test.mjs

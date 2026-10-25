@@ -70,3 +70,11 @@ Some controls cannot be enforced by repository code alone:
 - GitHub branch protection / required status checks need repository settings or permissions not exposed by this workflow.
 - Vercel preview deployment protection must be enabled/verified in project settings. Do not turn on a protection mode that blocks the Owner's testing without configuring a safe access path first.
 - Five-star Google Maps review carousel is intentionally not fabricated; only show reviews from a verified, permitted source. The existing Google Maps link is the no-cost fallback.
+
+
+## 2026-10-25 — POS idempotency fingerprint fix
+
+- Staging runtime found SQLSTATE 42883 in `erp_create_pos_sale_idempotent`: `digest(text, text)` is installed under the Supabase `extensions` schema, but the RPC pins `search_path = public`.
+- Migration `20261025115812_fix_pos_idempotency_digest_schema.sql` qualifies the call as `extensions.digest(...)` without relaxing transaction idempotency or authorization.
+- Applied and recorded on staging project `higoadrzxnhzbbwhdbmh`; a SHA-256 smoke query passed.
+- Production was not changed. Staging E2E must pass the POS/payment → KDS → recipe stock → offline replay → report reconciliation checks before acceptance.
