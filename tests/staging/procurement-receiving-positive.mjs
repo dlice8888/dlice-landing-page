@@ -246,7 +246,7 @@ async function main() {
       stock_movement_matches_receipt: true,
       audit_event_matches_receipt: true,
     },
-  }, null, 2) + "\\n", { mode: 0o600 });
+  }, null, 2) + "\n", { mode: 0o600 });
 
   const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
   const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
