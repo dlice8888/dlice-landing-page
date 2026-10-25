@@ -137,8 +137,12 @@ test("manual staging E2E covers POS, offline replay, KDS, recipe stock and recon
   assert.match(kdsWorkflow, /workflow_dispatch/);
   assert.match(kdsWorkflow, /confirm_staging_mutations/);
   assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);
-  assert.match(kdsE2E, /erp-create-tenant[\s\S]{0,140}423/);
-  assert.match(kdsE2E, /erp-invite-tenant-member[\s\S]{0,160}423/);
+  assert.match(kdsE2E, /STAGING_TEST_OWNER_USERNAME/);
+  assert.match(kdsE2E, /STAGING_TEST_OWNER_PASSWORD/);
+  assert.doesNotMatch(kdsE2E, /STAGING_TEST_BRANCH_A_(?:USERNAME|PASSWORD)/);
+  assert.doesNotMatch(kdsE2E, /erp-create-tenant/);
+  assert.doesNotMatch(kdsE2E, /erp-invite-tenant-member/);
+  assert.doesNotMatch(kdsWorkflow, /STAGING_TEST_BRANCH_A_(?:USERNAME|PASSWORD)/);
 });
 
 
