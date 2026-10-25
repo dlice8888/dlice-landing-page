@@ -49,8 +49,11 @@ async function tokenFor(username, password, label) {
     }),
   });
   const body = await response.json().catch(() => ({}));
-  assert.equal(response.status, 200, `${label} QA token must be issued by staging Auth`);
-  assert.equal(typeof body.access_token, "string", `${label} token must be present`);
+  if (response.status !== 200 || typeof body.access_token !== "string") {
+    const code = String(body.error_code || body.code || body.error || "auth_error")
+      .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
+    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Restore the dedicated temporary staging identity and verify its secret; no business-flow assertions ran.`);
+  }
   return body.access_token;
 }
 
@@ -253,7 +256,17 @@ async function main() {
   console.log(`PASS P2P E2E complete; PO ${po.po_number}; receipt ${receiptNumber}; QA branch only.`);
 }
 
-main().catch((error) => {
-  console.error("FAIL P2P positive-path E2E:", error.message);
+main().catch(async (error) => {
+  const blocked = String(error?.message || "").startsWith("STAGING_AUTH_BLOCKED:");
+  console.error(blocked ? error.message : "FAIL P2P positive-path E2E:", blocked ? "" : error.message);
   process.exitCode = 1;
+  await mkdir("artifacts", { recursive: true });
+  await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify({
+    schema_version: 1,
+    result: blocked ? "blocked" : "failed",
+    generated_at: new Date().toISOString(),
+    environment: "staging",
+    stage: blocked ? "authentication" : "business_flow",
+    error: blocked ? String(error.message) : String(error?.stack || error),
+  }, null, 2), { mode: 0o600 });
 });
