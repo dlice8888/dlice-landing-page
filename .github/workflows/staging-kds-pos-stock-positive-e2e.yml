@@ -8,6 +8,7 @@ on:
       - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
       - "tests/staging/kds-pos-stock-positive.mjs"
       - "supabase/staging-repairs/**"
+      - "supabase/migrations/**"
   schedule:
     # Daily 09:17 WIB. Scheduled runs are restricted to the repository default branch (staging).
     - cron: "17 2 * * *"
