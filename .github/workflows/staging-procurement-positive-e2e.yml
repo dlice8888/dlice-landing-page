@@ -7,6 +7,9 @@ on:
         required: true
         type: boolean
         default: false
+  schedule:
+    # Daily 09:23 WIB. Scheduled runs are restricted to the repository default branch (staging).
+    - cron: "23 2 * * *"
 permissions:
   contents: read
 concurrency:
@@ -14,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   purchase-to-stock:
-    if: ${{ github.ref == 'refs/heads/staging' && inputs.confirm_staging_mutations }}
+    if: ${{ github.ref == 'refs/heads/staging' && (github.event_name == 'schedule' || inputs.confirm_staging_mutations == true) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
