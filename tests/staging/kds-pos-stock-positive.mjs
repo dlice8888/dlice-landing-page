@@ -67,8 +67,11 @@ async function tokenFor(username, password, label) {
     body: JSON.stringify({ email: `${username.toLowerCase()}@accounts.dlice.internal`, password }),
   });
   const body = await response.json().catch(() => ({}));
-  assert.equal(response.status, 200, `${label} QA token must be issued by staging Auth`);
-  assert.equal(typeof body.access_token, "string", `${label} token must be present`);
+  if (response.status !== 200 || typeof body.access_token !== "string") {
+    const code = String(body.error_code || body.code || body.error || "auth_error")
+      .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
+    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Restore the dedicated temporary staging identity and verify its secret; no business-flow assertions ran.`);
+  }
   return body.access_token;
 }
 
@@ -436,9 +439,10 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  evidence.status = "FAIL";
-  evidence.error = String(error?.stack || error);
-  console.error(error);
+  const blocked = String(error?.message || "").startsWith("STAGING_AUTH_BLOCKED:");
+  evidence.status = blocked ? "BLOCKED" : "FAIL";
+  evidence.error = blocked ? String(error.message) : String(error?.stack || error);
+  console.error(blocked ? error.message : error);
   process.exitCode = 1;
 } finally {
   await closeCreatedShift();
