@@ -65,6 +65,16 @@ jobs:
           STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
         run: node tests/staging/procurement-receiving-positive.mjs
 
+      - name: Validate reconciliation artifact even when the E2E fails
+        if: always()
+        run: |
+          mkdir -p artifacts
+          file=artifacts/procurement-reconciliation.json
+          if [ ! -s "$file" ] || ! node -e 'const fs=require("node:fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (!x || typeof x !== "object" || typeof x.result !== "string") process.exit(1)' "$file" 2>/dev/null; then
+            printf '{"schema_version":1,"result":"failed","stage":"artifact_validation","reason":"missing_or_invalid_reconciliation_artifact","environment":"staging"}\n' > "$file"
+            echo "::error title=Reconciliation artifact invalid::A missing or invalid procurement artifact was replaced with explicit failed evidence."
+            exit 1
+          fi
       - name: Upload sanitized procurement reconciliation evidence
         if: always()
         uses: actions/upload-artifact@v4
