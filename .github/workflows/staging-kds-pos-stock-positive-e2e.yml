@@ -2,6 +2,7 @@ name: Staging KDS POS Stock and Offline Recovery E2E
 on:
   push:
     branches:
+      - staging
       - feat/staging-kds-offline-tenant-20261024
       - fix/auto-run-staging-pos-kds-e2e
     paths:
