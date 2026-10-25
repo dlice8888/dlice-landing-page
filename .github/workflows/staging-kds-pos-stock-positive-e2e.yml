@@ -35,12 +35,10 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
         run: |
           set +x
           missing=0
-          for key in STAGING_TEST_OWNER_USERNAME STAGING_TEST_OWNER_PASSWORD STAGING_TEST_BRANCH_A_USERNAME STAGING_TEST_BRANCH_A_PASSWORD; do
+          for key in STAGING_TEST_OWNER_USERNAME STAGING_TEST_OWNER_PASSWORD; do
             if [ -z "${!key}" ]; then
               echo "::error title=STAGING PREFLIGHT BLOCKED::$key is missing; no business-flow mutations may run."
               missing=1
@@ -64,8 +62,6 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
         run: node tests/staging/kds-pos-stock-positive.mjs
       - name: Validate reconciliation artifact even when the E2E fails
         if: always()
