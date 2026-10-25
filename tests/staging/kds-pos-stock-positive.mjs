@@ -221,7 +221,7 @@ async function main() {
   assert.equal(fixtureProduct.slug, productSlug, "QA product ID must still map to the expected QA-only slug");
   assert.equal(fixtureProduct.is_active, false, "Refuse to run if the QA fixture product is already active");
 
-,  await ensureChecklist("opening");
+  await ensureChecklist("opening");
 
   // Activate the fixture only for this run. finally restores it to inactive.
   productTouched = true;
@@ -454,7 +454,6 @@ try {
     process.exitCode = 1;
   }
   await mkdir("artifacts", { recursive: true });
-  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "
-");
+  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "\n");
   console.log(`E2E evidence status: ${evidence.status}`);
 }
