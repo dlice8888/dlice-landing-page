@@ -455,6 +455,6 @@ try {
     process.exitCode = 1;
   }
   await mkdir("artifacts", { recursive: true });
-  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "\\n");
+  await writeFile("artifacts/kds-pos-stock-reconciliation.json", JSON.stringify(evidence, null, 2) + "\n");
   console.log(`E2E evidence status: ${evidence.status}`);
 }
