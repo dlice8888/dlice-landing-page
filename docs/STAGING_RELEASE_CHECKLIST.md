@@ -75,6 +75,6 @@ Some controls cannot be enforced by repository code alone:
 ## 2026-10-25 — POS idempotency fingerprint fix
 
 - Staging runtime found SQLSTATE 42883 in `erp_create_pos_sale_idempotent`: `digest(text, text)` is installed under the Supabase `extensions` schema, but the RPC pins `search_path = public`.
-- Migration `20261025120000_fix_pos_idempotency_digest_schema.sql` qualifies the call as `extensions.digest(...)` without relaxing transaction idempotency or authorization.
+- Migration `20261025115812_fix_pos_idempotency_digest_schema.sql` qualifies the call as `extensions.digest(...)` without relaxing transaction idempotency or authorization.
 - Applied and recorded on staging project `higoadrzxnhzbbwhdbmh`; a SHA-256 smoke query passed.
 - Production was not changed. Staging E2E must pass the POS/payment → KDS → recipe stock → offline replay → report reconciliation checks before acceptance.
