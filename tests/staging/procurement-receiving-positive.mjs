@@ -39,7 +39,13 @@ const receiptNumber = `QA-RCV-${suffix}`;
 const note = `AUTOMATED QA E2E; procurement receiving; ${suffix}`;
 const anon = process.env.STAGING_SUPABASE_PUBLIC_KEY;
 
-function authEmail(identity) {\n  const value = String(identity || "").trim().toLowerCase();\n  // Accept a complete email for any provisioned staging identity; retain legacy username support.\n  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;\n}\n\nasync function tokenFor(username, password, label) {
+function authEmail(identity) {
+  const value = String(identity || "").trim().toLowerCase();
+  // Accept a complete email for any provisioned staging identity; retain legacy username support.
+  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;
+}
+
+async function tokenFor(username, password, label) {
   const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
     method: "POST",
     headers: { apikey: anon, "content-type": "application/json" },
@@ -246,7 +252,8 @@ async function main() {
       stock_movement_matches_receipt: true,
       audit_event_matches_receipt: true,
     },
-  }, null, 2) + "\n", { mode: 0o600 });
+  }, null, 2) + "
+", { mode: 0o600 });
 
   const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
   const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
