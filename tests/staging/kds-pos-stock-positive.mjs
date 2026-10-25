@@ -56,7 +56,6 @@ let ownerUserId = "";
 let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
-let recipeWasDraft = false;
 
 function authEmail(identity) {
   const value = String(identity || "").trim().toLowerCase();
@@ -176,17 +175,6 @@ async function restoreQaProduct() {
   }
 }
 
-async function retireQaRecipe() {
-  if (!ownerToken || !recipeWasDraft) return;
-  try {
-    const result = await call("erp-retire-recipe", { recipe_id: recipeId }, ownerToken);
-    assert.ok(["draft", "retired"].includes(result.status), "QA recipe must be restored to draft or retired");
-    pass("QA recipe activation is reverted after product cleanup", { recipe_status: result.status });
-  } catch (error) {
-    evidence.cleanup_errors.push(`QA recipe retirement: ${error.message}`);
-  }
-}
-
 async function closeCreatedShift() {
   if (!createdShiftId || !managerToken) return;
   try {
@@ -253,7 +241,7 @@ async function main() {
     { inventory_item_id: secondIngredientId, quantity_per_yield: 100, unit: "g", is_optional: false },
   ].sort((a, b) => a.inventory_item_id.localeCompare(b.inventory_item_id)),
   "QA recipe ingredients and units must match the reviewed 500g/100g fixture before stock writes");
-  recipeWasDraft = recipe.status === "draft";
+  assert.ok(["draft", "active"].includes(recipe.status), "QA recipe must be draft or active; retired fixtures require a one-time staging reset");
   if (recipe.status !== "active") await call("erp-activate-recipe", { recipe_id: recipeId }, ownerToken);
   trackingTouched = true;
   await call("erp-set-product-stock-tracking", { product_id: productId, enabled: true }, ownerToken);
@@ -421,7 +409,6 @@ try {
 } finally {
   await closeCreatedShift();
   await restoreQaProduct();
-  await retireQaRecipe();
   if (evidence.cleanup_errors.length) {
     evidence.status = "FAIL";
     evidence.error = [evidence.error, "QA fixture cleanup failed; inspect cleanup_errors before rerun."]
