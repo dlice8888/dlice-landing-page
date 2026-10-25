@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   purchase-to-stock:
-    if: ${{ github.ref == 'refs/heads/staging' && inputs.confirm_staging_mutations }}
+    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024') && inputs.confirm_staging_mutations }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: staging
