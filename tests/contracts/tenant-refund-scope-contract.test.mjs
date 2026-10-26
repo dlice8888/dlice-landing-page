@@ -22,7 +22,10 @@ test("tenant onboarding stays fail-closed until cross-tenant negative tests are 
 
 test("uncertified legacy tenant actions fail closed for non-platform owners", () => {
   assert.match(edge, /const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[/);
-  assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED && actor\.profile\.role !== "owner" && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+  assert.match(edge, /const PLATFORM_OWNER_USER_IDS = new Set\(/);
+  assert.match(edge, /DLICE_PLATFORM_OWNER_USER_IDS/);
+  assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED && !PLATFORM_OWNER_USER_IDS\.has\(actor\.user\.id\) && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+  assert.doesNotMatch(edge, /TENANT_ISOLATION_RELEASED && actor\.profile\.role !== "owner"/);
   for (const action of [
     "admin-list-orders", "admin-list-products", "admin-save-product", "admin-upload-product-photo", "admin-set-permissions",
     "erp-list-recipes", "erp-save-product-modifier", "erp-save-recipe-substitution",
