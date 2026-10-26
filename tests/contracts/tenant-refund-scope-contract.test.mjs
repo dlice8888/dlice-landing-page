@@ -19,3 +19,18 @@ test("tenant onboarding stays fail-closed until cross-tenant negative tests are 
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
   assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\)/);
 });
+
+test("uncertified legacy tenant actions fail closed for non-platform owners", () => {
+  assert.match(edge, /const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[/);
+  assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED && actor\.profile\.role !== "owner" && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+  for (const action of [
+    "admin-save-product", "admin-upload-product-photo", "admin-set-permissions",
+    "erp-list-recipes", "erp-save-product-modifier", "erp-save-recipe-substitution",
+    "erp-list-settlements", "erp-create-fiscal-period", "erp-save-tax-setting",
+    "erp-save-branch", "erp-save-assignment", "erp-process-refund",
+    "erp-overview", "erp-list-audit-logs",
+  ]) {
+    assert.ok(edge.includes(`"${action}"`), `missing fail-closed action: ${action}`);
+  }
+  assert.match(edge, /Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi\./);
+});
