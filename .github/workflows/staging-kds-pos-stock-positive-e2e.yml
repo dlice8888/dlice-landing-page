@@ -49,7 +49,7 @@ jobs:
           done
           if [ "$missing" -ne 0 ]; then
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"temporary_qa_auth_not_provisioned","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_owner_credentials_missing","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
           if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ] || [ "$STAGING_EDGE_FUNCTION_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders" ]; then
