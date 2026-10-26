@@ -49,8 +49,8 @@ const TENANT_ISOLATION_RELEASED = false;
 // Legacy actions whose data model/query paths are not yet certified tenant-scoped.
 // Keep non-platform-owner access closed until each action has a passing negative test.
 const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
-  "admin-update-status", "admin-verify-payment", "admin-proof-url",
-  "admin-configure-product", "admin-save-product", "admin-upload-product-photo",
+  "admin-list-orders", "admin-update-status", "admin-verify-payment", "admin-proof-url",
+  "admin-list-products", "admin-configure-product", "admin-save-product", "admin-upload-product-photo",
   "admin-list-staff", "admin-create-staff", "admin-set-permissions", "admin-set-active", "admin-reset-staff-password",
   "admin-payment-settings", "admin-save-payment-settings", "admin-upload-qris",
   "erp-list-recipes", "erp-save-recipe", "erp-activate-recipe", "erp-retire-recipe",
@@ -58,8 +58,8 @@ const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
   "erp-list-settlements", "erp-create-settlement", "erp-match-settlement",
   "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
   "erp-list-tax-settings", "erp-save-tax-setting",
-  "erp-save-branch", "erp-save-assignment", "erp-list-assignments",
-  "erp-process-refund",
+  "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
+  "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
   "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
   "admin-upload-media", "admin-delete-media", "erp-upload-media",
 ]);
