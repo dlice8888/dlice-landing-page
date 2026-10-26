@@ -24,10 +24,10 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
   assert.match(edge, /const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[/);
   assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED && actor\.profile\.role !== "owner" && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
   for (const action of [
-    "admin-save-product", "admin-upload-product-photo", "admin-set-permissions",
+    "admin-list-orders", "admin-list-products", "admin-save-product", "admin-upload-product-photo", "admin-set-permissions",
     "erp-list-recipes", "erp-save-product-modifier", "erp-save-recipe-substitution",
     "erp-list-settlements", "erp-create-fiscal-period", "erp-save-tax-setting",
-    "erp-save-branch", "erp-save-assignment", "erp-process-refund",
+    "erp-list-branches", "erp-list-branch-settings", "erp-save-branch", "erp-save-assignment", "erp-list-refunds", "erp-process-refund",
     "erp-overview", "erp-list-audit-logs",
   ]) {
     assert.ok(edge.includes(`"${action}"`), `missing fail-closed action: ${action}`);
