@@ -1963,7 +1963,10 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
-    if(old.branch_id&&!await hasFinanceHQ()&&!await actorCanAccessBranch(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    // Fail closed: a non-HQ finance actor must never process an unscoped refund.
+    const financeHQ = await hasFinanceHQ();
+    if(!old.branch_id&&!financeHQ)return fail("Refund tanpa cabang hanya dapat diproses oleh Finance Head Office.",403,origin);
+    if(old.branch_id&&!financeHQ&&!await actorCanAccessBranch(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.requested_by===actor.user.id||old.reviewed_by===actor.user.id)return fail("Pemisahan tugas: pemohon atau penyetuju tidak boleh memproses refund sendiri.",403,origin);
     const {data,error}=await admin.from("refund_records").update({status:"processed",processed_by:actor.user.id,processed_at:new Date().toISOString(),external_reference:reference}).eq("id",id).eq("status","approved").select("*").maybeSingle();
     if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
