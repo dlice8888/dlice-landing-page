@@ -46,6 +46,23 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
+// Legacy actions whose data model/query paths are not yet certified tenant-scoped.
+// Keep non-platform-owner access closed until each action has a passing negative test.
+const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
+  "admin-update-status", "admin-verify-payment", "admin-proof-url",
+  "admin-configure-product", "admin-save-product", "admin-upload-product-photo",
+  "admin-list-staff", "admin-create-staff", "admin-set-permissions", "admin-set-active", "admin-reset-staff-password",
+  "admin-payment-settings", "admin-save-payment-settings", "admin-upload-qris",
+  "erp-list-recipes", "erp-save-recipe", "erp-activate-recipe", "erp-retire-recipe",
+  "erp-list-product-modifiers", "erp-save-product-modifier", "erp-list-recipe-substitutions", "erp-save-recipe-substitution", "erp-set-product-stock-tracking",
+  "erp-list-settlements", "erp-create-settlement", "erp-match-settlement",
+  "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
+  "erp-list-tax-settings", "erp-save-tax-setting",
+  "erp-save-branch", "erp-save-assignment", "erp-list-assignments",
+  "erp-process-refund",
+  "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
+  "admin-upload-media", "admin-delete-media", "erp-upload-media",
+]);
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -396,6 +413,9 @@ Deno.serve(async (req: Request) => {
 
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
+  if (!TENANT_ISOLATION_RELEASED && actor.profile.role !== "owner" && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
+    return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
+  }
 
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
     if (actor.profile.role === "owner") return true;
