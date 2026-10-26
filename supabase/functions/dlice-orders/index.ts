@@ -46,6 +46,11 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
+// Platform-owner bypass is identity-based, never inferred from the generic business role "owner".
+// If the allowlist is unset, all uncertified actions remain blocked (fail closed).
+const PLATFORM_OWNER_USER_IDS = new Set(
+  (Deno.env.get("DLICE_PLATFORM_OWNER_USER_IDS") ?? "").split(",").map((value) => value.trim()).filter((value) => /^[0-9a-f-]{36}$/i.test(value)),
+);
 // Legacy actions whose data model/query paths are not yet certified tenant-scoped.
 // Keep non-platform-owner access closed until each action has a passing negative test.
 const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
@@ -413,7 +418,7 @@ Deno.serve(async (req: Request) => {
 
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
-  if (!TENANT_ISOLATION_RELEASED && actor.profile.role !== "owner" && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
+  if (!TENANT_ISOLATION_RELEASED && !PLATFORM_OWNER_USER_IDS.has(actor.user.id) && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
     return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
   }
 
