@@ -94,7 +94,7 @@ const getAdmin = async (req: Request) => {
   if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
   const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
-  const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
+  const savedPermissions = (Array.isArray(profile.permissions) ? profile.permissions : rolePermissions).filter((permission: string) => permission !== "*");
   // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
   return { user: userData.user, profile: { ...profile, permissions: [...new Set(savedPermissions)] } };
 };
