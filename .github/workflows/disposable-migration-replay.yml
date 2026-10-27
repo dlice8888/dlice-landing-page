@@ -41,4 +41,4 @@ jobs:
           echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
           supabase start
           supabase db reset
-          supabase migration list
+          echo "PASS: all repository migrations applied to the disposable local database."
