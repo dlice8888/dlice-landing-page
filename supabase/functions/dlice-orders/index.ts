@@ -46,6 +46,28 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
+// Platform-owner bypass requires two independent server-controlled sources: the UUID allowlist and Supabase Auth app_metadata.platform_owner=true.
+// Never use user_metadata for authorization. If either source is absent or mismatched, fail closed.
+const PLATFORM_OWNER_USER_IDS = new Set(
+  (Deno.env.get("DLICE_PLATFORM_OWNER_USER_IDS") ?? "").split(",").map((value) => value.trim()).filter((value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)),
+);
+// Legacy actions whose data model/query paths are not yet certified tenant-scoped.
+// Keep non-platform-owner access closed until each action has a passing negative test.
+const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
+  "admin-list-orders", "admin-update-status", "admin-verify-payment", "admin-proof-url",
+  "admin-list-products", "admin-configure-product", "admin-save-product", "admin-upload-product-photo",
+  "admin-list-staff", "admin-create-staff", "admin-set-permissions", "admin-set-active", "admin-reset-staff-password",
+  "admin-payment-settings", "admin-save-payment-settings", "admin-upload-qris",
+  "erp-list-recipes", "erp-save-recipe", "erp-activate-recipe", "erp-retire-recipe",
+  "erp-list-product-modifiers", "erp-save-product-modifier", "erp-list-recipe-substitutions", "erp-save-recipe-substitution", "erp-set-product-stock-tracking",
+  "erp-list-settlements", "erp-create-settlement", "erp-match-settlement",
+  "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
+  "erp-list-tax-settings", "erp-save-tax-setting",
+  "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
+  "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
+  "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
+  "admin-upload-media", "admin-delete-media", "erp-upload-media",
+]);
 const requestIp = (req: Request) => req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 const consumeRateLimit = async (scope: string, key: string, limit: number, windowSeconds: number): Promise<boolean | null> => {
   const bucket = await sha256(`${scope}:${key}`);
@@ -69,10 +91,10 @@ const getAdmin = async (req: Request) => {
   if (userError || !userData.user) return null;
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  if (profile.role === "owner") return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
+  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
   const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
-  const savedPermissions = Array.isArray(profile.permissions) ? profile.permissions : rolePermissions;
+  const savedPermissions = (Array.isArray(profile.permissions) ? profile.permissions : rolePermissions).filter((permission: string) => permission !== "*");
   // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
   return { user: userData.user, profile: { ...profile, permissions: [...new Set(savedPermissions)] } };
 };
@@ -396,9 +418,13 @@ Deno.serve(async (req: Request) => {
 
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
+  const isPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
+  if (!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
+    return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
+  }
 
   const actorCanAccessBranch = async (branchId: string | null | undefined): Promise<boolean> => {
-    if (actor.profile.role === "owner") return true;
+    if (isPlatformOwner) return true;
     if (!branchId) return false;
     const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
     if (branchError || !branch?.tenant_id) return false;
@@ -409,7 +435,7 @@ Deno.serve(async (req: Request) => {
     return !error && !!data?.length;
   };
   const actorBranchIds = async (): Promise<string[]> => {
-    if (actor.profile.role === "owner") return [];
+    if (isPlatformOwner) return [];
     const { data: memberships, error: membershipError } = await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id", actor.user.id).eq("status", "active");
     if (membershipError) throw new Error("Keanggotaan tenant gagal dimuat.");
     const membershipRows = memberships || [];
@@ -427,7 +453,7 @@ Deno.serve(async (req: Request) => {
     return [...new Set([...(ownedBranches.data || []).map((x: { id: string }) => x.id), ...(assignedBranches.data || []).map((x: { id: string }) => x.id)])];
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
-    if (actor.profile.role === "owner") return true;
+    if (isPlatformOwner) return true;
     if (!actor.profile.permissions.includes(permission)) return false;
     const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
@@ -485,16 +511,16 @@ Deno.serve(async (req: Request) => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && actor.profile.role !== "owner" && !actor.profile.permissions.includes(requiredPermission)) {
+  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
 
   if(action==="admin-session-info"){return json({role:actor.profile.role,permissions:actor.profile.permissions||[],display_name:actor.profile.display_name||actor.profile.username||""},200,origin);}
 
-  if(action==="admin-payment-settings"){if(actor.profile.role!=="owner")return fail("Hanya Owner.",403,origin);const {data,error}=await admin.from("payment_settings").select("method,display_name,instructions,account_name,account_number,qr_storage_path,is_enabled,updated_at").order("method");if(error)return fail("Pengaturan gagal dimuat.",500,origin);const settings=[];for(const s of data||[]){let qr_url=null;if(s.qr_storage_path){const {data:u}=await admin.storage.from("dlice-payment-assets").createSignedUrl(s.qr_storage_path,3600);qr_url=u?.signedUrl||null;}settings.push({...s,qr_url});}return json({settings},200,origin);}
-  if(action==="admin-save-payment-settings"){if(actor.profile.role!=="owner")return fail("Hanya Owner.",403,origin);const method=safeText(body.method,30),display_name=safeText(body.display_name,100),instructions=safeText(body.instructions,1000),account_name=safeText(body.account_name,120),account_number=safeText(body.account_number,80),is_enabled=body.is_enabled===true;if(!["bank_transfer","dlice_qris"].includes(method))return fail("Metode tidak valid.",422,origin);const {data:current}=await admin.from("payment_settings").select("qr_storage_path").eq("method",method).maybeSingle();if(is_enabled&&method==="bank_transfer"&&(!display_name||!account_name||!account_number))return fail("Lengkapi bank, nama pemilik, dan nomor rekening.",422,origin);if(is_enabled&&method==="dlice_qris"&&!current?.qr_storage_path)return fail("Unggah QRIS dahulu.",422,origin);const {error}=await admin.from("payment_settings").upsert({method,display_name:display_name||(method==="dlice_qris"?"QRIS D’Lice":"Transfer bank"),instructions:instructions||null,account_name:method==="bank_transfer"?account_name||null:null,account_number:method==="bank_transfer"?account_number||null:null,is_enabled,updated_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"method"});if(error)return fail("Pengaturan gagal disimpan.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"update_payment_settings",entity_type:"payment_settings",entity_id:method,metadata:{method,is_enabled}});return json({ok:true},200,origin);}
-  if(action==="admin-upload-qris"){if(actor.profile.role!=="owner")return fail("Hanya Owner.",403,origin);const mime=safeText(body.mime_type,50),encoded=safeText(body.file_base64,6500000),ext={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[mime];if(!ext||!encoded||encoded.length>6500000)return fail("QRIS harus JPG/PNG/WebP maksimal 4,5 MB.",422,origin);const binary=Uint8Array.from(atob(encoded.replace(/^data:[^,]+,/,"")),c=>c.charCodeAt(0));if(binary.byteLength>4.5*1024*1024)return fail("Ukuran QRIS maksimal 4,5 MB.",413,origin);const path=`qris/${crypto.randomUUID()}.${ext}`;const {error:up}=await admin.storage.from("dlice-payment-assets").upload(path,binary,{contentType:mime,upsert:false});if(up)return fail("Unggahan QRIS gagal.",500,origin);const {error}=await admin.from("payment_settings").upsert({method:"dlice_qris",display_name:"QRIS D’Lice",qr_storage_path:path,is_enabled:false,updated_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"method"});if(error)return fail("QRIS diunggah tetapi pengaturan gagal disimpan.",500,origin);return json({ok:true},200,origin);}
+  if(action==="admin-payment-settings"){if(!isPlatformOwner)return fail("Hanya Owner.",403,origin);const {data,error}=await admin.from("payment_settings").select("method,display_name,instructions,account_name,account_number,qr_storage_path,is_enabled,updated_at").order("method");if(error)return fail("Pengaturan gagal dimuat.",500,origin);const settings=[];for(const s of data||[]){let qr_url=null;if(s.qr_storage_path){const {data:u}=await admin.storage.from("dlice-payment-assets").createSignedUrl(s.qr_storage_path,3600);qr_url=u?.signedUrl||null;}settings.push({...s,qr_url});}return json({settings},200,origin);}
+  if(action==="admin-save-payment-settings"){if(!isPlatformOwner)return fail("Hanya Owner.",403,origin);const method=safeText(body.method,30),display_name=safeText(body.display_name,100),instructions=safeText(body.instructions,1000),account_name=safeText(body.account_name,120),account_number=safeText(body.account_number,80),is_enabled=body.is_enabled===true;if(!["bank_transfer","dlice_qris"].includes(method))return fail("Metode tidak valid.",422,origin);const {data:current}=await admin.from("payment_settings").select("qr_storage_path").eq("method",method).maybeSingle();if(is_enabled&&method==="bank_transfer"&&(!display_name||!account_name||!account_number))return fail("Lengkapi bank, nama pemilik, dan nomor rekening.",422,origin);if(is_enabled&&method==="dlice_qris"&&!current?.qr_storage_path)return fail("Unggah QRIS dahulu.",422,origin);const {error}=await admin.from("payment_settings").upsert({method,display_name:display_name||(method==="dlice_qris"?"QRIS D’Lice":"Transfer bank"),instructions:instructions||null,account_name:method==="bank_transfer"?account_name||null:null,account_number:method==="bank_transfer"?account_number||null:null,is_enabled,updated_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"method"});if(error)return fail("Pengaturan gagal disimpan.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"update_payment_settings",entity_type:"payment_settings",entity_id:method,metadata:{method,is_enabled}});return json({ok:true},200,origin);}
+  if(action==="admin-upload-qris"){if(!isPlatformOwner)return fail("Hanya Owner.",403,origin);const mime=safeText(body.mime_type,50),encoded=safeText(body.file_base64,6500000),ext={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[mime];if(!ext||!encoded||encoded.length>6500000)return fail("QRIS harus JPG/PNG/WebP maksimal 4,5 MB.",422,origin);const binary=Uint8Array.from(atob(encoded.replace(/^data:[^,]+,/,"")),c=>c.charCodeAt(0));if(binary.byteLength>4.5*1024*1024)return fail("Ukuran QRIS maksimal 4,5 MB.",413,origin);const path=`qris/${crypto.randomUUID()}.${ext}`;const {error:up}=await admin.storage.from("dlice-payment-assets").upload(path,binary,{contentType:mime,upsert:false});if(up)return fail("Unggahan QRIS gagal.",500,origin);const {error}=await admin.from("payment_settings").upsert({method:"dlice_qris",display_name:"QRIS D’Lice",qr_storage_path:path,is_enabled:false,updated_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"method"});if(error)return fail("QRIS diunggah tetapi pengaturan gagal disimpan.",500,origin);return json({ok:true},200,origin);}
 
   if(action==="admin-retry-payment-notification"){
     const orderId=safeText(body.order_id,80);
@@ -515,14 +541,14 @@ Deno.serve(async (req: Request) => {
   if(action==="admin-mark-notification-sent"){const orderId=safeText(body.order_id,80),type=safeText(body.notification_type,60);if(!orderId||!["payment_verified_whatsapp","customer_order_whatsapp"].includes(type))return fail("Notifikasi tidak valid.",422,origin);const {data:n}=await admin.from("notification_log").select("id,order_id").eq("order_id",orderId).eq("notification_type",type).order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n)return fail("Catatan notifikasi tidak ditemukan.",404,origin);const {data:notificationOrder}=await admin.from("orders").select("branch_id").eq("id",n.order_id).maybeSingle();if(!await actorCanAccessBranch(notificationOrder?.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);const {error}=await admin.from("notification_log").update({status:"sent",sent_at:new Date().toISOString(),attempts:1,last_error:null}).eq("id",n.id);if(error)return fail("Status pengiriman gagal dicatat.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"mark_whatsapp_notification_sent",entity_type:"notification",entity_id:n.id,metadata:{order_id:orderId,notification_type:type}});return json({ok:true},200,origin);}
 
   if (action === "admin-list-staff") {
-    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengelola izin staf.", 403, origin);
+    if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mengelola izin staf.", 403, origin);
     const { data, error } = await admin.from("admin_profiles").select("user_id,username,role,display_name,is_active,permissions").order("created_at", { ascending: true });
     if (error) return fail("Daftar staf gagal dimuat.", 500, origin);
     return json({ staff: data ?? [], available_permissions: ["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"] }, 200, origin);
   }
 
   if (action === "admin-create-staff") {
-    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat membuat akun staf.", 403, origin);
+    if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat membuat akun staf.", 403, origin);
     const username = safeText(body.username, 32);
     const displayName = safeText(body.display_name, 120);
     const password = typeof body.password === "string" ? body.password : "";
@@ -538,7 +564,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "admin-set-permissions") {
-    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah izin akses staf.", 403, origin);
+    if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mengubah izin akses staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
@@ -554,7 +580,7 @@ Deno.serve(async (req: Request) => {
 
 
   if (action === "admin-set-active") {
-    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
+    if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const isActive = body.is_active;
     if (!userId || typeof isActive !== "boolean") return fail("Akun dan status aktif wajib ditentukan.", 422, origin);
@@ -569,7 +595,7 @@ Deno.serve(async (req: Request) => {
 
 
   if (action === "admin-reset-staff-password") {
-    if (actor.profile.role !== "owner") return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
+    if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const password = typeof body.password === "string" ? body.password : "";
     if (!userId || password.length < 12 || password.length > 128) return fail("Akun dan kata sandi 12–128 karakter wajib diberikan.", 422, origin);
@@ -584,7 +610,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "admin-list-orders") {
     let query = admin.from("orders").select("id,branch_id,order_number,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,payment_status,operational_status,created_at,timezone,order_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),payment_records(id,method,status,amount_idr,proof_storage_path,created_at),notification_log(id,notification_type,status,message_text,recipient_whatsapp,created_at)").order("created_at", { ascending: false }).limit(100);
-    if (actor.profile.role !== "owner") {
+    if (!isPlatformOwner) {
       let ids: string[];
       try { ids = await actorBranchIds(); } catch { return fail("Penugasan cabang gagal dimuat.", 503, origin); }
       query = ids.length ? query.in("branch_id", ids) : query.eq("branch_id", "00000000-0000-0000-0000-000000000000");
@@ -703,7 +729,7 @@ Deno.serve(async (req: Request) => {
 
 
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
-  const isOwner = actor.profile.role === "owner";
+  const isOwner = isPlatformOwner;
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const tenantIdsForActor = async (): Promise<string[]> => {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
@@ -1963,7 +1989,10 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
-    if(old.branch_id&&!await hasFinanceHQ()&&!await actorCanAccessBranch(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    // Fail closed: a non-HQ finance actor must never process an unscoped refund.
+    const financeHQ = await hasFinanceHQ();
+    if(!old.branch_id&&!financeHQ)return fail("Refund tanpa cabang hanya dapat diproses oleh Finance Head Office.",403,origin);
+    if(old.branch_id&&!financeHQ&&!await actorCanAccessBranch(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.requested_by===actor.user.id||old.reviewed_by===actor.user.id)return fail("Pemisahan tugas: pemohon atau penyetuju tidak boleh memproses refund sendiri.",403,origin);
     const {data,error}=await admin.from("refund_records").update({status:"processed",processed_by:actor.user.id,processed_at:new Date().toISOString(),external_reference:reference}).eq("id",id).eq("status","approved").select("*").maybeSingle();
     if(error||!data)return fail("Refund berubah saat diproses.",409,origin);

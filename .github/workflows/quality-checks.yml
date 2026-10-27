@@ -29,6 +29,8 @@ jobs:
         run: node scripts/quality-checks.mjs
       - name: Run staging release contract tests
         run: node scripts/staging-release-contract-tests.mjs
+      - name: Run tenant refund authorization contract tests
+        run: node --test tests/contracts/tenant-refund-scope-contract.test.mjs
       - name: Require migration and documentation review
         shell: bash
         env:
