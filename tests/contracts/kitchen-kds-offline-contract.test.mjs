@@ -2,11 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const migration = readFileSync("supabase/migrations/20261023232000_kitchen_kds_idempotency_modifiers.sql", "utf8");
+const migration = readFileSync("supabase/migrations/20261023175347_kitchen_kds_idempotency_modifiers.sql", "utf8");
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
-const platform = readFileSync("supabase/migrations/20261023233000_tenant_branch_platform_foundation.sql", "utf8");
-const tenantIntegrity = readFileSync("supabase/migrations/20261023180000_tenant_branch_integrity_constraints.sql", "utf8");
-const posDispatch = readFileSync("supabase/migrations/20261023181000_kds_pos_deferred_dispatch.sql", "utf8");
+const platform = readFileSync("supabase/migrations/20261023175514_tenant_branch_platform_foundation.sql", "utf8");
+const tenantIntegrity = readFileSync("supabase/migrations/20261023175946_tenant_branch_integrity_constraints.sql", "utf8");
+const posDispatch = readFileSync("supabase/migrations/20261023180455_kds_pos_deferred_dispatch.sql", "utf8");
 const kdsE2E = readFileSync("tests/staging/kds-pos-stock-positive.mjs", "utf8");
 const kdsWorkflow = readFileSync(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", "utf8");
 const ui = readFileSync("erp.html", "utf8");
