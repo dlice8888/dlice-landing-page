@@ -132,3 +132,10 @@ The Vercel sandbox had no Docker executable, so the replay runs on an isolated G
 - The reusable REST deny-policy workflow passed on PR head `a12b6244444539c50562d1ff1a443574c224d975`: 68/68 requests returned HTTP 401 with SQLSTATE `42501`. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459278
 - The authenticated negative workflow was executed using the configured existing branch-account secrets only. Sign-in returned HTTP 400 `invalid_credentials`; the workflow exited BLOCKED before any branch/finance request and did not provision an account. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459240
 - The first disposable replay failed because `receipt_payment_notification_gates` ran before `public.orders` existed. The 12 timestamp/name corrections were applied with SQL bytes unchanged, and the KDS contract test's hard-coded file paths were updated in the same PR. Latest replay: https://github.com/dlice8888/dlice-landing-page/actions/runs/40500360730 (check final conclusion before merge).
+
+
+## Replay follow-up (2026-10-27, second failure)
+
+The latest disposable replay reached `20261022124132_stock_transfers_and_counts.sql` and failed with PostgreSQL SQLSTATE `42601` at the next `CREATE OR REPLACE FUNCTION`: the function bodies in this source mirror lacked terminating semicolons after the dollar-quoted bodies. The PR branch now adds those statement terminators only in the repository migration source mirror; no SQL was applied to staging or production. This is a source correction and means the earlier statement that all SQL bytes remain unchanged must be read as applying to the 12 filename/timestamp renames, not this subsequent syntax fix.
+
+A fresh disposable replay is required after this correction. Do not merge until it completes successfully. The staging-authenticated tests remain blocked by the existing identity's `invalid_credentials`, and cross-tenant isolation cannot be certified with only one tenant. `TENANT_ISOLATION_RELEASED` remains false.
