@@ -17,6 +17,8 @@ test("refund processing denies unscoped refunds to non-HQ finance actors", () =>
 
 test("tenant onboarding stays fail-closed until cross-tenant negative tests are accepted", () => {
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
+  assert.match(edge, /actor\.user\.app_metadata\?\.platform_owner === true/);
+  assert.doesNotMatch(edge, /user_metadata\?\.platform_owner/);
   assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED\) return fail\("Tenant onboarding is paused until cross-tenant isolation tests pass\.", 423, origin\)/);
 });
 
@@ -41,7 +43,7 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
 
 
 test("generic owner role cannot grant platform-wide bypass without allowlisted identity", () => {
-  assert.match(edge, /profile\.role === "owner" && PLATFORM_OWNER_USER_IDS\.has\(userData\.user\.id\)/);
+  assert.match(edge, /profile\.role === "owner" && PLATFORM_OWNER_USER_IDS\.has\(userData\.user\.id\) && userData\.user\.app_metadata\?\.platform_owner === true/);
   assert.match(edge, /\.filter\(\(permission: string\) => permission !== "\*"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*===\s*"owner"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*!==\s*"owner"\)/);
