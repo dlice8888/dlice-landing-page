@@ -34,3 +34,12 @@ Do not rollback by granting broad client access. If an authorized Edge Function 
 - Security Advisor still reports 17 `rls_enabled_no_policy` findings for these tables. The explicit deny policies are intended to close that advisor gap without granting client access.
 - **Hold application for now:** the repository connector did not return authoritative evidence that no browser/client code depends on these tables, and authenticated runtime regression tests for allowed Edge Function flows have not been run. This is not a claim that the migration is unsafe; it is a release gate requiring the remaining pre-apply evidence.
 - Do not expose secret values. Platform-owner allowlist membership must be compared against an approved identity source using a metadata/boolean check only; if that source cannot be accessed, leave platform-owner bypass unvalidated and tenant isolation unreleased.
+
+## Staging application result — 2026-10-27
+
+- Applied to staging project `higoadrzxnhzbbwhdbmh` as migration `20261027112330_explicit_deny_policies_server_only_tables`.
+- Post-apply catalog verification: 17/17 target tables retain RLS, 17/17 have exactly one explicit deny policy, `anon` denied direct SELECT/INSERT/UPDATE/DELETE on 17/17, `authenticated` denied the same operations on 17/17, and `service_role` retains SELECT/INSERT/UPDATE/DELETE on 17/17.
+- Security Advisor no longer reports the prior 17 `rls_enabled_no_policy` findings. One unrelated warning remains: Auth leaked-password protection is disabled. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+- Staging `dlice-orders` Edge Function is now version 60 from PR #58 source, with `TENANT_ISOLATION_RELEASED=false`. Do not treat deployment or this migration as proof of runtime tenant isolation.
+- Runtime negative API tests and before/after data snapshots are still outstanding because this connector has no HTTP POST/function-invoke action and no approved authenticated test identities were supplied. No temporary QA accounts were created.
+- Production project was not touched.
