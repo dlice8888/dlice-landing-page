@@ -2,16 +2,16 @@ name: Server-only table deny-policy contract
 
 on:
   push:
-    branches: [fix/staging-explicit-deny-policies-20261025]
+    branches: [staging]
     paths:
       - "tests/staging/internal-table-deny-policy-contract.mjs"
-      - "supabase/migrations/20261025010000_explicit_deny_policies_server_only_tables.sql"
+      - "supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql"
       - ".github/workflows/internal-table-deny-policy-contract.yml"
   pull_request:
     branches: [staging]
     paths:
       - "tests/staging/internal-table-deny-policy-contract.mjs"
-      - "supabase/migrations/20261025010000_explicit_deny_policies_server_only_tables.sql"
+      - "supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql"
       - ".github/workflows/internal-table-deny-policy-contract.yml"
 
 permissions:
