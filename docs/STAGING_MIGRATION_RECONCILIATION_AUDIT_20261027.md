@@ -136,3 +136,10 @@ The current Vercel sandbox has no Docker executable, and the Supabase staging pr
 3. Retrieve a trusted SQL artifact or deployment log for each remote-only migration, compare exact SQL and resulting catalog definitions, and then decide which local files can safely be renamed/recovered.
 4. For authenticated runtime tests, use existing authorized staging identities/tokens already configured for testing. Capture before/after snapshots via privileged read-only queries; no account provisioning or business writes.
 5. Keep the release gate false until trusted platform-owner identity/allowlist and authenticated tenant/branch negative tests pass.
+
+
+## PR CI follow-up (2026-10-27)
+
+- The reusable REST deny-policy workflow passed on PR head `a12b6244444539c50562d1ff1a443574c224d975`: 68/68 requests returned HTTP 401 with SQLSTATE `42501`. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459278
+- The authenticated negative workflow was executed using the configured existing branch-account secrets only. Sign-in returned HTTP 400 `invalid_credentials`; the workflow exited BLOCKED before any branch/finance request and did not provision an account. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459240
+- The disposable migration replay workflow was corrected after its first attempt exposed a missing-directory error. The corrected run is pending at the time this addendum was written; do not treat the migration chain as replay-verified until that run completes successfully.
