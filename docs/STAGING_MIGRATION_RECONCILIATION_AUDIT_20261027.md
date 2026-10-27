@@ -6,53 +6,41 @@ Production project `gdjlkrmlsurcdbwnmqgg` was not accessed or changed.
 
 ## Current decision
 
-**Do not rename or replay the historical mismatches against shared staging yet.** Supabase's migration ledger records a version and name, not a recoverable copy of the SQL applied at that version. The repository has historical source commits for the current local files, but the 13 remote-only ledger records do not have corresponding repository files to compare byte-for-byte. A matching name or a similar resulting object is not enough to assert SQL equivalence.
-
-This PR adds guardrails/tests and records the mapping evidence; it does not mutate the database or falsely mark the ledger as reconciled.
+**No historical SQL was changed and no migration was replayed against shared staging.** The disposable replay exposed an ordering defect: `20261017205317_receipt_payment_notification_gates.sql` ran before `public.orders` existed. I then renamed 12 local migration files to the exact timestamps/names already recorded in the remote ledger, preserving each SQL blob byte-for-byte. This restores the intended order and makes the ledger timestamps align. Supabase's ledger does not store the SQL payload, so these filename matches are provenance/order reconciliation, not proof that the SQL originally applied remotely is byte-identical.
 
 ## Ledger inventory
 
 - Repository at `staging`: 44 SQL migration files.
 - Staging remote ledger: 45 records.
-- Local-only timestamps: 12.
-- Remote-only timestamps: 13.
+- Local-only timestamps after reconciliation: 0.
+- Remote-only timestamps after reconciliation: 1 (`20261022140302_add_missing_fk_supporting_indexes`).
 - Latest migration `20261027112330_explicit_deny_policies_server_only_tables`: aligned between repository and remote ledger.
 
-### Candidate mappings by name
+### Reconciled filename mappings (SQL bytes unchanged)
 
-| Local file | Remote ledger record | Provenance / conclusion |
+| Repository migration file after reconciliation | Matching remote ledger record | Source provenance |
 |---|---|---|
-| `20261018000000_initial_dlice_ordering_schema.sql` | `20261017183506_initial_dlice_ordering_schema` | Local file originated in commit `791a9fcf09a24c66dbe51db70cd3d7caa2386701`. Name candidate only; applied remote SQL not independently retrievable. |
-| `20261018001000_index_ordering_foreign_keys.sql` | `20261017183509_index_ordering_foreign_keys` | Local file originated in commit `40a620319d323288102cfe9a927e9b6921a38bab`. Name candidate only. |
-| `20261018002000_atomic_checkout_and_private_payment_proofs.sql` | `20261017183535_atomic_checkout_and_private_payment_proofs` | Local source commits `8864f0ad9c24ab7d26e9c15891d3c09e56bdf3fc` and follow-up fix `466603eee3d16b77b4e7931f7df2fa3d2437be64`. Must compare the final source snapshot with a trusted deployment artifact before declaring equivalence. |
-| `20261018003000_seed_dlice_catalog.sql` | `20261017183537_seed_dlice_catalog` | Local source commits `03f1927168b578d6ab64c5bc7572ed53843c3638` and follow-up fix `24d9af7108254ac1074b7c48847058edbbb8116f`. Data-seed effects require separate verification. |
-| `20261018004000_admin_role_permissions.sql` | `20261017183540_admin_role_permissions` | Local source commit `e87152ee9f1d82b09f66d45a7b804c54f37a5c16`. Name candidate only. |
-| `20261018005000_product_catalog_storage.sql` | `20261017183542_product_catalog_storage` | Local source commit `bfa8aa14f2b87f9596db9f5b280e6caba5d3a758`. Name candidate only. |
-| `20261018006000_admin_username_accounts.sql` | `20261017184921_admin_username_accounts` | Local source commit `b1e72fb0fc1cc230090ef393b4d62c82a807d5c5`. Name candidate only. |
-| `20261020160000_lock_down_internal_table_rls.sql` | `20261020160307_lock_internal_table_rls` | Local source commit `caa09630e42c321c22db5432bd2bcdc1eaf57c27`. Local source has 12-table RLS/revoke/service-role policy statements. The remote SQL payload is unavailable, so don't treat timestamp/name drift as proof of identical DDL. |
-| `20261021151524_index_remaining_erp_foreign_keys.sql` | `20261022140302_add_missing_fk_supporting_indexes` | Local source commit `5b24e8beca02233791de0f58e13b08420a99a6fd` creates 34 named indexes. All 34 named indexes exist in the staging catalog. This proves those index objects exist, not that they cover every statement from the remote-only migration. |
-| `20261023232000_kitchen_kds_idempotency_modifiers.sql` | `20261023175347_kitchen_kds_idempotency_modifiers` | Local file entered through commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`; compare exact file blob history and dependency ordering before mapping. |
-| `20261023233000_tenant_branch_platform_foundation.sql` | `20261023175514_tenant_branch_platform_foundation` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`; name candidate only. |
-| `20261023180000_tenant_branch_integrity_constraints.sql` | `20261023175946_tenant_branch_integrity_constraints` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`; name candidate only. |
-| `20261023181000_kds_pos_deferred_dispatch.sql` | `20261023180455_kds_pos_deferred_dispatch` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`; name candidate only. |
+| `20261017183506_initial_dlice_ordering_schema.sql` | `20261017183506_initial_dlice_ordering_schema` | Commit `791a9fcf09a24c66dbe51db70cd3d7caa2386701`. |
+| `20261017183509_index_ordering_foreign_keys.sql` | `20261017183509_index_ordering_foreign_keys` | Commit `40a620319d323288102cfe9a927e9b6921a38bab`. |
+| `20261017183535_atomic_checkout_and_private_payment_proofs.sql` | `20261017183535_atomic_checkout_and_private_payment_proofs` | Source commit `8864f0ad9c24ab7d26e9c15891d3c09e56bdf3fc`, followed by fix `466603eee3d16b77b4e7931f7df2fa3d2437be64`. |
+| `20261017183537_seed_dlice_catalog.sql` | `20261017183537_seed_dlice_catalog` | Source commit `03f1927168b578d6ab64c5bc7572ed53843c3638`, followed by fix `24d9af7108254ac1074b7c48847058edbbb8116f`. |
+| `20261017183540_admin_role_permissions.sql` | `20261017183540_admin_role_permissions` | Commit `e87152ee9f1d82b09f66d45a7b804c54f37a5c16`. |
+| `20261017183542_product_catalog_storage.sql` | `20261017183542_product_catalog_storage` | Commit `bfa8aa14f2b87f9596db9f5b280e6caba5d3a758`. |
+| `20261017184921_admin_username_accounts.sql` | `20261017184921_admin_username_accounts` | Commit `b1e72fb0fc1cc230090ef393b4d62c82a807d5c5`. |
+| `20261020160307_lock_internal_table_rls.sql` | `20261020160307_lock_internal_table_rls` | Source commit `caa09630e42c321c22db5432bd2bcdc1eaf57c27`. |
+| `20261021151524_index_remaining_erp_foreign_keys.sql` | `20261021151524_index_remaining_erp_foreign_keys` | Source commit `5b24e8beca02233791de0f58e13b08420a99a6fd`; creates 34 named indexes, all present in the live catalog. |
+| `20261023175347_kitchen_kds_idempotency_modifiers.sql` | `20261023175347_kitchen_kds_idempotency_modifiers` | Source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`. |
+| `20261023175514_tenant_branch_platform_foundation.sql` | `20261023175514_tenant_branch_platform_foundation` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`. |
+| `20261023175946_tenant_branch_integrity_constraints.sql` | `20261023175946_tenant_branch_integrity_constraints` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`. |
+| `20261023180455_kds_pos_deferred_dispatch.sql` | `20261023180455_kds_pos_deferred_dispatch` | Same source commit `f6db219e512a0a59c1d9ea39c2c2b75b17011bc1`. |
 
-### Remote-only ledger entries without exact local filenames
+The rename operations changed filenames only; the migration SQL content was preserved. A remote migration ledger record does not expose the SQL originally applied, so final SQL equivalence still requires a trusted deployment artifact or migration log.
 
-- `20261017183506_initial_dlice_ordering_schema`
-- `20261017183509_index_ordering_foreign_keys`
-- `20261017183535_atomic_checkout_and_private_payment_proofs`
-- `20261017183537_seed_dlice_catalog`
-- `20261017183540_admin_role_permissions`
-- `20261017183542_product_catalog_storage`
-- `20261017184921_admin_username_accounts`
-- `20261020160307_lock_internal_table_rls`
+### Remaining remote-only migration
+
 - `20261022140302_add_missing_fk_supporting_indexes`
-- `20261023175347_kitchen_kds_idempotency_modifiers`
-- `20261023175514_tenant_branch_platform_foundation`
-- `20261023175946_tenant_branch_integrity_constraints`
-- `20261023180455_kds_pos_deferred_dispatch`
 
-The corresponding local-only timestamp files are the candidates in the mapping table above. No historical SQL file was renamed, removed, or replayed in this PR.
+This record has no exact local migration file. The 34 indexes in `20261021151524_index_remaining_erp_foreign_keys.sql` are present, but that is not proof that the remote-only migration's complete DDL is represented. Do not delete the ledger row or invent a matching file. Determine the additional index definitions from a trusted migration artifact or compare the live catalog to all repository-declared index definitions before creating a forward-only replacement.
 
 ## Live catalog audit on staging
 
@@ -114,27 +102,28 @@ Current staging snapshot:
 - Active tenant memberships: 1.
 - Active admin profiles: 3.
 - Active profiles with trusted `app_metadata.platform_owner=true`: 0.
-- No development branch/disposable Supabase branch is currently listed under staging.
+- No Supabase development branch was listed under staging; the GitHub-hosted disposable replay is the chosen no-shared-database test path.
 
 Therefore:
 - Keep `TENANT_ISOLATION_RELEASED = false`.
 - Do not create temporary QA identities; the requested approach is to use already-configured, existing identities only.
 - Authenticated branch-boundary tests need an existing branch-scoped JWT and a real second branch.
 - A true cross-tenant test cannot be meaningful until a second tenant and a legitimately authorized test identity already exist. Do not fabricate a JWT or create a tenant/account solely to make the test pass.
-- Full authenticated REST/JWT branch and cross-tenant tests have **not** been run in this pass because no usable pre-existing user access token was available to this runtime; the connector also cannot read GitHub environment secrets or dispatch the existing workflow.
+- The authenticated negative workflow attempted sign-in with the already-configured branch-account secrets and was blocked by HTTP 400 `invalid_credentials` before any branch/finance request. No user was created. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499598072
+- A true cross-tenant test cannot run against this staging state because there is only one tenant. Do not create a second tenant or temporary identity just to make the suite pass.
 
 ## Disposable migration replay
 
 This PR adds `.github/workflows/disposable-migration-replay.yml`. On a PR to `staging`, GitHub Actions will create a temporary local Supabase stack on its hosted runner, copy the repository migration files into that isolated stack, run `supabase db reset`, and print `supabase migration list`. It will not connect to staging or production.
 
-The current Vercel sandbox has no Docker executable, and the Supabase staging project has no existing development branch. I did not reset staging or create a paid Supabase branch. The disposable GitHub Actions replay is configured in this PR but its CI result must be reviewed before any historical filename reconciliation is merged.
+The Vercel sandbox had no Docker executable, so the replay runs on an isolated GitHub-hosted runner with local Supabase containers. The first attempt found the ordering defect above; after renaming the 12 files, the latest replay must pass before this PR can be considered migration-order verified. No migration DDL was applied to staging and no paid Supabase branch was created.
 
 ## Next safe actions
 
-1. Review this PR and wait for the disposable migration replay job.
-2. If replay fails, repair the local migration sequence in a follow-up PR and repeat the isolated replay; do not alter the remote ledger by guesswork.
-3. Retrieve a trusted SQL artifact or deployment log for each remote-only migration, compare exact SQL and resulting catalog definitions, and then decide which local files can safely be renamed/recovered.
-4. For authenticated runtime tests, use existing authorized staging identities/tokens already configured for testing. Capture before/after snapshots via privileged read-only queries; no account provisioning or business writes.
+1. Review the latest disposable migration replay; fix any remaining ordering error in a follow-up PR and rerun only on the disposable local stack.
+2. Retrieve trusted SQL for the one remote-only index migration and reconcile its resulting index definitions without editing the remote ledger by guesswork.
+3. Restore valid credentials for an existing authorized branch-scoped test identity; do not provision users. Rerun branch/permission tests and capture before/after snapshots.
+4. Run cross-tenant negative tests only when a second tenant and legitimate existing identities are available.
 5. Keep the release gate false until trusted platform-owner identity/allowlist and authenticated tenant/branch negative tests pass.
 
 
@@ -142,4 +131,4 @@ The current Vercel sandbox has no Docker executable, and the Supabase staging pr
 
 - The reusable REST deny-policy workflow passed on PR head `a12b6244444539c50562d1ff1a443574c224d975`: 68/68 requests returned HTTP 401 with SQLSTATE `42501`. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459278
 - The authenticated negative workflow was executed using the configured existing branch-account secrets only. Sign-in returned HTTP 400 `invalid_credentials`; the workflow exited BLOCKED before any branch/finance request and did not provision an account. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/40499459240
-- The disposable migration replay workflow was corrected after its first attempt exposed a missing-directory error. The corrected run is pending at the time this addendum was written; do not treat the migration chain as replay-verified until that run completes successfully.
+- The first disposable replay failed because `receipt_payment_notification_gates` ran before `public.orders` existed. The 12 timestamp/name corrections were applied with SQL bytes unchanged, and the KDS contract test's hard-coded file paths were updated in the same PR. Latest replay: https://github.com/dlice8888/dlice-landing-page/actions/runs/40500360730 (check final conclusion before merge).
