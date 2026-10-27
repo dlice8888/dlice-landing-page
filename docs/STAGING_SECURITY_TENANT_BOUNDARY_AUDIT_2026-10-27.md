@@ -50,3 +50,22 @@ These are repository/contract checks, not runtime tenant-boundary E2E.
 3. Run runtime requests for anonymous, authenticated role-without-permission, wrong-branch, and cross-tenant read/write cases. Snapshot relevant rows before/after and prove denied writes create no side effects.
 4. Confirm no browser/client code directly depends on the 17 PR #42 server-only tables, then apply the migration to staging only and rerun advisor plus authorized Edge Function regression tests.
 5. Keep release gate closed until all runtime evidence is attached to the PRs. Do not merge as a substitute for those checks.
+
+## Follow-up execution — 2026-10-27
+
+### PR #58 deployment
+- Deployed the branch's `supabase/functions/dlice-orders/index.ts` to staging project `higoadrzxnhzbbwhdbmh` using the Supabase Edge Function deploy action.
+- Verified deployed function status `ACTIVE`, version `60`, `verify_jwt=false` preserved from existing configuration, and deployed source includes the allowlist + trusted `app_metadata.platform_owner` checks and `TENANT_ISOLATION_RELEASED=false`.
+- Latest PR #58 CI on the branch head passed: Free quality checks, KDS/offline contract, CORS probes, procurement requisition contract, and procurement receiving contract. Links are available from the Actions runs attached to commit `53552607e5b63556d10bd7f93e8909788a8f9959`.
+
+### Browser dependency review and PR #42 application
+- Reviewed `index.html`, `admin.html`, and `erp.html` in the PR #58 source tree. Browser ERP interactions use the `dlice-orders` Edge Function `call(...)` wrapper; no direct Supabase `.from(...)` calls were found in `erp.html`, and the 17 target tables are not referenced as direct browser REST table calls. This supports server-only classification for the reviewed web clients.
+- Applied PR #42 migration to staging as `20261027112330_explicit_deny_policies_server_only_tables`.
+- Post-apply verification: 17/17 target tables RLS-enabled; 17/17 have one explicit deny policy; `anon` and `authenticated` have no direct SELECT/INSERT/UPDATE/DELETE; `service_role` retains all four privileges.
+- Security Advisor's 17 `rls_enabled_no_policy` findings cleared. Remaining unrelated warning: leaked-password protection disabled.
+
+### Identity validation and remaining hard gate
+- Read-only aggregate still shows 1 active business-owner profile and 0 active owner profiles with trusted `app_metadata.platform_owner=true`; the corresponding user-editable metadata claim count is also 0.
+- Secret inventory is not exposed by the available connector, so the actual configured `DLICE_PLATFORM_OWNER_USER_IDS` allowlist cannot be verified from secret metadata here. No secret values were read or displayed.
+- No temporary QA accounts were created. The connector does not expose a function-invoke/HTTP POST action, and no approved non-owner test identities or tenant-B fixture are available in this session. Therefore runtime anonymous POST, role-without-permission, wrong-branch, cross-tenant read/write, and before/after side-effect snapshots remain unverified.
+- `TENANT_ISOLATION_RELEASED` remains `false`. Do not mark PR #58 or tenant isolation as accepted until those runtime tests and data snapshots are attached.
