@@ -46,8 +46,8 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
-// Platform-owner bypass is identity-based, never inferred from the generic business role "owner".
-// If the allowlist is unset, all uncertified actions remain blocked (fail closed).
+// Platform-owner bypass requires two independent server-controlled sources: the UUID allowlist and Supabase Auth app_metadata.platform_owner=true.
+// Never use user_metadata for authorization. If either source is absent or mismatched, fail closed.
 const PLATFORM_OWNER_USER_IDS = new Set(
   (Deno.env.get("DLICE_PLATFORM_OWNER_USER_IDS") ?? "").split(",").map((value) => value.trim()).filter((value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)),
 );
@@ -91,7 +91,7 @@ const getAdmin = async (req: Request) => {
   if (userError || !userData.user) return null;
   const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id)) return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
+  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
   const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
   const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
   const savedPermissions = (Array.isArray(profile.permissions) ? profile.permissions : rolePermissions).filter((permission: string) => permission !== "*");
@@ -418,7 +418,7 @@ Deno.serve(async (req: Request) => {
 
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
-  const isPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id);
+  const isPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
   if (!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
     return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
   }
