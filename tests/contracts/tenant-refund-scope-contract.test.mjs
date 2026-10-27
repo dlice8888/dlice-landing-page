@@ -24,6 +24,7 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
   assert.match(edge, /const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[/);
   assert.match(edge, /const PLATFORM_OWNER_USER_IDS = new Set\(/);
   assert.match(edge, /DLICE_PLATFORM_OWNER_USER_IDS/);
+  assert.match(edge, /\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}/i, "platform-owner allowlist accepts only canonical UUID-shaped IDs");
   assert.match(edge, /if \(!TENANT_ISOLATION_RELEASED && !PLATFORM_OWNER_USER_IDS\.has\(actor\.user\.id\) && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
   assert.doesNotMatch(edge, /TENANT_ISOLATION_RELEASED && actor\.profile\.role !== "owner"/);
   for (const action of [
