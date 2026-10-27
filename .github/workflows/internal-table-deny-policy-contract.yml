@@ -1,0 +1,29 @@
+name: Server-only table deny-policy contract
+
+on:
+  push:
+    branches: [fix/staging-explicit-deny-policies-20261025]
+    paths:
+      - "tests/staging/internal-table-deny-policy-contract.mjs"
+      - "supabase/migrations/20261025010000_explicit_deny_policies_server_only_tables.sql"
+      - ".github/workflows/internal-table-deny-policy-contract.yml"
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/staging/internal-table-deny-policy-contract.mjs"
+      - "supabase/migrations/20261025010000_explicit_deny_policies_server_only_tables.sql"
+      - ".github/workflows/internal-table-deny-policy-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify explicit deny policies and direct client grant revocation
+        run: node tests/staging/internal-table-deny-policy-contract.mjs
