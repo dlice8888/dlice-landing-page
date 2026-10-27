@@ -43,3 +43,10 @@ Do not rollback by granting broad client access. If an authorized Edge Function 
 - Staging `dlice-orders` Edge Function is now version 60 from PR #58 source, with `TENANT_ISOLATION_RELEASED=false`. Do not treat deployment or this migration as proof of runtime tenant isolation.
 - Runtime negative API tests and before/after data snapshots are still outstanding because this connector has no HTTP POST/function-invoke action and no approved authenticated test identities were supplied. No temporary QA accounts were created.
 - Production project was not touched.
+
+
+## Migration history alignment — 2026-10-27
+
+- The migration was applied on staging and recorded by Supabase as version `20261027112330`.
+- The repository migration filename has been aligned to `supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql` so local version tracking matches the staging history. This change only renames the tracked file; it does not reapply DDL.
+- Production remains untouched. The new file must not be pushed to production as part of this staging-only rollout without a separately approved production migration plan.
