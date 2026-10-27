@@ -49,7 +49,7 @@ const TENANT_ISOLATION_RELEASED = false;
 // Platform-owner bypass is identity-based, never inferred from the generic business role "owner".
 // If the allowlist is unset, all uncertified actions remain blocked (fail closed).
 const PLATFORM_OWNER_USER_IDS = new Set(
-  (Deno.env.get("DLICE_PLATFORM_OWNER_USER_IDS") ?? "").split(",").map((value) => value.trim()).filter((value) => /^[0-9a-f-]{36}$/i.test(value)),
+  (Deno.env.get("DLICE_PLATFORM_OWNER_USER_IDS") ?? "").split(",").map((value) => value.trim()).filter((value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)),
 );
 // Legacy actions whose data model/query paths are not yet certified tenant-scoped.
 // Keep non-platform-owner access closed until each action has a passing negative test.
