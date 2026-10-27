@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const migration = await readFile(
-  "supabase/migrations/20261025010000_explicit_deny_policies_server_only_tables.sql",
+  "supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql",
   "utf8",
 );
 
