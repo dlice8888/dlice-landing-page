@@ -25,3 +25,12 @@ Explicit deny policies and revoked client grants are defense-in-depth for server
 
 ## Rollback
 Do not rollback by granting broad client access. If an authorized Edge Function workflow breaks, stop the rollout and diagnose its server-side access path. Any rollback must be a separately reviewed staging-only migration that preserves client denial and auditability.
+
+## Audit evidence — 2026-10-27 (read-only)
+
+- Staging project: `higoadrzxnhzbbwhdbmh` only.
+- Read-only catalog query confirms all 17 target tables have RLS enabled, zero existing policies, and no direct table grants to `anon` or `authenticated` at the time of inspection.
+- The migration is not present in staging migration history; it has not been applied.
+- Security Advisor still reports 17 `rls_enabled_no_policy` findings for these tables. The explicit deny policies are intended to close that advisor gap without granting client access.
+- **Hold application for now:** the repository connector did not return authoritative evidence that no browser/client code depends on these tables, and authenticated runtime regression tests for allowed Edge Function flows have not been run. This is not a claim that the migration is unsafe; it is a release gate requiring the remaining pre-apply evidence.
+- Do not expose secret values. Platform-owner allowlist membership must be compared against an approved identity source using a metadata/boolean check only; if that source cannot be accessed, leave platform-owner bypass unvalidated and tenant isolation unreleased.
