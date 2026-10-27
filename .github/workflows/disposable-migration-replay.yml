@@ -37,6 +37,7 @@ jobs:
           supabase init
           mkdir -p supabase/migrations
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
+          echo "Replay commit: $GITHUB_SHA"
           echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
           supabase start
           supabase db reset
