@@ -1,0 +1,36 @@
+name: Staging authenticated tenant-boundary negative probes
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/staging/tenant-isolation-existing-identity.mjs"
+      - ".github/workflows/staging-auth-tenant-negative.yml"
+      - "supabase/functions/dlice-orders/index.ts"
+  push:
+    branches: [staging]
+    paths:
+      - "tests/staging/tenant-isolation-existing-identity.mjs"
+      - ".github/workflows/staging-auth-tenant-negative.yml"
+      - "supabase/functions/dlice-orders/index.ts"
+
+permissions:
+  contents: read
+
+jobs:
+  auth-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test existing branch-scoped identity only; never provision accounts
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+        run: node tests/staging/tenant-isolation-existing-identity.mjs
