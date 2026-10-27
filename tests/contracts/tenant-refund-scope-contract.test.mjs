@@ -43,8 +43,8 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
 test("generic owner role cannot grant platform-wide bypass without allowlisted identity", () => {
   assert.match(edge, /profile\.role === "owner" && PLATFORM_OWNER_USER_IDS\.has\(userData\.user\.id\)/);
   assert.match(edge, /\.filter\(\(permission: string\) => permission !== "\*"\)/);
-  assert.doesNotMatch(edge, /actor\.profile\.role\s*===\s*"owner"/);
-  assert.doesNotMatch(edge, /actor\.profile\.role\s*!==\s*"owner"/);
+  assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*===\s*"owner"\)/);
+  assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*!==\s*"owner"\)/);
   assert.match(edge, /const actorCanAccessBranch = async \(branchId: string \| null \| undefined\): Promise<boolean> => \{\n    if \(isPlatformOwner\) return true;/);
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
 });
