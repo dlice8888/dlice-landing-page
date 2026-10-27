@@ -31,6 +31,11 @@ Ownership remains a product decision for tables without `tenant_id`, including `
 
 - RPC snapshot: 29 public functions; 5 are `SECURITY DEFINER`. Catalog checks report zero EXECUTE privilege for `anon` and `authenticated` across these functions, and all 29 have an explicit `search_path` setting. The five SECURITY DEFINER functions are `erp_create_stock_count`, `erp_create_stock_transfer`, `erp_post_stock_count`, `erp_transition_stock_transfer`, and `erp_update_stock_count_item`. Their bodies accept actor UUID arguments and depend on the trusted caller path; do not grant direct client EXECUTE without moving identity/tenant authorization inside each function. Review source/destination branch tenant equality in stock transfer logic before considering the release gate.
 
+## Confirmed gap and proposed replayable migration
+- The live `public.stock_transfers` schema stores `source_branch_id` and `destination_branch_id`, but the existing `erp_create_stock_transfer` SECURITY DEFINER function validates that each branch exists and is active without verifying that both branches belong to the same `tenant_id`. The Edge Function checks actor access to both branches, but that is not a database invariant and can be bypassed by a future trusted caller or privileged RPC path.
+- A live read-only query found no existing stock-transfer rows whose source and destination branches belong to different tenants.
+- Added migration `supabase/migrations/20261028120000_enforce_same_tenant_stock_transfers.sql` to this PR. It installs a replayable `BEFORE INSERT OR UPDATE OF source_branch_id, destination_branch_id` trigger that rejects missing branches and cross-tenant transfers, fixes `search_path`, and revokes direct client EXECUTE on the trigger function. This does not change current staging data and has not yet been applied to shared staging. It still needs CI/replay validation and a negative test that attempts a cross-tenant transfer through the trusted RPC path.
+
 ## Required reviewed migration design
 Do not generate broad policies until policy expressions, grants, RPCs, views, and FK chains have been inspected. The reviewed migration should:
 1. Use `auth.uid()` and active membership as identity/tenant source.
