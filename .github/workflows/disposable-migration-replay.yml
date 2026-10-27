@@ -1,0 +1,42 @@
+name: Disposable local Supabase migration replay
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/disposable-migration-replay.yml"
+  push:
+    branches: [staging]
+    paths:
+      - "supabase/migrations/**"
+      - ".github/workflows/disposable-migration-replay.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  migration-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - name: Replay all repository migrations against a disposable local Supabase database
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          cleanup() {
+            (cd "$tmp" && supabase stop --no-backup) >/dev/null 2>&1 || true
+            rm -rf "$tmp"
+          }
+          trap cleanup EXIT
+          cd "$tmp"
+          supabase init
+          cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
+          echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
+          supabase start
+          supabase db reset
+          supabase migration list
