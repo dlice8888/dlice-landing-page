@@ -45,6 +45,6 @@ test("generic owner role cannot grant platform-wide bypass without allowlisted i
   assert.match(edge, /\.filter\(\(permission: string\) => permission !== "\*"\)/);
   assert.doesNotMatch(edge, /actor\.profile\.role\s*===\s*"owner"/);
   assert.doesNotMatch(edge, /actor\.profile\.role\s*!==\s*"owner"/);
-  assert.match(edge, /const actorCanAccessBranch = async \(branchId: string \| null \| undefined\): Promise<boolean> => \{\n    if \(PLATFORM_OWNER_USER_IDS\.has\(actor\.user\.id\)\) return true;/);
+  assert.match(edge, /const actorCanAccessBranch = async \(branchId: string \| null \| undefined\): Promise<boolean> => \{\n    if \(isPlatformOwner\) return true;/);
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
 });
