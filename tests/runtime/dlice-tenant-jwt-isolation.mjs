@@ -125,3 +125,5 @@ if (edgeAction || edgeBody) {
 }
 console.log("PASS: both JWT identities, own-branch inventory success, foreign-branch 403, direct REST isolation, and server-only stock-transfer RPC denial.");
 console.log("Release gate remains closed: runtime CORS/JWT workflow evidence, independent migration review, staging migration replay, and stock/audit reconciliation are separate required gates.");
+
+// Re-run staging runtime gates on push; no test behavior or credentials changed.
