@@ -47,7 +47,10 @@ const userA = await verifyIdentity("tenant-a", tokenA, process.env.STAGING_TENAN
 const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENANT_B_USER_ID);
 assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
 
-async function branchRead(label, token, branchId, expectedVisible) {
+// The current staging RLS policy deliberately denies direct client access to
+// branches (including a user's own branch). Do not mistake this deny-all route
+// for proof that the authenticated business API correctly scopes tenants.
+async function branchDirectAccessDenied(label, token, branchId) {
   const { response, text } = await request(
     label,
     `/rest/v1/branches?id=eq.${encodeURIComponent(branchId)}&select=id,tenant_id`,
@@ -57,13 +60,12 @@ async function branchRead(label, token, branchId, expectedVisible) {
   assert.equal(response.status, 200, `${label} should return a filtered result, not an API error`);
   const rows = JSON.parse(text);
   assert.ok(Array.isArray(rows), `${label} response should be an array`);
-  assert.equal(rows.some((row) => row.id === branchId), expectedVisible, `${label} visibility mismatch`);
-  if (expectedVisible) assert.ok(rows.every((row) => row.tenant_id === (label.includes("tenant-a") ? tenantA : tenantB)), `${label} returned wrong tenant`);
+  assert.equal(rows.some((row) => row.id === branchId), false, `${label} unexpectedly exposed a branch via direct REST`);
 }
-await branchRead("tenant-a-own-branch", tokenA, branchA, true);
-await branchRead("tenant-a-foreign-branch", tokenA, branchB, false);
-await branchRead("tenant-b-own-branch", tokenB, branchB, true);
-await branchRead("tenant-b-foreign-branch", tokenB, branchA, false);
+await branchDirectAccessDenied("tenant-a-direct-own-branch-denied", tokenA, branchA);
+await branchDirectAccessDenied("tenant-a-direct-foreign-branch-denied", tokenA, branchB);
+await branchDirectAccessDenied("tenant-b-direct-own-branch-denied", tokenB, branchB);
+await branchDirectAccessDenied("tenant-b-direct-foreign-branch-denied", tokenB, branchA);
 
 // The stock-transfer RPC is server-only in current staging ACLs. Confirm an
 // authenticated client cannot bypass the Edge Function and call it directly.
@@ -101,4 +103,5 @@ if (edgeAction || edgeBody) {
 } else {
   console.log(JSON.stringify({ name: "edge-negative-action", skipped: true, reason: "No explicitly approved negative action configured" }));
 }
-console.log("Authenticated tenant-boundary probes passed for configured fixtures.");
+console.log("Authenticated JWT identity, direct REST denial, and direct RPC denial probes passed for configured fixtures.");
+console.log("IMPORTANT: this does not certify tenant-scoped business API isolation; TENANT_ISOLATION_RELEASED remains false until same-tenant business API access and cross-tenant denial are both proven.");
