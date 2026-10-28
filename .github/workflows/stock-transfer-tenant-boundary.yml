@@ -1,0 +1,51 @@
+name: Stock transfer tenant-boundary regression
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261028120000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary.sql"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+  push:
+    branches:
+      - "audit/tenant-isolation-inventory-20261028"
+    paths:
+      - "supabase/migrations/20261028120000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary.sql"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  postgres-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Apply migration and assert tenant boundary
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: postgres
+        run: psql -v ON_ERROR_STOP=1 -f tests/sql/stock-transfer-tenant-boundary.sql
