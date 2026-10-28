@@ -47,6 +47,25 @@ const userA = await verifyIdentity("tenant-a", tokenA, process.env.STAGING_TENAN
 const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENANT_B_USER_ID);
 assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
 
+async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBranchId) {
+  const own = await request(`${label}-business-own-branch-inventory`, "/functions/v1/dlice-orders", token, {
+    method: "POST",
+    body: JSON.stringify({ action: "erp-list-inventory", branch_id: ownBranchId }),
+  });
+  assert.equal(own.response.status, 200, `${label} must be able to read inventory for its own branch`);
+  const ownPayload = JSON.parse(own.text);
+  assert.ok(Array.isArray(ownPayload.balances), `${label} own-branch response must include balances`);
+  assert.ok(ownPayload.balances.every((row) => row.branch_id === ownBranchId), `${label} own-branch response leaked balances from another branch`);
+
+  const foreign = await request(`${label}-business-foreign-branch-inventory-denied`, "/functions/v1/dlice-orders", token, {
+    method: "POST",
+    body: JSON.stringify({ action: "erp-list-inventory", branch_id: foreignBranchId }),
+  });
+  assert.equal(foreign.response.status, 403, `${label} must be denied access to a foreign tenant branch`);
+}
+await verifyBusinessInventoryScope("tenant-a", tokenA, branchA, branchB);
+await verifyBusinessInventoryScope("tenant-b", tokenB, branchB, branchA);
+
 // The current staging RLS policy deliberately denies direct client access to
 // branches (including a user's own branch). Do not mistake this deny-all route
 // for proof that the authenticated business API correctly scopes tenants.
