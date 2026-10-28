@@ -2,6 +2,10 @@
 -- Runs only in an ephemeral CI database; it never connects to shared Supabase.
 \set ON_ERROR_STOP on
 
+-- Supabase roles referenced by the migration; these are test-only roles.
+create role anon nologin;
+create role authenticated nologin;
+
 create table public.branches (
   id uuid primary key,
   tenant_id uuid not null,
@@ -60,7 +64,7 @@ begin
     raise exception 'denied writes changed stock_transfers unexpectedly; expected 1 row, got %', v_count;
   end if;
 
-  -- Missing source and destination branches must fail closed.
+  -- Missing source branch must fail closed.
   v_error := null;
   begin
     insert into public.stock_transfers (source_branch_id, destination_branch_id)
