@@ -1,6 +1,13 @@
 name: Staging tenant JWT and CORS runtime gates
 
 on:
+  push:
+    branches:
+      - audit/tenant-isolation-inventory-20261028
+    paths:
+      - ".github/workflows/staging-tenant-runtime.yml"
+      - "tests/runtime/dlice-orders-security-smoke.mjs"
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
   workflow_dispatch:
     inputs:
       run_negative_edge_probe:
