@@ -41,14 +41,14 @@ jobs:
           STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN }}
           STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
           STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
-          STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
-          STAGING_TENANT_B_ID: ${{ vars.STAGING_TENANT_B_ID }}
-          STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
-          STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
+          STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_ID: 00000000-0000-4000-8000-000000000002
+          STAGING_TENANT_A_BRANCH_ID: 90000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_BRANCH_ID: 90000000-0000-4000-8000-000000000004
         run: |
           set -eu
           missing=0
-          for name in STAGING_ALLOWED_ORIGIN STAGING_TENANT_A_JWT STAGING_TENANT_B_JWT STAGING_TENANT_A_ID STAGING_TENANT_B_ID STAGING_TENANT_A_BRANCH_ID STAGING_TENANT_B_BRANCH_ID; do
+          for name in STAGING_ALLOWED_ORIGIN STAGING_TENANT_A_JWT STAGING_TENANT_B_JWT; do
             eval 'value=${'"$name"'-}'
             if [ -z "$value" ]; then
               echo "::error::Required staging variable/secret is missing: $name"
@@ -58,7 +58,7 @@ jobs:
           [ "$missing" -eq 0 ] || exit 2
           [ "$STAGING_TENANT_A_ID" != "$STAGING_TENANT_B_ID" ] || { echo "::error::Tenant IDs must differ"; exit 2; }
           [ "$STAGING_TENANT_A_BRANCH_ID" != "$STAGING_TENANT_B_BRANCH_ID" ] || { echo "::error::Branch fixture IDs must differ"; exit 2; }
-          echo "Staging configuration shape validated; secret values were not printed."
+          echo "Staging fixture IDs are pinned to the verified staging-only QA records; secret values were not printed."
 
       - name: Run runtime CORS and anonymous auth smoke tests
         env:
@@ -74,12 +74,12 @@ jobs:
           STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
           STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
           STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
-          STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
-          STAGING_TENANT_B_ID: ${{ vars.STAGING_TENANT_B_ID }}
-          STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
-          STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
-          STAGING_TENANT_A_USER_ID: ${{ vars.STAGING_TENANT_A_USER_ID }}
-          STAGING_TENANT_B_USER_ID: ${{ vars.STAGING_TENANT_B_USER_ID }}
+          STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_ID: 00000000-0000-4000-8000-000000000002
+          STAGING_TENANT_A_BRANCH_ID: 90000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_BRANCH_ID: 90000000-0000-4000-8000-000000000004
+          STAGING_TENANT_A_USER_ID: 378f02bc-2719-4b07-9107-4ce94299aa27
+          STAGING_TENANT_B_USER_ID: e1de1ffc-9fae-412f-9dd7-0993b54cb631
           STAGING_NEGATIVE_EDGE_ACTION: ${{ inputs.run_negative_edge_probe && vars.STAGING_NEGATIVE_EDGE_ACTION || '' }}
           STAGING_NEGATIVE_EDGE_BODY: ${{ inputs.run_negative_edge_probe && secrets.STAGING_NEGATIVE_EDGE_BODY || '' }}
         run: node tests/runtime/dlice-tenant-jwt-isolation.mjs
