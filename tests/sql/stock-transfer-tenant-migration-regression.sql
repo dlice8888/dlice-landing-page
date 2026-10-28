@@ -19,6 +19,19 @@ insert into public.branches (id, tenant_id) values
   ('90000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000001'),
   ('90000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000002');
 
+do $roles$
+begin
+  create role anon;
+exception when duplicate_object then null;
+end
+$roles$;
+do $roles$
+begin
+  create role authenticated;
+exception when duplicate_object then null;
+end
+$roles$;
+
 \echo 'Applying exact migration under test'
 \i supabase/migrations/20261028120000_enforce_same_tenant_stock_transfers.sql
 
