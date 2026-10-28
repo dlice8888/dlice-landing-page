@@ -17,6 +17,7 @@ if (![base, key, tokenA, tokenB, tenantA, tenantB, branchA, branchB].every(Boole
   process.exit(2);
 }
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
+assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
 assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
 
 async function request(name, path, token, init = {}) {
