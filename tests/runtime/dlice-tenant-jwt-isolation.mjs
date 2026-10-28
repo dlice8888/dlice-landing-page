@@ -123,5 +123,5 @@ if (edgeAction || edgeBody) {
 } else {
   console.log(JSON.stringify({ name: "edge-negative-action", skipped: true, reason: "No explicitly approved negative action configured" }));
 }
-console.log("Authenticated JWT identity, direct REST denial, and direct RPC denial probes passed for configured fixtures.");
-console.log("IMPORTANT: this does not certify tenant-scoped business API isolation; TENANT_ISOLATION_RELEASED remains false until same-tenant business API access and cross-tenant denial are both proven.");
+console.log("PASS: both JWT identities, own-branch inventory success, foreign-branch 403, direct REST isolation, and server-only stock-transfer RPC denial.");
+console.log("Release gate remains closed: runtime CORS/JWT workflow evidence, independent migration review, staging migration replay, and stock/audit reconciliation are separate required gates.");
