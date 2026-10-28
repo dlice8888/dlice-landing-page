@@ -36,8 +36,8 @@ jobs:
 
       - name: Validate required staging configuration without printing secrets
         env:
-          STAGING_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
           STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN }}
           STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
           STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
@@ -48,7 +48,7 @@ jobs:
         run: |
           set -eu
           missing=0
-          for name in STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY STAGING_ALLOWED_ORIGIN STAGING_TENANT_A_JWT STAGING_TENANT_B_JWT STAGING_TENANT_A_ID STAGING_TENANT_B_ID STAGING_TENANT_A_BRANCH_ID STAGING_TENANT_B_BRANCH_ID; do
+          for name in STAGING_ALLOWED_ORIGIN STAGING_TENANT_A_JWT STAGING_TENANT_B_JWT STAGING_TENANT_A_ID STAGING_TENANT_B_ID STAGING_TENANT_A_BRANCH_ID STAGING_TENANT_B_BRANCH_ID; do
             eval 'value=${'"$name"'-}'
             if [ -z "$value" ]; then
               echo "::error::Required staging variable/secret is missing: $name"
@@ -62,16 +62,16 @@ jobs:
 
       - name: Run runtime CORS and anonymous auth smoke tests
         env:
-          STAGING_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
           STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN }}
           STAGING_FOREIGN_ORIGIN: ${{ vars.STAGING_FOREIGN_ORIGIN }}
         run: node tests/runtime/dlice-orders-security-smoke.mjs
 
       - name: Run authenticated two-tenant JWT isolation probes
         env:
-          STAGING_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
-          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
           STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
           STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
           STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
