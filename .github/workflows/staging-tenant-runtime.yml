@@ -38,7 +38,7 @@ jobs:
         env:
           STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
           STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
-          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN }}
+          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}
           STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
           STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
           STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
@@ -64,7 +64,7 @@ jobs:
         env:
           STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
           STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
-          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN }}
+          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}
           STAGING_FOREIGN_ORIGIN: ${{ vars.STAGING_FOREIGN_ORIGIN }}
         run: node tests/runtime/dlice-orders-security-smoke.mjs
 
