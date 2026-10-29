@@ -554,7 +554,7 @@ Deno.serve(async (req: Request) => {
     const password = typeof body.password === "string" ? body.password : "";
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
-    if (!validUsername(username) || !displayName || password.length < 12 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 12 karakter), atau izin akses tidak valid.", 422, origin);
+    if (!validUsername(username) || !displayName || password.length < 8 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 8 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
     const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "sales_admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
@@ -598,7 +598,7 @@ Deno.serve(async (req: Request) => {
     if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mereset kata sandi staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const password = typeof body.password === "string" ? body.password : "";
-    if (!userId || password.length < 12 || password.length > 128) return fail("Akun dan kata sandi 12–128 karakter wajib diberikan.", 422, origin);
+    if (!userId || password.length < 8 || password.length > 128) return fail("Akun dan kata sandi 8–128 karakter wajib diberikan.", 422, origin);
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
