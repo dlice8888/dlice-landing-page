@@ -32,7 +32,19 @@ async function request(name, path, token, init = {}) {
     redirect: "manual",
   });
   const text = await response.text();
-  console.log(JSON.stringify({ name, status: response.status, bodyBytes: text.length }));
+  let safeError = {};
+  if (!response.ok) {
+    try {
+      const payload = JSON.parse(text);
+      const code = payload.code ?? payload.error_code ?? payload.error;
+      const message = payload.msg ?? payload.message ?? payload.error_description;
+      if (typeof code === "string") safeError.errorCode = code.slice(0, 80);
+      if (typeof message === "string") safeError.errorMessage = message.slice(0, 180);
+    } catch {
+      safeError.errorBody = "non_json";
+    }
+  }
+  console.log(JSON.stringify({ name, status: response.status, bodyBytes: text.length, ...safeError }));
   return { response, text };
 }
 async function verifyIdentity(label, token, expectedUserId) {
