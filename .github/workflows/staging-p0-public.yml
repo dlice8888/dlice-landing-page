@@ -49,7 +49,7 @@ jobs:
             process.exit(2);
           }
           await import("node:fs/promises").then(({ appendFile }) =>
-            appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\\n"));
+            appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
           console.log("Approved staging origin validated.");
           NODE
       - name: Run non-mutating public P0 HTTP, CORS, and anonymous RLS checks
