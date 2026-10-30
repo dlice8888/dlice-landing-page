@@ -511,7 +511,11 @@ Deno.serve(async (req: Request) => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
+  // Inventory listing is authorized by branchAccess below, which verifies active tenant membership
+  // or an active assignment against the requested branch. Do not require a global profile permission
+  // for tenant_owner accounts: their "*" profile grant is intentionally not treated as platform-owner.
+  const branchScopedPermission = action === "erp-list-inventory";
+  if (requiredPermission && !isPlatformOwner && !branchScopedPermission && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
@@ -1195,7 +1199,9 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-list-inventory") {
     const branchId=safeText(body.branch_id,80);
-    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    // A branch is mandatory so the tenant/assignment authorization cannot fall back to an unscoped query.
+    if(!branchId)return fail("Cabang wajib dipilih untuk melihat persediaan.",422,origin);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     const [items,balances]=await Promise.all([
       admin.from("inventory_items").select("id,sku,name,unit,category,min_stock,is_active").order("name").limit(1000),
       admin.from("branch_inventory").select("branch_id,inventory_item_id,on_hand,updated_at").eq("branch_id",branchId||"00000000-0000-0000-0000-000000000000")
