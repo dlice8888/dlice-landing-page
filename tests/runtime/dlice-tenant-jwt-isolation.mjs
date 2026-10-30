@@ -67,6 +67,12 @@ const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENAN
 assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
 
 async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBranchId) {
+  const unscoped = await request(`${label}-business-unscoped-inventory-denied`, "/functions/v1/dlice-orders", token, {
+    method: "POST",
+    body: JSON.stringify({ action: "erp-list-inventory" }),
+  });
+  assert.equal(unscoped.response.status, 422, `${label} must not list inventory without an explicit branch`);
+
   const own = await request(`${label}-business-own-branch-inventory`, "/functions/v1/dlice-orders", token, {
     method: "POST",
     body: JSON.stringify({ action: "erp-list-inventory", branch_id: ownBranchId }),
