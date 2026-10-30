@@ -1,0 +1,63 @@
+name: Staging Runtime Tenant Isolation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "supabase/functions/dlice-orders/**"
+      - ".github/workflows/staging-runtime-tenant-isolation.yml"
+  push:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "supabase/functions/dlice-orders/**"
+      - ".github/workflows/staging-runtime-tenant-isolation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-runtime-tenant-isolation
+  cancel-in-progress: false
+
+jobs:
+  tenant-isolation:
+    name: Authenticated tenant boundary probes
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    env:
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
+      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
+      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
+      STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
+      STAGING_TENANT_B_ID: ${{ vars.STAGING_TENANT_B_ID }}
+      STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
+      STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
+      STAGING_TENANT_A_USER_ID: ${{ vars.STAGING_TENANT_A_USER_ID }}
+      STAGING_TENANT_B_USER_ID: ${{ vars.STAGING_TENANT_B_USER_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate required staging configuration without printing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY STAGING_TENANT_A_USERNAME STAGING_TENANT_A_PASSWORD STAGING_TENANT_B_USERNAME STAGING_TENANT_B_PASSWORD STAGING_TENANT_A_ID STAGING_TENANT_B_ID STAGING_TENANT_A_BRANCH_ID STAGING_TENANT_B_BRANCH_ID; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required staging Environment secret/variable: $name"
+              exit 2
+            fi
+          done
+          echo "Required staging inputs are present; secret values are not displayed."
+      - name: Authenticate both QA identities using D'Lice username login and run tenant isolation probes
+        run: node tests/runtime/dlice-tenant-jwt-isolation.mjs
