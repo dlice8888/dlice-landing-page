@@ -19,6 +19,12 @@ if (![base, key, tokenA, tokenB, tenantA, tenantB, branchA, branchB].every(Boole
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
 assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
 assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
+for (const [label, token] of [["STAGING_TENANT_A_JWT", tokenA], ["STAGING_TENANT_B_JWT", tokenB]]) {
+  if (token.split(".").length !== 3 || token.startsWith("Bearer ")) {
+    console.error(`${label} must contain only a raw Supabase access_token JWT (three dot-separated segments), not a refresh token, JSON session, API key, or "Bearer " prefix. Secret values were not printed.`);
+    process.exit(2);
+  }
+}
 
 async function request(name, path, token, init = {}) {
   const response = await fetch(`${base}${path}`, {
