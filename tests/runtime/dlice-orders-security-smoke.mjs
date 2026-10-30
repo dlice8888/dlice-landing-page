@@ -11,7 +11,7 @@ if (!base || !key) {
 }
 const endpoint = `${base}/functions/v1/dlice-orders`;
 const allowedOrigin = process.env.STAGING_ALLOWED_ORIGIN;
-const foreignOrigin = process.env.STAGING_FOREIGN_ORIGIN ?? "https://origin-not-allowlisted.invalid";
+const foreignOrigin = process.env.STAGING_FOREIGN_ORIGIN || "https://origin-not-allowlisted.invalid";
 
 async function probe(name, init, check) {
   const response = await fetch(endpoint, { ...init, redirect: "manual" });
