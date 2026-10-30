@@ -37,7 +37,7 @@ async function loginWithDliceUsername(label, username, password) {
       status: response.status,
       error: typeof payload.error === "string" ? payload.error.slice(0, 160) : "missing_session",
     }));
-    process.exit(2);
+    return null;
   }
   const token = payload.session.access_token;
   if (typeof token !== "string" || token.split(".").length !== 3 || token.startsWith("Bearer ")) {
@@ -47,8 +47,14 @@ async function loginWithDliceUsername(label, username, password) {
   console.log(JSON.stringify({ name: `${label}-dlice-username-login`, status: response.status, accessTokenShapeValid: true }));
   return token;
 }
+// Attempt both identities before failing so a bad first credential does not hide
+// whether the second QA account is configured correctly. Never print credentials or JWTs.
 const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
 const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
+if (!tokenA || !tokenB) {
+  console.error("Tenant isolation probes skipped: one or both QA identities failed D'Lice username login.");
+  process.exit(2);
+}
 
 async function request(name, path, token, init = {}) {
   const response = await fetch(`${base}${path}`, {
