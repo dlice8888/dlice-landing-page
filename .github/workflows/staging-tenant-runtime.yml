@@ -6,6 +6,7 @@ on:
       - audit/tenant-isolation-inventory-20261028
     paths:
       - ".github/workflows/staging-tenant-runtime.yml"
+      - "supabase/functions/dlice-orders/**"
       - "tests/runtime/dlice-orders-security-smoke.mjs"
       - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
   workflow_dispatch:
