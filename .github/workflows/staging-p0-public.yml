@@ -1,0 +1,73 @@
+name: Staging public P0 HTTP checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact approved staging Preview origin; never production"
+        required: true
+        type: string
+        default: "https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app"
+  push:
+    branches:
+      - staging
+    paths:
+      - .github/workflows/staging-p0-public.yml
+      - tests/staging/p0-http-smoke.mjs
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-public-p0-http
+  cancel-in-progress: false
+
+jobs:
+  public-p0:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Checkout staging test branch
+        uses: actions/checkout@v4
+        with:
+          ref: staging
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate exact staging origin
+        id: preview
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app' }}
+        run: |
+          node --input-type=module <<'NODE'
+          const u = new URL(process.env.PREVIEW_URL);
+          const expected = "https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app";
+          if (u.origin !== expected || u.protocol !== "https:") {
+            console.error("Blocked: origin is not the approved staging Preview host.");
+            process.exit(2);
+          }
+          await import("node:fs/promises").then(({ appendFile }) =>
+            appendFile(process.env.GITHUB_OUTPUT, "origin=" + u.origin + "\n"));
+          console.log("Approved staging origin validated.");
+          NODE
+      - name: Run non-mutating public P0 HTTP, CORS, and anonymous RLS checks
+        env:
+          SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
+          ALLOWED_PREVIEW_ORIGIN: ${{ steps.preview.outputs.origin }}
+          DISALLOWED_ORIGIN: https://dlice-p0-negative.invalid
+          P0_PUBLIC_ONLY: "true"
+        run: |
+          set -o pipefail
+          node tests/staging/p0-http-smoke.mjs 2>&1 | tee public-p0-results.log
+      - name: Upload public P0 result log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-public-p0-results
+          path: public-p0-results.log
+          if-no-files-found: ignore
+          retention-days: 14
