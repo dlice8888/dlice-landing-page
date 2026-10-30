@@ -6,25 +6,49 @@ import assert from "node:assert/strict";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
-const tokenA = process.env.STAGING_TENANT_A_JWT;
-const tokenB = process.env.STAGING_TENANT_B_JWT;
+const usernameA = process.env.STAGING_TENANT_A_USERNAME;
+const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
+const usernameB = process.env.STAGING_TENANT_B_USERNAME;
+const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
 const tenantA = process.env.STAGING_TENANT_A_ID;
 const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
-if (![base, key, tokenA, tokenB, tenantA, tenantB, branchA, branchB].every(Boolean)) {
-  console.error("Missing required staging URL/key, two user JWTs, tenant IDs, or branch fixture IDs. No probes run.");
+if (![base, key, usernameA, passwordA, usernameB, passwordB, tenantA, tenantB, branchA, branchB].every(Boolean)) {
+  console.error("Missing staging URL/key, two D'Lice QA username/password pairs, tenant IDs, or branch fixture IDs. No probes run.");
   process.exit(2);
 }
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
 assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
 assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
-for (const [label, token] of [["STAGING_TENANT_A_JWT", tokenA], ["STAGING_TENANT_B_JWT", tokenB]]) {
-  if (token.split(".").length !== 3 || token.startsWith("Bearer ")) {
-    console.error(`${label} must contain only a raw Supabase access_token JWT (three dot-separated segments), not a refresh token, JSON session, API key, or "Bearer " prefix. Secret values were not printed.`);
+async function loginWithDliceUsername(label, username, password) {
+  // Use the same username/password flow as the D'Lice UI. The Edge Function
+  // maps username to its internal Supabase Auth identity and returns a session.
+  const response = await fetch(`${base}/functions/v1/dlice-orders`, {
+    method: "POST",
+    headers: { apikey: key, "content-type": "application/json" },
+    body: JSON.stringify({ action: "admin-login", username, password }),
+    redirect: "manual",
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload.session?.access_token) {
+    console.error(JSON.stringify({
+      name: `${label}-dlice-login-failed`,
+      status: response.status,
+      error: typeof payload.error === "string" ? payload.error.slice(0, 160) : "missing_session",
+    }));
     process.exit(2);
   }
+  const token = payload.session.access_token;
+  if (typeof token !== "string" || token.split(".").length !== 3 || token.startsWith("Bearer ")) {
+    console.error(`${label} D'Lice login did not return a raw three-segment Supabase access_token. No token value was printed.`);
+    process.exit(2);
+  }
+  console.log(JSON.stringify({ name: `${label}-dlice-username-login`, status: response.status, accessTokenShapeValid: true }));
+  return token;
 }
+const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
+const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
 
 async function request(name, path, token, init = {}) {
   const response = await fetch(`${base}${path}`, {
