@@ -10,12 +10,14 @@ const usernameA = process.env.STAGING_TENANT_A_USERNAME;
 const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
 const usernameB = process.env.STAGING_TENANT_B_USERNAME;
 const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
+const jwtA = process.env.STAGING_TENANT_A_JWT;
+const jwtB = process.env.STAGING_TENANT_B_JWT;
 const tenantA = process.env.STAGING_TENANT_A_ID;
 const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
-if (![base, key, usernameA, passwordA, usernameB, passwordB, tenantA, tenantB, branchA, branchB].every(Boolean)) {
-  console.error("Missing staging URL/key, two D'Lice QA username/password pairs, tenant IDs, or branch fixture IDs. No probes run.");
+if (![base, key, tenantA, tenantB, branchA, branchB].every(Boolean) || ((!usernameA || !passwordA || !usernameB || !passwordB) && (!jwtA || !jwtB))) {
+  console.error("Missing staging URL/key, two D'Lice QA login pairs or two JWTs, tenant IDs, or branch fixture IDs. No probes run.");
   process.exit(2);
 }
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
@@ -49,10 +51,21 @@ async function loginWithDliceUsername(label, username, password) {
 }
 // Attempt both identities before failing so a bad first credential does not hide
 // whether the second QA account is configured correctly. Never print credentials or JWTs.
-const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
-const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
+function configuredJwt(label, token) {
+  if (!token) return null;
+  if (typeof token !== "string" || token.split(".").length !== 3 || token.startsWith("Bearer ")) {
+    console.error(label + " configured JWT is not a raw three-segment access token. No token value was printed.");
+    process.exit(2);
+  }
+  console.log(JSON.stringify({ name: label + "-configured-jwt-fallback", status: "provided", tokenValuePrinted: false }));
+  return token;
+}
+const loginTokenA = usernameA && passwordA ? await loginWithDliceUsername("tenant-a", usernameA, passwordA) : null;
+const loginTokenB = usernameB && passwordB ? await loginWithDliceUsername("tenant-b", usernameB, passwordB) : null;
+const tokenA = loginTokenA ?? configuredJwt("tenant-a", jwtA);
+const tokenB = loginTokenB ?? configuredJwt("tenant-b", jwtB);
 if (!tokenA || !tokenB) {
-  console.error("Tenant isolation probes skipped: one or both QA identities failed D'Lice username login.");
+  console.error("Tenant isolation probes skipped: both identities need a successful D'Lice login or a configured JWT fallback.");
   process.exit(2);
 }
 
