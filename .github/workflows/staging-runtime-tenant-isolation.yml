@@ -73,9 +73,26 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for name in STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY STAGING_TENANT_A_USERNAME STAGING_TENANT_A_PASSWORD STAGING_TENANT_B_USERNAME STAGING_TENANT_B_PASSWORD; do
+          for name in STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY; do
             if [[ -z "${!name:-}" ]]; then
-              echo "::error::Missing required staging Environment secret/variable: $name"
+              echo "::error::Missing required staging secret: $name"
+              exit 2
+            fi
+          done
+          for tenant in A B; do
+            username="STAGING_TENANT_${tenant}_USERNAME"
+            password="STAGING_TENANT_${tenant}_PASSWORD"
+            jwt="STAGING_TENANT_${tenant}_JWT"
+            if [[ -n "${!username:-}" && -n "${!password:-}" ]]; then
+              echo "Tenant ${tenant}: username/password login configured."
+            elif [[ -n "${!jwt:-}" ]]; then
+              echo "Tenant ${tenant}: JWT fallback configured."
+            else
+              echo "::error::Tenant ${tenant} needs either both username/password secrets or its JWT secret."
+              exit 2
+            fi
+            if [[ -n "${!username:-}" && -z "${!password:-}" ]] || [[ -z "${!username:-}" && -n "${!password:-}" ]]; then
+              echo "::error::Tenant ${tenant} username and password must be configured together."
               exit 2
             fi
           done
