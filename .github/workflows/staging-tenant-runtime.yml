@@ -1,0 +1,88 @@
+name: Staging tenant JWT and CORS runtime gates
+
+on:
+  push:
+    branches:
+      - audit/tenant-isolation-inventory-20261028
+    paths:
+      - ".github/workflows/staging-tenant-runtime.yml"
+      - "supabase/functions/dlice-orders/**"
+      - "tests/runtime/dlice-orders-security-smoke.mjs"
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+  workflow_dispatch:
+    inputs:
+      run_negative_edge_probe:
+        description: "Run an explicitly configured negative Edge Function probe"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-tenant-runtime-gates
+  cancel-in-progress: false
+
+jobs:
+  runtime-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Validate required staging configuration without printing secrets
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}
+          STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
+          STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
+          STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_ID: 00000000-0000-4000-8000-000000000002
+          STAGING_TENANT_A_BRANCH_ID: 90000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_BRANCH_ID: 90000000-0000-4000-8000-000000000004
+        run: |
+          set -eu
+          missing=0
+          for name in STAGING_ALLOWED_ORIGIN STAGING_TENANT_A_JWT STAGING_TENANT_B_JWT; do
+            eval 'value=${'"$name"'-}'
+            if [ -z "$value" ]; then
+              echo "::error::Required staging variable/secret is missing: $name"
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 2
+          [ "$STAGING_TENANT_A_ID" != "$STAGING_TENANT_B_ID" ] || { echo "::error::Tenant IDs must differ"; exit 2; }
+          [ "$STAGING_TENANT_A_BRANCH_ID" != "$STAGING_TENANT_B_BRANCH_ID" ] || { echo "::error::Branch fixture IDs must differ"; exit 2; }
+          echo "Staging fixture IDs are pinned to the verified staging-only QA records; secret values were not printed."
+
+      - name: Run runtime CORS and anonymous auth smoke tests
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_ALLOWED_ORIGIN: ${{ vars.STAGING_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}
+          STAGING_FOREIGN_ORIGIN: ${{ vars.STAGING_FOREIGN_ORIGIN }}
+        run: node tests/runtime/dlice-orders-security-smoke.mjs
+
+      - name: Run authenticated two-tenant JWT isolation probes
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_ANON_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+          STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
+          STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
+          STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_ID: 00000000-0000-4000-8000-000000000002
+          STAGING_TENANT_A_BRANCH_ID: 90000000-0000-4000-8000-000000000001
+          STAGING_TENANT_B_BRANCH_ID: 90000000-0000-4000-8000-000000000004
+          STAGING_TENANT_A_USER_ID: 378f02bc-2719-4b07-9107-4ce94299aa27
+          STAGING_TENANT_B_USER_ID: e1de1ffc-9fae-412f-9dd7-0993b54cb631
+          STAGING_NEGATIVE_EDGE_ACTION: ${{ inputs.run_negative_edge_probe && vars.STAGING_NEGATIVE_EDGE_ACTION || '' }}
+          STAGING_NEGATIVE_EDGE_BODY: ${{ inputs.run_negative_edge_probe && secrets.STAGING_NEGATIVE_EDGE_BODY || '' }}
+        run: node tests/runtime/dlice-tenant-jwt-isolation.mjs
+
+# Re-triggerable staging gate definition; runtime credentials remain GitHub Environment secrets.
