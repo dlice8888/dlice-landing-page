@@ -53,12 +53,36 @@ async function loginWithDliceUsername(label, username, password) {
 // whether the second QA account is configured correctly. Never print credentials or JWTs.
 function configuredJwt(label, token) {
   if (!token) return null;
-  if (typeof token !== "string" || token.split(".").length !== 3 || token.startsWith("Bearer ")) {
-    console.error(label + " configured JWT is not a raw three-segment access token. No token value was printed.");
+  let normalized = String(token).trim();
+  let format = "raw";
+  if (normalized.startsWith("Bearer ")) {
+    normalized = normalized.slice(7).trim();
+    format = "bearer-prefixed";
+  }
+  if (normalized.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(normalized);
+      if (typeof parsed.access_token === "string") {
+        normalized = parsed.access_token.trim();
+        format = "session-json";
+      }
+    } catch {
+      // Continue to the generic shape check without printing the supplied value.
+    }
+  }
+  if (normalized.split(".").length !== 3 || !normalized.startsWith("eyJ")) {
+    console.error(JSON.stringify({
+      name: label + "-configured-jwt-invalid-format",
+      segments: normalized.split(".").length,
+      startsWithJwtHeader: normalized.startsWith("eyJ"),
+      containsWhitespace: /\\s/.test(normalized),
+      sourceFormat: format,
+      tokenValuePrinted: false,
+    }));
     process.exit(2);
   }
-  console.log(JSON.stringify({ name: label + "-configured-jwt-fallback", status: "provided", tokenValuePrinted: false }));
-  return token;
+  console.log(JSON.stringify({ name: label + "-configured-jwt-fallback", status: "provided", sourceFormat: format, tokenValuePrinted: false }));
+  return normalized;
 }
 const loginTokenA = usernameA && passwordA ? await loginWithDliceUsername("tenant-a", usernameA, passwordA) : null;
 const loginTokenB = usernameB && passwordB ? await loginWithDliceUsername("tenant-b", usernameB, passwordB) : null;
