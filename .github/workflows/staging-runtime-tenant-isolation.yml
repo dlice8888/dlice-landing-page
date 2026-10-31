@@ -23,8 +23,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  pull-request-static-check:
+    name: Pull request static check (no staging secrets)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check tenant isolation test syntax
+        run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
+
   tenant-isolation:
     name: Authenticated tenant boundary probes
+    # Never expose staging credentials to pull_request code. Run via workflow_dispatch
+    # or after a trusted push to staging, where the staging Environment is explicitly selected.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 10
