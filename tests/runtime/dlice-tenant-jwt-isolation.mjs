@@ -14,11 +14,50 @@ const tenantA = process.env.STAGING_TENANT_A_ID;
 const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
-if (![base, key, tenantA, tenantB, branchA, branchB].every(Boolean) ||
-    !(usernameA && passwordA) || !(usernameB && passwordB)) {
-  console.error("Missing staging URL/key, tenant IDs, branch IDs, or a complete login pair/JWT for each tenant. No probes run.");
+const missingInputs = [];
+for (const [name, value] of [
+  ["STAGING_SUPABASE_URL", base],
+  ["STAGING_SUPABASE_PUBLIC_KEY", key],
+  ["STAGING_TENANT_A_ID", tenantA],
+  ["STAGING_TENANT_B_ID", tenantB],
+  ["STAGING_TENANT_A_BRANCH_ID", branchA],
+  ["STAGING_TENANT_B_BRANCH_ID", branchB],
+  ["STAGING_TENANT_A_USERNAME", usernameA],
+  ["STAGING_TENANT_A_PASSWORD", passwordA],
+  ["STAGING_TENANT_B_USERNAME", usernameB],
+  ["STAGING_TENANT_B_PASSWORD", passwordB],
+]) {
+  if (!value) missingInputs.push(name);
+}
+if (missingInputs.length) {
+  console.error(JSON.stringify({
+    name: "secret-preflight",
+    status: "FAIL",
+    missingInputNames: missingInputs,
+    secretValuesPrinted: false,
+  }));
+  for (const name of [
+    "tenant-a-login",
+    "tenant-b-login",
+    "tenant-identities-distinct",
+    "tenant-a-own-branch-read",
+    "tenant-b-own-branch-read",
+    "tenant-a-cross-tenant-read-denied",
+    "tenant-b-cross-tenant-read-denied",
+    "tenant-a-cross-tenant-write-denied",
+    "tenant-b-cross-tenant-write-denied",
+  ]) {
+    console.error(JSON.stringify({
+      name,
+      status: "BLOCKED",
+      reason: "secret_preflight_failed",
+      executed: false,
+    }));
+  }
+  console.error("FAIL: runtime tenant-isolation gate blocked; no security probe is claimed as executed.");
   process.exit(2);
 }
+console.log(JSON.stringify({ name: "secret-preflight", status: "PASS", secretValuesPrinted: false }));
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
 assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
 assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
