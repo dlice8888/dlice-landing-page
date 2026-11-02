@@ -78,16 +78,12 @@ jobs:
           for tenant in A B; do
             username="STAGING_TENANT_${tenant}_USERNAME"
             password="STAGING_TENANT_${tenant}_PASSWORD"
-            jwt="STAGING_TENANT_${tenant}_JWT"
-            if [[ -n "${!username:-}" && -n "${!password:-}" ]]; then
-              echo "Tenant ${tenant}: username/password configured."
-            elif [[ -n "${!jwt:-}" ]]; then
-              echo "Tenant ${tenant}: JWT fallback configured."
-            else
-              echo "::error::Tenant ${tenant} needs a complete username/password pair or a JWT."
+            if [[ -z "${!username:-}" || -z "${!password:-}" ]]; then
+              echo "::error::Tenant ${tenant} requires its own username and password; JWT-only fallback is not accepted for this login proof."
               exit 2
             fi
+            echo "Tenant ${tenant}: independent username/password pair configured."
           done
-          echo "Required staging inputs are present; secret values are not displayed."
+          echo "Both independent login pairs and required staging inputs are present; secret values are not displayed."
       - name: Authenticate both QA identities and run read-only tenant isolation probes
         run: node tests/runtime/dlice-tenant-jwt-isolation.mjs
