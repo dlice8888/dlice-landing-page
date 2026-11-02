@@ -16,8 +16,10 @@ const tenantA = process.env.STAGING_TENANT_A_ID;
 const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
-if (![base, key, tenantA, tenantB, branchA, branchB].every(Boolean) || ((!usernameA || !passwordA || !usernameB || !passwordB) && (!jwtA || !jwtB))) {
-  console.error("Missing staging URL/key, two D'Lice QA login pairs or two JWTs, tenant IDs, or branch fixture IDs. No probes run.");
+if (![base, key, tenantA, tenantB, branchA, branchB].every(Boolean) ||
+    (!(usernameA && passwordA) && !jwtA) ||
+    (!(usernameB && passwordB) && !jwtB)) {
+  console.error("Missing staging URL/key, tenant IDs, branch IDs, or a complete login pair/JWT for each tenant. No probes run.");
   process.exit(2);
 }
 assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
