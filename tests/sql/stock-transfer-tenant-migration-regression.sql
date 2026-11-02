@@ -82,22 +82,46 @@ begin
 end
 $test$;
 
+\echo 'Cross-tenant source-branch update must fail and preserve the original row'
+do $test$
+begin
+  begin
+    update public.stock_transfers
+       set source_branch_id = '90000000-0000-4000-8000-000000000004'
+     where id = 'a0000000-0000-4000-8000-000000000001';
+    raise exception 'TEST_FAILURE: cross-tenant source update was accepted';
+  exception
+    when raise_exception then
+      if sqlerrm = 'TEST_FAILURE: cross-tenant source update was accepted' then
+        raise;
+      end if;
+      if sqlerrm <> 'stock_transfer_cross_tenant_forbidden' then
+        raise exception 'TEST_FAILURE: unexpected source update rejection: %', sqlerrm;
+      end if;
+  end;
+end
+$test$;
+
 do $test$
 declare
   row_count integer;
+  source uuid;
   destination uuid;
 begin
   select count(*) into row_count from public.stock_transfers;
   if row_count <> 1 then
     raise exception 'TEST_FAILURE: expected exactly one committed same-tenant transfer, got %', row_count;
   end if;
-  select destination_branch_id into destination
+  select source_branch_id, destination_branch_id into source, destination
     from public.stock_transfers
    where id = 'a0000000-0000-4000-8000-000000000001';
+  if source <> '90000000-0000-4000-8000-000000000001' then
+    raise exception 'TEST_FAILURE: rejected source update changed the source branch';
+  end if;
   if destination <> '90000000-0000-4000-8000-000000000002' then
-    raise exception 'TEST_FAILURE: rejected update changed the destination branch';
+    raise exception 'TEST_FAILURE: rejected destination update changed the destination branch';
   end if;
 end
 $test$;
 
-\echo 'PASS: same-tenant insert succeeds; cross-tenant insert/update fail; rejected update preserves data.'
+\echo 'PASS: same-tenant insert succeeds; cross-tenant insert and both source/destination updates fail; rejected updates preserve data.'
