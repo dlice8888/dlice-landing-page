@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-node@1e60f620b9541d10c78b8c5f5e9e0f5a1a5b8c5e
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: Static syntax validation
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: actions/setup-node@1e60f620b9541d10c78b8c5f5e9e0f5a1a5b8c5e
+      - uses: actions/setup-node@v4
         with:
           node-version: "22"
       - name: Validate staging inputs without printing secrets
