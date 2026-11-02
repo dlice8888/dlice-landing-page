@@ -23,7 +23,7 @@ concurrency:
 jobs:
   pull-request-static-check:
     name: Pull request static check (no staging secrets)
-    if: github.event_name == 'pull_request'
+    if: always()
     runs-on: ubuntu-latest
     permissions:
       contents: read
