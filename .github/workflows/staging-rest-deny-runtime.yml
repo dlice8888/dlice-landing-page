@@ -1,0 +1,32 @@
+name: Staging REST direct-client deny runtime
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/staging/rest-deny-policy-runtime.mjs"
+      - ".github/workflows/staging-rest-deny-runtime.yml"
+      - "supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql"
+  push:
+    branches: [staging]
+    paths:
+      - "tests/staging/rest-deny-policy-runtime.mjs"
+      - ".github/workflows/staging-rest-deny-runtime.yml"
+      - "supabase/migrations/20261027112330_explicit_deny_policies_server_only_tables.sql"
+
+permissions:
+  contents: read
+
+jobs:
+  rest-deny:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Probe direct REST CRUD denial on the fixed staging project
+        env:
+          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
+          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
+        run: node tests/staging/rest-deny-policy-runtime.mjs

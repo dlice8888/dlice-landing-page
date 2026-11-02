@@ -86,7 +86,7 @@ begin
     return jsonb_build_object('id',p_transfer_id,'status','cancelled');
   end if;
 end;
-$function$
+$function$;
 
 revoke all on function public.erp_transition_stock_transfer(uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.erp_transition_stock_transfer(uuid,uuid,text) to service_role;

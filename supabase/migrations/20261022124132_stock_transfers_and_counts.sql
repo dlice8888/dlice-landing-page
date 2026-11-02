@@ -86,7 +86,7 @@ begin
   end loop;
   if v_count <> jsonb_array_length(p_items) then raise exception 'duplicate_stock_count_items'; end if;
   return jsonb_build_object('id',v_id,'status','draft','replayed',false);
-end; $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.erp_create_stock_transfer(p_transfer_number text, p_source_branch_id uuid, p_destination_branch_id uuid, p_items jsonb, p_actor_user_id uuid, p_idempotency_key text, p_notes text DEFAULT NULL::text)
@@ -118,7 +118,7 @@ begin
   end loop;
   if v_count <> jsonb_array_length(p_items) then raise exception 'duplicate_transfer_items'; end if;
   return jsonb_build_object('id',v_id,'status','draft','replayed',false);
-end; $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.erp_post_stock_count(p_count_id uuid, p_actor_user_id uuid)
@@ -147,7 +147,7 @@ begin
   end loop;
   update public.stock_counts set status='posted',posted_by=p_actor_user_id,posted_at=now(),updated_at=now() where id=p_count_id;
   return jsonb_build_object('id',p_count_id,'status','posted','items_posted',v_posted);
-end; $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.erp_transition_stock_transfer(p_transfer_id uuid, p_actor_user_id uuid, p_transition text)
@@ -194,7 +194,7 @@ begin
     update public.stock_transfers set status='cancelled',updated_at=now() where id=p_transfer_id;
     return jsonb_build_object('id',p_transfer_id,'status','cancelled');
   end if;
-end; $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.erp_update_stock_count_item(p_count_id uuid, p_item_id uuid, p_counted_quantity numeric)
@@ -212,7 +212,7 @@ begin
   update public.stock_count_items set counted_quantity=p_counted_quantity,updated_at=now() where id=p_item_id and stock_count_id=p_count_id;
   if not found then raise exception 'stock_count_item_not_found'; end if;
   return true;
-end; $function$
+end; $function$;
 
 
 revoke all on function public.erp_create_stock_transfer(text,uuid,uuid,jsonb,uuid,text,text) from public,anon,authenticated;
