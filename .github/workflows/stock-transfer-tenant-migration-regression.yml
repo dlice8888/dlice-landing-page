@@ -1,0 +1,49 @@
+name: Free stock-transfer tenant migration regression
+
+on:
+  push:
+    branches:
+      - audit/tenant-isolation-inventory-20261028
+    paths:
+      - "supabase/migrations/20261028120000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-migration-regression.sql"
+      - ".github/workflows/stock-transfer-tenant-migration-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stock-transfer-tenant-migration-regression
+  cancel-in-progress: false
+
+jobs:
+  isolated-postgres-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Replay migration and test same-tenant / cross-tenant writes
+        env:
+          PGPASSWORD: postgres
+        run: |
+          set -eu
+          psql --host 127.0.0.1 --username postgres --dbname postgres --set ON_ERROR_STOP=1 --file tests/sql/stock-transfer-tenant-migration-regression.sql

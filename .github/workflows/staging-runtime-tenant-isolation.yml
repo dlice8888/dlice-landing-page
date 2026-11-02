@@ -1,0 +1,101 @@
+name: Staging Runtime Tenant Isolation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "supabase/functions/dlice-orders/**"
+      - ".github/workflows/staging-runtime-tenant-isolation.yml"
+  push:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "supabase/functions/dlice-orders/**"
+      - ".github/workflows/staging-runtime-tenant-isolation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-runtime-tenant-isolation
+  cancel-in-progress: false
+
+jobs:
+  pull-request-static-check:
+    name: Pull request static check (no staging secrets)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check tenant isolation test syntax
+        run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
+
+  tenant-isolation:
+    name: Authenticated tenant boundary probes
+    # Never expose staging credentials to pull_request code. Run via workflow_dispatch
+    # or after a trusted push to staging, where the staging Environment is explicitly selected.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    env:
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
+      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
+      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
+      STAGING_TENANT_A_JWT: ${{ secrets.STAGING_TENANT_A_JWT }}
+      STAGING_TENANT_B_JWT: ${{ secrets.STAGING_TENANT_B_JWT }}
+      STAGING_TENANT_A_ID: 00000000-0000-4000-8000-000000000001
+      STAGING_TENANT_B_ID: 00000000-0000-4000-8000-000000000002
+      STAGING_TENANT_A_BRANCH_ID: 90000000-0000-4000-8000-000000000001
+      STAGING_TENANT_B_BRANCH_ID: 90000000-0000-4000-8000-000000000004
+      STAGING_TENANT_A_USER_ID: 378f02bc-2719-4b07-9107-4ce94299aa27
+      STAGING_TENANT_B_USER_ID: e1de1ffc-9fae-412f-9dd7-0993b54cb631
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate required staging configuration without printing secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in STAGING_SUPABASE_URL STAGING_SUPABASE_ANON_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing required staging secret: $name"
+              exit 2
+            fi
+          done
+          for tenant in A B; do
+            username="STAGING_TENANT_${tenant}_USERNAME"
+            password="STAGING_TENANT_${tenant}_PASSWORD"
+            jwt="STAGING_TENANT_${tenant}_JWT"
+            if [[ -n "${!username:-}" && -n "${!password:-}" ]]; then
+              echo "Tenant ${tenant}: username/password login configured."
+            elif [[ -n "${!jwt:-}" ]]; then
+              echo "Tenant ${tenant}: JWT fallback configured."
+            else
+              echo "::error::Tenant ${tenant} needs either both username/password secrets or its JWT secret."
+              exit 2
+            fi
+            if [[ -n "${!username:-}" && -z "${!password:-}" ]] || [[ -z "${!username:-}" && -n "${!password:-}" ]]; then
+              echo "::error::Tenant ${tenant} username and password must be configured together."
+              exit 2
+            fi
+          done
+          echo "Required staging inputs are present; secret values are not displayed."
+      - name: Authenticate both QA identities using D'Lice username login and run tenant isolation probes
+        run: node tests/runtime/dlice-tenant-jwt-isolation.mjs
