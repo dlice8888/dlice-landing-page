@@ -10,15 +10,12 @@ const usernameA = process.env.STAGING_TENANT_A_USERNAME;
 const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
 const usernameB = process.env.STAGING_TENANT_B_USERNAME;
 const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
-const jwtA = process.env.STAGING_TENANT_A_JWT;
-const jwtB = process.env.STAGING_TENANT_B_JWT;
 const tenantA = process.env.STAGING_TENANT_A_ID;
 const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
 if (![base, key, tenantA, tenantB, branchA, branchB].every(Boolean) ||
-    (!(usernameA && passwordA) && !jwtA) ||
-    (!(usernameB && passwordB) && !jwtB)) {
+    !(usernameA && passwordA) || !(usernameB && passwordB)) {
   console.error("Missing staging URL/key, tenant IDs, branch IDs, or a complete login pair/JWT for each tenant. No probes run.");
   process.exit(2);
 }
@@ -51,49 +48,12 @@ async function loginWithDliceUsername(label, username, password) {
   console.log(JSON.stringify({ name: `${label}-dlice-username-login`, status: response.status, accessTokenShapeValid: true }));
   return token;
 }
-// Attempt both identities before failing so a bad first credential does not hide
-// whether the second QA account is configured correctly. Never print credentials or JWTs.
-function configuredJwt(label, token) {
-  if (!token) return null;
-  let normalized = String(token).trim();
-  let format = "raw";
-  if (normalized.startsWith("Bearer ")) {
-    normalized = normalized.slice(7).trim();
-    format = "bearer-prefixed";
-  }
-  if (normalized.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(normalized);
-      if (typeof parsed.access_token === "string") {
-        normalized = parsed.access_token.trim();
-        format = "session-json";
-      }
-    } catch {
-      // Continue to the generic shape check without printing the supplied value.
-    }
-  }
-  if (normalized.split(".").length !== 3 || !normalized.startsWith("eyJ")) {
-    console.error(JSON.stringify({
-      name: label + "-configured-jwt-invalid-format",
-      segments: normalized.split(".").length,
-      startsWithJwtHeader: normalized.startsWith("eyJ"),
-      containsWhitespace: /\\s/.test(normalized),
-      sourceFormat: format,
-      tokenValuePrinted: false,
-    }));
-    process.exit(2);
-  }
-  console.log(JSON.stringify({ name: label + "-configured-jwt-fallback", status: "provided", sourceFormat: format, tokenValuePrinted: false }));
-  return normalized;
-}
-const loginTokenA = usernameA && passwordA ? await loginWithDliceUsername("tenant-a", usernameA, passwordA) : null;
-const loginTokenB = usernameB && passwordB ? await loginWithDliceUsername("tenant-b", usernameB, passwordB) : null;
-const tokenA = loginTokenA ?? configuredJwt("tenant-a", jwtA);
-const tokenB = loginTokenB ?? configuredJwt("tenant-b", jwtB);
-if (!tokenA || !tokenB) {
-  console.error("Tenant isolation probes skipped: both identities need a successful D'Lice login or a configured JWT fallback.");
-  process.exit(2);
-}
+// Both QA identities must perform an actual username/password login. JWT-only
+// fallback is intentionally disallowed so the release evidence proves two logins.
+const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
+const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
+assert.ok(tokenA, "Tenant A username/password login must succeed");
+assert.ok(tokenB, "Tenant B username/password login must succeed");
 
 async function request(name, path, token, init = {}) {
   const response = await fetch(`${base}${path}`, {
@@ -198,25 +158,29 @@ for (const [label, token] of [["tenant-a", tokenA], ["tenant-b", tokenB]]) {
   assert.ok([401, 403, 404, 405].includes(response.status), `${label} direct server-only RPC must be inaccessible (got ${response.status})`);
 }
 
-// Optional Edge Function negative probe: provide a known action and body which
-// is expected to be rejected. Never defaults to a guessed business mutation.
-const edgeAction = process.env.STAGING_NEGATIVE_EDGE_ACTION;
-const edgeBody = process.env.STAGING_NEGATIVE_EDGE_BODY;
-if (edgeAction || edgeBody) {
-  assert.ok(edgeAction && edgeBody, "Set both STAGING_NEGATIVE_EDGE_ACTION and STAGING_NEGATIVE_EDGE_BODY");
-  const parsedBody = JSON.parse(edgeBody);
-  assert.equal(parsedBody.action, edgeAction, "Edge probe body action must match configured action");
-  for (const [label, token] of [["tenant-a", tokenA], ["tenant-b", tokenB]]) {
-    const { response } = await request(`${label}-edge-negative-${edgeAction}`, "/functions/v1/dlice-orders", token, {
-      method: "POST",
-      body: JSON.stringify(parsedBody),
-    });
-    assert.ok([401, 403, 404, 409, 423].includes(response.status), `${label} negative Edge probe unexpectedly succeeded (got ${response.status})`);
-  }
-} else {
-  console.log(JSON.stringify({ name: "edge-negative-action", skipped: true, reason: "No explicitly approved negative action configured" }));
+// Mandatory negative write probes: the handler checks branchAccess for BOTH
+// source and destination before invoking the stock-transfer RPC. A foreign
+// destination must be rejected with 403 and must never reach the mutation RPC.
+async function verifyForeignWriteDenied(label, token, ownBranchId, foreignBranchId) {
+  const probeNumber = `SECURITY-DENY-${label.toUpperCase()}-${Date.now()}`;
+  const { response } = await request(`${label}-foreign-stock-transfer-write-denied`, "/functions/v1/dlice-orders", token, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "erp-create-stock-transfer",
+      transfer_number: probeNumber,
+      source_branch_id: ownBranchId,
+      destination_branch_id: foreignBranchId,
+      inventory_item_id: "00000000-0000-4000-8000-000000000099",
+      quantity: 1,
+      idempotency_key: `deny-${label}-${Date.now()}`,
+      notes: "Automated tenant-isolation negative test; must be rejected before mutation",
+    }),
+  });
+  assert.equal(response.status, 403, `${label} must be denied before creating a cross-tenant stock transfer`);
 }
-console.log("PASS: both JWT identities, own-branch inventory success, foreign-branch 403, direct REST isolation, and server-only stock-transfer RPC denial.");
+await verifyForeignWriteDenied("tenant-a", tokenA, branchA, branchB);
+await verifyForeignWriteDenied("tenant-b", tokenB, branchB, branchA);
+console.log("PASS: both real username/password logins, distinct users, own-branch inventory success, foreign-branch read denial, foreign-branch write denial, direct REST isolation, and server-only stock-transfer RPC denial.");
 console.log("Release gate remains closed: runtime CORS/JWT workflow evidence, independent migration review, staging migration replay, and stock/audit reconciliation are separate required gates.");
 
 // Re-run staging runtime gates on push; no test behavior or credentials changed.
