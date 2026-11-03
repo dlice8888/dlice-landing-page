@@ -10,18 +10,24 @@ const usernameA = process.env.STAGING_TENANT_A_USERNAME;
 const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
 const usernameB = process.env.STAGING_TENANT_B_USERNAME;
 const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
-const tenantA = process.env.STAGING_TENANT_A_ID;
-const tenantB = process.env.STAGING_TENANT_B_ID;
 const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
+const expectedUserA = process.env.STAGING_TENANT_A_USER_ID;
+const expectedUserB = process.env.STAGING_TENANT_B_USER_ID;
+const credentialSources = {
+  tenantAUsername: process.env.STAGING_TENANT_A_USERNAME_SOURCE || "unknown",
+  tenantAPassword: process.env.STAGING_TENANT_A_PASSWORD_SOURCE || "unknown",
+  tenantBUsername: process.env.STAGING_TENANT_B_USERNAME_SOURCE || "unknown",
+  tenantBPassword: process.env.STAGING_TENANT_B_PASSWORD_SOURCE || "unknown",
+};
 const missingInputs = [];
 for (const [name, value] of [
   ["STAGING_SUPABASE_URL", base],
   ["STAGING_SUPABASE_PUBLIC_KEY", key],
-  ["STAGING_TENANT_A_ID", tenantA],
-  ["STAGING_TENANT_B_ID", tenantB],
   ["STAGING_TENANT_A_BRANCH_ID", branchA],
   ["STAGING_TENANT_B_BRANCH_ID", branchB],
+  ["STAGING_TENANT_A_USER_ID", expectedUserA],
+  ["STAGING_TENANT_B_USER_ID", expectedUserB],
   ["STAGING_TENANT_A_USERNAME", usernameA],
   ["STAGING_TENANT_A_PASSWORD", passwordA],
   ["STAGING_TENANT_B_USERNAME", usernameB],
@@ -34,6 +40,7 @@ if (missingInputs.length) {
     name: "secret-preflight",
     status: "FAIL",
     missingInputNames: missingInputs,
+    credentialSources,
     secretValuesPrinted: false,
   }));
   for (const name of [
@@ -57,10 +64,26 @@ if (missingInputs.length) {
   console.error("FAIL: runtime tenant-isolation gate blocked; no security probe is claimed as executed.");
   process.exit(2);
 }
-console.log(JSON.stringify({ name: "secret-preflight", status: "PASS", secretValuesPrinted: false }));
-assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
-assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
-assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
+console.log(JSON.stringify({ name: "secret-preflight", status: "PASS", credentialSources, secretValuesPrinted: false }));
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const fixtureIds = [
+  ["STAGING_TENANT_A_BRANCH_ID", branchA],
+  ["STAGING_TENANT_B_BRANCH_ID", branchB],
+  ["STAGING_TENANT_A_USER_ID", expectedUserA],
+  ["STAGING_TENANT_B_USER_ID", expectedUserB],
+];
+const invalidFixtureIds = fixtureIds.filter(([, value]) => !uuidPattern.test(value)).map(([name]) => name);
+if (invalidFixtureIds.length || branchA === branchB || expectedUserA === expectedUserB) {
+  console.error(JSON.stringify({
+    name: "fixture-preflight",
+    status: "FAIL",
+    invalidInputNames: invalidFixtureIds,
+    branchIdsDistinct: branchA !== branchB,
+    userIdsDistinct: expectedUserA !== expectedUserB,
+  }));
+  process.exit(2);
+}
+
 async function loginWithDliceUsername(label, username, password) {
   // Use the same username/password flow as the D'Lice UI. The Edge Function
   // maps username to its internal Supabase Auth identity and returns a session.
@@ -130,8 +153,8 @@ async function verifyIdentity(label, token, expectedUserId) {
   return user.id;
 }
 
-const userA = await verifyIdentity("tenant-a", tokenA, process.env.STAGING_TENANT_A_USER_ID);
-const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENANT_B_USER_ID);
+const userA = await verifyIdentity("tenant-a", tokenA, expectedUserA);
+const userB = await verifyIdentity("tenant-b", tokenB, expectedUserB);
 assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
 
 async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBranchId) {
