@@ -215,7 +215,7 @@ for (const [label, token] of [["tenant-a", tokenA], ["tenant-b", tokenB]]) {
       p_notes: "Negative security test; must not execute",
     }),
   });
-  assert.ok([401, 403, 404, 405].includes(response.status), `${label} direct server-only RPC must be inaccessible (got ${response.status})`);
+  assert.ok([401, 403].includes(response.status), `${label} direct server-only RPC must return an explicit authentication/authorization denial; 404/405 are not accepted as proof (got ${response.status})`);
 }
 
 // Mandatory negative write probes: the handler checks branchAccess for BOTH
