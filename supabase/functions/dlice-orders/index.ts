@@ -46,6 +46,9 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
+// Public ordering has no trusted host-to-tenant resolver and products have no tenant_id yet.
+// Fail closed for public branch/catalog/order actions until tenant-domain routing is implemented and tested.
+const PUBLIC_TENANT_ROUTING_RELEASED = false;
 // Platform-owner bypass requires two independent server-controlled sources: the UUID allowlist and Supabase Auth app_metadata.platform_owner=true.
 // Never use user_metadata for authorization. If either source is absent or mismatched, fail closed.
 const PLATFORM_OWNER_USER_IDS = new Set(
@@ -148,6 +151,7 @@ Deno.serve(async (req: Request) => {
 
 
   if (action === "list-online-branches") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Katalog publik sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const method=safeText(body.receiving_method,20);
     if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
     const city=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
@@ -187,6 +191,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "list-products") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Katalog publik sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
     if (error) return fail("Menu belum dapat dimuat.", 500, origin);
     const products = (data ?? []).map((p) => ({ ...p, image_url: p.image_path ? admin.storage.from("dlice-product-photos").getPublicUrl(p.image_path).data.publicUrl : null }));
@@ -255,6 +260,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "create-order") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Pemesanan online sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const customerName = safeText(body.customer_name, 120);
     const customerWhatsapp = normPhone(safeText(body.customer_whatsapp, 30));
     const requestedDate = safeText(body.requested_date, 10);
