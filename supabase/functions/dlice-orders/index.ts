@@ -116,6 +116,13 @@ Deno.serve(async (req: Request) => {
   } catch { return fail("Format permintaan tidak valid.", 400, origin); }
   const action = safeText(body.action, 40);
 
+  // Public catalog reads are not tenant-routed yet. Never expose the global
+  // products table to anonymous callers while SaaS tenant isolation is uncertified.
+  // Re-enable only after a trusted tenant resolver and cross-tenant catalog tests exist.
+  if (action === "list-products") {
+    return fail("Katalog sementara ditutup sampai pemetaan tenant dan isolasi katalog selesai diverifikasi.", 423, origin);
+  }
+
   if (action === "admin-login") {
     const username = safeText(body.username, 32).toLowerCase();
     const password = typeof body.password === "string" ? body.password : "";
