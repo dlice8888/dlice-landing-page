@@ -56,6 +56,7 @@ await probe("anonymous-public-list-products-blocked", {
   body: JSON.stringify({ action: "list-products" }),
 }, (response) => {
   assert.equal(response.status, 423, "public catalog must fail closed until tenant-aware routing is implemented");
+  assert.equal(response.headers.get("access-control-allow-origin"), null, "no-Origin catalog request must not receive an ACAO fallback");
 });
 
 await probe("anonymous-admin-list-orders", {
