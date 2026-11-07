@@ -5,6 +5,9 @@ on:
     branches: [staging]
     paths:
       - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "tests/security/tenant-b-owner-bootstrap-static.mjs"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "docs/runbooks/staging-tenant-b-owner-bootstrap.md"
       - ".github/workflows/staging-runtime-tenant-isolation.yml"
       - ".github/workflows/tenant-isolation-static.yml"
 
@@ -26,5 +29,7 @@ jobs:
           node-version: "22"
       - name: Check tenant-isolation probe syntax
         run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
+      - name: Check Tenant B owner bootstrap security invariants
+        run: node tests/security/tenant-b-owner-bootstrap-static.mjs
       - name: Check patch whitespace
         run: git diff --check
