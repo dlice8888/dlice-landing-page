@@ -3,11 +3,6 @@ name: Staging Runtime Tenant Isolation
 # Trusted staging-only runtime gate. Do not run untrusted pull-request code with
 # staging credentials. PR validation is handled by ordinary secret-free checks.
 on:
-  pull_request:
-    branches: [staging]
-    paths:
-      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
-      - ".github/workflows/staging-runtime-tenant-isolation.yml"
   workflow_dispatch:
   push:
     branches: [staging]
@@ -23,26 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  pull-request-static-check:
-    name: Pull request static check (no staging secrets)
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - name: Check tenant-isolation probe syntax
-        run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
-      - name: Check patch whitespace
-        run: git diff --check
-
   tenant-isolation:
-    if: github.event_name != 'pull_request'
     name: Authenticated tenant boundary probes
     runs-on: ubuntu-latest
     environment: staging
