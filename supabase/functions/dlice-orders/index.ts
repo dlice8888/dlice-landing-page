@@ -514,7 +514,6 @@ Deno.serve(async (req: Request) => {
     "erp-reconcile-purchase-requisition": "procurement",
     "erp-list-purchase-orders": "procurement",
     "erp-create-purchase-order": "procurement",
-    "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
@@ -756,7 +755,7 @@ Deno.serve(async (req: Request) => {
     const [{ data: tenant, error: tenantError }, { data: branch, error: branchError }, { data: targetProfile, error: profileError }, { data: authResult, error: authError }] = await Promise.all([
       admin.from("tenants").select("id,slug,status").eq("id", tenantBId).maybeSingle(),
       admin.from("branches").select("id,tenant_id,status").eq("id", branchBId).maybeSingle(),
-      admin.from("admin_profiles").select("user_id,role,is_active,permissions").eq("user_id", targetUserId).maybeSingle(),
+      admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", targetUserId).maybeSingle(),
       admin.auth.admin.getUserById(targetUserId),
     ]);
     if (tenantError || branchError || profileError || authError || !tenant || !branch || !targetProfile || !authResult.user) {
@@ -773,39 +772,17 @@ Deno.serve(async (req: Request) => {
     if (membershipLookupError) return fail("Keanggotaan target gagal diverifikasi.", 503, origin);
     if ((priorMemberships || []).length > 0) return fail("Akun target sudah memiliki keanggotaan tenant; gunakan identitas khusus yang belum terikat tenant.", 409, origin);
 
-    const previousPermissions = Array.isArray(targetProfile.permissions) ? targetProfile.permissions : [];
-    const grantedPermissions = ["branches", "inventory", "procurement"];
-    const { data: membership, error: membershipError } = await admin.from("tenant_memberships").insert({
-      tenant_id: tenantBId, user_id: targetUserId, role: "tenant_owner",
-      permissions: grantedPermissions, status: "active",
-    }).select("id,tenant_id,user_id,role,status").single();
-    if (membershipError || !membership) return fail("Keanggotaan Tenant Owner gagal dibuat.", 409, origin);
-
-    const { error: permissionsError } = await admin.from("admin_profiles").update({
-      permissions: grantedPermissions, updated_at: new Date().toISOString(),
-    }).eq("user_id", targetUserId);
-    if (permissionsError) {
-      await admin.from("tenant_memberships").delete().eq("id", membership.id);
-      return fail("Izin operasional gagal disiapkan; perubahan keanggotaan dibatalkan.", 500, origin);
-    }
-    const { error: auditError } = await admin.from("admin_audit_logs").insert({
-      actor_user_id: actor.user.id,
-      action: "platform_bootstrap_tenant_owner",
-      entity_type: "tenant_membership",
-      entity_id: membership.id,
-      metadata: {
-        tenant_id: tenantBId, tenant_slug: tenant.slug, branch_id: branchBId,
-        target_user_id: targetUserId, assigned_role: "tenant_owner",
-        previous_permissions: previousPermissions, granted_permissions: grantedPermissions,
-        bootstrap_scope: "staging_tenant_b_only",
-      },
+    const { data: bootstrapResult, error: bootstrapError } = await admin.rpc("platform_bootstrap_tenant_owner", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: targetUserId,
+      p_tenant_id: tenantBId,
+      p_branch_id: branchBId,
     });
-    if (auditError) {
-      await admin.from("tenant_memberships").delete().eq("id", membership.id);
-      await admin.from("admin_profiles").update({ permissions: previousPermissions, updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
-      return fail("Audit trail gagal dicatat; perubahan bootstrap dibatalkan.", 500, origin);
+    if (bootstrapError || !bootstrapResult?.membership || bootstrapResult.audit_recorded !== true) {
+      return fail("Bootstrap tenant dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.", 409, origin);
     }
-    return json({ ok: true, membership, branch_id: branchBId, permissions: grantedPermissions, audit_recorded: true }, 201, origin);
+    return json({ ok: true, membership: bootstrapResult.membership, branch_id: branchBId,
+      permissions: bootstrapResult.membership.permissions, audit_recorded: true }, 201, origin);
   }
 
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
@@ -822,6 +799,15 @@ Deno.serve(async (req: Request) => {
     if(["tenant_owner","tenant_admin"].includes(String(membership.role)))return true;
     const {data,error}=await admin.from("branch_assignments").select("id").eq("branch_id",branchId).eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error&&!!data?.length;
+  };
+  const hasTenantPermissionForBranch = async (branchId: string, permission: string): Promise<boolean> => {
+    const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
+    if (branchError || !branch) return false;
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships")
+      .select("role,permissions").eq("tenant_id", branch.tenant_id).eq("user_id", actor.user.id).eq("status", "active").maybeSingle();
+    if (membershipError || !membership) return false;
+    if (["tenant_owner", "tenant_admin"].includes(String(membership.role))) return true;
+    return Array.isArray(membership.permissions) && membership.permissions.includes(permission);
   };
   const isTenantOwnerForBranch = async (branchId: string): Promise<boolean> => {
     const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
@@ -1028,18 +1014,17 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-create-warehouse") {
-    if(!hasPerm("inventory")&&!hasPerm("branches"))return fail("Izin Inventory/Branches diperlukan.",403,origin);
     const branchId=safeText(body.branch_id,80),code=safeText(body.code,40).toUpperCase(),name=safeText(body.name,120),type=safeText(body.warehouse_type,30)||"branch";
     if(!/^[A-Z0-9_-]{2,40}$/.test(code)||name.length<2||!["central","branch","cold_storage","transit"].includes(type))return fail("Data gudang tidak valid.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();if(!branch)return fail("Cabang tidak ditemukan.",404,origin);
-    const {data:membership}=await admin.from("tenant_memberships").select("role").eq("tenant_id",branch.tenant_id).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
-    if(!membership||!["tenant_owner","tenant_admin"].includes(String(membership.role)))return fail("Hanya Tenant Owner/Admin yang dapat membuat gudang.",403,origin);
-    const {data:warehouse,error}=await admin.from("warehouses").insert({tenant_id:branch.tenant_id,branch_id:branchId,code,name,warehouse_type:type,is_default:body.is_default===true}).select("*").single();
-    if(error||!warehouse)return fail("Gudang gagal dibuat; kode atau gudang default mungkin sudah ada.",409,origin);
-    const {error:auditError}=await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_warehouse_created",entity_type:"warehouse",entity_id:warehouse.id,metadata:{tenant_id:branch.tenant_id,branch_id:branchId,code,warehouse_type:type,is_default:warehouse.is_default}});
-    if(auditError){await admin.from("warehouses").delete().eq("id",warehouse.id);return fail("Audit gudang gagal dicatat; pembuatan gudang dibatalkan.",500,origin);}
-    return json({ok:true,warehouse,audit_recorded:true},201,origin);
+    if(!await hasTenantPermissionForBranch(branchId,"inventory"))return fail("Izin Inventory pada tenant cabang ini diperlukan.",403,origin);
+    const {data:result,error}=await admin.rpc("erp_create_warehouse_with_audit",{
+      p_actor_user_id:actor.user.id,p_branch_id:branchId,p_code:code,p_name:name,
+      p_warehouse_type:type,p_is_default:body.is_default===true
+    });
+    if(error||!result?.warehouse||result.audit_recorded!==true)return fail("Gudang dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,warehouse:result.warehouse,audit_recorded:true},201,origin);
+  }
   }
 
   if (action === "erp-list-integrations") {
@@ -1768,14 +1753,14 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("purchase_orders").select("id,status,branch_id,requested_by").eq("id",id).maybeSingle();
     if(!old)return fail("Purchase order tidak ditemukan.",404,origin);
     if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(next==="approved"&&!isOwner&&!await isTenantOwnerForBranch(old.branch_id))return fail("Hanya Tenant Owner/Admin atau Owner platform dapat menyetujui purchase order.",403,origin);
+    if(!await hasTenantPermissionForBranch(old.branch_id,"procurement"))return fail("Izin Procurement pada tenant cabang ini diperlukan.",403,origin);
     if(next==="approved"&&old.requested_by===actor.user.id)return fail("Pembuat purchase order tidak boleh menyetujui purchase order sendiri.",403,origin);
-    const valid=(old.status==="draft"&&["submitted","cancelled"].includes(next))||(old.status==="submitted"&&["approved","cancelled"].includes(next))||(old.status==="approved"&&["ordered","cancelled"].includes(next));
-    if(!valid)return fail("Perubahan status tidak diizinkan dari status saat ini.",409,origin);
-    const {data,error}=await admin.from("purchase_orders").update({status:next,approved_by:next==="approved"?actor.user.id:undefined,updated_at:new Date().toISOString()}).eq("id",id).eq("status",old.status).select("*").maybeSingle();
-    if(error||!data)return fail("Purchase order berubah; muat ulang.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_purchase_order_"+next,entity_type:"purchase_order",entity_id:id,metadata:{previous_status:old.status}});
-    return json({ok:true,purchase_order:data},200,origin);
+    const {data:result,error}=await admin.rpc("erp_transition_purchase_order_with_audit",{
+      p_actor_user_id:actor.user.id,p_purchase_order_id:id,p_next_status:next,p_platform_owner:isOwner
+    });
+    if(error||!result?.purchase_order||result.audit_recorded!==true)return fail("Perubahan status dan audit PO atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,purchase_order:result.purchase_order,audit_recorded:true},200,origin);
+  }
   }
 
 
