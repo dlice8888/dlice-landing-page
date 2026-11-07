@@ -92,6 +92,8 @@ if (tokenB) {
 }
 if (!identityA || !identityB) blocked("tenant-identities-distinct", "one_or_both_identity_checks_not_successful");
 else (identityA !== identityB ? pass : fail)("tenant-identities-distinct", { identitiesDifferent: identityA !== identityB });
+const verifiedTokenA = identityA ? tokenA : null;
+const verifiedTokenB = identityB ? tokenB : null;
 const ownRead = async (label, token, branch) => apiProbe(`${label}-own-branch-read`, "/functions/v1/dlice-orders", token, {
   method: "POST", body: JSON.stringify({ action: "erp-list-inventory", branch_id: branch }),
 }, ({response,payload}) => {
@@ -99,13 +101,13 @@ const ownRead = async (label, token, branch) => apiProbe(`${label}-own-branch-re
   return { ok: response.status === 200 && balances.length > 0 && balances.every(x => x.branch_id === branch),
     evidence: { balanceRows: balances.length, allRowsMatchOwnBranch: balances.every(x => x.branch_id === branch) } };
 });
-await ownRead("tenant-a", tokenA, cfg.branchA);
-await ownRead("tenant-b", tokenB, cfg.branchB);
+await ownRead("tenant-a", verifiedTokenA, cfg.branchA);
+await ownRead("tenant-b", verifiedTokenB, cfg.branchB);
 const crossRead = async (label, token, foreignBranch) => apiProbe(`${label}-cross-tenant-read-denied`, "/functions/v1/dlice-orders", token, {
   method: "POST", body: JSON.stringify({ action: "erp-list-inventory", branch_id: foreignBranch }),
 }, ({response}) => ({ ok: response.status === 403, evidence: { expectedHttpStatus: 403 } }));
-await crossRead("tenant-a", tokenA, cfg.branchB);
-await crossRead("tenant-b", tokenB, cfg.branchA);
+await crossRead("tenant-a", verifiedTokenA, cfg.branchB);
+await crossRead("tenant-b", verifiedTokenB, cfg.branchA);
 const crossWrite = async (label, token, ownBranch, foreignBranch) => apiProbe(`${label}-cross-tenant-write-denied`, "/functions/v1/dlice-orders", token, {
   method: "POST", body: JSON.stringify({
     action: "erp-create-stock-transfer", transfer_number: `SECURITY-DENY-${label}-${Date.now()}`,
@@ -115,8 +117,8 @@ const crossWrite = async (label, token, ownBranch, foreignBranch) => apiProbe(`$
     notes: "Negative security test; must be rejected before mutation",
   }),
 }, ({response}) => ({ ok: response.status === 403, evidence: { expectedHttpStatus: 403, mutationMustNotRun: true } }));
-await crossWrite("tenant-a", tokenA, cfg.branchA, cfg.branchB);
-await crossWrite("tenant-b", tokenB, cfg.branchB, cfg.branchA);
+await crossWrite("tenant-a", verifiedTokenA, cfg.branchA, cfg.branchB);
+await crossWrite("tenant-b", verifiedTokenB, cfg.branchB, cfg.branchA);
 const requiredNames = [
   "tenant-a-login", "tenant-b-login", "tenant-identities-distinct",
   "tenant-a-own-branch-read", "tenant-b-own-branch-read",
