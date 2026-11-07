@@ -41,6 +41,14 @@ const warehouse = source.slice(warehouseStart, warehouseEnd);
 assert.ok(warehouse.includes('admin.rpc("erp_create_warehouse_with_audit"'), "warehouse insert and audit must use atomic DB RPC");
 assert.ok(!warehouse.includes('admin.from("admin_audit_logs").insert'), "warehouse handler must not write audit separately");
 
+const poCreateStart = source.indexOf('if (action === "erp-create-purchase-order")');
+const poCreateEnd = source.indexOf('if (action === "erp-update-purchase-order")', poCreateStart);
+const poCreate = source.slice(poCreateStart, poCreateEnd);
+assert.ok(poCreate.includes('admin.rpc("erp_create_purchase_order_with_audit"'), "PO header, lines and audit must use atomic DB RPC");
+assert.ok(!poCreate.includes('admin.from("purchase_orders").insert'), "PO header must not be inserted separately");
+assert.ok(!poCreate.includes('admin.from("admin_audit_logs").insert'), "PO creation handler must not write audit separately");
+assert.ok(poCreate.includes('hasTenantPermissionForBranch(branchId,"procurement")'), "PO create permission must be tenant scoped");
+
 const poStart = source.indexOf('if (action === "erp-update-purchase-order")');
 const poEnd = source.indexOf('if (action === "erp-list-fulfillment-orders")', poStart);
 const po = source.slice(poStart, poEnd);
@@ -48,7 +56,7 @@ assert.ok(po.includes('admin.rpc("erp_transition_purchase_order_with_audit"'), "
 assert.ok(!po.includes('admin.from("admin_audit_logs").insert'), "PO handler must not write audit separately");
 assert.ok(po.includes('hasTenantPermissionForBranch(old.branch_id,"procurement")'), "PO permission must be tenant scoped");
 
-for (const fn of ["platform_bootstrap_tenant_owner", "erp_create_warehouse_with_audit", "erp_transition_purchase_order_with_audit"]) {
+for (const fn of ["platform_bootstrap_tenant_owner", "erp_create_warehouse_with_audit", "erp_create_purchase_order_with_audit", "erp_transition_purchase_order_with_audit"]) {
   assert.ok(migration.includes(`create or replace function public.${fn}(`), `migration missing ${fn}`);
   assert.ok(migration.includes("security invoker"), "privileged operations must not silently bypass RLS with SECURITY DEFINER");
   assert.ok(migration.includes(`to service_role`), "RPC must be executable by service_role");
