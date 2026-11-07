@@ -28,8 +28,8 @@ jobs:
       STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
       STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME || secrets.STAGING_TEST_OWNER_USERNAME }}
       STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD || secrets.STAGING_TEST_OWNER_PASSWORD }}
-      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME || secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD || secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
+      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
       # Fixture identifiers are GitHub Environment variables, not source literals.
       # Values are checked against live staging Auth/tenant/branch records before use.
       STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
@@ -39,8 +39,8 @@ jobs:
       # Emit only the selected secret alias name; never expose credential values.
       STAGING_TENANT_A_USERNAME_SOURCE: ${{ secrets.STAGING_TENANT_A_USERNAME != '' && 'canonical' || (secrets.STAGING_TEST_OWNER_USERNAME != '' && 'legacy-owner-alias' || 'missing') }}
       STAGING_TENANT_A_PASSWORD_SOURCE: ${{ secrets.STAGING_TENANT_A_PASSWORD != '' && 'canonical' || (secrets.STAGING_TEST_OWNER_PASSWORD != '' && 'legacy-owner-alias' || 'missing') }}
-      STAGING_TENANT_B_USERNAME_SOURCE: ${{ secrets.STAGING_TENANT_B_USERNAME != '' && 'canonical' || (secrets.STAGING_TEST_BRANCH_A_USERNAME != '' && 'legacy-branch-a-alias' || 'missing') }}
-      STAGING_TENANT_B_PASSWORD_SOURCE: ${{ secrets.STAGING_TENANT_B_PASSWORD != '' && 'canonical' || (secrets.STAGING_TEST_BRANCH_A_PASSWORD != '' && 'legacy-branch-a-alias' || 'missing') }}
+      STAGING_TENANT_B_USERNAME_SOURCE: ${{ secrets.STAGING_TENANT_B_USERNAME != '' && 'canonical' || 'missing' }}
+      STAGING_TENANT_B_PASSWORD_SOURCE: ${{ secrets.STAGING_TENANT_B_PASSWORD != '' && 'canonical' || 'missing' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
