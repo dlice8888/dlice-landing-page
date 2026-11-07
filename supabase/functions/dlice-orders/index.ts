@@ -774,7 +774,7 @@ Deno.serve(async (req: Request) => {
     if ((priorMemberships || []).length > 0) return fail("Akun target sudah memiliki keanggotaan tenant; gunakan identitas khusus yang belum terikat tenant.", 409, origin);
 
     const previousPermissions = Array.isArray(targetProfile.permissions) ? targetProfile.permissions : [];
-    const grantedPermissions = ["branches", "inventory", "procurement", "audit"];
+    const grantedPermissions = ["branches", "inventory", "procurement"];
     const { data: membership, error: membershipError } = await admin.from("tenant_memberships").insert({
       tenant_id: tenantBId, user_id: targetUserId, role: "tenant_owner",
       permissions: grantedPermissions, status: "active",
@@ -822,6 +822,13 @@ Deno.serve(async (req: Request) => {
     if(["tenant_owner","tenant_admin"].includes(String(membership.role)))return true;
     const {data,error}=await admin.from("branch_assignments").select("id").eq("branch_id",branchId).eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error&&!!data?.length;
+  };
+  const isTenantOwnerForBranch = async (branchId: string): Promise<boolean> => {
+    const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
+    if (branchError || !branch) return false;
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships")
+      .select("role").eq("tenant_id", branch.tenant_id).eq("user_id", actor.user.id).eq("status", "active").maybeSingle();
+    return !membershipError && !!membership && ["tenant_owner", "tenant_admin"].includes(String(membership.role));
   };
   const branchIdsForActor = async (): Promise<string[]> => {
     const {data:memberships,error:membershipError}=await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id",actor.user.id).eq("status","active");
@@ -1695,14 +1702,15 @@ Deno.serve(async (req: Request) => {
       .eq("id", id).maybeSingle();
     if (oldError || !old) return fail("Purchase requisition tidak ditemukan.", 404, origin);
     if (!await branchAccess(old.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
-    if (["approved", "rejected", "converted"].includes(next) && !isOwner) {
-      return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Owner.", 403, origin);
+    const tenantOwnerApprover = isOwner || await isTenantOwnerForBranch(old.branch_id);
+    if (["approved", "rejected", "converted"].includes(next) && !tenantOwnerApprover) {
+      return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.", 403, origin);
     }
     if (["approved", "rejected"].includes(next) && old.requested_by === actor.user.id) {
       return fail("Pembuat requisition tidak boleh menyetujui atau menolak requisition sendiri.", 403, origin);
     }
-    if (next === "cancelled" && !isOwner && old.requested_by !== actor.user.id) {
-      return fail("Hanya pembuat requisition atau Owner yang dapat membatalkan.", 403, origin);
+    if (next === "cancelled" && !tenantOwnerApprover && old.requested_by !== actor.user.id) {
+      return fail("Hanya pembuat requisition atau Tenant Owner/Admin yang dapat membatalkan.", 403, origin);
     }
     if (supplierId) {
       const { data: supplier } = await admin.from("suppliers").select("id").eq("id", supplierId).eq("is_active", true).maybeSingle();
@@ -1758,7 +1766,8 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("purchase_orders").select("id,status,branch_id,requested_by").eq("id",id).maybeSingle();
     if(!old)return fail("Purchase order tidak ditemukan.",404,origin);
     if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(next==="approved"&&!isOwner)return fail("Hanya Owner dapat menyetujui purchase order pada tahap ini.",403,origin);
+    if(next==="approved"&&!isOwner&&!await isTenantOwnerForBranch(old.branch_id))return fail("Hanya Tenant Owner/Admin atau Owner platform dapat menyetujui purchase order.",403,origin);
+    if(next==="approved"&&old.requested_by===actor.user.id)return fail("Pembuat purchase order tidak boleh menyetujui purchase order sendiri.",403,origin);
     const valid=(old.status==="draft"&&["submitted","cancelled"].includes(next))||(old.status==="submitted"&&["approved","cancelled"].includes(next))||(old.status==="approved"&&["ordered","cancelled"].includes(next));
     if(!valid)return fail("Perubahan status tidak diizinkan dari status saat ini.",409,origin);
     const {data,error}=await admin.from("purchase_orders").update({status:next,approved_by:next==="approved"?actor.user.id:undefined,updated_at:new Date().toISOString()}).eq("id",id).eq("status",old.status).select("*").maybeSingle();
@@ -1818,6 +1827,7 @@ Deno.serve(async (req: Request) => {
       .eq("id",receiptId).eq("purchase_order_id",purchaseOrderId).maybeSingle();
     if(receiptError||!receipt)return fail("Receipt tidak ditemukan untuk purchase order ini.",404,origin);
     if(!await branchAccess(receipt.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!isOwner && !await isTenantOwnerForBranch(receipt.branch_id))return fail("Rekonsiliasi receipt hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.",403,origin);
     const [lines,audit]=await Promise.all([
       admin.from("purchase_receipt_items").select("id,receipt_id,purchase_order_item_id,inventory_item_id,quantity_received,unit_cost_idr").eq("receipt_id",receipt.id),
       admin.from("admin_audit_logs").select("id,action,entity_type,entity_id,metadata,created_at").eq("entity_type","purchase_receipt").eq("entity_id",receipt.id).eq("action","erp_purchase_receipt_posted")
