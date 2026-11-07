@@ -736,6 +736,78 @@ Deno.serve(async (req: Request) => {
 
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
   const isOwner = isPlatformOwner;
+
+  // One-time, staging-only bootstrap escape hatch. This does NOT release general tenant onboarding
+  // or tenant isolation. It is restricted to the known QA Tenant B and platform-owner identities.
+  if (action === "platform-bootstrap-tenant-b-owner") {
+    const stagingProjectHost = "higoadrzxnhzbbwhdbmh.supabase.co";
+    const tenantBId = "00000000-0000-4000-8000-000000000002";
+    const branchBId = "90000000-0000-4000-8000-000000000004";
+    if (!isPlatformOwner) return fail("Hanya platform owner terotorisasi yang dapat menjalankan bootstrap.", 403, origin);
+    if (Deno.env.get("DLICE_TENANT_B_BOOTSTRAP_ENABLED") !== "true") return fail("Bootstrap Tenant B belum diaktifkan oleh administrator platform.", 423, origin);
+    try {
+      if (new URL(SUPABASE_URL ?? "").hostname !== stagingProjectHost) return fail("Bootstrap hanya tersedia pada project staging yang ditetapkan.", 403, origin);
+    } catch { return fail("Konfigurasi project staging tidak valid.", 503, origin); }
+
+    const targetUserId = safeText(body.user_id, 80);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserId) || targetUserId === actor.user.id) {
+      return fail("User ID staf target tidak valid.", 422, origin);
+    }
+    const [{ data: tenant, error: tenantError }, { data: branch, error: branchError }, { data: targetProfile, error: profileError }, { data: authResult, error: authError }] = await Promise.all([
+      admin.from("tenants").select("id,slug,status").eq("id", tenantBId).maybeSingle(),
+      admin.from("branches").select("id,tenant_id,status").eq("id", branchBId).maybeSingle(),
+      admin.from("admin_profiles").select("user_id,role,is_active,permissions").eq("user_id", targetUserId).maybeSingle(),
+      admin.auth.admin.getUserById(targetUserId),
+    ]);
+    if (tenantError || branchError || profileError || authError || !tenant || !branch || !targetProfile || !authResult.user) {
+      return fail("Tenant, cabang, atau identitas target tidak dapat diverifikasi.", 404, origin);
+    }
+    if (tenant.slug !== "dlice-qa-isolation-b" || tenant.status !== "active" || branch.tenant_id !== tenantBId || branch.status !== "active") {
+      return fail("Scope Tenant B/cabang QA tidak cocok atau tidak aktif.", 409, origin);
+    }
+    if (targetProfile.role !== "sales_admin" || targetProfile.is_active !== true || !authResult.user.email_confirmed_at || authResult.user.app_metadata?.platform_owner === true) {
+      return fail("Target harus berupa akun staf aktif terverifikasi, bukan akun platform owner.", 409, origin);
+    }
+    const { data: priorMemberships, error: membershipLookupError } = await admin.from("tenant_memberships")
+      .select("tenant_id,role,status").eq("user_id", targetUserId);
+    if (membershipLookupError) return fail("Keanggotaan target gagal diverifikasi.", 503, origin);
+    if ((priorMemberships || []).length > 0) return fail("Akun target sudah memiliki keanggotaan tenant; gunakan identitas khusus yang belum terikat tenant.", 409, origin);
+
+    const previousPermissions = Array.isArray(targetProfile.permissions) ? targetProfile.permissions : [];
+    const grantedPermissions = ["branches", "inventory", "procurement", "audit"];
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships").insert({
+      tenant_id: tenantBId, user_id: targetUserId, role: "tenant_owner",
+      permissions: grantedPermissions, status: "active",
+    }).select("id,tenant_id,user_id,role,status").single();
+    if (membershipError || !membership) return fail("Keanggotaan Tenant Owner gagal dibuat.", 409, origin);
+
+    const { error: permissionsError } = await admin.from("admin_profiles").update({
+      permissions: grantedPermissions, updated_at: new Date().toISOString(),
+    }).eq("user_id", targetUserId);
+    if (permissionsError) {
+      await admin.from("tenant_memberships").delete().eq("id", membership.id);
+      return fail("Izin operasional gagal disiapkan; perubahan keanggotaan dibatalkan.", 500, origin);
+    }
+    const { error: auditError } = await admin.from("admin_audit_logs").insert({
+      actor_user_id: actor.user.id,
+      action: "platform_bootstrap_tenant_owner",
+      entity_type: "tenant_membership",
+      entity_id: membership.id,
+      metadata: {
+        tenant_id: tenantBId, tenant_slug: tenant.slug, branch_id: branchBId,
+        target_user_id: targetUserId, assigned_role: "tenant_owner",
+        previous_permissions: previousPermissions, granted_permissions: grantedPermissions,
+        bootstrap_scope: "staging_tenant_b_only",
+      },
+    });
+    if (auditError) {
+      await admin.from("tenant_memberships").delete().eq("id", membership.id);
+      await admin.from("admin_profiles").update({ permissions: previousPermissions, updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
+      return fail("Audit trail gagal dicatat; perubahan bootstrap dibatalkan.", 500, origin);
+    }
+    return json({ ok: true, membership, branch_id: branchBId, permissions: grantedPermissions, audit_recorded: true }, 201, origin);
+  }
+
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const tenantIdsForActor = async (): Promise<string[]> => {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
