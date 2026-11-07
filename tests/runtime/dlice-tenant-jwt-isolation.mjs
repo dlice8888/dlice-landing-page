@@ -169,6 +169,7 @@ async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBr
   assert.equal(own.response.status, 200, `${label} must be able to read inventory for its own branch`);
   const ownPayload = JSON.parse(own.text);
   assert.ok(Array.isArray(ownPayload.balances), `${label} own-branch response must include balances`);
+  assert.ok(ownPayload.balances.length > 0, `${label} own-branch positive read requires at least one real inventory balance fixture; an empty result is not proof of access`);
   assert.ok(ownPayload.balances.every((row) => row.branch_id === ownBranchId), `${label} own-branch response leaked balances from another branch`);
 
   const foreign = await request(`${label}-business-foreign-branch-inventory-denied`, "/functions/v1/dlice-orders", token, {
