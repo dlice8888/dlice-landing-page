@@ -1017,7 +1017,7 @@ Deno.serve(async (req: Request) => {
     const branchId=safeText(body.branch_id,80),code=safeText(body.code,40).toUpperCase(),name=safeText(body.name,120),type=safeText(body.warehouse_type,30)||"branch";
     if(!/^[A-Z0-9_-]{2,40}$/.test(code)||name.length<2||!["central","branch","cold_storage","transit"].includes(type))return fail("Data gudang tidak valid.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(!await hasTenantPermissionForBranch(branchId,"inventory"))return fail("Izin Inventory pada tenant cabang ini diperlukan.",403,origin);
+    if(!await isTenantOwnerForBranch(branchId))return fail("Hanya Tenant Owner/Admin pada tenant cabang ini yang dapat membuat gudang.",403,origin);
     const {data:result,error}=await admin.rpc("erp_create_warehouse_with_audit",{
       p_actor_user_id:actor.user.id,p_branch_id:branchId,p_code:code,p_name:name,
       p_warehouse_type:type,p_is_default:body.is_default===true
