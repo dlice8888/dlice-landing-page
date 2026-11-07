@@ -1037,7 +1037,9 @@ Deno.serve(async (req: Request) => {
     if(!membership||!["tenant_owner","tenant_admin"].includes(String(membership.role)))return fail("Hanya Tenant Owner/Admin yang dapat membuat gudang.",403,origin);
     const {data:warehouse,error}=await admin.from("warehouses").insert({tenant_id:branch.tenant_id,branch_id:branchId,code,name,warehouse_type:type,is_default:body.is_default===true}).select("*").single();
     if(error||!warehouse)return fail("Gudang gagal dibuat; kode atau gudang default mungkin sudah ada.",409,origin);
-    return json({ok:true,warehouse},201,origin);
+    const {error:auditError}=await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_warehouse_created",entity_type:"warehouse",entity_id:warehouse.id,metadata:{tenant_id:branch.tenant_id,branch_id:branchId,code,warehouse_type:type,is_default:warehouse.is_default}});
+    if(auditError){await admin.from("warehouses").delete().eq("id",warehouse.id);return fail("Audit gudang gagal dicatat; pembuatan gudang dibatalkan.",500,origin);}
+    return json({ok:true,warehouse,audit_recorded:true},201,origin);
   }
 
   if (action === "erp-list-integrations") {
