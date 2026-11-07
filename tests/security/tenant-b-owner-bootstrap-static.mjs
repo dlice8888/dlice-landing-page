@@ -54,4 +54,10 @@ const po = source.slice(poStart, poEnd);
 assert.ok(po.includes("isTenantOwnerForBranch(old.branch_id)"), "tenant owner/admin must be allowed to approve scoped purchase orders");
 assert.ok(po.includes("old.requested_by===actor.user.id"), "purchase-order maker-checker must remain enforced");
 
+const reconciliation = source.slice(source.indexOf('if (action === "erp-reconcile-purchase-requisition")'), source.indexOf('if (action === "erp-list-purchase-requisitions")'));
+assert.ok(reconciliation.includes("isTenantOwnerForBranch(requisition.branch_id)"), "tenant owner/admin must be allowed to reconcile requisition audit");
+const receiptReconciliation = source.slice(source.indexOf('if (action === "erp-reconcile-purchase-receipt")'), source.indexOf('if (action === "erp-set-product-stock-tracking")'));
+assert.ok(receiptReconciliation.includes("isTenantOwnerForBranch(receipt.branch_id)"), "tenant owner/admin must be allowed to reconcile goods receipt");
+assert.ok(source.includes("const TENANT_ISOLATION_RELEASED = false"), "bootstrap must not release tenant isolation");
+
 console.log("PASS: staging Tenant B bootstrap is platform-owner-only, staging-only, tenant-scoped, audited, and maker-checker protected.");
