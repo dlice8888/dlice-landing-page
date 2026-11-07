@@ -1596,7 +1596,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-reconcile-purchase-requisition") {
-    if (!isOwner) return fail("Rekonsiliasi requisition hanya dapat diakses Owner.", 403, origin);
     const id = safeText(body.id, 80);
     if (!id) return fail("ID requisition wajib diisi.", 422, origin);
     const { data: requisition, error: reqError } = await admin.from("purchase_requisitions")
@@ -1604,6 +1603,7 @@ Deno.serve(async (req: Request) => {
       .eq("id", id).maybeSingle();
     if (reqError || !requisition) return fail("Purchase requisition tidak ditemukan.", 404, origin);
     if (!await branchAccess(requisition.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!isOwner && !await isTenantOwnerForBranch(requisition.branch_id)) return fail("Rekonsiliasi requisition hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.", 403, origin);
     const [lines, audit] = await Promise.all([
       admin.from("purchase_requisition_items")
         .select("id,requisition_id,inventory_item_id,item_name_snapshot,quantity,estimated_unit_cost_idr,estimated_line_total_idr,notes")
@@ -1821,7 +1821,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-reconcile-purchase-receipt") {
-    if (!isOwner) return fail("Rekonsiliasi penerimaan hanya dapat diakses Owner.",403,origin);
     const receiptId=safeText(body.receipt_id,80),purchaseOrderId=safeText(body.purchase_order_id,80);
     if(!receiptId||!purchaseOrderId)return fail("ID receipt dan purchase order wajib diisi.",422,origin);
     const {data:receipt,error:receiptError}=await admin.from("purchase_receipts")
