@@ -232,11 +232,6 @@ begin
     if v_item_name is null then raise exception 'active_inventory_item_not_found' using errcode = '23503'; end if;
     v_line_total := round(v_quantity * v_unit_cost)::bigint;
     v_sum := v_sum + v_line_total;
-    insert into public.purchase_order_items(
-      purchase_order_id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr
-    ) values (
-      null,v_inventory_item_id,v_item_name,v_quantity,v_unit_cost,v_line_total
-    );
     v_items := v_items || jsonb_build_array(jsonb_build_object(
       'inventory_item_id',v_inventory_item_id,'item_name_snapshot',v_item_name,
       'quantity',v_quantity,'unit_cost_idr',v_unit_cost,'line_total_idr',v_line_total
@@ -249,11 +244,17 @@ begin
   values(p_po_number,p_branch_id,'draft',p_subtotal_idr,p_actor_user_id,nullif(trim(p_notes),''))
   returning * into v_po;
 
-  -- Attach lines to the new header inside the same transaction.
-  update public.purchase_order_items set purchase_order_id = v_po.id
-  where purchase_order_id is null and inventory_item_id in (
-    select (x->>'inventory_item_id')::uuid from jsonb_array_elements(p_items) x
-  );
+  -- Persist each validated line against the new header inside the same transaction.
+  for v_item in select value from jsonb_array_elements(v_items)
+  loop
+    insert into public.purchase_order_items(
+      purchase_order_id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr
+    ) values (
+      v_po.id,(v_item->>'inventory_item_id')::uuid,v_item->>'item_name_snapshot',
+      (v_item->>'quantity')::numeric,(v_item->>'unit_cost_idr')::bigint,
+      (v_item->>'line_total_idr')::bigint
+    );
+  end loop;
   -- Rebuild the line array from persisted rows, scoped to this PO.
   select coalesce(jsonb_agg(to_jsonb(poi) - 'purchase_order_id' order by poi.id),'[]'::jsonb)
   into v_items from public.purchase_order_items poi where poi.purchase_order_id = v_po.id;
