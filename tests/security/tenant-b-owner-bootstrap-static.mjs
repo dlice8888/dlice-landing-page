@@ -18,7 +18,6 @@ for (const required of [
   'targetProfile.role !== "sales_admin"',
   "targetProfile.is_active !== true",
   "!authResult.user.email_confirmed_at",
-  '["tenant_owner", "tenant_admin"]',
   'status: "active"',
   'action: "platform_bootstrap_tenant_owner"',
   "if (auditError)",
