@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   static-check:
-    name: Tenant probe syntax and patch checks (no staging secrets)
+    name: Tenant probe syntax, transaction invariants and patch checks (no staging secrets)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,8 +30,6 @@ jobs:
           node-version: "22"
       - name: Check tenant-isolation probe syntax
         run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
-      - name: Check Tenant B owner bootstrap security invariants
-        run: node tests/security/tenant-b-owner-bootstrap-static.mjs
       - name: Check atomic tenant audit and nine-probe invariants
         run: node tests/security/tenant-b-owner-bootstrap-static.mjs
       - name: Check patch whitespace
