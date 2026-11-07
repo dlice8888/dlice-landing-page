@@ -513,7 +513,6 @@ Deno.serve(async (req: Request) => {
     "erp-transition-purchase-requisition": "procurement",
     "erp-reconcile-purchase-requisition": "procurement",
     "erp-list-purchase-orders": "procurement",
-    "erp-create-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
@@ -801,6 +800,7 @@ Deno.serve(async (req: Request) => {
     return !error&&!!data?.length;
   };
   const hasTenantPermissionForBranch = async (branchId: string, permission: string): Promise<boolean> => {
+    if (isOwner) return true;
     const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
     if (branchError || !branch) return false;
     const { data: membership, error: membershipError } = await admin.from("tenant_memberships")
@@ -1729,6 +1729,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-create-purchase-order") {
     const branchId=safeText(body.branch_id,80),items=body.items;
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!await hasTenantPermissionForBranch(branchId,"procurement"))return fail("Izin Procurement pada tenant cabang ini diperlukan.",403,origin);
     if(!Array.isArray(items)||!items.length||items.length>100)return fail("Tambahkan minimal satu item pembelian.",422,origin);
     let subtotal=0;const cleaned=[];
     for(const x of items){
@@ -1739,12 +1740,13 @@ Deno.serve(async (req: Request) => {
       subtotal+=Math.round(qty*unitCost);cleaned.push({inventory_item_id:itemId,item_name_snapshot:it.name,quantity:qty,unit_cost_idr:Math.round(unitCost)});
     }
     const code="PO-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,6).toUpperCase();
-    const {data:po,error}=await admin.from("purchase_orders").insert({po_number:code,branch_id:branchId,status:"draft",subtotal_idr:subtotal,requested_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
-    if(error||!po)return fail("Purchase order gagal dibuat.",409,origin);
-    const {error:itemsError}=await admin.from("purchase_order_items").insert(cleaned.map(x=>({...x,purchase_order_id:po.id})));
-    if(itemsError){await admin.from("purchase_orders").delete().eq("id",po.id);return fail("Detail purchase order gagal disimpan.",500,origin);}
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_purchase_order_created",entity_type:"purchase_order",entity_id:po.id,metadata:{po_number:code,subtotal_idr:subtotal}});
-    return json({ok:true,purchase_order:{...po,items:cleaned}},201,origin);
+    const {data:result,error}=await admin.rpc("erp_create_purchase_order_with_audit",{
+      p_actor_user_id:actor.user.id,p_branch_id:branchId,p_po_number:code,p_subtotal_idr:subtotal,
+      p_notes:safeText(body.notes,500)||null,p_items:cleaned,p_platform_owner:isOwner
+    });
+    if(error||!result?.purchase_order||result.audit_recorded!==true)return fail("Pembuatan PO, detail, dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,purchase_order:{...result.purchase_order,items:result.items},audit_recorded:true},201,origin);
+  }
   }
 
   if (action === "erp-update-purchase-order") {
