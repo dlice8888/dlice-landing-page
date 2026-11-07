@@ -170,3 +170,101 @@ revoke all on function public.erp_transition_purchase_order_with_audit(uuid,uuid
 grant execute on function public.platform_bootstrap_tenant_owner(uuid,uuid,uuid,uuid) to service_role;
 grant execute on function public.erp_create_warehouse_with_audit(uuid,uuid,text,text,text,boolean) to service_role;
 grant execute on function public.erp_transition_purchase_order_with_audit(uuid,uuid,text,boolean) to service_role;
+
+
+create or replace function public.erp_create_purchase_order_with_audit(
+  p_actor_user_id uuid,
+  p_branch_id uuid,
+  p_po_number text,
+  p_subtotal_idr bigint,
+  p_notes text,
+  p_items jsonb,
+  p_platform_owner boolean default false
+) returns jsonb
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_tenant_id uuid;
+  v_po public.purchase_orders%rowtype;
+  v_item jsonb;
+  v_inventory_item_id uuid;
+  v_item_name text;
+  v_quantity numeric;
+  v_unit_cost bigint;
+  v_line_total bigint;
+  v_sum bigint := 0;
+  v_items jsonb := '[]'::jsonb;
+begin
+  if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) < 1
+     or jsonb_array_length(p_items) > 100 then
+    raise exception 'invalid_purchase_order_items' using errcode = '22023';
+  end if;
+  if p_po_number is null or length(trim(p_po_number)) < 6 or p_subtotal_idr < 0 then
+    raise exception 'invalid_purchase_order_header' using errcode = '22023';
+  end if;
+
+  select b.tenant_id into v_tenant_id
+  from public.branches b where b.id = p_branch_id and b.status = 'active';
+  if v_tenant_id is null then raise exception 'active_branch_not_found' using errcode = '23503'; end if;
+
+  if not coalesce(p_platform_owner,false) and not exists (
+    select 1 from public.tenant_memberships tm
+    where tm.tenant_id = v_tenant_id and tm.user_id = p_actor_user_id
+      and tm.status = 'active'
+      and (tm.role in ('tenant_owner','tenant_admin') or tm.permissions ? 'procurement')
+  ) then
+    raise exception 'tenant_procurement_permission_required' using errcode = '42501';
+  end if;
+
+  for v_item in select value from jsonb_array_elements(p_items)
+  loop
+    v_inventory_item_id := (v_item->>'inventory_item_id')::uuid;
+    v_quantity := (v_item->>'quantity')::numeric;
+    v_unit_cost := (v_item->>'unit_cost_idr')::bigint;
+    if v_quantity is null or v_quantity <= 0 or v_quantity > 100000
+       or v_unit_cost is null or v_unit_cost < 0 then
+      raise exception 'invalid_purchase_order_line' using errcode = '22023';
+    end if;
+    select ii.name into v_item_name from public.inventory_items ii
+    where ii.id = v_inventory_item_id and ii.is_active = true;
+    if v_item_name is null then raise exception 'active_inventory_item_not_found' using errcode = '23503'; end if;
+    v_line_total := round(v_quantity * v_unit_cost)::bigint;
+    v_sum := v_sum + v_line_total;
+    insert into public.purchase_order_items(
+      purchase_order_id,inventory_item_id,item_name_snapshot,quantity,unit_cost_idr,line_total_idr
+    ) values (
+      null,v_inventory_item_id,v_item_name,v_quantity,v_unit_cost,v_line_total
+    );
+    v_items := v_items || jsonb_build_array(jsonb_build_object(
+      'inventory_item_id',v_inventory_item_id,'item_name_snapshot',v_item_name,
+      'quantity',v_quantity,'unit_cost_idr',v_unit_cost,'line_total_idr',v_line_total
+    ));
+  end loop;
+
+  if v_sum <> p_subtotal_idr then raise exception 'purchase_order_subtotal_mismatch' using errcode = '22023'; end if;
+
+  insert into public.purchase_orders(po_number,branch_id,status,subtotal_idr,requested_by,notes)
+  values(p_po_number,p_branch_id,'draft',p_subtotal_idr,p_actor_user_id,nullif(trim(p_notes),''))
+  returning * into v_po;
+
+  -- Attach lines to the new header inside the same transaction.
+  update public.purchase_order_items set purchase_order_id = v_po.id
+  where purchase_order_id is null and inventory_item_id in (
+    select (x->>'inventory_item_id')::uuid from jsonb_array_elements(p_items) x
+  );
+  -- Rebuild the line array from persisted rows, scoped to this PO.
+  select coalesce(jsonb_agg(to_jsonb(poi) - 'purchase_order_id' order by poi.id),'[]'::jsonb)
+  into v_items from public.purchase_order_items poi where poi.purchase_order_id = v_po.id;
+
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'erp_purchase_order_created','purchase_order',v_po.id::text,
+    jsonb_build_object('po_number',v_po.po_number,'subtotal_idr',v_po.subtotal_idr,'tenant_id',v_tenant_id,'line_count',jsonb_array_length(p_items)));
+
+  return jsonb_build_object('purchase_order',to_jsonb(v_po),'items',v_items,'audit_recorded',true);
+end;
+$$;
+
+revoke all on function public.erp_create_purchase_order_with_audit(uuid,uuid,text,bigint,text,jsonb,boolean) from public, anon, authenticated;
+grant execute on function public.erp_create_purchase_order_with_audit(uuid,uuid,text,bigint,text,jsonb,boolean) to service_role;
