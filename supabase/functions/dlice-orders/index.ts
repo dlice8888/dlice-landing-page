@@ -1739,6 +1739,7 @@ Deno.serve(async (req: Request) => {
       if(!it)return fail("Item persediaan tidak ditemukan.",404,origin);
       subtotal+=Math.round(qty*unitCost);cleaned.push({inventory_item_id:itemId,item_name_snapshot:it.name,quantity:qty,unit_cost_idr:Math.round(unitCost)});
     }
+    if(!Number.isSafeInteger(subtotal))return fail("Nilai total PO melebihi batas angka aman.",422,origin);
     const code="PO-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,6).toUpperCase();
     const {data:result,error}=await admin.rpc("erp_create_purchase_order_with_audit",{
       p_actor_user_id:actor.user.id,p_branch_id:branchId,p_po_number:code,p_subtotal_idr:subtotal,
