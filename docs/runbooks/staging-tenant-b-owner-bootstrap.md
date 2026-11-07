@@ -39,7 +39,7 @@ This is a one-time staging bootstrap for tenant `dlice-qa-isolation-b` only.
 
 1. Tenant Owner creates the QA branch warehouse through `erp-create-warehouse`. The endpoint writes `erp_warehouse_created` to `admin_audit_logs`; if audit insertion fails, the warehouse write is rolled back.
 2. The existing Tenant B branch manager (or another authorized requester) creates the purchase requisition with `erp-create-purchase-requisition`.
-3. A different Tenant B tenant_owner/admin approves it with `erp-transition-purchase-requisition`. Self-approval remains denied.
+3. A different Tenant B tenant_owner/admin approves it with `erp-transition-purchase-requisition`. Self-approval remains denied. Reconcile the requisition and its audit entries with `erp-reconcile-purchase-requisition`.
 4. Tenant Owner converts the approved requisition to a draft PO, then submits, approves, and orders the PO through `erp-update-purchase-order`. PO self-approval remains denied.
 5. Tenant Owner or authorized inventory/procurement staff posts goods receipt through `erp-receive-purchase-order`.
 6. Tenant Owner/admin verifies receipt lines, stock movements, PO status, and matching `admin_audit_logs` through `erp-reconcile-purchase-receipt`.
