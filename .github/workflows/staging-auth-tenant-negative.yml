@@ -1,11 +1,6 @@
 name: Staging authenticated tenant-boundary negative probes
+# Staging credentials are used only after trusted staging branch updates.
 on:
-  pull_request:
-    branches: [staging]
-    paths:
-      - "tests/staging/tenant-isolation-existing-identity.mjs"
-      - ".github/workflows/staging-auth-tenant-negative.yml"
-      - "supabase/functions/dlice-orders/index.ts"
   push:
     branches: [staging]
     paths:
