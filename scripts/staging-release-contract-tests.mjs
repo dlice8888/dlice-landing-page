@@ -24,7 +24,7 @@ const erpAuthorizationCoverage = () => {
     const start = actions[i].index;
     const end = i + 1 < actions.length ? actions[i + 1].index : edge.length;
     const block = edge.slice(start, end);
-    if (!/hasPerm\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
+    if (!/hasPerm\(|hasTenantPermissionForBranch\(|isTenantOwnerForBranch\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
   }

@@ -46,6 +46,9 @@ const todayDate = () => new Date().toISOString().slice(0, 10);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
+// Public ordering has no trusted host-to-tenant resolver and products have no tenant_id yet.
+// Fail closed for public branch/catalog/order actions until tenant-domain routing is implemented and tested.
+const PUBLIC_TENANT_ROUTING_RELEASED = false;
 // Platform-owner bypass requires two independent server-controlled sources: the UUID allowlist and Supabase Auth app_metadata.platform_owner=true.
 // Never use user_metadata for authorization. If either source is absent or mismatched, fail closed.
 const PLATFORM_OWNER_USER_IDS = new Set(
@@ -148,6 +151,7 @@ Deno.serve(async (req: Request) => {
 
 
   if (action === "list-online-branches") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Katalog publik sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const method=safeText(body.receiving_method,20);
     if(!["pickup","delivery"].includes(method))return fail("Metode penerimaan tidak valid.",422,origin);
     const city=safeText(req.headers.get("cf-ipcity")||req.headers.get("x-vercel-ip-city")||"",80).toLowerCase();
@@ -187,6 +191,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "list-products") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Katalog publik sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const { data, error } = await admin.from("products").select("id,slug,name,description,unit_price_idr,is_active,image_path,category,display_order,badge").eq("is_active", true).order("display_order").order("name");
     if (error) return fail("Menu belum dapat dimuat.", 500, origin);
     const products = (data ?? []).map((p) => ({ ...p, image_url: p.image_path ? admin.storage.from("dlice-product-photos").getPublicUrl(p.image_path).data.publicUrl : null }));
@@ -255,6 +260,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "create-order") {
+    if (!PUBLIC_TENANT_ROUTING_RELEASED) return fail("Pemesanan online sementara ditutup sampai pemetaan domain ke tenant lolos pengujian isolasi.", 423, origin);
     const customerName = safeText(body.customer_name, 120);
     const customerWhatsapp = normPhone(safeText(body.customer_whatsapp, 30));
     const requestedDate = safeText(body.requested_date, 10);
@@ -507,8 +513,6 @@ Deno.serve(async (req: Request) => {
     "erp-transition-purchase-requisition": "procurement",
     "erp-reconcile-purchase-requisition": "procurement",
     "erp-list-purchase-orders": "procurement",
-    "erp-create-purchase-order": "procurement",
-    "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
@@ -730,6 +734,56 @@ Deno.serve(async (req: Request) => {
 
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
   const isOwner = isPlatformOwner;
+
+  // One-time, staging-only bootstrap escape hatch. This does NOT release general tenant onboarding
+  // or tenant isolation. It is restricted to the known QA Tenant B and platform-owner identities.
+  if (action === "platform-bootstrap-tenant-b-owner") {
+    const stagingProjectHost = "higoadrzxnhzbbwhdbmh.supabase.co";
+    const tenantBId = "00000000-0000-4000-8000-000000000002";
+    const branchBId = "90000000-0000-4000-8000-000000000004";
+    if (!isPlatformOwner) return fail("Hanya platform owner terotorisasi yang dapat menjalankan bootstrap.", 403, origin);
+    if (Deno.env.get("DLICE_TENANT_B_BOOTSTRAP_ENABLED") !== "true") return fail("Bootstrap Tenant B belum diaktifkan oleh administrator platform.", 423, origin);
+    try {
+      if (new URL(SUPABASE_URL ?? "").hostname !== stagingProjectHost) return fail("Bootstrap hanya tersedia pada project staging yang ditetapkan.", 403, origin);
+    } catch { return fail("Konfigurasi project staging tidak valid.", 503, origin); }
+
+    const targetUserId = safeText(body.user_id, 80);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserId) || targetUserId === actor.user.id) {
+      return fail("User ID staf target tidak valid.", 422, origin);
+    }
+    const [{ data: tenant, error: tenantError }, { data: branch, error: branchError }, { data: targetProfile, error: profileError }, { data: authResult, error: authError }] = await Promise.all([
+      admin.from("tenants").select("id,slug,status").eq("id", tenantBId).maybeSingle(),
+      admin.from("branches").select("id,tenant_id,status").eq("id", branchBId).maybeSingle(),
+      admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", targetUserId).maybeSingle(),
+      admin.auth.admin.getUserById(targetUserId),
+    ]);
+    if (tenantError || branchError || profileError || authError || !tenant || !branch || !targetProfile || !authResult.user) {
+      return fail("Tenant, cabang, atau identitas target tidak dapat diverifikasi.", 404, origin);
+    }
+    if (tenant.slug !== "dlice-qa-isolation-b" || tenant.status !== "active" || branch.tenant_id !== tenantBId || branch.status !== "active") {
+      return fail("Scope Tenant B/cabang QA tidak cocok atau tidak aktif.", 409, origin);
+    }
+    if (targetProfile.role !== "sales_admin" || targetProfile.is_active !== true || !authResult.user.email_confirmed_at || authResult.user.app_metadata?.platform_owner === true) {
+      return fail("Target harus berupa akun staf aktif terverifikasi, bukan akun platform owner.", 409, origin);
+    }
+    const { data: priorMemberships, error: membershipLookupError } = await admin.from("tenant_memberships")
+      .select("tenant_id,role,status").eq("user_id", targetUserId);
+    if (membershipLookupError) return fail("Keanggotaan target gagal diverifikasi.", 503, origin);
+    if ((priorMemberships || []).length > 0) return fail("Akun target sudah memiliki keanggotaan tenant; gunakan identitas khusus yang belum terikat tenant.", 409, origin);
+
+    const { data: bootstrapResult, error: bootstrapError } = await admin.rpc("platform_bootstrap_tenant_owner", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: targetUserId,
+      p_tenant_id: tenantBId,
+      p_branch_id: branchBId,
+    });
+    if (bootstrapError || !bootstrapResult?.membership || bootstrapResult.audit_recorded !== true) {
+      return fail("Bootstrap tenant dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.", 409, origin);
+    }
+    return json({ ok: true, membership: bootstrapResult.membership, branch_id: branchBId,
+      permissions: bootstrapResult.membership.permissions, audit_recorded: true }, 201, origin);
+  }
+
   const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
   const tenantIdsForActor = async (): Promise<string[]> => {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
@@ -744,6 +798,23 @@ Deno.serve(async (req: Request) => {
     if(["tenant_owner","tenant_admin"].includes(String(membership.role)))return true;
     const {data,error}=await admin.from("branch_assignments").select("id").eq("branch_id",branchId).eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`).limit(1);
     return !error&&!!data?.length;
+  };
+  const hasTenantPermissionForBranch = async (branchId: string, permission: string): Promise<boolean> => {
+    if (isOwner) return true;
+    const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
+    if (branchError || !branch) return false;
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships")
+      .select("role,permissions").eq("tenant_id", branch.tenant_id).eq("user_id", actor.user.id).eq("status", "active").maybeSingle();
+    if (membershipError || !membership) return false;
+    if (["tenant_owner", "tenant_admin"].includes(String(membership.role))) return true;
+    return Array.isArray(membership.permissions) && membership.permissions.includes(permission);
+  };
+  const isTenantOwnerForBranch = async (branchId: string): Promise<boolean> => {
+    const { data: branch, error: branchError } = await admin.from("branches").select("tenant_id").eq("id", branchId).maybeSingle();
+    if (branchError || !branch) return false;
+    const { data: membership, error: membershipError } = await admin.from("tenant_memberships")
+      .select("role").eq("tenant_id", branch.tenant_id).eq("user_id", actor.user.id).eq("status", "active").maybeSingle();
+    return !membershipError && !!membership && ["tenant_owner", "tenant_admin"].includes(String(membership.role));
   };
   const branchIdsForActor = async (): Promise<string[]> => {
     const {data:memberships,error:membershipError}=await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id",actor.user.id).eq("status","active");
@@ -943,16 +1014,17 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-create-warehouse") {
-    if(!hasPerm("inventory")&&!hasPerm("branches"))return fail("Izin Inventory/Branches diperlukan.",403,origin);
     const branchId=safeText(body.branch_id,80),code=safeText(body.code,40).toUpperCase(),name=safeText(body.name,120),type=safeText(body.warehouse_type,30)||"branch";
     if(!/^[A-Z0-9_-]{2,40}$/.test(code)||name.length<2||!["central","branch","cold_storage","transit"].includes(type))return fail("Data gudang tidak valid.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();if(!branch)return fail("Cabang tidak ditemukan.",404,origin);
-    const {data:membership}=await admin.from("tenant_memberships").select("role").eq("tenant_id",branch.tenant_id).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
-    if(!membership||!["tenant_owner","tenant_admin"].includes(String(membership.role)))return fail("Hanya Tenant Owner/Admin yang dapat membuat gudang.",403,origin);
-    const {data:warehouse,error}=await admin.from("warehouses").insert({tenant_id:branch.tenant_id,branch_id:branchId,code,name,warehouse_type:type,is_default:body.is_default===true}).select("*").single();
-    if(error||!warehouse)return fail("Gudang gagal dibuat; kode atau gudang default mungkin sudah ada.",409,origin);
-    return json({ok:true,warehouse},201,origin);
+    if(!await isTenantOwnerForBranch(branchId))return fail("Hanya Tenant Owner/Admin pada tenant cabang ini yang dapat membuat gudang.",403,origin);
+    const {data:result,error}=await admin.rpc("erp_create_warehouse_with_audit",{
+      p_actor_user_id:actor.user.id,p_branch_id:branchId,p_code:code,p_name:name,
+      p_warehouse_type:type,p_is_default:body.is_default===true
+    });
+    if(error||!result?.warehouse||result.audit_recorded!==true)return fail("Gudang dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,warehouse:result.warehouse,audit_recorded:true},201,origin);
+  }
   }
 
   if (action === "erp-list-integrations") {
@@ -1509,7 +1581,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-reconcile-purchase-requisition") {
-    if (!isOwner) return fail("Rekonsiliasi requisition hanya dapat diakses Owner.", 403, origin);
     const id = safeText(body.id, 80);
     if (!id) return fail("ID requisition wajib diisi.", 422, origin);
     const { data: requisition, error: reqError } = await admin.from("purchase_requisitions")
@@ -1517,6 +1588,7 @@ Deno.serve(async (req: Request) => {
       .eq("id", id).maybeSingle();
     if (reqError || !requisition) return fail("Purchase requisition tidak ditemukan.", 404, origin);
     if (!await branchAccess(requisition.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!isOwner && !await isTenantOwnerForBranch(requisition.branch_id)) return fail("Rekonsiliasi requisition hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.", 403, origin);
     const [lines, audit] = await Promise.all([
       admin.from("purchase_requisition_items")
         .select("id,requisition_id,inventory_item_id,item_name_snapshot,quantity,estimated_unit_cost_idr,estimated_line_total_idr,notes")
@@ -1617,14 +1689,15 @@ Deno.serve(async (req: Request) => {
       .eq("id", id).maybeSingle();
     if (oldError || !old) return fail("Purchase requisition tidak ditemukan.", 404, origin);
     if (!await branchAccess(old.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
-    if (["approved", "rejected", "converted"].includes(next) && !isOwner) {
-      return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Owner.", 403, origin);
+    const tenantOwnerApprover = isOwner || await isTenantOwnerForBranch(old.branch_id);
+    if (["approved", "rejected", "converted"].includes(next) && !tenantOwnerApprover) {
+      return fail("Persetujuan, penolakan, dan konversi requisition hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.", 403, origin);
     }
     if (["approved", "rejected"].includes(next) && old.requested_by === actor.user.id) {
       return fail("Pembuat requisition tidak boleh menyetujui atau menolak requisition sendiri.", 403, origin);
     }
-    if (next === "cancelled" && !isOwner && old.requested_by !== actor.user.id) {
-      return fail("Hanya pembuat requisition atau Owner yang dapat membatalkan.", 403, origin);
+    if (next === "cancelled" && !tenantOwnerApprover && old.requested_by !== actor.user.id) {
+      return fail("Hanya pembuat requisition atau Tenant Owner/Admin yang dapat membatalkan.", 403, origin);
     }
     if (supplierId) {
       const { data: supplier } = await admin.from("suppliers").select("id").eq("id", supplierId).eq("is_active", true).maybeSingle();
@@ -1656,6 +1729,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-create-purchase-order") {
     const branchId=safeText(body.branch_id,80),items=body.items;
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!await hasTenantPermissionForBranch(branchId,"procurement"))return fail("Izin Procurement pada tenant cabang ini diperlukan.",403,origin);
     if(!Array.isArray(items)||!items.length||items.length>100)return fail("Tambahkan minimal satu item pembelian.",422,origin);
     let subtotal=0;const cleaned=[];
     for(const x of items){
@@ -1665,13 +1739,15 @@ Deno.serve(async (req: Request) => {
       if(!it)return fail("Item persediaan tidak ditemukan.",404,origin);
       subtotal+=Math.round(qty*unitCost);cleaned.push({inventory_item_id:itemId,item_name_snapshot:it.name,quantity:qty,unit_cost_idr:Math.round(unitCost)});
     }
+    if(!Number.isSafeInteger(subtotal))return fail("Nilai total PO melebihi batas angka aman.",422,origin);
     const code="PO-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,6).toUpperCase();
-    const {data:po,error}=await admin.from("purchase_orders").insert({po_number:code,branch_id:branchId,status:"draft",subtotal_idr:subtotal,requested_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
-    if(error||!po)return fail("Purchase order gagal dibuat.",409,origin);
-    const {error:itemsError}=await admin.from("purchase_order_items").insert(cleaned.map(x=>({...x,purchase_order_id:po.id})));
-    if(itemsError){await admin.from("purchase_orders").delete().eq("id",po.id);return fail("Detail purchase order gagal disimpan.",500,origin);}
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_purchase_order_created",entity_type:"purchase_order",entity_id:po.id,metadata:{po_number:code,subtotal_idr:subtotal}});
-    return json({ok:true,purchase_order:{...po,items:cleaned}},201,origin);
+    const {data:result,error}=await admin.rpc("erp_create_purchase_order_with_audit",{
+      p_actor_user_id:actor.user.id,p_branch_id:branchId,p_po_number:code,p_subtotal_idr:subtotal,
+      p_notes:safeText(body.notes,500)||null,p_items:cleaned,p_platform_owner:isOwner
+    });
+    if(error||!result?.purchase_order||result.audit_recorded!==true)return fail("Pembuatan PO, detail, dan audit atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,purchase_order:{...result.purchase_order,items:result.items},audit_recorded:true},201,origin);
+  }
   }
 
   if (action === "erp-update-purchase-order") {
@@ -1680,13 +1756,14 @@ Deno.serve(async (req: Request) => {
     const {data:old}=await admin.from("purchase_orders").select("id,status,branch_id,requested_by").eq("id",id).maybeSingle();
     if(!old)return fail("Purchase order tidak ditemukan.",404,origin);
     if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(next==="approved"&&!isOwner)return fail("Hanya Owner dapat menyetujui purchase order pada tahap ini.",403,origin);
-    const valid=(old.status==="draft"&&["submitted","cancelled"].includes(next))||(old.status==="submitted"&&["approved","cancelled"].includes(next))||(old.status==="approved"&&["ordered","cancelled"].includes(next));
-    if(!valid)return fail("Perubahan status tidak diizinkan dari status saat ini.",409,origin);
-    const {data,error}=await admin.from("purchase_orders").update({status:next,approved_by:next==="approved"?actor.user.id:undefined,updated_at:new Date().toISOString()}).eq("id",id).eq("status",old.status).select("*").maybeSingle();
-    if(error||!data)return fail("Purchase order berubah; muat ulang.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_purchase_order_"+next,entity_type:"purchase_order",entity_id:id,metadata:{previous_status:old.status}});
-    return json({ok:true,purchase_order:data},200,origin);
+    if(!await hasTenantPermissionForBranch(old.branch_id,"procurement"))return fail("Izin Procurement pada tenant cabang ini diperlukan.",403,origin);
+    if(next==="approved"&&old.requested_by===actor.user.id)return fail("Pembuat purchase order tidak boleh menyetujui purchase order sendiri.",403,origin);
+    const {data:result,error}=await admin.rpc("erp_transition_purchase_order_with_audit",{
+      p_actor_user_id:actor.user.id,p_purchase_order_id:id,p_next_status:next,p_platform_owner:isOwner
+    });
+    if(error||!result?.purchase_order||result.audit_recorded!==true)return fail("Perubahan status dan audit PO atomik gagal; tidak ada perubahan parsial yang dikomit.",409,origin);
+    return json({ok:true,purchase_order:result.purchase_order,audit_recorded:true},200,origin);
+  }
   }
 
 
@@ -1732,7 +1809,6 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-reconcile-purchase-receipt") {
-    if (!isOwner) return fail("Rekonsiliasi penerimaan hanya dapat diakses Owner.",403,origin);
     const receiptId=safeText(body.receipt_id,80),purchaseOrderId=safeText(body.purchase_order_id,80);
     if(!receiptId||!purchaseOrderId)return fail("ID receipt dan purchase order wajib diisi.",422,origin);
     const {data:receipt,error:receiptError}=await admin.from("purchase_receipts")
@@ -1740,6 +1816,7 @@ Deno.serve(async (req: Request) => {
       .eq("id",receiptId).eq("purchase_order_id",purchaseOrderId).maybeSingle();
     if(receiptError||!receipt)return fail("Receipt tidak ditemukan untuk purchase order ini.",404,origin);
     if(!await branchAccess(receipt.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!isOwner && !await isTenantOwnerForBranch(receipt.branch_id))return fail("Rekonsiliasi receipt hanya dapat dilakukan Tenant Owner/Admin atau Owner platform.",403,origin);
     const [lines,audit]=await Promise.all([
       admin.from("purchase_receipt_items").select("id,receipt_id,purchase_order_item_id,inventory_item_id,quantity_received,unit_cost_idr").eq("receipt_id",receipt.id),
       admin.from("admin_audit_logs").select("id,action,entity_type,entity_id,metadata,created_at").eq("entity_type","purchase_receipt").eq("entity_id",receipt.id).eq("action","erp_purchase_receipt_posted")

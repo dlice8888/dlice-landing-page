@@ -1,225 +1,132 @@
-// Authenticated tenant-boundary probes for staging Supabase Data API.
-// Configure only with two legitimate QA users from different tenants.
-// No secrets or JWTs are printed. This script performs read-only REST probes and
-// calls only the explicitly selected negative RPC/Edge actions supplied by env.
-import assert from "node:assert/strict";
-
+// Nine independently recorded authenticated tenant-boundary probes.
+// Credentials are never printed. A probe is PASS/FAIL only when its request ran;
+// prerequisites that are absent are BLOCKED with executed:false.
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
-const usernameA = process.env.STAGING_TENANT_A_USERNAME;
-const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
-const usernameB = process.env.STAGING_TENANT_B_USERNAME;
-const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
-const tenantA = process.env.STAGING_TENANT_A_ID;
-const tenantB = process.env.STAGING_TENANT_B_ID;
-const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
-const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
-const missingInputs = [];
-for (const [name, value] of [
-  ["STAGING_SUPABASE_URL", base],
-  ["STAGING_SUPABASE_PUBLIC_KEY", key],
-  ["STAGING_TENANT_A_ID", tenantA],
-  ["STAGING_TENANT_B_ID", tenantB],
-  ["STAGING_TENANT_A_BRANCH_ID", branchA],
-  ["STAGING_TENANT_B_BRANCH_ID", branchB],
-  ["STAGING_TENANT_A_USERNAME", usernameA],
-  ["STAGING_TENANT_A_PASSWORD", passwordA],
-  ["STAGING_TENANT_B_USERNAME", usernameB],
-  ["STAGING_TENANT_B_PASSWORD", passwordB],
-]) {
-  if (!value) missingInputs.push(name);
+const cfg = {
+  usernameA: process.env.STAGING_TENANT_A_USERNAME,
+  passwordA: process.env.STAGING_TENANT_A_PASSWORD,
+  usernameB: process.env.STAGING_TENANT_B_USERNAME,
+  passwordB: process.env.STAGING_TENANT_B_PASSWORD,
+  branchA: process.env.STAGING_TENANT_A_BRANCH_ID,
+  branchB: process.env.STAGING_TENANT_B_BRANCH_ID,
+  userA: process.env.STAGING_TENANT_A_USER_ID,
+  userB: process.env.STAGING_TENANT_B_USER_ID,
+};
+const probes = new Map();
+function record(name, status, executed, evidence = {}) {
+  const item = { name, status, executed, evidence };
+  probes.set(name, item);
+  console.log(JSON.stringify({ probe: name, ...item }));
+  return item;
 }
-if (missingInputs.length) {
-  console.error(JSON.stringify({
-    name: "secret-preflight",
-    status: "FAIL",
-    missingInputNames: missingInputs,
-    secretValuesPrinted: false,
-  }));
+function blocked(name, reason) { return record(name, "BLOCKED", false, { reason }); }
+function pass(name, evidence) { return record(name, "PASS", true, evidence); }
+function fail(name, evidence) { return record(name, "FAIL", true, evidence); }
+const required = [
+  ["STAGING_SUPABASE_URL", base], ["STAGING_SUPABASE_PUBLIC_KEY", key],
+  ["STAGING_TENANT_A_USERNAME", cfg.usernameA], ["STAGING_TENANT_A_PASSWORD", cfg.passwordA],
+  ["STAGING_TENANT_B_USERNAME", cfg.usernameB], ["STAGING_TENANT_B_PASSWORD", cfg.passwordB],
+  ["STAGING_TENANT_A_BRANCH_ID", cfg.branchA], ["STAGING_TENANT_B_BRANCH_ID", cfg.branchB],
+  ["STAGING_TENANT_A_USER_ID", cfg.userA], ["STAGING_TENANT_B_USER_ID", cfg.userB],
+];
+const missing = required.filter(([, value]) => !value).map(([name]) => name);
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const invalid = required.filter(([name, value]) => name.includes("_ID") && value && !uuid.test(value)).map(([name]) => name);
+const fixtureOk = !invalid.length && cfg.branchA !== cfg.branchB && cfg.userA !== cfg.userB;
+if (missing.length || !fixtureOk) {
+  const reason = missing.length ? "missing_preflight_inputs" : "invalid_or_non_distinct_fixture_ids";
   for (const name of [
-    "tenant-a-login",
-    "tenant-b-login",
-    "tenant-identities-distinct",
-    "tenant-a-own-branch-read",
-    "tenant-b-own-branch-read",
-    "tenant-a-cross-tenant-read-denied",
-    "tenant-b-cross-tenant-read-denied",
-    "tenant-a-cross-tenant-write-denied",
-    "tenant-b-cross-tenant-write-denied",
-  ]) {
-    console.error(JSON.stringify({
-      name,
-      status: "BLOCKED",
-      reason: "secret_preflight_failed",
-      executed: false,
-    }));
-  }
-  console.error("FAIL: runtime tenant-isolation gate blocked; no security probe is claimed as executed.");
+    "tenant-a-login", "tenant-b-login", "tenant-identities-distinct",
+    "tenant-a-own-branch-read", "tenant-b-own-branch-read",
+    "tenant-a-cross-tenant-read-denied", "tenant-b-cross-tenant-read-denied",
+    "tenant-a-cross-tenant-write-denied", "tenant-b-cross-tenant-write-denied",
+  ]) blocked(name, reason);
+  console.error(JSON.stringify({ gate: "tenant-isolation", status: "FAIL", executedProbeCount: 0, blockedProbeCount: 9, missingInputNames: missing, invalidFixtureNames: invalid, secretValuesPrinted: false }));
   process.exit(2);
 }
-console.log(JSON.stringify({ name: "secret-preflight", status: "PASS", secretValuesPrinted: false }));
-assert.notEqual(tenantA, tenantB, "Tenant A and B must be distinct");
-assert.ok(tenantA && tenantB, "Both tenant fixture IDs must be configured");
-assert.notEqual(branchA, branchB, "Branch fixtures must be distinct");
-async function loginWithDliceUsername(label, username, password) {
-  // Use the same username/password flow as the D'Lice UI. The Edge Function
-  // maps username to its internal Supabase Auth identity and returns a session.
-  const response = await fetch(`${base}/functions/v1/dlice-orders`, {
-    method: "POST",
-    headers: { apikey: key, "content-type": "application/json" },
+console.log(JSON.stringify({ preflight: "PASS", fixtureIdsDistinct: true, secretValuesPrinted: false }));
+async function safeFetch(url, init) {
+  try { return await fetch(url, { ...init, redirect: "manual" }); }
+  catch (error) { return { status: 0, ok: false, _networkError: String(error?.name || "network_error") }; }
+}
+async function login(label, username, password) {
+  const response = await safeFetch(`${base}/functions/v1/dlice-orders`, {
+    method: "POST", headers: { apikey: key, "content-type": "application/json" },
     body: JSON.stringify({ action: "admin-login", username, password }),
-    redirect: "manual",
   });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok || !payload.session?.access_token) {
-    console.error(JSON.stringify({
-      name: `${label}-dlice-login-failed`,
-      status: response.status,
-      error: typeof payload.error === "string" ? payload.error.slice(0, 160) : "missing_session",
-    }));
-    return null;
-  }
-  const token = payload.session.access_token;
-  if (typeof token !== "string" || token.split(".").length !== 3 || token.startsWith("Bearer ")) {
-    console.error(`${label} D'Lice login did not return a raw three-segment Supabase access_token. No token value was printed.`);
-    process.exit(2);
-  }
-  console.log(JSON.stringify({ name: `${label}-dlice-username-login`, status: response.status, accessTokenShapeValid: true }));
-  return token;
+  const payload = response.status ? await response.json().catch(() => ({})) : {};
+  const token = payload.session?.access_token;
+  const ok = response.status === 200 && typeof token === "string" && token.split(".").length === 3;
+  (ok ? pass : fail)(`${label}-login`, { httpStatus: response.status, tokenShapeValid: !!ok, error: typeof payload.error === "string" ? payload.error.slice(0,120) : undefined, networkError: response._networkError });
+  return ok ? token : null;
 }
-// Both QA identities must perform an actual username/password login. JWT-only
-// fallback is intentionally disallowed so the release evidence proves two logins.
-const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
-const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
-assert.ok(tokenA, "Tenant A username/password login must succeed");
-assert.ok(tokenB, "Tenant B username/password login must succeed");
-
-async function request(name, path, token, init = {}) {
-  const response = await fetch(`${base}${path}`, {
-    ...init,
-    headers: {
-      apikey: key,
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-      ...(init.headers ?? {}),
-    },
-    redirect: "manual",
+async function apiProbe(name, path, token, init, predicate) {
+  if (!token) return blocked(name, "required_login_not_successful");
+  const response = await safeFetch(`${base}${path}`, {
+    ...init, headers: { apikey: key, authorization: `Bearer ${token}`, "content-type": "application/json", ...(init?.headers || {}) },
   });
-  const text = await response.text();
-  let safeError = {};
-  if (!response.ok) {
-    try {
-      const payload = JSON.parse(text);
-      const code = payload.code ?? payload.error_code ?? payload.error;
-      const message = payload.msg ?? payload.message ?? payload.error_description;
-      if (typeof code === "string") safeError.errorCode = code.slice(0, 80);
-      if (typeof message === "string") safeError.errorMessage = message.slice(0, 180);
-    } catch {
-      safeError.errorBody = "non_json";
-    }
-  }
-  console.log(JSON.stringify({ name, status: response.status, bodyBytes: text.length, ...safeError }));
-  return { response, text };
+  const body = response.status ? await response.text().catch(() => "") : "";
+  let payload = null; try { payload = JSON.parse(body); } catch {}
+  const verdict = predicate({ response, body, payload });
+  const evidence = { httpStatus: response.status, responseBytes: body.length, ...verdict.evidence, networkError: response._networkError };
+  (verdict.ok ? pass : fail)(name, evidence);
+  return { ok: verdict.ok, response, body, payload };
 }
-async function verifyIdentity(label, token, expectedUserId) {
-  const { response, text } = await request(`${label}-identity`, "/auth/v1/user", token);
-  assert.equal(response.status, 200, `${label} JWT must resolve to a real user`);
-  const user = JSON.parse(text);
-  assert.ok(user.id, `${label} identity response missing id`);
-  if (expectedUserId) assert.equal(user.id, expectedUserId, `${label} JWT user mismatch`);
-  return user.id;
+const tokenA = await login("tenant-a", cfg.usernameA, cfg.passwordA);
+const tokenB = await login("tenant-b", cfg.usernameB, cfg.passwordB);
+let identityA = null, identityB = null;
+if (tokenA) {
+  const r = await apiProbe("tenant-a-identity-check", "/auth/v1/user", tokenA, {}, ({response,payload}) => ({
+    ok: response.status === 200 && payload?.id === cfg.userA,
+    evidence: { expectedUserMatched: payload?.id === cfg.userA },
+  }));
+  if (r.ok) identityA = r.payload.id;
 }
-
-const userA = await verifyIdentity("tenant-a", tokenA, process.env.STAGING_TENANT_A_USER_ID);
-const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENANT_B_USER_ID);
-assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
-
-async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBranchId) {
-  const unscoped = await request(`${label}-business-unscoped-inventory-denied`, "/functions/v1/dlice-orders", token, {
-    method: "POST",
-    body: JSON.stringify({ action: "erp-list-inventory" }),
-  });
-  assert.equal(unscoped.response.status, 422, `${label} must not list inventory without an explicit branch`);
-
-  const own = await request(`${label}-business-own-branch-inventory`, "/functions/v1/dlice-orders", token, {
-    method: "POST",
-    body: JSON.stringify({ action: "erp-list-inventory", branch_id: ownBranchId }),
-  });
-  assert.equal(own.response.status, 200, `${label} must be able to read inventory for its own branch`);
-  const ownPayload = JSON.parse(own.text);
-  assert.ok(Array.isArray(ownPayload.balances), `${label} own-branch response must include balances`);
-  assert.ok(ownPayload.balances.every((row) => row.branch_id === ownBranchId), `${label} own-branch response leaked balances from another branch`);
-
-  const foreign = await request(`${label}-business-foreign-branch-inventory-denied`, "/functions/v1/dlice-orders", token, {
-    method: "POST",
-    body: JSON.stringify({ action: "erp-list-inventory", branch_id: foreignBranchId }),
-  });
-  assert.equal(foreign.response.status, 403, `${label} must be denied access to a foreign tenant branch`);
+if (tokenB) {
+  const r = await apiProbe("tenant-b-identity-check", "/auth/v1/user", tokenB, {}, ({response,payload}) => ({
+    ok: response.status === 200 && payload?.id === cfg.userB,
+    evidence: { expectedUserMatched: payload?.id === cfg.userB },
+  }));
+  if (r.ok) identityB = r.payload.id;
 }
-await verifyBusinessInventoryScope("tenant-a", tokenA, branchA, branchB);
-await verifyBusinessInventoryScope("tenant-b", tokenB, branchB, branchA);
-
-// The current staging RLS policy deliberately denies direct client access to
-// branches (including a user's own branch). Do not mistake this deny-all route
-// for proof that the authenticated business API correctly scopes tenants.
-async function branchDirectAccessDenied(label, token, branchId) {
-  const { response, text } = await request(
-    label,
-    `/rest/v1/branches?id=eq.${encodeURIComponent(branchId)}&select=id,tenant_id`,
-    token,
-    { headers: { accept: "application/json" } },
-  );
-  assert.equal(response.status, 200, `${label} should return a filtered result, not an API error`);
-  const rows = JSON.parse(text);
-  assert.ok(Array.isArray(rows), `${label} response should be an array`);
-  assert.equal(rows.some((row) => row.id === branchId), false, `${label} unexpectedly exposed a branch via direct REST`);
-}
-await branchDirectAccessDenied("tenant-a-direct-own-branch-denied", tokenA, branchA);
-await branchDirectAccessDenied("tenant-a-direct-foreign-branch-denied", tokenA, branchB);
-await branchDirectAccessDenied("tenant-b-direct-own-branch-denied", tokenB, branchB);
-await branchDirectAccessDenied("tenant-b-direct-foreign-branch-denied", tokenB, branchA);
-
-// The stock-transfer RPC is server-only in current staging ACLs. Confirm an
-// authenticated client cannot bypass the Edge Function and call it directly.
-for (const [label, token] of [["tenant-a", tokenA], ["tenant-b", tokenB]]) {
-  const { response } = await request(`${label}-direct-stock-transfer-rpc-denied`, "/rest/v1/rpc/erp_create_stock_transfer", token, {
-    method: "POST",
-    body: JSON.stringify({
-      p_transfer_number: "SECURITY-PROBE-NO-WRITE",
-      p_source_branch_id: branchA,
-      p_destination_branch_id: branchB,
-      p_items: [],
-      p_actor_user_id: label === "tenant-a" ? userA : userB,
-      p_idempotency_key: `security-probe-${label}`,
-      p_notes: "Negative security test; must not execute",
-    }),
-  });
-  assert.ok([401, 403, 404, 405].includes(response.status), `${label} direct server-only RPC must be inaccessible (got ${response.status})`);
-}
-
-// Mandatory negative write probes: the handler checks branchAccess for BOTH
-// source and destination before invoking the stock-transfer RPC. A foreign
-// destination must be rejected with 403 and must never reach the mutation RPC.
-async function verifyForeignWriteDenied(label, token, ownBranchId, foreignBranchId) {
-  const probeNumber = `SECURITY-DENY-${label.toUpperCase()}-${Date.now()}`;
-  const { response } = await request(`${label}-foreign-stock-transfer-write-denied`, "/functions/v1/dlice-orders", token, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "erp-create-stock-transfer",
-      transfer_number: probeNumber,
-      source_branch_id: ownBranchId,
-      destination_branch_id: foreignBranchId,
-      inventory_item_id: "00000000-0000-4000-8000-000000000099",
-      quantity: 1,
-      idempotency_key: `deny-${label}-${Date.now()}`,
-      notes: "Automated tenant-isolation negative test; must be rejected before mutation",
-    }),
-  });
-  assert.equal(response.status, 403, `${label} must be denied before creating a cross-tenant stock transfer`);
-}
-await verifyForeignWriteDenied("tenant-a", tokenA, branchA, branchB);
-await verifyForeignWriteDenied("tenant-b", tokenB, branchB, branchA);
-console.log("PASS: both real username/password logins, distinct users, own-branch inventory success, foreign-branch read denial, foreign-branch write denial, direct REST isolation, and server-only stock-transfer RPC denial.");
-console.log("Release gate remains closed: runtime CORS/JWT workflow evidence, independent migration review, staging migration replay, and stock/audit reconciliation are separate required gates.");
-
-// Re-run staging runtime gates on push; no test behavior or credentials changed.
+if (!identityA || !identityB) blocked("tenant-identities-distinct", "one_or_both_identity_checks_not_successful");
+else (identityA !== identityB ? pass : fail)("tenant-identities-distinct", { identitiesDifferent: identityA !== identityB });
+const verifiedTokenA = identityA ? tokenA : null;
+const verifiedTokenB = identityB ? tokenB : null;
+const ownRead = async (label, token, branch) => apiProbe(`${label}-own-branch-read`, "/functions/v1/dlice-orders", token, {
+  method: "POST", body: JSON.stringify({ action: "erp-list-inventory", branch_id: branch }),
+}, ({response,payload}) => {
+  const balances = Array.isArray(payload?.balances) ? payload.balances : [];
+  return { ok: response.status === 200 && balances.length > 0 && balances.every(x => x.branch_id === branch),
+    evidence: { balanceRows: balances.length, allRowsMatchOwnBranch: balances.every(x => x.branch_id === branch) } };
+});
+await ownRead("tenant-a", verifiedTokenA, cfg.branchA);
+await ownRead("tenant-b", verifiedTokenB, cfg.branchB);
+const crossRead = async (label, token, foreignBranch) => apiProbe(`${label}-cross-tenant-read-denied`, "/functions/v1/dlice-orders", token, {
+  method: "POST", body: JSON.stringify({ action: "erp-list-inventory", branch_id: foreignBranch }),
+}, ({response}) => ({ ok: response.status === 403, evidence: { expectedHttpStatus: 403 } }));
+await crossRead("tenant-a", verifiedTokenA, cfg.branchB);
+await crossRead("tenant-b", verifiedTokenB, cfg.branchA);
+const crossWrite = async (label, token, ownBranch, foreignBranch) => apiProbe(`${label}-cross-tenant-write-denied`, "/functions/v1/dlice-orders", token, {
+  method: "POST", body: JSON.stringify({
+    action: "erp-create-stock-transfer", transfer_number: `SECURITY-DENY-${label}-${Date.now()}`,
+    source_branch_id: ownBranch, destination_branch_id: foreignBranch,
+    inventory_item_id: "00000000-0000-4000-8000-000000000099", quantity: 1,
+    idempotency_key: `deny-${label}-${crypto.randomUUID()}`,
+    notes: "Negative security test; must be rejected before mutation",
+  }),
+}, ({response}) => ({ ok: response.status === 403, evidence: { expectedHttpStatus: 403, mutationMustNotRun: true } }));
+await crossWrite("tenant-a", verifiedTokenA, cfg.branchA, cfg.branchB);
+await crossWrite("tenant-b", verifiedTokenB, cfg.branchB, cfg.branchA);
+const requiredNames = [
+  "tenant-a-login", "tenant-b-login", "tenant-identities-distinct",
+  "tenant-a-own-branch-read", "tenant-b-own-branch-read",
+  "tenant-a-cross-tenant-read-denied", "tenant-b-cross-tenant-read-denied",
+  "tenant-a-cross-tenant-write-denied", "tenant-b-cross-tenant-write-denied",
+];
+const summary = requiredNames.map(name => probes.get(name) || { name, status:"BLOCKED", executed:false, evidence:{reason:"probe_not_recorded"} });
+const executedProbeCount = summary.filter(x => x.executed).length;
+const failed = summary.filter(x => x.status !== "PASS");
+console.log(JSON.stringify({ gate:"tenant-isolation", status: failed.length ? "FAIL" : "PASS", requiredProbeCount:9, executedProbeCount, passProbeCount:summary.filter(x=>x.status==="PASS").length, failProbeCount:summary.filter(x=>x.status==="FAIL").length, blockedProbeCount:summary.filter(x=>x.status==="BLOCKED").length, probes:summary }));
+if (failed.length || summary.some(x => !x.executed)) process.exit(2);

@@ -1,0 +1,36 @@
+name: Tenant Isolation Static Checks
+
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - "tests/security/tenant-b-owner-bootstrap-static.mjs"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/migrations/20261108090000_atomic_tenant_audit_operations.sql"
+      - "docs/runbooks/staging-tenant-b-owner-bootstrap.md"
+      - ".github/workflows/staging-runtime-tenant-isolation.yml"
+      - ".github/workflows/tenant-isolation-static.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  static-check:
+    name: Tenant probe syntax, transaction invariants and patch checks (no staging secrets)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check tenant-isolation probe syntax
+        run: node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
+      - name: Check atomic tenant audit and nine-probe invariants
+        run: node tests/security/tenant-b-owner-bootstrap-static.mjs
+      - name: Check patch whitespace
+        run: git diff --check
