@@ -1,7 +1,7 @@
 # Branch cleanup final report
 
 - Finalized: 2026-11-13T13:53:57Z UTC.
-- Audit documents are being committed to `audit/branch-cleanup-20261113`, based on current staging; no application functionality was changed.
+- Audit documents were committed and pushed to `audit/branch-cleanup-20261113`, based on current staging (initial audit commit `53a711ab679044fce9b910f5e815a1a1992d4aa1`); no application functionality was changed.
 
 ## Summary
 
@@ -28,9 +28,9 @@
 
 ## Preserved branches
 
-Every current branch is listed below with its exact SHA and preservation reason. Detailed ancestry, commit counts, changed paths, migration dependencies and PR state are in [BRANCH_RECONCILIATION.md](./BRANCH_RECONCILIATION.md).
+All 70 original branches remaining after deletion are listed below with their exact SHA and preservation reason. Detailed ancestry, commit counts, changed paths, migration dependencies and PR state are in [BRANCH_RECONCILIATION.md](./BRANCH_RECONCILIATION.md).
 
-The audit branch `audit/branch-cleanup-20261113` was created after the 73-branch baseline solely to preserve these deliverables; it is not part of the pre-cleanup inventory or deletion candidates.
+The audit branch `audit/branch-cleanup-20261113` was created after the 73-branch baseline solely to preserve these deliverables; it is not part of the pre-cleanup inventory or deletion candidates. Its initial published commit is `53a711ab679044fce9b910f5e815a1a1992d4aa1`.
 
 | Branch | SHA | Exact preservation reason |
 |---|---|---|
@@ -128,12 +128,13 @@ All live PRs and issues remain open; no PR state was changed. PR #64 remains Dra
 
 ## Post-cleanup evidence
 
-- Paginated GitHub branch count after deletion: 70 before publishing this audit branch; final expected count is 71 including the audit branch. All seven open PR head branches still exist; the three deleted refs are absent.
+- Paginated GitHub branch count after cleanup and audit-branch publication: 71. All seven open PR head branches still exist; the three deleted refs are absent.
 - `main` remains at `8d74dbda81eb483a26d779b782fd4b37e12af770`; `staging` remains at `aed2733f62506ed87a5040a48f479753fdafe1b1`.
 - Current staging still has 45 migration files. No Supabase migration or production operation was attempted.
 - Open PR state after cleanup: #21, #22, #31, #62, #63, #64, #71 remain OPEN; #64 remains Draft. Open issues #34 and #45 remain OPEN.
 - Ruleset list remains empty. No branch protection write succeeded.
 - `node scripts/quality-checks.mjs`: PASS. `git diff --check`: PASS.
+- GitHub Actions `Free quality checks` run `43438214189` completed SUCCESS for the published audit commit `53a711ab679044fce9b910f5e815a1a1992d4aa1`.
 - Latest staging `auth-negative` workflow check: FAILURE (run `43434328863`); no nine-probe release claim is made.
 
 ## Failures and blockers
@@ -158,4 +159,4 @@ All live PRs and issues remain open; no PR state was changed. PR #64 remains Dra
 | No production migration/deployment triggered | PASS |
 | Rulesets configured and effective | FAIL/BLOCKED (write API 403; no rulesets) |
 | Branch protection effectively enforced | FAIL (branch API `protected=false`; rulesets empty) |
-| All audit docs complete and committed on an audit branch | PENDING commit/push |
+| All audit docs complete and committed on an audit branch | PASS — pushed to `audit/branch-cleanup-20261113` |
