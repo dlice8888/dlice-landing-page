@@ -1,3 +1,5 @@
+  assert.match(workflow, /STAGING_TENANT_A_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_BRANCH_ID\s*\}\}/);
+  assert.match(workflow, /STAGING_TENANT_B_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_BRANCH_ID\s*\}\}/);
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -21,8 +23,8 @@ test("staging tenant gate uses only the six canonical credentials and the verifi
   }
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
-  assert.match(workflow, /STAGING_TENANT_A_USER_ID:\s*b930897c-f8fb-443b-9056-e70c08b31446/);
-  assert.match(workflow, /STAGING_TENANT_B_USER_ID:\s*e1de1ffc-9fae-412f-9dd7-0993b54cb631/);
+  assert.match(workflow, /STAGING_TENANT_A_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_USER_ID\s*\}\}/);
+  assert.match(workflow, /STAGING_TENANT_B_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_USER_ID\s*\}\}/);
   assert.match(workflow, /STAGING_TENANT_A_BRANCH_CODE:\s*QA-DLICE-A/);
   assert.match(workflow, /STAGING_TENANT_B_BRANCH_CODE:\s*QA-TENANT-B/);
 });
