@@ -407,7 +407,8 @@ if (
         body: JSON.stringify({ action: "erp-list-inventory", branch_id: requestedBranch }),
       });
       const balances = payload?.balances;
-      const validRows = Array.isArray(balances) && balances.every((row) => row.branch_id === requestedBranch);
+      // Empty inventory is not proof of a working own-branch read. Require at least one real row.
+      const validRows = Array.isArray(balances) && balances.length > 0 && balances.every((row) => row.branch_id === requestedBranch);
       const passed = response.status === 200 && validRows;
       return {
         passed,
