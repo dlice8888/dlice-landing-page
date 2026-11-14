@@ -54,3 +54,58 @@ Those starting percentages have not been independently rescored against feature-
 2. Resolve and pass the live two-tenant authentication, membership, branch mapping, cross-tenant read/write denial, and required independent review gates before certifying tenant-scoped features.
 3. Obtain owner access to staging-only credentials and remote status checks (GitHub Environment metadata currently returns HTTP 403), apply the reviewed migration only after the release gate, and run browser/integration E2E against staging.
 4. Implement and verify additional domain workflows; this increment advances a Command Center/BI foundation only and is not sufficient to reach 50%.
+
+
+## Live staging snapshot — verified 2026-11-14 (read-only)
+
+The following measurements were queried directly from Supabase project `higoadrzxnhzbbwhdbmh` after this report's original draft. They are staging measurements, not estimates:
+
+| Measurement | Live staging result |
+| --- | ---: |
+| Supabase project health | ACTIVE_HEALTHY |
+| PostgreSQL | 17.11 |
+| Public tables | 64 |
+| Tenant records | 2 |
+| Branch records | 155 |
+| Tenant memberships | 3 |
+| Products | 4 |
+| Recipes / recipe ingredients | 1 / 2 |
+| POS sales / shifts | 6 / 7 |
+| Orders / kitchen tickets | 7 / 6 |
+| Branch inventory / stock movements | 4 / 26 |
+| Stock transfers / stock counts | 0 / 0 |
+| Purchase requisitions / purchase orders / receipts | 0 / 0 / 0 |
+| Production batches / consumptions | 0 / 0 |
+| Finance journal entries / cash reconciliations | 0 / 0 |
+| Branch operation checklist runs | 1 |
+| Integration connections / outbox events | 0 / 0 |
+| Backup/restore runs | 0 |
+| Applied migration records | 43; latest `20261027140145` |
+
+A read-only SQL count attempt initially referenced a nonexistent legacy relation name `branch_checklist_runs`; the query was corrected to the actual `branch_operation_checklist_runs` table before the counts above were recorded. No staging data was changed.
+
+### Live Supabase advisor findings
+
+- Security advisor: leaked-password protection is disabled (1 warning).
+- Performance advisor: 26 foreign keys without covering indexes and 49 indexes currently reported unused. Unused-index findings are informational and must not be handled by dropping indexes without workload evidence.
+- Health advisor: no lints returned in this query.
+
+### PR #76 and preview status
+
+- PR #76 `feat(erp): add owner command-center summary` remains Draft, open, and has no submitted independent review.
+- Head: `d18757efbfa564d75d05384acfbc34b69b76d0c8`; base: `staging`.
+- GitHub Actions associated with the head show success for Free quality checks, disposable local migration replay, CORS probes, Kitchen KDS offline contract, Procurement requisition contract, and Procurement receiving contract.
+- Vercel preview: `https://dlice-landing-page-mzizcnmb3-dlice8888-7332.vercel.app`, state READY. This is a PR preview, not proof of the staging branch deployment or authenticated browser acceptance.
+- PR #76 migration `20261114110000_command_center_summary.sql` is not in the live staging migration history and has not been applied.
+
+### Merge and migration decision
+
+- PR #76: do not merge or apply its migration yet. It is Draft, has zero submitted reviews, and its own acceptance report explicitly says no staging verification or browser E2E. Review the SECURITY DEFINER RPC, UI/API authorization path, and staging runtime behavior first.
+- PR #75: keep Draft; the nine authenticated tenant-isolation probes have not passed.
+- PR #64: keep Draft and its migration untouched.
+- PR #62: do not merge. It is non-mergeable, its base/head state is not clean, and the submitted review record is only COMMENTED. The reported ACL migration is already present in staging through migration `20261027140145`; merging its PR is not needed to reapply it.
+- No PR or migration was merged/applied by this audit. Production was not changed.
+
+### Scoring consequence
+
+The 28.61% figure remains the arithmetic average of the user-provided baseline estimates, not an independently verified implementation score. PR #76 adds code and CI evidence for an Executive Command Center foundation, but because it is not merged into staging and not verified in the staging browser, it does not justify increasing the live-staging progress score. A defensible verified average across all 18 domains remains not calculable until feature-level acceptance evidence is collected consistently.
