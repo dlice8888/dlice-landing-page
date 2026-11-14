@@ -4,11 +4,13 @@ on:
     branches: [staging]
     paths:
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
   push:
     branches: [staging]
     paths:
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
 
 permissions:
@@ -35,10 +37,13 @@ jobs:
           trap cleanup EXIT
           cd "$tmp"
           supabase init
-          mkdir -p supabase/migrations
+          mkdir -p supabase/migrations supabase/tests
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
+          cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/
           echo "Replay commit: $GITHUB_SHA"
           echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
-          supabase start
+          supabase start 2>&1 | sed '/"PUBLISHABLE_KEY"/d'
           supabase db reset
           echo "PASS: all repository migrations applied to the disposable local database."
+          supabase test db
+          echo "PASS: migrations and database contract tests passed locally."

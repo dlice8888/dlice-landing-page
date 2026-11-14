@@ -43,6 +43,7 @@ const randomToken = () => {
 const normPhone = (value: string) => value.replace(/[^0-9]/g, "").replace(/^0/, "62");
 const safeText = (value: unknown, max: number) => typeof value === "string" ? value.trim().slice(0, max) : "";
 const todayDate = () => new Date().toISOString().slice(0, 10);
+const SUPPORTED_BRANCH_TIMEZONES = new Set(["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"]);
 // Fail closed: tenant-aware catalog, finance, reporting and audit isolation has not passed negative E2E.
 // Do not enable until cross-tenant read/write denial tests pass for every tenant-scoped action.
 const TENANT_ISOLATION_RELEASED = false;
@@ -77,7 +78,7 @@ const consumeRateLimit = async (scope: string, key: string, limit: number, windo
 };
 
 const formatTransactionCode = (orderNumber: number | string, createdAt: string, timezone = "Asia/Jakarta") => {
-  const safeTimezone = ["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"].includes(timezone) ? timezone : "Asia/Jakarta";
+  const safeTimezone = SUPPORTED_BRANCH_TIMEZONES.has(timezone) ? timezone : "Asia/Jakarta";
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: safeTimezone, day: "2-digit", month: "2-digit", year: "numeric",
   }).formatToParts(new Date(createdAt));
@@ -990,18 +991,24 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-overview") {
     if (!isOwner) return fail("Ringkasan lintas cabang hanya tersedia untuk Owner; gunakan laporan cabang untuk data operasional.",403,origin);
-    const [branches, planned, active, inventory, shifts, sales, expenses, purchaseOrders] = await Promise.all([
-      admin.from("branches").select("id",{count:"exact",head:true}),
-      admin.from("branches").select("id",{count:"exact",head:true}).eq("status","planned"),
-      admin.from("branches").select("id",{count:"exact",head:true}).eq("status","active"),
-      admin.from("inventory_items").select("id",{count:"exact",head:true}).eq("is_active",true),
-      admin.from("pos_shifts").select("id",{count:"exact",head:true}).eq("status","open"),
-      admin.from("pos_sales").select("total_idr").gte("created_at",new Date(new Date().setHours(0,0,0,0)).toISOString()).eq("payment_status","paid"),
-      admin.from("branch_expenses").select("id",{count:"exact",head:true}).eq("status","pending_approval"),
-      admin.from("purchase_orders").select("id",{count:"exact",head:true}).in("status",["submitted","approved","ordered","partially_received"])
-    ]);
-    const todaySales=(sales.data||[]).reduce((n: number,x: {total_idr:number})=>n+Number(x.total_idr||0),0);
-    return json({branches:branches.count||0,planned_branches:planned.count||0,active_branches:active.count||0,inventory_items:inventory.count||0,open_shifts:shifts.count||0,today_sales_idr:todaySales,pending_expenses:expenses.count||0,open_purchase_orders:purchaseOrders.count||0},200,origin);
+    const fromDate=safeText(body.from_date,10),throughDate=safeText(body.through_date,10);
+    const validDate=(value:string)=>{
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+      const parsed=new Date(`${value}T00:00:00.000Z`);
+      return Number.isFinite(parsed.getTime())&&parsed.toISOString().slice(0,10)===value;
+    };
+    if(!validDate(fromDate)||!validDate(throughDate)||throughDate>="9999-12-31"||Date.parse(`${throughDate}T00:00:00Z`)<Date.parse(`${fromDate}T00:00:00Z`)||Date.parse(`${throughDate}T00:00:00Z`)-Date.parse(`${fromDate}T00:00:00Z`)>92*86400000)return fail("Rentang tanggal ringkasan tidak valid; gunakan maksimum 93 hari.",422,origin);
+    const selectedBranch=safeText(body.branch_id,80);
+    if(selectedBranch&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBranch))return fail("Cabang ringkasan tidak valid.",422,origin);
+    const branchResult=await admin.from("branches").select("id,code,name,status,city,province,timezone",{count:"exact"}).order("code",{ascending:true}).limit(500);
+    if(branchResult.error)return fail("Daftar cabang ringkasan gagal dimuat.",500,origin);
+    if((branchResult.count||0)>500)return fail("Ringkasan dibatasi maksimal 500 cabang per permintaan.",422,origin);
+    const availableBranches=branchResult.data||[];
+    if(selectedBranch&&!availableBranches.some((branch:any)=>branch.id===selectedBranch))return fail("Cabang ringkasan tidak ditemukan.",404,origin);
+    const branchIds=selectedBranch?[selectedBranch]:availableBranches.map((branch:any)=>branch.id);
+    const summaryResult=await admin.rpc("dlice_get_command_center_summary",{p_branch_ids:branchIds,p_from_date:fromDate,p_through_date:throughDate});
+    if(summaryResult.error||!summaryResult.data)return fail("Ringkasan operasional gagal dimuat.",500,origin);
+    return json({ok:true,available_branches:availableBranches,...summaryResult.data},200,origin);
   }
 
   const branchChecklistTemplates: Record<string, { key: string; label: string; critical: boolean }[]> = {
@@ -1157,11 +1164,13 @@ Deno.serve(async (req: Request) => {
     if(!isOwner)return fail("Hanya Owner dapat mengubah master cabang.",403,origin);
     const id=safeText(body.id,80),code=safeText(body.code,24).toUpperCase(),name=safeText(body.name,120),status=safeText(body.status,20);
     if(!/^[A-Z0-9-]{2,24}$/.test(code)||!name||!["planned","active","suspended","closed"].includes(status))return fail("Kode, nama, atau status cabang tidak valid.",422,origin);
+    const timezone=safeText(body.timezone,80)||"Asia/Jakarta";
+    if(!SUPPORTED_BRANCH_TIMEZONES.has(timezone))return fail("Zona waktu cabang tidak didukung.",422,origin);
     const lat=body.latitude==null||body.latitude===""?null:Number(body.latitude),lon=body.longitude==null||body.longitude===""?null:Number(body.longitude),radius=body.service_radius_km==null||body.service_radius_km===""?null:Number(body.service_radius_km),daily=body.daily_order_capacity==null||body.daily_order_capacity===""?null:Number(body.daily_order_capacity);
     if((lat!==null&&(!Number.isFinite(lat)||lat < -90||lat>90))||(lon!==null&&(!Number.isFinite(lon)||lon < -180||lon>180))||(radius!==null&&(!Number.isFinite(radius)||radius<0||radius>500))||(daily!==null&&(!Number.isInteger(daily)||daily<0||daily>100000)))return fail("Koordinat, radius, atau kapasitas harian tidak valid.",422,origin);
     const online=body.accepts_online_orders===true,pickup=body.pickup_enabled!==false,delivery=body.delivery_enabled===true;
     if(online&&status==="active"&&(!safeText(body.city,100)||!safeText(body.address,300)))return fail("Cabang online harus memiliki kota dan alamat.",422,origin);
-    const values={code,name,status,address:safeText(body.address,300)||null,city:safeText(body.city,100)||null,province:safeText(body.province,100)||null,timezone:safeText(body.timezone,80)||"Asia/Jakarta",opening_date:safeText(body.opening_date,10)||null,notes:safeText(body.notes,500)||null,latitude:lat,longitude:lon,service_radius_km:radius,accepts_online_orders:online,pickup_enabled:pickup,delivery_enabled:delivery,daily_order_capacity:daily,updated_at:new Date().toISOString()};
+    const values={code,name,status,address:safeText(body.address,300)||null,city:safeText(body.city,100)||null,province:safeText(body.province,100)||null,timezone,opening_date:safeText(body.opening_date,10)||null,notes:safeText(body.notes,500)||null,latitude:lat,longitude:lon,service_radius_km:radius,accepts_online_orders:online,pickup_enabled:pickup,delivery_enabled:delivery,daily_order_capacity:daily,updated_at:new Date().toISOString()};
     const result=id?await admin.from("branches").update(values).eq("id",id).select("*").single():await admin.from("branches").insert(values).select("*").single();
     if(result.error||!result.data)return fail(result.error?.code==="23505"?"Kode cabang sudah digunakan.":"Cabang gagal disimpan.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_save_branch",entity_type:"branch",entity_id:result.data.id,metadata:{code,status}});

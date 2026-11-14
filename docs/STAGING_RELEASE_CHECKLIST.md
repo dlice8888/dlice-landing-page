@@ -71,6 +71,13 @@ Some controls cannot be enforced by repository code alone:
 - Vercel preview deployment protection must be enabled/verified in project settings. Do not turn on a protection mode that blocks the Owner's testing without configuring a safe access path first.
 - Five-star Google Maps review carousel is intentionally not fabricated; only show reviews from a verified, permitted source. The existing Google Maps link is the no-cost fallback.
 
+## 2026-11-14 — Command Center summary foundation
+
+- Migration `20261114110000_command_center_summary.sql` adds a service-role-only, read-only summary RPC. It groups paid POS sales and open orders by each branch's configured timezone and reports current shift, stock, KDS, requisition, purchase-order, and expense queues. Disposable local replay of all 46 migrations and five database contract tests passed; the tests cover role grants, period bounds, empty scopes, and a seeded branch.
+- The ERP dashboard calls the RPC only after the Edge Function verifies the Platform Owner identity and validates the requested date range and optional branch against the server-loaded branch list. Query failures are surfaced; no empty-success fallback is used.
+- `TENANT_ISOLATION_RELEASED` remains `false`; this does not certify tenant isolation or grant dashboard access to tenant members. The PR must pass disposable migration replay and review before any staging application. No staging or production migration/deployment was performed as part of this change.
+- Branch region data is absent from the current schema; the dashboard shows city/province and does not infer a region.
+- The migration creates only a function and grants; it does not mutate operational data. If a reviewed staging release must be rolled back, roll back the Edge/UI caller first, then use a reviewed forward migration to drop `public.dlice_get_command_center_summary(uuid[], date, date)`.
 
 ## 2026-10-25 — POS idempotency fingerprint fix
 
