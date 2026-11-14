@@ -13,7 +13,7 @@ test("command-center summary is service-role-only and validates bounded date and
   assert.match(migration, /create or replace function public\.dlice_get_command_center_summary/i);
   assert.match(migration, /security invoker/i, "RPC runs with invoker privileges");
   assert.doesNotMatch(migration, /security definer/i, "RPC must not bypass RLS via SECURITY DEFINER");
-  assert.doesNotMatch(migration, /auth\\.role\\(/i, "authorization relies on EXECUTE ACL rather than deprecated auth.role()");
+  assert.doesNotMatch(migration, /auth\.role\(/i, "authorization relies on EXECUTE ACL rather than deprecated auth.role()");
   assert.match(migration, /cardinality\(p_branch_ids\)\s*>\s*500/i);
   assert.match(migration, /p_through_date\s*-\s*p_from_date\s*>\s*92/i);
   assert.match(migration, /revoke all on function public\.dlice_get_command_center_summary/i);
