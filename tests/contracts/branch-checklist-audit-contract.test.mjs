@@ -6,6 +6,10 @@ const source = await readFile(
   new URL("../../supabase/functions/dlice-orders/index.ts", import.meta.url),
   "utf8",
 );
+const migrationWorkflow = await readFile(
+  new URL("../../.github/workflows/disposable-migration-replay.yml", import.meta.url),
+  "utf8",
+);
 
 const checklistSection = source.slice(
   source.indexOf('if (action === "erp-list-branch-checklists")'),
@@ -33,4 +37,10 @@ test("checklist mutations use the atomic database workflow", () => {
 test("checklist mutation RPC errors never produce success responses", () => {
   assert.match(checklistSection, /if\s*\(\s*error\s*\)\s*return fail\(/);
   assert.match(checklistSection, /result\?\.blocked/);
+});
+
+test("disposable CI runs database assertions without logging local credentials", () => {
+  assert.match(migrationWorkflow, /cp "\$GITHUB_WORKSPACE"\/supabase\/tests\/\*\.sql supabase\/tests\//);
+  assert.match(migrationWorkflow, /supabase test db/);
+  assert.ok(migrationWorkflow.includes("grep -viE '(key|secret|password|jwt|token|authorization|bearer)'"));
 });
