@@ -25,6 +25,8 @@ test("staging tenant gate uses only the six canonical credentials and the verifi
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
   assert.match(workflow, /STAGING_TENANT_A_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_USER_ID\s*\}\}/);
   assert.match(workflow, /STAGING_TENANT_B_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_USER_ID\s*\}\}/);
+  assert.match(workflow, /STAGING_TENANT_A_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_ID\s*\}\}/);
+  assert.match(workflow, /STAGING_TENANT_B_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_ID\s*\}\}/);
   assert.match(workflow, /STAGING_TENANT_A_BRANCH_CODE:\s*QA-DLICE-A/);
   assert.match(workflow, /STAGING_TENANT_B_BRANCH_CODE:\s*QA-TENANT-B/);
 });
