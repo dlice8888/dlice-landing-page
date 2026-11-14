@@ -125,6 +125,23 @@ Deno.serve(async (req: Request) => {
   } catch { return fail("Format permintaan tidak valid.", 400, origin); }
   const action = safeText(body.action, 40);
 
+  // Public catalog and checkout still use the legacy global product/branch model.
+  // Keep them closed until host/domain -> tenant resolution and tenant-scoped
+  // catalog/order queries have passed positive and cross-tenant negative tests.
+  const PUBLIC_TENANT_ROUTING_RELEASED = false;
+  const PUBLIC_TENANT_ROUTING_REQUIRED_ACTIONS = new Set([
+    "list-online-branches",
+    "list-products",
+    "create-order",
+  ]);
+  if (!PUBLIC_TENANT_ROUTING_RELEASED && PUBLIC_TENANT_ROUTING_REQUIRED_ACTIONS.has(action)) {
+    return fail(
+      "Katalog dan pemesanan publik sementara ditutup sampai routing tenant dan isolasi katalog/pesanan terverifikasi.",
+      423,
+      origin,
+    );
+  }
+
   if (action === "admin-login") {
     const username = safeText(body.username, 32).toLowerCase();
     const password = typeof body.password === "string" ? body.password : "";
