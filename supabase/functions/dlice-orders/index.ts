@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { resolveTenantScopedPermissions } from "./tenant-permissions.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -89,14 +90,22 @@ const getAdmin = async (req: Request) => {
   if (!token) return null;
   const { data: userData, error: userError } = await authClient.auth.getUser(token);
   if (userError || !userData.user) return null;
-  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
+  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
-  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
-  const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
-  const savedPermissions = (Array.isArray(profile.permissions) ? profile.permissions : rolePermissions).filter((permission: string) => permission !== "*");
-  // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
-  return { user: userData.user, profile: { ...profile, permissions: [...new Set(savedPermissions)] } };
+  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) {
+    return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
+  }
+  // Never authorize tenant actions from global admin_profiles.permissions or position defaults.
+  // The intersection is deliberately fail-closed for users with multiple tenant memberships:
+  // a permission granted in Tenant A cannot silently become a grant in Tenant B.
+  const { data: memberships, error: membershipError } = await admin
+    .from("tenant_memberships")
+    .select("tenant_id,role,permissions")
+    .eq("user_id", userData.user.id)
+    .eq("status", "active");
+  if (membershipError || !memberships?.length) return null;
+  const permissions = resolveTenantScopedPermissions(memberships);
+  return { user: userData.user, profile: { ...profile, permissions } };
 };
 
 Deno.serve(async (req: Request) => {
@@ -511,7 +520,7 @@ Deno.serve(async (req: Request) => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
+  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
@@ -730,7 +739,7 @@ Deno.serve(async (req: Request) => {
 
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
   const isOwner = isPlatformOwner;
-  const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
+  const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes("*") || actor.profile.permissions.includes(p);
   const tenantIdsForActor = async (): Promise<string[]> => {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
     if(error)throw new Error("Keanggotaan tenant gagal dimuat.");
