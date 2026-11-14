@@ -25,20 +25,22 @@ The Edge Function must fail closed if its required URL/key variables are missing
 - [ ] Checkout/payment/fulfillment E2E checklist is completed on staging with test data.
 - [ ] Mobile landing, product image loading, checkout summary, upload errors, and tracking are checked at narrow viewport widths.
 - [ ] Request/response logs do not include passwords, tokens, full payment proof, full WhatsApp numbers, or other unnecessary customer data.
+- [ ] Tenant-isolation runtime workflow uses only the six canonical staging secrets, verifies the expected A/B user and branch fixtures, and records all nine required probes with identity, tenant/branch scope, operation, expected/actual result, HTTP status, sanitized evidence, duration, and `PASS`/`FAIL`/`BLOCKED` status. No required probe may be skipped or blocked.
 - [ ] No new paid service, billing-enabled API, or paid Vercel feature was introduced.
 
 ## Staging acceptance sequence
 
 1. Enable Supabase Auth leaked-password protection manually in staging (Authentication → Security/Password Security); use test credentials only.
-2. Test Owner login, invalid login, account/IP rate limiting, staff permission boundaries, logout and expired session behavior.
-3. Test valid/invalid order tracking by transaction code + full WhatsApp number and by private token. Invalid lookups must not reveal order data.
-4. Create a multi-item order. Check server-calculated prices, receipt version, transaction code format, date/time (WITA), pickup/delivery, and address validation.
-5. Test capacity conflict and simultaneous checkout; one capacity slot must not be oversold.
-6. Test receipt confirmation, bank/QRIS instructions, proof upload/re-upload, proof version matching, payment verification, and notification idempotency.
-7. Test each allowed operational status transition. Unpaid orders cannot enter fulfillment; cancellation/delivery issue needs a reason; required notification must be marked sent before fulfillment transitions.
-8. Confirm customer tracking reflects payment and operational statuses separately.
-9. Confirm privacy-safe daily funnel counts change and no customer identifiers appear in analytics rows.
-10. Re-run Supabase security/performance advisors and review Vercel preview response headers.
+2. Run the authenticated tenant-isolation workflow from the trusted `staging` branch or a manual dispatch. Tenant A and Tenant B must log in with their own canonical credentials; verify expected Auth IDs, active memberships, and branch assignments before tenant-scoped probes. The gate must fail closed on missing/empty configuration or fixture mismatch, print no credentials or JWTs, and keep `TENANT_ISOLATION_RELEASED=false` until all required probes pass.
+3. Test Owner login, invalid login, account/IP rate limiting, staff permission boundaries, logout and expired session behavior.
+4. Test valid/invalid order tracking by transaction code + full WhatsApp number and by private token. Invalid lookups must not reveal order data.
+5. Create a multi-item order. Check server-calculated prices, receipt version, transaction code format, date/time (WITA), pickup/delivery, and address validation.
+6. Test capacity conflict and simultaneous checkout; one capacity slot must not be oversold.
+7. Test receipt confirmation, bank/QRIS instructions, proof upload/re-upload, proof version matching, payment verification, and notification idempotency.
+8. Test each allowed operational status transition. Unpaid orders cannot enter fulfillment; cancellation/delivery issue needs a reason; required notification must be marked sent before fulfillment transitions.
+9. Confirm customer tracking reflects payment and operational statuses separately.
+10. Confirm privacy-safe daily funnel counts change and no customer identifiers appear in analytics rows.
+11. Re-run Supabase security/performance advisors and review Vercel preview response headers.
 
 ## Promotion procedure
 
