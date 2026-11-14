@@ -37,6 +37,8 @@ jobs:
         run: |
           node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
           node --test tests/contracts/tenant-runtime-probe-contract.test.mjs
+      - name: Verify public tenant routing release gate
+        run: node --test tests/contracts/public-tenant-routing-gate-contract.test.mjs
       - name: Require migration and documentation review
         shell: bash
         env:
