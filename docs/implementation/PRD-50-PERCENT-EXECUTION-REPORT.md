@@ -117,3 +117,68 @@ The 28.61% figure remains the arithmetic average of the user-provided baseline e
 - Of 155 branch records, 5 are `active` and 150 are `planned`.
 - All 3 tenant membership records are currently `active`.
 - RLS being enabled is a baseline control only; it does not prove the policies correctly deny cross-tenant or cross-branch access. Runtime JWT probes remain required.
+
+
+## Reconciliation update — 2026-11-15 (live read-only verification)
+
+This section supersedes conflicting environment counts and status statements in the 2026-11-14 snapshot above. It does not retroactively convert Preview or disposable-test evidence into staging acceptance.
+
+### Current Supabase staging measurements
+
+Queried directly from project `higoadrzxnhzbbwhdbmh`:
+
+| Measurement | Verified 2026-11-15 |
+| --- | ---: |
+| Public base tables | 64 |
+| Public base tables with RLS enabled | 64 / 64 |
+| Applied migration records | 46; latest `20261027140145` |
+| Tenant records | 2 |
+| Branch records | 155 |
+| Active branches | 5 |
+| Planned branches | 150 |
+| Active tenant memberships | 3 |
+| Inventory balance rows | 4 |
+| Tenant A `dlice-default` / `QA-DLICE-A` inventory rows | 2; on-hand total 1,240 |
+| Tenant B `dlice-qa-isolation-b` / `QA-TENANT-B` inventory rows | 2; on-hand total 800 |
+| Purchase orders | 0 |
+| Purchase receipts | 0 |
+| Production batches | 0 |
+| Finance journal entries | 0 |
+
+The Tenant B inventory fixture is now present (two balance rows, total on-hand 800). This corrects the older PR #71 narrative that Tenant B had zero inventory. This is read-only fixture evidence only; it does not prove Tenant A/B JWT login or cross-tenant read/write denial.
+
+The only deployed Supabase Edge Function listed is `dlice-orders`, ACTIVE at version 66 with `verify_jwt=false`. Its handler must therefore enforce authentication/authorization itself on every protected action; CORS is not an authorization control.
+
+### Current Supabase advisors
+
+- Security: one warning — leaked-password protection disabled. Remediation: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+- Performance: 26 foreign keys lack covering indexes; 49 indexes are reported unused. The unused-index list is informational; do not drop indexes without workload/EXPLAIN evidence. Remediate missing FK indexes in a reviewed, measured migration rather than applying blanket changes.
+- Health: no advisor findings.
+
+### GitHub PR gate — live status 2026-11-15
+
+| PR | Scope | State | Review evidence | Decision |
+| --- | --- | --- | --- | --- |
+| #75 | Tenant-scoped permissions and A/B runtime probes | Open, Draft, mergeable | 0 submitted reviews | HOLD until nine authenticated runtime probes pass and independent review is recorded |
+| #76 | Executive Command Center summary | Open, Draft, mergeable | 0 submitted reviews | HOLD; review SECURITY DEFINER/RPC authorization and validate staging UI/API before merge |
+| #77 | Atomic branch checklist + audit | Open, Draft, mergeable | 0 submitted reviews | HOLD; no authenticated branch-role staging acceptance |
+| #78 | Atomic owner/tenant bootstrap | Open, Draft, mergeable | 0 submitted reviews | HOLD; review service-role RPC/owner identity and run staging acceptance |
+| #64 | Legacy tenant isolation transfer migration | Open, Draft, not mergeable | no qualifying independent approval | Keep untouched; migration must not be applied |
+
+The PR #75 description now reports two distinct active Auth identities and matching A/B branch membership fixtures. Its nine live runtime probes remain unexecuted/unpassed; a successful CORS-only run is not tenant isolation evidence. PR #76–78 disposable migration replay and contract tests are not staging migration evidence.
+
+### Staging workflow data is not yet end-to-end
+
+The presence of schema and fixture rows is not proof of a completed operating workflow. Current staging has zero purchase orders, receipts, production batches, and finance journal entries. Therefore Procure-to-Pay, Forecast-to-Production, and Record-to-Report have no positive-path reconciliation evidence. Order-to-Cash still needs authenticated payment-to-fulfillment-to-stock-to-settlement reconciliation.
+
+### Updated release boundary
+
+- `TENANT_ISOLATION_RELEASED=false`; `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
+- No PR was merged and no migration was applied during this reconciliation.
+- No Edge Function was deployed.
+- No production deployment, migration, or setting was changed.
+- RLS enabled on 64/64 tables is a control baseline, not proof that tenant and branch policies are correct under live JWTs.
+
+### PRD scoring integrity
+
+The previously listed domain percentages are user-supplied historical baselines, not a fresh feature-level audit. The arithmetic mean of those inputs is 28.61%; it must not be presented as actual verified completion. A defensible current 18-domain percentage remains **not calculable** until each feature has a traceable implementation check, staging runtime acceptance, and a defined weighting rubric. The 50% target is not verified.
