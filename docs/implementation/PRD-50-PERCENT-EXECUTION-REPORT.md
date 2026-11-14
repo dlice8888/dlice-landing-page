@@ -109,3 +109,11 @@ A read-only SQL count attempt initially referenced a nonexistent legacy relation
 ### Scoring consequence
 
 The 28.61% figure remains the arithmetic average of the user-provided baseline estimates, not an independently verified implementation score. PR #76 adds code and CI evidence for an Executive Command Center foundation, but because it is not merged into staging and not verified in the staging browser, it does not justify increasing the live-staging progress score. A defensible verified average across all 18 domains remains not calculable until feature-level acceptance evidence is collected consistently.
+
+
+### Additional staging controls — read-only query
+
+- RLS is enabled on all 64 of 64 public tables.
+- Of 155 branch records, 5 are `active` and 150 are `planned`.
+- All 3 tenant membership records are currently `active`.
+- RLS being enabled is a baseline control only; it does not prove the policies correctly deny cross-tenant or cross-branch access. Runtime JWT probes remain required.
