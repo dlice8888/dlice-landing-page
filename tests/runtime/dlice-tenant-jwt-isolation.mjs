@@ -92,7 +92,9 @@ async function loginWithDliceUsername(label, username, password) {
 const tokenA = await loginWithDliceUsername("tenant-a", usernameA, passwordA);
 const tokenB = await loginWithDliceUsername("tenant-b", usernameB, passwordB);
 assert.ok(tokenA, "Tenant A username/password login must succeed");
+console.log(JSON.stringify({ probe: "tenant-a-login", status: "PASS", executed: true }));
 assert.ok(tokenB, "Tenant B username/password login must succeed");
+console.log(JSON.stringify({ probe: "tenant-b-login", status: "PASS", executed: true }));
 
 async function request(name, path, token, init = {}) {
   const response = await fetch(`${base}${path}`, {
@@ -133,6 +135,7 @@ async function verifyIdentity(label, token, expectedUserId) {
 const userA = await verifyIdentity("tenant-a", tokenA, process.env.STAGING_TENANT_A_USER_ID);
 const userB = await verifyIdentity("tenant-b", tokenB, process.env.STAGING_TENANT_B_USER_ID);
 assert.notEqual(userA, userB, "Tenant fixtures must use different user identities");
+console.log(JSON.stringify({ probe: "tenant-identities-distinct", status: "PASS", executed: true }));
 
 async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBranchId) {
   const unscoped = await request(`${label}-business-unscoped-inventory-denied`, "/functions/v1/dlice-orders", token, {
@@ -149,12 +152,14 @@ async function verifyBusinessInventoryScope(label, token, ownBranchId, foreignBr
   const ownPayload = JSON.parse(own.text);
   assert.ok(Array.isArray(ownPayload.balances), `${label} own-branch response must include balances`);
   assert.ok(ownPayload.balances.every((row) => row.branch_id === ownBranchId), `${label} own-branch response leaked balances from another branch`);
+  console.log(JSON.stringify({ probe: `${label}-own-branch-read`, status: "PASS", executed: true }));
 
   const foreign = await request(`${label}-business-foreign-branch-inventory-denied`, "/functions/v1/dlice-orders", token, {
     method: "POST",
     body: JSON.stringify({ action: "erp-list-inventory", branch_id: foreignBranchId }),
   });
   assert.equal(foreign.response.status, 403, `${label} must be denied access to a foreign tenant branch`);
+  console.log(JSON.stringify({ probe: `${label}-cross-tenant-read-denied`, status: "PASS", executed: true }));
 }
 await verifyBusinessInventoryScope("tenant-a", tokenA, branchA, branchB);
 await verifyBusinessInventoryScope("tenant-b", tokenB, branchB, branchA);
@@ -216,6 +221,7 @@ async function verifyForeignWriteDenied(label, token, ownBranchId, foreignBranch
     }),
   });
   assert.equal(response.status, 403, `${label} must be denied before creating a cross-tenant stock transfer`);
+  console.log(JSON.stringify({ probe: `${label}-cross-tenant-write-denied`, status: "PASS", executed: true }));
 }
 await verifyForeignWriteDenied("tenant-a", tokenA, branchA, branchB);
 await verifyForeignWriteDenied("tenant-b", tokenB, branchB, branchA);
