@@ -5,13 +5,6 @@ create extension if not exists pgtap with schema extensions;
 select plan(6);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-select throws_ok(
-  $$select public.dlice_get_command_center_summary('{}'::uuid[], date '2026-01-01', date '2026-01-01')$$,
-  '42501',
-  'service_role_required',
-  'rejects callers outside service_role'
-);
-
 select ok(
   not has_function_privilege(
     'anon',
@@ -19,6 +12,15 @@ select ok(
     'execute'
   ),
   'does not grant RPC execution to anon'
+);
+
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'public.dlice_get_command_center_summary(uuid[],date,date)',
+    'execute'
+  ),
+  'does not grant RPC execution to authenticated'
 );
 
 select set_config('request.jwt.claim.role', 'service_role', true);
