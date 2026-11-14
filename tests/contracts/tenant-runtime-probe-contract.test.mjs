@@ -46,6 +46,7 @@ test("runtime tenant gate records every required probe and validates active tena
     assert.ok(probe.includes(field), `probe evidence is missing ${field}`);
   }
   assert.match(probe, /erp-list-tenant-memberships/);
+  assert.match(probe, /balances\.length\s*>\s*0/, "own-branch read must prove at least one real inventory row");
   assert.match(probe, /status\s*===?\s*["']active["']/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
