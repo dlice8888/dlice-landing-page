@@ -51,6 +51,30 @@ The Edge Function must fail closed if its required URL/key variables are missing
 5. Deploy the reviewed code, verify production health and order flow, and retain the previous working deployment for rollback.
 6. If any critical order/payment/tracking test fails, stop rollout and revert code or apply a reviewed forward-fix. Never try untested schema rollback against live orders.
 
+## GitHub Actions staging tenant-isolation fixtures
+
+The trusted `staging` Environment must contain these six secrets (values are never printed by the workflow):
+
+- `STAGING_SUPABASE_URL`
+- `STAGING_SUPABASE_PUBLIC_KEY`
+- `STAGING_TENANT_A_USERNAME`
+- `STAGING_TENANT_A_PASSWORD`
+- `STAGING_TENANT_B_USERNAME`
+- `STAGING_TENANT_B_PASSWORD`
+
+Keep fixture identifiers in Environment variables, not in workflow YAML:
+
+| Variable | Verified staging fixture |
+| --- | --- |
+| `STAGING_TENANT_A_ID` | `00000000-0000-4000-8000-000000000001` |
+| `STAGING_TENANT_B_ID` | `00000000-0000-4000-8000-000000000002` |
+| `STAGING_TENANT_A_BRANCH_ID` | `90000000-0000-4000-8000-000000000001` |
+| `STAGING_TENANT_B_BRANCH_ID` | `90000000-0000-4000-8000-000000000004` |
+| `STAGING_TENANT_A_USER_ID` | `b930897c-f8fb-443b-9056-e70c08b31446` |
+| `STAGING_TENANT_B_USER_ID` | `e1de1ffc-9fae-412f-9dd7-0993b54cb631` |
+
+These are non-secret fixture identifiers verified against the current staging database. The runtime workflow must fail closed when any variable is missing or mismatched; do not restore hard-coded fallbacks or use the Owner account as Tenant A.
+
 ## Environment variable policy
 
 - `SUPABASE_URL`: environment-specific Supabase project URL; staging must point to staging and production to production.
@@ -69,6 +93,7 @@ Use the existing Supabase advisor/logging, Vercel deployment/build/runtime logs,
 
 Some controls cannot be enforced by repository code alone:
 - Leaked-password protection requires a Supabase Auth dashboard toggle in each environment.
+- Platform Owner authorization requires a server-managed Auth `app_metadata.platform_owner=true` boolean and a matching `DLICE_PLATFORM_OWNER_USER_IDS` Edge Function allowlist entry; update through the authorized Auth Admin path, never by direct SQL against `auth.users`.
 - GitHub branch protection / required status checks need repository settings or permissions not exposed by this workflow.
 - Vercel preview deployment protection must be enabled/verified in project settings. Do not turn on a protection mode that blocks the Owner's testing without configuring a safe access path first.
 - Five-star Google Maps review carousel is intentionally not fabricated; only show reviews from a verified, permitted source. The existing Google Maps link is the no-cost fallback.
