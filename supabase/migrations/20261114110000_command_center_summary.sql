@@ -5,13 +5,10 @@ create or replace function public.dlice_get_command_center_summary(
 )
 returns jsonb
 language plpgsql
-security definer
+security invoker
 set search_path to ''
 as $function$
 begin
-  if auth.role() is distinct from 'service_role' then
-    raise exception 'service_role_required' using errcode = '42501';
-  end if;
 
   if p_branch_ids is null or cardinality(p_branch_ids) > 500 then
     raise exception 'invalid_branch_scope' using errcode = '22023';
