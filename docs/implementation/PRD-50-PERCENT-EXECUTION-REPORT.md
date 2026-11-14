@@ -182,3 +182,16 @@ The presence of schema and fixture rows is not proof of a completed operating wo
 ### PRD scoring integrity
 
 The previously listed domain percentages are user-supplied historical baselines, not a fresh feature-level audit. The arithmetic mean of those inputs is 28.61%; it must not be presented as actual verified completion. A defensible current 18-domain percentage remains **not calculable** until each feature has a traceable implementation check, staging runtime acceptance, and a defined weighting rubric. The 50% target is not verified.
+
+
+### Command Center RPC security hardening — 2026-11-15
+
+A source-level security correction was committed to PR #76:
+- `dlice_get_command_center_summary` now uses `SECURITY INVOKER`, not `SECURITY DEFINER`.
+- EXECUTE remains revoked from `PUBLIC`, `anon`, and `authenticated`, and granted only to `service_role`.
+- Removed the deprecated `auth.role()` authorization branch; access is enforced by PostgreSQL function privileges and the Edge Function's authenticated Platform Owner gate.
+- Updated pgTAP to assert that both `anon` and `authenticated` lack EXECUTE, and updated the source contract to prohibit SECURITY DEFINER and auth.role() in this RPC.
+
+Commit: `586e122e267a8a1656158b639325d3ae500db8b6`.
+Vercel Preview for this head: READY at https://dlice-landing-page-mkr4ujxrc-dlice8888-7332.vercel.app.
+The Preview is not staging acceptance. No GitHub Actions run for this exact head was returned at the time of this update; CI and disposable migration replay for the revised SQL/test suite remain pending. No staging/production migration or deployment was performed.
