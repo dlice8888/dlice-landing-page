@@ -48,7 +48,8 @@ test("generic owner role cannot grant platform-wide bypass without allowlisted i
   assert.match(edge, /\.select\("tenant_id,role,permissions"\)/);
   assert.match(edge, /\.eq\("status", "active"\)/);
   assert.match(edge, /resolveTenantScopedPermissions\(memberships\)/);
-  assert.doesNotMatch(edge, /admin\.from\("admin_profiles"\)\.select\([^)]*permissions/);
+  assert.match(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,username"\)/);
+  assert.doesNotMatch(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,permissions,username"\)/);
   assert.match(edge, /actor\.profile\.permissions\.includes\("\*"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*===\s*"owner"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*!==\s*"owner"\)/);
