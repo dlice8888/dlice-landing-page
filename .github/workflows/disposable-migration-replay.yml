@@ -35,10 +35,18 @@ jobs:
           trap cleanup EXIT
           cd "$tmp"
           supabase init
-          mkdir -p supabase/migrations
+          mkdir -p supabase/migrations supabase/tests
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
+          cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/
           echo "Replay commit: $GITHUB_SHA"
           echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
-          supabase start
+          start_log="$tmp/supabase-start.log"
+          if ! supabase start >"$start_log" 2>&1; then
+            echo "::error::Disposable Supabase failed to start."
+            grep -viE '(key|secret|password|jwt|token|authorization|bearer)' "$start_log" | tail -80 || true
+            exit 1
+          fi
+          rm -f "$start_log"
           supabase db reset
           echo "PASS: all repository migrations applied to the disposable local database."
+          supabase test db

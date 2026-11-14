@@ -47,3 +47,9 @@ This slice is not a full SOP platform. It does not yet include configurable chec
 ## Rollback
 
 The migration is additive. If runtime validation fails, disable the new navigation/action use by reverting the feature branch; do not drop the table while audit evidence may exist. Keep the table in staging until the failure is understood. No production change is part of this rollout.
+
+## Atomic audit follow-up — 2026-11-14
+
+The checklist mutation handlers now call `dlice_manage_branch_checklist`, which commits each run/item/status change and its audit row in the same PostgreSQL transaction. The function is executable only by `service_role`; the Edge Function continues to authenticate the actor and check branch access before calling it. Concurrent edits are rejected by the expected-version check, and retries of start/completion are idempotent.
+
+Migration `20261114120000_atomic_branch_checklist_audit.sql` is additive and has **not** been applied to shared staging or production. The disposable migration workflow runs the 27 pgTAP assertions in `supabase/tests/branch_checklist_atomic_audit.test.sql`, including rollback on forced audit insertion failure for create, item update, blocked completion, and completion. Authenticated branch-role browser acceptance and staging deployment remain outstanding; do not treat this follow-up as tenant-isolation certification.

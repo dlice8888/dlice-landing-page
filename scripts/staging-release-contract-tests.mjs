@@ -9,6 +9,7 @@ const html = read("index.html");
 const track = read("track.html");
 const erp = read("erp.html");
 const branchChecklistMigration = read("supabase/migrations/20261021182634_branch_operation_checklists.sql");
+const atomicBranchChecklistMigration = read("supabase/migrations/20261114120000_atomic_branch_checklist_audit.sql");
 const stockWorkflowMigration = read("supabase/migrations/20261022124132_stock_transfers_and_counts.sql");
 const stockWorkflowAccessMigration = read("supabase/migrations/20261023003006_revoke_direct_client_access_stock_workflows.sql");
 const retention = read("supabase/migrations/20261020171825_safe_operational_retention_and_rpc_acl.sql");
@@ -62,8 +63,9 @@ const checks = [
   ["branch checklist actions are explicitly permission-gated", /"erp-list-branch-checklists": "branches"[\s\S]*?"erp-start-branch-checklist": "branches"[\s\S]*?"erp-update-branch-checklist-item": "branches"[\s\S]*?"erp-complete-branch-checklist": "branches"/.test(edge)],
   ["branch checklist actions verify active branch assignment", /const checklistContext = async[\s\S]{0,500}branchAccess\(branchId\)/.test(edge) && /if \(!await branchAccess\(run\.branch_id\)\)/.test(edge)],
   ["branch checklist business date uses the branch timezone", /new Intl\.DateTimeFormat\("en-GB", \{[\s\S]{0,180}timeZone: branch\.timezone/.test(edge)],
-  ["branch checklist item updates use optimistic concurrency", /eq\("id", runId\)\.eq\("version", run\.version\)/.test(edge)],
-  ["critical checklist failures block completion", /criticalFailures = items\.filter\(\(item\) => item\.critical && item\.status !== "passed"\)/.test(edge) && /Checklist tertahan: semua item kritis/.test(edge)],
+  ["branch checklist mutations use a service-role-only atomic RPC with optimistic concurrency", /p_action: "update_item"[\s\S]{0,300}p_expected_version: run\.version/.test(edge) && /v_run\.version <> p_expected_version/.test(atomicBranchChecklistMigration) && /REVOKE ALL ON FUNCTION public\.dlice_manage_branch_checklist[\s\S]*FROM public, anon, authenticated/i.test(atomicBranchChecklistMigration) && /GRANT EXECUTE ON FUNCTION public\.dlice_manage_branch_checklist[\s\S]*TO service_role/i.test(atomicBranchChecklistMigration)],
+  ["branch checklist audit insertion failure rolls back the workflow transaction", /INSERT INTO public\.admin_audit_logs/.test(atomicBranchChecklistMigration) && /branch_checklist_started/.test(atomicBranchChecklistMigration) && /branch_checklist_item_updated/.test(atomicBranchChecklistMigration) && /branch_checklist_blocked/.test(atomicBranchChecklistMigration) && /branch_checklist_completed/.test(atomicBranchChecklistMigration)],
+  ["critical checklist failures block completion", /item->'critical' = 'true'::jsonb/.test(atomicBranchChecklistMigration) && /SET status = 'blocked'/.test(atomicBranchChecklistMigration) && /result\?\.blocked/.test(edge) && /Checklist tertahan: semua item kritis/.test(edge)],
   ["branch checklist table denies direct client access", /ALTER TABLE public\.branch_operation_checklist_runs ENABLE ROW LEVEL SECURITY/i.test(branchChecklistMigration) && /AS RESTRICTIVE FOR ALL TO anon, authenticated\s+USING \(false\) WITH CHECK \(false\)/i.test(branchChecklistMigration) && /REVOKE ALL ON TABLE public\.branch_operation_checklist_runs FROM anon, authenticated/i.test(branchChecklistMigration)],
   ["ERP workspace exposes opening/closing checklist view", /id="operationsView"/.test(erp) && /startOpeningChecklist/.test(erp) && /startClosingChecklist/.test(erp) && /erp-complete-branch-checklist/.test(erp)],
   ["stock transfer and count actions are permission-gated", /"erp-create-stock-transfer": "inventory"/.test(edge) && /"erp-post-stock-count": "inventory"/.test(edge)],

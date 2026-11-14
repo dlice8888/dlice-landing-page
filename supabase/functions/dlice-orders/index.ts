@@ -1038,6 +1038,23 @@ Deno.serve(async (req: Request) => {
     const part = (name: string) => parts.find((p) => p.type === name)?.value || "";
     return { branch, businessDate: `${part("year")}-${part("month")}-${part("day")}` };
   };
+  const checklistMutationFailure = (error: { code?: string }) => {
+    const status = error.code === "42501" ? 403
+      : error.code === "P0002" ? 404
+      : ["40001", "55000"].includes(error.code || "") ? 409
+      : error.code === "22023" ? 422
+      : 500;
+    const message = error.code === "40001"
+      ? "Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi."
+      : error.code === "55000"
+      ? "Checklist yang sudah selesai tidak dapat diubah."
+      : error.code === "P0002"
+      ? "Checklist atau item tidak ditemukan."
+      : error.code === "22023"
+      ? "Data checklist tidak valid atau belum lengkap."
+      : "Perubahan checklist gagal disimpan bersama audit.";
+    return fail(message, status, origin);
+  };
 
   if (action === "erp-list-branch-checklists") {
     const branchId = safeText(body.branch_id, 80);
@@ -1058,29 +1075,20 @@ Deno.serve(async (req: Request) => {
     const context = await checklistContext(branchId);
     if ("error" in context) return context.error;
     if (context.branch.status !== "active") return fail("Checklist operasional hanya dapat dimulai pada cabang berstatus aktif.", 409, origin);
-    const { data: existing, error: existingError } = await admin.from("branch_operation_checklist_runs")
-      .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
-      .eq("branch_id", branchId).eq("business_date", context.businessDate).eq("checklist_type", checklistType).maybeSingle();
-    if (existingError) return fail("Status checklist gagal diperiksa.", 500, origin);
-    if (existing) return json({ run: existing, existing: true }, 200, origin);
     const items = branchChecklistTemplates[checklistType].map((item) => ({
       ...item, status: "pending", notes: "", checked_by: null, checked_at: null,
     }));
-    const { data: run, error } = await admin.from("branch_operation_checklist_runs").insert({
-      branch_id: branchId, business_date: context.businessDate, checklist_type: checklistType,
-      template_version: 1, items, status: "in_progress", started_by: actor.user.id,
-    }).select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at").single();
-    if (error) {
-      if (error.code === "23505") {
-        const { data: raced } = await admin.from("branch_operation_checklist_runs")
-          .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
-          .eq("branch_id", branchId).eq("business_date", context.businessDate).eq("checklist_type", checklistType).maybeSingle();
-        if (raced) return json({ run: raced, existing: true }, 200, origin);
-      }
-      return fail("Checklist gagal dimulai.", 500, origin);
-    }
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_started", entity_type: "branch_operation_checklist_run", entity_id: run.id, metadata: { branch_id: branchId, checklist_type: checklistType, business_date: context.businessDate } });
-    return json({ run, existing: false }, 201, origin);
+    const { data: result, error } = await admin.rpc("dlice_manage_branch_checklist", {
+      p_action: "start",
+      p_actor_user_id: actor.user.id,
+      p_branch_id: branchId,
+      p_business_date: context.businessDate,
+      p_checklist_type: checklistType,
+      p_items: items,
+    });
+    if (error) return checklistMutationFailure(error);
+    if (!result?.run) return fail("Checklist gagal dimulai.", 500, origin);
+    return json(result, result.existing ? 200 : 201, origin);
   }
 
   if (action === "erp-update-branch-checklist-item") {
@@ -1097,17 +1105,18 @@ Deno.serve(async (req: Request) => {
     if (!run) return fail("Checklist tidak ditemukan.", 404, origin);
     if (!await branchAccess(run.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     if (run.status === "completed") return fail("Checklist yang sudah selesai tidak dapat diubah.", 409, origin);
-    const items = Array.isArray(run.items) ? run.items as { key: string; status: string; critical: boolean; notes?: string; checked_by?: string | null; checked_at?: string | null }[] : [];
-    if (!items.some((item) => item.key === itemKey)) return fail("Item checklist tidak ditemukan.", 404, origin);
-    const now = new Date().toISOString();
-    const updatedItems = items.map((item) => item.key === itemKey ? { ...item, status: itemStatus, notes: itemNotes, checked_by: actor.user.id, checked_at: now } : item);
-    const { data: updated, error: updateError } = await admin.from("branch_operation_checklist_runs")
-      .update({ items: updatedItems, version: Number(run.version || 1) + 1, updated_at: now })
-      .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
-    if (updateError) return fail("Item checklist gagal disimpan.", 500, origin);
-    if (!updated) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_item_updated", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { checklist_type: run.checklist_type, business_date: run.business_date, item_key: itemKey, item_status: itemStatus } });
-    return json({ ok: true, version: updated.version }, 200, origin);
+    const { data: result, error: updateError } = await admin.rpc("dlice_manage_branch_checklist", {
+      p_action: "update_item",
+      p_actor_user_id: actor.user.id,
+      p_run_id: runId,
+      p_item_key: itemKey,
+      p_item_status: itemStatus,
+      p_notes: itemNotes,
+      p_expected_version: run.version,
+    });
+    if (updateError) return checklistMutationFailure(updateError);
+    if (result?.ok !== true) return fail("Item checklist gagal disimpan.", 500, origin);
+    return json(result, 200, origin);
   }
 
   if (action === "erp-complete-branch-checklist") {
@@ -1119,28 +1128,16 @@ Deno.serve(async (req: Request) => {
     if (error) return fail("Checklist gagal dimuat.", 500, origin);
     if (!run) return fail("Checklist tidak ditemukan.", 404, origin);
     if (!await branchAccess(run.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
-    if (run.status === "completed") return json({ ok: true, status: "completed" }, 200, origin);
-    const items = Array.isArray(run.items) ? run.items as { key: string; label: string; status: string; critical: boolean; notes?: string }[] : [];
-    if (!items.length || items.some((item) => item.status === "pending")) return fail("Semua item harus diperiksa sebelum checklist diselesaikan.", 422, origin);
-    if (items.some((item) => item.status === "failed" && !(item.notes || "").trim())) return fail("Item gagal wajib memiliki catatan.", 422, origin);
-    const criticalFailures = items.filter((item) => item.critical && item.status !== "passed");
-    const now = new Date().toISOString();
-    if (criticalFailures.length) {
-      const { data: blocked, error: blockError } = await admin.from("branch_operation_checklist_runs")
-        .update({ status: "blocked", version: Number(run.version || 1) + 1, updated_at: now })
-        .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
-      if (blockError) return fail("Status checklist gagal diperbarui.", 500, origin);
-      if (!blocked) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
-      await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_blocked", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { checklist_type: run.checklist_type, business_date: run.business_date, failed_critical_items: criticalFailures.map((item) => item.key) } });
-      return fail("Checklist tertahan: semua item kritis harus berstatus lulus.", 409, origin);
-    }
-    const { data: completed, error: completeError } = await admin.from("branch_operation_checklist_runs")
-      .update({ status: "completed", completed_by: actor.user.id, completed_at: now, version: Number(run.version || 1) + 1, updated_at: now })
-      .eq("id", runId).eq("version", run.version).select("id,version").maybeSingle();
-    if (completeError) return fail("Checklist gagal diselesaikan.", 500, origin);
-    if (!completed) return fail("Checklist berubah oleh pengguna lain. Muat ulang sebelum mencoba lagi.", 409, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "branch_checklist_completed", entity_type: "branch_operation_checklist_run", entity_id: runId, metadata: { branch_id: run.branch_id, checklist_type: run.checklist_type, business_date: run.business_date } });
-    return json({ ok: true, status: "completed", completed_at: now }, 200, origin);
+    const { data: result, error: completeError } = await admin.rpc("dlice_manage_branch_checklist", {
+      p_action: "complete",
+      p_actor_user_id: actor.user.id,
+      p_run_id: runId,
+      p_expected_version: run.version,
+    });
+    if (completeError) return checklistMutationFailure(completeError);
+    if (result?.blocked) return fail("Checklist tertahan: semua item kritis harus berstatus lulus.", 409, origin);
+    if (result?.ok !== true) return fail("Checklist gagal diselesaikan.", 500, origin);
+    return json(result, 200, origin);
   }
 
   if (action === "erp-list-branches") {

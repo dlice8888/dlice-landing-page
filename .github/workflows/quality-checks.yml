@@ -33,6 +33,8 @@ jobs:
         run: node --test tests/contracts/tenant-refund-scope-contract.test.mjs
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
+      - name: Verify atomic branch checklist contract
+        run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
       - name: Require migration and documentation review
         shell: bash
         env:
