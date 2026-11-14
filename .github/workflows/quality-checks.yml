@@ -29,6 +29,8 @@ jobs:
         run: node scripts/quality-checks.mjs
       - name: Run staging release contract tests
         run: node scripts/staging-release-contract-tests.mjs
+      - name: Verify atomic tenant bootstrap contract
+        run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
       - name: Run tenant refund authorization contract tests
         run: node --test tests/contracts/tenant-refund-scope-contract.test.mjs
       - name: Verify staging secret workflow triggers

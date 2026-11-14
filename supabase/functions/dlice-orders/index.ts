@@ -408,11 +408,17 @@ Deno.serve(async (req: Request) => {
     const username = safeText(body.username, 32);
     const password = typeof body.password === "string" ? body.password : "";
     if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Nama pengguna atau kata sandi penyiapan awal tidak memenuhi ketentuan.", 422, origin);
-    const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username } });
+    const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, app_metadata: { platform_owner: true }, user_metadata: { username } });
     if (createError || !created.user) return fail("Akun Pemilik gagal dibuat.", 500, origin);
-    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "owner", display_name: "Owner D’Lice", is_active: true, permissions: ["*"] });
-    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail("Profil Pemilik gagal dibuat.", 500, origin); }
-    await admin.from("admin_audit_logs").insert({ actor_user_id: created.user.id, action: "bootstrap_owner", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username } });
+    const { error: bootstrapError } = await admin.rpc("dlice_bootstrap_initial_owner", { p_user_id: created.user.id, p_username: username });
+    if (bootstrapError) {
+      if (typeof bootstrapError.code !== "string" || !/^[0-9A-Z]{5}$/.test(bootstrapError.code)) {
+        return fail("Hasil bootstrap belum dapat dipastikan. Verifikasi akun Auth dan transaksi database sebelum mencoba kembali.", 503, origin);
+      }
+      const { error: cleanupError } = await admin.auth.admin.deleteUser(created.user.id);
+      if (cleanupError) return fail("Bootstrap gagal; profil, membership, dan audit tidak tersimpan, tetapi akun Auth sementara memerlukan pembersihan operator.", 500, origin);
+      return fail("Profil, membership, dan audit Pemilik gagal dibuat secara atomik.", bootstrapError.code === "23505" ? 409 : 500, origin);
+    }
     return json({ ok: true }, 201, origin);
   }
 
@@ -804,12 +810,14 @@ Deno.serve(async (req: Request) => {
     if(!isOwner)return fail("Hanya Owner platform yang dapat membuat tenant baru.",403,origin);
     const slug=safeText(body.slug,60).toLowerCase(),legalName=safeText(body.legal_name,180);
     if(!/^[a-z0-9][a-z0-9-]{1,60}$/.test(slug)||legalName.length<2)return fail("Slug atau nama legal tenant tidak valid.",422,origin);
-    const {data:tenant,error}=await admin.from("tenants").insert({slug,legal_name:legalName,status:"trial",plan_code:safeText(body.plan_code,40)||"starter",settings:{}}).select("*").single();
-    if(error||!tenant)return fail("Tenant gagal dibuat; slug mungkin sudah digunakan.",409,origin);
-    const {error:membershipError}=await admin.from("tenant_memberships").insert({tenant_id:tenant.id,user_id:actor.user.id,role:"tenant_owner",permissions:["*"],status:"active"});
-    if(membershipError){await admin.from("tenants").delete().eq("id",tenant.id);return fail("Keanggotaan Owner tenant gagal dibuat.",409,origin);}
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"tenant_created",entity_type:"tenant",entity_id:tenant.id,metadata:{slug,legal_name:legalName}});
-    return json({ok:true,tenant},201,origin);
+    const {data:createdTenant,error}=await admin.rpc("dlice_create_tenant_with_owner",{
+      p_actor_user_id:actor.user.id,
+      p_slug:slug,
+      p_legal_name:legalName,
+      p_plan_code:safeText(body.plan_code,40)||"starter",
+    });
+    if(error||!createdTenant?.tenant)return fail("Tenant, membership, dan audit tidak dapat dibuat secara atomik.",error?.code==="23505"?409:500,origin);
+    return json({ok:true,tenant:createdTenant.tenant},201,origin);
   }
 
   if (action === "erp-invite-tenant-member") {
