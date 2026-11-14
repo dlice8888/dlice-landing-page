@@ -44,7 +44,13 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
 
 test("generic owner role cannot grant platform-wide bypass without allowlisted identity", () => {
   assert.match(edge, /profile\.role === "owner" && PLATFORM_OWNER_USER_IDS\.has\(userData\.user\.id\) && userData\.user\.app_metadata\?\.platform_owner === true/);
-  assert.match(edge, /\.filter\(\(permission: string\) => permission !== "\*"\)/);
+  assert.match(edge, /\.from\("tenant_memberships"\)/);
+  assert.match(edge, /\.select\("tenant_id,role,permissions"\)/);
+  assert.match(edge, /\.eq\("status", "active"\)/);
+  assert.match(edge, /resolveTenantScopedPermissions\(memberships\)/);
+  assert.match(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,username"\)/);
+  assert.doesNotMatch(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,permissions,username"\)/);
+  assert.match(edge, /actor\.profile\.permissions\.includes\("\*"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*===\s*"owner"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*!==\s*"owner"\)/);
   assert.match(edge, /const actorCanAccessBranch = async \(branchId: string \| null \| undefined\): Promise<boolean> => \{\n    if \(isPlatformOwner\) return true;/);
