@@ -43,3 +43,12 @@ test("bootstrap RPCs are service-role-only and write audit inside their transact
     assert.match(migration, new RegExp(`GRANT EXECUTE ON FUNCTION public\\.${fn}[\\s\\S]*?TO service_role`));
   }
 });
+
+
+test("successful bootstrap returns the new Auth UUID for administrator allowlist verification", () => {
+  assert.match(ownerBootstrap, /data:\\s*bootstrapResult/);
+  assert.match(ownerBootstrap, /user_id:\\s*created\\.user\\.id/);
+  assert.match(ownerBootstrap, /platform_owner_allowlist_update_required:\\s*true/);
+  assert.match(ownerBootstrap, /DLICE_OWNER_BOOTSTRAP_SECRET/);
+  assert.match(ownerBootstrap, /count\\s*\\?\\?\\s*0/);
+});
