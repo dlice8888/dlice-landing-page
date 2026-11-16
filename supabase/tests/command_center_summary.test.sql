@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(6);
+select plan(7);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select ok(
@@ -46,6 +46,19 @@ select throws_ok(
   '22023',
   'unsupported_branch_timezone',
   'rejects branches with unsupported timezone configuration'
+);
+
+update public.branches set timezone = null where code = 'DLC-HQ';
+
+select throws_ok(
+  $select public.dlice_get_command_center_summary(
+    array[(select id from public.branches where code = 'DLC-HQ')],
+    current_date,
+    current_date
+  )$,
+  '22023',
+  'unsupported_branch_timezone',
+  'rejects branches with a null timezone configuration'
 );
 
 select is(
