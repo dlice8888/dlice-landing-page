@@ -49,13 +49,13 @@ test("service-role branch mutations derive scope from a database-backed branch a
 
 
 test("every handler using unscoped Head Office helpers remains behind the tenant-isolation release gate", () => {
-  const starts = [...source.matchAll(/^  if\\s*\\(action\\s*===\\s*"([^"]+)"\\)/gm)];
+  const starts = [...source.matchAll(/^  if\s*\(action\s*===\s*"([^"]+)"\)/gm)];
   for (let index = 0; index < starts.length; index++) {
     const action = starts[index][1];
     const start = starts[index].index;
     const end = starts[index + 1]?.index ?? source.length;
     const block = source.slice(start, end);
-    if (/hasHQPermission\\(|hasFinanceHQ\\(/.test(block)) {
+    if (/hasHQPermission\(|hasFinanceHQ\(/.test(block)) {
       assert.ok(gatedActions.has(action), `unscoped HQ helper action is not gated: ${action}`);
     }
   }
