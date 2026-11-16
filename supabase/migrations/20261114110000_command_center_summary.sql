@@ -18,7 +18,7 @@ begin
     select 1
     from public.branches b
     where b.id = any(p_branch_ids)
-      and b.timezone not in ('Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura')
+      and (b.timezone is null or b.timezone not in ('Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura'))
   ) then
     raise exception 'unsupported_branch_timezone' using errcode = '22023';
   end if;
