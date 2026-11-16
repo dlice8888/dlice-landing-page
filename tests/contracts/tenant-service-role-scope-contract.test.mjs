@@ -7,14 +7,14 @@ const source = await readFile(
   "utf8",
 );
 
-const gate = source.match(/const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\\(\\[([\\s\\S]*?)\\]\\);/)?.[1] ?? "";
+const gate = source.match(/const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? "";
 const gatedActions = new Set([...gate.matchAll(/"([^"]+)"/g)].map((match) => match[1]));
 
 test("unscoped service-role inventory and invite handlers remain closed before tenant isolation release", () => {
   for (const action of ["erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory"]) {
     assert.ok(gatedActions.has(action), `missing tenant isolation gate for ${action}`);
   }
-  assert.match(source, /if \\(!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS\\.has\\(action\\)\\)/);
+  assert.match(source, /if \(!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
 });
 
 test("global funnel metrics are not exposed to tenant members before tenant-scoped reporting exists", () => {
@@ -29,9 +29,9 @@ test("global funnel metrics are not exposed to tenant members before tenant-scop
 
 test("service-role branch mutations derive scope from a database-backed branch authorization check", () => {
   const helpers = source.slice(source.indexOf("const actorCanAccessBranch"), source.indexOf("const actorBranchIds"));
-  assert.match(helpers, /branches[\\s\\S]*?select\\("tenant_id"\\)[\\s\\S]*?eq\\("id"/);
-  assert.match(helpers, /tenant_memberships[\\s\\S]*?eq\\("tenant_id"/);
-  assert.match(helpers, /branch_assignments[\\s\\S]*?eq\\("branch_id"/);
+  assert.match(helpers, /branches[\s\S]*?select\("tenant_id"\)[\s\S]*?eq\("id"/);
+  assert.match(helpers, /tenant_memberships[\s\S]*?eq\("tenant_id"/);
+  assert.match(helpers, /branch_assignments[\s\S]*?eq\("branch_id"/);
   for (const [action, marker] of [
     ["erp-open-shift", "branchAccess(branchId)"],
     ["erp-create-pos-sale", "branchAccess(branchId)"],
@@ -41,7 +41,7 @@ test("service-role branch mutations derive scope from a database-backed branch a
     ["erp-create-cash-reconciliation", "branchAccess(branchId)"],
   ]) {
     const start = source.indexOf(`if (action === "${action}")`);
-    const next = source.indexOf("\\n  if (action ===", start + 1);
+    const next = source.indexOf("\n  if (action ===", start + 1);
     const block = source.slice(start, next === -1 ? undefined : next);
     assert.ok(start >= 0 && block.includes(marker), `missing server-side scope guard for ${action}`);
   }
