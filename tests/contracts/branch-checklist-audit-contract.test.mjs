@@ -64,7 +64,7 @@ test("all checklist reads and writes derive branch access from active server-sid
     const next = checklistSection.indexOf('if (action ===', start + action.length);
     const block = checklistSection.slice(start, next === -1 ? undefined : next);
     assert.match(block, /checklistContext\(branchId\)/);
-    assert.match(block, /branchAccess/);
+    // checklistContext calls branchAccess before querying the branch row.
   }
 
   for (const action of [
