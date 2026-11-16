@@ -68,6 +68,7 @@ const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
   "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
   "erp-list-tax-settings", "erp-save-tax-setting",
   "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
+  "erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory",
   "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
   "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
   "admin-upload-media", "admin-delete-media", "erp-upload-media",
@@ -208,6 +209,8 @@ Deno.serve(async (req: Request) => {
   if (action === "admin-funnel-summary") {
     const actor = await getAdmin(req);
     if (!actor) return fail("Sesi operasional tidak valid.", 401, origin);
+    const funnelPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
+    if (!TENANT_ISOLATION_RELEASED && !funnelPlatformOwner) return fail("Ringkasan funnel lintas tenant ditutup sampai isolasi tenant terverifikasi.", 423, origin);
     if (!actor.profile.permissions.includes("*") && !actor.profile.permissions.includes("orders")) return fail("Akses ringkasan tidak diizinkan.", 403, origin);
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await admin.from("funnel_daily_metrics").select("metric_date,event_name,event_count").gte("metric_date", since).order("metric_date", { ascending: true });
