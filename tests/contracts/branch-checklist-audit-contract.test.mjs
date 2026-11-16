@@ -51,9 +51,9 @@ test("all checklist reads and writes derive branch access from active server-sid
     source.indexOf("const branchAccess = async"),
     source.indexOf("const branchIdsForActor = async"),
   );
-  assert.match(accessHelper, /branches[\\s\\S]*?select\\("tenant_id"\\)[\\s\\S]*?eq\\("id",branchId\\)/);
-  assert.match(accessHelper, /tenant_memberships[\\s\\S]*?eq\\("tenant_id",branch\\.tenant_id\\)[\\s\\S]*?eq\\("user_id",actor\\.user\\.id\\)[\\s\\S]*?eq\\("status","active"\\)/);
-  assert.match(accessHelper, /branch_assignments[\\s\\S]*?eq\\("branch_id",branchId\\)[\\s\\S]*?eq\\("user_id",actor\\.user\\.id\\)[\\s\\S]*?eq\\("employment_status","active"\\)/);
+  assert.match(accessHelper, /branches[\s\S]*?select\("tenant_id"\)[\s\S]*?eq\("id",branchId\)/);
+  assert.match(accessHelper, /tenant_memberships[\s\S]*?eq\("tenant_id",branch\.tenant_id\)[\s\S]*?eq\("user_id",actor\.user\.id\)[\s\S]*?eq\("status","active"\)/);
+  assert.match(accessHelper, /branch_assignments[\s\S]*?eq\("branch_id",branchId\)[\s\S]*?eq\("user_id",actor\.user\.id\)[\s\S]*?eq\("employment_status","active"\)/);
 
   for (const action of [
     'if (action === "erp-list-branch-checklists")',
@@ -63,7 +63,7 @@ test("all checklist reads and writes derive branch access from active server-sid
     assert.notEqual(start, -1, `missing ${action}`);
     const next = checklistSection.indexOf('if (action ===', start + action.length);
     const block = checklistSection.slice(start, next === -1 ? undefined : next);
-    assert.match(block, /checklistContext\\(branchId\\)/);
+    assert.match(block, /checklistContext\(branchId\)/);
     assert.match(block, /branchAccess/);
   }
 
@@ -75,8 +75,8 @@ test("all checklist reads and writes derive branch access from active server-sid
     assert.notEqual(start, -1, `missing ${action}`);
     const next = checklistSection.indexOf('if (action ===', start + action.length);
     const block = checklistSection.slice(start, next === -1 ? undefined : next);
-    assert.match(block, /select\\("id,branch_id/);
-    assert.match(block, /branchAccess\\(run\\.branch_id\\)/);
+    assert.match(block, /select\("id,branch_id/);
+    assert.match(block, /branchAccess\(run\.branch_id\)/);
     assert.ok(block.indexOf("branchAccess(run.branch_id)") < block.indexOf("admin.rpc("), "authorization must precede the privileged RPC");
   }
 
@@ -84,5 +84,5 @@ test("all checklist reads and writes derive branch access from active server-sid
     checklistSection.indexOf('if (action === "erp-list-branch-checklists")'),
     checklistSection.indexOf('if (action === "erp-start-branch-checklist")'),
   );
-  assert.match(listBlock, /\\.eq\\("branch_id", branchId\\)\\.eq\\("business_date", context\\.businessDate\\)/);
+  assert.match(listBlock, /\.eq\("branch_id", branchId\)\.eq\("business_date", context\.businessDate\)/);
 });
