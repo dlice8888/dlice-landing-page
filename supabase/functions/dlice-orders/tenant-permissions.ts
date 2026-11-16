@@ -10,8 +10,36 @@
 export type TenantMembershipPermission = {
   tenant_id?: string;
   role?: string;
+  status?: string;
   permissions?: unknown;
 };
+
+export type TenantHeadOfficeAssignment = {
+  tenant_id?: string;
+  is_head_office?: boolean;
+  default_permissions?: unknown;
+};
+
+export function hasTenantScopedHeadOfficePermission(
+  memberships: TenantMembershipPermission[],
+  assignments: TenantHeadOfficeAssignment[],
+  tenantId: string,
+  permission: string,
+): boolean {
+  const isActiveMemberWithPermission = memberships.some((membership) => {
+    if (membership.tenant_id !== tenantId || membership.status !== "active") return false;
+    if (!Array.isArray(membership.permissions)) return false;
+    return membership.permissions.includes(permission) || membership.permissions.includes("*");
+  });
+  if (!isActiveMemberWithPermission) return false;
+
+  return assignments.some((assignment) =>
+    assignment.tenant_id === tenantId &&
+    assignment.is_head_office === true &&
+    Array.isArray(assignment.default_permissions) &&
+    assignment.default_permissions.includes(permission)
+  );
+}
 
 export function resolveTenantScopedPermissions(
   memberships: TenantMembershipPermission[],

@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { resolveTenantScopedPermissions } from "./tenant-permissions.ts";
+import {
+  hasTenantScopedHeadOfficePermission,
+  resolveTenantScopedPermissions,
+} from "./tenant-permissions.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -483,6 +486,39 @@ Deno.serve(async (req: Request) => {
     if (!actor.profile.permissions.includes(permission)) return false;
     const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
+  };
+  const hasHQPermissionForTenant = async (permission: string, tenantId: string): Promise<boolean | null> => {
+    if (isPlatformOwner) return true;
+    if (!actor.profile.permissions.includes(permission)) return false;
+    const [membershipResult, assignmentResult] = await Promise.all([
+      admin.from("tenant_memberships").select("tenant_id,status,permissions")
+        .eq("tenant_id", tenantId).eq("user_id", actor.user.id).eq("status", "active"),
+      admin.from("branch_assignments")
+        .select("branches!inner(tenant_id),job_positions!inner(is_head_office,default_permissions)")
+        .eq("user_id", actor.user.id).eq("employment_status", "active")
+        .eq("branches.tenant_id", tenantId)
+        .lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`),
+    ]);
+    if (membershipResult.error || assignmentResult.error) return null;
+    const assignments = (assignmentResult.data || []).map((assignment: {
+      branches: { tenant_id: string } | { tenant_id: string }[] | null;
+      job_positions: { is_head_office: boolean; default_permissions: unknown } |
+        { is_head_office: boolean; default_permissions: unknown }[] | null;
+    }) => {
+      const branch = Array.isArray(assignment.branches) ? assignment.branches[0] : assignment.branches;
+      const position = Array.isArray(assignment.job_positions) ? assignment.job_positions[0] : assignment.job_positions;
+      return {
+        tenant_id: branch?.tenant_id,
+        is_head_office: position?.is_head_office,
+        default_permissions: position?.default_permissions,
+      };
+    });
+    return hasTenantScopedHeadOfficePermission(
+      membershipResult.data || [],
+      assignments,
+      tenantId,
+      permission,
+    );
   };
 
   const permissionForAction: Record<string, string> = {
@@ -1294,7 +1330,26 @@ Deno.serve(async (req: Request) => {
     if (!transferId || !["approve", "pick", "ship", "receive", "reconcile", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
     const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
     if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
-    if (transition === "approve" && !await hasHQPermission("inventory")) return fail("Persetujuan transfer memerlukan izin Inventory Head Office.", 403, origin);
+    if (transition === "approve") {
+      const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
+        .select("id,tenant_id")
+        .in("id", [transfer.source_branch_id, transfer.destination_branch_id]);
+      if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
+      if (transferBranches?.length !== 2) {
+        return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+      }
+      const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.source_branch_id)?.tenant_id;
+      const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.destination_branch_id)?.tenant_id;
+      if (!sourceTenantId || !destinationTenantId) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+      if (sourceTenantId !== destinationTenantId && !isPlatformOwner) {
+        return fail("Persetujuan transfer lintas tenant hanya tersedia untuk platform owner.", 403, origin);
+      }
+      const approvalAuthorized = await hasHQPermissionForTenant("inventory", sourceTenantId);
+      if (approvalAuthorized === null) return fail("Otorisasi Inventory Head Office gagal diperiksa.", 500, origin);
+      if (!approvalAuthorized) {
+        return fail("Persetujuan transfer memerlukan izin Inventory Head Office pada tenant terkait.", 403, origin);
+      }
+    }
     const branchToCheck = ["receive", "reconcile"].includes(transition) ? transfer.destination_branch_id : transfer.source_branch_id;
     if (transition !== "approve" && !await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
     if (transition === "cancel" && !["draft", "approved", "picked"].includes(transfer.status)) return fail("Transfer hanya dapat dibatalkan sebelum dikirim.", 409, origin);

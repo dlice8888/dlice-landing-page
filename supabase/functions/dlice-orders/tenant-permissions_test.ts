@@ -1,4 +1,41 @@
-import { resolveTenantScopedPermissions } from "./tenant-permissions.ts";
+import {
+  hasTenantScopedHeadOfficePermission,
+  resolveTenantScopedPermissions,
+} from "./tenant-permissions.ts";
+
+Deno.test("Head Office permission requires an active membership and assignment in the target tenant", () => {
+  const allowed = hasTenantScopedHeadOfficePermission(
+    [{ tenant_id: "tenant-a", status: "active", permissions: ["inventory"] }],
+    [{ tenant_id: "tenant-a", is_head_office: true, default_permissions: ["inventory"] }],
+    "tenant-a",
+    "inventory",
+  );
+  if (!allowed) throw new Error("Expected matching tenant membership and Head Office assignment to grant access");
+
+  const crossTenantAssignment = hasTenantScopedHeadOfficePermission(
+    [{ tenant_id: "tenant-a", status: "active", permissions: ["inventory"] }],
+    [{ tenant_id: "tenant-b", is_head_office: true, default_permissions: ["inventory"] }],
+    "tenant-a",
+    "inventory",
+  );
+  if (crossTenantAssignment) throw new Error("A Head Office assignment in another tenant must not grant access");
+});
+
+Deno.test("inactive membership or non-Head Office assignment cannot approve tenant transfers", () => {
+  const inactiveMember = hasTenantScopedHeadOfficePermission(
+    [{ tenant_id: "tenant-a", status: "inactive", permissions: ["inventory"] }],
+    [{ tenant_id: "tenant-a", is_head_office: true, default_permissions: ["inventory"] }],
+    "tenant-a",
+    "inventory",
+  );
+  const nonHeadOffice = hasTenantScopedHeadOfficePermission(
+    [{ tenant_id: "tenant-a", status: "active", permissions: ["inventory"] }],
+    [{ tenant_id: "tenant-a", is_head_office: false, default_permissions: ["inventory"] }],
+    "tenant-a",
+    "inventory",
+  );
+  if (inactiveMember || nonHeadOffice) throw new Error("Approval must require active membership and a Head Office assignment");
+});
 
 Deno.test("tenant grants are intersected, never unioned across tenants", () => {
   const permissions = resolveTenantScopedPermissions([
