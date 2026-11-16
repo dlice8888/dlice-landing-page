@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(6);
+select plan(7);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
 select ok(
@@ -21,6 +21,17 @@ select ok(
     'execute'
   ),
   'does not grant RPC execution to authenticated'
+);
+
+select ok(
+  exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'branches'
+      and column_name = 'timezone'
+      and is_nullable = 'NO'
+  ),
+  'requires a non-null branch timezone at the schema boundary'
 );
 
 select set_config('request.jwt.claim.role', 'service_role', true);
