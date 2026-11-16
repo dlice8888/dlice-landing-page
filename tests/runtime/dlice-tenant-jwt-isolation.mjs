@@ -347,12 +347,16 @@ if (
           membership.status === "active"
         ) &&
         !membershipsB.some((membership) => membership.tenant_id === tenantA);
+      // These QA identities are intentionally assigned to exactly one branch each.
+      // Check the complete visible branch set, not merely that the expected branch appears.
       const branchAAssignmentIsCorrect = Array.isArray(branchesA) &&
-        branchesA.some((branch) => branch.id === branchA && branch.code === branchCodeA) &&
-        !branchesA.some((branch) => branch.id === branchB);
+        branchesA.length === 1 &&
+        branchesA[0].id === branchA &&
+        branchesA[0].code === branchCodeA;
       const branchBAssignmentIsCorrect = Array.isArray(branchesB) &&
-        branchesB.some((branch) => branch.id === branchB && branch.code === branchCodeB) &&
-        !branchesB.some((branch) => branch.id === branchA);
+        branchesB.length === 1 &&
+        branchesB[0].id === branchB &&
+        branchesB[0].code === branchCodeB;
       const identityMatchesFixtures = userA === userIdA && userB === userIdB && userA !== userB;
       const passed = identityAResult.response.status === 200 &&
         identityBResult.response.status === 200 &&
