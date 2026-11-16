@@ -23,3 +23,6 @@ The migration has disposable-database pgTAP coverage for service-role-only
 execution, membership permissions, successful writes, and rollback on audit
 failure. Applying the migration to staging still requires independent review
 and the applicable release gates.
+
+
+After a successful bootstrap, the response includes the created Auth user UUID and explicitly states that the platform-owner allowlist still requires an authorized administrator update. Do not treat the Auth metadata flag alone as sufficient platform-owner authorization. Add the UUID to the server-side `PLATFORM_OWNER_USER_IDS` / `DLICE_PLATFORM_OWNER_USER_IDS` allowlist through the approved secret-management process, then verify the boolean Auth app metadata and effective Owner authorization. Never send the bootstrap secret or password to chat or logs.
