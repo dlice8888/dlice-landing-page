@@ -1,0 +1,105 @@
+name: Staging Tenant Isolation Acceptance
+
+# Run only from the trusted staging branch; never expose staging credentials to PR code.
+on:
+  push:
+    branches: [staging]
+    paths:
+      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/functions/dlice-orders/tenant-permissions.ts"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-tenant-isolation-acceptance
+  cancel-in-progress: false
+
+jobs:
+  tenant-isolation:
+    name: Authenticated tenant isolation P01-P09
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    env:
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
+      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
+      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
+      STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
+      STAGING_TENANT_B_ID: ${{ vars.STAGING_TENANT_B_ID }}
+      STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
+      STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
+      STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
+      STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
+      STAGING_TENANT_A_USER_ID: ${{ vars.STAGING_TENANT_A_USER_ID }}
+      STAGING_TENANT_B_USER_ID: ${{ vars.STAGING_TENANT_B_USER_ID }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Preflight and execute all tenant-isolation probes
+        id: probes
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node tests/runtime/dlice-tenant-jwt-isolation.mjs > staging-tenant-isolation-evidence.jsonl 2>&1
+          result=$?
+          set -e
+          cat staging-tenant-isolation-evidence.jsonl
+          echo "exit_code=$result" >> "$GITHUB_OUTPUT"
+          exit "$result"
+      - name: Summarize P01-P09 and configuration preflight
+        if: always()
+        env:
+          PROBE_EXIT_CODE: ${{ steps.probes.outputs.exit_code }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs";
+          const output = process.env.GITHUB_STEP_SUMMARY;
+          const records = readFileSync("staging-tenant-isolation-evidence.jsonl", "utf8")
+            .split(/\r?\n/)
+            .flatMap((line) => {
+              try { return [JSON.parse(line)]; } catch { return []; }
+            });
+          const probes = records.filter((record) => /^P\d\d$/.test(record.probeId));
+          const summary = records.find((record) => record.probeId === "SUMMARY");
+          const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
+          const status = summary?.status ?? "BLOCKED";
+          const rows = probes.map((probe) =>
+            `| ${probe.probeId} | ${probe.status} | ${probe.timestamp ?? "not recorded"} | ${String(probe.actualResult ?? "No probe result").replaceAll("|", "\\|")} |`
+          );
+          appendFileSync(output, [
+            "## Staging tenant-isolation acceptance",
+            "",
+            `- Result: **${status}**`,
+            `- Commit: \`${process.env.GITHUB_SHA}\``,
+            `- Workflow run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}/attempts/${process.env.GITHUB_RUN_ATTEMPT}`,
+            `- Configuration inputs individually checked: ${preflight.length}; values were not logged`,
+            `- Counts: PASS ${summary?.pass ?? 0}, FAILED ${summary?.fail ?? 0}, BLOCKED ${summary?.blocked ?? 9}, SKIPPED ${summary?.skipped ?? 0}`,
+            "",
+            "| Probe | Status | Timestamp (UTC) | Result |",
+            "|---|---|---|---|",
+            ...rows,
+            "",
+            "Full structured evidence is in this job's retained log under the probe step.",
+            "",
+          ].join("\n"));
+          NODE
+      - name: Enforce complete P01-P09 acceptance
+        if: always()
+        env:
+          PROBE_EXIT_CODE: ${{ steps.probes.outputs.exit_code }}
+        run: |
+          if [ "${PROBE_EXIT_CODE:-}" != "0" ]; then
+            echo "::error::Staging tenant-isolation acceptance did not pass; see the structured evidence above."
+            exit 1
+          fi

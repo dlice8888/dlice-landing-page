@@ -47,6 +47,7 @@ function recordProbe({
 }) {
   const result = {
     probeId: id,
+    timestamp: new Date().toISOString(),
     authIdentity,
     tenantScope,
     branchScope,
@@ -134,8 +135,39 @@ function configurationProblems() {
     ["STAGING_TENANT_B_USER_ID", userIdB],
   ];
   const missingInputNames = inputs.filter(([, value]) => value === undefined).map(([name]) => name);
-  const emptyInputNames = inputs.filter(([, value]) => value === "").map(([name]) => name);
+  const emptyInputNames = inputs.filter(([, value]) => typeof value === "string" && value.trim() === "").map(([name]) => name);
   const configurationErrors = [];
+  const distinctUsernames = usernameA?.trim().toLowerCase() !== usernameB?.trim().toLowerCase();
+  const distinctTenantIds = tenantA !== tenantB;
+  const distinctBranchIds = branchA !== branchB;
+  const distinctUserIds = userIdA !== userIdB;
+  const checks = inputs.map(([name, value]) => {
+    let valid = typeof value === "string" && value.trim().length > 0;
+    if (valid && name === "STAGING_SUPABASE_URL") {
+      try {
+        const url = new URL(value);
+        valid = url.protocol === "https:" &&
+          url.hostname === "higoadrzxnhzbbwhdbmh.supabase.co" &&
+          url.pathname === "/" &&
+          !url.search &&
+          !url.hash;
+      } catch {
+        valid = false;
+      }
+    } else if (valid && name === "STAGING_SUPABASE_PUBLIC_KEY") {
+      valid = isPublicSupabaseKey(value);
+    } else if (valid && name.endsWith("_USERNAME")) {
+      valid = /^[a-zA-Z0-9._-]{3,32}$/.test(value.trim()) && distinctUsernames;
+    } else if (valid && name.endsWith("_ID")) {
+      valid = isUuid(value);
+      if (["STAGING_TENANT_A_ID", "STAGING_TENANT_B_ID"].includes(name)) valid &&= distinctTenantIds;
+      if (["STAGING_TENANT_A_BRANCH_ID", "STAGING_TENANT_B_BRANCH_ID"].includes(name)) valid &&= distinctBranchIds;
+      if (["STAGING_TENANT_A_USER_ID", "STAGING_TENANT_B_USER_ID"].includes(name)) valid &&= distinctUserIds;
+    } else if (valid && name.endsWith("_BRANCH_CODE")) {
+      valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B");
+    }
+    return { name, status: valid ? "PASS" : "FAIL" };
+  });
 
   if (base) {
     try {
@@ -154,31 +186,36 @@ function configurationProblems() {
     configurationErrors.push("Tenant A and Tenant B usernames must be distinct");
   }
   const fixtureIds = [tenantA, tenantB, branchA, branchB, userIdA, userIdB];
-  if (fixtureIds.every((value) => value !== undefined && value !== "")) {
+  if (fixtureIds.every((value) => typeof value === "string" && value.trim() !== "")) {
     if (!fixtureIds.every(isUuid)) {
       configurationErrors.push("Tenant, branch, and user fixture identifiers must be UUIDs");
     }
   }
-  if (tenantA && tenantB && tenantA === tenantB) {
+  if (tenantA && tenantB && !distinctTenantIds) {
     configurationErrors.push("Tenant fixture identifiers must be distinct");
   }
-  if (branchA && branchB && branchA === branchB) {
+  if (branchA && branchB && !distinctBranchIds) {
     configurationErrors.push("Branch fixture identifiers must be distinct");
   }
-  if (userIdA && userIdB && userIdA === userIdB) {
+  if (userIdA && userIdB && !distinctUserIds) {
     configurationErrors.push("User fixture identities must be distinct");
   }
-  return { missingInputNames, emptyInputNames, configurationErrors };
+  return { missingInputNames, emptyInputNames, configurationErrors, checks };
 }
 
 const configuration = configurationProblems();
+for (const check of configuration.checks) {
+  console.log(JSON.stringify({ probeId: "PREFLIGHT", ...check, valuePrinted: false }));
+}
 if (
   configuration.missingInputNames.length ||
   configuration.emptyInputNames.length ||
-  configuration.configurationErrors.length
+  configuration.configurationErrors.length ||
+  configuration.checks.some((check) => check.status !== "PASS")
 ) {
   console.log(JSON.stringify({
     probeId: "CONFIG",
+    timestamp: new Date().toISOString(),
     status: "FAIL",
     missingInputNames: configuration.missingInputNames,
     emptyInputNames: configuration.emptyInputNames,
@@ -197,6 +234,7 @@ if (
   }
   console.log(JSON.stringify({
     probeId: "SUMMARY",
+    timestamp: new Date().toISOString(),
     status: "FAIL",
     pass: 0,
     fail: 0,
@@ -208,6 +246,7 @@ if (
 } else {
   console.log(JSON.stringify({
     probeId: "CONFIG",
+    timestamp: new Date().toISOString(),
     status: "PASS",
     missingInputNames: [],
     emptyInputNames: [],
@@ -628,6 +667,7 @@ if (
     supplementalResults.every((result) => result.status === "PASS");
   console.log(JSON.stringify({
     probeId: "SUMMARY",
+    timestamp: new Date().toISOString(),
     status: allProbesPassed ? "PASS" : "FAIL",
     pass,
     fail,
