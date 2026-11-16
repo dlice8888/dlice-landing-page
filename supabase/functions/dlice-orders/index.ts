@@ -410,7 +410,7 @@ Deno.serve(async (req: Request) => {
     if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Nama pengguna atau kata sandi penyiapan awal tidak memenuhi ketentuan.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, app_metadata: { platform_owner: true }, user_metadata: { username } });
     if (createError || !created.user) return fail("Akun Pemilik gagal dibuat.", 500, origin);
-    const { error: bootstrapError } = await admin.rpc("dlice_bootstrap_initial_owner", { p_user_id: created.user.id, p_username: username });
+    const { data: bootstrapResult, error: bootstrapError } = await admin.rpc("dlice_bootstrap_initial_owner", { p_user_id: created.user.id, p_username: username });
     if (bootstrapError) {
       if (typeof bootstrapError.code !== "string" || !/^[0-9A-Z]{5}$/.test(bootstrapError.code)) {
         return fail("Hasil bootstrap belum dapat dipastikan. Verifikasi akun Auth dan transaksi database sebelum mencoba kembali.", 503, origin);
@@ -419,7 +419,7 @@ Deno.serve(async (req: Request) => {
       if (cleanupError) return fail("Bootstrap gagal; profil, membership, dan audit tidak tersimpan, tetapi akun Auth sementara memerlukan pembersihan operator.", 500, origin);
       return fail("Profil, membership, dan audit Pemilik gagal dibuat secara atomik.", bootstrapError.code === "23505" ? 409 : 500, origin);
     }
-    return json({ ok: true }, 201, origin);
+    return json({ ok: true, user_id: created.user.id, tenant_id: bootstrapResult?.tenant_id ?? null, platform_owner_allowlist_update_required: true }, 201, origin);
   }
 
   const actor = await getAdmin(req);
