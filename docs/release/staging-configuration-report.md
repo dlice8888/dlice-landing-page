@@ -30,8 +30,9 @@ P03 additionally verifies real Auth identities, active memberships, and exact
 branch IDs/codes using the login sessions. Only that trusted runtime run can
 verify that configured identifiers correspond to real staging records.
 
-The accepted branch-code contract is `QA-DLICE-A` and `QA-TENANT-B`. No
-hard-coded fixture UUID is used as proof of a live record.
+The probe expects branch codes `QA-DLICE-A` and `QA-TENANT-B`; their current
+staging records have not been verified because no trusted runtime run has
+occurred. No hard-coded fixture UUID is used as proof of a live record.
 
 ## Required follow-up
 

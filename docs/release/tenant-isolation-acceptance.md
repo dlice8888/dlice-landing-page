@@ -36,8 +36,10 @@ probe is failed, blocked, skipped, or absent.
 - Runtime syntax and contracts: **8/8 PASS**.
 - Tenant permission Deno unit tests: **7/7 PASS**.
 - Empty-configuration exercise: **9 BLOCKED, 0 PASS, 0 SKIPPED**.
-- The new workflow/preflight/evidence changes are still local and have not yet
-  run in GitHub Actions.
+- The workflow and fail-closed preflight changes were pushed in commit
+  `073a58f11b043da6083ba610c501e3eb93302e35`; exact-head quality, procurement,
+  Kitchen/KDS, CORS, and Vercel Preview checks passed. These checks do not run
+  the protected staging workflow or provide live tenant-isolation evidence.
 - No authenticated staging session, cross-tenant read/write result, or database
   evidence was produced.
 

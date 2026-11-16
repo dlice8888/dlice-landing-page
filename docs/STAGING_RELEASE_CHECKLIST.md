@@ -31,7 +31,7 @@ The Edge Function must fail closed if its required URL/key variables are missing
 ## Staging acceptance sequence
 
 1. Enable Supabase Auth leaked-password protection manually in staging (Authentication → Security/Password Security); use test credentials only.
-2. Run the authenticated tenant-isolation workflow from the trusted `staging` branch or a manual dispatch. Tenant A and Tenant B must log in with their own canonical credentials; verify expected Auth IDs, active memberships, and branch assignments before tenant-scoped probes. The gate must fail closed on missing/empty configuration or fixture mismatch, print no credentials or JWTs, and keep `TENANT_ISOLATION_RELEASED=false` until all required probes pass.
+2. After independent review and official integration, run the authenticated tenant-isolation workflow from a push to the trusted `staging` branch. The canonical workflow does not support arbitrary manual dispatch. Tenant A and Tenant B must log in with their own canonical credentials; verify expected Auth IDs, active memberships, and branch assignments before tenant-scoped probes. The gate must fail closed on missing/empty configuration or fixture mismatch, print no credentials or JWTs, and keep `TENANT_ISOLATION_RELEASED=false` until all required probes pass.
 3. Test Owner login, invalid login, account/IP rate limiting, staff permission boundaries, logout and expired session behavior.
 4. Test valid/invalid order tracking by transaction code + full WhatsApp number and by private token. Invalid lookups must not reveal order data.
 5. Create a multi-item order. Check server-calculated prices, receipt version, transaction code format, date/time (WITA), pickup/delivery, and address validation.
@@ -62,18 +62,26 @@ The trusted `staging` Environment must contain these six secrets (values are nev
 - `STAGING_TENANT_B_USERNAME`
 - `STAGING_TENANT_B_PASSWORD`
 
-Keep fixture identifiers in Environment variables, not in workflow YAML:
+Keep fixture identifiers in Environment variables, not in workflow YAML. The
+identifiers previously listed in this checklist are historical clues only and
+are not verified against current staging. Do not copy them into the Environment
+without confirming the actual tenant, branch, and Auth records and their
+relationships. The current verification state is documented in
+[docs/release/staging-configuration-report.md](./release/staging-configuration-report.md).
 
-| Variable | Verified staging fixture |
+| Variable | Required value |
 | --- | --- |
-| `STAGING_TENANT_A_ID` | `00000000-0000-4000-8000-000000000001` |
-| `STAGING_TENANT_B_ID` | `00000000-0000-4000-8000-000000000002` |
-| `STAGING_TENANT_A_BRANCH_ID` | `90000000-0000-4000-8000-000000000001` |
-| `STAGING_TENANT_B_BRANCH_ID` | `90000000-0000-4000-8000-000000000004` |
-| `STAGING_TENANT_A_USER_ID` | `b930897c-f8fb-443b-9056-e70c08b31446` |
-| `STAGING_TENANT_B_USER_ID` | `e1de1ffc-9fae-412f-9dd7-0993b54cb631` |
+| `STAGING_TENANT_A_ID` | Actual verified Tenant A UUID |
+| `STAGING_TENANT_B_ID` | Actual verified, distinct Tenant B UUID |
+| `STAGING_TENANT_A_BRANCH_ID` | Actual branch UUID owned by Tenant A |
+| `STAGING_TENANT_B_BRANCH_ID` | Actual branch UUID owned by Tenant B |
+| `STAGING_TENANT_A_USER_ID` | Auth UUID for the actual Tenant A QA identity |
+| `STAGING_TENANT_B_USER_ID` | Auth UUID for the actual Tenant B QA identity |
 
-These are non-secret fixture identifiers verified against the current staging database. The runtime workflow must fail closed when any variable is missing or mismatched; do not restore hard-coded fallbacks or use the Owner account as Tenant A.
+All six values must be confirmed from current staging records and identity
+relationships through authorized read paths. The runtime workflow must fail
+closed when any variable is missing or mismatched; do not restore hard-coded
+fallbacks or use the Owner account as Tenant A.
 
 ## Environment variable policy
 

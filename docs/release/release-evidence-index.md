@@ -6,9 +6,15 @@
 | Evidence | Reference | Environment / commit | Result |
 |---|---|---|---|
 | Baseline repository state | [staging-baseline.md](./staging-baseline.md) | Initial checkout `33a561147d20aa0e99d4e7963d62c73dfeb56fe2`; main `8d74dbda81eb483a26d779b782fd4b37e12af770`; staging `aed2733f62506ed87a5040a48f479753fdafe1b1` | Recorded |
-| PR #75 checks | https://github.com/dlice8888/dlice-landing-page/pull/75/checks | PR head `ac1a64b9cf4a57f2ac60d4ea82a8f7001e27a2f4` | PASS; no approval |
+| PR #75 exact-head checks | https://github.com/dlice8888/dlice-landing-page/pull/75/checks | Implementation/workflow commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS; no independent approval |
 | Tenant approval security fix | https://github.com/dlice8888/dlice-landing-page/commit/ac1a64b9cf4a57f2ac60d4ea82a8f7001e27a2f4 | PR #75 head `ac1a64b9cf4a57f2ac60d4ea82a8f7001e27a2f4` | Pushed; focused local tests PASS; GitHub checks PASS |
-| PR #75 Preview | https://vercel.com/dlice8888-7332/dlice-landing-page/cgqcJZzEYrX91XaDLYshYaWJeQ2Q | PR #75 security-fix head | Ready; not production |
+| PR #75 Preview | https://vercel.com/dlice8888-7332/dlice-landing-page/82VNpbMq8gp3DquM8RT5kJJfA9RN | PR #75 implementation/workflow head `073a58f11b043da6083ba610c501e3eb93302e35` | Ready; not production |
+| Quality checks | https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459997 | Commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Procurement requisition contract | https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459908 | Commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Procurement receiving contract | https://github.com/dlice8888/dlice-landing-page/actions/runs/43920460253 | Commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Kitchen/KDS offline contract | https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459964 | Commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| CORS probes | https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459889 | Commit `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Trusted staging P01–P09 | No run; restricted to protected `staging` branch | Supabase staging | BLOCKED / NOT RUN |
 | PR #76 disposable replay | https://github.com/dlice8888/dlice-landing-page/actions/runs/43622512657 | Disposable local DB; PR #76 head | PASS |
 | PR #77 disposable replay | https://github.com/dlice8888/dlice-landing-page/actions/runs/43570024409 | Disposable local DB; PR #77 head | PASS |
 | PR #78 disposable replay | https://github.com/dlice8888/dlice-landing-page/actions/runs/43573222955 | Disposable local DB; PR #78 head | PASS |
