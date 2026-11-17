@@ -51,10 +51,10 @@ test("all checklist reads and writes derive branch access from active server-sid
     source.indexOf("const checklistContext = async"),
     source.indexOf("const checklistMutationFailure ="),
   );
-  assert.match(contextHelper, /Asia\\/Jakarta.*Asia\\/Makassar.*Asia\\/Jayapura/);
+  assert.match(contextHelper, /Asia\/Jakarta.*Asia\/Makassar.*Asia\/Jayapura/);
   assert.match(contextHelper, /Zona waktu cabang tidak valid/);
-  assert.match(contextHelper, /timeZone: branch\\.timezone/);
-  assert.doesNotMatch(contextHelper, /branch\\.timezone \\|\\| "Asia\\/Jakarta"/);
+  assert.match(contextHelper, /timeZone: branch\.timezone/);
+  assert.doesNotMatch(contextHelper, /branch\.timezone \|\| "Asia\/Jakarta"/);
 
   const accessHelper = source.slice(
     source.indexOf("const branchAccess = async"),
