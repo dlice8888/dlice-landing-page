@@ -57,7 +57,7 @@ test("initial owner bootstrap requires the one-time server secret before any acc
   assert.ok(ownerBootstrap.indexOf("bootstrap_secret") < ownerBootstrap.indexOf("admin.auth.admin.createUser"));
   assert.match(ownerBootstrap, /if \(!bootstrapSecret \|\| safeText\(body\.bootstrap_secret, 256\) !== bootstrapSecret\) return fail/);
   assert.match(ownerBootstrap, /if \(\(count \?\? 0\) > 0\) return fail/);
-  assert.doesNotMatch(ownerBootstrap, /console\\.(?:log|info|warn|error).*bootstrapSecret/);
+  assert.doesNotMatch(ownerBootstrap, /console\.(?:log|info|warn|error).*bootstrapSecret/);
   assert.doesNotMatch(ownerBootstrap, /return json\([\s\S]{0,300}(?:password|bootstrap_secret)/i);
 });
 
