@@ -78,3 +78,23 @@ The Owner profile aggregate shows one active Owner profile, while the Auth metad
 ## Execution status
 
 The connected GitHub action set exposes workflow-run lookup and rerun tools, but no workflow-dispatch action. The authenticated P01–P09 run therefore cannot be safely started from this connection. Do not infer runtime success from existing Vercel status checks or static CI.
+
+
+## P01–P09 semantic coverage gap
+
+Although the runtime script records nine named probes, these are nine authentication/identity/branch-read/cross-read/cross-write assertions, not the full nine acceptance domains in the master execution prompt.
+
+Current runner coverage:
+- Login Tenant A and Tenant B.
+- Verify each authenticated UUID and distinct identities.
+- Positive own-branch inventory read for A and B.
+- Cross-branch/cross-tenant inventory read denial for A and B.
+- Cross-branch/cross-tenant stock-transfer write denial for A and B.
+
+Not covered by this runner as separate acceptance domains:
+- P01 full configuration/tenant-membership/tenant-branch-user relational preflight.
+- P07 comprehensive branch isolation across all relevant API/RPC/database paths.
+- P08 offline queue replay and idempotency reconciliation.
+- P09 broad regression across RLS, service-role paths, POS, order, inventory, procurement, and finance.
+
+The runner also creates no explicit post-attempt database assertion proving that denied write attempts caused zero side effects. These are implementation/test gaps; do not relabel them as PASS.
