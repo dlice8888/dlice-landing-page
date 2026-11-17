@@ -1,8 +1,16 @@
 // Nine independently recorded authenticated tenant-boundary probes.
 // Credentials are never printed. A probe is PASS/FAIL only when its request ran;
 // prerequisites that are absent are BLOCKED with executed:false.
-const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
-const key = process.env.STAGING_SUPABASE_ANON_KEY;
+const rawBase = process.env.STAGING_SUPABASE_URL?.trim();
+const base = rawBase?.replace(/\/$/, "");
+const key = process.env.STAGING_SUPABASE_ANON_KEY?.trim();
+const expectedProjectHost = "higoadrzxnhzbbwhdbmh.supabase.co";
+let endpointValid = false;
+try {
+  const parsed = new URL(base || "");
+  endpointValid = parsed.protocol === "https:" && parsed.hostname === expectedProjectHost
+    && parsed.username === "" && parsed.password === "" && parsed.search === "" && parsed.hash === "";
+} catch { endpointValid = false; }
 const cfg = {
   usernameA: process.env.STAGING_TENANT_A_USERNAME,
   passwordA: process.env.STAGING_TENANT_A_PASSWORD,
@@ -24,7 +32,7 @@ function blocked(name, reason) { return record(name, "BLOCKED", false, { reason 
 function pass(name, evidence) { return record(name, "PASS", true, evidence); }
 function fail(name, evidence) { return record(name, "FAIL", true, evidence); }
 const required = [
-  ["STAGING_SUPABASE_URL", base], ["STAGING_SUPABASE_PUBLIC_KEY", key],
+  ["STAGING_SUPABASE_URL", endpointValid ? base : ""], ["STAGING_SUPABASE_ANON_KEY", key],
   ["STAGING_TENANT_A_USERNAME", cfg.usernameA], ["STAGING_TENANT_A_PASSWORD", cfg.passwordA],
   ["STAGING_TENANT_B_USERNAME", cfg.usernameB], ["STAGING_TENANT_B_PASSWORD", cfg.passwordB],
   ["STAGING_TENANT_A_BRANCH_ID", cfg.branchA], ["STAGING_TENANT_B_BRANCH_ID", cfg.branchB],
@@ -33,9 +41,9 @@ const required = [
 const missing = required.filter(([, value]) => !value).map(([name]) => name);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const invalid = required.filter(([name, value]) => name.includes("_ID") && value && !uuid.test(value)).map(([name]) => name);
-const fixtureOk = !invalid.length && cfg.branchA !== cfg.branchB && cfg.userA !== cfg.userB;
+const fixtureOk = endpointValid && !invalid.length && cfg.branchA !== cfg.branchB && cfg.userA !== cfg.userB;
 if (missing.length || !fixtureOk) {
-  const reason = missing.length ? "missing_preflight_inputs" : "invalid_or_non_distinct_fixture_ids";
+  const reason = missing.length ? "missing_or_invalid_preflight_inputs" : "invalid_or_non_distinct_fixture_ids";
   for (const name of [
     "tenant-a-login", "tenant-b-login", "tenant-identities-distinct",
     "tenant-a-own-branch-read", "tenant-b-own-branch-read",
