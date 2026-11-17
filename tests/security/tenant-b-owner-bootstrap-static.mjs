@@ -73,6 +73,9 @@ const probeNames = [
   "tenant-a-cross-tenant-write-denied", "tenant-b-cross-tenant-write-denied",
 ];
 for (const name of probeNames) assert.ok(runner.includes(name), `runner missing independent probe ${name}`);
+assert.ok(runner.includes('const expectedProjectHost = "higoadrzxnhzbbwhdbmh.supabase.co"'), "runtime probes must pin the exact staging Supabase host");
+assert.ok(runner.includes('parsed.protocol === "https:" && parsed.hostname === expectedProjectHost'), "runtime probes must reject non-HTTPS or non-staging endpoints");
+assert.ok(runner.includes('["STAGING_SUPABASE_ANON_KEY", key]'), "preflight evidence must use the actual canonical public-key environment name");
 assert.ok(runner.includes("executedProbeCount"), "runner must report executed probe count");
 assert.ok(runner.includes("status, executed, evidence"), "each probe must record status, executed, and evidence");
 assert.ok(!runner.includes("assert.ok("), "an assertion must not abort subsequent probes");
