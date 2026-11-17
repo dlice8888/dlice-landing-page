@@ -41,3 +41,18 @@ An administrator should inspect/add the twelve named inputs in
 branch trigger the acceptance workflow. Do not paste values into a PR, issue,
 commit, or report. Detailed steps are in
 [administrator-action-required.md](./administrator-action-required.md).
+
+
+## Reconciliation addendum — 18 Nov 2026
+
+The staging records were rechecked read-only. The canonical fixture IDs in PR #75 match the current tenant and QA branch rows:
+
+- Tenant A: `dlice-default`, branch `QA-DLICE-A`, active branch inventory rows: 2.
+- Tenant B: `dlice-qa-isolation-b`, branch `QA-TENANT-B`, active branch inventory rows: 2.
+- Both QA users have active tenant membership and an active assignment to their designated QA branch.
+
+**Fixture discrepancy requiring maintainer action:** Tenant A's QA user also has an active assignment to `DLC-B001` (branch status `planned`). The P03 runner intentionally requires the complete visible branch list to contain exactly the designated QA branch. Do not weaken this assertion or filter out the extra assignment merely to obtain PASS. An authorized maintainer must remove/deactivate the stale assignment through the approved application/admin workflow, or provision a dedicated Tenant A QA identity with exactly one branch assignment.
+
+The twelve GitHub Environment inputs remain **BLOCKED / UNVERIFIED** because this integration cannot inspect Environment variables or secrets. No values were read, changed, or logged. The workflow's value-free preflight must verify them during a trusted staging run.
+
+The canonical workflow now supports both push to `staging` and manual dispatch, but the job-level ref guard permits execution only when `github.ref == refs/heads/staging`. No trusted P01–P09 run has been executed yet.
