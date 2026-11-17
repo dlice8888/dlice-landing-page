@@ -39,8 +39,8 @@ Deno.test("inactive membership or non-Head Office assignment cannot approve tena
 
 Deno.test("tenant grants are intersected, never unioned across tenants", () => {
   const permissions = resolveTenantScopedPermissions([
-    { tenant_id: "tenant-a", permissions: ["orders", "inventory", "pos"] },
-    { tenant_id: "tenant-b", permissions: ["orders", "reports"] },
+    { tenant_id: "tenant-a", status: "active", permissions: ["orders", "inventory", "pos"] },
+    { tenant_id: "tenant-b", status: "active", permissions: ["orders", "reports"] },
   ]);
   if (permissions.join(",") !== "orders") {
     throw new Error(`Expected only shared grant 'orders', got: ${permissions.join(",")}`);
@@ -56,8 +56,8 @@ Deno.test("global-profile-only grants are not accepted without memberships", () 
 
 Deno.test("malformed or missing membership permissions fail closed", () => {
   const permissions = resolveTenantScopedPermissions([
-    { tenant_id: "tenant-a", permissions: ["inventory"] },
-    { tenant_id: "tenant-b", permissions: null },
+    { tenant_id: "tenant-a", status: "active", permissions: ["inventory"] },
+    { tenant_id: "tenant-b", status: "active", permissions: null },
   ]);
   if (permissions.length !== 0) {
     throw new Error("Expected empty permissions when one membership has no explicit grants");
@@ -66,8 +66,8 @@ Deno.test("malformed or missing membership permissions fail closed", () => {
 
 Deno.test("wildcard in one membership does not widen another membership", () => {
   const permissions = resolveTenantScopedPermissions([
-    { tenant_id: "tenant-a", permissions: ["*"] },
-    { tenant_id: "tenant-b", permissions: ["orders"] },
+    { tenant_id: "tenant-a", status: "active", permissions: ["*"] },
+    { tenant_id: "tenant-b", status: "active", permissions: ["orders"] },
   ]);
   if (permissions.join(",") !== "orders") {
     throw new Error(`Expected only 'orders', got: ${permissions.join(",")}`);
@@ -76,10 +76,20 @@ Deno.test("wildcard in one membership does not widen another membership", () => 
 
 Deno.test("wildcard is retained when every active membership explicitly grants it", () => {
   const permissions = resolveTenantScopedPermissions([
-    { tenant_id: "tenant-a", permissions: ["*"] },
-    { tenant_id: "tenant-b", permissions: ["*"] },
+    { tenant_id: "tenant-a", status: "active", permissions: ["*"] },
+    { tenant_id: "tenant-b", status: "active", permissions: ["*"] },
   ]);
   if (permissions.join(",") !== "*") {
     throw new Error("Expected explicit all-tenant wildcard grant");
+  }
+});
+
+Deno.test("inactive memberships cannot contribute permissions", () => {
+  const permissions = resolveTenantScopedPermissions([
+    { tenant_id: "tenant-a", status: "inactive", permissions: ["*"] },
+    { tenant_id: "tenant-b", status: "active", permissions: ["orders"] },
+  ]);
+  if (permissions.join(",") !== "orders") {
+    throw new Error(`Expected only active membership grants, got: ${permissions.join(",")}`);
   }
 });

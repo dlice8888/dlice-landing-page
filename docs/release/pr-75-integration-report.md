@@ -1,8 +1,8 @@
 # PR #75 integration report
 
-**State after the acceptance-gate push:** Open, non-Draft, base `staging`, head
-`073a58f11b043da6083ba610c501e3eb93302e35`. No independent review or approval
-was recorded. No merge was performed.
+**Current state:** Open, non-Draft, base `staging`, remote head
+`8f31f6d201e7bcda0041dfcda8e6123a42b6ba14`. No independent review or approval
+is recorded. No merge was performed.
 
 ## Evidence
 
@@ -27,6 +27,23 @@ was recorded. No merge was performed.
   [procurement receiving](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920460253),
   [Kitchen/KDS offline](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459964),
   and [CORS probes](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920459889).
+- GitHub also reports successful checks on the current remote head
+  `8f31f6d201e7bcda0041dfcda8e6123a42b6ba14`, including
+  [static checks](https://github.com/dlice8888/dlice-landing-page/actions/runs/43923376178),
+  [contract checks](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920749355),
+  [CORS probes](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920749255),
+  [Kitchen/KDS offline contracts](https://github.com/dlice8888/dlice-landing-page/actions/runs/43920749322),
+  and Vercel Preview checks.
+- A local, unpushed follow-up makes the permission resolver explicitly ignore
+  inactive memberships. Its Deno unit tests passed 8/8, the focused Node
+  authorization/gate contracts passed 9/9, and the repository quality and
+  staging contract checks passed. This local change is not covered by the
+  remote-head checks above.
+- `deno check supabase/functions/dlice-orders/index.ts` remains blocked by 11
+  diagnostics elsewhere in the Edge Function, including an unresolved
+  `shift_id` identifier and existing implicit-any/nullability and
+  `Deno.serve` typing errors. The changed membership query/helper produced no
+  diagnostic.
 - The trusted staging P01–P09 workflow has not run: it is restricted to the
   protected `staging` branch and was not triggered from this PR branch.
 
@@ -34,12 +51,12 @@ was recorded. No merge was performed.
 
 | Requirement | Result |
 |---|---|
-| Checks on `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Checks on current remote head `8f31f6d201e7bcda0041dfcda8e6123a42b6ba14` | PASS |
 | Independent approval | BLOCKED — none observed |
 | Branch protection | BLOCKED — API access returned 403 |
 | Staging secrets/variables | BLOCKED — metadata access returned 403 |
 | Trusted P01–P09 runtime evidence | BLOCKED — not run |
-| Vercel Preview on `073a58f11b043da6083ba610c501e3eb93302e35` | PASS |
+| Vercel Preview | PASS; Preview only |
 | Official merge to staging | NOT DONE |
 | Production deployment | NOT DONE |
 

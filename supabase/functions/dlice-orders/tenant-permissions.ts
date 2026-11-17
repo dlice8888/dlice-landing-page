@@ -10,7 +10,7 @@
 export type TenantMembershipPermission = {
   tenant_id?: string;
   role?: string;
-  status?: string;
+  status: string;
   permissions?: unknown;
 };
 
@@ -46,7 +46,10 @@ export function resolveTenantScopedPermissions(
 ): string[] {
   if (!Array.isArray(memberships) || memberships.length === 0) return [];
 
-  const permissionSets = memberships.map((membership) => {
+  const activeMemberships = memberships.filter((membership) => membership.status === "active");
+  if (activeMemberships.length === 0) return [];
+
+  const permissionSets = activeMemberships.map((membership) => {
     const values = Array.isArray(membership.permissions)
       ? membership.permissions
       : [];

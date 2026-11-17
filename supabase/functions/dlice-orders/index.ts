@@ -104,7 +104,7 @@ const getAdmin = async (req: Request) => {
   // a permission granted in Tenant A cannot silently become a grant in Tenant B.
   const { data: memberships, error: membershipError } = await admin
     .from("tenant_memberships")
-    .select("tenant_id,role,permissions")
+    .select("tenant_id,role,permissions,status")
     .eq("user_id", userData.user.id)
     .eq("status", "active");
   if (membershipError || !memberships?.length) return null;
