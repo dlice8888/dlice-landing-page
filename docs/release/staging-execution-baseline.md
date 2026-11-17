@@ -29,7 +29,7 @@
 | PR | State | Base | Head | Mergeable | Current assessment |
 |---|---|---|---|---|---|
 | #64 | Open, Draft | staging | `audit/tenant-isolation-inventory-20261028` | false | HOLD: no independent approval; tenant negative runtime evidence and migration/source reconciliation outstanding |
-| #71 | Open, Draft | staging | `fix/staging-tenant-fixtures-20261103` | true | HOLD: PR description and checked workflow source disagree; current staging workflow is still legacy single-user |
+| #71 | Open, Draft | staging | `fix/staging-tenant-fixtures-20261103` | true | HOLD: PR #71 improves credential contract on its head, but staging still has fallbacks/hard-coded IDs; full P01–P09 coverage and runtime proof are outstanding |
 | #76 | Open, Draft | staging | `feat/erp-command-center-foundation` | true | Partial implementation; authenticated Owner dashboard and KPI reconciliation not proven |
 | #77 | Open, Draft | staging | `fix/branch-checklist-audit-atomicity-20261114` | true | Disposable DB/contract evidence reported in PR; authenticated branch-role staging acceptance outstanding |
 | #78 | Open, Draft | staging | `fix/atomic-tenant-bootstrap-staging-20261114` | true | Disposable DB/contract evidence reported in PR; authenticated Owner and Tenant A/B acceptance outstanding |
@@ -43,7 +43,7 @@ Two different workflows exist on `staging` and must not be conflated:
 1. `.github/workflows/staging-auth-tenant-negative.yml` is a legacy single-identity negative probe. It runs on push only, references legacy Branch A username/password secrets, and hard-codes the staging URL, publishable key, and Edge Function URL.
 2. `.github/workflows/staging-runtime-tenant-isolation.yml` is the authenticated nine-probe workflow. It has `workflow_dispatch` and trusted staging push triggers. On `staging`, it uses legacy credential fallbacks and hard-codes tenant, branch, and user fixture IDs.
 
-On PR #71 head, the runtime workflow removes the credential fallbacks and moves branch/user IDs to Environment variables, but still does not externalize tenant IDs. The PR #71 runner requires staging URL/key, four canonical Tenant A/B credentials, and branch/user identifiers. It emits nine independent records (login A/B, identity distinct, own-branch reads A/B, cross-branch reads A/B, cross-branch writes A/B), with explicit BLOCKED results on failed preflight.
+On PR #71 head, the runtime workflow removes the credential fallbacks and moves branch/user IDs to Environment variables, but still does not externalize tenant IDs. The PR #71 runner requires staging URL/key, four canonical Tenant A/B credentials, and branch/user identifiers. The earlier prompt's Tenant A candidate user and PR #71's Tenant A candidate are both active Auth users with active membership in Tenant A; they are different identities, so the authorized test-account owner must select the canonical QA identity rather than silently substituting one. It emits nine independent records (login A/B, identity distinct, own-branch reads A/B, cross-branch reads A/B, cross-branch writes A/B), with explicit BLOCKED results on failed preflight.
 
 Those nine assertions do not cover the full requested P01–P09 domains: full tenant/membership relational preflight, broad branch isolation across all relevant paths, offline queue/idempotency, and broad module regression are not included as separate acceptance domains. No authenticated P01–P09 final run was executed.
 
@@ -68,10 +68,12 @@ Those nine assertions do not cover the full requested P01–P09 domains: full te
 
 - 2 tenant rows, 1 active tenant.
 - 155 branch rows, 5 active branches.
-- 3 tenant membership rows, all 3 active.
+- 3 tenant membership rows, all 3 active. Tenant `dlice-default` has 2 active memberships; `dlice-qa-isolation-b` has 1.
 - 1 active Owner profile.
+- Tenant `dlice-default`: 154 branches and 2 inventory balance rows (total on-hand 1,240).
+- Tenant `dlice-qa-isolation-b`: 1 branch and 2 inventory balance rows (total on-hand 800). This supersedes the older PR #71 description stating Tenant B had zero inventory.
 - Auth metadata aggregate: 0 JSON boolean `platform_owner=true`; 0 string `platform_owner='true'` among non-deleted Auth users.
-- This aggregate does not identify the legitimate Owner or prove allowlist membership; do not infer which account should be elevated.
+- The active Owner profile joins to one non-deleted Auth user, but that user has neither boolean nor string `platform_owner=true` metadata. The linked identity is not disclosed in this report. This does not prove allowlist membership; do not infer which account should be elevated.
 
 ## Security and release gates
 
