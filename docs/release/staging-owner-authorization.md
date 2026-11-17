@@ -39,3 +39,12 @@ The code does not authorize from a client-editable user metadata claim. The
 **Acceptance:** all four authorization sources match the real account, and the
 independent runtime authorization tests pass. Until then Owner authorization is
 BLOCKED, not PASS.
+
+
+## Read-only reconciliation — 18 Nov 2026
+
+The staging database currently contains one active `admin_profiles` record with role `owner`. Its linked Auth user's `raw_app_meta_data.platform_owner` claim is **NULL / absent**, not boolean `true`. This means the repository's two-source platform-owner authorization condition is not currently proven and should fail closed.
+
+The Auth identity and the `DLICE_PLATFORM_OWNER_USER_IDS` Edge Function secret were not independently verified through authorized Auth Admin / function-secret controls. Do not infer the allowlist contents from the database, and do not edit Auth metadata or the allowlist through SQL or an unapproved path.
+
+Required maintainer action remains: verify the actual Owner identity, preserve existing app metadata while setting the boolean claim through Supabase Auth Admin, and reconcile the server-side allowlist through the authorized Edge Function secret settings. Then run the Owner-specific authorization tests.
