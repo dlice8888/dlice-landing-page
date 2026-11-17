@@ -38,16 +38,14 @@ No PR was merged, closed, or retargeted during this audit.
 
 ## GitHub workflow discovery
 
-The `staging` branch contains `.github/workflows/staging-auth-tenant-negative.yml`. Its current implementation:
+Two different workflows exist on `staging` and must not be conflated:
 
-- Runs on push to `staging`; no `workflow_dispatch` trigger is present.
-- Uses GitHub Environment `staging`.
-- References only legacy `STAGING_TEST_BRANCH_A_USERNAME` and `STAGING_TEST_BRANCH_A_PASSWORD`.
-- Hard-codes the staging Supabase URL, publishable key, and Edge Function URL in workflow YAML.
-- Does not reference the six tenant fixture variables or canonical independent Tenant A/B credentials.
-- Executes `tests/staging/tenant-isolation-existing-identity.mjs`, a single-identity wrong-branch/permission negative test, not the complete P01–P09 two-tenant acceptance suite.
+1. `.github/workflows/staging-auth-tenant-negative.yml` is a legacy single-identity negative probe. It runs on push only, references legacy Branch A username/password secrets, and hard-codes the staging URL, publishable key, and Edge Function URL.
+2. `.github/workflows/staging-runtime-tenant-isolation.yml` is the authenticated nine-probe workflow. It has `workflow_dispatch` and trusted staging push triggers. On `staging`, it uses legacy credential fallbacks and hard-codes tenant, branch, and user fixture IDs.
 
-The same workflow path checked on PR #71 head also retains the legacy single-identity implementation. This conflicts with portions of PR #71's description and must be reconciled before treating its workflow as canonical.
+On PR #71 head, the runtime workflow removes the credential fallbacks and moves branch/user IDs to Environment variables, but still does not externalize tenant IDs. The PR #71 runner requires staging URL/key, four canonical Tenant A/B credentials, and branch/user identifiers. It emits nine independent records (login A/B, identity distinct, own-branch reads A/B, cross-branch reads A/B, cross-branch writes A/B), with explicit BLOCKED results on failed preflight.
+
+Those nine assertions do not cover the full requested P01–P09 domains: full tenant/membership relational preflight, broad branch isolation across all relevant paths, offline queue/idempotency, and broad module regression are not included as separate acceptance domains. No authenticated P01–P09 final run was executed.
 
 ## Supabase migration history
 
