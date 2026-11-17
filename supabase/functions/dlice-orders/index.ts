@@ -858,8 +858,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-tenant-memberships") {
-    if(!hasPerm("branches")&&!isOwner)return fail("Izin keanggotaan tenant tidak diizinkan.",403,origin);
-    const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)").eq("user_id",actor.user.id).eq("status","active");
+    // Self-service only: return active memberships belonging to the authenticated actor.
+    // Do not require a global "branches" permission for a user's own membership lookup.
+    // Never accept a caller-supplied user_id here; actor identity comes from the verified session.
+    const {data,error}=await admin.from("tenant_memberships")
+      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)")
+      .eq("user_id",actor.user.id)
+      .eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
     return json({memberships:data||[]},200,origin);
   }
