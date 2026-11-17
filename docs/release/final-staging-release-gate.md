@@ -7,7 +7,7 @@
 
 | Gate | Status | Evidence | Remaining action |
 |---|---|---|---|
-| GitHub staging secrets | UNKNOWN | Environment secret values are not readable; runtime validity not proven | Admin verifies canonical secrets and trusted runtime |
+| GitHub branch protection/rulesets | FAIL | Direct metadata: main and staging both `protected=false`; rulesets API returns empty list; required checks enforcement off | Environment secret values are not readable; runtime validity not proven | Admin verifies canonical secrets and trusted runtime |
 | GitHub staging variables | PARTIAL | PR #71 head uses four branch/user variables; tenant IDs remain hard-coded/omitted | Agree canonical contract and configure six verified variables |
 | Owner metadata | FAIL | One linked Auth user; zero linked users with boolean `platform_owner=true` | Authorized Supabase Auth Admin action |
 | Owner allowlist | UNKNOWN | Effective server-side secret value not readable | Authorized admin verifies allowlist |
@@ -35,6 +35,10 @@
 | Finance → Analytics | PARTIAL | Command Center summary foundation exists | Reconcile revenue, COGS, margin, waste and valuation |
 | Independent review | FAIL | Reviewed PR comments are COMMENTED by the author; no independent approval established | Obtain independent non-author approval |
 | Production isolation | PASS (audit scope) | No production mutation performed in this execution | Preserve this boundary |
+
+## Required P0 administrator action
+
+The GitHub API confirmed that both `main` and `staging` are unprotected and no repository rulesets are configured. The connected tools cannot create branch protection/rulesets. Repository administrator must configure protection without weakening any existing controls (required independent approval, required status checks, no force-push/delete, and staging deployment protection) and then re-read the settings to prove they are active.
 
 ## Important interpretation
 
