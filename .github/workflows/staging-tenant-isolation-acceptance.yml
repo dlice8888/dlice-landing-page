@@ -2,6 +2,7 @@ name: Staging Tenant Isolation Acceptance
 
 # Run only from the trusted staging branch; never expose staging credentials to PR code.
 on:
+  workflow_dispatch:
   push:
     branches: [staging]
     paths:
@@ -19,6 +20,8 @@ concurrency:
 
 jobs:
   tenant-isolation:
+    # Manual dispatch is accepted only when the selected ref is the trusted staging branch.
+    if: github.ref == 'refs/heads/staging'
     name: Authenticated tenant isolation P01-P09
     runs-on: ubuntu-latest
     environment: staging
