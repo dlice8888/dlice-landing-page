@@ -1005,7 +1005,10 @@ Deno.serve(async (req: Request) => {
     if((branchResult.count||0)>500)return fail("Ringkasan dibatasi maksimal 500 cabang per permintaan.",422,origin);
     const availableBranches=branchResult.data||[];
     if(selectedBranch&&!availableBranches.some((branch:any)=>branch.id===selectedBranch))return fail("Cabang ringkasan tidak ditemukan.",404,origin);
-    const branchIds=selectedBranch?[selectedBranch]:availableBranches.map((branch:any)=>branch.id);
+    const summaryBranches=selectedBranch?availableBranches.filter((branch:any)=>branch.id===selectedBranch):availableBranches;
+    const invalidTimezoneBranch=summaryBranches.find((branch:any)=>!SUPPORTED_BRANCH_TIMEZONES.has(branch.timezone));
+    if(invalidTimezoneBranch)return fail("Zona waktu cabang tidak didukung. Perbaiki konfigurasi cabang sebelum memuat ringkasan.",422,origin);
+    const branchIds=summaryBranches.map((branch:any)=>branch.id);
     const summaryResult=await admin.rpc("dlice_get_command_center_summary",{p_branch_ids:branchIds,p_from_date:fromDate,p_through_date:throughDate});
     if(summaryResult.error||!summaryResult.data)return fail("Ringkasan operasional gagal dimuat.",500,origin);
     return json({ok:true,available_branches:availableBranches,...summaryResult.data},200,origin);
