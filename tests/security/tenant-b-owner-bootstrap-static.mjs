@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const source = readFileSync(new URL("../../supabase/functions/dlice-orders/index.ts", import.meta.url), "utf8");
 const migration = readFileSync(new URL("../../supabase/migrations/20261108090000_atomic_tenant_audit_operations.sql", import.meta.url), "utf8");
 const runner = readFileSync(new URL("../runtime/dlice-tenant-jwt-isolation.mjs", import.meta.url), "utf8");
+const workflow = readFileSync(new URL("../../.github/workflows/staging-runtime-tenant-isolation.yml", import.meta.url), "utf8");
 
 const start = source.indexOf('if (action === "platform-bootstrap-tenant-b-owner")');
 assert.notEqual(start, -1, "staging Tenant B bootstrap action must exist");
@@ -73,6 +74,16 @@ const probeNames = [
   "tenant-a-cross-tenant-write-denied", "tenant-b-cross-tenant-write-denied",
 ];
 for (const name of probeNames) assert.ok(runner.includes(name), `runner missing independent probe ${name}`);
+for (const name of ["STAGING_TENANT_A_ID", "STAGING_TENANT_B_ID", "STAGING_TENANT_A_BRANCH_ID", "STAGING_TENANT_B_BRANCH_ID", "STAGING_TENANT_A_USER_ID", "STAGING_TENANT_B_USER_ID"]) {
+  assert.ok(runner.includes(name), `runner missing canonical fixture variable ${name}`);
+  assert.ok(workflow.includes(`vars.${name}`), `workflow missing canonical GitHub Environment variable ${name}`);
+}
+assert.ok(runner.includes('action: "erp-list-tenant-memberships"'), "P03 must verify each identity's own active tenant membership");
+const membershipActionStart = source.indexOf('if (action === "erp-list-tenant-memberships")');
+const membershipActionEnd = source.indexOf('if (action === "erp-create-tenant")', membershipActionStart);
+const membershipAction = source.slice(membershipActionStart, membershipActionEnd);
+assert.ok(membershipAction.includes('.eq("user_id",actor.user.id)'), "membership endpoint must be self-scoped");
+assert.ok(!membershipAction.includes('hasPerm("branches")'), "self-membership verification must not rely on global profile permissions");
 assert.ok(runner.includes('const expectedProjectHost = "higoadrzxnhzbbwhdbmh.supabase.co"'), "runtime probes must pin the exact staging Supabase host");
 assert.ok(runner.includes('parsed.protocol === "https:" && parsed.hostname === expectedProjectHost'), "runtime probes must reject non-HTTPS or non-staging endpoints");
 assert.ok(runner.includes('["STAGING_SUPABASE_ANON_KEY", key]'), "preflight evidence must use the actual canonical public-key environment name");
