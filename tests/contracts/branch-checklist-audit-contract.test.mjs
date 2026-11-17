@@ -47,6 +47,15 @@ test("disposable CI runs database assertions without logging local credentials",
 
 
 test("all checklist reads and writes derive branch access from active server-side membership", () => {
+  const contextHelper = source.slice(
+    source.indexOf("const checklistContext = async"),
+    source.indexOf("const checklistMutationFailure ="),
+  );
+  assert.match(contextHelper, /Asia\\/Jakarta.*Asia\\/Makassar.*Asia\\/Jayapura/);
+  assert.match(contextHelper, /Zona waktu cabang tidak valid/);
+  assert.match(contextHelper, /timeZone: branch\\.timezone/);
+  assert.doesNotMatch(contextHelper, /branch\\.timezone \\|\\| "Asia\\/Jakarta"/);
+
   const accessHelper = source.slice(
     source.indexOf("const branchAccess = async"),
     source.indexOf("const branchIdsForActor = async"),
