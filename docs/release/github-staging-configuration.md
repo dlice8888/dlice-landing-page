@@ -49,3 +49,32 @@ Do not silently alias legacy Branch A credentials to Tenant A or Owner credentia
 ## Security rules
 
 Never echo secret values, tokens, sessions, cookies, or service-role keys. A secret name being referenced in YAML does not prove the secret exists or authenticates successfully. A successful preflight must fail closed on missing, malformed, mismatched, or unverified inputs.
+
+
+## Separate authenticated runtime workflow
+
+The primary nine-probe workflow on `staging` is `.github/workflows/staging-runtime-tenant-isolation.yml`.
+
+Observed on `staging`:
+- Has `workflow_dispatch` and trusted `push` to `staging`.
+- Uses `STAGING_SUPABASE_URL` and `STAGING_SUPABASE_PUBLIC_KEY` secrets.
+- Credential fallback expressions allow legacy Owner credentials to substitute for Tenant A and legacy Branch A credentials to substitute for Tenant B.
+- Tenant IDs, branch IDs, and user IDs are hard-coded in YAML.
+- Executes the nine-probe runner.
+
+Observed on PR #71 head:
+- Keeps `workflow_dispatch` and trusted staging push.
+- Removes legacy credential fallback; requires four canonical Tenant A/B username/password secrets.
+- Externalizes branch A/B and user A/B identifiers to Environment variables.
+- Still does not externalize Tenant A/B IDs, so it does not meet the requested six-variable contract.
+- The runner records nine probes independently. Missing preflight inputs create explicit BLOCKED records and a nonzero exit; this is correct fail-closed behavior, not a passing acceptance run.
+
+## Data-backed fixture constraints
+
+Read-only staging aggregates show 2 tenant records (1 active), 155 branches (5 active), and 3 active tenant memberships. PR #71's own runbook reports Tenant B currently has zero inventory balance rows; its positive own-branch inventory assertion cannot pass until a legitimate operational flow creates auditable stock. Do not weaken the assertion or seed inventory directly with ad-hoc SQL.
+
+The Owner profile aggregate shows one active Owner profile, while the Auth metadata aggregate found zero non-deleted users with `raw_app_meta_data.platform_owner` as boolean true or string `true`. This is not permission to elevate an account. An authorized administrator must establish the legitimate Owner identity and verify its app metadata and server-side allowlist.
+
+## Execution status
+
+The connected GitHub action set exposes workflow-run lookup and rerun tools, but no workflow-dispatch action. The authenticated P01–P09 run therefore cannot be safely started from this connection. Do not infer runtime success from existing Vercel status checks or static CI.
