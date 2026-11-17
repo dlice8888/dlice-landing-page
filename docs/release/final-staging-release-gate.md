@@ -7,7 +7,8 @@
 
 | Gate | Status | Evidence | Remaining action |
 |---|---|---|---|
-| GitHub branch protection/rulesets | FAIL | Direct metadata: main and staging both `protected=false`; rulesets API returns empty list; required checks enforcement off | Environment secret values are not readable; runtime validity not proven | Admin verifies canonical secrets and trusted runtime |
+| GitHub branch protection/rulesets | FAIL | `main` and `staging` both `protected=false`; rulesets API empty; required checks enforcement off | Repository admin configures rulesets, independent review, required checks, and staging deployment protection |
+| GitHub staging secrets | UNKNOWN | Environment secret metadata/plaintext is not readable; runtime validity not proven | Admin verifies canonical secrets and trusted runtime |
 | GitHub staging variables | PARTIAL | PR #71 head uses four branch/user variables; tenant IDs remain hard-coded/omitted | Agree canonical contract and configure six verified variables |
 | Owner metadata | FAIL | One linked Auth user; zero linked users with boolean `platform_owner=true` | Authorized Supabase Auth Admin action |
 | Owner allowlist | UNKNOWN | Effective server-side secret value not readable | Authorized admin verifies allowlist |
