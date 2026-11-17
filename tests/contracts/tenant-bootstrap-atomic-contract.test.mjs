@@ -67,6 +67,6 @@ test("uncertain bootstrap RPC outcomes are never auto-cleaned up as if rollback 
   assert.ok(uncertain >= 0 && cleanup > uncertain);
   assert.ok(ownerBootstrap.indexOf("typeof bootstrapError.code !== \"string\"") < uncertain);
   assert.ok(ownerBootstrap.indexOf("typeof bootstrapError.code !== \"string\"") < cleanup);
-  assert.match(ownerBootstrap, /pg_advisory_xact_lock/);
+  assert.match(migration, /pg_advisory_xact_lock/);
 });
 
