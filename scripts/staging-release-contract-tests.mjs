@@ -24,6 +24,10 @@ const erpAuthorizationCoverage = () => {
     const start = actions[i].index;
     const end = i + 1 < actions.length ? actions[i + 1].index : edge.length;
     const block = edge.slice(start, end);
+    // Self-membership reads are explicitly authorized by the verified actor UUID and active status.
+    if (action === "erp-list-tenant-memberships" &&
+      /\.eq\("user_id",\s*actor\.user\.id\)/.test(block) &&
+      /\.eq\("status",\s*"active"\)/.test(block)) continue;
     if (!/hasPerm\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
