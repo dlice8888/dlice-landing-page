@@ -16,6 +16,8 @@ const cfg = {
   passwordA: process.env.STAGING_TENANT_A_PASSWORD,
   usernameB: process.env.STAGING_TENANT_B_USERNAME,
   passwordB: process.env.STAGING_TENANT_B_PASSWORD,
+  tenantA: process.env.STAGING_TENANT_A_ID,
+  tenantB: process.env.STAGING_TENANT_B_ID,
   branchA: process.env.STAGING_TENANT_A_BRANCH_ID,
   branchB: process.env.STAGING_TENANT_B_BRANCH_ID,
   userA: process.env.STAGING_TENANT_A_USER_ID,
@@ -35,13 +37,15 @@ const required = [
   ["STAGING_SUPABASE_URL", endpointValid ? base : ""], ["STAGING_SUPABASE_ANON_KEY", key],
   ["STAGING_TENANT_A_USERNAME", cfg.usernameA], ["STAGING_TENANT_A_PASSWORD", cfg.passwordA],
   ["STAGING_TENANT_B_USERNAME", cfg.usernameB], ["STAGING_TENANT_B_PASSWORD", cfg.passwordB],
+  ["STAGING_TENANT_A_ID", cfg.tenantA], ["STAGING_TENANT_B_ID", cfg.tenantB],
   ["STAGING_TENANT_A_BRANCH_ID", cfg.branchA], ["STAGING_TENANT_B_BRANCH_ID", cfg.branchB],
   ["STAGING_TENANT_A_USER_ID", cfg.userA], ["STAGING_TENANT_B_USER_ID", cfg.userB],
 ];
 const missing = required.filter(([, value]) => !value).map(([name]) => name);
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const invalid = required.filter(([name, value]) => name.includes("_ID") && value && !uuid.test(value)).map(([name]) => name);
-const fixtureOk = endpointValid && !invalid.length && cfg.branchA !== cfg.branchB && cfg.userA !== cfg.userB;
+const fixtureOk = endpointValid && !invalid.length && cfg.tenantA !== cfg.tenantB
+  && cfg.branchA !== cfg.branchB && cfg.userA !== cfg.userB;
 if (missing.length || !fixtureOk) {
   const reason = missing.length ? "missing_or_invalid_preflight_inputs" : "invalid_or_non_distinct_fixture_ids";
   for (const name of [
@@ -83,23 +87,40 @@ async function apiProbe(name, path, token, init, predicate) {
 }
 const tokenA = await login("tenant-a", cfg.usernameA, cfg.passwordA);
 const tokenB = await login("tenant-b", cfg.usernameB, cfg.passwordB);
-let identityA = null, identityB = null;
-if (tokenA) {
-  const r = await apiProbe("tenant-a-identity-check", "/auth/v1/user", tokenA, {}, ({response,payload}) => ({
-    ok: response.status === 200 && payload?.id === cfg.userA,
-    evidence: { expectedUserMatched: payload?.id === cfg.userA },
+let identityA = null, identityB = null, membershipA = false, membershipB = false;
+async function verifyIdentityAndMembership(label, token, expectedUser, expectedTenant) {
+  if (!token) {
+    blocked(`${label}-identity-check`, "required_login_not_successful");
+    blocked(`${label}-membership-check`, "required_login_not_successful");
+    return null;
+  }
+  const identity = await apiProbe(`${label}-identity-check`, "/auth/v1/user", token, {}, ({response,payload}) => ({
+    ok: response.status === 200 && payload?.id === expectedUser,
+    evidence: { expectedUserMatched: payload?.id === expectedUser },
   }));
-  if (r.ok) identityA = r.payload.id;
+  const membership = await apiProbe(`${label}-membership-check`, "/functions/v1/dlice-orders", token, {
+    method: "POST", body: JSON.stringify({ action: "erp-list-tenant-memberships" }),
+  }, ({response,payload}) => {
+    const rows = Array.isArray(payload?.memberships) ? payload.memberships : [];
+    const match = rows.some(row => row.user_id === expectedUser && row.tenant_id === expectedTenant && row.status === "active");
+    return { ok: response.status === 200 && match, evidence: { activeExpectedTenantMembership: match, membershipCount: rows.length } };
+  });
+  return { identity: identity.ok ? identity.payload.id : null, membershipOk: membership.ok };
 }
-if (tokenB) {
-  const r = await apiProbe("tenant-b-identity-check", "/auth/v1/user", tokenB, {}, ({response,payload}) => ({
-    ok: response.status === 200 && payload?.id === cfg.userB,
-    evidence: { expectedUserMatched: payload?.id === cfg.userB },
-  }));
-  if (r.ok) identityB = r.payload.id;
-}
+const verifiedA = await verifyIdentityAndMembership("tenant-a", tokenA, cfg.userA, cfg.tenantA);
+const verifiedB = await verifyIdentityAndMembership("tenant-b", tokenB, cfg.userB, cfg.tenantB);
+identityA = verifiedA?.identity || null;
+identityB = verifiedB?.identity || null;
+membershipA = verifiedA?.membershipOk === true;
+membershipB = verifiedB?.membershipOk === true;
 if (!identityA || !identityB) blocked("tenant-identities-distinct", "one_or_both_identity_checks_not_successful");
-else (identityA !== identityB ? pass : fail)("tenant-identities-distinct", { identitiesDifferent: identityA !== identityB });
+else {
+  const distinct = identityA !== identityB;
+  const membershipsValid = membershipA && membershipB;
+  (distinct && membershipsValid ? pass : fail)("tenant-identities-distinct", {
+    identitiesDifferent: distinct, tenantAMembershipVerified: membershipA, tenantBMembershipVerified: membershipB,
+  });
+}
 const verifiedTokenA = identityA ? tokenA : null;
 const verifiedTokenB = identityB ? tokenB : null;
 const ownRead = async (label, token, branch) => apiProbe(`${label}-own-branch-read`, "/functions/v1/dlice-orders", token, {
