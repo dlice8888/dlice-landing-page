@@ -46,3 +46,16 @@ probe is failed, blocked, skipped, or absent.
 `TENANT_ISOLATION_RELEASED=false` remains unchanged. Do not enable either
 release flag until trusted runtime evidence and independent approval are
 available.
+
+
+## Reconciliation addendum — 18 Nov 2026
+
+- The canonical workflow supports `workflow_dispatch` and trusted pushes to `staging`; a job-level ref guard prevents dispatch from any non-staging ref. It remains protected by the GitHub Environment named `staging`.
+- P01–P09 remain **NOT RUN** on trusted staging. Static/contract CI is not runtime acceptance.
+- The configured Tenant A and Tenant B tenant/branch/user records were checked read-only. Both have active membership, an active QA branch assignment, and two inventory rows on the designated QA branch.
+- P03 has a known Tenant A fixture blocker: the Tenant A QA user also has an active assignment to planned branch `DLC-B001`. The exact-one-branch assertion is intentionally retained. An authorized maintainer must reconcile that assignment before P03 can pass.
+- Staging `dlice-orders` was deployed as version 67 from CI-passing source commit `1ae5d40277179bd617e10a11cc839f8df89fc550`. Runtime source contains the self-scoped membership handler. No migration was applied.
+- Owner authorization remains blocked: the active Owner profile's Auth `app_metadata.platform_owner` claim is absent; the server-side allowlist has not been verified.
+- The six staging secrets and six fixture variables remain unverified because the connected GitHub integration cannot read Environment metadata. The workflow preflight is the required value-free verification path.
+
+Do not mark this acceptance PASS until the fixture discrepancy and Owner/configuration blockers are resolved and a trusted staging workflow run proves all nine probes PASS with no BLOCKED or SKIPPED records.
