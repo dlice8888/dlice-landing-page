@@ -24,6 +24,13 @@ const erpAuthorizationCoverage = () => {
     const start = actions[i].index;
     const end = i + 1 < actions.length ? actions[i + 1].index : edge.length;
     const block = edge.slice(start, end);
+    // Self-membership lookup is authorized by an authenticated actor and
+    // a strict user_id + active-status filter, not a global profile permission.
+    if (action === "erp-list-tenant-memberships") {
+      if (!/\.eq\("user_id",\s*actor\.user\.id\)/.test(block)
+        || !/\.eq\("status",\s*"active"\)/.test(block)) missing.push(action);
+      continue;
+    }
     if (!/hasPerm\(|hasTenantPermissionForBranch\(|isTenantOwnerForBranch\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
