@@ -53,7 +53,7 @@ The same workflow path checked on PR #71 head also retains the legacy single-ide
 
 - Staging migration history returned 46 entries, ending at `20261027140145`.
 - The database migration tracking table contains version `20261022140302`, name `add_missing_fk_supporting_indexes`.
-- The expected source path `supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql` returned 404 on `staging` and `main`; GitHub code search for the version in this repository returned zero results.
+- Recursive Git tree inspection of the `staging` commit did not contain a path with version `20261022140302`; the expected source path returned 404 on `staging` and `main`; GitHub code search for the version in this repository returned zero results. A check of the historical branch `audit/migration-reconciliation-runtime-tests-20261027` at the expected path also returned 404.
 - Therefore database history confirms an applied migration record, but source recovery, original commit, checksum, and parity remain **BLOCKED/UNKNOWN**. Do not synthesize replacement SQL or replay it.
 - No migration was applied by this audit.
 
@@ -66,6 +66,15 @@ The same workflow path checked on PR #71 head also retains the legacy single-ide
 - Target was `null` in deployment metadata; it is treated as Preview evidence, not a production release.
 - READY proves deployment build/deploy completion only; authenticated browser and tenant-isolation acceptance were not performed.
 
+## Staging data snapshot (read-only)
+
+- 2 tenant rows, 1 active tenant.
+- 155 branch rows, 5 active branches.
+- 3 tenant membership rows, all 3 active.
+- 1 active Owner profile.
+- Auth metadata aggregate: 0 JSON boolean `platform_owner=true`; 0 string `platform_owner='true'` among non-deleted Auth users.
+- This aggregate does not identify the legitimate Owner or prove allowlist membership; do not infer which account should be elevated.
+
 ## Security and release gates
 
 - Preserve `TENANT_ISOLATION_RELEASED=false`.
@@ -73,8 +82,8 @@ The same workflow path checked on PR #71 head also retains the legacy single-ide
 - No production database, production environment variable, production deployment, or production data was changed.
 - Supabase security advisor returned one warning: leaked-password protection disabled. This is recorded as an advisory; it is not permission to weaken any other control.
 - GitHub Environment secret/variable plaintext is not readable through this audit. Presence and runtime validity are not established.
-- The currently checked staging workflow does not implement the six-secret/six-variable contract.
-- Owner identity, `app_metadata.platform_owner` boolean, and server-side UUID allowlist agreement have not been verified.
+- The staging runtime workflow does not implement the requested six-secret/six-variable contract: it has legacy credential fallbacks and hard-coded fixture IDs. PR #71's head removes the credential fallbacks and externalizes four branch/user variables, but still omits tenant ID variables and has not been independently reviewed or merged.
+- Read-only aggregate query found 1 active Owner profile, but 0 non-deleted Auth users with `raw_app_meta_data.platform_owner` as JSON boolean true and 0 with it as string `true`. The matching Owner identity/UUID and server-side allowlist agreement have not been established. No metadata was changed.
 - PR #64 has one COMMENTED review from the author, no independent approval in the review list, and no inline review threads.
 
 ## Administrator actions required
