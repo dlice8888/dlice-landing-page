@@ -52,3 +52,21 @@ test("successful bootstrap returns the new Auth UUID for administrator allowlist
   assert.match(ownerBootstrap, /DLICE_OWNER_BOOTSTRAP_SECRET/);
   assert.match(ownerBootstrap, /count\s*\?\?\s*0/);
 });
+test("initial owner bootstrap requires the one-time server secret before any account or profile lookup", () => {
+  assert.ok(ownerBootstrap.indexOf("DLICE_OWNER_BOOTSTRAP_SECRET") < ownerBootstrap.indexOf("admin_profiles"));
+  assert.ok(ownerBootstrap.indexOf("bootstrap_secret") < ownerBootstrap.indexOf("admin.auth.admin.createUser"));
+  assert.match(ownerBootstrap, /if \(!bootstrapSecret \|\| safeText\(body\.bootstrap_secret, 256\) !== bootstrapSecret\) return fail/);
+  assert.match(ownerBootstrap, /if \(\(count \?\? 0\) > 0\) return fail/);
+  assert.doesNotMatch(ownerBootstrap, /console\\.(?:log|info|warn|error).*bootstrapSecret/);
+  assert.doesNotMatch(ownerBootstrap, /return json\([\s\S]{0,300}(?:password|bootstrap_secret)/i);
+});
+
+test("uncertain bootstrap RPC outcomes are never auto-cleaned up as if rollback were proven", () => {
+  const uncertain = ownerBootstrap.indexOf("Hasil bootstrap belum dapat dipastikan");
+  const cleanup = ownerBootstrap.indexOf("admin.auth.admin.deleteUser");
+  assert.ok(uncertain >= 0 && cleanup > uncertain);
+  assert.ok(ownerBootstrap.indexOf("typeof bootstrapError.code !== \"string\"") < uncertain);
+  assert.ok(ownerBootstrap.indexOf("typeof bootstrapError.code !== \"string\"") < cleanup);
+  assert.match(ownerBootstrap, /pg_advisory_xact_lock/);
+});
+
