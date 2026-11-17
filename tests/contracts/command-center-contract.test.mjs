@@ -42,6 +42,12 @@ test("command-center API remains release-gated and reports database errors", () 
   assert.match(edge, /ringkasan operasional gagal dimuat/i);
   assert.match(edge, /const SUPPORTED_BRANCH_TIMEZONES = new Set/);
   assert.match(edge, /Zona waktu cabang tidak didukung/);
+  assert.match(edge, /const summaryBranches=selectedBranch\?availableBranches\.filter/);
+  assert.match(edge, /summaryBranches\.find\(\(branch:any\)=>!SUPPORTED_BRANCH_TIMEZONES\.has\(branch\.timezone\)\)/);
+  assert.ok(
+    edge.indexOf("invalidTimezoneBranch") < edge.indexOf('admin.rpc("dlice_get_command_center_summary"'),
+    "timezone validation must fail closed before the summary RPC",
+  );
   assert.match(migration, /unsupported_branch_timezone/);
 });
 
