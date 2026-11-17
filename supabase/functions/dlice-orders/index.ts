@@ -866,7 +866,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-list-tenant-memberships") {
     // Self-service only: this endpoint returns the authenticated actor's own active memberships.
     // Tenant membership is the authorization source; a global profile permission is not required.
-    const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status)").eq("user_id",actor.user.id).eq("status","active");
+    const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)").eq("user_id",actor.user.id).eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
     return json({memberships:data||[]},200,origin);
   }
