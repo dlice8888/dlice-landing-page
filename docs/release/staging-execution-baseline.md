@@ -12,7 +12,7 @@
 - Default branch: `main`.
 - Repository permission returned by GitHub: admin, maintain, push.
 - `staging` ref resolved to `aed2733f62506ed87a5040a48f479753fdafe1b1`.
-- Repository is public; branch listing reported `protected=false` for sampled branches. This is not a substitute for checking rulesets/branch protection.
+- Repository is public. Direct branch metadata for both `main` and `staging` reports `protected=false`, protection disabled, and required status checks enforcement `off`. Repository rulesets API returned an empty list. This is a verified P0 release-protection gap.
 - Production branch and release flags were not modified.
 
 ## Connected services
@@ -76,6 +76,8 @@ Those nine assertions do not cover the full requested P01–P09 domains: full te
 - The active Owner profile joins to one non-deleted Auth user, but that user has neither boolean nor string `platform_owner=true` metadata. The linked identity is not disclosed in this report. This does not prove allowlist membership; do not infer which account should be elevated.
 
 ## Security and release gates
+
+- GitHub release protection is currently absent on both `main` and `staging`: both branch metadata responses show `protected=false`; rulesets API returns `[]`. Branch-protection mutation is not available through the connected GitHub tools. A repository administrator must configure required independent PR review, required checks, no force-push/delete, and staging deployment protection. Do not merge or release until this is fixed.
 
 - Preserve `TENANT_ISOLATION_RELEASED=false`.
 - Preserve `PUBLIC_TENANT_ROUTING_RELEASED=false`.
