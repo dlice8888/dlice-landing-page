@@ -103,3 +103,22 @@ test("missing staging configuration is reported as blocked, never as a passing p
   assert.equal(summary.skipped, 0);
   assert.equal(summary.secretValuesPrinted, false);
 });
+
+test("inventory reads authorize the requested branch before any data query and scope balances to that branch", () => {
+  const start = edgeSource.indexOf('if (action === "erp-list-inventory")');
+  const end = edgeSource.indexOf('if (action === "erp-save-inventory")', start);
+  assert.ok(start >= 0 && end > start, "inventory list handler must exist");
+  const handler = edgeSource.slice(start, end);
+  const authorization = handler.indexOf("await branchAccess(branchId)");
+  const firstDataQuery = handler.indexOf('admin.from("inventory_items")');
+  const balancesQuery = handler.indexOf('admin.from("branch_inventory")');
+  assert.ok(authorization >= 0, "requested branch must be authorized");
+  assert.ok(firstDataQuery > authorization, "no inventory data may be queried before branch authorization");
+  assert.ok(balancesQuery > authorization, "branch balances may only be queried after branch authorization");
+  assert.match(handler, /\.eq\(["']branch_id["'],\s*branchId\s*\|\|\s*["']00000000-0000-0000-0000-000000000000["']\)/,
+    "balance query must be restricted to the requested branch; unscoped reads must return no branch balances");
+  assert.match(handler, /select\(["']id,sku,name,unit,category,min_stock,is_active["']\)/,
+    "the shared inventory master query must return only its approved catalog fields");
+  assert.match(handler, /if\(branchId&&!await branchAccess\(branchId\)\)return fail\([^;]+403/,
+    "foreign-tenant branch reads must be rejected before catalog or balance queries");
+});
