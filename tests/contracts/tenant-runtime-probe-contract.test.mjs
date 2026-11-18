@@ -124,3 +124,29 @@ test("inventory reads authorize the requested branch before any data query and s
   assert.match(handler, /if\(!branchId\|\|!await branchAccess\(branchId\)\)return fail\([^;]+403/,
     "missing or foreign-tenant branch reads must be rejected before catalog or balance queries");
 });
+
+
+test("P03 requires ordinary branch_worker identities, equal tenant roles and permissions, and allows multiple same-tenant branches", () => {
+  assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
+  assert.ok(probe.includes('membershipA?.admin_profiles?.role === "branch_worker"'));
+  assert.ok(probe.includes('membershipB?.admin_profiles?.role === "branch_worker"'));
+  assert.ok(probe.includes("sameTenantRole"));
+  assert.ok(probe.includes("permissionSetsEqual"));
+  assert.ok(probe.includes("branchesA.every((branch) => branch.tenant_id === tenantA)"));
+  assert.ok(probe.includes("branchesB.every((branch) => branch.tenant_id === tenantB)"));
+  assert.ok(!probe.includes("branchesA.length === 1") && !probe.includes("branchesB.length === 1"),
+    "additional same-tenant assignments must not fail the worker acceptance test");
+});
+
+test("runtime probe evidence masks user, tenant, and branch identifiers in every probe", () => {
+  assert.ok(probe.includes("const maskId ="));
+  assert.ok(probe.includes("maskId(tenantA)"));
+  assert.ok(probe.includes("maskId(branchA)"));
+  assert.ok(probe.includes("maskId(tenantB)"));
+  assert.ok(probe.includes("maskId(branchB)"));
+  assert.ok(probe.includes("identityAUserIdMasked: maskId(userA)"));
+  assert.ok(probe.includes("identityBUserIdMasked: maskId(userB)"));
+  assert.ok(!probe.includes("identityAUserId: userA") && !probe.includes("identityBUserId: userB"));
+  const definitions = probe.slice(probe.indexOf("const requiredProbes = ["), probe.indexOf("];", probe.indexOf("const requiredProbes = [")));
+  assert.doesNotMatch(definitions, /tenantA \?\?|tenantB \?\?|branchA \?\?|branchB \?\?/);
+});
