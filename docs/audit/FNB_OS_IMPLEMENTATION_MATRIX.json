@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18T19:45:00+07:00",
+  "snapshot_at": "2026-11-18T19:55:00+07:00",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2209,15 +2209,27 @@
       "sales_admin"
     ],
     "ordinary_worker_profile_type_available": false,
-    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner",
+    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner. PR #86 introduces branch_worker source-only; no staging profiles changed.",
     "active_cross_tenant_assignment_rows": 0,
     "branch_worker_role_candidate": {
       "pr": 86,
-      "branch": "fix/tenant-worker-profile-role-20261118",
       "head": "eeda0bdd715dc5477969be3196c6800d6a23eac2",
       "migration": "20261118190000_add_branch_worker_profile_role.sql",
-      "status": "DRAFT_NOT_APPLIED",
-      "ci": "PENDING"
+      "quality_run": 44306779658,
+      "quality_result": "SUCCESS",
+      "disposable_migration_replay_run": 44306779612,
+      "disposable_migration_replay_result": "SUCCESS",
+      "staging_migration_applied": false
+    },
+    "p03_probe_candidate": {
+      "pr": 87,
+      "head": "a44f27117c33f432ef467b5b52716bea028e0471",
+      "quality_run": 44307838730,
+      "quality_result": "SUCCESS",
+      "tenant_runtime_contract_tests": "7/7",
+      "masked_identifiers": true,
+      "multiple_same_tenant_assignments_allowed": true,
+      "staging_runtime_executed": false
     }
   },
   "tenant_acceptance": {
@@ -2236,17 +2248,17 @@
     ],
     "current_status": "BLOCKED",
     "last_known_runtime_run": 44208204366,
-    "latest_candidate_static_ci_run": 44304941471,
+    "latest_candidate_static_ci_run": 44307838730,
     "runtime_probes_executed": 0,
     "reason": [
       "GitHub Environment credential and fixture availability cannot be independently verified; workflow dispatch is not exposed through the connected integration",
-      "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only",
-      "Tenant A has two active same-tenant branch assignments while P03 fixture requires exactly one",
-      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be independently verified",
-      "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed"
+      "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only and no profiles have been changed",
+      "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed",
+      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be independently verified"
     ],
     "no_skipped_policy": true,
-    "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging"
+    "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging",
+    "p03_candidate": "PR #87 requires branch_worker profile, branch_manager tenant role, equal non-empty permission sets, active tenant membership, configured QA branch visibility, and masks all identity/tenant/branch IDs; allows multiple same-tenant assignments"
   },
   "open_prs": [
     83,
@@ -2264,7 +2276,8 @@
     22,
     84,
     85,
-    86
+    86,
+    87
   ],
-  "open_pr_count": 16
+  "open_pr_count": 17
 }
