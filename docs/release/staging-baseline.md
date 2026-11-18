@@ -1,8 +1,8 @@
 # Staging baseline
 
-**Captured:** 2026-11-16 17:17 UTC  
-**Baseline checkout:** `fix/atomic-tenant-bootstrap-staging-20261114`  
-**Baseline commit:** `33a561147d20aa0e99d4e7963d62c73dfeb56fe2`  
+**Captured:** 2026-11-16 17:17 UTC
+**Baseline checkout:** `fix/atomic-tenant-bootstrap-staging-20261114`
+**Baseline commit:** `33a561147d20aa0e99d4e7963d62c73dfeb56fe2`
 **Status:** Immutable discovery snapshot. Follow-up findings belong in the other release reports.
 
 ## Repository and GitHub

@@ -1,6 +1,6 @@
 # Release evidence index
 
-**Snapshot date:** 2026-11-16  
+**Snapshot date:** 2026-11-16
 **Decision:** NO-GO; administrative/runtime evidence remains blocked or not run.
 
 | Evidence | Reference | Environment / commit | Result |
