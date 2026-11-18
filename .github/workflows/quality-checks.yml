@@ -41,6 +41,8 @@ jobs:
         run: deno test supabase/functions/dlice-orders/tenant-permissions_test.ts
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
+      - name: Verify tenant worker profile role boundary
+        run: node --test tests/contracts/tenant-worker-profile-role-contract.test.mjs
       - name: Verify runtime tenant-isolation probe evidence
         run: |
           node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
