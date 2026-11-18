@@ -60,3 +60,7 @@ PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migratio
 - Fresh database inspection found two real active worker candidates, both `sales_admin` profile classifications with `branch_manager` membership and six permissions. Their active assignment counts are one and two, each confined to its own tenant. This is fixture inventory only, not authentication evidence.
 
 All seven operational E2E flows remain PARTIAL / NOT RUN or NOT VERIFIED as shown above. Existing contract tests and CORS probes do not substitute for the positive transaction workflows. No E2E data mutation was initiated in this continuation.
+
+
+### Canonical QA branch assignment cross-check
+A second read-only query confirmed the configured branch fixtures already exist and are actively assigned: tenant `dlice-default` has `QA-DLICE-A` (the same worker also has `DLC-B001`), and tenant `dlice-qa-isolation-b` has `QA-TENANT-B`. Both memberships have role `branch_manager`, six permissions, and the same permission-set fingerprint. The two candidate users are distinct membership rows in different tenants. This confirms branch assignment data is present; it does not provide passwords or prove either login. Populate the canonical GitHub variables from the existing records—do not create substitute tenants, branches, users, or assignments.
