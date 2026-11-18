@@ -26,6 +26,7 @@ jobs:
           STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
           STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
           STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+          STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+          STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
+          STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
         run: node tests/staging/tenant-isolation-existing-identity.mjs
