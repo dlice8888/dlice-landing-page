@@ -24,3 +24,12 @@
 ## Not performed
 
 No Auth metadata, branch assignment, GitHub Environment secret/variable, database schema/data, migration, release flag, branch protection, PR merge/close, production deployment or production data change was performed.
+
+
+## Additional P0 implementation slice — PR #85
+
+- Discovered deployed v69 inventory-read denial: `erp-list-inventory` was included in the tenant-wide denylist, making worker own-branch positive probes return 423 before branch authorization.
+- Created Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/85), head `63575c051112b7ec621afc4f96a1beef62238c2b`.
+- Candidate handler requires `inventory` permission, branch ID, active tenant membership and exact active assignment before any data query; it returns item details only through the selected branch's `branch_inventory` rows and retains the global inventory-master write gate.
+- Exact-head Free quality workflow [44304941471](https://github.com/dlice8888/dlice-landing-page/actions/runs/44304941471) passed; tenant runtime probe contract 6/6 and service-role scope contract 4/4 passed; Deno permission tests 2/2 passed in that workflow.
+- Candidate has not been deployed to staging. P04/P06 remain BLOCKED/NOT RUN until reviewed and merged to staging and then exercised through trusted runtime acceptance.
