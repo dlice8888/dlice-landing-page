@@ -2264,10 +2264,16 @@
       "index_statements": 9,
       "normalized_exact_match": true,
       "staging_applied": false,
-      "quality_and_disposable_replay": "PENDING",
+      "quality_and_disposable_replay": "PASS",
       "staging_indexes_exist": true,
       "staging_index_count": 9,
-      "index_definition_verified": true
+      "index_definition_verified": true,
+      "quality_run_id": 44309825502,
+      "disposable_replay_run_id": 44309825526,
+      "disposable_replay_job_id": 134821567927,
+      "disposable_replay_log": "Recovered migration applied successfully in disposable local database; complete repository migration set finished.",
+      "pr_status": "OPEN_DRAFT",
+      "preview": "READY"
     }
   },
   "tenant_acceptance": {
