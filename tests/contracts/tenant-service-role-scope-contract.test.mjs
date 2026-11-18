@@ -32,6 +32,9 @@ test("branch and inventory reads use tenant membership and branch assignment gua
   const inventory = source.slice(inventoryStart, inventoryEnd);
   assert.match(inventory, /branchAccess\(branchId\)/);
   assert.match(inventory, /eq\("branch_id",branchId/);
+  assert.match(inventory, /inventoryItemIds\.length/);
+  assert.match(inventory, /\.in\("id",inventoryItemIds\)/);
+  assert.match(inventory, /if\(!branchId\|\|!await branchAccess\(branchId\)\)/);
 });
 
 test("global funnel metrics are not exposed to tenant members before tenant-scoped reporting exists", () => {
