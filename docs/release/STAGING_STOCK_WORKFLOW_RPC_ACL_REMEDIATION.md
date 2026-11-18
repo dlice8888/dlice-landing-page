@@ -12,11 +12,12 @@ Migration `20261118165519_revoke_public_stock_workflow_rpc_execute.sql` revokes 
 
 ## Staging verification completed
 
-1. Apply this migration only through the approved staging migration process.
-2. Verify `has_function_privilege('anon', ...)` and `has_function_privilege('authenticated', ...)` are false for all five functions.
-3. Verify `has_function_privilege('service_role', ...)` remains true.
-4. Run authenticated positive branch-scoped stock transfer/count flows through `dlice-orders`.
-5. Run anonymous and authenticated direct RPC negative probes and confirm denial.
-6. Re-run Supabase Security Advisor and retain sanitized evidence.
+1. **Completed:** staging migration recorded as version `20261118165519`.
+2. **PASS:** `anon` EXECUTE is false for all five functions.
+3. **PASS:** `authenticated` EXECUTE is false for all five functions.
+4. **PASS:** `service_role` EXECUTE remains true for all five functions.
+5. **PASS:** Supabase Security Advisor no longer reports the five stock RPCs as publicly or authenticated-executable.
+6. **Pending:** authenticated positive branch-scoped stock count/transfer flows through `dlice-orders`.
+7. **Pending:** anonymous and authenticated direct RPC negative HTTP probes confirm denial.
 
-No function body, business transition, data row, Auth metadata, deployment, release flag, or production resource is changed by the migration source itself.
+No function body, business transition, business data row, Auth metadata, deployment, release flag, or production resource was changed. The migration changes staging function privileges only.
