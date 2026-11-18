@@ -39,3 +39,7 @@ The five SECURITY DEFINER stock functions are executable by `service_role` and d
 7. Verify migration history, schema diff, policies, grants, functions and data invariants after application.
 
 No staging DDL, migration application, production migration, or database data mutation occurred during this audit.
+
+## New source-only migration candidate
+
+PR #86 adds `supabase/migrations/20261118190000_add_branch_worker_profile_role.sql` to extend `admin_profiles_role_check` with the `branch_worker` identity classification. This migration is not applied to staging or production. It requires disposable replay, independent review, backup/rollback planning and explicit staging authorization. It is unrelated to PR #64's tenant stock-transfer migration and does not authorize that migration.
