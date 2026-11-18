@@ -94,7 +94,7 @@ for (const file of ["index.html", "admin.html", "track.html", "erp.html"]) {
     const body = match[2] || "";
     if (/\bsrc\s*=/.test(attrs) || !body.trim()) continue;
     try {
-      if (/\\btype\\s*=\\s*["']module["']/i.test(attrs)) {
+      if (/\btype\s*=\s*["']module["']/i.test(attrs)) {
         // Parse modules as modules: vm.Script rejects valid top-level await.
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dlice-module-contract-"));
         const tempFile = path.join(dir, "inline-module.mjs");
