@@ -49,3 +49,7 @@ Staging CORS runtime workflow [44307838539](https://github.com/dlice8888/dlice-l
 ## Production deployment exception
 
 **Exception recorded:** a documentation-only commit was accidentally made to `main` due to an omitted branch argument, triggering a production-target Vercel deployment. The added file was immediately deleted from `main`, which triggered a second production-target deployment. The current `dlice.vercel.app` alias points to restoration deployment `dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e`. The restored main tree SHA `427d9413b4e6fe070ba76a93baab533ccb528570` is byte-for-byte the same Git tree as the pre-incident parent commit. No application source, Auth, database or production data was changed. This is not described as “no production deployment”; it is a documented unintended documentation-only deployment followed by source-tree restoration.
+
+## Migration source parity update
+
+The staging source tree still has 45 migration files against 46 applied migration records. PR #88 restores the missing `20261022140302_add_missing_fk_supporting_indexes.sql` directly from the staging migration-history SQL; all nine index statements normalized-match the recorded applied SQL. This is source-only and does not reapply the migration. Keep the parity gate open until PR #88 exact-head quality and disposable replay pass and the PR is reviewed.
