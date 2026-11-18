@@ -31,6 +31,10 @@
 | Audit log access | Scoped, least privilege | Platform Owner scope | NOT VERIFIED |
 | Public catalog/order routing | Disabled while routing gate false | Owner configuration does not bypass release gate | BLOCKED |
 
+## Inventory read permission refinement
+
+The deployed v69 `erp-list-inventory` path was blocked by the global uncertified-action denylist. PR #85 proposes allowing only this read action through the explicit `inventory` permission + required branch + active membership + exact active branch assignment checks. The returned catalog is derived from the requested branch's stock rows, not the global inventory master. The global inventory master write action `erp-save-inventory` remains gated. Runtime acceptance is still pending.
+
 ## Required additions
 
 - Add an explicit role/permission/action inventory for every Edge Function action and RPC, including read/write scope and audit requirement.
