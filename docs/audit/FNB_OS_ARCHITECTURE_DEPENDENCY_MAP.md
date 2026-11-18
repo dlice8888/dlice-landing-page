@@ -58,6 +58,10 @@ flowchart TD
 - #31 is a downstream workflow acceptance gate, not a substitute for business-path E2E.
 - #74 is a broad staging-to-main promotion and is not a safe substitute for bounded production release PRs.
 
+## Inventory read path correction candidate
+
+The deployed v69 handler's global denylist blocked `erp-list-inventory` before its branch authorization helper. PR #85 is a bounded candidate that removes only that action from the denylist, requires `inventory` permission and explicit branch_id, verifies active membership and exact active branch assignment before querying, then reads `branch_inventory` joined to `inventory_items`. It intentionally keeps global inventory master writes denied because `inventory_items` has no tenant_id ownership column. Candidate CI passed; no staging deployment or P04/P06 runtime proof yet.
+
 ## Main architecture risks
 
 - Tenant context is not yet proven end-to-end across every action, RPC, view, storage object, scheduled task and integration event.
