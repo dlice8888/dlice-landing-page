@@ -15,7 +15,7 @@
 
 - Confirmed 2 tenants, 155 branches, 3 active tenant memberships, 64 public tables, 64 RLS-enabled tables, 64 policies, 29 public functions, and 5 SECURITY DEFINER functions.
 - Confirmed two distinct worker memberships in different tenants with the same `branch_manager` permission set.
-- Confirmed Worker A has 2 active same-tenant branch assignments while Worker B has 1; P03 exact-one-branch assertion remains a blocker.
+- Confirmed Worker A has 2 active same-tenant branch assignments while Worker B has 1; there are no cross-tenant assignment rows. PR #87 corrects the previous over-strict exact-one-branch assertion.
 - Confirmed active Owner profile/Auth user exists but `app_metadata.platform_owner` boolean true is absent.
 - Confirmed 46 staging migration records vs 45 source migration files; source for `20261022140302` is missing.
 - Confirmed PR #64 migration version `20261028120000` is not applied.
