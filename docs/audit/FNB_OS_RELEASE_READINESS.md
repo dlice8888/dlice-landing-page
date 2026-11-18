@@ -1,6 +1,6 @@
 # FnB OS Release Readiness
 
-**Decision:** <badge>NO-GO</badge>  
+**Decision:** NO-GO  
 **Snapshot:** 18 November 2026  
 **Target:** staging only; production excluded
 
