@@ -50,3 +50,13 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
 
 PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration passed disposable local replay (run 44306779612) but is not applied to staging and no account was changed. PR #87's exact-head quality workflow 44307838730 passed 7/7 tenant runtime contract tests; this is not P03 runtime acceptance. P03 remains BLOCKED.
+
+
+## Latest staging execution evidence — 2026-11-18
+
+- Tenant isolation run [44207773570](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773570): 0 PASS / 0 FAILED / 9 BLOCKED / 0 SKIPPED. Preflight accepted the staging URL and public key but found empty values for both worker username/password pairs and Tenant A/B tenant, branch and user IDs. All P01–P09 were recorded BLOCKED with `executed:false`; no authenticated probe ran.
+- Existing-identity negative probe [44208204366](https://github.com/dlice8888/dlice-landing-page/actions/runs/44208204366) blocked because canonical Tenant A credentials or Tenant B branch fixture are missing. It explicitly did not create accounts.
+- P0 HTTP run [44207773489](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773489) blocked because Owner QA username/password are absent. No disposable QA bootstrap ran.
+- Fresh database inspection found two real active worker candidates, both `sales_admin` profile classifications with `branch_manager` membership and six permissions. Their active assignment counts are one and two, each confined to its own tenant. This is fixture inventory only, not authentication evidence.
+
+All seven operational E2E flows remain PARTIAL / NOT RUN or NOT VERIFIED as shown above. Existing contract tests and CORS probes do not substitute for the positive transaction workflows. No E2E data mutation was initiated in this continuation.
