@@ -8,7 +8,7 @@
 
 - Two worker memberships are present in separate tenants. Both have role `branch_manager` and identical permission arrays: `orders, branches, inventory, pos, procurement, reports`.
 - Memberships are active and worker identities are distinct in the staging inventory.
-- Worker A has two active branch assignments in its own tenant; Worker B has one. No cross-tenant assignment rows were found. The exact-one-branch P03 fixture assertion therefore fails for A until the extra assignment is reconciled through the authorized admin path.
+- Worker A has two active assignments in its own tenant; Worker B has one. No cross-tenant assignment rows were found. The previous exact-one-branch P03 assertion was stricter than the acceptance requirement; PR #87 now allows multiple same-tenant assignments while checking the configured branch and cross-tenant branch invisibility.
 - One active Owner profile is linked to an Auth user, but the Auth user lacks `app_metadata.platform_owner=true` as a boolean. Read-only count of Auth users with that boolean true: 0.
 - GitHub Environment variables/secrets and `DLICE_PLATFORM_OWNER_USER_IDS` could not be read through the connected integration. Their values were not queried or printed.
 
@@ -51,7 +51,7 @@ The deployed denylist at `index.ts:71` and guard at `454-455` blocked `erp-list-
 |---|---|---|
 | P01 Tenant A login | BLOCKED | Protected credential availability cannot be verified; no trusted run |
 | P02 Tenant B login | BLOCKED | Protected credential availability cannot be verified; no trusted run |
-| P03 distinct identity/membership/exact branch | BLOCKED | No runtime run; Worker A has 2 active assignments but expected exactly 1 |
+| P03 distinct identity/membership/ordinary worker/permissions/branch | BLOCKED | No runtime run; both profiles remain sales_admin; PR #87 adds branch_worker and equal-permission checks |
 | P04 A own-branch inventory read | BLOCKED | No authenticated runtime read |
 | P05 A cross-tenant read denied | BLOCKED | No authenticated runtime negative test |
 | P06 B own-branch inventory read | BLOCKED | No authenticated runtime read |
@@ -63,7 +63,7 @@ Latest known staging runtime attempt `44208204366` was blocked at preflight befo
 
 ## Required secure remediation
 
-1. Reconcile Worker A extra branch assignment through the authorized HR/branch assignment workflow; preserve all unrelated assignment history.
+1. Review/merge PR #87's P03 correction; do not alter Worker A's same-tenant assignments merely to satisfy the obsolete exact-one assertion.
 2. Verify canonical two-worker credentials and six fixture variables by presence/availability only in GitHub Environment `staging`.
 3. Verify Owner Auth metadata through official Supabase Auth Admin, preserving other metadata, and independently verify UUID allowlist.
 4. Run P01–P09 and supplemental direct REST/RPC tests on trusted staging; no SKIPPED or false PASS.
