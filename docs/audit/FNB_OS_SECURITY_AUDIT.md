@@ -39,6 +39,12 @@
 - Performance: 26 unindexed foreign-key findings; 49 unused-index suggestions. Do not drop unused indexes without workload/query-plan review.
 - No database DDL or Auth configuration was changed during this audit.
 
+## Deployed Edge Function and inventory read gap
+
+Staging `dlice-orders` is ACTIVE at version 69, `verify_jwt=false`, deployed source SHA-256 `d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40`. Custom token validation is performed by `authClient.auth.getUser(token)` inside `getAdmin`; do not infer that `verify_jwt=false` means there is no authentication.
+
+The deployed denylist at `index.ts:71` and guard at `454-455` blocked `erp-list-inventory` with HTTP 423 for non-platform-owner users while the release flag was false. The old handler at `1266-1275` queried the global `inventory_items` table. PR #85 is a candidate fix: explicit inventory permission, mandatory branch ID, active membership and exact active assignment check before any query, and branch_inventory-to-inventory_items join. It retains the global inventory master write denylist. Exact-head quality CI 44304941471 passed; the change has not been deployed to staging, so this is not runtime proof.
+
 ## P0 evidence status
 
 | Test | Status | Reason |
