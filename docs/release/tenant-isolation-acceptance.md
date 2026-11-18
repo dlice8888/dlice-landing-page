@@ -59,3 +59,10 @@ available.
 - The six staging secrets and six fixture variables remain unverified because the connected GitHub integration cannot read Environment metadata. The workflow preflight is the required value-free verification path.
 
 Do not mark this acceptance PASS until the fixture discrepancy and Owner/configuration blockers are resolved and a trusted staging workflow run proves all nine probes PASS with no BLOCKED or SKIPPED records.
+
+## Execution update — 2026-11-18
+
+- Latest staging-authenticated negative workflow run: [44208204366](https://github.com/dlice8888/dlice-landing-page/actions/runs/44208204366), commit `c1498fd42d97e067eff4bd822fa3a9541c2636d9`, **FAILED/BLOCKED** before network access. The workflow log showed empty Tenant A username/password and Tenant B branch fixture inputs; this is missing configuration evidence, not a failed authorization probe.
+- The checked-in legacy probe referenced `branchB` before its declaration on the configured-credentials/missing-fixture path. The implementation branch moves the declaration ahead of preflight and adds a regression test that uses placeholders and makes no requests.
+- The same implementation replaces the workflow's literal staging publishable key with `secrets.STAGING_SUPABASE_PUBLIC_KEY`. GitHub Environment secret availability has not been independently verified.
+- Local contract tests and static quality checks pass for the candidate. This is not a trusted staging run; P01–P09 remain **BLOCKED / NOT RUN**, and both release flags remain false.
