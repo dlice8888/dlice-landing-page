@@ -45,3 +45,7 @@ Staging's two candidate tenant users are both classified globally as `sales_admi
 ## Runtime CORS gate
 
 Staging CORS runtime workflow [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539) passed all three live probes: allowlisted origin HTTP 200 with exact ACAO, foreign origin HTTP 403 without ACAO, and absent Origin HTTP 200 without fallback ACAO. This gate is PASS; tenant P01–P09 remain BLOCKED/NOT RUN.
+
+## Production deployment exception
+
+**Exception recorded:** a documentation-only commit was accidentally made to `main` due to an omitted branch argument, triggering a production-target Vercel deployment. The added file was immediately deleted from `main`, which triggered a second production-target deployment. The current `dlice.vercel.app` alias points to restoration deployment `dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e`. The restored main tree SHA `427d9413b4e6fe070ba76a93baab533ccb528570` is byte-for-byte the same Git tree as the pre-incident parent commit. No application source, Auth, database or production data was changed. This is not described as “no production deployment”; it is a documented unintended documentation-only deployment followed by source-tree restoration.
