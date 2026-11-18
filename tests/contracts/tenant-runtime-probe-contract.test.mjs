@@ -124,22 +124,21 @@ test("inventory reads authorize the requested branch before any data query and s
 });
 
 test("P03 requires ordinary branch_worker identities, equal tenant roles and permissions, and allows multiple same-tenant branches", () => {
-  assert.match(edgeSource, /admin_profiles\\(display_name,username,role\\)/);
-  assert.match(probe, /profileAIsOrdinaryWorker/);
-  assert.match(probe, /profileBIsOrdinaryWorker/);
-  assert.match(probe, /admin_profiles\\?\\.role === "branch_worker"/);
-  assert.match(probe, /sameTenantRole/);
-  assert.match(probe, /permissionSetsEqual/);
-  assert.match(probe, /branchesA\\.some\\(\\(branch\\) => branch\\.id === branchA/);
-  assert.doesNotMatch(probe, /branchesA\\.length === 1|branchesB\\.length === 1/,
+  assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
+  assert.ok(probe.includes('membershipA?.admin_profiles?.role === "branch_worker"'));
+  assert.ok(probe.includes('membershipB?.admin_profiles?.role === "branch_worker"'));
+  assert.ok(probe.includes("sameTenantRole"));
+  assert.ok(probe.includes("permissionSetsEqual"));
+  assert.ok(probe.includes("branchesA.some((branch) => branch.id === branchA"));
+  assert.ok(!probe.includes("branchesA.length === 1") && !probe.includes("branchesB.length === 1"),
     "additional same-tenant assignments must not fail the worker acceptance test");
 });
 
 test("runtime probe evidence masks user, tenant, and branch identifiers", () => {
-  assert.match(probe, /const maskId =/);
-  assert.match(probe, /maskId\\(tenantA\\)/);
-  assert.match(probe, /maskId\\(branchA\\)/);
-  assert.match(probe, /identityAUserIdMasked: maskId\\(userA\\)/);
-  assert.match(probe, /identityBUserIdMasked: maskId\\(userB\\)/);
-  assert.doesNotMatch(probe, /identityAUserId:\\s*userA|identityBUserId:\\s*userB/);
+  assert.ok(probe.includes("const maskId ="));
+  assert.ok(probe.includes("maskId(tenantA)"));
+  assert.ok(probe.includes("maskId(branchA)"));
+  assert.ok(probe.includes("identityAUserIdMasked: maskId(userA)"));
+  assert.ok(probe.includes("identityBUserIdMasked: maskId(userB)"));
+  assert.ok(!probe.includes("identityAUserId: userA") && !probe.includes("identityBUserId: userB"));
 });
