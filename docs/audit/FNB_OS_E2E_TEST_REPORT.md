@@ -9,7 +9,7 @@
 |---|---|---|
 | P01 | Login Worker A and validate session | BLOCKED / NOT RUN |
 | P02 | Login Worker B and validate session | BLOCKED / NOT RUN |
-| P03 | Different Auth users, active memberships, exact tenant and exact one-branch assignment | BLOCKED / NOT RUN; Worker A has 2 active branch assignments |
+| P03 | Different Auth users, active memberships, ordinary worker profile, equal role/permissions, valid branch assignment | BLOCKED / NOT RUN; both profiles are sales_admin; PR #87 adds the corrected assertions |
 | P04 | Worker A reads own branch inventory rows | BLOCKED / NOT RUN |
 | P05 | Worker A cross-tenant read rejected | BLOCKED / NOT RUN |
 | P06 | Worker B reads own branch inventory rows | BLOCKED / NOT RUN |
@@ -47,6 +47,6 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 
 ## Additional P03 identity blocker
 
-A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A also has two active same-tenant branch assignments versus the exact-one P03 fixture requirement.
+A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
 
-PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration is not applied and no account was changed. P03 remains BLOCKED.
+PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration passed disposable local replay (run 44306779612) but is not applied to staging and no account was changed. PR #87's exact-head quality workflow 44307838730 passed 7/7 tenant runtime contract tests; this is not P03 runtime acceptance. P03 remains BLOCKED.
