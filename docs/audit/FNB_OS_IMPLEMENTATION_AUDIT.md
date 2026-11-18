@@ -56,7 +56,7 @@ Detailed feature-level requirements, historical evidence notes, and source line 
 
 - Staging has 2 tenants, 155 branches, 3 active tenant memberships, and 4 active Auth users.
 - Two worker memberships are distinct users in distinct tenants; both have role `branch_manager` and the same permission set: orders, branches, inventory, pos, procurement, reports.
-- Worker A has 2 active branch assignments in its own tenant; Worker B has 1 active branch assignment in its own tenant. There are 0 cross-tenant assignment rows. The canonical P03 runner requires exactly one visible branch for each user, so Worker A currently fails that fixture assertion.
+- Worker A has 2 active branch assignments in its own tenant; Worker B has 1. There are 0 cross-tenant assignment rows. Multiple same-tenant assignments satisfy the stated acceptance requirement. PR #87 removes the previous over-strict exact-one-visible-branch assertion and instead requires the configured branch to be present and the other tenant's branch to remain invisible.
 - Each designated QA branch has 2 inventory balance rows, but no authenticated request has proved that either worker can read those rows.
 - The active Owner profile is linked to an Auth user. Its `app_metadata.platform_owner` claim is absent; count of Auth users with boolean `true` is 0. The UUID allowlist cannot be independently inspected through the available integration.
 - The Edge Function explicitly requires both the platform-owner UUID allowlist and boolean Auth app metadata; see `supabase/functions/dlice-orders/index.ts:52-55,92-100`.
@@ -66,7 +66,7 @@ Detailed feature-level requirements, historical evidence notes, and source line 
 
 PR #83 remains Draft/HOLD, targets staging, and has not been merged. The branch fixes the `branchB` temporal-dead-zone path, sources the publishable key from the staging Environment secret, and now rejects blank/whitespace key, username, password, and malformed/missing Tenant B branch UUID before network access. Login failure logging is sanitized to a constant error code. A table-driven no-network regression test covers eight missing/invalid input variants.
 
-Latest exact-head Free quality workflow run: [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) — SUCCESS. This is static/quality CI, not P01–P09. Vercel Preview is READY. P01–P09 are still BLOCKED because the protected staging inputs cannot be independently verified and Worker A's branch fixture is not exact-one.
+Latest exact-head Free quality workflow run: [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) — SUCCESS. This is static/quality CI, not P01–P09. Vercel Preview is READY. P01–P09 remain BLOCKED because protected staging inputs cannot be independently verified, both candidate profiles remain sales_admin rather than branch_worker, and deployed Edge Function v69 still denies the own-branch inventory action.
 
 ## Additional P0 inventory authorization finding
 
@@ -76,7 +76,7 @@ A separate Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/8
 
 ## Required next sequence
 
-1. Resolve the extra active Worker A branch assignment through the authorized HR/branch-assignment admin path; do not directly mutate the database to satisfy a test.
+1. Merge the reviewed P03 probe correction in PR #87; no branch assignment change is required because the extra assignment is within Tenant A and there are no cross-tenant assignment rows.
 2. Verify all 14 protected staging workflow inputs by name/availability only, without reading or printing values.
 3. Verify two real worker logins, tenant membership, exact branch assignment, and non-Owner/non-Admin role; then run P01–P09 on trusted staging.
 4. Complete Owner Auth Admin metadata and UUID allowlist verification using the official authorized route; do not bootstrap by bypass.
