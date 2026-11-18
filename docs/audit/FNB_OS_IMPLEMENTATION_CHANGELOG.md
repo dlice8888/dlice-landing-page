@@ -33,3 +33,10 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - Candidate handler requires `inventory` permission, branch ID, active tenant membership and exact active assignment before any data query; it returns item details only through the selected branch's `branch_inventory` rows and retains the global inventory-master write gate.
 - Exact-head Free quality workflow [44304941471](https://github.com/dlice8888/dlice-landing-page/actions/runs/44304941471) passed; tenant runtime probe contract 6/6 and service-role scope contract 4/4 passed; Deno permission tests 2/2 passed in that workflow.
 - Candidate has not been deployed to staging. P04/P06 remain BLOCKED/NOT RUN until reviewed and merged to staging and then exercised through trusted runtime acceptance.
+
+## Additional P0 worker identity work — PR #86
+
+- Fresh staging role inventory showed the two candidate `branch_manager` tenant members are both globally classified as `sales_admin`; current role constraint permits only `sales_admin` and `owner`.
+- Created Draft PR [#86](https://github.com/dlice8888/dlice-landing-page/pull/86), head `eeda0bdd715dc5477969be3196c6800d6a23eac2`.
+- Added source migration `20261118190000_add_branch_worker_profile_role.sql`, Owner-only role conversion with active membership/assignment checks, Owner UI, and quality contract test.
+- No migration was applied and no profile, Auth metadata, membership or assignment was changed. Exact-head GitHub Actions CI was not yet returned at this snapshot; Vercel Preview is available.
