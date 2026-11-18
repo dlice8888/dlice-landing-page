@@ -2264,7 +2264,10 @@
       "index_statements": 9,
       "normalized_exact_match": true,
       "staging_applied": false,
-      "quality_and_disposable_replay": "PENDING"
+      "quality_and_disposable_replay": "PENDING",
+      "staging_indexes_exist": true,
+      "staging_index_count": 9,
+      "index_definition_verified": true
     }
   },
   "tenant_acceptance": {
