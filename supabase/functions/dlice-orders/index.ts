@@ -68,7 +68,7 @@ const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
   "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
   "erp-list-tax-settings", "erp-save-tax-setting",
   "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
-  "erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory",
+  "erp-accept-tenant-invite", "erp-save-inventory",
   "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
   "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
   "admin-upload-media", "admin-delete-media", "erp-upload-media",
@@ -1265,13 +1265,17 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-list-inventory") {
     const branchId=safeText(body.branch_id,80);
-    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    const [items,balances]=await Promise.all([
-      admin.from("inventory_items").select("id,sku,name,unit,category,min_stock,is_active").order("name").limit(1000),
-      admin.from("branch_inventory").select("branch_id,inventory_item_id,on_hand,updated_at").eq("branch_id",branchId||"00000000-0000-0000-0000-000000000000")
-    ]);
-    if(items.error||balances.error)return fail("Persediaan gagal dimuat.",500,origin);
-    return json({items:items.data||[],balances:balances.data||[]},200,origin);
+    if(!branchId)return fail("Cabang wajib dipilih untuk melihat persediaan.",422,origin);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:rows,error}=await admin.from("branch_inventory")
+      .select("branch_id,inventory_item_id,on_hand,updated_at,inventory_items!branch_inventory_inventory_item_id_fkey(id,sku,name,unit,category,min_stock,is_active)")
+      .eq("branch_id",branchId)
+      .order("inventory_item_id");
+    if(error)return fail("Persediaan gagal dimuat.",500,origin);
+    const scopedRows=rows||[];
+    const items=scopedRows.map((row:any)=>row.inventory_items).filter((item:any)=>item&&item.is_active!==false);
+    const balances=scopedRows.map(({inventory_items:_item,...balance}:any)=>balance);
+    return json({items,balances},200,origin);
   }
 
   if (action === "erp-save-inventory") {
