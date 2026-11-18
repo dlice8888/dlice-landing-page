@@ -104,21 +104,38 @@ test("missing staging configuration is reported as blocked, never as a passing p
   assert.equal(summary.secretValuesPrinted, false);
 });
 
-test("inventory reads authorize the requested branch before any data query and scope balances to that branch", () => {
+test("inventory list is enabled for scoped worker reads while global inventory writes remain gated", () => {
+  const denylistStart = edgeSource.indexOf("const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([");
+  const denylistEnd = edgeSource.indexOf("]);", denylistStart);
+  assert.ok(denylistStart >= 0 && denylistEnd > denylistStart, "tenant denylist must exist");
+  const denylist = edgeSource.slice(denylistStart, denylistEnd);
+  assert.doesNotMatch(denylist, /"erp-list-inventory"/, "own-branch inventory reads must be eligible for explicit branch authorization");
+  assert.match(denylist, /"erp-save-inventory"/, "global inventory master writes remain closed until tenant ownership is modeled");
+});
+
+test("inventory reads require and authorize a branch, then return only that branch's inventory rows", () => {
   const start = edgeSource.indexOf('if (action === "erp-list-inventory")');
   const end = edgeSource.indexOf('if (action === "erp-save-inventory")', start);
   assert.ok(start >= 0 && end > start, "inventory list handler must exist");
   const handler = edgeSource.slice(start, end);
+  const requiredBranch = handler.indexOf("if(!branchId)");
   const authorization = handler.indexOf("await branchAccess(branchId)");
-  const firstDataQuery = handler.indexOf('admin.from("inventory_items")');
-  const balancesQuery = handler.indexOf('admin.from("branch_inventory")');
-  assert.ok(authorization >= 0, "requested branch must be authorized");
-  assert.ok(firstDataQuery > authorization, "no inventory data may be queried before branch authorization");
-  assert.ok(balancesQuery > authorization, "branch balances may only be queried after branch authorization");
-  assert.match(handler, /\.eq\(["']branch_id["'],\s*branchId\s*\|\|\s*["']00000000-0000-0000-0000-000000000000["']\)/,
-    "balance query must be restricted to the requested branch; unscoped reads must return no branch balances");
-  assert.match(handler, /select\(["']id,sku,name,unit,category,min_stock,is_active["']\)/,
-    "the shared inventory master query must return only its approved catalog fields");
-  assert.match(handler, /if\(branchId&&!await branchAccess\(branchId\)\)return fail\([^;]+403/,
-    "foreign-tenant branch reads must be rejected before catalog or balance queries");
+  const branchQuery = handler.indexOf('admin.from("branch_inventory")');
+  assert.ok(requiredBranch >= 0 && requiredBranch < authorization, "branch_id is mandatory before authorization");
+  assert.match(handler, /return fail\("Cabang wajib dipilih untuk melihat persediaan\.",422/);
+  assert.ok(authorization > requiredBranch && authorization < branchQuery, "branch authorization must precede every data query");
+  assert.match(handler, /return fail\("Akses cabang tidak diizinkan\.",403/);
+  assert.doesNotMatch(handler, /admin\.from\("inventory_items"\)/, "never enumerate the global inventory master for a tenant-scoped read");
+  assert.match(handler, /inventory_items!branch_inventory_inventory_item_id_fkey\(/, "items must be joined only through the selected branch's stock rows");
+  assert.match(handler, /\.eq\("branch_id",branchId\)/, "stock rows must be filtered to the authorized branch");
+  assert.match(handler, /const items=scopedRows\.map\(/, "returned items must be derived from scoped branch rows");
+  assert.match(handler, /const balances=scopedRows\.map\(/, "returned balances must be derived from the same scoped rows");
+
+  const accessStart = edgeSource.indexOf("const branchAccess = async");
+  const accessEnd = edgeSource.indexOf("const branchIdsForActor", accessStart);
+  const access = edgeSource.slice(accessStart, accessEnd);
+  assert.match(access, /\.eq\("tenant_id",branch\.tenant_id\)/, "membership must match the requested branch tenant");
+  assert.match(access, /\.eq\("status","active"\)/, "membership must be active");
+  assert.match(access, /\.eq\("branch_id",branchId\)/, "worker must have an assignment to the exact branch");
+  assert.match(access, /\.eq\("employment_status","active"\)/, "branch assignment must be active");
 });
