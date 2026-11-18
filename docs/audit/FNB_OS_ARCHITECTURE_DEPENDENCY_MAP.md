@@ -46,7 +46,7 @@ flowchart TD
 - The five SECURITY DEFINER stock functions are service_role executable and denied to anon/authenticated in current privilege inventory.
 - Direct public table grants to anon/authenticated are limited to SELECT on `public.products`.
 - 155 branch rows are present, but this is not evidence of 150 configured operational branches or production readiness.
-- Current worker A/B permissions are equivalent, but Worker A has two active same-tenant assignments; the canonical P03 test expects exactly one branch.
+- Current worker A/B permissions are equivalent; Worker A has two active same-tenant assignments and Worker B has one. PR #87 aligns P03 with the actual requirement by allowing multiple same-tenant assignments while checking the configured branch and rejecting visibility of the other tenant's branch.
 
 ## PR dependency graph
 
