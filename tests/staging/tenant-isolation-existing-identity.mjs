@@ -3,16 +3,15 @@ import assert from "node:assert/strict";
 const base = (process.env.STAGING_SUPABASE_URL || "").replace(/\/$/, "");
 const edge = process.env.STAGING_EDGE_FUNCTION_URL || "";
 const key = process.env.STAGING_SUPABASE_PUBLIC_KEY || "";
-const username = process.env.STAGING_TEST_BRANCH_A_USERNAME || "";
-const password = process.env.STAGING_TEST_BRANCH_A_PASSWORD || "";
+const username = process.env.STAGING_TENANT_A_USERNAME || "";
+const password = process.env.STAGING_TENANT_A_PASSWORD || "";
 assert.equal(base, "https://higoadrzxnhzbbwhdbmh.supabase.co", "Refusing non-staging target");
 assert.equal(edge, base + "/functions/v1/dlice-orders", "Refusing non-staging Edge Function");
-if (!username || !password) {
-  console.error("BLOCKED: existing branch-scoped staging identity credentials are not configured; no account was created.");
+if (!username || !password || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(branchB)) {
+  console.error("BLOCKED: canonical Tenant A credentials or Tenant B branch fixture are not configured; no account was created.");
   process.exit(2);
 }
-const branchA = "90000000-0000-4000-8000-000000000001";
-const branchB = "d8672046-7029-489b-9223-df07007cdc69";
+const branchB = process.env.STAGING_TENANT_B_BRANCH_ID || "";
 const zero = "00000000-0000-0000-0000-000000000000";
 const email = username.trim().toLowerCase().includes("@")
   ? username.trim().toLowerCase()
