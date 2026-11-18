@@ -41,3 +41,9 @@ The deployed v69 `erp-list-inventory` path was blocked by the global uncertified
 - Add direct REST/RLS tests for each exposed table and direct RPC EXECUTE denial.
 - Add multi-membership regression tests (intersection, wildcard, inactive membership, assignment removal).
 - Do not change role metadata or assignment records by direct SQL to make test fixtures pass.
+
+## Additional identity classification finding
+
+The current staging schema allows only `admin_profiles.role IN ('sales_admin','owner')`. The two active `branch_manager` tenant members both have `sales_admin` global profile classification. Their tenant permissions are equal and are correctly resolved from tenant memberships, but they cannot yet be certified as ordinary non-admin workers under the stated acceptance requirement.
+
+PR #86 adds a non-admin `branch_worker` classification, an Owner-only conversion endpoint that requires active non-admin membership plus active same-tenant branch assignment, and an Owner UI. It remains Draft/HOLD; its migration is source-only. No existing user was changed.
