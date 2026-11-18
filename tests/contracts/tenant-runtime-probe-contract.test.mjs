@@ -122,6 +122,7 @@ test("inventory reads require and authorize a branch, then return only that bran
   const authorization = handler.indexOf("await branchAccess(branchId)");
   const branchQuery = handler.indexOf('admin.from("branch_inventory")');
   assert.ok(requiredBranch >= 0 && requiredBranch < authorization, "branch_id is mandatory before authorization");
+  assert.match(handler, /hasPerm\("inventory"\)/, "worker must hold the inventory permission");
   assert.match(handler, /return fail\("Cabang wajib dipilih untuk melihat persediaan\.",422/);
   assert.ok(authorization > requiredBranch && authorization < branchQuery, "branch authorization must precede every data query");
   assert.match(handler, /return fail\("Akses cabang tidak diizinkan\.",403/);
