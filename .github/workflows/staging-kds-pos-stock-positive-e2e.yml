@@ -33,9 +33,9 @@ jobs:
           node-version: "22"
       - name: Preflight staging configuration before any business-flow mutation
         env:
-          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
-          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
-          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
         run: |
@@ -60,9 +60,9 @@ jobs:
           fi
       - name: Run POS → payment → KDS → recipe stock → report and offline replay E2E
         env:
-          STAGING_SUPABASE_URL: https://higoadrzxnhzbbwhdbmh.supabase.co
-          STAGING_SUPABASE_PUBLIC_KEY: sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo
-          STAGING_EDGE_FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
         run: node tests/staging/kds-pos-stock-positive.mjs
