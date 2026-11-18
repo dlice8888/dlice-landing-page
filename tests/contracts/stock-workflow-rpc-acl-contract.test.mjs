@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const migration = await readFile("supabase/migrations/20261118165519_revoke_public_stock_workflow_rpc_execute.sql", "utf8");
+const migration = await readFile("supabase/migrations/20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql", "utf8");
 const edge = await readFile("supabase/functions/dlice-orders/index.ts", "utf8");
 const workflow = await readFile(".github/workflows/quality-checks.yml", "utf8");
 
