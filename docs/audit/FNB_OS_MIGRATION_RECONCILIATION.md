@@ -47,3 +47,7 @@ PR #86 adds `supabase/migrations/20261118190000_add_branch_worker_profile_role.s
 ## Disposable replay result — PR #86
 
 The new `20261118190000_add_branch_worker_profile_role.sql` migration was replayed successfully on the disposable local Supabase database in workflow run [44306779612](https://github.com/dlice8888/dlice-landing-page/actions/runs/44306779612). The log confirms all repository migrations, including this migration, applied to the disposable database. This does not apply the migration to staging. Independent review, backup/rollback plan and explicit staging authorization remain required.
+
+## Exact source recovery candidate — PR #88
+
+The applied migration history row was queried directly and returned name `add_missing_fk_supporting_indexes` with one stored SQL string containing nine `CREATE INDEX IF NOT EXISTS` statements. PR #88 restores `20261022140302_add_missing_fk_supporting_indexes.sql`; normalized SQL comparison is an exact match to the applied history statement. The source file is not yet on staging; PR #88 quality and disposable replay are pending. Do not reapply the migration to staging because it is already recorded as applied.
