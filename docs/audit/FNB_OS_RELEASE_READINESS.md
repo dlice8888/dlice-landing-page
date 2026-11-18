@@ -41,3 +41,7 @@ Do not merge PR #64 or apply its migration until P01–P09, supplemental direct 
 ## Additional P0 identity gate
 
 Staging's two candidate tenant users are both classified globally as `sales_admin`; the database role constraint has no ordinary worker value. Their tenant membership role is `branch_manager`, but this alone does not satisfy the explicit non-Admin fixture requirement. PR #86 adds the source-only `branch_worker` role and Owner-authorized conversion path. Do not apply its migration or change user profiles until migration review and authorized Owner verification pass. P03 remains BLOCKED.
+
+## Runtime CORS gate
+
+Staging CORS runtime workflow [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539) passed all three live probes: allowlisted origin HTTP 200 with exact ACAO, foreign origin HTTP 403 without ACAO, and absent Origin HTTP 200 without fallback ACAO. This gate is PASS; tenant P01–P09 remain BLOCKED/NOT RUN.
