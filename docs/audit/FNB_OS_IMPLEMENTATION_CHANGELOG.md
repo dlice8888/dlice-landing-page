@@ -63,3 +63,12 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - Recovered all nine original index statements and added them to isolated PR [#88](https://github.com/dlice8888/dlice-landing-page/pull/88).
 - Normalized source SQL exactly matches the applied staging migration-history SQL.
 - Added a migration contract test and release/rollback note. Quality and disposable replay were still pending at the snapshot; no staging migration was reapplied.
+
+## PR #83 exact-head verification — 2026-11-18
+
+- PR #83 head: `b3121406d00fa395ff5073e4b67997f05d81ad0f`; draft, open, mergeable; Vercel Preview `dpl_EANn7yD2SrmKRodsqYZppJajqZAw` READY.
+- Free quality run [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) SUCCESS. The workflow includes staging secret workflow, tenant-isolation runtime evidence and public-routing gate checks. The log contains passing test groups of 5/5, 4/4, 11/11, 5/5 and 1/1.
+- `branchB` is declared before the fail-closed preflight in `tests/staging/tenant-isolation-existing-identity.mjs`, eliminating the previously observed temporal-dead-zone path.
+- Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
+- The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
+- **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
