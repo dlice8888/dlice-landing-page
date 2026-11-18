@@ -67,8 +67,8 @@ const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
   "erp-list-settlements", "erp-create-settlement", "erp-match-settlement",
   "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
   "erp-list-tax-settings", "erp-save-tax-setting",
-  "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
-  "erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory",
+  "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
+  "erp-accept-tenant-invite", "erp-save-inventory",
   "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
   "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
   "admin-upload-media", "admin-delete-media", "erp-upload-media",
@@ -1216,7 +1216,7 @@ Deno.serve(async (req: Request) => {
   if (action === "erp-list-branches") {
     if(!isOwner&&!["branches","pos","inventory","procurement","finance","reports","hr","staff"].some(hasPerm))return fail("Izin cabang tidak diizinkan.",403,origin);
     const ids=await branchIdsForActor().catch(()=>[]);
-    let q=admin.from("branches").select("id,code,name,status,address,city,province,timezone,opening_date,notes,created_at").order("code");
+    let q=admin.from("branches").select("id,tenant_id,code,name,status,address,city,province,timezone,opening_date,notes,created_at").order("code");
     q=ids?.length?q.in("id",ids):q.eq("id","00000000-0000-0000-0000-000000000000");
     const {data,error}=await q;
     if(error)return fail("Daftar cabang gagal dimuat.",500,origin);
@@ -1265,13 +1265,20 @@ Deno.serve(async (req: Request) => {
 
   if (action === "erp-list-inventory") {
     const branchId=safeText(body.branch_id,80);
-    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    const [items,balances]=await Promise.all([
-      admin.from("inventory_items").select("id,sku,name,unit,category,min_stock,is_active").order("name").limit(1000),
-      admin.from("branch_inventory").select("branch_id,inventory_item_id,on_hand,updated_at").eq("branch_id",branchId||"00000000-0000-0000-0000-000000000000")
-    ]);
-    if(items.error||balances.error)return fail("Persediaan gagal dimuat.",500,origin);
-    return json({items:items.data||[],balances:balances.data||[]},200,origin);
+    if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:balances,error:balanceError}=await admin.from("branch_inventory")
+      .select("branch_id,inventory_item_id,on_hand,updated_at")
+      .eq("branch_id",branchId);
+    if(balanceError)return fail("Persediaan gagal dimuat.",500,origin);
+    // inventory_items is a shared legacy master without tenant_id. Only expose item metadata
+    // referenced by stock rows in the already-authorized branch, never the global catalog.
+    const inventoryItemIds=[...new Set((balances||[]).map((row:any)=>row.inventory_item_id).filter(Boolean))];
+    const itemsResult=inventoryItemIds.length
+      ? await admin.from("inventory_items").select("id,sku,name,unit,category,min_stock,is_active")
+          .in("id",inventoryItemIds).order("name").limit(1000)
+      : {data:[],error:null};
+    if(itemsResult.error)return fail("Persediaan gagal dimuat.",500,origin);
+    return json({items:itemsResult.data||[],balances:balances||[]},200,origin);
   }
 
   if (action === "erp-save-inventory") {

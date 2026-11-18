@@ -115,10 +115,12 @@ test("inventory reads authorize the requested branch before any data query and s
   assert.ok(authorization >= 0, "requested branch must be authorized");
   assert.ok(firstDataQuery > authorization, "no inventory data may be queried before branch authorization");
   assert.ok(balancesQuery > authorization, "branch balances may only be queried after branch authorization");
-  assert.match(handler, /\.eq\(["']branch_id["'],\s*branchId\s*\|\|\s*["']00000000-0000-0000-0000-000000000000["']\)/,
-    "balance query must be restricted to the requested branch; unscoped reads must return no branch balances");
+  assert.match(handler, /\.eq\(["']branch_id["'],\s*branchId\s*\)/,
+    "balance query must be restricted to the explicitly authorized branch");
+  assert.match(handler, /inventoryItemIds[\s\S]*?\.in\(["']id["'],\s*inventoryItemIds\s*\)/,
+    "shared inventory metadata must be restricted to items stocked in the authorized branch");
   assert.match(handler, /select\(["']id,sku,name,unit,category,min_stock,is_active["']\)/,
     "the shared inventory master query must return only its approved catalog fields");
-  assert.match(handler, /if\(branchId&&!await branchAccess\(branchId\)\)return fail\([^;]+403/,
-    "foreign-tenant branch reads must be rejected before catalog or balance queries");
+  assert.match(handler, /if\(!branchId\|\|!await branchAccess\(branchId\)\)return fail\([^;]+403/,
+    "missing or foreign-tenant branch reads must be rejected before catalog or balance queries");
 });

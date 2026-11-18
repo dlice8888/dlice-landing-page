@@ -10,11 +10,31 @@ const source = await readFile(
 const gate = source.match(/const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? "";
 const gatedActions = new Set([...gate.matchAll(/"([^"]+)"/g)].map((match) => match[1]));
 
-test("unscoped service-role inventory and invite handlers remain closed before tenant isolation release", () => {
-  for (const action of ["erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory"]) {
+test("unscoped service-role inventory writes and tenant invites remain closed before tenant isolation release", () => {
+  for (const action of ["erp-accept-tenant-invite", "erp-save-inventory"]) {
     assert.ok(gatedActions.has(action), `missing tenant isolation gate for ${action}`);
   }
   assert.match(source, /if \(!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+});
+
+test("branch and inventory reads use tenant membership and branch assignment guards", () => {
+  assert.equal(gatedActions.has("erp-list-branches"), false);
+  assert.equal(gatedActions.has("erp-list-inventory"), false);
+
+  const branchListStart = source.indexOf('if (action === "erp-list-branches")');
+  const branchListEnd = source.indexOf("\n  if (action ===", branchListStart + 1);
+  const branchList = source.slice(branchListStart, branchListEnd);
+  assert.match(branchList, /branchIdsForActor\(\)/);
+  assert.match(branchList, /select\("id,tenant_id,code/);
+
+  const inventoryStart = source.indexOf('if (action === "erp-list-inventory")');
+  const inventoryEnd = source.indexOf("\n  if (action ===", inventoryStart + 1);
+  const inventory = source.slice(inventoryStart, inventoryEnd);
+  assert.match(inventory, /branchAccess\(branchId\)/);
+  assert.match(inventory, /eq\("branch_id",branchId/);
+  assert.match(inventory, /inventoryItemIds\.length/);
+  assert.match(inventory, /\.in\("id",inventoryItemIds\)/);
+  assert.match(inventory, /if\(!branchId\|\|!await branchAccess\(branchId\)\)/);
 });
 
 test("global funnel metrics are not exposed to tenant members before tenant-scoped reporting exists", () => {
