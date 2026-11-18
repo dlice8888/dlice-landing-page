@@ -2238,7 +2238,21 @@
       "sso_deployment_type": "all_except_custom_domains",
       "trusted_ips_enabled": false,
       "preview_latest_status": "READY",
-      "production_deployment_performed": false
+      "production_deployment_performed": true,
+      "production_deployment_exception": {
+        "type": "unintended_documentation_only_deployment",
+        "initial_deployment_id": "dpl_FV4dAmvTdERXQupSkcvqvReXqqXP",
+        "initial_commit": "eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1",
+        "restoration_deployment_id": "dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e",
+        "restoration_commit": "ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4",
+        "production_alias": "dlice.vercel.app",
+        "alias_points_to_restoration": true,
+        "restored_main_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
+        "preincident_parent_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
+        "tree_restored_exactly": true,
+        "application_code_changed": false,
+        "production_database_or_auth_changed": false
+      }
     }
   },
   "tenant_acceptance": {
