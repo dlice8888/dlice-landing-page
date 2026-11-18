@@ -103,3 +103,7 @@ A fresh read-only staging query confirms the two active non-owner memberships ar
 PR [#86](https://github.com/dlice8888/dlice-landing-page/pull/86) adds a source-only `branch_worker` identity classification, Owner-only role conversion guarded by active membership and branch assignment, and Owner UI. It is not merged, its migration is not applied, and no staging profile was changed. Its exact-head quality CI 44306779658 passed 4/4 role contract tests; disposable migration replay 44306779612 passed. Vercel Preview is READY. PR #87's P03 correction passed quality CI 44307838730 (7/7 tenant runtime contract tests), but P01–P09 have not run against staging.
 
 The deployed staging Edge Function remains v69. PR #85's scoped inventory handler is not deployed; the current deployed guard still denies `erp-list-inventory` for non-Owner users (HTTP 423). P04/P06 remain blocked until reviewed code is on staging and the trusted runtime workflow runs.
+
+## Staging CORS runtime verification
+
+Workflow run [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539) executed three real OPTIONS requests against staging `dlice-orders`: registered origin returned HTTP 200 with exact ACAO, foreign origin returned HTTP 403 with no ACAO, and no-Origin request returned HTTP 200 with no fallback ACAO. All three runtime CORS probes passed. This does not execute or replace P01–P09.
