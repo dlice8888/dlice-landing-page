@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18T19:55:00+07:00",
+  "snapshot_at": "2026-11-18T20:05:00+07:00",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2253,6 +2253,18 @@
         "application_code_changed": false,
         "production_database_or_auth_changed": false
       }
+    },
+    "source_migration_files_staging": 45,
+    "migration_source_recovery_candidate": {
+      "pr": 88,
+      "branch": "fix/recover-migration-source-20261022140302-20261118",
+      "file": "supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql",
+      "source_of_truth": "staging supabase_migrations.schema_migrations version 20261022140302",
+      "applied_name": "add_missing_fk_supporting_indexes",
+      "index_statements": 9,
+      "normalized_exact_match": true,
+      "staging_applied": false,
+      "quality_and_disposable_replay": "PENDING"
     }
   },
   "tenant_acceptance": {
@@ -2300,7 +2312,8 @@
     84,
     85,
     86,
-    87
+    87,
+    88
   ],
-  "open_pr_count": 17
+  "open_pr_count": 18
 }
