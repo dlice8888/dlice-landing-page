@@ -2230,6 +2230,15 @@
       "masked_identifiers": true,
       "multiple_same_tenant_assignments_allowed": true,
       "staging_runtime_executed": false
+    },
+    "vercel_project": {
+      "name": "dlice-landing-page",
+      "password_protection_enabled": false,
+      "sso_protection_enabled": true,
+      "sso_deployment_type": "all_except_custom_domains",
+      "trusted_ips_enabled": false,
+      "preview_latest_status": "READY",
+      "production_deployment_performed": false
     }
   },
   "tenant_acceptance": {
