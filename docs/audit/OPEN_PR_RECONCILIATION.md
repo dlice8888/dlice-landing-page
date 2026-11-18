@@ -1,7 +1,7 @@
 # Open PR Reconciliation — 18 November 2026
 
 **Repository:** `dlice8888/dlice-landing-page`  
-**Current open PR count:** 15  
+**Current open PR count:** 16  
 **Scope:** Current GitHub search result, not the historical 14-PR inventory from 17 November.
 
 No PR was merged or closed during this audit. No branch was deleted. Mergeability is not equivalent to approval or acceptance.
@@ -11,6 +11,7 @@ No PR was merged or closed during this audit. No branch was deleted. Mergeabilit
 | [#83](https://github.com/dlice8888/dlice-landing-page/pull/83) | Tenant probe fail-closed preflight | staging → fix/p0-tenant-isolation-preflight-20261118 | Yes | Yes | 4 / 3 | Keep Draft/HOLD; CI quality PASS; P01–P09 not run; preview READY |
 | [#84](https://github.com/dlice8888/dlice-landing-page/pull/84) | Ten-file FnB OS audit documentation | staging → audit/fnb-os-continuation-20261118 | Yes | Yes | 10 / 11 | Keep Draft; quality run 44304082511 PASS; evidence-only documentation |
 | [#85](https://github.com/dlice8888/dlice-landing-page/pull/85) | Branch-scoped inventory read authorization | staging → fix/tenant-scoped-inventory-read-20261118 | Yes | Yes | 3 / 7 | Keep Draft/HOLD; quality run 44304941471 PASS; P04/P06 require trusted staging runtime after reviewed staging merge |
+| [#86](https://github.com/dlice8888/dlice-landing-page/pull/86) | Distinct ordinary branch-worker profile role | staging → fix/tenant-worker-profile-role-20261118 | Yes | Pending | 6 / 6 | Keep Draft/HOLD; adds source migration and Owner-only role conversion; CI pending; migration not applied |
 | [#82](https://github.com/dlice8888/dlice-landing-page/pull/82) | Staging evidence whitespace normalization | staging → docs/reconcile-tenant-evidence-20261118 | Yes | No | 2 / 1 | Refresh/reconcile base and diff; preserve NO-GO flags |
 | [#74](https://github.com/dlice8888/dlice-landing-page/pull/74) | Staging → main promotion | main → staging | Yes | No | 139 / 355 | NOT SAFE; broad promotion, stale release gates, conflicts and failed auth-negative history |
 | [#71](https://github.com/dlice8888/dlice-landing-page/pull/71) | Canonical tenant fixture workflow | staging → fix/staging-tenant-fixtures-20261103 | Yes | No | 8 / 44 | HOLD; trusted credentials/fixture exactness not verified; auth-negative failed historically |
@@ -26,9 +27,9 @@ No PR was merged or closed during this audit. No branch was deleted. Mergeabilit
 
 ## Key reconciliation findings
 
-- Current open PR count is 15 after opening documentation PR #84 and scoped inventory-read PR #85; PR #21 and #79 are not in the current open search result. Do not use the previous 14-PR inventory as current.
+- Current open PR count is 16 after opening documentation PR #84, scoped inventory-read PR #85, and branch-worker identity PR #86; PR #21 and #79 are not in the current open search result. Do not use the previous 14-PR inventory as current.
 - All 13 PRs are Draft. No requested reviewers were returned in current PR metadata. A green check or `mergeable=true` is not an approval.
-- PR #84 contains the ten requested audit artifacts; exact-head quality run 44304082511 passed. PR #85 fixes the scoped own-branch inventory read path; exact-head quality run 44304941471 passed. Neither PR is merged or deployed to staging.
+- PR #84 contains the ten requested audit artifacts; exact-head quality run 44304082511 passed. PR #85 fixes the scoped own-branch inventory read path; exact-head quality run 44304941471 passed. PR #86 adds a non-admin branch_worker profile classification and Owner-only conversion path; exact-head GitHub Actions CI was pending at the latest read. None of these PRs is merged.
 - PR #83 latest head is `b3121406d00fa395ff5073e4b67997f05d81ad0f`. Exact-head quality run 44303062590 passed; Preview is READY. This does not satisfy staging tenant acceptance.
 - PR #64 remains Draft/HOLD. Its migration `20261028120000_enforce_same_tenant_stock_transfers.sql` is not in staging migration history.
 - PR #74 must not be merged as a bulk staging-to-main promotion.
@@ -40,7 +41,7 @@ No PR was merged or closed during this audit. No branch was deleted. Mergeabilit
 ## Dependency order
 
 1. #83 and #71 trusted fixture/preflight correctness.
-2. #85 scoped inventory read path and own-branch runtime proof.
+2. #86 branch_worker identity classification and authorized profile-role path, then #85 scoped inventory read path and own-branch runtime proof.
 3. #84 audit evidence and matrix reconciliation.
 2. Owner Auth/RBAC and tenant identity verification.
 3. #64 tenant isolation acceptance and migration review.
