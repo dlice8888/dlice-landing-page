@@ -95,3 +95,11 @@ A separate Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/8
 ## Release decision
 
 **NO-GO.** Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Keep PR #64 Draft/HOLD. Do not apply its migration, merge it, promote staging to main, or deploy production.
+
+## Additional identity and inventory findings — 18 November 2026
+
+A fresh read-only staging query confirms the two active non-owner memberships are in separate tenants, both have tenant role `branch_manager`, identical permission sets (`orders, branches, inventory, pos, procurement, reports`), active Auth users and active profiles. However, both corresponding `admin_profiles.role` values are `sales_admin`. The live check constraint `admin_profiles_role_check` permits only `sales_admin` and `owner`; therefore staging cannot currently represent an ordinary non-admin worker profile. Do not mark P03 compliant. Worker A has 2 active same-tenant assignments and Worker B has 1; there are 0 cross-tenant assignment rows.
+
+PR [#86](https://github.com/dlice8888/dlice-landing-page/pull/86) adds a source-only `branch_worker` identity classification, Owner-only role conversion guarded by active membership and branch assignment, and Owner UI. It is not merged, its migration is not applied, and no staging profile was changed. Its exact-head CI was not yet returned at this snapshot; Vercel Preview status is reported separately.
+
+The deployed staging Edge Function remains v69. PR #85's scoped inventory handler is not deployed; the current deployed guard still denies `erp-list-inventory` for non-Owner users (HTTP 423). P04/P06 remain blocked until reviewed code is on staging and the trusted runtime workflow runs.
