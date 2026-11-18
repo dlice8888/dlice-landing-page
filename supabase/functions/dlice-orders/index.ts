@@ -1273,8 +1273,10 @@ Deno.serve(async (req: Request) => {
       .order("inventory_item_id");
     if(error)return fail("Persediaan gagal dimuat.",500,origin);
     const scopedRows=rows||[];
-    const items=scopedRows.map((row:any)=>row.inventory_items).filter((item:any)=>item&&item.is_active!==false);
-    const balances=scopedRows.map(({inventory_items:_item,...balance}:any)=>balance);
+    const itemsById=new Map<string,any>();
+    for(const row of scopedRows){const item=row.inventory_items;if(item&&item.is_active!==false)itemsById.set(item.id,item);}
+    const items=[...itemsById.values()];
+    const balances=scopedRows.map((row:any)=>({branch_id:row.branch_id,inventory_item_id:row.inventory_item_id,on_hand:row.on_hand,updated_at:row.updated_at}));
     return json({items,balances},200,origin);
   }
 
