@@ -19,6 +19,10 @@
 
 The last known runtime workflow run `44208204366` stopped during configuration preflight before network access. It is not a failed authorization result and not a PASS. The exact-head Free quality workflow `44303062590` passed but is not runtime acceptance.
 
+## P04/P06 deployed-code blocker
+
+On deployed Edge Function v69, `erp-list-inventory` is rejected by the global uncertified-action guard with HTTP 423 for non-Owner users before branch authorization. Therefore P04/P06 cannot pass against the current deployment even with valid worker credentials. PR #85 changes the candidate handler to require inventory permission, branch ID, active membership and exact active assignment before returning only branch-associated stock rows. Its static quality CI passed (44304941471), but the PR is not merged/deployed and no P04/P06 runtime request has been made.
+
 ## Required operational flows
 
 | # | Flow | Current status | Missing evidence |
