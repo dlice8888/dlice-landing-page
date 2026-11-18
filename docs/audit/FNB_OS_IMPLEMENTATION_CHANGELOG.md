@@ -72,3 +72,12 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
 - The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
+
+
+## Fresh staging evidence checkpoint — 2026-11-18
+
+- Read-only Supabase inspection reconfirmed two active candidate workers: both currently `sales_admin` profiles with `branch_manager` memberships and six permissions; active assignment counts are one and two, each within one tenant. No worker role or assignment was changed.
+- The live profile role constraint still excludes `branch_worker`; PR #86 migration remains unapplied. The Owner profile exists, but the linked Auth user set contains zero boolean `platform_owner=true` values; allowlist not independently readable.
+- Tenant acceptance run [44207773570](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773570) returned 9 BLOCKED / 0 SKIPPED because worker credentials and canonical fixture IDs were empty. No P01–P09 request executed.
+- Existing-identity probe [44208204366](https://github.com/dlice8888/dlice-landing-page/actions/runs/44208204366) blocked without account creation. P0 HTTP bootstrap [44207773489](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773489) blocked by missing Owner QA credentials.
+- No staging or production mutation occurred. No credentials or full identity identifiers were copied into this report.
