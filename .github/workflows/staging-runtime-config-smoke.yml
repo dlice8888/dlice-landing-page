@@ -1,0 +1,42 @@
+name: Staging runtime configuration smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact Vercel Preview URL for the staging branch (never production)"
+        required: true
+        type: string
+  push:
+    branches: [staging]
+    paths:
+      - "api/runtime-config.js"
+      - "index.html"
+      - "erp.html"
+      - "tests/staging/runtime-config-smoke.mjs"
+      - ".github/workflows/staging-runtime-config-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-runtime-config-smoke
+  cancel-in-progress: true
+
+jobs:
+  runtime-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@1a4442cacd436585916779262731d5b1621c8ec2
+        with:
+          node-version: "22"
+      - name: Verify preview runtime config and public read APIs
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app' }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: node tests/staging/runtime-config-smoke.mjs
