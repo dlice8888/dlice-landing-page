@@ -29,7 +29,7 @@ No PR was merged or closed during this audit. No branch was deleted. Mergeabilit
 ## Key reconciliation findings
 
 - Current open PR count is 17 after opening documentation PR #84, scoped inventory-read PR #85, branch-worker identity PR #86, and P03 evidence correction PR #87; PR #21 and #79 are not in the current open search result. Do not use the previous 14-PR inventory as current.
-- All 13 PRs are Draft. No requested reviewers were returned in current PR metadata. A green check or `mergeable=true` is not an approval.
+- All 17 PRs are Draft. No requested reviewers were returned in current PR metadata. A green check or `mergeable=true` is not an approval.
 - PR #84 contains the ten requested audit artifacts; exact-head quality run 44304082511 passed. PR #85 fixes the scoped own-branch inventory read path; exact-head quality run 44304941471 passed. PR #86 adds a non-admin branch_worker profile classification and Owner-only conversion path; quality run 44306779658 passed and disposable migration replay 44306779612 passed. PR #87 corrects P03 worker/permission assertions and masks identifiers; quality run 44307838730 passed 7/7 contract tests. None of these PRs is merged.
 - PR #83 latest head is `b3121406d00fa395ff5073e4b67997f05d81ad0f`. Exact-head quality run 44303062590 passed; Preview is READY. This does not satisfy staging tenant acceptance.
 - PR #64 remains Draft/HOLD. Its migration `20261028120000_enforce_same_tenant_stock_transfers.sql` is not in staging migration history.
