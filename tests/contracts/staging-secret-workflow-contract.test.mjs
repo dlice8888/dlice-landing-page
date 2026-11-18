@@ -9,7 +9,7 @@ test("authenticated staging probes do not execute pull request code with staging
   assert.match(triggers, /^  push:\s*\n\s+branches:\s*\[staging\]/m);
   assert.doesNotMatch(triggers, /\bpull_request\b/);
   assert.match(workflow, /^\s+environment:\s*staging\s*$/m);
-  assert.match(workflow, /STAGING_TEST_BRANCH_A_PASSWORD:\s*\$\{\{\s*secrets\.STAGING_TEST_BRANCH_A_PASSWORD\s*\}\}/);
+  assert.match(workflow, /STAGING_TENANT_A_PASSWORD:\s*\$\{\{\s*secrets\.STAGING_TENANT_A_PASSWORD\s*\}\}/);
 });
 
 
