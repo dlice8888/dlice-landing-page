@@ -68,3 +68,13 @@ Latest known staging runtime attempt `44208204366` was blocked at preflight befo
 3. Verify Owner Auth metadata through official Supabase Auth Admin, preserving other metadata, and independently verify UUID allowlist.
 4. Run P01–P09 and supplemental direct REST/RPC tests on trusted staging; no SKIPPED or false PASS.
 5. Keep both release flags false and PR #64 Draft/HOLD until independent security review and runtime evidence pass.
+
+## Ordinary worker identity classification — additional P0
+
+Fresh staging read-only evidence:
+- Both non-owner tenant members have tenant membership role `branch_manager`, identical permission sets and active Auth accounts.
+- Both linked `admin_profiles.role` values are `sales_admin`.
+- The actual database check constraint `admin_profiles_role_check` permits only `sales_admin` and `owner`; no ordinary `branch_worker` identity type currently exists.
+- The app's Owner bypass remains independent and requires the allowlisted UUID plus boolean Auth app metadata. Global profile permissions are not used for tenant permission resolution.
+
+PR #86 introduces a source-only `branch_worker` classification and Owner-only conversion action requiring active non-admin tenant membership and active same-tenant assignment. It does not modify existing users or Auth metadata. Migration `20261118190000_add_branch_worker_profile_role.sql` is not applied. P03 remains BLOCKED until an authorized Owner action classifies real workers and the runtime probe verifies the identities.
