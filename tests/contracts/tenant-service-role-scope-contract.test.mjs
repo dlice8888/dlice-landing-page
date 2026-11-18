@@ -22,13 +22,13 @@ test("branch and inventory reads use tenant membership and branch assignment gua
   assert.equal(gatedActions.has("erp-list-inventory"), false);
 
   const branchListStart = source.indexOf('if (action === "erp-list-branches")');
-  const branchListEnd = source.indexOf("\\n  if (action ===", branchListStart + 1);
+  const branchListEnd = source.indexOf("\n  if (action ===", branchListStart + 1);
   const branchList = source.slice(branchListStart, branchListEnd);
   assert.match(branchList, /branchIdsForActor\(\)/);
   assert.match(branchList, /select\("id,tenant_id,code/);
 
   const inventoryStart = source.indexOf('if (action === "erp-list-inventory")');
-  const inventoryEnd = source.indexOf("\\n  if (action ===", inventoryStart + 1);
+  const inventoryEnd = source.indexOf("\n  if (action ===", inventoryStart + 1);
   const inventory = source.slice(inventoryStart, inventoryEnd);
   assert.match(inventory, /branchAccess\(branchId\)/);
   assert.match(inventory, /eq\("branch_id",branchId/);
