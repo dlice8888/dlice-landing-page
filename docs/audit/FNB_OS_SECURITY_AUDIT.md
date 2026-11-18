@@ -96,3 +96,19 @@ All three CORS runtime probes passed. They are distinct from tenant authenticati
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
 - The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
+
+
+## Fresh staging authentication and worker fixture check — 2026-11-18
+
+Read-only Supabase inspection (project `higoadrzxnhzbbwhdbmh`):
+- Two active non-owner identities have active `branch_manager` tenant memberships and six permissions each. Their profile classification is still `sales_admin`; no active `branch_worker` profile exists.
+- One worker has one active branch assignment and the other has two. Each worker's active assignments remain within its own tenant; no cross-tenant assignment was found in the aggregate inventory. Do not remove the second same-tenant assignment merely to simplify testing.
+- The live `admin_profiles_role_check` constraint still allows only `sales_admin` and `owner`. PR #86's migration remains source-only; no staging migration or profile conversion was performed.
+- One active Owner profile exists, but the linked Auth metadata aggregate reports zero accounts with boolean `app_metadata.platform_owner=true`. The Owner UUID allowlist is not readable through the connected tools. Owner authorization therefore remains BLOCKED, not assumed from the profile row alone.
+
+Latest staging workflow evidence:
+- Tenant acceptance run [44207773570](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773570): P01–P09 all **BLOCKED**, 0 PASS, 0 FAILED, 9 BLOCKED, 0 SKIPPED. URL and public key preflight passed; both worker credential pairs and all tenant/branch/user fixture IDs were empty. No probe request executed.
+- Existing-identity negative probe run [44208204366](https://github.com/dlice8888/dlice-landing-page/actions/runs/44208204366): **BLOCKED** because canonical Tenant A credentials or Tenant B branch fixture are not configured; log explicitly confirms no account was created.
+- P0 HTTP run [44207773489](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773489): **BLOCKED** because the existing Owner QA username/password are missing; no business-flow bootstrap ran.
+
+The GitHub integration does not expose Actions Environment secret/variable values or provide workflow-dispatch capability. Do not infer fixture values from database rows or create substitute accounts. P01–P09 and Owner authorization remain unverified until the authorized maintainer provisions the real fixture references and completes the official Owner Auth metadata/allowlist step.
