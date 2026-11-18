@@ -78,3 +78,12 @@ Fresh staging read-only evidence:
 - The app's Owner bypass remains independent and requires the allowlisted UUID plus boolean Auth app metadata. Global profile permissions are not used for tenant permission resolution.
 
 PR #86 introduces a source-only `branch_worker` classification and Owner-only conversion action requiring active non-admin tenant membership and active same-tenant assignment. It does not modify existing users or Auth metadata. Migration `20261118190000_add_branch_worker_profile_role.sql` is not applied. P03 remains BLOCKED until an authorized Owner action classifies real workers and the runtime probe verifies the identities.
+
+## CORS runtime evidence
+
+Staging runtime workflow [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539) executed three live OPTIONS probes:
+- registered staging Preview origin: HTTP 200 and exact matching ACAO;
+- foreign origin: HTTP 403 and no ACAO;
+- no Origin header: HTTP 200 and no fallback ACAO.
+
+All three CORS runtime probes passed. They are distinct from tenant authentication and cross-tenant P01–P09, which remain BLOCKED/NOT RUN.
