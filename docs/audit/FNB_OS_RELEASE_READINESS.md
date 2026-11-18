@@ -30,6 +30,10 @@
 4. **GitHub branch protection/rulesets:** configure required reviews/status checks/no force-push/no delete and staging deployment reviewers through repository Settings. The current API reports staging unprotected and rulesets empty; this audit did not weaken protection.
 5. **Missing migration source:** recover `20261022140302` from the authoritative source and checksum it against the applied version.
 
+## Additional P0 dependency
+
+PR #85 is a Draft code candidate for the own-branch inventory read path required by P04/P06. Its exact-head quality CI passed, but it has not been merged or deployed to staging. Do not run P01–P09 against v69 expecting P04/P06 to pass; after review and staging merge, run the trusted workflow and preserve BLOCKED results if inputs are missing.
+
 ## Release sequence
 
 Do not merge PR #64 or apply its migration until P01–P09, supplemental direct REST/RPC checks, migration replay, operational regression, independent security review and all release gates pass. Do not merge PR #74 as a bulk promotion. Do not deploy production.
