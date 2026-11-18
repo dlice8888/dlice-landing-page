@@ -56,3 +56,10 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - The file was immediately deleted from `main`; restoration commit `ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4` triggered deployment `dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e`.
 - Verified the restored main tree SHA `427d9413b4e6fe070ba76a93baab533ccb528570` exactly equals the pre-incident parent tree SHA. Verified `dlice.vercel.app` points to the restoration deployment and the accidental audit matrix file is absent from main.
 - No application code, database, Auth metadata or production data was changed. Production deployment did occur; this is explicitly recorded as an exception. No further production deployment is authorized.
+
+## Migration source parity recovery — PR #88
+
+- Queried the actual staging migration history row `20261022140302`, name `add_missing_fk_supporting_indexes`.
+- Recovered all nine original index statements and added them to isolated PR [#88](https://github.com/dlice8888/dlice-landing-page/pull/88).
+- Normalized source SQL exactly matches the applied staging migration-history SQL.
+- Added a migration contract test and release/rollback note. Quality and disposable replay were still pending at the snapshot; no staging migration was reapplied.
