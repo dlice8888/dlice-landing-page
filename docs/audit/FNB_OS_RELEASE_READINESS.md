@@ -1,0 +1,35 @@
+# FnB OS Release Readiness
+
+**Decision:** <badge>NO-GO</badge>  
+**Snapshot:** 18 November 2026  
+**Target:** staging only; production excluded
+
+## Release gates
+
+| Gate | Current result | Evidence |
+|---|---|---|
+| `TENANT_ISOLATION_RELEASED=false` | PRESERVED | Edge source `supabase/functions/dlice-orders/index.ts:52` |
+| `PUBLIC_TENANT_ROUTING_RELEASED=false` | PRESERVED | Edge source `supabase/functions/dlice-orders/index.ts:135-144` |
+| PR #64 migration | HOLD / NOT APPLIED | Staging migration history ends at `20261027140145` |
+| P01–P09 | BLOCKED / NOT RUN | Last runtime attempt 44208204366 blocked before network access |
+| Owner authorization | BLOCKED | Active Owner profile exists; Auth app_metadata boolean true absent; allowlist not independently verifiable |
+| Worker A/B identity and scope | PARTIAL | Two distinct workers, equal branch_manager permissions; Worker A has two active assignments |
+| RLS | CONFIGURATION PASS ONLY | 64/64 public tables have RLS; policy semantics not fully adversarially verified |
+| Migration parity | BLOCKED | 46 applied rows vs 45 source files |
+| Operational E2E | NOT VERIFIED | Required seven business flows not proven end-to-end |
+| Open PR reconciliation | IN PROGRESS | 13 current open PRs, all Draft |
+| GitHub protection | P0 BLOCKED | staging reports `protected=false`; rulesets empty; protection read endpoint 403 |
+| Vercel Preview | READY | Preview readiness is not authenticated staging acceptance |
+| Production | UNTOUCHED | No production deployment or database change |
+
+## External configuration actions that cannot be performed through this connection
+
+1. **GitHub Environment `staging` secrets/variables:** verify presence of the six tenant credential secrets and six tenant fixture variables without revealing values. Location: repository Settings → Environments → staging. Reason: connected integration cannot read environment metadata; workflow dispatch API is not exposed here. Verify by trusted staging workflow preflight.
+2. **Worker A branch assignment:** remove/reconcile the extra active branch assignment through the authorized HR/branch-assignment admin UI/API. Do not directly alter DB rows. Verify P03 returns exactly one visible branch with the expected tenant/branch/code.
+3. **Owner Auth metadata:** through Supabase Authentication → Users / authorized Auth Admin, preserve existing app metadata and set boolean `platform_owner: true` only if the account is genuinely authorized. Verify Auth read-back and UUID allowlist membership independently.
+4. **GitHub branch protection/rulesets:** configure required reviews/status checks/no force-push/no delete and staging deployment reviewers through repository Settings. The current API reports staging unprotected and rulesets empty; this audit did not weaken protection.
+5. **Missing migration source:** recover `20261022140302` from the authoritative source and checksum it against the applied version.
+
+## Release sequence
+
+Do not merge PR #64 or apply its migration until P01–P09, supplemental direct REST/RPC checks, migration replay, operational regression, independent security review and all release gates pass. Do not merge PR #74 as a bulk promotion. Do not deploy production.
