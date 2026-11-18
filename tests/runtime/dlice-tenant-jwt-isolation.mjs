@@ -18,11 +18,12 @@ const branchCodeA = process.env.STAGING_TENANT_A_BRANCH_CODE;
 const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
 const userIdA = process.env.STAGING_TENANT_A_USER_ID;
 const userIdB = process.env.STAGING_TENANT_B_USER_ID;
+const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
-  ["P01", "Tenant A username/password login", "Tenant A", tenantA ?? "unconfigured", branchA ?? "unconfigured", "D'Lice admin-login"],
-  ["P02", "Tenant B username/password login", "Tenant B", tenantB ?? "unconfigured", branchB ?? "unconfigured", "D'Lice admin-login"],
-  ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${tenantA ?? "unconfigured"},${tenantB ?? "unconfigured"}`, `${branchA ?? "unconfigured"},${branchB ?? "unconfigured"}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
+  ["P01", "Tenant A username/password login", "Tenant A", maskId(tenantA), maskId(branchA), "D'Lice admin-login"],
+  ["P02", "Tenant B username/password login", "Tenant B", maskId(tenantB), maskId(branchB), "D'Lice admin-login"],
+  ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
   ["P04", "Tenant A own-branch inventory read", "Tenant A", tenantA ?? "unconfigured", branchA ?? "unconfigured", "erp-list-inventory"],
   ["P05", "Tenant A cross-tenant inventory read denied", "Tenant A", tenantA ?? "unconfigured", branchB ?? "unconfigured", "erp-list-inventory"],
   ["P06", "Tenant B own-branch inventory read", "Tenant B", tenantB ?? "unconfigured", branchB ?? "unconfigured", "erp-list-inventory"],
@@ -372,30 +373,19 @@ if (
       const membershipsB = membershipBResult.payload?.memberships;
       const branchesA = branchesAResult.payload?.branches;
       const branchesB = branchesBResult.payload?.branches;
-      const membershipAIsCorrect = Array.isArray(membershipsA) &&
-        membershipsA.some((membership) =>
-          membership.user_id === userA &&
-          membership.tenant_id === tenantA &&
-          membership.status === "active"
-        ) &&
-        !membershipsA.some((membership) => membership.tenant_id === tenantB);
-      const membershipBIsCorrect = Array.isArray(membershipsB) &&
-        membershipsB.some((membership) =>
-          membership.user_id === userB &&
-          membership.tenant_id === tenantB &&
-          membership.status === "active"
-        ) &&
-        !membershipsB.some((membership) => membership.tenant_id === tenantA);
-      // These QA identities are intentionally assigned to exactly one branch each.
-      // Check the complete visible branch set, not merely that the expected branch appears.
-      const branchAAssignmentIsCorrect = Array.isArray(branchesA) &&
-        branchesA.length === 1 &&
-        branchesA[0].id === branchA &&
-        branchesA[0].code === branchCodeA;
-      const branchBAssignmentIsCorrect = Array.isArray(branchesB) &&
-        branchesB.length === 1 &&
-        branchesB[0].id === branchB &&
-        branchesB[0].code === branchCodeB;
+      const membershipA = Array.isArray(membershipsA) ? membershipsA.find((membership) => membership.user_id === userA && membership.tenant_id === tenantA && membership.status === "active") : null;
+      const membershipB = Array.isArray(membershipsB) ? membershipsB.find((membership) => membership.user_id === userB && membership.tenant_id === tenantB && membership.status === "active") : null;
+      const membershipAIsCorrect = !!membershipA && !membershipsA.some((membership) => membership.tenant_id === tenantB);
+      const membershipBIsCorrect = !!membershipB && !membershipsB.some((membership) => membership.tenant_id === tenantA);
+      const profileAIsOrdinaryWorker = membershipA?.admin_profiles?.role === "branch_worker";
+      const profileBIsOrdinaryWorker = membershipB?.admin_profiles?.role === "branch_worker";
+      const sameTenantRole = membershipA?.role === "branch_manager" && membershipB?.role === membershipA?.role;
+      const permissionsA = Array.isArray(membershipA?.permissions) ? [...membershipA.permissions].sort() : [];
+      const permissionsB = Array.isArray(membershipB?.permissions) ? [...membershipB.permissions].sort() : [];
+      const permissionSetsEqual = permissionsA.length > 0 && JSON.stringify(permissionsA) === JSON.stringify(permissionsB);
+      // Multiple same-tenant assignments are valid; the configured QA branch must be visible.
+      const branchAAssignmentIsCorrect = Array.isArray(branchesA) && branchesA.some((branch) => branch.id === branchA && branch.code === branchCodeA) && !branchesA.some((branch) => branch.id === branchB);
+      const branchBAssignmentIsCorrect = Array.isArray(branchesB) && branchesB.some((branch) => branch.id === branchB && branch.code === branchCodeB) && !branchesB.some((branch) => branch.id === branchA);
       const identityMatchesFixtures = userA === userIdA && userB === userIdB && userA !== userB;
       const passed = identityAResult.response.status === 200 &&
         identityBResult.response.status === 200 &&
@@ -406,6 +396,10 @@ if (
         identityMatchesFixtures &&
         membershipAIsCorrect &&
         membershipBIsCorrect &&
+        profileAIsOrdinaryWorker &&
+        profileBIsOrdinaryWorker &&
+        sameTenantRole &&
+        permissionSetsEqual &&
         branchAAssignmentIsCorrect &&
         branchBAssignmentIsCorrect;
       return {
@@ -422,11 +416,19 @@ if (
           tenantBBranches: branchesBResult.response.status,
         },
         evidence: {
-          identityAUserId: userA ?? null,
-          identityBUserId: userB ?? null,
+          identityAUserIdMasked: maskId(userA),
+          identityBUserIdMasked: maskId(userB),
           identityMatchesFixtures,
           membershipAActiveInTenantA: membershipAIsCorrect,
           membershipBActiveInTenantB: membershipBIsCorrect,
+          profileAIsOrdinaryWorker,
+          profileBIsOrdinaryWorker,
+          tenantRoleA: membershipA?.role ?? null,
+          tenantRoleB: membershipB?.role ?? null,
+          sameTenantRole,
+          permissionSetsEqual,
+          permissionCountA: permissionsA.length,
+          permissionCountB: permissionsB.length,
           branchAAssignmentMatchesFixture: branchAAssignmentIsCorrect,
           branchBAssignmentMatchesFixture: branchBAssignmentIsCorrect,
         },
@@ -443,7 +445,7 @@ if (
       recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
       return;
     }
-    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${identityByTenant[tenant]})`, async () => {
+    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
       const requestedBranch = isTenantA ? branchA : branchB;
       const { response, payload, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
