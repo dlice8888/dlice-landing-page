@@ -644,7 +644,55 @@ Deno.serve(async (req: Request) => {
   }
 
 
-  if (action === "admin-set-active") {
+if (action === "admin-set-profile-role") {
+    if (!isPlatformOwner) return fail("Hanya Pemilik platform yang dapat mengubah klasifikasi profil.", 403, origin);
+    const userId = safeText(body.user_id, 80);
+    const nextRole = safeText(body.profile_role, 30);
+    if (!userId || !["sales_admin", "branch_worker"].includes(nextRole)) {
+      return fail("Akun atau jenis profil tidak valid.", 422, origin);
+    }
+    const { data: target, error: targetError } = await admin
+      .from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
+    if (targetError || !target) return fail("Profil akun tidak ditemukan.", 404, origin);
+    if (target.role === "owner") return fail("Profil Owner tidak dapat diubah melalui aksi ini.", 409, origin);
+
+    if (nextRole === "branch_worker") {
+      const { data: memberships, error: membershipError } = await admin
+        .from("tenant_memberships").select("tenant_id,role")
+        .eq("user_id", userId).eq("status", "active");
+      if (membershipError) return fail("Keanggotaan tenant belum dapat diverifikasi.", 503, origin);
+      if (!memberships?.length || memberships.some((membership: any) => ["tenant_owner", "tenant_admin"].includes(String(membership.role)))) {
+        return fail("Profil pekerja memerlukan keanggotaan pekerja aktif dan tidak boleh memiliki peran Tenant Owner/Admin.", 409, origin);
+      }
+      const { data: assignments, error: assignmentError } = await admin
+        .from("branch_assignments")
+        .select("id,branch_id,branches(tenant_id)")
+        .eq("user_id", userId).eq("employment_status", "active")
+        .lte("starts_on", todayDate())
+        .or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
+      if (assignmentError) return fail("Penugasan cabang belum dapat diverifikasi.", 503, origin);
+      const tenantIds = new Set(memberships.map((membership: any) => membership.tenant_id));
+      const validAssignments = (assignments || []).filter((assignment: any) => tenantIds.has(assignment.branches?.tenant_id));
+      const hasCrossTenantAssignment = (assignments || []).some((assignment: any) => !tenantIds.has(assignment.branches?.tenant_id));
+      if (!validAssignments.length || hasCrossTenantAssignment) {
+        return fail("Profil pekerja memerlukan assignment aktif pada tenant miliknya dan tidak boleh memiliki assignment lintas tenant.", 409, origin);
+      }
+    }
+
+    const { error } = await admin.from("admin_profiles")
+      .update({ role: nextRole, updated_at: new Date().toISOString() }).eq("user_id", userId);
+    if (error) return fail("Klasifikasi profil gagal diperbarui.", 409, origin);
+    await admin.from("admin_audit_logs").insert({
+      actor_user_id: actor.user.id,
+      action: "set_staff_profile_role",
+      entity_type: "admin_profile",
+      entity_id: userId,
+      metadata: { previous_role: target.role, profile_role: nextRole },
+    });
+    return json({ ok: true, user_id: userId, profile_role: nextRole }, 200, origin);
+  }
+
+    if (action === "admin-set-active") {
     if (!isPlatformOwner) return fail("Hanya Pemilik yang dapat mengubah status akun staf.", 403, origin);
     const userId = safeText(body.user_id, 80);
     const isActive = body.is_active;
@@ -862,7 +910,7 @@ Deno.serve(async (req: Request) => {
     // Do not require a global "branches" permission for a user's own membership lookup.
     // Never accept a caller-supplied user_id here; actor identity comes from the verified session.
     const {data,error}=await admin.from("tenant_memberships")
-      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)")
+      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username,role)")
       .eq("user_id",actor.user.id)
       .eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
