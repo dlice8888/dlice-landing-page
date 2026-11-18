@@ -8,6 +8,7 @@ on:
       - "supabase/functions/dlice-orders/index.ts"
       - "tests/staging/procurement-requisition-contract.mjs"
       - "tests/staging/procurement-receiving-positive.mjs"
+      - "tests/staging/runtime-config-smoke.mjs"
       - "api/runtime-config.js"
       - "index.html"
       - "erp.html"
