@@ -128,7 +128,8 @@ test("inventory reads require and authorize a branch, then return only that bran
   assert.doesNotMatch(handler, /admin\.from\("inventory_items"\)/, "never enumerate the global inventory master for a tenant-scoped read");
   assert.match(handler, /inventory_items!branch_inventory_inventory_item_id_fkey\(/, "items must be joined only through the selected branch's stock rows");
   assert.match(handler, /\.eq\("branch_id",branchId\)/, "stock rows must be filtered to the authorized branch");
-  assert.match(handler, /const items=scopedRows\.map\(/, "returned items must be derived from scoped branch rows");
+  assert.match(handler, /const itemsById=new Map<string,any>\(\)/, "branch items must be deduplicated across warehouses");
+  assert.match(handler, /const items=\[\.\.\.itemsById\.values\(\)\]/, "returned items must be derived from scoped branch rows");
   assert.match(handler, /const balances=scopedRows\.map\(/, "returned balances must be derived from the same scoped rows");
 
   const accessStart = edgeSource.indexOf("const branchAccess = async");
