@@ -1,4 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import {
+  hasTenantScopedHeadOfficePermission,
+  resolveTenantScopedPermissions,
+} from "./tenant-permissions.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -64,6 +68,7 @@ const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set([
   "erp-list-fiscal-periods", "erp-create-fiscal-period", "erp-close-fiscal-period", "erp-reopen-fiscal-period",
   "erp-list-tax-settings", "erp-save-tax-setting",
   "erp-list-branches", "erp-save-branch", "erp-list-branch-settings", "erp-save-branch-setting", "erp-save-assignment", "erp-list-assignments",
+  "erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory",
   "erp-list-refunds", "erp-create-refund", "erp-review-refund", "erp-process-refund",
   "erp-overview", "erp-reports", "erp-export-report", "erp-list-audit-logs", "admin-list-audit-logs",
   "admin-upload-media", "admin-delete-media", "erp-upload-media",
@@ -89,14 +94,22 @@ const getAdmin = async (req: Request) => {
   if (!token) return null;
   const { data: userData, error: userError } = await authClient.auth.getUser(token);
   if (userError || !userData.user) return null;
-  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,permissions,username").eq("user_id", userData.user.id).maybeSingle();
+  const { data: profile, error } = await admin.from("admin_profiles").select("role,is_active,display_name,username").eq("user_id", userData.user.id).maybeSingle();
   if (error || !profile?.is_active) return null;
-  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
-  const { data: assignments } = await admin.from("branch_assignments").select("job_positions(default_permissions)").eq("user_id", userData.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
-  const rolePermissions = (assignments || []).flatMap((a: any) => Array.isArray(a.job_positions?.default_permissions) ? a.job_positions.default_permissions : []);
-  const savedPermissions = (Array.isArray(profile.permissions) ? profile.permissions : rolePermissions).filter((permission: string) => permission !== "*");
-  // Explicit profile permissions are authoritative; position defaults are only a fallback/template.
-  return { user: userData.user, profile: { ...profile, permissions: [...new Set(savedPermissions)] } };
+  if (profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(userData.user.id) && userData.user.app_metadata?.platform_owner === true) {
+    return { user: userData.user, profile: { ...profile, permissions: ["*"] } };
+  }
+  // Never authorize tenant actions from global admin_profiles.permissions or position defaults.
+  // The intersection is deliberately fail-closed for users with multiple tenant memberships:
+  // a permission granted in Tenant A cannot silently become a grant in Tenant B.
+  const { data: memberships, error: membershipError } = await admin
+    .from("tenant_memberships")
+    .select("tenant_id,role,permissions,status")
+    .eq("user_id", userData.user.id)
+    .eq("status", "active");
+  if (membershipError || !memberships?.length) return null;
+  const permissions = resolveTenantScopedPermissions(memberships);
+  return { user: userData.user, profile: { ...profile, permissions } };
 };
 
 Deno.serve(async (req: Request) => {
@@ -115,6 +128,23 @@ Deno.serve(async (req: Request) => {
     body = await req.json();
   } catch { return fail("Format permintaan tidak valid.", 400, origin); }
   const action = safeText(body.action, 40);
+
+  // Public catalog and checkout still use the legacy global product/branch model.
+  // Keep them closed until host/domain -> tenant resolution and tenant-scoped
+  // catalog/order queries have passed positive and cross-tenant negative tests.
+  const PUBLIC_TENANT_ROUTING_RELEASED = false;
+  const PUBLIC_TENANT_ROUTING_REQUIRED_ACTIONS = new Set([
+    "list-online-branches",
+    "list-products",
+    "create-order",
+  ]);
+  if (!PUBLIC_TENANT_ROUTING_RELEASED && PUBLIC_TENANT_ROUTING_REQUIRED_ACTIONS.has(action)) {
+    return fail(
+      "Katalog dan pemesanan publik sementara ditutup sampai routing tenant dan isolasi katalog/pesanan terverifikasi.",
+      423,
+      origin,
+    );
+  }
 
   if (action === "admin-login") {
     const username = safeText(body.username, 32).toLowerCase();
@@ -179,6 +209,8 @@ Deno.serve(async (req: Request) => {
   if (action === "admin-funnel-summary") {
     const actor = await getAdmin(req);
     if (!actor) return fail("Sesi operasional tidak valid.", 401, origin);
+    const funnelPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
+    if (!TENANT_ISOLATION_RELEASED && !funnelPlatformOwner) return fail("Ringkasan funnel lintas tenant ditutup sampai isolasi tenant terverifikasi.", 423, origin);
     if (!actor.profile.permissions.includes("*") && !actor.profile.permissions.includes("orders")) return fail("Akses ringkasan tidak diizinkan.", 403, origin);
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await admin.from("funnel_daily_metrics").select("metric_date,event_name,event_count").gte("metric_date", since).order("metric_date", { ascending: true });
@@ -458,6 +490,39 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await admin.from("branch_assignments").select("job_positions(is_head_office,default_permissions)").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     return !error && (data || []).some((x: any) => x.job_positions?.is_head_office === true && Array.isArray(x.job_positions?.default_permissions) && x.job_positions.default_permissions.includes(permission));
   };
+  const hasHQPermissionForTenant = async (permission: string, tenantId: string): Promise<boolean | null> => {
+    if (isPlatformOwner) return true;
+    if (!actor.profile.permissions.includes(permission)) return false;
+    const [membershipResult, assignmentResult] = await Promise.all([
+      admin.from("tenant_memberships").select("tenant_id,status,permissions")
+        .eq("tenant_id", tenantId).eq("user_id", actor.user.id).eq("status", "active"),
+      admin.from("branch_assignments")
+        .select("branches!inner(tenant_id),job_positions!inner(is_head_office,default_permissions)")
+        .eq("user_id", actor.user.id).eq("employment_status", "active")
+        .eq("branches.tenant_id", tenantId)
+        .lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`),
+    ]);
+    if (membershipResult.error || assignmentResult.error) return null;
+    const assignments = (assignmentResult.data || []).map((assignment: {
+      branches: { tenant_id: string } | { tenant_id: string }[] | null;
+      job_positions: { is_head_office: boolean; default_permissions: unknown } |
+        { is_head_office: boolean; default_permissions: unknown }[] | null;
+    }) => {
+      const branch = Array.isArray(assignment.branches) ? assignment.branches[0] : assignment.branches;
+      const position = Array.isArray(assignment.job_positions) ? assignment.job_positions[0] : assignment.job_positions;
+      return {
+        tenant_id: branch?.tenant_id,
+        is_head_office: position?.is_head_office,
+        default_permissions: position?.default_permissions,
+      };
+    });
+    return hasTenantScopedHeadOfficePermission(
+      membershipResult.data || [],
+      assignments,
+      tenantId,
+      permission,
+    );
+  };
 
   const permissionForAction: Record<string, string> = {
     "admin-list-orders": "orders",
@@ -511,7 +576,7 @@ Deno.serve(async (req: Request) => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes(requiredPermission)) {
+  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
@@ -730,7 +795,7 @@ Deno.serve(async (req: Request) => {
 
   // Multi-branch POS/ERP actions. All writes run through this authenticated server endpoint.
   const isOwner = isPlatformOwner;
-  const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes(p);
+  const hasPerm = (p: string) => isOwner || actor.profile.permissions.includes("*") || actor.profile.permissions.includes(p);
   const tenantIdsForActor = async (): Promise<string[]> => {
     const {data,error}=await admin.from("tenant_memberships").select("tenant_id").eq("user_id",actor.user.id).eq("status","active");
     if(error)throw new Error("Keanggotaan tenant gagal dimuat.");
@@ -793,8 +858,13 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-tenant-memberships") {
-    if(!hasPerm("branches")&&!isOwner)return fail("Izin keanggotaan tenant tidak diizinkan.",403,origin);
-    const {data,error}=await admin.from("tenant_memberships").select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)").eq("user_id",actor.user.id).eq("status","active");
+    // Self-service only: return active memberships belonging to the authenticated actor.
+    // Do not require a global "branches" permission for a user's own membership lookup.
+    // Never accept a caller-supplied user_id here; actor identity comes from the verified session.
+    const {data,error}=await admin.from("tenant_memberships")
+      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username)")
+      .eq("user_id",actor.user.id)
+      .eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
     return json({memberships:data||[]},200,origin);
   }
@@ -1268,7 +1338,26 @@ Deno.serve(async (req: Request) => {
     if (!transferId || !["approve", "pick", "ship", "receive", "reconcile", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
     const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
     if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
-    if (transition === "approve" && !await hasHQPermission("inventory")) return fail("Persetujuan transfer memerlukan izin Inventory Head Office.", 403, origin);
+    if (transition === "approve") {
+      const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
+        .select("id,tenant_id")
+        .in("id", [transfer.source_branch_id, transfer.destination_branch_id]);
+      if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
+      if (transferBranches?.length !== 2) {
+        return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+      }
+      const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.source_branch_id)?.tenant_id;
+      const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.destination_branch_id)?.tenant_id;
+      if (!sourceTenantId || !destinationTenantId) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+      if (sourceTenantId !== destinationTenantId && !isPlatformOwner) {
+        return fail("Persetujuan transfer lintas tenant hanya tersedia untuk platform owner.", 403, origin);
+      }
+      const approvalAuthorized = await hasHQPermissionForTenant("inventory", sourceTenantId);
+      if (approvalAuthorized === null) return fail("Otorisasi Inventory Head Office gagal diperiksa.", 500, origin);
+      if (!approvalAuthorized) {
+        return fail("Persetujuan transfer memerlukan izin Inventory Head Office pada tenant terkait.", 403, origin);
+      }
+    }
     const branchToCheck = ["receive", "reconcile"].includes(transition) ? transfer.destination_branch_id : transfer.source_branch_id;
     if (transition !== "approve" && !await branchAccess(branchToCheck)) return fail("Akses cabang untuk tindakan ini tidak diizinkan.", 403, origin);
     if (transition === "cancel" && !["draft", "approved", "picked"].includes(transfer.status)) return fail("Transfer hanya dapat dibatalkan sebelum dikirim.", 409, origin);

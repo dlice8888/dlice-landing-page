@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
+const tenantPermissions = readFileSync("supabase/functions/dlice-orders/tenant-permissions.ts", "utf8");
 
 test("refund processing denies unscoped refunds to non-HQ finance actors", () => {
   const start = edge.indexOf('if (action === "erp-process-refund")');
@@ -44,9 +45,28 @@ test("uncertified legacy tenant actions fail closed for non-platform owners", ()
 
 test("generic owner role cannot grant platform-wide bypass without allowlisted identity", () => {
   assert.match(edge, /profile\.role === "owner" && PLATFORM_OWNER_USER_IDS\.has\(userData\.user\.id\) && userData\.user\.app_metadata\?\.platform_owner === true/);
-  assert.match(edge, /\.filter\(\(permission: string\) => permission !== "\*"\)/);
+  assert.match(edge, /\.from\("tenant_memberships"\)/);
+  assert.match(edge, /\.select\("tenant_id,role,permissions,status"\)/);
+  assert.match(edge, /\.eq\("status", "active"\)/);
+  assert.match(edge, /resolveTenantScopedPermissions\(memberships\)/);
+  assert.match(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,username"\)/);
+  assert.doesNotMatch(edge, /admin\.from\("admin_profiles"\)\.select\("role,is_active,display_name,permissions,username"\)/);
+  assert.match(edge, /actor\.profile\.permissions\.includes\("\*"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*===\s*"owner"\)/);
   assert.doesNotMatch(edge, /if\s*\(actor\.profile\.role\s*!==\s*"owner"\)/);
   assert.match(edge, /const actorCanAccessBranch = async \(branchId: string \| null \| undefined\): Promise<boolean> => \{\n    if \(isPlatformOwner\) return true;/);
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
+});
+
+test("stock-transfer approval scopes Head Office authorization to the transfer tenant", () => {
+  const start = edge.indexOf('if (action === "erp-transition-stock-transfer")');
+  assert.notEqual(start, -1, "stock-transfer transition action exists");
+  const next = edge.indexOf('\n  if (action === ', start + 1);
+  const handler = edge.slice(start, next === -1 ? undefined : next);
+  assert.match(handler, /from\("branches"\)[\s\S]*?source_branch_id[\s\S]*?destination_branch_id/);
+  assert.match(handler, /sourceTenantId !== destinationTenantId && !isPlatformOwner/);
+  assert.match(handler, /hasHQPermissionForTenant\("inventory", sourceTenantId\)/);
+  assert.match(edge, /hasTenantScopedHeadOfficePermission\(/);
+  assert.match(tenantPermissions, /membership\.tenant_id !== tenantId \|\| membership\.status !== "active"/);
+  assert.match(tenantPermissions, /assignment\.tenant_id === tenantId/);
 });

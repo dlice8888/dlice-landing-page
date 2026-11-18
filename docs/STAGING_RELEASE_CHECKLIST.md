@@ -25,20 +25,22 @@ The Edge Function must fail closed if its required URL/key variables are missing
 - [ ] Checkout/payment/fulfillment E2E checklist is completed on staging with test data.
 - [ ] Mobile landing, product image loading, checkout summary, upload errors, and tracking are checked at narrow viewport widths.
 - [ ] Request/response logs do not include passwords, tokens, full payment proof, full WhatsApp numbers, or other unnecessary customer data.
+- [ ] Tenant-isolation runtime workflow uses only the six canonical staging secrets, verifies the expected A/B user and branch fixtures, and records all nine required probes with identity, tenant/branch scope, operation, expected/actual result, HTTP status, sanitized evidence, duration, and `PASS`/`FAIL`/`BLOCKED` status. No required probe may be skipped or blocked.
 - [ ] No new paid service, billing-enabled API, or paid Vercel feature was introduced.
 
 ## Staging acceptance sequence
 
 1. Enable Supabase Auth leaked-password protection manually in staging (Authentication → Security/Password Security); use test credentials only.
-2. Test Owner login, invalid login, account/IP rate limiting, staff permission boundaries, logout and expired session behavior.
-3. Test valid/invalid order tracking by transaction code + full WhatsApp number and by private token. Invalid lookups must not reveal order data.
-4. Create a multi-item order. Check server-calculated prices, receipt version, transaction code format, date/time (WITA), pickup/delivery, and address validation.
-5. Test capacity conflict and simultaneous checkout; one capacity slot must not be oversold.
-6. Test receipt confirmation, bank/QRIS instructions, proof upload/re-upload, proof version matching, payment verification, and notification idempotency.
-7. Test each allowed operational status transition. Unpaid orders cannot enter fulfillment; cancellation/delivery issue needs a reason; required notification must be marked sent before fulfillment transitions.
-8. Confirm customer tracking reflects payment and operational statuses separately.
-9. Confirm privacy-safe daily funnel counts change and no customer identifiers appear in analytics rows.
-10. Re-run Supabase security/performance advisors and review Vercel preview response headers.
+2. After independent review and official integration, run the authenticated tenant-isolation workflow from a push to the trusted `staging` branch. The canonical workflow does not support arbitrary manual dispatch. Tenant A and Tenant B must log in with their own canonical credentials; verify expected Auth IDs, active memberships, and branch assignments before tenant-scoped probes. The gate must fail closed on missing/empty configuration or fixture mismatch, print no credentials or JWTs, and keep `TENANT_ISOLATION_RELEASED=false` until all required probes pass.
+3. Test Owner login, invalid login, account/IP rate limiting, staff permission boundaries, logout and expired session behavior.
+4. Test valid/invalid order tracking by transaction code + full WhatsApp number and by private token. Invalid lookups must not reveal order data.
+5. Create a multi-item order. Check server-calculated prices, receipt version, transaction code format, date/time (WITA), pickup/delivery, and address validation.
+6. Test capacity conflict and simultaneous checkout; one capacity slot must not be oversold.
+7. Test receipt confirmation, bank/QRIS instructions, proof upload/re-upload, proof version matching, payment verification, and notification idempotency.
+8. Test each allowed operational status transition. Unpaid orders cannot enter fulfillment; cancellation/delivery issue needs a reason; required notification must be marked sent before fulfillment transitions.
+9. Confirm customer tracking reflects payment and operational statuses separately.
+10. Confirm privacy-safe daily funnel counts change and no customer identifiers appear in analytics rows.
+11. Re-run Supabase security/performance advisors and review Vercel preview response headers.
 
 ## Promotion procedure
 
@@ -48,6 +50,38 @@ The Edge Function must fail closed if its required URL/key variables are missing
 4. Apply production migrations in version order only after confirming they are backward compatible and backed by a tested recovery plan.
 5. Deploy the reviewed code, verify production health and order flow, and retain the previous working deployment for rollback.
 6. If any critical order/payment/tracking test fails, stop rollout and revert code or apply a reviewed forward-fix. Never try untested schema rollback against live orders.
+
+## GitHub Actions staging tenant-isolation fixtures
+
+The trusted `staging` Environment must contain these six secrets (values are never printed by the workflow):
+
+- `STAGING_SUPABASE_URL`
+- `STAGING_SUPABASE_PUBLIC_KEY`
+- `STAGING_TENANT_A_USERNAME`
+- `STAGING_TENANT_A_PASSWORD`
+- `STAGING_TENANT_B_USERNAME`
+- `STAGING_TENANT_B_PASSWORD`
+
+Keep fixture identifiers in Environment variables, not in workflow YAML. The
+identifiers previously listed in this checklist are historical clues only and
+are not verified against current staging. Do not copy them into the Environment
+without confirming the actual tenant, branch, and Auth records and their
+relationships. The current verification state is documented in
+[docs/release/staging-configuration-report.md](./release/staging-configuration-report.md).
+
+| Variable | Required value |
+| --- | --- |
+| `STAGING_TENANT_A_ID` | Actual verified Tenant A UUID |
+| `STAGING_TENANT_B_ID` | Actual verified, distinct Tenant B UUID |
+| `STAGING_TENANT_A_BRANCH_ID` | Actual branch UUID owned by Tenant A |
+| `STAGING_TENANT_B_BRANCH_ID` | Actual branch UUID owned by Tenant B |
+| `STAGING_TENANT_A_USER_ID` | Auth UUID for the actual Tenant A QA identity |
+| `STAGING_TENANT_B_USER_ID` | Auth UUID for the actual Tenant B QA identity |
+
+All six values must be confirmed from current staging records and identity
+relationships through authorized read paths. The runtime workflow must fail
+closed when any variable is missing or mismatched; do not restore hard-coded
+fallbacks or use the Owner account as Tenant A.
 
 ## Environment variable policy
 
@@ -67,6 +101,7 @@ Use the existing Supabase advisor/logging, Vercel deployment/build/runtime logs,
 
 Some controls cannot be enforced by repository code alone:
 - Leaked-password protection requires a Supabase Auth dashboard toggle in each environment.
+- Platform Owner authorization requires a server-managed Auth `app_metadata.platform_owner=true` boolean and a matching `DLICE_PLATFORM_OWNER_USER_IDS` Edge Function allowlist entry; update through the authorized Auth Admin path, never by direct SQL against `auth.users`.
 - GitHub branch protection / required status checks need repository settings or permissions not exposed by this workflow.
 - Vercel preview deployment protection must be enabled/verified in project settings. Do not turn on a protection mode that blocks the Owner's testing without configuring a safe access path first.
 - Five-star Google Maps review carousel is intentionally not fabricated; only show reviews from a verified, permitted source. The existing Google Maps link is the no-cost fallback.
