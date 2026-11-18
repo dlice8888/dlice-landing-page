@@ -40,3 +40,11 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - Created Draft PR [#86](https://github.com/dlice8888/dlice-landing-page/pull/86), head `eeda0bdd715dc5477969be3196c6800d6a23eac2`.
 - Added source migration `20261118190000_add_branch_worker_profile_role.sql`, Owner-only role conversion with active membership/assignment checks, Owner UI, and quality contract test.
 - No migration was applied and no profile, Auth metadata, membership or assignment was changed. Exact-head GitHub Actions CI was not yet returned at this snapshot; Vercel Preview is available.
+
+## P03 evidence hardening — PR #87
+
+- Updated the P03 runtime probe to require two distinct Auth users, active memberships in separate tenants, `branch_worker` global profile classification, equal `branch_manager` tenant roles, and equal non-empty tenant permission sets.
+- Corrected the prior exact-one-branch assertion: multiple same-tenant branch assignments are valid; the expected QA branch must be present and the other tenant's branch must remain invisible.
+- Added linked profile role to the self-only membership response.
+- Masked user, tenant and branch identifiers in every P01–P09 and supplemental runtime evidence record.
+- Exact-head Free quality workflow [44307838730](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838730) passed 7/7 tenant runtime contract tests. No staging runtime probes were executed.
