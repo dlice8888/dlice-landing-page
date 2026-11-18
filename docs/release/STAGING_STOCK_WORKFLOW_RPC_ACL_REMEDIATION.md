@@ -1,6 +1,6 @@
 # Staging stock-workflow RPC EXECUTE ACL remediation
 
-**Scope:** staging only. The ACL migration was applied to Supabase staging as migration version `20261118165519` and verified. It has not been applied to production.
+**Scope:** staging only. The ACL migration was applied to Supabase staging as migration version `20261118165519` (migration name `20261118193000_revoke_public_stock_workflow_rpc_execute`) and verified. It has not been applied to production.
 
 ## Verified defect
 
@@ -8,7 +8,7 @@ The staging catalog reports explicit EXECUTE grants to `anon` and `authenticated
 
 ## Remediation
 
-Migration `20261118165519_revoke_public_stock_workflow_rpc_execute.sql` revokes EXECUTE from PostgreSQL `PUBLIC`, `anon`, and `authenticated`, then grants it only to `service_role`. The existing `dlice-orders` Edge Function calls these RPCs with its server-side admin client after action-specific authentication, permission, active membership, and branch-scope checks.
+Migration `20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql` revokes EXECUTE from PostgreSQL `PUBLIC`, `anon`, and `authenticated`, then grants it only to `service_role`. The existing `dlice-orders` Edge Function calls these RPCs with its server-side admin client after action-specific authentication, permission, active membership, and branch-scope checks.
 
 ## Staging verification completed
 
