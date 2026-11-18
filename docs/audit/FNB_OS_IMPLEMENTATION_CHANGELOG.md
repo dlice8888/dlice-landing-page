@@ -48,3 +48,11 @@ No Auth metadata, branch assignment, GitHub Environment secret/variable, databas
 - Added linked profile role to the self-only membership response.
 - Masked user, tenant and branch identifiers in every P01–P09 and supplemental runtime evidence record.
 - Exact-head Free quality workflow [44307838730](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838730) passed 7/7 tenant runtime contract tests. No staging runtime probes were executed.
+
+## Production deployment exception and restoration
+
+- One documentation-only GitHub file update accidentally omitted the explicit audit branch and wrote the matrix artifact to default branch `main`.
+- Vercel created production-target deployment `dpl_FV4dAmvTdERXQupSkcvqvReXqqXP` for commit `eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1`.
+- The file was immediately deleted from `main`; restoration commit `ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4` triggered deployment `dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e`.
+- Verified the restored main tree SHA `427d9413b4e6fe070ba76a93baab533ccb528570` exactly equals the pre-incident parent tree SHA. Verified `dlice.vercel.app` points to the restoration deployment and the accidental audit matrix file is absent from main.
+- No application code, database, Auth metadata or production data was changed. Production deployment did occur; this is explicitly recorded as an exception. No further production deployment is authorized.
