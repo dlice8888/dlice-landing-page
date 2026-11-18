@@ -47,6 +47,8 @@ jobs:
           node --test tests/contracts/tenant-runtime-probe-contract.test.mjs
       - name: Verify public tenant routing release gate
         run: node --test tests/contracts/public-tenant-routing-gate-contract.test.mjs
+      - name: Verify recovered migration source
+        run: node --test tests/contracts/migration-source-recovery-contract.test.mjs
       - name: Require migration and documentation review
         shell: bash
         env:
