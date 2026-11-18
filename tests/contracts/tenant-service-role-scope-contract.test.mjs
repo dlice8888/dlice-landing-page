@@ -10,11 +10,19 @@ const source = await readFile(
 const gate = source.match(/const TENANT_SCOPE_UNCERTIFIED_ACTIONS = new Set\(\[([\s\S]*?)\]\);/)?.[1] ?? "";
 const gatedActions = new Set([...gate.matchAll(/"([^"]+)"/g)].map((match) => match[1]));
 
-test("unscoped service-role inventory and invite handlers remain closed before tenant isolation release", () => {
-  for (const action of ["erp-accept-tenant-invite", "erp-list-inventory", "erp-save-inventory"]) {
+test("global inventory master writes and tenant invite handlers remain closed before tenant isolation release", () => {
+  for (const action of ["erp-accept-tenant-invite", "erp-save-inventory"]) {
     assert.ok(gatedActions.has(action), `missing tenant isolation gate for ${action}`);
   }
+  assert.ok(!gatedActions.has("erp-list-inventory"), "branch inventory reads use explicit tenant and branch authorization");
   assert.match(source, /if \(!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+  const start = source.indexOf('if (action === "erp-list-inventory")');
+  const end = source.indexOf('if (action === "erp-save-inventory")', start);
+  const inventory = source.slice(start, end);
+  assert.match(inventory, /hasPerm\("inventory"\)/);
+  assert.match(inventory, /branchAccess\(branchId\)/);
+  assert.match(inventory, /from\("branch_inventory"\)/);
+  assert.doesNotMatch(inventory, /from\("inventory_items"\)/);
 });
 
 test("global funnel metrics are not exposed to tenant members before tenant-scoped reporting exists", () => {
