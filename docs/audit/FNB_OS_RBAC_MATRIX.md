@@ -6,8 +6,8 @@
 
 | Actor | Tenant membership | Permission set | Branch assignment | Current assessment |
 |---|---|---|---|---|
-| Worker A | Active `branch_manager` in Tenant A | orders, branches, inventory, pos, procurement, reports | 2 active assignments in same tenant | PARTIAL; P03 exact-one-branch assertion fails |
-| Worker B | Active `branch_manager` in Tenant B | orders, branches, inventory, pos, procurement, reports | 1 active assignment in same tenant | PARTIAL; runtime not run |
+| Worker A | Active `branch_manager` in Tenant A; global profile `sales_admin` | orders, branches, inventory, pos, procurement, reports | 2 active assignments in same tenant | BLOCKED for ordinary-worker acceptance; extra same-tenant assignment is valid |
+| Worker B | Active `branch_manager` in Tenant B; global profile `sales_admin` | orders, branches, inventory, pos, procurement, reports | 1 active assignment in same tenant | BLOCKED for ordinary-worker acceptance; profile classification must change through authorized Owner path |
 | Owner profile | Active profile, role `owner`; Auth user exists | profile role alone is insufficient | no branch assignment required | BLOCKED; app_metadata boolean true absent; allowlist unverifiable |
 | Sales admin profiles | Active/inactive records exist | global profile permissions are not tenant authorization | must rely on tenant membership + assignment | NOT VERIFIED |
 
