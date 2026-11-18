@@ -112,3 +112,7 @@ Latest staging workflow evidence:
 - P0 HTTP run [44207773489](https://github.com/dlice8888/dlice-landing-page/actions/runs/44207773489): **BLOCKED** because the existing Owner QA username/password are missing; no business-flow bootstrap ran.
 
 The GitHub integration does not expose Actions Environment secret/variable values or provide workflow-dispatch capability. Do not infer fixture values from database rows or create substitute accounts. P01–P09 and Owner authorization remain unverified until the authorized maintainer provisions the real fixture references and completes the official Owner Auth metadata/allowlist step.
+
+
+### Canonical QA branch assignment cross-check
+A second read-only query confirmed the configured branch fixtures already exist and are actively assigned: tenant `dlice-default` has `QA-DLICE-A` (the same worker also has `DLC-B001`), and tenant `dlice-qa-isolation-b` has `QA-TENANT-B`. Both memberships have role `branch_manager`, six permissions, and the same permission-set fingerprint. The two candidate users are distinct membership rows in different tenants. This confirms branch assignment data is present; it does not provide passwords or prove either login. Populate the canonical GitHub variables from the existing records—do not create substitute tenants, branches, users, or assignments.
