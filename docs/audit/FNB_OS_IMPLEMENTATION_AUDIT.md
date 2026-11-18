@@ -21,7 +21,7 @@ No production branch, production Supabase project, production deployment, shared
 | Supabase staging | `higoadrzxnhzbbwhdbmh`, ACTIVE_HEALTHY | Read-only inspection succeeded |
 | Database | 64 public tables, 64 RLS-enabled, 0 without RLS, 64 policies, 29 public functions, 5 SECURITY DEFINER | Configuration inventory only; policy correctness still needs adversarial tests |
 | Migration parity | 46 applied migration rows vs 45 source migration files | One source mismatch: `20261022140302` |
-| Vercel | Project `dlice-landing-page`; PR #83 Preview READY | Preview is not staging runtime acceptance |
+| Vercel | Project `dlice-landing-page`; SSO protection enabled for all deployments except custom domains; PR previews READY | Preview is not staging runtime acceptance |
 | Security Advisor | Leaked-password protection disabled | WARN |
 | Performance Advisor | 26 unindexed foreign keys; 49 unused-index suggestions | Remediation must be query-plan/workload based; no bulk index deletion |
 
