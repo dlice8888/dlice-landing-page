@@ -17,9 +17,9 @@
 | RLS | CONFIGURATION PASS ONLY | 64/64 public tables have RLS; policy semantics not fully adversarially verified |
 | Migration parity | BLOCKED | 46 applied rows vs 45 source files |
 | Operational E2E | NOT VERIFIED | Required seven business flows not proven end-to-end |
-| Open PR reconciliation | IN PROGRESS | 13 current open PRs, all Draft |
+| Open PR reconciliation | IN PROGRESS | 17 current open PRs, all Draft |
 | GitHub protection | P0 BLOCKED | staging reports `protected=false`; rulesets empty; protection read endpoint 403 |
-| Vercel Preview | READY | Preview readiness is not authenticated staging acceptance |
+| Vercel Preview | READY | Preview readiness is not authenticated staging acceptance; project SSO protection is enabled for all deployments except custom domains |
 | Production | UNTOUCHED | No production deployment or database change |
 
 ## External configuration actions that cannot be performed through this connection
