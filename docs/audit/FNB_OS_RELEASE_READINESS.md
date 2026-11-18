@@ -52,4 +52,4 @@ Staging CORS runtime workflow [44307838539](https://github.com/dlice8888/dlice-l
 
 ## Migration source parity update
 
-The staging source tree still has 45 migration files against 46 applied migration records. PR #88 restores the missing `20261022140302_add_missing_fk_supporting_indexes.sql` directly from the staging migration-history SQL; all nine index statements normalized-match the recorded applied SQL. This is source-only and does not reapply the migration. Keep the parity gate open until PR #88 exact-head quality and disposable replay pass and the PR is reviewed.
+The staging source tree still has 45 migration files against 46 applied migration records. PR #88 restores the missing `20261022140302_add_missing_fk_supporting_indexes.sql` directly from the staging migration-history SQL; all nine index statements normalized-match the recorded applied SQL. This is source-only and does not reapply the migration. PR #88 exact-head quality (44309825502) and disposable replay (44309825526; all 46 migrations) have passed. The source file is not yet merged; keep parity marked PARTIAL until PR #88 is merged through the staging review path.
