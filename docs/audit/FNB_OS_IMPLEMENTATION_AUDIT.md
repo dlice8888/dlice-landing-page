@@ -107,3 +107,7 @@ The deployed staging Edge Function remains v69. PR #85's scoped inventory handle
 ## Staging CORS runtime verification
 
 Workflow run [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539) executed three real OPTIONS requests against staging `dlice-orders`: registered origin returned HTTP 200 with exact ACAO, foreign origin returned HTTP 403 with no ACAO, and no-Origin request returned HTTP 200 with no fallback ACAO. All three runtime CORS probes passed. This does not execute or replace P01–P09.
+
+## Production deployment exception and restoration
+
+A documentation-only matrix write was accidentally sent to the repository default branch because one GitHub file-update call omitted its explicit branch argument. Vercel created production-target deployments `dpl_FV4dAmvTdERXQupSkcvqvReXqqXP` (commit `eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1`) and, after immediate file deletion from `main`, `dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e` (commit `ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4`). The custom domain alias `dlice.vercel.app` currently points to the latter restoration deployment. Critically, the restored `main` tree SHA `427d9413b4e6fe070ba76a93baab533ccb528570` exactly matches the pre-incident parent tree `8d74dbda81eb483a26d779b782fd4b37e12af770`; the accidental matrix file is absent from `main`. No application code, database, Auth metadata or production data was changed, but production deployments did occur and are recorded as an exception.
