@@ -44,3 +44,9 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 - Prove idempotent retry and concurrent duplicate prevention.
 - Capture request/response status, masked actor/tenant/branch, timestamp, run ID and commit SHA.
 - Never record credentials, JWTs, publishable secrets or payment proof content in logs.
+
+## Additional P03 identity blocker
+
+A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A also has two active same-tenant branch assignments versus the exact-one P03 fixture requirement.
+
+PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration is not applied and no account was changed. P03 remains BLOCKED.
