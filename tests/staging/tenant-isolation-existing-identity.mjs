@@ -8,8 +8,13 @@ const password = process.env.STAGING_TENANT_A_PASSWORD || "";
 const branchB = process.env.STAGING_TENANT_B_BRANCH_ID || "";
 assert.equal(base, "https://higoadrzxnhzbbwhdbmh.supabase.co", "Refusing non-staging target");
 assert.equal(edge, base + "/functions/v1/dlice-orders", "Refusing non-staging Edge Function");
-if (!key || !username || !password || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(branchB)) {
-  console.error("BLOCKED: staging public key, canonical Tenant A credentials, or Tenant B branch fixture are not configured; no account was created.");
+if (
+  !key.trim() ||
+  !username.trim() ||
+  !password.trim() ||
+  !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(branchB)
+) {
+  console.error("BLOCKED: one or more required staging public key, canonical Tenant A credentials, or Tenant B branch fixture inputs are missing or invalid; no request was made and no account was created.");
   process.exit(2);
 }
 const zero = "00000000-0000-0000-0000-000000000000";
@@ -24,7 +29,7 @@ const login = await fetch(base + "/auth/v1/token?grant_type=password", {
 });
 const session = await login.json().catch(() => ({}));
 if (!login.ok || typeof session.access_token !== "string") {
-  console.error(JSON.stringify({ status: "BLOCKED", stage: "login", http: login.status, code: session.error_code || session.code || session.error || "auth_error", note: "Existing account login failed; no user was created." }));
+  console.error(JSON.stringify({ status: "BLOCKED", stage: "login", http: login.status, code: "auth_error", note: "Existing account login failed; no user was created." }));
   process.exit(2);
 }
 
