@@ -37,3 +37,7 @@ PR #85 is a Draft code candidate for the own-branch inventory read path required
 ## Release sequence
 
 Do not merge PR #64 or apply its migration until P01–P09, supplemental direct REST/RPC checks, migration replay, operational regression, independent security review and all release gates pass. Do not merge PR #74 as a bulk promotion. Do not deploy production.
+
+## Additional P0 identity gate
+
+Staging's two candidate tenant users are both classified globally as `sales_admin`; the database role constraint has no ordinary worker value. Their tenant membership role is `branch_manager`, but this alone does not satisfy the explicit non-Admin fixture requirement. PR #86 adds the source-only `branch_worker` role and Owner-authorized conversion path. Do not apply its migration or change user profiles until migration review and authorized Owner verification pass. P03 remains BLOCKED.
