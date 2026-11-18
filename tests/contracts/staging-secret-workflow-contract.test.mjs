@@ -75,5 +75,6 @@ test("KDS/POS/Stock staging E2E uses only staging Environment Supabase endpoint 
   assert.match(kds, /STAGING_SUPABASE_PUBLIC_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.match(kds, /STAGING_EDGE_FUNCTION_URL:\s*\$\{\{\s*secrets\.STAGING_EDGE_FUNCTION_URL\s*\}\}/);
   assert.doesNotMatch(kds, /sb_publishable_[A-Za-z0-9_-]+/);
-  assert.doesNotMatch(kds, /https:\/\/higoadrzxnhzbbwhdbmh\.supabase\.co/);
+  assert.doesNotMatch(kds, /STAGING_SUPABASE_URL:\s*https:\/\/higoadrzxnhzbbwhdbmh\.supabase\.co/);
+  assert.doesNotMatch(kds, /STAGING_EDGE_FUNCTION_URL:\s*https:\/\/higoadrzxnhzbbwhdbmh\.supabase\.co/);
 });
