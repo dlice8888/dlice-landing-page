@@ -1264,6 +1264,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "erp-list-inventory") {
+    if(!hasPerm("inventory"))return fail("Izin Inventory diperlukan.",403,origin);
     const branchId=safeText(body.branch_id,80);
     if(!branchId)return fail("Cabang wajib dipilih untuk melihat persediaan.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
