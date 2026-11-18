@@ -66,3 +66,14 @@ test("every missing or invalid required input fails closed before any network re
     });
   }
 });
+
+
+test("KDS/POS/Stock staging E2E uses only staging Environment Supabase endpoint secrets", () => {
+  const kds = readFileSync(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", "utf8");
+  assert.match(kds, /^\s+environment:\s*staging\s*$/m);
+  assert.match(kds, /STAGING_SUPABASE_URL:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_URL\s*\}\}/);
+  assert.match(kds, /STAGING_SUPABASE_PUBLIC_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
+  assert.match(kds, /STAGING_EDGE_FUNCTION_URL:\s*\$\{\{\s*secrets\.STAGING_EDGE_FUNCTION_URL\s*\}\}/);
+  assert.doesNotMatch(kds, /sb_publishable_[A-Za-z0-9_-]+/);
+  assert.doesNotMatch(kds, /https:\/\/higoadrzxnhzbbwhdbmh\.supabase\.co/);
+});
