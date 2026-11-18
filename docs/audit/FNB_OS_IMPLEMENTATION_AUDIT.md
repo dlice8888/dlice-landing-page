@@ -68,6 +68,12 @@ PR #83 remains Draft/HOLD, targets staging, and has not been merged. The branch 
 
 Latest exact-head Free quality workflow run: [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) — SUCCESS. This is static/quality CI, not P01–P09. Vercel Preview is READY. P01–P09 are still BLOCKED because the protected staging inputs cannot be independently verified and Worker A's branch fixture is not exact-one.
 
+## Additional P0 inventory authorization finding
+
+The deployed staging `dlice-orders` is version 69 (`verify_jwt=false`; custom token validation remains inside the handler). Its early tenant denylist included `erp-list-inventory`, so non-Owner users were rejected with HTTP 423 before the branch-level authorization handler. This made positive own-branch probes P04/P06 impossible. The old handler also selected the global `inventory_items` catalog, not only the items associated with the requested branch.
+
+A separate Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/85) now removes only the list action from the global denylist, requires the `inventory` permission and a non-empty branch, checks active tenant membership plus an active assignment to the exact branch before any data query, and returns items only through the requested branch's `branch_inventory` FK relation. Global `erp-save-inventory` remains gated. Exact-head quality CI [44304941471](https://github.com/dlice8888/dlice-landing-page/actions/runs/44304941471) passed; this candidate is not deployed to staging and P04/P06 remain NOT RUN.
+
 ## Required next sequence
 
 1. Resolve the extra active Worker A branch assignment through the authorized HR/branch-assignment admin path; do not directly mutate the database to satisfy a test.
