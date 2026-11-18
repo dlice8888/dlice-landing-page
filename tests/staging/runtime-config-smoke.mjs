@@ -27,6 +27,15 @@ const record = (id, status, detail) => {
   console.log(`${status} ${id}: ${detail}`);
 };
 
+for (const [id, path] of [["CUSTOMER-WEBSITE", "/"], ["ERP-WORKSPACE", "/erp.html"]]) {
+  const page = await fetch(`${preview}${path}`, { headers, cache: "no-store" });
+  assert.equal(page.status, 200, `${id} HTTP ${page.status}`);
+  const html = await page.text();
+  assert.ok(html.includes("/api/runtime-config"), `${id} must load environment-scoped runtime config`);
+  assert.ok(!/sb_secret_|service_role/i.test(html), `${id} must not embed a Supabase secret/service-role key`);
+  record(id, "PASS", "page loads and uses runtime config without embedded privileged keys");
+}
+
 const configResponse = await fetch(`${preview}/api/runtime-config`, { headers, cache: "no-store" });
 assert.equal(configResponse.status, 200, `runtime config HTTP ${configResponse.status}`);
 const config = await configResponse.json();
