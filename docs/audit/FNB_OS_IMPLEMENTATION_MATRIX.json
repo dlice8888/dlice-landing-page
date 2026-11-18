@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18",
+  "snapshot_at": "2026-11-18T19:34:00+07:00",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2180,6 +2180,25 @@
     "release_gate_source": {
       "file": "supabase/functions/dlice-orders/index.ts",
       "lines": "52,135-144"
+    },
+    "deployed_edge_function": {
+      "name": "dlice-orders",
+      "version": 69,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "sha256": "d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40"
+    },
+    "inventory_read_finding": {
+      "deployed_behavior": "erp-list-inventory is in TENANT_SCOPE_UNCERTIFIED_ACTIONS and returns HTTP 423 for non-platform-owner while release flag is false; legacy handler queries global inventory_items.",
+      "source": {
+        "file": "supabase/functions/dlice-orders/index.ts",
+        "lines": "71,454-455,1266-1275"
+      },
+      "remediation_pr": 85,
+      "candidate_commit": "63575c051112b7ec621afc4f96a1beef62238c2b",
+      "candidate_behavior": "requires inventory permission, branch_id, active membership and exact active assignment; queries branch_inventory joined to inventory_items; no global catalog scan",
+      "ci_run": 44304941471,
+      "status": "PARTIAL"
     }
   },
   "tenant_acceptance": {
@@ -2205,7 +2224,8 @@
       "Tenant A currently has two active same-tenant branch assignments; P03 requires exactly one",
       "Owner app_metadata.platform_owner boolean true is absent"
     ],
-    "no_skipped_policy": true
+    "no_skipped_policy": true,
+    "inventory_positive_read_gate": "P04/P06 cannot pass against deployed v69 until PR #85 is merged to staging; candidate code is not deployed"
   },
   "open_prs": [
     83,
@@ -2220,6 +2240,9 @@
     63,
     64,
     31,
-    22
-  ]
+    22,
+    84,
+    85
+  ],
+  "open_pr_count": 15
 }
