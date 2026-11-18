@@ -68,3 +68,7 @@ The deployed v69 handler's global denylist blocked `erp-list-inventory` before i
 - Shared Edge Function has legacy action handlers; `TENANT_SCOPE_UNCERTIFIED_ACTIONS` deliberately fails closed for unverified actions.
 - Five SECURITY DEFINER functions require ongoing function-body and EXECUTE-grant review even though client EXECUTE is currently denied.
 - Ledger correctness, rollback and idempotency must be tested across cross-module transactions before Owner BI can be trusted.
+
+## Identity classification dependency
+
+A staging read-only query found the only allowed global profile roles are `sales_admin` and `owner`, while tenant membership roles include `branch_manager`. The two candidate workers have `sales_admin` global profile role, so the system currently conflates admin profile classification with ordinary worker identity. PR #86 proposes a distinct `branch_worker` identity classification while keeping tenant authorization exclusively membership/assignment based. This role migration and Owner-authorized conversion must precede P03 certification.
