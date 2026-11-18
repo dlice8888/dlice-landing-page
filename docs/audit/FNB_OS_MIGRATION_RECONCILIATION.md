@@ -51,3 +51,5 @@ The new `20261118190000_add_branch_worker_profile_role.sql` migration was replay
 ## Exact source recovery candidate — PR #88
 
 The applied migration history row was queried directly and returned name `add_missing_fk_supporting_indexes` with one stored SQL string containing nine `CREATE INDEX IF NOT EXISTS` statements. PR #88 restores `20261022140302_add_missing_fk_supporting_indexes.sql`; normalized SQL comparison is an exact match to the applied history statement. The source file is not yet on staging; PR #88 quality and disposable replay are pending. Do not reapply the migration to staging because it is already recorded as applied.
+
+A fresh read-only `pg_indexes` query confirmed all nine recovered indexes currently exist in staging with the expected table/column definitions. This validates the applied index objects independently of the migration-history row; source parity remains open until PR #88 is merged and disposable replay passes.
