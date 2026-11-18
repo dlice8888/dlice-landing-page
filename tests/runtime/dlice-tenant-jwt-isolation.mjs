@@ -473,7 +473,7 @@ if (
       recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
       return;
     }
-    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${identityByTenant[tenant]})`, async () => {
+    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
       const foreignBranch = isTenantA ? branchB : branchA;
       const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
@@ -498,7 +498,7 @@ if (
       recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
       return;
     }
-    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${identityByTenant[tenant]})`, async () => {
+    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
       const ownBranch = isTenantA ? branchA : branchB;
       const foreignBranch = isTenantA ? branchB : branchA;
       const control = await authorizedRequest(token, "/functions/v1/dlice-orders", {
@@ -562,8 +562,8 @@ if (
     const definition = {
       id: `RLS-${tenant}-${branchKind.toUpperCase()}`,
       authIdentity,
-      tenantScope: tenantId,
-      branchScope: branchId,
+      tenantScope: maskId(tenantId),
+      branchScope: maskId(branchId),
       operation: "Direct REST GET /rest/v1/branches",
       expectedResult: "Direct client table access is denied or returns no matching branch row",
     };
@@ -572,7 +572,7 @@ if (
       recordBlocked(definition, "identity_not_verified");
       return;
     }
-    await runProbe(definition, `${authIdentity} (${identityByTenant[tenant]})`, async () => {
+    await runProbe(definition, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
       const { response, text, payload, evidence } = await authorizedRequest(
         token,
         `/rest/v1/branches?id=eq.${encodeURIComponent(branchId)}&select=id,tenant_id`,
@@ -602,8 +602,8 @@ if (
     const definition = {
       id: `RPC-${tenant}-CROSS-TENANT-WRITE`,
       authIdentity,
-      tenantScope: isTenantA ? tenantA : tenantB,
-      branchScope: foreignBranch,
+      tenantScope: maskId(isTenantA ? tenantA : tenantB),
+      branchScope: maskId(foreignBranch),
       operation: "Direct REST POST /rest/v1/rpc/erp_create_stock_transfer",
       expectedResult: "Server-only stock-transfer RPC is inaccessible to the authenticated client",
     };
@@ -612,7 +612,7 @@ if (
       recordBlocked(definition, "identity_not_verified");
       return;
     }
-    await runProbe(definition, `${authIdentity} (${identityByTenant[tenant]})`, async () => {
+    await runProbe(definition, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
       const { response, evidence } = await authorizedRequest(
         token,
         "/rest/v1/rpc/erp_create_stock_transfer",
