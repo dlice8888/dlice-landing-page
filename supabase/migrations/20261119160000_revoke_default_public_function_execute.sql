@@ -2,8 +2,6 @@
 -- Edge Functions use service_role; direct client access remains denied by RLS and action-level authorization.
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
 
 -- Reassert the trigger-only ACL boundary against the live staging catalog.
 REVOKE EXECUTE ON FUNCTION public.erp_guard_journal_period() FROM PUBLIC, anon, authenticated;
