@@ -1,0 +1,37 @@
+name: Production CORS source contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
+      - ".github/workflows/production-cors-contract.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
+      - ".github/workflows/production-cors-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  production-cors-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify production CORS contract
+        run: node --test tests/contracts/production-cors-contract.test.mjs
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.8
+      - name: Type-check production Edge Function
+        run: deno check supabase/functions/dlice-orders/index.ts
