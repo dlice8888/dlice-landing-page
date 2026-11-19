@@ -1,5 +1,8 @@
 import fs from "node:fs";
 import vm from "node:vm";
+import path from "node:path";
+import os from "node:os";
+import { spawnSync } from "node:child_process";
 
 const fail = (message) => { console.error("FAIL:", message); process.exitCode = 1; };
 const pass = (message) => console.log("PASS:", message);
@@ -92,8 +95,14 @@ for (const file of ["index.html", "admin.html", "track.html", "erp.html"]) {
     if (/\bsrc\s*=/.test(attrs) || !body.trim()) continue;
     try {
       if (/\btype\s*=\s*["']module["']/i.test(attrs)) {
-        // Module syntax is checked by the existing quality-check script.
-        if (!/\bimport\b/.test(body)) new vm.Script(body);
+        // Parse modules as modules: vm.Script rejects valid top-level await.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dlice-module-contract-"));
+        const tempFile = path.join(dir, "inline-module.mjs");
+        try {
+          fs.writeFileSync(tempFile, body, "utf8");
+          const result = spawnSync(process.execPath, ["--check", tempFile], { encoding: "utf8" });
+          if (result.status !== 0) throw new Error(result.stderr || result.stdout || "module syntax check failed");
+        } finally { fs.rmSync(dir, { recursive: true, force: true }); }
       } else new vm.Script(body, { filename: `${file}#${i + 1}` });
     } catch (error) {
       fail(`${file} inline script ${i + 1}: ${error.message}`);
