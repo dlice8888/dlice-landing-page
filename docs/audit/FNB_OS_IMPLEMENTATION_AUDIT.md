@@ -122,3 +122,17 @@ A fresh read-only `pg_indexes` query confirmed all nine recovered indexes curren
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
 - The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
+
+
+## Continuation evidence update — 2026-11-20
+
+The current staging implementation has advanced since the 18 Nov snapshot, but the overall release posture remains NO-GO.
+
+- Migration source/history parity is now 52 source files versus 48 live applied versions, with zero applied versions missing from source and four pending source migrations. The exact staging-head clean replay passed 52 migrations and 67 pgTAP assertions.
+- The Owner Command Center is a source-level foundation with a service-role-only summary RPC, an Owner-gated Edge action, date/branch filters and branch summary KPIs. It is not a complete consolidated finance/region dashboard: region rollups and margin/COGS reconciliation are not yet evidenced.
+- Branch checklist mutations now use an atomic database RPC with same-transaction audit writes, optimistic version checks and 27 pgTAP assertions in the disposable migration replay. The migration remains pending on live staging.
+- The broad public RPC ACL hardening migration passes disposable catalog-privilege tests. It remains pending on live staging; live function privileges have not yet been changed by that migration.
+- Latest P01–P09 remains BLOCKED before authentication: all nine probes have executed:false, 0 skipped. Positive KDS/POS/Stock E2E and Owner bootstrap also stop at credential preflight.
+- Supabase Advisor reports 26 unindexed foreign keys, 49 unused-index suggestions, and leaked-password protection disabled. These are follow-up performance/security work items, not proof that the database is unhealthy; no Advisor-driven DDL was applied.
+
+The implementation matrix should continue to mark runtime-dependent requirements PARTIAL/BLOCKED until authenticated tenant tests, transaction-level E2E reconciliation, backup/restore, and 150-branch load evidence exist. Keep both release flags false.
