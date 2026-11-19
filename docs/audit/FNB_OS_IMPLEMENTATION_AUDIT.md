@@ -122,3 +122,8 @@ A fresh read-only `pg_indexes` query confirmed all nine recovered indexes curren
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
 - The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
+
+
+## Current integration delta — 20 November 2026
+
+Since this historical snapshot, staging integrated the staging-only P01–P09 workflow on main (#96), stock RPC ACL source (#94), default public RPC ACL (#99), canonical Tenant A workflow mapping and P03 role correction (#100), atomic Owner/tenant bootstrap (#78/#102), Owner Command Center summary (#103), and atomic Branch Operations checklist (#105). The current staging SHA is `4a13e70ce29e3fe117b6b6e7705089fa4241298a`. The migration chain replays locally and all 67 pgTAP tests pass. However P01–P09 are still BLOCKED 9 / SKIPPED 0 because runtime credentials and fixture variables resolve empty; the KDS/POS/Stock and P0 HTTP E2E flows stop before mutations. See `FNB_OS_IMPLEMENTATION_DELTA_20261120.md` for the current 18-domain matrix and release decision.
