@@ -82,7 +82,7 @@ The latest repository query returned **four open PRs**:
 
 | PR | Base | Disposition |
 |---:|---|---|
-| #104 | main | Production CORS source + contract. Draft/HOLD until all staging gates pass because main merge triggers production deployment. |
+| #104 | main | CORS contract/Deno check pass, but the 239-line Edge Function source is not verified as the exact production export and omits the 2,271-line staging tenant/ERP implementation. Draft/HOLD; do not deploy or treat as full FnB OS source. Main merge also triggers production deployment. |
 | #84 | staging | Refreshed audit documentation candidate with current evidence. |
 | #71 | staging | HOLD. Contains useful atomic warehouse/PO audit candidates, but also an out-of-order migration timestamp (20261108090000) that predates already-applied staging versions and a one-time Tenant B bootstrap path that is no longer the current fixture setup. Do not merge as-is. |
 | #64 | staging | Security/tenant-isolation HOLD; do not merge or apply its migration until runtime acceptance and independent review pass. |
