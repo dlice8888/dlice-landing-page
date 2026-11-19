@@ -46,3 +46,35 @@ for each row
 execute function public.enforce_stock_transfer_same_tenant();
 
 revoke all on function public.enforce_stock_transfer_same_tenant() from public, anon, authenticated;
+
+-- A branch tenant reassignment must not invalidate historical stock-transfer scope.
+-- This permits reassignment only while the branch has no stock-transfer history.
+create or replace function public.prevent_branch_tenant_reassignment_with_stock_transfers()
+returns trigger
+language plpgsql
+set search_path = pg_catalog, public
+as $function$
+begin
+  if new.tenant_id is distinct from old.tenant_id
+     and exists (
+       select 1
+         from public.stock_transfers st
+        where st.source_branch_id = old.id
+           or st.destination_branch_id = old.id
+     ) then
+    raise exception 'branch_tenant_change_with_stock_transfers_forbidden';
+  end if;
+
+  return new;
+end;
+$function$;
+
+drop trigger if exists trg_branch_tenant_reassignment_with_stock_transfers on public.branches;
+
+create trigger trg_branch_tenant_reassignment_with_stock_transfers
+before update of tenant_id
+on public.branches
+for each row
+execute function public.prevent_branch_tenant_reassignment_with_stock_transfers();
+
+revoke all on function public.prevent_branch_tenant_reassignment_with_stock_transfers() from public, anon, authenticated;
