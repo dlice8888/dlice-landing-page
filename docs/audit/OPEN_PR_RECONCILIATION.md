@@ -78,14 +78,12 @@ This section supersedes the 18 Nov PR counts, mergeability and migration-source 
 
 ## Current PR reconciliation — 2026-11-20
 
-The latest repository query returned six open PRs:
+The latest repository query returned **four open PRs**:
 
 | PR | Base | Disposition |
 |---:|---|---|
 | #104 | main | Production CORS source + contract. Draft/HOLD until all staging gates pass because main merge triggers production deployment. |
-| #84 | staging | Audit documentation candidate; its 18 Nov snapshot is being refreshed with current evidence. |
-| #82 | staging | Formatting-only whitespace cleanup; no functional change. |
-| #80 | staging | 17 Nov release-baseline documentation; historical evidence, not a current release gate. |
+| #84 | staging | Refreshed audit documentation candidate with current evidence. |
 | #71 | staging | HOLD. Contains useful atomic warehouse/PO audit candidates, but also an out-of-order migration timestamp (20261108090000) that predates already-applied staging versions and a one-time Tenant B bootstrap path that is no longer the current fixture setup. Do not merge as-is. |
 | #64 | staging | Security/tenant-isolation HOLD; do not merge or apply its migration until runtime acceptance and independent review pass. |
 
@@ -97,6 +95,8 @@ Closed/merged reconciliation:
 - #95 closed as superseded by #97; its validated changes were carried forward there.
 - #101 closed without merge because the recovered applied migration source was already present on staging.
 - #74 closed without merge because it was a large, conflicting bulk promotion; no staging-to-main mass merge was performed.
+- #80 closed as a stale 17 Nov evidence snapshot, superseded by the refreshed 20 Nov audit in this PR.
+- #82 closed as formatting-only cleanup with no functional change.
 - #76/#77 were superseded/closed; their reviewed feature slices are tracked separately rather than merging stale branch histories.
 
 Do not equate a merged-to-staging PR with main integration or production deployment. Do not merge #104 or #64 while the release gates remain NO-GO.
