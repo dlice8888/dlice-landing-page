@@ -96,3 +96,15 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+## Superseding release gate snapshot — 2026-11-19
+
+- NO-GO remains in force. TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false remain unchanged.
+- Current open PR inventory is 17; all are Draft. PR #74 is dirty and is not an acceptable bulk merge path.
+- Staging E2E reruns on 19 Nov: KDS/POS/Stock run 44505286727 attempt 2 and Procurement run 44506173400 attempt 2 both stopped before business mutations because effective runner inputs STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, and STAGING_TEST_BRANCH_A_USERNAME were empty. P01-P09 run 44326099475 has nine BLOCKED/not-executed probes. Do not report E2E acceptance as passed.
+- PR #95 updates P03 to the live role model (sales_admin global profile and branch_manager tenant membership); exact-head quality run 44541119025 passed static/contract checks only. It does not prove P01-P09.
+- PR #96 adds the P01-P09 workflow_dispatch entrypoint on main, with job guard restricting execution to ref staging. It remains Draft/unmerged; no dispatch occurred from this connection.
+- Owner authorization remains blocked: active Owner profile exists but Auth app metadata platform_owner is absent. No official Auth Admin update-user operation is exposed by the current connector. Do not mutate auth.users directly.
+- Migration source parity is not clean: 47 DB applied rows vs 47 staging source files with one applied version missing from the staging directory and one unapplied branch_worker migration file. main has only two migration files. Production Supabase project is INACTIVE, so production migration history is not available for comparison.
+- Staging DB configuration checks: 64/64 public tables RLS enabled; five stock SECURITY DEFINER RPCs deny anon/authenticated and permit service_role. Security Advisor WARN: leaked-password protection disabled. Performance Advisor INFO: 26 unindexed foreign keys.
+- No production migration, deployment, data mutation, or Auth change was performed. Production remains untouched in this continuation.
