@@ -339,7 +339,7 @@ GitHub compare results against each PR's current base branch:
 
 | PR | Head commits ahead | Base commits behind head | Changed files | Compare state | Mergeable |
 |---:|---:|---:|---:|---|---|
-| #64 | 49 | 76 | 12 | Diverged | No |
+| #64 | 49 | 76 | 12 | Closed without merge | No |
 | #71 | 44 | 63 | 8 | Diverged | No |
 | #104 | 7 | 0 | 4 | Ahead | Yes |
 | #106 | 4 | 0 | 3 | Ahead | Yes |
@@ -382,10 +382,10 @@ The original historical snapshot covered PR #1–#107 (105 actual PRs; #34 and #
 
 Current repository totals:
 - **107 actual PRs** across the number range #1–#109.
-- **75 merged**, **25 closed without merge**, **7 open**.
+- **75 merged**, **26 closed without merge**, **6 open**.
 - **2,195 total PR commits**, **902 PR-level file touches**, **70,541 additions**, **2,076 deletions**. These are per-PR aggregate metrics, not unique files/commits across Git history.
 
-Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR was merged or closed during this audit.
+Current open PRs: #71, #104, #106, #107, #108, #109. All are Draft. No PR was merged or closed during this audit.
 
 ### PR #109 latest validation
 - Dedicated `Stock transfer same-tenant boundary` workflow run `44596628557`: **SUCCESS**. The isolated PostgreSQL test and API contract test passed.
@@ -421,7 +421,7 @@ Latest head commit checks and submitted reviews inspected after PR #109:
 
 | PR | Latest relevant CI | Independent submitted approval/review | Gate interpretation |
 |---:|---|---|---|
-| #64 | No qualifying workflow run | None; one self-authored COMMENTED review | No test evidence; stale branch |
+| #64 | No qualifying workflow run | None; one self-authored COMMENTED review | Closed without merge; superseded by PR #109 |
 | #71 | Migration replay, CORS probes, Free quality, KDS contract, tenant static checks, procurement contracts all SUCCESS | None; one self-authored COMMENTED review | Static/contract only; P01–P09 runtime remains BLOCKED |
 | #104 | Verify Superpowers submodule SUCCESS only | None | No production CORS runtime proof |
 | #106 | Free quality, KDS contract, disposable migration replay all SUCCESS | None | Source/history parity candidate only |
