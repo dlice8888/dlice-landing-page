@@ -415,3 +415,19 @@ Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR w
 - This is the production deployment created after PR #96. PR #96 changed only the guarded P01–P09 workflow entrypoint; it did not change app HTML/JS, Edge Function source, Supabase schema, Auth metadata, or business data. The production build/deployment happened, but there is no evidence of a functional app-code change from that PR.
 - Previous production deployment `dpl_83d9ZYmZjAVuiifaczxKqegHJ6do` remains READY in deployment history. No rollback or alias reassignment was performed; the current alias mapping is now verified directly from the deployment record.
 - Preview deployments are being created for audit branches and Draft PRs, but no production deployment was created by PR #108/#109. No deployment promotion, rollback, or production code change was performed in this audit.
+
+
+### Current open-PR CI and independent review matrix
+Latest head commit checks and submitted reviews inspected after PR #109:
+
+| PR | Latest relevant CI | Independent submitted approval/review | Gate interpretation |
+|---:|---|---|---|
+| #64 | No qualifying workflow run | None; one self-authored COMMENTED review | No test evidence; stale branch |
+| #71 | Migration replay, CORS probes, Free quality, KDS contract, tenant static checks, procurement contracts all SUCCESS | None; one self-authored COMMENTED review | Static/contract only; P01–P09 runtime remains BLOCKED |
+| #104 | Verify Superpowers submodule SUCCESS only | None | No production CORS runtime proof |
+| #106 | Free quality, KDS contract, disposable migration replay all SUCCESS | None | Source/history parity candidate only |
+| #107 | Free quality, CORS probes, procurement contracts all SUCCESS | None | Exact Preview runtime-config smoke not executed; track.html gap remains |
+| #108 | Free quality SUCCESS | None | Documentation artifact; independent completeness review still needed |
+| #109 | Dedicated SQL/API boundary regression SUCCESS; full disposable migration replay SUCCESS; Free quality FAIL | None | Policy conflict with existing platform-owner exception |
+
+No open PR has an independent submitted approval. The repository ruleset currently requires zero approvals and zero named status checks, so these missing reviews are not blocked by the live ruleset.
