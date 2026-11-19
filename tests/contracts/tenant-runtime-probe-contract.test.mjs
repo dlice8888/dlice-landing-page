@@ -7,7 +7,7 @@ const workflow = readFileSync(".github/workflows/staging-tenant-isolation-accept
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const edgeSource = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 
-test("staging tenant gate uses only the six canonical credentials and the verified identities", () => {
+test("staging tenant gate uses six canonical credentials and discovers fixture UUIDs from authenticated membership and branch responses", () => {
   const triggers = workflow.split(/^permissions:\s*$/m, 1)[0];
   assert.match(workflow, /^\s+environment:\s*staging\s*$/m);
   assert.match(triggers, /^  workflow_dispatch:\s*$/m);
@@ -25,12 +25,7 @@ test("staging tenant gate uses only the six canonical credentials and the verifi
   }
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
-  assert.match(workflow, /STAGING_TENANT_A_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_USER_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_B_USER_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_USER_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_A_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_BRANCH_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_B_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_BRANCH_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_A_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_B_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_ID\s*\}\}/);
+  assert.doesNotMatch(workflow, /vars\.STAGING_TENANT_(?:A|B)_(?:ID|USER_ID|BRANCH_ID)/);
   assert.match(workflow, /STAGING_TENANT_A_BRANCH_CODE:\s*QA-DLICE-A/);
   assert.match(workflow, /STAGING_TENANT_B_BRANCH_CODE:\s*QA-TENANT-B/);
   assert.match(workflow, /^name:\s*Staging Tenant Isolation Acceptance$/m);
@@ -61,6 +56,7 @@ test("runtime tenant gate records every required probe and validates active tena
   }
   assert.match(probe, /erp-list-tenant-memberships/);
   assert.match(probe, /balances\.length\s*>\s*0/, "own-branch read must prove at least one real inventory row");
+  assert.match(probe, /resolveTenantFixtures/);
   assert.match(probe, /status\s*===?\s*["']active["']/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
@@ -94,7 +90,7 @@ test("missing staging configuration is reported as blocked, never as a passing p
   assert.equal(probes.length, 9);
   assert.ok(probes.every((record) => record.status === "BLOCKED"));
   const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
-  assert.equal(preflight.length, 14);
+  assert.equal(preflight.length, 8);
   assert.ok(preflight.every((record) => record.valuePrinted === false));
   assert.ok(preflight.every((record) => record.status === "FAIL"));
   const summary = records.find((record) => record.probeId === "SUMMARY");
@@ -129,20 +125,23 @@ test("inventory reads authorize the requested branch before any data query and s
 test("P03 requires supported global sales_admin profiles, branch_manager tenant memberships, equal permissions, and allows multiple same-tenant branches", () => {
   assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
   // Global console role and tenant-scoped membership role are separate parts of the actual app model.
-  assert.ok(probe.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
-  assert.ok(probe.includes('membershipB?.admin_profiles?.role === "sales_admin"'));
-  assert.ok(probe.includes('membershipA?.role === "branch_manager"'));
-  assert.ok(probe.includes('membershipB?.role === membershipA?.role'));
-  assert.ok(probe.includes("sameTenantRole"));
-  assert.ok(probe.includes("permissionSetsEqual"));
-  assert.ok(probe.includes("branchesA.every((branch) => branch.tenant_id === tenantA)"));
-  assert.ok(probe.includes("branchesB.every((branch) => branch.tenant_id === tenantB)"));
-  assert.ok(!probe.includes("branchesA.length === 1") && !probe.includes("branchesB.length === 1"),
+  const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
+  assert.ok(fixtureResolver.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
+  assert.ok(fixtureResolver.includes('membershipB?.admin_profiles?.role === "sales_admin"'));
+  assert.ok(fixtureResolver.includes('membershipA?.role === "branch_manager"'));
+  assert.ok(fixtureResolver.includes('membershipB?.role === membershipA.role'));
+  assert.ok(fixtureResolver.includes("sameTenantRole"));
+  assert.ok(fixtureResolver.includes("permissionSetsEqual"));
+  assert.ok(fixtureResolver.includes("list(branchesA).every((branch) => branch?.tenant_id === tenantA)"));
+  assert.ok(fixtureResolver.includes("list(branchesB).every((branch) => branch?.tenant_id === tenantB)"));
+  assert.ok(!fixtureResolver.includes("branchesA.length === 1") && !fixtureResolver.includes("branchesB.length === 1"),
     "additional same-tenant assignments must not fail the worker acceptance test");
 });
 
 test("runtime probe evidence masks user, tenant, and branch identifiers in every probe", () => {
   assert.ok(probe.includes("const maskId ="));
+  assert.ok(probe.includes("resolveTenantFixtures"));
+  assert.doesNotMatch(probe, /STAGING_TENANT_[AB]_(?:ID|USER_ID|BRANCH_ID)/);
   assert.ok(probe.includes("maskId(tenantA)"));
   assert.ok(probe.includes("maskId(branchA)"));
   assert.ok(probe.includes("maskId(tenantB)"));
