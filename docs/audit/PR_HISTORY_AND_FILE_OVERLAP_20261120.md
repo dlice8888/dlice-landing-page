@@ -431,3 +431,14 @@ Latest head commit checks and submitted reviews inspected after PR #109:
 | #109 | Dedicated SQL/API boundary regression SUCCESS; full disposable migration replay SUCCESS; Free quality FAIL | None | Policy conflict with existing platform-owner exception |
 
 No open PR has an independent submitted approval. The repository ruleset currently requires zero approvals and zero named status checks, so these missing reviews are not blocked by the live ruleset.
+
+
+### Supabase Edge Function source/runtime drift
+- Supabase staging `dlice-orders` is ACTIVE at **version 70**, last updated `2026-11-18`, with `verify_jwt=false` and explicit action-level Auth validation inside the handler.
+- Its deployed `tenant-permissions.ts` matches the current `staging` branch file exactly. Its deployed `index.ts` does **not** match current `staging` source: deployed 219,189 bytes / 2,251 lines vs GitHub staging 217,003 bytes / 2,271 lines.
+- Deployed v70 still uses non-atomic direct Auth/profile bootstrap and direct tenant/membership inserts; current staging source calls `dlice_bootstrap_initial_owner` and `dlice_create_tenant_with_owner`.
+- Deployed v70 still computes a legacy global Command Center summary directly from branches/inventory/shifts/sales/expenses/POs; current staging source calls `dlice_get_command_center_summary` with explicit branch IDs and a bounded date range.
+- Deployed v70 still performs branch checklist start/item update/completion through separate table writes and separate audit inserts; current staging source calls `dlice_manage_branch_checklist` for atomic mutation + audit and optimistic locking.
+- Current staging also validates branch timezone against the supported timezone set; deployed v70 falls back silently to `Asia/Jakarta` for unsupported values.
+- The three supporting migrations for the newer code (`20261120100000`, `20261120110000`, `20261120120000`) are not yet applied to staging. This is expected source/runtime drift while release gates are held, but it means the newer bootstrap, Command Center, and atomic checklist features are **not active in the deployed Edge Function** yet.
+- Do not deploy the newer function source before the three migrations are reviewed/applied in the correct order and the staging P0 tenant gate passes. No Edge Function deployment was performed in this audit. Both `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` are still present in deployed v70 and current staging source.
