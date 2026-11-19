@@ -66,6 +66,24 @@ begin
 end
 $test$;
 
+-- Reassigning a branch's tenant must not invalidate a transfer already referencing it.
+do $test$
+begin
+  begin
+    update public.branches
+       set tenant_id = '00000000-0000-4000-8000-000000000002'
+     where id = '90000000-0000-4000-8000-000000000002';
+    raise exception 'TEST_FAILURE: branch tenant reassignment with transfer history was accepted';
+  exception
+    when raise_exception then
+      if sqlerrm = 'TEST_FAILURE: branch tenant reassignment with transfer history was accepted' then raise; end if;
+      if sqlerrm <> 'branch_tenant_change_with_stock_transfers_forbidden' then
+        raise exception 'TEST_FAILURE: unexpected branch reassignment rejection: %', sqlerrm;
+      end if;
+  end;
+end
+$test$;
+
 -- Updating the source to another tenant must fail.
 do $test$
 begin
