@@ -278,3 +278,11 @@ The table below records every PR returned by the paginated GitHub API at the sna
 | #105 | MERGED | `staging` | `feat/branch-ops-atomic-checklist-staging-20261120` | ? | ? | +0/-0 | feat(branch-ops): make branch checklist mutations atomic |
 | #106 | OPEN | `staging` | `reconcile/migration-version-rpc-acl-20261120` | ? | ? | +0/-0 | fix(db): align RPC ACL migration source with staging history |
 | #107 | OPEN | `staging` | `feat/staging-runtime-config-smoke-20261118` | ? | ? | +0/-0 | feat(frontend): use environment-validated Supabase runtime config |
+
+
+### Audit artifact provenance
+This document records the 105-PR / 104-branch snapshot taken immediately before this audit document was submitted. The documentation PR that carries this file is excluded from that historical count to avoid self-reference.
+
+### CI state at snapshot
+- PR #106 latest head `c256de028f1728bcc00255718a66c9f84307721f`: Free quality checks, KDS contract and disposable migration replay all PASS. It remains Draft and requires independent review.
+- PR #107 latest Preview CORS probes and Procurement receiving contract PASS; Free quality and requisition contract checks were still running. Runtime-config smoke against the exact Preview URL has not yet been executed.
