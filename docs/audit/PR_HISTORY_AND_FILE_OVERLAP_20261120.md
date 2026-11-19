@@ -394,7 +394,7 @@ Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR w
 - PR #109 remains Draft/HOLD. The API/trigger change must not merge until Product Owner decides the cross-tenant stock-transfer policy and the full migration replay/independent review pass.
 
 
-- Latest PR #109 evidence after correcting its workflow action reference: dedicated boundary regression `44596628557` SUCCESS; disposable full migration replay `44596627981` SUCCESS; Free quality checks `44596627912` FAIL at the pre-existing platform-owner cross-tenant approval contract. The PR remains Draft/HOLD pending Product Owner policy decision.
+- Latest PR #109 evidence at head `2d1a7249ad5e8e00a164b08af8137b033294c59b`: dedicated boundary regression `44599359879` SUCCESS; disposable full migration replay `44599359836` SUCCESS; Free quality checks `44599359868` SUCCESS; CORS, KDS, procurement receiving, and procurement requisition checks SUCCESS. It remains Draft/HOLD pending independent review and P01–P09 runtime gate.
 
 
 ### Scheduled staging mutation workflows on main — latent release blocker
@@ -427,7 +427,7 @@ Latest head commit checks and submitted reviews inspected after PR #109:
 | #106 | Free quality, KDS contract, disposable migration replay all SUCCESS | None | Source/history parity candidate only |
 | #107 | Free quality, CORS probes, procurement contracts all SUCCESS | None | Exact Preview runtime-config smoke not executed; track.html gap remains |
 | #108 | Free quality SUCCESS | None | Documentation artifact; independent completeness review still needed |
-| #109 | Dedicated SQL/API boundary regression SUCCESS; full disposable migration replay SUCCESS; Free quality FAIL | None | Policy conflict with existing platform-owner exception |
+| #109 | Free quality, full disposable migration replay, SQL/API boundary regression, CORS, KDS, procurement checks SUCCESS | None | Draft/HOLD pending independent review and P01–P09 runtime gate |
 
 No open PR has an independent submitted approval. The repository ruleset currently requires zero approvals and zero named status checks, so these missing reviews are not blocked by the live ruleset.
 
