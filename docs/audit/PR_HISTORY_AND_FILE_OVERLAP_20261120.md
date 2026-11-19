@@ -354,3 +354,11 @@ Implications:
 - PR #106 preserves the original SQL file body while renaming its migration version to the version recorded in staging history.
 - A normalized comparison of the source migration SQL and the exact SQL passed to the staging migration application confirms all executable SQL statements match. The only textual difference is explanatory comment wording; there is no executable-statement difference.
 - Live staging ACL aggregate remains 29 public functions, 0 `anon` EXECUTE, 0 `authenticated` EXECUTE, 29 `service_role` EXECUTE, including 5 SECURITY DEFINER functions. This is runtime privilege evidence, not proof that every Edge Function authorization path has passed tenant A/B testing.
+
+
+### Stock-transfer tenant policy conflict — requires Product Owner decision
+- Current staging has zero stock-transfer rows and no same-tenant trigger. The `erp_create_stock_transfer` SECURITY DEFINER RPC itself checks that both branches are active but does not compare their tenant IDs.
+- Current Edge Function permits `branchAccess` for a verified platform owner across branches. The transition handler explicitly permits platform-owner approval when source and destination tenant IDs differ.
+- Existing contract `tests/contracts/tenant-refund-scope-contract.test.mjs` asserts that platform-owner cross-tenant approval exception. This conflicts with PR #64's proposed unconditional same-tenant database trigger.
+- A narrow candidate PR #109 was opened with forward-only migration `20261120130000`, API checks, and disposable PostgreSQL regression. Its initial Free quality-check run failed on the existing platform-owner exception contract; the dedicated SQL workflow initially failed before job setup due to an invalid setup-node action reference, which has since been corrected to `actions/setup-node@v4`. The migration replay run was still in progress at last inspection.
+- **Do not merge PR #109 or PR #64, and do not apply the trigger, until Product Owner decides whether platform-owner cross-tenant logistics is prohibited or is a supported HQ workflow.** Do not weaken the existing contract test just to make CI green.
