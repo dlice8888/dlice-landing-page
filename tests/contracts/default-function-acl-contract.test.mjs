@@ -8,6 +8,8 @@ const workflow = await readFile(".github/workflows/disposable-migration-replay.y
 
 test("default function privileges deny public client EXECUTE for the application migration owner", () => {
   assert.match(migration, /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public[\s\S]*?REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated/);
+  assert.match(migration, /REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, anon, authenticated/);
+  assert.match(migration, /GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO service_role/);
   for (const fn of ["erp_guard_journal_period", "erp_guard_refund_amount", "set_updated_at"]) {
     assert.ok(migration.includes(`REVOKE EXECUTE ON FUNCTION public.${fn}() FROM PUBLIC, anon, authenticated;`), fn);
   }
