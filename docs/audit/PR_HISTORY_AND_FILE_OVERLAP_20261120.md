@@ -40,6 +40,8 @@
 | [#104](https://github.com/dlice8888/dlice-landing-page/pull/104) | `main` → `security/production-cors-contract-main-20261120` | security(cors): track production Edge Function source and fail-closed contract | HOLD — production CORS source; verify production runtime contract and independent review |
 | [#106](https://github.com/dlice8888/dlice-landing-page/pull/106) | `staging` → `reconcile/migration-version-rpc-acl-20261120` | fix(db): align RPC ACL migration source with staging history | DRAFT — source filename reconciliation for ACL migration; current CI checks pass, independent review required |
 | [#107](https://github.com/dlice8888/dlice-landing-page/pull/107) | `staging` → `feat/staging-runtime-config-smoke-20261118` | feat(frontend): use environment-validated Supabase runtime config | DRAFT — environment-scoped runtime config; latest Preview runtime smoke not yet executed |
+| [#108](https://github.com/dlice8888/dlice-landing-page/pull/108) | `staging` → `docs/pr-history-inventory-20261120` | docs(audit): add full PR history and file-overlap inventory | DRAFT — documentation-only audit artifact; independent review of completeness required |
+| [#109](https://github.com/dlice8888/dlice-landing-page/pull/109) | `staging` → `security/stock-transfer-same-tenant-20261120` | security(stock): enforce same-tenant stock transfers | DRAFT/HOLD — conflicts with existing platform-owner cross-tenant approval contract; Product Owner decision required |
 
 No open PR is approved for merge by this inventory. PR #74 is not used as a merge path.
 
@@ -343,6 +345,7 @@ GitHub compare results against each PR's current base branch:
 | #106 | 4 | 0 | 3 | Ahead | Yes |
 | #107 | 11 | 10 | 6 | Diverged | Yes |
 | #108 | 8 | 0 | 1 | Ahead | Yes |
+| #109 | 6 | 0 | 5 | Ahead | Yes |
 
 Implications:
 - #64 and #71 are stale against current staging and cannot be merged without explicit reconciliation/rebase. Do not use their stale base snapshots as integration targets.
