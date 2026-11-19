@@ -54,6 +54,8 @@ for (const [label, pattern] of [
   ["privacy-preserving funnel event action", /action === "record-funnel-event"/],
   ["atomic payment verification RPC", /admin\.rpc\("admin_apply_payment_verification"/],
   ["atomic operational status RPC", /admin\.rpc\("admin_apply_operational_status_change"/],
+  ["atomic initial owner bootstrap RPC", /admin\.rpc\("dlice_bootstrap_initial_owner"/],
+  ["atomic tenant creation RPC", /admin\.rpc\("dlice_create_tenant_with_owner"/],
 ]) {
   if (pattern.test(edge)) pass(label); else fail(label);
 }
