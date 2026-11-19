@@ -76,3 +76,7 @@ This section supersedes the earlier 46/45 migration count and source-mismatch de
 - Supabase Security Advisor: leaked-password protection disabled (WARN). Performance Advisor: 26 unindexed foreign keys (INFO). No schema or migration changes were made during these checks.
 
 Required next actions: recover the exact PR #94 migration source into the staging source-of-truth through review without reapplying it; decide separately whether the un-applied branch_worker role migration is still required by the approved identity model; then build a production-specific migration plan only after the inactive production project is safely available for read-only history/schema comparison.
+
+## Superseding status — 20 November 2026
+
+See `FNB_OS_IMPLEMENTATION_DELTA_20261120.md` for the current result. The previously missing applied migration source `20261022140302_add_missing_fk_supporting_indexes.sql` has been recovered from the live staging migration-history `statements` field and verified to match exactly after trimming surrounding whitespace. Current staging has 52 source files and 48 applied migration-history rows: four pending migrations, zero applied versions without source, and zero duplicate versions. No pending migration has been applied to shared staging.
