@@ -19,6 +19,8 @@ systems before retrying. No tenant onboarding is enabled by this change:
 `TENANT_ISOLATION_RELEASED` remains `false` until the independent tenant
 isolation acceptance gate passes.
 
+Migration source: `supabase/migrations/20261120100000_atomic_owner_and_tenant_bootstrap.sql`. The original PR timestamp (`20261114150000`) was later than the already-applied staging migration version `20261119155309`; because this migration is not applied to shared staging, its source timestamp is normalized to `20261120100000` so future staging application follows the pending `20261119160000` ACL migration and preserves monotonic migration order.
+
 The migration has disposable-database pgTAP coverage for service-role-only
 execution, membership permissions, successful writes, and rollback on audit
 failure. Applying the migration to staging still requires independent review
