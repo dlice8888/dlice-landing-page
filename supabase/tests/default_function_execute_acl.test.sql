@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(10);
+SELECT plan(13);
 
 SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_journal_period()', 'EXECUTE'),
   'anon cannot execute journal-period trigger function');
@@ -13,6 +13,30 @@ SELECT ok(NOT has_function_privilege('anon', 'public.set_updated_at()', 'EXECUTE
   'anon cannot execute updated-at trigger function');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.set_updated_at()', 'EXECUTE'),
   'authenticated cannot execute updated-at trigger function');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND has_function_privilege('anon', p.oid, 'EXECUTE')
+), 'anon cannot execute any public-schema RPC');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND has_function_privilege('authenticated', p.oid, 'EXECUTE')
+), 'authenticated cannot execute any public-schema RPC');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
+), 'service_role retains EXECUTE on all public-schema functions');
 
 SELECT ok(NOT EXISTS (
   SELECT 1
