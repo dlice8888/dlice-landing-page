@@ -43,6 +43,8 @@ jobs:
         run: deno test supabase/functions/dlice-orders/tenant-permissions_test.ts
       - name: Run ERP command-center contract tests
         run: node --test tests/contracts/command-center-contract.test.mjs
+      - name: Run branch checklist atomic audit contract tests
+        run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
       - name: Verify tenant worker profile role boundary
