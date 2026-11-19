@@ -32,8 +32,8 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
         run: |
           set +x
           missing=0
@@ -61,8 +61,8 @@ jobs:
           STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
           STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
           STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
-          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TEST_BRANCH_A_USERNAME }}
-          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TEST_BRANCH_A_PASSWORD }}
+          STAGING_TEST_BRANCH_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+          STAGING_TEST_BRANCH_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
         run: node tests/staging/procurement-receiving-positive.mjs
 
       - name: Validate reconciliation artifact even when the E2E fails
