@@ -320,3 +320,11 @@ After this inventory snapshot, PR #108 was created to carry this audit document.
 - Applied version missing exact source filename on the staging branch: `20261119182606` (PR #106 carries the rename).
 - After PR #106 source reconciliation, three newer source migrations remain unapplied: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`.
 - No duplicate source timestamps were found.
+
+
+### Tenant fixture auto-discovery candidate branch
+- Branch `fix/tenant-isolation-discover-fixtures-20261120`, head `f18748e96f6b0329af8aa77f026f49984151049e`, is 8 commits ahead of current `staging` and 0 behind at the time checked. It is not associated with an open PR.
+- It modifies the current `staging-tenant-isolation-acceptance.yml` workflow and the P01–P09 runner to derive tenant, branch, and user IDs from the two authenticated users' self-membership and assigned-branch responses. This removes the six currently empty ID variables while retaining the four canonical username/password secrets and exact staging URL/public key checks.
+- Its resolver enforces distinct Auth identities and tenants, active membership, supported `sales_admin` global profile, `branch_manager` tenant role, equal non-empty tenant permission sets, branch assignment separation, and exact unique QA branch-code matches. It supports multiple same-tenant branch assignments for Tenant A.
+- Latest Free quality checks run `44593578517` completed SUCCESS. The job ran static checks, runtime probe contract tests, tenant permission tests, and the new authenticated-fixture-discovery unit tests. It did **not** run staging P01–P09; the four canonical login secrets remain unavailable/empty.
+- The candidate is more suitable than the six-ID-variable version for this staging fixture model. Preserve it for a narrow port/review into PR #71 or a single scoped follow-up; do not merge the branch or create another PR automatically. It still cannot close the runtime gate without valid canonical credentials for the corrected A and B users.
