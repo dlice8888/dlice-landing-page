@@ -1,0 +1,2328 @@
+{
+  "repository": "dlice8888/dlice-landing-page",
+  "target_branch": "staging",
+  "snapshot_at": "2026-11-18T20:05:00+07:00",
+  "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
+  "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
+  "release_flags": {
+    "TENANT_ISOLATION_RELEASED": false,
+    "PUBLIC_TENANT_ROUTING_RELEASED": false
+  },
+  "domains": [
+    {
+      "number": 1,
+      "name": "Executive Command Center",
+      "historical_estimate_pct": 20,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 29
+      },
+      "features": [
+        {
+          "requirement": "Company overview / owner dashboard",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Basic ERP overview and funnel metrics exist; authoritative rollups need reconciliation.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 32
+          }
+        },
+        {
+          "requirement": "Live sales monitor (day/week/month)",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Basic reporting UI exists; verify against source orders and business-date cutoff.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 33
+          }
+        },
+        {
+          "requirement": "Branch ranking, region/format comparison",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified 150-branch ranking/cohort output.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 34
+          }
+        },
+        {
+          "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Some source tables/metrics exist; KPI dictionary and totals reconciled to transaction fixtures are missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 35
+          }
+        },
+        {
+          "requirement": "Critical stock, expiry, waste alerts",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Lot/expiry/waste alert workflow not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 36
+          }
+        },
+        {
+          "requirement": "Sales-drop / food-cost anomaly detection",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified anomaly rule, assignment, acknowledgement, or closure.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 37
+          }
+        },
+        {
+          "requirement": "Approval center and pending approvals",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Some PO/expense/refund approvals exist; unified queue and delegated policies not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 38
+          }
+        },
+        {
+          "requirement": "Target vs actual and executive reports",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Official targets, scheduled reports, and exports not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 39
+          }
+        },
+        {
+          "requirement": "Company → region → branch → shift → transaction drill-down",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Role-aware drill-down and row-level consistency need browser and API tests.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 40
+          }
+        },
+        {
+          "requirement": "Alert → assign task → resolve → audit result",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Assignment and action-outcome workflow not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 41
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 2,
+      "name": "POS & Checkout",
+      "historical_estimate_pct": 45,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 43
+      },
+      "features": [
+        {
+          "requirement": "POS workspace, shifts, cash reconciliation",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS sales/shifts and cash reconciliation structures exist; complete operating-day E2E still needed.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 46
+          }
+        },
+        {
+          "requirement": "Cart, product selection, quantity updates",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Checkout/cart foundations exist; full modifier and concurrency coverage not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 47
+          }
+        },
+        {
+          "requirement": "Dine-in, takeaway, pickup, delivery parity",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Pickup/delivery fields exist; all order types and downstream behavior need E2E.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 48
+          }
+        },
+        {
+          "requirement": "Variants, toppings, special instructions",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Complete modifier-group flow not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 49
+          }
+        },
+        {
+          "requirement": "Discounts, coupons, vouchers, special pricing",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Rule engine, approvals, and audit evidence missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 50
+          }
+        },
+        {
+          "requirement": "Cash, QRIS, card, transfer and other provider methods",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Payment-proof/status foundations exist; live provider confirmation and settlement parity not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 51
+          }
+        },
+        {
+          "requirement": "Split bill, partial payment, final settlement",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Partial/split tender lifecycle not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 52
+          }
+        },
+        {
+          "requirement": "Hold/resume order",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified workflow found.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 53
+          }
+        },
+        {
+          "requirement": "Void, refund, return with reason and approval",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Refund records/request/approval/processing exist; POS void/return policy and positive E2E are incomplete.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 54
+          }
+        },
+        {
+          "requirement": "Receipt printing/digital receipt",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Receipt behavior needs device/browser/provider acceptance.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 55
+          }
+        },
+        {
+          "requirement": "Cash in/out, drawer reconciliation, shift close",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Cash reconciliation/shift structures exist; positive and variance fixtures need end-to-end proof.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 56
+          }
+        },
+        {
+          "requirement": "Offline sales queue and safe resynchronization",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Offline persistence, deduplication and replay recovery not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 57
+          }
+        },
+        {
+          "requirement": "Separate order, payment, fulfillment statuses",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Status separation foundations exist; all transitions and retry/idempotency cases need positive E2E.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 58
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 3,
+      "name": "Order Management",
+      "historical_estimate_pct": 55,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 60
+      },
+      "features": [
+        {
+          "requirement": "Online and POS orders / shared queue",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Online order flow and ERP queue foundations exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 63
+          }
+        },
+        {
+          "requirement": "WhatsApp, marketplace, additional channels",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Provider integrations and contract tests missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 64
+          }
+        },
+        {
+          "requirement": "Hours, cutoff, menu availability, branch capacity",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch routing/capacity and WIB/WITA/WIT cutoff contract exist; full browser E2E still needed.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 65
+          }
+        },
+        {
+          "requirement": "Branch assignment by area/capacity",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Routing foundation exists; overload/failover cases not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 66
+          }
+        },
+        {
+          "requirement": "Unique business order number",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "DLC date/sequence formatter exists; uniqueness and concurrency acceptance needed.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 67
+          }
+        },
+        {
+          "requirement": "Consistent status/timeline across channels",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Order status history exists; cross-channel parity not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 68
+          }
+        },
+        {
+          "requirement": "Duplicate orders, delayed payment, failed order handling",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Idempotency, replay, timeout and compensation tests missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 69
+          }
+        },
+        {
+          "requirement": "Preparation ETA and exception escalation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "SLA prediction and escalation workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 70
+          }
+        },
+        {
+          "requirement": "Cancellation/refund and customer order history",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Status/refund/history foundations exist; complete lifecycle and notification proof missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 71
+          }
+        },
+        {
+          "requirement": "Customer notifications on each state",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Notification log/retry foundations exist; actual delivery and idempotent event handling unverified.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 72
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 4,
+      "name": "Kitchen & Production",
+      "historical_estimate_pct": 35,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 74
+      },
+      "features": [
+        {
+          "requirement": "KDS and kitchen order tickets",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Station-level dispatch and live KDS behavior not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 77
+          }
+        },
+        {
+          "requirement": "Station routing (hot/cold/beverage/packing)",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified station configuration and routing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 78
+          }
+        },
+        {
+          "requirement": "Queue priority and prep SLA",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Priority and overdue escalation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 79
+          }
+        },
+        {
+          "requirement": "Waiting → in progress → ready → handed over",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Fulfillment/status foundations exist; kitchen-specific state machine and E2E missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 80
+          }
+        },
+        {
+          "requirement": "Recipes, portion/yield and waste tolerance",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Recipe/BOM and actual consumption structures exist; yield/tolerance calculations incomplete.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 81
+          }
+        },
+        {
+          "requirement": "Prep lists and batch planning",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Production batches exist; forecast-driven prep planning not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 82
+          }
+        },
+        {
+          "requirement": "Actual material consumption",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Atomic production consumption RPC exists; positive recipe-to-stock reconciliation needed.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 83
+          }
+        },
+        {
+          "requirement": "QC, temperature, shelf life and spoilage",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Food safety checks and corrective actions not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 84
+          }
+        },
+        {
+          "requirement": "Made-to-order vs batch production separation",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Batch/consumption foundations exist; distinct planning/fulfillment paths need acceptance.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 85
+          }
+        },
+        {
+          "requirement": "Theoretical vs actual usage / waste variance",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "No verified variance report reconciled against stock ledger.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 86
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 5,
+      "name": "Menu, Recipe & Product Engineering",
+      "historical_estimate_pct": 45,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 88
+      },
+      "features": [
+        {
+          "requirement": "Central product catalog and categories",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Product catalog exists; full category/variant/modifier lifecycle needs proof.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 91
+          }
+        },
+        {
+          "requirement": "Per-branch availability",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch capacity/availability foundations exist; real branch parity unverified.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 92
+          }
+        },
+        {
+          "requirement": "Central, regional and branch-specific pricing",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Pricing policy and effective date approval missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 93
+          }
+        },
+        {
+          "requirement": "Recipe/BOM and ingredient mapping",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Recipe ingredients and version activation exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 94
+          }
+        },
+        {
+          "requirement": "Nested BOM, unit conversions, yield and prep loss",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Nested sub-recipes and conversion engine not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 95
+          }
+        },
+        {
+          "requirement": "Recipe versions and effective dates",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Atomic activation exists; historical version immutability/effective-date tests missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 96
+          }
+        },
+        {
+          "requirement": "Cost per serving and contribution margin",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Costing engine and reconciled margin outputs missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 97
+          }
+        },
+        {
+          "requirement": "Allergens and regulated product information",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Structured allergen/product compliance flow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 98
+          }
+        },
+        {
+          "requirement": "Availability by schedule and stock",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Capacity/availability foundations exist; stock-aware availability not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 99
+          }
+        },
+        {
+          "requirement": "Recipe change request → costing → approval → rollout",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Version activation exists; full approval/simulation/branch verification missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 100
+          }
+        },
+        {
+          "requirement": "POS/production uses the same approved recipe version",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Cross-module version parity needs E2E proof.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 101
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 6,
+      "name": "Inventory & Warehouse",
+      "historical_estimate_pct": 55,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 103
+      },
+      "features": [
+        {
+          "requirement": "Inventory item and branch stock",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Inventory items and branch inventory exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 106
+          }
+        },
+        {
+          "requirement": "Stock movement ledger",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Stock movement table and atomic receiving/production flows exist; all movement sources need reconciliation.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 107
+          }
+        },
+        {
+          "requirement": "Warehouse/storage/bin hierarchy",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Multi-warehouse and storage-location hierarchy not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 108
+          }
+        },
+        {
+          "requirement": "Purchase/use units and conversions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Item/recipe quantity structures exist; conversion and rounding policy incomplete.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 109
+          }
+        },
+        {
+          "requirement": "FIFO/FEFO, lot/batch and expiry",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Lot traceability and expiry allocation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 110
+          }
+        },
+        {
+          "requirement": "Available/reserved/in-transit/blocked balances",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Transfer lifecycle exists; full stock-bucket accounting not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 111
+          }
+        },
+        {
+          "requirement": "Min/max, safety stock and reorder point",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Reorder rules and purchase recommendations missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 112
+          }
+        },
+        {
+          "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Transfer states and ledger hooks exist; positive quantity/idempotency/cross-branch E2E required.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 113
+          }
+        },
+        {
+          "requirement": "Stock count/cycle count and variance adjustment",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Count/posting foundations exist; full positive reconciliation and approval limits required.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 114
+          }
+        },
+        {
+          "requirement": "Stock valuation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Valuation method and historical valuation reports not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 115
+          }
+        },
+        {
+          "requirement": "Adjustments with reasons/approvals/audit",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Restricted workflow/audit foundations exist; risk thresholds and full review trail missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 116
+          }
+        },
+        {
+          "requirement": "PO receipt → stock ledger → balance reconciliation",
+          "source_status": "PARTIAL / GATE",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Receipt-reconciliation endpoint exists; positive procurement workflow has not been run.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 117
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 7,
+      "name": "Procurement & Supplier",
+      "historical_estimate_pct": 40,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 119
+      },
+      "features": [
+        {
+          "requirement": "Supplier directory",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Supplier master exists.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 122
+          }
+        },
+        {
+          "requirement": "Supplier price lists, contracts and price history",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified contract/effective price lifecycle.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 123
+          }
+        },
+        {
+          "requirement": "Purchase requisition from branch/warehouse/central kitchen",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #36 adds branch-scoped multi-line requisitions, draft/submit/Owner approve-or-reject/convert-to-PO, service-role-only atomic RPCs, audit trail, and ERP UI. Positive runtime E2E has not yet run; warehouse/central-kitchen consolidation remains missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 124
+          }
+        },
+        {
+          "requirement": "Consolidated demand across branches",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Multi-branch buying/consolidation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 125
+          }
+        },
+        {
+          "requirement": "Purchase order draft, submit, approval, ordered",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PO state transitions exist; positive-path test still needed.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 126
+          }
+        },
+        {
+          "requirement": "Approval limits by value/category",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Approval actions exist; configurable thresholds/delegation not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 127
+          }
+        },
+        {
+          "requirement": "Goods received note and quantity/quality inspection",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Atomic receiving RPC and GRN structures exist; live positive E2E pending.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 128
+          }
+        },
+        {
+          "requirement": "Three-way match: PO, receipt, supplier invoice",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Invoice matching and tolerance/exception handling missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 129
+          }
+        },
+        {
+          "requirement": "AP handoff and supplier payment",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Procurement-to-AP-to-payment reconciliation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 130
+          }
+        },
+        {
+          "requirement": "Supplier return and supplier performance",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Return and scorecard workflows missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 131
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 8,
+      "name": "Branch Operations",
+      "historical_estimate_pct": 50,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 133
+      },
+      "features": [
+        {
+          "requirement": "Branch directory, status, timezone and assignments",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch master, timezone and job assignments exist; 150 branch data readiness is not established.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 136
+          }
+        },
+        {
+          "requirement": "Opening and closing checklists",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Checklist runs, item status and critical-item completion gates exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 137
+          }
+        },
+        {
+          "requirement": "Opening readiness changes branch operating status",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Real branch lifecycle integration not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 138
+          }
+        },
+        {
+          "requirement": "Daily tasks, due dates and escalation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Task assignment/scheduling/notification workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 139
+          }
+        },
+        {
+          "requirement": "SOP and work instructions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Operating model/docs exist; in-app versioned SOP delivery not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 140
+          }
+        },
+        {
+          "requirement": "Cleanliness, equipment and safety checks",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Checklist foundations exist; calibrated evidence and full templates missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 141
+          }
+        },
+        {
+          "requirement": "Photo evidence",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Evidence upload/storage/retention workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 142
+          }
+        },
+        {
+          "requirement": "Incidents and corrective actions",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Incident severity, assignment, escalation and closure missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 143
+          }
+        },
+        {
+          "requirement": "Equipment maintenance",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Work orders, preventive maintenance and downtime records missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 144
+          }
+        },
+        {
+          "requirement": "Branch audit and compliance score",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Audit scoring and executive roll-up missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 145
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 9,
+      "name": "Delivery & Fulfillment",
+      "historical_estimate_pct": 20,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 147
+      },
+      "features": [
+        {
+          "requirement": "Pickup/delivery selection and fulfillment queue",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Order type and fulfillment state foundations exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 150
+          }
+        },
+        {
+          "requirement": "Address validation and delivery quote",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Live quote provider and validation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 151
+          }
+        },
+        {
+          "requirement": "Courier booking / Biteship integration",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No provider credentials, contract tests or live integration evidence.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 152
+          }
+        },
+        {
+          "requirement": "Dispatch and shipment tracking",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Courier lifecycle and tracking callbacks missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 153
+          }
+        },
+        {
+          "requirement": "Proof of delivery",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "POD capture and access policy missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 154
+          }
+        },
+        {
+          "requirement": "Cancel/retry/provider exception handling",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Idempotent retry, cancellation and compensation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 155
+          }
+        },
+        {
+          "requirement": "Customer fee, subsidy and actual courier cost separation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Cost model and reconciliation report missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 156
+          }
+        },
+        {
+          "requirement": "Delivery completion notification",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Notification foundation exists; provider event → customer status E2E missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 157
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 10,
+      "name": "CRM, Loyalty & Marketing",
+      "historical_estimate_pct": 10,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 159
+      },
+      "features": [
+        {
+          "requirement": "Unified customer profile across channels",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Customer/order identity fields and history foundations exist; deduplication not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 162
+          }
+        },
+        {
+          "requirement": "Consent and communication preferences",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Consent lifecycle, withdrawal and audit missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 163
+          }
+        },
+        {
+          "requirement": "Customer segments",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Segment rules and refresh jobs missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 164
+          }
+        },
+        {
+          "requirement": "Loyalty points and tiers",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Ledger, expiry, reversal and duplicate-event protection missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 165
+          }
+        },
+        {
+          "requirement": "Rewards and vouchers/coupons",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Issuance, eligibility, redemption and reversal missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 166
+          }
+        },
+        {
+          "requirement": "Referral program",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Attribution and fraud controls missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 167
+          }
+        },
+        {
+          "requirement": "Campaign management and ROI",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Campaign lifecycle and attribution metrics missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 168
+          }
+        },
+        {
+          "requirement": "Feedback/reviews/support cases",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Ticketing, SLA and escalation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 169
+          }
+        },
+        {
+          "requirement": "Repeat purchase and customer lifetime analysis",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Canonical customer identity and verified BI metrics missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 170
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 11,
+      "name": "Finance & Accounting",
+      "historical_estimate_pct": 35,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 172
+      },
+      "features": [
+        {
+          "requirement": "Finance overview, expenses and approvals",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch expense approval foundations exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 175
+          }
+        },
+        {
+          "requirement": "Cash/bank, settlement creation and matching",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Settlement and cash reconciliation structures/RPCs exist; source-to-bank positive E2E pending.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 176
+          }
+        },
+        {
+          "requirement": "Payment provider fee and settlement variance",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Full fee/variance reconciliation not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 177
+          }
+        },
+        {
+          "requirement": "AR/AP subledgers and aging",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Complete AR/AP workflows and control-account tie-out missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 178
+          }
+        },
+        {
+          "requirement": "Chart of accounts and general ledger",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Journal-entry table exists; full COA/posted balanced journal lifecycle not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 179
+          }
+        },
+        {
+          "requirement": "Automated journals from POS/procurement/payroll",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Source mapping and balanced journal posting missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 180
+          }
+        },
+        {
+          "requirement": "Bank reconciliation",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Cash/bank reconciliation foundations exist; statement import and independent matching not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 181
+          }
+        },
+        {
+          "requirement": "Tax and invoicing",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Tax settings exist; tax calculations, invoice numbering and compliance tests missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 182
+          }
+        },
+        {
+          "requirement": "Budgets and branch P&L",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Budget-vs-actual and branch P&L not reconciled.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 183
+          }
+        },
+        {
+          "requirement": "Consolidated financial statements",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Group consolidation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 184
+          }
+        },
+        {
+          "requirement": "Period close/reopen and backdated-posting controls",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Fiscal period guards exist; close/reopen and full GL acceptance missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 185
+          }
+        },
+        {
+          "requirement": "Revenue vs cash received/settlement distinction",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Payment/settlement concepts exist; end-to-end reconciliation is incomplete.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 186
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 12,
+      "name": "HR & Workforce",
+      "historical_estimate_pct": 15,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 188
+      },
+      "features": [
+        {
+          "requirement": "Employee directory and lifecycle",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Employee hire/change/termination lifecycle missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 191
+          }
+        },
+        {
+          "requirement": "Organization hierarchy and job positions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Job positions and branch assignments exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 192
+          }
+        },
+        {
+          "requirement": "Attendance and timesheets",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Clock-in/out, approvals and exception handling missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 193
+          }
+        },
+        {
+          "requirement": "Shift scheduling and replacement",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Demand-based scheduling and shift swaps missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 194
+          }
+        },
+        {
+          "requirement": "Leave and overtime",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Approval and policy engine missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 195
+          }
+        },
+        {
+          "requirement": "Payroll calculation/integration",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Provider integration and payroll reconciliation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 196
+          }
+        },
+        {
+          "requirement": "Labor cost by branch",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Approved payroll-to-branch allocation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 197
+          }
+        },
+        {
+          "requirement": "Training/certification and performance reviews",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Course, certificate expiry and review workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 198
+          }
+        },
+        {
+          "requirement": "Recruitment/onboarding/offboarding",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Onboarding checklist and access revocation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 199
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 13,
+      "name": "Franchise & Expansion",
+      "historical_estimate_pct": 5,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 201
+      },
+      "features": [
+        {
+          "requirement": "Branch ownership model",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch master foundation exists; ownership policies not proven end-to-end.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 204
+          }
+        },
+        {
+          "requirement": "Franchise directory/application",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Application and due diligence workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 205
+          }
+        },
+        {
+          "requirement": "Site selection and feasibility",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Site scorecard, financial forecast and approval missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 206
+          }
+        },
+        {
+          "requirement": "Opening project and readiness",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Branch setup/checklist foundations exist; full project workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 207
+          }
+        },
+        {
+          "requirement": "Agreements and contract expiry",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Document/version/renewal controls missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 208
+          }
+        },
+        {
+          "requirement": "Royalty calculation and reconciliation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Contract-driven royalty ledger and settlement missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 209
+          }
+        },
+        {
+          "requirement": "Territory and franchise-specific access",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Geographic scope and tenant/franchise isolation missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 210
+          }
+        },
+        {
+          "requirement": "Franchise compliance and performance",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Audit, corrective action and partner reporting missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 211
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 14,
+      "name": "BI & Analytics",
+      "historical_estimate_pct": 20,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 213
+      },
+      "features": [
+        {
+          "requirement": "Basic overview, funnel metrics and reports",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Basic overview/funnel metrics exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 216
+          }
+        },
+        {
+          "requirement": "Official KPI dictionary and versioning",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Formula, source, timezone, refresh SLA and owner missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 217
+          }
+        },
+        {
+          "requirement": "Net sales/AOV/gross margin",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Source data exists; canonical totals and reconciliation tests missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 218
+          }
+        },
+        {
+          "requirement": "Food cost %, labor cost %, waste %",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Actual vs theoretical cost data and formula definitions missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 219
+          }
+        },
+        {
+          "requirement": "Stock variance and fulfillment/cancellation rates",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Source entities exist; canonical metric outputs not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 220
+          }
+        },
+        {
+          "requirement": "Branch benchmarking by comparable cohorts",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Format/region/hours cohort definitions missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 221
+          }
+        },
+        {
+          "requirement": "Demand forecasting and accuracy monitoring",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Forecast pipeline, evaluation and override audit missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 222
+          }
+        },
+        {
+          "requirement": "Data quality monitoring and anomaly detection",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Freshness/completeness checks and alert lifecycle missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 223
+          }
+        },
+        {
+          "requirement": "Export and scheduled executive reports",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Controlled exports and schedules missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 224
+          }
+        },
+        {
+          "requirement": "Alert → action → measured outcome",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Closed-loop workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 225
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 15,
+      "name": "Admin, Identity & Access Control",
+      "historical_estimate_pct": 55,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 227
+      },
+      "features": [
+        {
+          "requirement": "User/admin profiles, role and permission actions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Admin profile and action-level permission foundations exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 230
+          }
+        },
+        {
+          "requirement": "Branch assignments and scope enforcement",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Server-side branch checks exist; full matrix testing is ongoing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 231
+          }
+        },
+        {
+          "requirement": "Owner/manager/no-permission/inactive identity probes",
+          "source_status": "PASS (negative/role suite)",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Existing suite reports 21 PASS / 0 FAIL; this is not full business E2E.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 232
+          }
+        },
+        {
+          "requirement": "Audit logs for sensitive actions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Audit log table and events exist; coverage of all sensitive mutations not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 233
+          }
+        },
+        {
+          "requirement": "Delegated approval policies and separation of duties",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Some approval gates exist; configurable policy matrix missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 234
+          }
+        },
+        {
+          "requirement": "Sessions/devices and access reviews",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Session inventory, revocation and periodic review missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 235
+          }
+        },
+        {
+          "requirement": "Recovery and offboarding",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Safe account recovery and immediate access revocation not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 236
+          }
+        },
+        {
+          "requirement": "API/database deny-by-default and direct-table protection",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "All 45 public tables have RLS; most internal tables have no direct anon/authenticated SELECT. Public catalog access is intentionally exposed and still requires policy review.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 237
+          }
+        },
+        {
+          "requirement": "Cross-tenant isolation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Current single-organization model does not prove SaaS tenant isolation.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 238
+          }
+        },
+        {
+          "requirement": "Permission changes themselves audited",
+          "source_status": "GATE",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Full audit and access review acceptance missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 239
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 16,
+      "name": "SaaS Tenant Management",
+      "historical_estimate_pct": 5,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 241
+      },
+      "features": [
+        {
+          "requirement": "Tenant directory, tenant onboarding",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No demonstrated multi-tenant onboarding lifecycle.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 244
+          }
+        },
+        {
+          "requirement": "Tenant/member isolation in database and APIs",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No proven tenant entity/scope across tables, functions, storage, caches and jobs.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 245
+          }
+        },
+        {
+          "requirement": "Plans, subscriptions, entitlements and quotas",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Server-enforced entitlements and usage limits missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 246
+          }
+        },
+        {
+          "requirement": "Billing, invoices and usage metering",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Subscription billing and idempotent usage ledger missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 247
+          }
+        },
+        {
+          "requirement": "Tenant settings and suspension",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Lifecycle and grace/suspension behavior missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 248
+          }
+        },
+        {
+          "requirement": "Support access with approval/audit",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Just-in-time scoped support access missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 249
+          }
+        },
+        {
+          "requirement": "Export/offboarding and data deletion policy",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Audited export, retention and deletion workflow missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 250
+          }
+        },
+        {
+          "requirement": "Multiple companies sharing one platform safely",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "One D’Lice org with branch slots is not proof of multi-tenant SaaS.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 251
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 17,
+      "name": "Integrations & Automation",
+      "historical_estimate_pct": 20,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 253
+      },
+      "features": [
+        {
+          "requirement": "Edge Function API and payment proof flow",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Shared \\dlice-orders\\ endpoint and payment proof/status paths exist.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 256
+          }
+        },
+        {
+          "requirement": "Payment provider callback signature and status validation",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No verified live provider webhook evidence.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 257
+          }
+        },
+        {
+          "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Provider-specific integrations not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 258
+          }
+        },
+        {
+          "requirement": "Webhooks and event log",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Notification logs/retry actions exist; durable event delivery contract missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 259
+          }
+        },
+        {
+          "requirement": "Idempotency and replay protection",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Some atomic/idempotent operations exist; complete per-action coverage not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 260
+          }
+        },
+        {
+          "requirement": "Retry/backoff/dead-letter queue",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Notification retry foundation exists; durable retry/dead-letter behavior missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 261
+          }
+        },
+        {
+          "requirement": "Integration health and alerting",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Health dashboards, lag/error alerts and recovery runbooks missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 262
+          }
+        },
+        {
+          "requirement": "Secret storage/rotation",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Secret-based CORS config is active; integration credential rotation/least privilege not audited end-to-end.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 263
+          }
+        },
+        {
+          "requirement": "Import/export and catalog synchronization",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Validated imports, conflict resolution and scheduled sync missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 264
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    },
+    {
+      "number": 18,
+      "name": "Quality, Compliance & Security",
+      "historical_estimate_pct": 35,
+      "source": {
+        "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+        "line": 266
+      },
+      "features": [
+        {
+          "requirement": "RLS on exposed public tables",
+          "source_status": "PASS (database configuration)",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Read-only SQL found 45/45 public tables with RLS enabled; policy correctness still needs per-table tests.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 269
+          }
+        },
+        {
+          "requirement": "Direct access to internal stock/procurement/audit data",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "No direct anon/authenticated SELECT grants on key internal tables; endpoint-level scope tests still required.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 270
+          }
+        },
+        {
+          "requirement": "Exact-origin CORS",
+          "source_status": "PASS (runtime)",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "GitHub Actions run 39979764381: registered staging origin HTTP 200 with exact ACAO; foreign origin HTTP 403/no ACAO; no Origin HTTP 200/no ACAO.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 271
+          }
+        },
+        {
+          "requirement": "Custom auth/permission checks on shared endpoint",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "\\verify_jwt=false\\ remains; custom action authentication is present, so every action must remain covered by regression tests.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 272
+          }
+        },
+        {
+          "requirement": "Leaked-password protection",
+          "source_status": "GATE / WARN",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "Supabase Security Advisor reports it disabled; enabling requires an explicit platform configuration decision.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 273
+          }
+        },
+        {
+          "requirement": "Food safety, temperature, allergens, recall",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Operational compliance records and recall traceability missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 274
+          }
+        },
+        {
+          "requirement": "Supplier quality, quarantine, corrective actions",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Inspection, quarantine and CAPA lifecycle missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 275
+          }
+        },
+        {
+          "requirement": "Backup and restore drill / RPO / RTO",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No restore rehearsal evidence found.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 276
+          }
+        },
+        {
+          "requirement": "Monitoring, system health and incident runbooks",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Rate limits and logs exist; production-grade alert/runbook acceptance missing.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 277
+          }
+        },
+        {
+          "requirement": "Load/concurrency test for 150 branches",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No approved realistic workload test or latency/error SLO evidence.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 278
+          }
+        },
+        {
+          "requirement": "Pilot, rollout and rollback",
+          "source_status": "NOT EVIDENCED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "No signed-off pilot operating-day reconciliation or tested rollback evidence.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 279
+          }
+        },
+        {
+          "requirement": "Workflow",
+          "source_status": "Current state",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Exit criteria",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 282
+          }
+        },
+        {
+          "requirement": "Order-to-Cash",
+          "source_status": "PARTIAL / E2E GATE",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Create order → verify payment → route → kitchen/fulfillment → stock consumption exactly once → settlement/cash match → customer/BI update. Reconcile source and totals.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 284
+          }
+        },
+        {
+          "requirement": "Procure-to-Pay",
+          "source_status": "PARTIAL / E2E GATE",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR → consolidation → approval → PO → GRN → stock movement/balance → invoice 3-way match → AP → supplier payment. Positive E2E and artifact are still required.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 285
+          }
+        },
+        {
+          "requirement": "Forecast-to-Production",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Forecast → recipe requirements → available/expiry-valid stock → PR/transfer → batch/prep → actual consumption/waste → stock and cost reconciliation. Forecasting itself is not proven.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 286
+          }
+        },
+        {
+          "requirement": "Record-to-Report",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS/procurement/payroll/expenses → source mapping → balanced journal → settlement/stock/AP reconciliation → period close → branch P&L → group consolidation.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 287
+          }
+        },
+        {
+          "requirement": "Stock transfer and count",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "All states, correct source/destination quantities, one ledger event per transition, retries safe, variance approved, branch scope verified.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 288
+          }
+        },
+        {
+          "requirement": "Authentication and permissions",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Positive and negative role tests per action, anonymous 401, unauthorized 403, cross-branch/tenant deny, inactive-user deny, audit event, browser path.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 289
+          }
+        },
+        {
+          "requirement": "Responsive UX and accessibility",
+          "source_status": "UNVERIFIED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 290
+          }
+        },
+        {
+          "requirement": "Backup, recovery, scale and rollout",
+          "source_status": "NOT DEMONSTRATED",
+          "audit_status": "NOT VERIFIED",
+          "evidence_or_gap": "Restore drill, measured RPO/RTO, concurrency test, branch pilot and rollback rehearsal.",
+          "source": {
+            "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
+            "line": 291
+          }
+        }
+      ],
+      "status": "PARTIAL",
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+    }
+  ],
+  "current_platform_evidence": {
+    "supabase_project": "higoadrzxnhzbbwhdbmh",
+    "supabase_status": "ACTIVE_HEALTHY",
+    "public_tables": 64,
+    "public_tables_rls_enabled": 64,
+    "public_tables_rls_disabled": 0,
+    "public_policies": 64,
+    "public_functions": 29,
+    "security_definer_functions": 5,
+    "staging_migrations": 46,
+    "source_migration_files": 45,
+    "missing_source_migration": "20261022140302",
+    "latest_staging_migration": "20261027140145",
+    "pr64_migration_applied": false,
+    "tenants": 2,
+    "branches": 155,
+    "active_tenant_memberships": 3,
+    "worker_memberships": 2,
+    "worker_role": "branch_manager",
+    "worker_permission_sets_equal": true,
+    "worker_A_active_branch_assignments": 2,
+    "worker_B_active_branch_assignments": 1,
+    "cross_tenant_assignment_rows": 0,
+    "inventory_balance_rows_per_QA_branch": 2,
+    "active_owner_profile": 1,
+    "owner_auth_user_exists": true,
+    "owner_app_metadata_platform_owner_boolean_true": 0,
+    "security_advisor": {
+      "leaked_password_protection": "WARN_DISABLED"
+    },
+    "performance_advisor": {
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49
+    },
+    "public_table_grants": {
+      "anon_authenticated_select": [
+        "public.products"
+      ]
+    },
+    "owner_auth_source": {
+      "file": "supabase/functions/dlice-orders/index.ts",
+      "lines": "52-55,92-100"
+    },
+    "release_gate_source": {
+      "file": "supabase/functions/dlice-orders/index.ts",
+      "lines": "52,135-144"
+    },
+    "deployed_edge_function": {
+      "name": "dlice-orders",
+      "version": 69,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "sha256": "d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40"
+    },
+    "inventory_read_finding": {
+      "deployed_behavior": "erp-list-inventory is in TENANT_SCOPE_UNCERTIFIED_ACTIONS and returns HTTP 423 for non-platform-owner while release flag is false; legacy handler queries global inventory_items.",
+      "source": {
+        "file": "supabase/functions/dlice-orders/index.ts",
+        "lines": "71,454-455,1266-1275"
+      },
+      "remediation_pr": 85,
+      "candidate_commit": "63575c051112b7ec621afc4f96a1beef62238c2b",
+      "candidate_behavior": "requires inventory permission, branch_id, active membership and exact active assignment; queries branch_inventory joined to inventory_items; no global catalog scan",
+      "ci_run": 44304941471,
+      "status": "PARTIAL"
+    },
+    "admin_profile_role_constraint": [
+      "sales_admin",
+      "owner"
+    ],
+    "worker_global_profile_roles": [
+      "sales_admin",
+      "sales_admin"
+    ],
+    "ordinary_worker_profile_type_available": false,
+    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner. PR #86 introduces branch_worker source-only; no staging profiles changed.",
+    "active_cross_tenant_assignment_rows": 0,
+    "branch_worker_role_candidate": {
+      "pr": 86,
+      "head": "eeda0bdd715dc5477969be3196c6800d6a23eac2",
+      "migration": "20261118190000_add_branch_worker_profile_role.sql",
+      "quality_run": 44306779658,
+      "quality_result": "SUCCESS",
+      "disposable_migration_replay_run": 44306779612,
+      "disposable_migration_replay_result": "SUCCESS",
+      "staging_migration_applied": false
+    },
+    "p03_probe_candidate": {
+      "pr": 87,
+      "head": "a44f27117c33f432ef467b5b52716bea028e0471",
+      "quality_run": 44307838730,
+      "quality_result": "SUCCESS",
+      "tenant_runtime_contract_tests": "7/7",
+      "masked_identifiers": true,
+      "multiple_same_tenant_assignments_allowed": true,
+      "staging_runtime_executed": false
+    },
+    "vercel_project": {
+      "name": "dlice-landing-page",
+      "password_protection_enabled": false,
+      "sso_protection_enabled": true,
+      "sso_deployment_type": "all_except_custom_domains",
+      "trusted_ips_enabled": false,
+      "preview_latest_status": "READY",
+      "production_deployment_performed": true,
+      "production_deployment_exception": {
+        "type": "unintended_documentation_only_deployment",
+        "initial_deployment_id": "dpl_FV4dAmvTdERXQupSkcvqvReXqqXP",
+        "initial_commit": "eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1",
+        "restoration_deployment_id": "dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e",
+        "restoration_commit": "ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4",
+        "production_alias": "dlice.vercel.app",
+        "alias_points_to_restoration": true,
+        "restored_main_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
+        "preincident_parent_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
+        "tree_restored_exactly": true,
+        "application_code_changed": false,
+        "production_database_or_auth_changed": false
+      }
+    },
+    "source_migration_files_staging": 45,
+    "migration_source_recovery_candidate": {
+      "pr": 88,
+      "branch": "fix/recover-migration-source-20261022140302-20261118",
+      "file": "supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql",
+      "source_of_truth": "staging supabase_migrations.schema_migrations version 20261022140302",
+      "applied_name": "add_missing_fk_supporting_indexes",
+      "index_statements": 9,
+      "normalized_exact_match": true,
+      "staging_applied": false,
+      "quality_and_disposable_replay": "PASS",
+      "staging_indexes_exist": true,
+      "staging_index_count": 9,
+      "index_definition_verified": true,
+      "quality_run_id": 44309825502,
+      "disposable_replay_run_id": 44309825526,
+      "disposable_replay_job_id": 134821567927,
+      "disposable_replay_log": "Recovered migration applied successfully in disposable local database; complete repository migration set finished.",
+      "pr_status": "OPEN_DRAFT",
+      "preview": "READY"
+    }
+  },
+  "tenant_acceptance": {
+    "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
+    "runner": "tests/runtime/dlice-tenant-jwt-isolation.mjs",
+    "required_probes": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P06",
+      "P07",
+      "P08",
+      "P09"
+    ],
+    "current_status": "BLOCKED",
+    "last_known_runtime_run": 44208204366,
+    "latest_candidate_static_ci_run": 44307838730,
+    "runtime_probes_executed": 0,
+    "reason": [
+      "GitHub Environment credential and fixture availability cannot be independently verified; workflow dispatch is not exposed through the connected integration",
+      "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only and no profiles have been changed",
+      "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed",
+      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be independently verified"
+    ],
+    "no_skipped_policy": true,
+    "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging",
+    "p03_candidate": "PR #87 requires branch_worker profile, branch_manager tenant role, equal non-empty permission sets, active tenant membership, configured QA branch visibility, and masks all identity/tenant/branch IDs; allows multiple same-tenant assignments"
+  },
+  "open_prs": [
+    83,
+    82,
+    74,
+    71,
+    78,
+    77,
+    76,
+    80,
+    62,
+    63,
+    64,
+    31,
+    22,
+    84,
+    85,
+    86,
+    87,
+    88
+  ],
+  "open_pr_count": 18
+}
