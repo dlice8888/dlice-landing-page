@@ -101,11 +101,6 @@ function recordBlocked(definition, reason) {
   });
 }
 
-function isUuid(value) {
-  return typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
 function isPublicSupabaseKey(value) {
   if (value.startsWith("sb_secret_")) return false;
   const parts = value.split(".");
@@ -381,18 +376,18 @@ if (
       tenantB = resolved.tenantB;
       branchA = resolved.branchA;
       branchB = resolved.branchB;
-      tenantFixturesVerified = resolved.passed;
-      refreshProbeScopes();
-      definition.tenantScope = `${maskId(tenantA)},${maskId(tenantB)}`;
-      definition.branchScope = `${maskId(branchA)},${maskId(branchB)}`;
-
-      const passed = identityAResult.response.status === 200 &&
+      const responsesOk = identityAResult.response.status === 200 &&
         identityBResult.response.status === 200 &&
         membershipAResult.response.status === 200 &&
         membershipBResult.response.status === 200 &&
         branchesAResult.response.status === 200 &&
-        branchesBResult.response.status === 200 &&
-        resolved.passed;
+        branchesBResult.response.status === 200;
+      tenantFixturesVerified = responsesOk && resolved.passed;
+      refreshProbeScopes();
+      definition.tenantScope = `${maskId(tenantA)},${maskId(tenantB)}`;
+      definition.branchScope = `${maskId(branchA)},${maskId(branchB)}`;
+
+      const passed = tenantFixturesVerified;
       return {
         passed,
         actualResult: passed
