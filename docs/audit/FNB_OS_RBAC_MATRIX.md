@@ -47,3 +47,8 @@ The deployed v69 `erp-list-inventory` path was blocked by the global uncertified
 The current staging schema allows only `admin_profiles.role IN ('sales_admin','owner')`. The two active `branch_manager` tenant members both have `sales_admin` global profile classification. Their tenant permissions are equal and are correctly resolved from tenant memberships, but they cannot yet be certified as ordinary non-admin workers under the stated acceptance requirement.
 
 PR #86 adds a non-admin `branch_worker` classification, an Owner-only conversion endpoint that requires active non-admin membership plus active same-tenant branch assignment, and an Owner UI. It remains Draft/HOLD; its migration is source-only. No existing user was changed.
+
+
+## Current RBAC acceptance status — 20 November 2026
+
+The current role model for P03 expects distinct Auth identities, active tenant memberships, and branch assignment; the global profile role may be `sales_admin` while tenant membership role is `branch_manager`. The P03 static contract has been corrected and quality checks pass. The live P01–P09 workflow still cannot validate these relationships because Tenant A/B credentials and tenant/branch/user fixture variables resolve empty in the runner. Owner bypass remains blocked because the linked Auth user's boolean `app_metadata.platform_owner=true` is absent and the server-side UUID allowlist is not verified. No role or membership assignments were modified. See `FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
