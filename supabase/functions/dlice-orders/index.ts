@@ -1167,7 +1167,7 @@ if (action === "admin-set-profile-role") {
     const { data: branch, error } = await admin.from("branches").select("id,status,timezone").eq("id", branchId).maybeSingle();
     if (error) return { error: fail("Cabang gagal dimuat.", 500, origin) };
     if (!branch) return { error: fail("Cabang tidak ditemukan.", 404, origin) };
-    if (!["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura"].includes(branch.timezone)) {
+    if (!SUPPORTED_BRANCH_TIMEZONES.has(branch.timezone)) {
       return { error: fail("Zona waktu cabang tidak valid. Perbaiki konfigurasi cabang sebelum checklist dijalankan.", 422, origin) };
     }
     const parts = new Intl.DateTimeFormat("en-GB", {
