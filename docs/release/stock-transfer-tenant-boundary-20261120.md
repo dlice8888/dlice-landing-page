@@ -15,6 +15,7 @@ The PRD requires tenant isolation and cross-tenant denial. It does not authorize
 - Edge Function `erp-create-stock-transfer` validates that source and destination branches belong to the same tenant before invoking the service-role RPC.
 - Edge Function `erp-transition-stock-transfer` revalidates tenant ownership for every transition; Platform Owner does not bypass this boundary.
 - Database trigger `trg_stock_transfer_same_tenant` rejects cross-tenant insert or branch reassignment in `stock_transfers`.
+- A second trigger blocks changing a branch's `tenant_id` after it has stock-transfer history, preventing later branch re-parenting from invalidating the transfer's tenant boundary.
 - Trigger function EXECUTE is revoked from `PUBLIC`, `anon`, and `authenticated`; it is invoked only by the table trigger.
 - No table schema, inventory ledger, or business data is rewritten by this migration.
 
