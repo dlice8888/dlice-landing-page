@@ -369,3 +369,22 @@ Implications:
 - Current `staging/track.html` still selects staging/production Supabase project URLs based on `location.hostname`. This remains a hard-coded environment-routing path and is outside PR #107's current smoke coverage.
 - `admin.html` currently has no Supabase client/config reference; confirm whether it is an inactive placeholder before including it in scope.
 - PR #107 description now records this gap. Do not call runtime configuration complete until `track.html` is migrated and smoke-tested.
+
+
+## 12. Current repository inventory update — after PR #109
+The original historical snapshot covered PR #1–#107 (105 actual PRs; #34 and #45 do not exist). Two audit PRs have since been added:
+- #108 — full PR history and overlap inventory: 12 commits, 1 changed file, +371/-0.
+- #109 — proposed stock-transfer tenant boundary: 6 commits, 5 changed files, +278/-13.
+
+Current repository totals:
+- **107 actual PRs** across the number range #1–#109.
+- **75 merged**, **25 closed without merge**, **7 open**.
+- **2,172 total PR commits**, **900 PR-level file touches**, **70,303 additions**, **2,074 deletions**. These are per-PR aggregate metrics, not unique files/commits across Git history.
+
+Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR was merged or closed during this audit.
+
+### PR #109 latest validation
+- Dedicated `Stock transfer same-tenant boundary` workflow run `44596628557`: **SUCCESS**. The isolated PostgreSQL test and API contract test passed.
+- `Free quality checks` run `44596627912`: **FAIL** on the existing contract asserting the platform-owner cross-tenant approval exception. This is the documented product-policy conflict, not a reason to weaken the existing contract.
+- Disposable full migration replay run `44596627981` was still in progress at the last check.
+- PR #109 remains Draft/HOLD. The API/trigger change must not merge until Product Owner decides the cross-tenant stock-transfer policy and the full migration replay/independent review pass.
