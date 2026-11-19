@@ -381,8 +381,10 @@ if (
         : null;
       const membershipAIsCorrect = !!membershipA && !membershipsA.some((membership) => membership.tenant_id === tenantB);
       const membershipBIsCorrect = !!membershipB && !membershipsB.some((membership) => membership.tenant_id === tenantA);
-      const profileAIsOrdinaryWorker = membershipA?.admin_profiles?.role === "branch_worker";
-      const profileBIsOrdinaryWorker = membershipB?.admin_profiles?.role === "branch_worker";
+      // admin_profiles.role is the global D'Lice console role (sales_admin).
+      // Branch authorization is represented by tenant_memberships.role (branch_manager).
+      const profileAHasSupportedRole = membershipA?.admin_profiles?.role === "sales_admin";
+      const profileBHasSupportedRole = membershipB?.admin_profiles?.role === "sales_admin";
       const sameTenantRole = membershipA?.role === "branch_manager" && membershipB?.role === membershipA?.role;
       const permissionsA = Array.isArray(membershipA?.permissions) ? [...membershipA.permissions].sort() : [];
       const permissionsB = Array.isArray(membershipB?.permissions) ? [...membershipB.permissions].sort() : [];
@@ -415,8 +417,8 @@ if (
         identityMatchesFixtures &&
         membershipAIsCorrect &&
         membershipBIsCorrect &&
-        profileAIsOrdinaryWorker &&
-        profileBIsOrdinaryWorker &&
+        profileAHasSupportedRole &&
+        profileBHasSupportedRole &&
         sameTenantRole &&
         permissionSetsEqual &&
         branchAAssignmentIsCorrect &&
@@ -440,8 +442,8 @@ if (
           identityMatchesFixtures,
           membershipAActiveInTenantA: membershipAIsCorrect,
           membershipBActiveInTenantB: membershipBIsCorrect,
-          profileAIsOrdinaryWorker,
-          profileBIsOrdinaryWorker,
+          profileAHasSupportedRole,
+          profileBHasSupportedRole,
           tenantRoleA: membershipA?.role ?? null,
           tenantRoleB: membershipB?.role ?? null,
           sameTenantRole,
