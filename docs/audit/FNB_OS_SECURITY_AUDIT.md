@@ -128,3 +128,12 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+
+## Current security delta — 20 November 2026
+
+- Static permission resolver tests pass 8/8; default public function EXECUTE ACL pgTAP and stock RPC ACL source are included in the current staging migration chain.
+- Runtime CORS probes on staging pass for the tested allowed/foreign/no-origin matrix.
+- P01–P09 latest run 44579674471 is BLOCKED 9 / SKIPPED 0 before any probe request because canonical Tenant A/B credentials and six fixture variables resolve empty.
+- The linked active Owner Auth identity still lacks JSON boolean `app_metadata.platform_owner=true`; the server-side allowlist remains unverified. No Auth metadata was changed.
+- Main is Vercel production branch. Production CORS source/contract PR #104 passes static contract and Deno type-check but remains Draft; no production runtime probe or deployment is claimed.
