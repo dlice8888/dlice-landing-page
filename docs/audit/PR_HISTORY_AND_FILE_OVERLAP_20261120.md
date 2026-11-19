@@ -113,7 +113,7 @@ Important limitations in the live ruleset:
 - Required approving review count: **0**; required reviewers: **none**.
 - Required status checks: **empty**.
 - Required deployment environments: **empty**.
-- Code-owner review and last-push approval flags are enabled, but no independent approval count is required.
+- Code-owner review and last-push approval flags are enabled, but no independent approval count is required. No CODEOWNERS file was found at the repository root, `.github/CODEOWNERS`, or `docs/CODEOWNERS`, so code-owner routing has no configured owners.
 - Bypass actors include repository roles and integrations with `always`; current connected actor reports `current_user_can_bypass=always`.
 
 Therefore the ruleset is active but does **not** enforce independent approval, required CI, or a staging deployment reviewer gate. Do not treat `protected=true` as proof that the release gate is complete. Repository administrator must tighten the ruleset through GitHub Settings.
@@ -136,7 +136,7 @@ Supabase staging project: `higoadrzxnhzbbwhdbmh`.
 | Public functions executable by service_role | 29 |
 
 Additional SQL provenance review found:
-- `20261017183537_seed_dlice_catalog`: stored migration-history statement contains literal backslash-n separators while current source uses real line breaks. The three product rows exist with creation timestamps near the migration time and were updated by a later catalog migration; the original seed execution provenance still needs confirmation. Do not re-seed blindly.
+- `20261017183537_seed_dlice_catalog`: the stored migration-history statement contains literal backslash-n separators while current source uses real line breaks. The three expected product rows exist (created at 2026-10-17 18:36:33 UTC) and were updated at 2026-10-20 18:57:40 UTC, matching the later catalog-copy migration timestamp. No missing catalog rows were found; confirm original seed provenance from the initial deployment/commit trace, and do not re-seed blindly.
 - `20261019185240_atomic_payment_verification`: stored history statement lacks the explicit `p_order_id::text` cast now present in source; the live function definition contains the cast. Record as source/history provenance drift, not as an instruction to reapply.
 - `20261020201654_finance_refund_settlement_and_period_guards`: stored history SQL is older than source; the live refund guard has the stronger immutable-field checks in source. Reconcile the function definition and original change provenance before any new migration.
 - `20261022124132_stock_transfers_and_counts`: source and history order the two stock-transfer indexes differently; both indexes exist in staging. This is a statement-order difference, not a missing index.
@@ -286,3 +286,7 @@ This document records the 105-PR / 104-branch snapshot taken immediately before 
 ### CI state at snapshot
 - PR #106 latest head `c256de028f1728bcc00255718a66c9f84307721f`: Free quality checks, KDS contract and disposable migration replay all PASS. It remains Draft and requires independent review.
 - PR #107 latest Preview CORS probes and Procurement receiving contract PASS; Free quality and requisition contract checks were still running. Runtime-config smoke against the exact Preview URL has not yet been executed.
+
+
+### Post-snapshot update
+After this inventory snapshot, PR #108 was created to carry this audit document. The current open-PR count therefore includes PR #108; the 105-PR / 5-open count above is intentionally frozen at the snapshot before PR #108.
