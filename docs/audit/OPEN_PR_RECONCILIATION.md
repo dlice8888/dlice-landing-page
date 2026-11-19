@@ -75,3 +75,7 @@ This section supersedes the 18 Nov PR counts, mergeability and migration-source 
 - Latest E2E reruns: KDS/POS/Stock run 44505286727 attempt 2 and Procurement run 44506173400 attempt 2 both stopped at preflight; Owner username/password and Branch A username resolved empty. No business transaction was created. P01-P09 run 44326099475 reported nine BLOCKED/not-executed probes.
 - Owner Auth app_metadata.platform_owner remains absent. No connected Auth Admin mutation action is available; do not use direct SQL.
 - Release flags remain false; no merge, migration apply, deployment or production mutation occurred in this snapshot.
+
+## Current PR inventory — 20 November 2026
+
+The 18 November inventory above is historical. Current open PRs are: #104 (production CORS source/contract, main, Draft/HOLD because main is the Vercel production branch); #84 (historical audit docs, superseded by this current audit branch); #82 (whitespace-only release docs); #80 (historical staging baseline docs); #74 (bulk staging→main, dirty/conflicting, DO NOT MERGE); #71 (staging tenant fixture/tenant audit operations, stale and hard-coded to Tenant B, HOLD); #64 (tenant-isolation release audit, HOLD until P01–P09 pass). PRs #96, #94, #99, #100, #78, #102, #103, and #105 are merged. PRs #62, #63, #22, #31, #76, #77, and #101 were closed as superseded/stale. The complete current status and evidence are in `FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
