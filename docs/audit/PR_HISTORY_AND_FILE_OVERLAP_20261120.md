@@ -348,3 +348,9 @@ Implications:
 - #104 is a clean seven-commit production-source PR against current main, but remains Draft/HOLD pending production CORS runtime evidence and independent review.
 - #106 and #108 are clean, scoped staging PRs. #106 is source/history parity only; #108 is documentation only. Neither is a release authorization.
 
+
+
+### RPC ACL migration SQL provenance clarification
+- PR #106 preserves the original SQL file body while renaming its migration version to the version recorded in staging history.
+- A normalized comparison of the source migration SQL and the exact SQL passed to the staging migration application confirms all executable SQL statements match. The only textual difference is explanatory comment wording; there is no executable-statement difference.
+- Live staging ACL aggregate remains 29 public functions, 0 `anon` EXECUTE, 0 `authenticated` EXECUTE, 29 `service_role` EXECUTE, including 5 SECURITY DEFINER functions. This is runtime privilege evidence, not proof that every Edge Function authorization path has passed tenant A/B testing.
