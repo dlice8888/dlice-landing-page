@@ -396,3 +396,14 @@ Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR w
 
 
 - Latest PR #109 evidence after correcting its workflow action reference: dedicated boundary regression `44596628557` SUCCESS; disposable full migration replay `44596627981` SUCCESS; Free quality checks `44596627912` FAIL at the pre-existing platform-owner cross-tenant approval contract. The PR remains Draft/HOLD pending Product Owner policy decision.
+
+
+### Scheduled staging mutation workflows on main — latent release blocker
+- Main contains two scheduled positive-path workflows: procurement at `02:23 UTC` (09:23 WIB) and KDS/POS/stock at `02:17 UTC` (09:17 WIB).
+- Both use the condition `github.event_name == 'schedule' || inputs.confirm_staging_mutations == true`. A scheduled run therefore bypasses the manual `confirm_staging_mutations` input and can write QA-prefixed business records to shared staging if the Environment credentials become available.
+- Latest scheduled runs inspected:
+  - Procurement `44506173400` (19 Nov) and `44284617369` (18 Nov): failed at the positive E2E script preflight because Owner username/password and Branch A username were missing.
+  - KDS/POS/stock `44505286727` (19 Nov): failed at preflight because Owner username/password were missing.
+- Logs show these runs stopped before the positive workflow began; no business mutations were executed in those runs.
+- **Latent risk:** if those legacy secrets are later populated, the schedules will automatically start writing to staging without a manual confirmation. This conflicts with the current staging mutation gate. Repository administrator should disable the schedules or change them to read-only monitoring until a separately approved, protected QA schedule is designed. Do not add or populate those legacy secrets as a workaround.
+- The current `staging` branch version of the KDS workflow has a preflight and QA artifact validation; the main version does not have the same preflight and runs the positive script directly. Main's scheduled workflow is therefore also missing the newer staging safeguards.
