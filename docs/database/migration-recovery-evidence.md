@@ -39,3 +39,8 @@ The database tracking row is not a substitute for the original SQL source. Do no
 6. Obtain independent review before any shared staging migration action.
 
 No database schema, migration history, or production resource was changed during this audit.
+
+
+## Recovery completed — 20 November 2026
+
+The exact migration source for version `20261022140302` is now present in staging at `supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql`. Its concatenated SQL statements match the live `supabase_migrations.schema_migrations.statements` value exactly after trimming surrounding whitespace. It was not reapplied; its version is already recorded as applied. Current full migration parity is 52 files / 48 applied / 4 pending / 0 missing source / 0 duplicate. See `docs/audit/FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
