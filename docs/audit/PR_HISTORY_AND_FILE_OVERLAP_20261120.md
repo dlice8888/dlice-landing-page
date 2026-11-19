@@ -456,3 +456,12 @@ No open PR has an independent submitted approval. The repository ruleset current
 - The generic atomic owner/tenant bootstrap in PR #102 (`dlice_bootstrap_initial_owner`, `dlice_create_tenant_with_owner`) is the preferred production candidate, but its migration and Edge Function source are not yet deployed to staging.
 - The other PR #71 RPCs are potentially reusable after independent review: `erp_create_warehouse_with_audit`, `erp_transition_purchase_order_with_audit`, and `erp_create_purchase_order_with_audit`. They are SECURITY INVOKER, service_role-only, tenant-membership scoped, and write audit rows in the same transaction. Review their actor/role checks, PO item validation, idempotency, and rollback behavior before salvaging them into forward-only migrations.
 - Keep PR #71 Draft/HOLD; do not merge its old migration timestamp or staging-specific bootstrap helper.
+
+
+### Release protection audit — active ruleset is not an effective merge gate
+- GitHub reports both `main` and `staging` as `protected=true`, and one active repository ruleset exists (`27559290`).
+- The ruleset currently has `required_approving_review_count=0`, `required_status_checks=[]`, and `required_deployments.required_deployment_environments=[]`. The `required_reviewers` list is empty.
+- `require_code_owner_review=true` is configured, but the repository tree has no `CODEOWNERS` file, so there is no mapped code-owner reviewer set.
+- The ruleset allows multiple repository roles and integrations to bypass always; the active connection reports `current_user_can_bypass=always`.
+- Existing safeguards do include deletion, non-fast-forward, creation/update restrictions, required linear history, and required signatures. Those do not substitute for independent review, mandatory CI, or staging deployment approval.
+- GitHub branch-protection GET is 403 for this integration and no ruleset mutation action is available. Repository administrator must configure at least one independent approval, required general CI checks, code-owner mappings, staging required deployment reviewers, and a minimal break-glass bypass list. Do not claim "protected" means "release-gated" until the actual ruleset configuration is verified.
