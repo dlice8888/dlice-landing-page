@@ -12,7 +12,7 @@ Live staging catalog inspection found that PostgreSQL default privileges for `po
 - Revoke direct client EXECUTE from every existing function in schema `public`.
 - Grant `service_role` EXECUTE on every existing public-schema function; trusted Edge Function calls already use its server-side service-role client.
 - Keep explicit revocations for the historically exposed trigger-only functions.
-- Add pgTAP checks for current function privileges, default privileges, and a newly created function.
+- Add pgTAP checks for current function privileges and the `postgres` default ACL.
 - Run `supabase test db` as part of disposable migration replay.
 
 ## Scope and limits
