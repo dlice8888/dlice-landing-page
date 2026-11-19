@@ -60,3 +60,19 @@ A fresh read-only `pg_indexes` query confirmed all nine recovered indexes curren
 - Disposable full migration replay [44309825526](https://github.com/dlice8888/dlice-landing-page/actions/runs/44309825526), job `134821567927`, succeeded. Logs explicitly show `20261022140302_add_missing_fk_supporting_indexes.sql` applied and the complete repository migration set finished.
 - Initial replay attempt hit Docker registry rate limiting and port 54322 collision; retry succeeded. This was infra flakiness, not a migration SQL failure.
 - PR #88 remains open and Draft; no staging migration was re-applied. Source restoration is validated, but staging migration parity remains a release gate until reviewed/merged through normal controls.
+
+## Superseding live migration reconciliation — 2026-11-19
+
+This section supersedes the earlier 46/45 migration count and source-mismatch details above.
+
+- Supabase staging migration history: 47 applied rows.
+- staging source tree: 47 SQL migration files.
+- main source tree: 2 SQL migration files.
+- The staging and database sets are not identical: applied version 20261118165519 named 20261118193000_revoke_public_stock_workflow_rpc_execute is absent from the staging migration directory. Its exact SQL source exists in PR #94 at supabase/migrations/20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql.
+- Staging contains 20261118190000_add_branch_worker_profile_role.sql, but no corresponding version exists in applied migration history. It remains source-only and must not be applied merely to make counts match.
+- Main baseline filenames (20261018000000, 20261018001000) differ from the applied staging baseline (20261017183506, 20261017183509). Production is a separate project and is currently INACTIVE; its migration history could not be inspected. No staging-to-production bulk replay or filename renumbering is safe.
+- Read-only staging ACL verification reconfirmed all five stock workflow SECURITY DEFINER functions have anon=false, authenticated=false, service_role=true.
+- Read-only RLS verification: 64/64 public base tables have RLS enabled and 64/64 have a policy. Client table grants are constrained by deny/service-role-only policies; products intentionally allows SELECT of active products. This is configuration evidence, not a replacement for runtime adversarial tests.
+- Supabase Security Advisor: leaked-password protection disabled (WARN). Performance Advisor: 26 unindexed foreign keys (INFO). No schema or migration changes were made during these checks.
+
+Required next actions: recover the exact PR #94 migration source into the staging source-of-truth through review without reapplying it; decide separately whether the un-applied branch_worker role migration is still required by the approved identity model; then build a production-specific migration plan only after the inactive production project is safely available for read-only history/schema comparison.
