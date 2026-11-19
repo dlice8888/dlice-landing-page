@@ -12,6 +12,7 @@
 - Open: **5**.
 - Branches retrieved: **104**.
 - Branches whose head is not referenced by any PR: **5**.
+- Across the 105 PRs: **2,154 commits**, **894 PR-level file touches**, **69,654 additions**, and **2,061 deletions**. File touches are summed per PR and therefore include repeated files; they are not unique repository paths.
 
 ### PR count by target branch
 
@@ -290,3 +291,32 @@ This document records the 105-PR / 104-branch snapshot taken immediately before 
 
 ### Post-snapshot update
 After this inventory snapshot, PR #108 was created to carry this audit document. The current open-PR count therefore includes PR #108; the 105-PR / 5-open count above is intentionally frozen at the snapshot before PR #108.
+
+
+## 11. Post-snapshot verification addendum — 20 Nov 2026
+
+### P0 RPC ACL runtime
+- Supabase staging applied migration version `20261119182606_revoke_default_public_function_execute`.
+- Read-only post-application inventory: 29 public functions; 0 executable by `anon`; 0 executable by `authenticated`; 29 executable by `service_role`.
+- All 29 current public functions are owned by `postgres`; five are SECURITY DEFINER. The default function ACL for `postgres` revokes client EXECUTE. The `supabase_admin` default ACL still includes client EXECUTE for future functions created under that role; no current public function is owned by `supabase_admin`. Do not alter internal role membership/ACL without a supported Supabase role-lifecycle review.
+- PR #106 is a filename/source-history rename only: `20261119160000_...` → `20261119182606_...`; SQL bytes are unchanged. Latest PR #106 checks: Free quality checks, KDS offline contract and disposable migration replay all SUCCESS. It remains Draft/open and requires independent review. Do not reapply the migration.
+
+### Tenant fixture correction
+- Latest staging P01–P09 run `44579674471`: **BLOCKED 9 / executed 0 / skipped 0**. Four canonical username/password secrets and six tenant/branch/user variables were empty; no authenticated probe request ran.
+- Tenant A's earlier fixture user `378f02bc-2719-4b07-9107-4ce94299aa27` is a global admin profile `owner` and tenant membership `tenant_owner`, not an ordinary branch-manager identity. Do not use it for branch-manager negative isolation acceptance.
+- Correct Tenant A branch-manager identity: `b930897c-f8fb-443b-9056-e70c08b31446`; Auth identity confirmed and not banned, active Tenant A `branch_manager` membership, active assignment to QA branch A `90000000-0000-4000-8000-000000000001`.
+- Tenant B identity `e1de1ffc-9fae-412f-9dd7-0993b54cb631` remains valid: Auth confirmed and not banned, active Tenant B `branch_manager` membership, active assignment to QA branch B `90000000-0000-4000-8000-000000000004`.
+- Both QA branches currently have two real `branch_inventory` rows; total `on_hand` is 1,240 for A and 800 for B. Own-branch and cross-tenant behavior still require authenticated runtime proof.
+- Tenant B admin-profile display name still refers to “Branch A Manager”; treat as stale QA profile text and correct only through authorized admin UI after confirming the account owner.
+- PR #71 description was updated with the corrected fixture and these blockers. PR #71 remains Draft/HOLD.
+
+### PR #71 migration ordering and salvage candidate
+- PR #71 introduces `20261108090000_atomic_tenant_audit_operations.sql` with four SECURITY INVOKER/service-role RPCs: `platform_bootstrap_tenant_owner`, `erp_create_warehouse_with_audit`, `erp_transition_purchase_order_with_audit`, and `erp_create_purchase_order_with_audit`.
+- This timestamp is older than the current staging applied migration version `20261119182606`. Do not merge or apply this migration filename as-is. If its functionality is retained after independent security and rollback review, regenerate it with a new forward-only timestamp and replay the complete migration chain in a disposable database.
+- These four RPCs are potentially useful atomicity improvements for tenant bootstrap, warehouse audit, and PO create/transition audit. They are not yet part of staging's current 52-file migration source or 49-row applied history. Their inclusion in PR #71 must be evaluated function-by-function; do not merge PR #71 wholesale.
+
+### Current migration parity
+- Staging source: 52 migration files; applied history: 49 rows.
+- Applied version missing exact source filename on the staging branch: `20261119182606` (PR #106 carries the rename).
+- After PR #106 source reconciliation, three newer source migrations remain unapplied: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`.
+- No duplicate source timestamps were found.
