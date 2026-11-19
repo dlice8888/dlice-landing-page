@@ -344,7 +344,7 @@ GitHub compare results against each PR's current base branch:
 | #104 | 7 | 0 | 4 | Ahead | Yes |
 | #106 | 4 | 0 | 3 | Ahead | Yes |
 | #107 | 11 | 10 | 6 | Diverged | Yes |
-| #108 | 8 | 0 | 1 | Ahead | Yes |
+| #108 | 27 | 0 | 1 | Ahead | Yes |
 | #109 | 14 | 0 | 7 | Ahead | Yes |
 
 Implications:
@@ -389,7 +389,7 @@ Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR w
 
 ### PR #109 latest validation
 - Dedicated `Stock transfer same-tenant boundary` workflow run `44596628557`: **SUCCESS**. The isolated PostgreSQL test and API contract test passed.
-- `Free quality checks` run `44596627912`: **FAIL** on the existing contract asserting the platform-owner cross-tenant approval exception. This is the documented product-policy conflict, not a reason to weaken the existing contract.
+- The corrected PR #109 head `2d1a7249ad5e8e00a164b08af8137b033294c59b` now has all relevant checks SUCCESS: Free quality checks, full disposable migration replay, dedicated API/PostgreSQL same-tenant regression, CORS probes, KDS offline contract, procurement receiving, and procurement requisition contracts.
 - Disposable full migration replay run `44596627981` was still in progress at the last check.
 - PR #109 remains Draft/HOLD. The API/trigger change must not merge until Product Owner decides the cross-tenant stock-transfer policy and the full migration replay/independent review pass.
 
