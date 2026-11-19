@@ -58,3 +58,20 @@ No PR was merged or closed during this audit. No branch was deleted. Mergeabilit
 ## Actions deliberately not taken
 
 No PR was merged, closed, or converted from Draft. No migration was applied. No workflow was dispatched because the connected GitHub action surface available here does not expose a workflow-dispatch operation. No production resource was modified.
+
+## Superseding integration snapshot — 2026-11-19
+
+This section supersedes the 18 Nov PR counts, mergeability and migration-source findings above where they differ.
+
+- Current open PR count is 17; all 17 are Draft. PRs: #96, #95, #94, #93, #84, #82, #80, #78, #77, #76, #74, #71, #64, #63, #62, #31, #22.
+- main...staging is diverged: staging is 360 commits ahead, main is 19 commits ahead; PR #74 touches 145 files and is dirty. Do not use #74 as a bulk promotion.
+- Already-merged staging work includes #92/#91/#90/#89/#88/#81/#75/#72/#70/#69/#68/#67/#66/#65/#61/#60/#59/#58/#56/#55/#54/#53/#52/#51/#50/#49/#48/#47/#46/#42/#40/#39/#37/#36/#35/#33/#32/#30/#28/#27/#26/#25/#24/#23/#20. Reconcile by ancestry/diff, not by recreating duplicate PRs.
+- Overlap clusters: tenant identity/probes #64/#71/#95; stock RPC/trigger ACL #62/#94; ERP Edge Function/migration replay #76/#77/#78; release evidence #80/#82/#84. #63 is a separate main-targeted production CORS change; #96 is a CI-only P01-P09 dispatch entrypoint guarded to run only on staging.
+- Supabase staging has 47 applied migration rows and staging has 47 SQL files, but the sets differ: applied DB version 20261118165519 (20261118193000_revoke_public_stock_workflow_rpc_execute) is absent from staging source; exact SQL is in PR #94. Conversely, staging contains 20261118190000_add_branch_worker_profile_role.sql, which is not applied.
+- Main contains only two migration source files (20261018000000 and 20261018001000); staging/database baseline begins 20261017183506 and 20261017183509. Do not bulk rename or replay staging history into production.
+- Only Supabase projects exposed are dlice-staging (ACTIVE_HEALTHY) and dlice-production (INACTIVE). Production migration history cannot currently be queried.
+- Staging security checks: 64/64 public tables have RLS; 64/64 have policies; five stock SECURITY DEFINER RPCs deny anon/authenticated and allow service_role. Security Advisor warns leaked-password protection is disabled; Performance Advisor reports 26 unindexed foreign keys.
+- PR #95 corrects P03 to the observed model: global admin_profiles.role=sales_admin and tenant_memberships.role=branch_manager. Exact-head quality run 44541119025 passed static/contract checks, not P01-P09 runtime.
+- Latest E2E reruns: KDS/POS/Stock run 44505286727 attempt 2 and Procurement run 44506173400 attempt 2 both stopped at preflight; Owner username/password and Branch A username resolved empty. No business transaction was created. P01-P09 run 44326099475 reported nine BLOCKED/not-executed probes.
+- Owner Auth app_metadata.platform_owner remains absent. No connected Auth Admin mutation action is available; do not use direct SQL.
+- Release flags remain false; no merge, migration apply, deployment or production mutation occurred in this snapshot.
