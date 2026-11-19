@@ -1,0 +1,54 @@
+BEGIN;
+SELECT plan(10);
+
+SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_journal_period()', 'EXECUTE'),
+  'anon cannot execute journal-period trigger function');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.erp_guard_journal_period()', 'EXECUTE'),
+  'authenticated cannot execute journal-period trigger function');
+SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_refund_amount()', 'EXECUTE'),
+  'anon cannot execute refund-guard trigger function');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.erp_guard_refund_amount()', 'EXECUTE'),
+  'authenticated cannot execute refund-guard trigger function');
+SELECT ok(NOT has_function_privilege('anon', 'public.set_updated_at()', 'EXECUTE'),
+  'anon cannot execute updated-at trigger function');
+SELECT ok(NOT has_function_privilege('authenticated', 'public.set_updated_at()', 'EXECUTE'),
+  'authenticated cannot execute updated-at trigger function');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND has_function_privilege('anon', p.oid, 'EXECUTE')
+), 'anon cannot execute any public-schema RPC');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND has_function_privilege('authenticated', p.oid, 'EXECUTE')
+), 'authenticated cannot execute any public-schema RPC');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
+), 'service_role retains EXECUTE on all public-schema functions');
+
+SELECT ok(NOT EXISTS (
+  SELECT 1
+  FROM pg_default_acl d
+  JOIN pg_namespace n ON n.oid = d.defaclnamespace
+  CROSS JOIN LATERAL aclexplode(d.defaclacl) a
+  WHERE n.nspname = 'public'
+    AND d.defaclobjtype = 'f'
+    AND d.defaclrole = 'postgres'::regrole
+    AND a.grantee IN (0, 'anon'::regrole, 'authenticated'::regrole)
+    AND a.privilege_type = 'EXECUTE'
+), 'postgres default privileges do not grant public RPC EXECUTE to client roles');
+
+SELECT * FROM finish();
+ROLLBACK;
