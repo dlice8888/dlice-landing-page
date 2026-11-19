@@ -449,3 +449,10 @@ No open PR has an independent submitted approval. The repository ruleset current
 - Do not treat the READY Vercel staging deployment as proof that its Supabase-backed features are runtime-ready. Align database migrations and Edge Function version only after P0 tenant runtime evidence and migration review.
 
 - PR #109's previous Free quality failure was caused by the stale platform-owner exception contract. The contract was corrected to the PRD's strict same-tenant rule at commit `29db1c85a34cd40519d961356732b5a7bf948e2c`; rerun CI is in progress.
+
+
+### PR #71 migration salvage classification
+- `platform_bootstrap_tenant_owner` in `20261108090000_atomic_tenant_audit_operations.sql` hard-codes staging Tenant B ID `00000000-0000-4000-8000-000000000002`, QA Branch B ID `90000000-0000-4000-8000-000000000004`, and slug `dlice-qa-isolation-b`. It is a staging-fixture bootstrap helper, not a reusable SaaS tenant-onboarding API; do not promote it to main.
+- The generic atomic owner/tenant bootstrap in PR #102 (`dlice_bootstrap_initial_owner`, `dlice_create_tenant_with_owner`) is the preferred production candidate, but its migration and Edge Function source are not yet deployed to staging.
+- The other PR #71 RPCs are potentially reusable after independent review: `erp_create_warehouse_with_audit`, `erp_transition_purchase_order_with_audit`, and `erp_create_purchase_order_with_audit`. They are SECURITY INVOKER, service_role-only, tenant-membership scoped, and write audit rows in the same transaction. Review their actor/role checks, PO item validation, idempotency, and rollback behavior before salvaging them into forward-only migrations.
+- Keep PR #71 Draft/HOLD; do not merge its old migration timestamp or staging-specific bootstrap helper.
