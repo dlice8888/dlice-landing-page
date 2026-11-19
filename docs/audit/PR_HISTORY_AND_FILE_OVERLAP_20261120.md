@@ -407,3 +407,11 @@ Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR w
 - Logs show these runs stopped before the positive workflow began; no business mutations were executed in those runs.
 - **Latent risk:** if those legacy secrets are later populated, the schedules will automatically start writing to staging without a manual confirmation. This conflicts with the current staging mutation gate. Repository administrator should disable the schedules or change them to read-only monitoring until a separately approved, protected QA schedule is designed. Do not add or populate those legacy secrets as a workaround.
 - The current `staging` branch version of the KDS workflow has a preflight and QA artifact validation; the main version does not have the same preflight and runs the positive script directly. Main's scheduled workflow is therefore also missing the newer staging safeguards.
+
+
+### Vercel production deployment and alias verification
+- Current latest production deployment: `dpl_6wzdyEyDiyif7KRRWsdhDoRAUH6Q`, state READY, commit `2bb254bfb06baa8a3847b9112552f9413420b9f0` on `main`.
+- Deployment alias list confirms `dlice.vercel.app`, `dlice-landing-page-dlice8888-7332.vercel.app`, and `dlice-landing-page-git-main-dlice8888-7332.vercel.app` all point to that deployment.
+- This is the production deployment created after PR #96. PR #96 changed only the guarded P01–P09 workflow entrypoint; it did not change app HTML/JS, Edge Function source, Supabase schema, Auth metadata, or business data. The production build/deployment happened, but there is no evidence of a functional app-code change from that PR.
+- Previous production deployment `dpl_83d9ZYmZjAVuiifaczxKqegHJ6do` remains READY in deployment history. No rollback or alias reassignment was performed; the current alias mapping is now verified directly from the deployment record.
+- Preview deployments are being created for audit branches and Draft PRs, but no production deployment was created by PR #108/#109. No deployment promotion, rollback, or production code change was performed in this audit.
