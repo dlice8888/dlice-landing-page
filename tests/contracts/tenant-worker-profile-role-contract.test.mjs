@@ -4,7 +4,7 @@ import test from "node:test";
 
 const edge = await readFile("supabase/functions/dlice-orders/index.ts", "utf8");
 const erp = await readFile("erp.html", "utf8");
-const migration = await readFile("supabase/migrations/20261118190000_add_branch_worker_profile_role.sql", "utf8");
+const migration = await readFile("supabase/migrations/20261119155309_add_branch_worker_profile_role.sql", "utf8");
 const workflow = await readFile(".github/workflows/quality-checks.yml", "utf8");
 
 test("branch_worker is a non-owner identity classification, not a permission grant", () => {
