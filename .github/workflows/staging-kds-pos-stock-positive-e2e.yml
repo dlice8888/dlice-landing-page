@@ -1,5 +1,12 @@
 name: Staging KDS POS Stock and Offline Recovery E2E
 on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_mutations:
+        description: "Confirm QA-only POS/KDS/stock mutations in staging"
+        required: true
+        type: boolean
+        default: false
   push:
     branches:
       - staging
@@ -20,7 +27,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   kds-pos-stock:
-    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024' || github.ref == 'refs/heads/fix/auto-run-staging-pos-kds-e2e') && (github.event_name == 'schedule' || github.event_name == 'push') }}
+    if: ${{ (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/feat/staging-kds-offline-tenant-20261024' || github.ref == 'refs/heads/fix/auto-run-staging-pos-kds-e2e') && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.confirm_staging_mutations == true)) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: staging
