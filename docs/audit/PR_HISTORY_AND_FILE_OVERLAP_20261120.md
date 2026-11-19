@@ -41,7 +41,7 @@
 | [#106](https://github.com/dlice8888/dlice-landing-page/pull/106) | `staging` → `reconcile/migration-version-rpc-acl-20261120` | fix(db): align RPC ACL migration source with staging history | DRAFT — source filename reconciliation for ACL migration; current CI checks pass, independent review required |
 | [#107](https://github.com/dlice8888/dlice-landing-page/pull/107) | `staging` → `feat/staging-runtime-config-smoke-20261118` | feat(frontend): use environment-validated Supabase runtime config | DRAFT — environment-scoped runtime config; latest Preview runtime smoke not yet executed |
 | [#108](https://github.com/dlice8888/dlice-landing-page/pull/108) | `staging` → `docs/pr-history-inventory-20261120` | docs(audit): add full PR history and file-overlap inventory | DRAFT — documentation-only audit artifact; independent review of completeness required |
-| [#109](https://github.com/dlice8888/dlice-landing-page/pull/109) | `staging` → `security/stock-transfer-same-tenant-20261120` | security(stock): enforce same-tenant stock transfers | DRAFT/HOLD — conflicts with existing platform-owner cross-tenant approval contract; Product Owner decision required |
+| [#109](https://github.com/dlice8888/dlice-landing-page/pull/109) | `staging` → `security/stock-transfer-same-tenant-20261120` | security(stock): enforce same-tenant stock transfers | DRAFT/HOLD — strict same-tenant boundary aligns with PRD; awaiting green CI, P01–P09 runtime gate, and independent review |
 
 No open PR is approved for merge by this inventory. PR #74 is not used as a merge path.
 
@@ -361,12 +361,11 @@ Implications:
 - Live staging ACL aggregate remains 29 public functions, 0 `anon` EXECUTE, 0 `authenticated` EXECUTE, 29 `service_role` EXECUTE, including 5 SECURITY DEFINER functions. This is runtime privilege evidence, not proof that every Edge Function authorization path has passed tenant A/B testing.
 
 
-### Stock-transfer tenant policy conflict — requires Product Owner decision
-- Current staging has zero stock-transfer rows and no same-tenant trigger. The `erp_create_stock_transfer` SECURITY DEFINER RPC itself checks that both branches are active but does not compare their tenant IDs.
-- Current Edge Function permits `branchAccess` for a verified platform owner across branches. The transition handler explicitly permits platform-owner approval when source and destination tenant IDs differ.
-- Existing contract `tests/contracts/tenant-refund-scope-contract.test.mjs` asserts that platform-owner cross-tenant approval exception. This conflicts with PR #64's proposed unconditional same-tenant database trigger.
-- A narrow candidate PR #109 was opened with forward-only migration `20261120130000`, API checks, and disposable PostgreSQL regression. Its initial Free quality-check run failed on the existing platform-owner exception contract; the dedicated SQL workflow initially failed before job setup due to an invalid setup-node action reference, which has since been corrected to `actions/setup-node@v4`. The migration replay run was still in progress at last inspection.
-- **Do not merge PR #109 or PR #64, and do not apply the trigger, until Product Owner decides whether platform-owner cross-tenant logistics is prohibited or is a supported HQ workflow.** Do not weaken the existing contract test just to make CI green.
+### Stock-transfer policy — PRD resolves to strict same-tenant
+- The D’Lice PRD defines one tenant per organization (150 branches are not 150 tenants), transfers between warehouses/branches, and the lifecycle Draft → Approved → Picked → Shipped → Received → Reconciled. It requires tenant isolation and cross-tenant denial and does not authorize a Platform Owner/HQ cross-tenant stock-transfer exception.
+- The current staging Edge Function's platform-owner cross-tenant approval exception and its old contract test were inconsistent with the PRD. PR #109 removes the exception, enforces same-tenant at API + database layers, and updates the contract test to the PRD.
+- Current staging has zero stock-transfer rows and no same-tenant trigger. The SECURITY DEFINER RPC itself does not compare tenant IDs; the database trigger is necessary defense-in-depth even though direct client EXECUTE has been revoked.
+- PR #109 uses a forward-only migration timestamp `20261120130000`, a disposable PostgreSQL regression, and API contract tests. Keep it Draft/HOLD until all CI is green, independent review is complete, and the P01–P09 tenant runtime gate is unblocked. Do not apply the migration before these gates.
 
 
 ### Frontend runtime-config completeness
@@ -448,3 +447,5 @@ No open PR has an independent submitted approval. The repository ruleset current
 - Current Vercel staging deployment `dpl_J3n6BBXyjWNJZvMqzV6C1fZ9RP2M` is READY from branch `staging`, commit `4a13e70ce29e3fe117b6b6e7705089fa4241298a`, with alias `dlice-landing-page-git-staging-dlice8888-7332.vercel.app`.
 - The web deployment therefore contains the newer staging source (including the atomic branch checklist client changes), while Supabase `dlice-orders` remains at v70 and does not contain the newer atomic checklist/Command Center/owner bootstrap handlers. This is a cross-service version mismatch, not a Vercel build failure.
 - Do not treat the READY Vercel staging deployment as proof that its Supabase-backed features are runtime-ready. Align database migrations and Edge Function version only after P0 tenant runtime evidence and migration review.
+
+- PR #109's previous Free quality failure was caused by the stale platform-owner exception contract. The contract was corrected to the PRD's strict same-tenant rule at commit `29db1c85a34cd40519d961356732b5a7bf948e2c`; rerun CI is in progress.
