@@ -93,3 +93,15 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+
+## 20 November 2026 — staged integration continuation
+
+- Merged PR #96 to main to expose the staging-only manual P01–P09 workflow from the default branch. Main is the Vercel production deployment branch; no further main merges are allowed before release gates.
+- Merged PR #94 and PR #99 to staging to restore/strengthen stock and default public RPC execute ACL source; their pending migrations have not been applied to shared staging.
+- Merged PR #100 to staging with P03 role-model correction, canonical Tenant A secret mapping, and guarded KDS/POS/Stock workflow dispatch.
+- Merged PR #78 and #102 to staging with atomic Owner/tenant bootstrap and monotonic migration timestamp.
+- Merged PR #103 to staging with Owner Command Center summary API/UI and pgTAP/contract tests.
+- Merged PR #105 to staging with atomic Branch Operations checklist/audit RPC, branch membership checks, and 27 pgTAP assertions.
+- Current disposable replay passes 52 migrations and 67 pgTAP tests. No shared staging migration, Edge Function deployment, production deployment, or release flag change was performed.
+- Current P01–P09 remains blocked at preflight (9 BLOCKED, 0 SKIPPED); Owner and Tenant A/B credentials/fixtures are empty at runtime.
