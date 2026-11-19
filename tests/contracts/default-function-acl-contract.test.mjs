@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const migration = await readFile("supabase/migrations/20261119160000_revoke_default_public_function_execute.sql", "utf8");
+const migration = await readFile("supabase/migrations/20261119182606_revoke_default_public_function_execute.sql", "utf8");
 const sqlTest = await readFile("supabase/tests/default_function_execute_acl.test.sql", "utf8");
 const workflow = await readFile(".github/workflows/disposable-migration-replay.yml", "utf8");
 
