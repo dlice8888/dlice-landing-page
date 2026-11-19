@@ -48,3 +48,8 @@ A workflow that emits nine probe records is not necessarily equivalent to the fu
 The Vercel Preview deployment READY status and static/disposable CI evidence are not authenticated staging acceptance.
 
 No PR was merged. No migration was applied. No production resource, data, secret, environment variable, or deployment was changed.
+
+
+## Current release decision — 20 November 2026
+
+NO-GO remains. The migration source parity issue is resolved and disposable replay passes 67 pgTAP assertions, but P01–P09 remain BLOCKED 9 / SKIPPED 0 due empty Tenant A/B credentials and fixture variables. Owner Auth metadata remains incomplete; POS/KDS/Stock and P0 HTTP E2E stop before mutations; backup/restore and 150-branch load tests are not run. Four migrations are pending and have not been applied to shared staging. Keep both release flags false. See `docs/audit/FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
