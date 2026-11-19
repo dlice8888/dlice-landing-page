@@ -442,3 +442,9 @@ No open PR has an independent submitted approval. The repository ruleset current
 - Current staging also validates branch timezone against the supported timezone set; deployed v70 falls back silently to `Asia/Jakarta` for unsupported values.
 - The three supporting migrations for the newer code (`20261120100000`, `20261120110000`, `20261120120000`) are not yet applied to staging. This is expected source/runtime drift while release gates are held, but it means the newer bootstrap, Command Center, and atomic checklist features are **not active in the deployed Edge Function** yet.
 - Do not deploy the newer function source before the three migrations are reviewed/applied in the correct order and the staging P0 tenant gate passes. No Edge Function deployment was performed in this audit. Both `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` are still present in deployed v70 and current staging source.
+
+
+### Vercel staging deployment alignment
+- Current Vercel staging deployment `dpl_J3n6BBXyjWNJZvMqzV6C1fZ9RP2M` is READY from branch `staging`, commit `4a13e70ce29e3fe117b6b6e7705089fa4241298a`, with alias `dlice-landing-page-git-staging-dlice8888-7332.vercel.app`.
+- The web deployment therefore contains the newer staging source (including the atomic branch checklist client changes), while Supabase `dlice-orders` remains at v70 and does not contain the newer atomic checklist/Command Center/owner bootstrap handlers. This is a cross-service version mismatch, not a Vercel build failure.
+- Do not treat the READY Vercel staging deployment as proof that its Supabase-backed features are runtime-ready. Align database migrations and Edge Function version only after P0 tenant runtime evidence and migration review.
