@@ -50,8 +50,10 @@ SELECT ok(NOT EXISTS (
     AND a.privilege_type = 'EXECUTE'
 ), 'postgres default privileges do not grant public RPC EXECUTE to client roles');
 
+SET ROLE postgres;
 CREATE FUNCTION public.dlice_default_acl_test_probe() RETURNS integer
 LANGUAGE sql AS 'SELECT 1';
+RESET ROLE;
 SELECT ok(NOT has_function_privilege('anon', 'public.dlice_default_acl_test_probe()', 'EXECUTE'),
   'new functions do not inherit anon EXECUTE');
 SELECT ok(NOT has_function_privilege('authenticated', 'public.dlice_default_acl_test_probe()', 'EXECUTE'),
