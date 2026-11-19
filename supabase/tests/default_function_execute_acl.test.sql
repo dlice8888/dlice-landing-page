@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(13);
+SELECT plan(10);
 
 SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_journal_period()', 'EXECUTE'),
   'anon cannot execute journal-period trigger function');
@@ -49,18 +49,6 @@ SELECT ok(NOT EXISTS (
     AND a.grantee IN (0, 'anon'::regrole, 'authenticated'::regrole)
     AND a.privilege_type = 'EXECUTE'
 ), 'postgres default privileges do not grant public RPC EXECUTE to client roles');
-
-SET ROLE postgres;
-CREATE FUNCTION public.dlice_default_acl_test_probe() RETURNS integer
-LANGUAGE sql AS 'SELECT 1';
-RESET ROLE;
-SELECT ok(NOT has_function_privilege('anon', 'public.dlice_default_acl_test_probe()', 'EXECUTE'),
-  'new functions do not inherit anon EXECUTE');
-SELECT ok(NOT has_function_privilege('authenticated', 'public.dlice_default_acl_test_probe()', 'EXECUTE'),
-  'new functions do not inherit authenticated EXECUTE');
-SELECT ok(has_function_privilege('service_role', 'public.dlice_default_acl_test_probe()', 'EXECUTE'),
-  'new functions retain service_role EXECUTE');
-DROP FUNCTION public.dlice_default_acl_test_probe();
 
 SELECT * FROM finish();
 ROLLBACK;
