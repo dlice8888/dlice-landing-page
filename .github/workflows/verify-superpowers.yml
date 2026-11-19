@@ -9,7 +9,8 @@ on:
       - "docs/engineering/superpowers-integration.md"
       - "supabase/functions/dlice-orders/index.ts"
       - "tests/contracts/production-cors-contract.test.mjs"
-      - ".github/workflows/production-cors-contract.yml"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
       - ".github/workflows/verify-superpowers.yml"
   push:
     branches:
@@ -20,6 +21,8 @@ on:
       - "tools/superpowers"
       - "AGENTS.md"
       - "docs/engineering/superpowers-integration.md"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
       - ".github/workflows/verify-superpowers.yml"
   workflow_dispatch:
 
