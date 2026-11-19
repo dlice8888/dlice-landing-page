@@ -88,7 +88,7 @@ The latest repository query returned **four open PRs**:
 | #64 | staging | Security/tenant-isolation HOLD; do not merge or apply its migration until runtime acceptance and independent review pass. |
 
 Closed/merged reconciliation:
-- #96 merged to main (trusted P01–P09 dispatch workflow is present on default branch).
+- #96 merged to main (trusted P01–P09 dispatch workflow is present on default branch). Its merge triggered Vercel production deployment dpl_6wzdyEyDiyif7KRRWsdhDoRAUH6Q; main also reintroduced a documentation-only implementation matrix from the PR branch's older base snapshot. This deployment exception is recorded in FNB_OS_RELEASE_READINESS.md. No application source or database migration changed.
 - #97 merged to staging (tenant P03 role model and E2E config corrections).
 - #102 merged to staging (Owner bootstrap migration timestamp normalization).
 - #103 merged to staging (Owner Command Center summary foundation).
