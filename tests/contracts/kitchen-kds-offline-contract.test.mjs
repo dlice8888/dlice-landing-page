@@ -136,7 +136,7 @@ test("automatic staging E2E covers the required POS to report vertical slice", (
   assert.match(kdsWorkflow, /schedule:/);
   assert.match(kdsWorkflow, /workflow_dispatch:/);
   assert.match(kdsWorkflow, /confirm_staging_mutations:/);
-  assert.match(kdsWorkflow, /inputs\\.confirm_staging_mutations\\s*==\\s*true/);
+  assert.match(kdsWorkflow, /inputs\.confirm_staging_mutations\s*==\s*true/);
   assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);
   assert.match(kdsE2E, /STAGING_TEST_OWNER_USERNAME/);
   assert.match(kdsE2E, /STAGING_TEST_OWNER_PASSWORD/);
