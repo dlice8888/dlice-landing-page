@@ -362,3 +362,10 @@ Implications:
 - Existing contract `tests/contracts/tenant-refund-scope-contract.test.mjs` asserts that platform-owner cross-tenant approval exception. This conflicts with PR #64's proposed unconditional same-tenant database trigger.
 - A narrow candidate PR #109 was opened with forward-only migration `20261120130000`, API checks, and disposable PostgreSQL regression. Its initial Free quality-check run failed on the existing platform-owner exception contract; the dedicated SQL workflow initially failed before job setup due to an invalid setup-node action reference, which has since been corrected to `actions/setup-node@v4`. The migration replay run was still in progress at last inspection.
 - **Do not merge PR #109 or PR #64, and do not apply the trigger, until Product Owner decides whether platform-owner cross-tenant logistics is prohibited or is a supported HQ workflow.** Do not weaken the existing contract test just to make CI green.
+
+
+### Frontend runtime-config completeness
+- PR #107 is a useful six-file change for `index.html` and `erp.html`, but it does not update `track.html`.
+- Current `staging/track.html` still selects staging/production Supabase project URLs based on `location.hostname`. This remains a hard-coded environment-routing path and is outside PR #107's current smoke coverage.
+- `admin.html` currently has no Supabase client/config reference; confirm whether it is an inactive placeholder before including it in scope.
+- PR #107 description now records this gap. Do not call runtime configuration complete until `track.html` is migrated and smoke-tested.
