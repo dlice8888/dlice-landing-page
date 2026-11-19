@@ -76,3 +76,27 @@ This section supersedes the earlier 46/45 migration count and source-mismatch de
 - Supabase Security Advisor: leaked-password protection disabled (WARN). Performance Advisor: 26 unindexed foreign keys (INFO). No schema or migration changes were made during these checks.
 
 Required next actions: recover the exact PR #94 migration source into the staging source-of-truth through review without reapplying it; decide separately whether the un-applied branch_worker role migration is still required by the approved identity model; then build a production-specific migration plan only after the inactive production project is safely available for read-only history/schema comparison.
+
+## Fresh source/history reconciliation — 2026-11-20
+
+This section supersedes the 2026-11-19 source/history counts above.
+
+- Live staging migration history: **48 applied versions**.
+- Current staging source: **52 SQL migration files**.
+- Applied versions missing from source: **0**.
+- Duplicate source versions: **0**.
+- Source versions not yet applied to live staging: **4**:
+  - 20261119160000_revoke_default_public_function_execute.sql
+  - 20261120100000_atomic_owner_and_tenant_bootstrap.sql
+  - 20261120110000_command_center_summary.sql
+  - 20261120120000_atomic_branch_checklist_audit.sql
+- No live staging or production migration was applied during this checkpoint.
+
+The exact staging-head disposable replay is workflow run [44579674275](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674275), commit 4a13e70ce29e3fe117b6b6e7705089fa4241298a. Its log confirms all **52** repository migrations applied to a clean local Supabase database and **67 pgTAP assertions across 4 SQL test files passed**. This is clean-database replay evidence, not live staging application evidence.
+
+Supabase Advisor recheck:
+- Security: leaked-password protection disabled (WARN).
+- Performance: 26 unindexed foreign keys and 49 unused-index suggestions (INFO; unused-index signals need workload-aware review, not automatic deletion).
+- Health: no findings.
+
+The 26 unindexed foreign keys require a table/column/index coverage review before a new index migration is authored. Do not blindly add indexes where an existing composite index may already cover the FK prefix. The ACL migration is included in the successful disposable replay; it is still pending on live staging and must not be described as applied there.
