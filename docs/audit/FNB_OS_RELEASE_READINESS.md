@@ -108,3 +108,7 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 - Migration source parity is not clean: 47 DB applied rows vs 47 staging source files with one applied version missing from the staging directory and one unapplied branch_worker migration file. main has only two migration files. Production Supabase project is INACTIVE, so production migration history is not available for comparison.
 - Staging DB configuration checks: 64/64 public tables RLS enabled; five stock SECURITY DEFINER RPCs deny anon/authenticated and permit service_role. Security Advisor WARN: leaked-password protection disabled. Performance Advisor INFO: 26 unindexed foreign keys.
 - No production migration, deployment, data mutation, or Auth change was performed. Production remains untouched in this continuation.
+
+## Superseding release decision — 20 November 2026
+
+**NO-GO remains.** Staging HEAD is `4a13e70ce29e3fe117b6b6e7705089fa4241298a`. Quality checks, CORS probes, browser smoke, KDS contract, procurement contract, disposable migration replay, and 67 pgTAP assertions pass. P01–P09 remain BLOCKED 9 / SKIPPED 0 because canonical Tenant A/B credentials and six fixture variables resolve empty. Owner Auth `app_metadata.platform_owner=true` is still absent. Four migrations remain pending; none has been applied to shared staging. Backup/restore and 150-branch load tests have not run. Keep both release flags false and production unchanged. See `FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
