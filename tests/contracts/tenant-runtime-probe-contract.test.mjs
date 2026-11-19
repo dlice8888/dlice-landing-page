@@ -126,10 +126,13 @@ test("inventory reads authorize the requested branch before any data query and s
 });
 
 
-test("P03 requires ordinary branch_worker identities, equal tenant roles and permissions, and allows multiple same-tenant branches", () => {
+test("P03 requires supported global sales_admin profiles, branch_manager tenant memberships, equal permissions, and allows multiple same-tenant branches", () => {
   assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
-  assert.ok(probe.includes('membershipA?.admin_profiles?.role === "branch_worker"'));
-  assert.ok(probe.includes('membershipB?.admin_profiles?.role === "branch_worker"'));
+  // Global console role and tenant-scoped membership role are separate parts of the actual app model.
+  assert.ok(probe.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
+  assert.ok(probe.includes('membershipB?.admin_profiles?.role === "sales_admin"'));
+  assert.ok(probe.includes('membershipA?.role === "branch_manager"'));
+  assert.ok(probe.includes('membershipB?.role === membershipA?.role'));
   assert.ok(probe.includes("sameTenantRole"));
   assert.ok(probe.includes("permissionSetsEqual"));
   assert.ok(probe.includes("branchesA.every((branch) => branch.tenant_id === tenantA)"));
