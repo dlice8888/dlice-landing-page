@@ -485,3 +485,13 @@ A commit-set comparison found **20 commits on main not reachable from staging**.
 
 ### Main-only commit inventory (20)
 `2bb254b` guarded P01–P09 dispatch; `11d2609` PR83/migration audit evidence; `85d8899` restore main tree after audit artifact; `4b2c281` migration source recovery docs; `ab47e1b` remove accidental audit artifact; `eddc1cf` staging CORS runtime evidence; `8d74dbd` schedule positive E2E from main; `7d4d68b` PR41 E2E entrypoints; `0dfb8a9` procurement reconciliation evidence; `1d70c77` payment status/cleanup assertions; `aa4b605` procurement workflow entrypoint; `03ad0e4` KDS/POS/stock workflow entrypoint; `bc2d9d0` KDS/POS/stock E2E harness; `79d7b30` requisition lifecycle/generated PO; `8acc74d` procurement harness syntax check; `53631a8` Superpowers integration; `56f03f3` and `7f6c2ba` staging-migration reverts; `60471e6` and `9fdbf41` production recipe/stock migrations later reverted from main.
+
+
+### Closed-unmerged E2E scenarios worth salvaging — PR #31
+PR #31's `tests/staging/next-workflow-acceptance.mjs` is not present at that path in current staging, but contains useful negative and cross-role scenarios not fully represented by the current vertical-slice contracts:
+- P2P: Owner/Procurement create and list requisitions/POs; branch manager can receive only assigned-branch PO; cross-branch receive denied; no-permission and inactive users denied; unknown PO ID returns not-found without mutation.
+- O2C: branch-scoped fulfillment list; cross-branch fulfillment read/update denied; no-permission/inactive identities denied; unknown order ID returns not-found without mutation.
+- Finance: Head Office settlement listing; branch manager cannot create settlement; no-permission/inactive identities denied; cash reconciliation is branch-scoped.
+- Stock: unknown transfer/count identifiers must fail closed without changing ledger state.
+- The PR's workflow provisions temporary QA users and writes evidence artifacts, but uses legacy Owner/Branch A secrets and a hard-coded old Branch B UUID. Do not merge it unchanged. Port the scenarios into the current dynamic fixture-discovery runner, use the verified A/B branch-manager identities, and preserve no-SKIPPED semantics.
+- PR #31 is a test scenario source, not runtime acceptance evidence; it was closed without merge and no qualifying staging run is recorded.
