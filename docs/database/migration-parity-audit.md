@@ -45,3 +45,8 @@ Unused-index warnings are workload-dependent and must not trigger blind index de
 7. Obtain independent approval before any shared staging schema mutation.
 
 No migration was applied and no production database was changed during this audit.
+
+
+## Superseding result — 20 November 2026
+
+The source for applied version `20261022140302` has now been recovered from the live staging migration-history statements and verified against the stored SQL. Current staging has 52 source files and 48 applied versions, with four pending migrations, zero DB versions missing source, and zero duplicate source versions. The old 46/45 count and missing-source status above are the 17 November historical snapshot. See `docs/audit/FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
