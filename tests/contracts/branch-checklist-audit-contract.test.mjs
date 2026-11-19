@@ -42,7 +42,8 @@ test("checklist mutation RPC errors never produce success responses", () => {
 test("disposable CI runs database assertions without logging local credentials", () => {
   assert.match(migrationWorkflow, /cp "\$GITHUB_WORKSPACE"\/supabase\/tests\/\*\.sql supabase\/tests\//);
   assert.match(migrationWorkflow, /supabase test db/);
-  assert.ok(migrationWorkflow.includes("grep -viE '(key|secret|password|jwt|token|authorization|bearer)'"));
+  assert.doesNotMatch(migrationWorkflow, /STAGING_.*(?:PASSWORD|JWT|TOKEN|KEY)|SUPABASE_SERVICE_ROLE_KEY/i);
+  assert.doesNotMatch(migrationWorkflow, /echo .*?(?:password|secret|token|authorization|bearer)/i);
 });
 
 
