@@ -45,6 +45,8 @@ jobs:
         run: node --test tests/contracts/tenant-worker-profile-role-contract.test.mjs
       - name: Verify stock workflow RPC execute ACL boundary
         run: node --test tests/contracts/stock-workflow-rpc-acl-contract.test.mjs
+      - name: Verify default public RPC execute ACL boundary
+        run: node --test tests/contracts/default-function-acl-contract.test.mjs
       - name: Verify runtime tenant-isolation probe evidence
         run: |
           node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
