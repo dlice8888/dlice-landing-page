@@ -281,8 +281,8 @@ The table below records every PR returned by the paginated GitHub API at the sna
 | #105 | MERGED | `staging` | `feat/branch-ops-atomic-checklist-staging-20261120` | 9 | 7 | +830/-56 | feat(branch-ops): make branch checklist mutations atomic |
 | #106 | OPEN | `staging` | `reconcile/migration-version-rpc-acl-20261120` | 4 | 3 | +35/-1 | fix(db): align RPC ACL migration source with staging history |
 | #107 | OPEN | `staging` | `feat/staging-runtime-config-smoke-20261118` | 11 | 6 | +267/-5 | feat(frontend): use environment-validated Supabase runtime config |
-| #108 | OPEN | `staging` | `docs/pr-history-inventory-20261120` | 12 | 1 | +371/-0 | docs(audit): add full PR history and file-overlap inventory |
-| #109 | OPEN | `staging` | `security/stock-transfer-same-tenant-20261120` | 6 | 5 | +278/-13 | security(stock): enforce same-tenant stock transfers |
+| #108 | OPEN | `staging` | `docs/pr-history-inventory-20261120` | 27 | 1 | +497/-0 | docs(audit): add full PR history and file-overlap inventory |
+| #109 | OPEN | `staging` | `security/stock-transfer-same-tenant-20261120` | 14 | 7 | +390/-15 | security(stock): enforce same-tenant stock transfers |
 
 
 ### Audit artifact provenance
@@ -345,7 +345,7 @@ GitHub compare results against each PR's current base branch:
 | #106 | 4 | 0 | 3 | Ahead | Yes |
 | #107 | 11 | 10 | 6 | Diverged | Yes |
 | #108 | 8 | 0 | 1 | Ahead | Yes |
-| #109 | 6 | 0 | 5 | Ahead | Yes |
+| #109 | 14 | 0 | 7 | Ahead | Yes |
 
 Implications:
 - #64 and #71 are stale against current staging and cannot be merged without explicit reconciliation/rebase. Do not use their stale base snapshots as integration targets.
@@ -377,13 +377,13 @@ Implications:
 
 ## 12. Current repository inventory update — after PR #109
 The original historical snapshot covered PR #1–#107 (105 actual PRs; #34 and #45 do not exist). Two audit PRs have since been added:
-- #108 — full PR history and overlap inventory: 12 commits, 1 changed file, +371/-0.
-- #109 — proposed stock-transfer tenant boundary: 6 commits, 5 changed files, +278/-13.
+- #108 — full PR history and overlap inventory: 27 commits, 1 changed file, +497/-0.
+- #109 — proposed stock-transfer tenant boundary: 14 commits, 7 changed files, +390/-15.
 
 Current repository totals:
 - **107 actual PRs** across the number range #1–#109.
 - **75 merged**, **25 closed without merge**, **7 open**.
-- **2,172 total PR commits**, **900 PR-level file touches**, **70,303 additions**, **2,074 deletions**. These are per-PR aggregate metrics, not unique files/commits across Git history.
+- **2,195 total PR commits**, **902 PR-level file touches**, **70,541 additions**, **2,076 deletions**. These are per-PR aggregate metrics, not unique files/commits across Git history.
 
 Current open PRs: #64, #71, #104, #106, #107, #108, #109. All are Draft. No PR was merged or closed during this audit.
 
