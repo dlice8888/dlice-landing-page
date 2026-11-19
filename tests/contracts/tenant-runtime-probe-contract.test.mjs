@@ -30,8 +30,6 @@ test("staging tenant gate uses six canonical credentials and discovers fixture U
   assert.match(workflow, /STAGING_TENANT_B_BRANCH_CODE:\s*QA-TENANT-B/);
   assert.match(workflow, /^name:\s*Staging Tenant Isolation Acceptance$/m);
   assert.doesNotMatch(triggers, /pull_request/);
-  assert.match(workflow, /STAGING_TENANT_A_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_A_BRANCH_ID\s*\}\}/);
-  assert.match(workflow, /STAGING_TENANT_B_BRANCH_ID:\s*\$\{\{\s*vars\.STAGING_TENANT_B_BRANCH_ID\s*\}\}/);
   assert.match(workflow, /Summarize P01-P09 and configuration preflight/);
   assert.match(workflow, /staging-tenant-isolation-evidence\.jsonl/);
 });
@@ -57,7 +55,8 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /erp-list-tenant-memberships/);
   assert.match(probe, /balances\.length\s*>\s*0/, "own-branch read must prove at least one real inventory row");
   assert.match(probe, /resolveTenantFixtures/);
-  assert.match(probe, /status\s*===?\s*["']active["']/);
+  const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
+  assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
   assert.match(probe, /valuePrinted:\s*false/);
