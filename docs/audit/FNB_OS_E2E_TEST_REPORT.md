@@ -76,3 +76,21 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+
+## Latest staging runtime results — 2026-11-20
+
+| Workflow | Run | Result | What actually executed |
+|---|---:|---|---|
+| Tenant isolation P01–P09 | [44579674471](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674471) | BLOCKED | Preflight only; 9 probes BLOCKED, 0 executed, 0 skipped |
+| KDS/POS/Stock positive E2E | [44579674219](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674219) | BLOCKED | Owner credential preflight failed; business-flow step skipped |
+| P0 HTTP bootstrap | [44579674185](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674185) | BLOCKED | Owner credential preflight failed; HTTP/security probe step skipped |
+| Authenticated tenant negative probes | [44579674333](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674333) | BLOCKED | Tenant A credentials and Tenant B branch fixture missing in runner |
+| Staging CORS probes | [44579674771](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674771) | PASS | Runtime CORS probe workflow completed successfully |
+| KDS offline contract | [44579674589](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674589) | PASS | Contract/static assertions only; not positive POS transaction E2E |
+| Procurement receiving contract | [44579674180](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674180) | PASS | Contract assertions only; not procurement positive E2E |
+| Disposable migration replay | [44579674275](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674275) | PASS | 52 migrations replayed locally; 67 pgTAP assertions passed |
+
+The P01–P09 run logs show that the staging URL and publishable key were available, while both Tenant A/B username/password pairs and all six fixture IDs resolved empty. The probes were emitted as BLOCKED with executed:false; the workflow reports 0 skipped. This is not a tenant authorization test result.
+
+The positive KDS/POS/Stock workflow did not reach order creation, payment, KDS, stock consumption, offline replay, or reconciliation. The procurement receiving contract is not a substitute for PR → approval → PO → GRN → stock movement → AP E2E. These operational flows remain NOT RUN.
