@@ -76,3 +76,8 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+
+## Superseding runtime evidence — 20 November 2026
+
+Latest P01–P09 run 44579674471: PASS 0, FAIL 0, BLOCKED 9, SKIPPED 0. All nine probes had `executed=false`; preflight found the canonical Tenant A/B username/password secrets and tenant/branch/user fixture variables empty. No authorization request was sent. KDS/POS/Stock run 44579674219 and P0 HTTP run 44579674185 stopped before business mutations because Owner credentials were empty. Procurement receiving contract and KDS offline contract pass as contract tests, not positive operational E2E. See `FNB_OS_IMPLEMENTATION_DELTA_20261120.md` for all current evidence.
