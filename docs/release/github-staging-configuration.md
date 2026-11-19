@@ -98,3 +98,8 @@ Not covered by this runner as separate acceptance domains:
 - P09 broad regression across RLS, service-role paths, POS, order, inventory, procurement, and finance.
 
 The runner also creates no explicit post-attempt database assertion proving that denied write attempts caused zero side effects. These are implementation/test gaps; do not relabel them as PASS.
+
+
+## Runtime resolution check — 20 November 2026
+
+The current staging workflow references canonical secrets `STAGING_TENANT_A_USERNAME/PASSWORD` and `STAGING_TENANT_B_USERNAME/PASSWORD`, plus six `vars.STAGING_TENANT_*` fixture identifiers. On run 44579674471 all ten resolved inputs were empty at runtime (values were not printed). This confirms the blocker is effective runtime resolution, not merely a static workflow reference. The connected GitHub integration cannot read/write Environment secrets or variables; do not substitute repository-level values or legacy Branch A aliases. An authorized maintainer must reconcile the existing Environment `staging` values through GitHub Settings and rerun P01–P09.
