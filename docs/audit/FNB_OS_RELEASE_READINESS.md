@@ -108,3 +108,29 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 - Migration source parity is not clean: 47 DB applied rows vs 47 staging source files with one applied version missing from the staging directory and one unapplied branch_worker migration file. main has only two migration files. Production Supabase project is INACTIVE, so production migration history is not available for comparison.
 - Staging DB configuration checks: 64/64 public tables RLS enabled; five stock SECURITY DEFINER RPCs deny anon/authenticated and permit service_role. Security Advisor WARN: leaked-password protection disabled. Performance Advisor INFO: 26 unindexed foreign keys.
 - No production migration, deployment, data mutation, or Auth change was performed. Production remains untouched in this continuation.
+
+## Fresh release-gate checkpoint — 2026-11-20
+
+- Latest staging branch SHA: 4a13e70ce29e3fe117b6b6e7705089fa4241298a; main SHA: 2bb254bfb06baa8a3847b9112552f9413420b9f0.
+- PR #96 is merged to main and makes the P01–P09 workflow dispatchable from the default branch; its job remains guarded to run only on staging.
+- PR #97 is merged to staging and carries the P03 role-model correction plus E2E workflow configuration fixes.
+- PR #102 and PR #103 are merged to staging. PR #103 includes the Owner Command Center summary foundation; its clean-database replay ran before the final normalized Owner migration and atomic checklist migration landed, so use the newer staging-head replay below as the authoritative database test.
+- PR #104 contains production CORS source and static contract coverage. Its exact-head CORS contract and Deno type-check passed, but it remains Draft because merging to main triggers the Vercel production deployment. No production deployment was initiated by this checkpoint.
+- PR #74's bulk staging-to-main promotion was closed without merge; no bulk promotion is authorized.
+
+### Current runtime blockers
+
+- P01–P09 run [44579674471](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674471): **0 PASS, 0 FAILED, 9 BLOCKED, 0 SKIPPED; 0/9 probes executed**. The staging URL and publishable key passed preflight; Tenant A/B username/passwords and six tenant/branch/user fixture variables resolved empty in the runner. This does not prove the stored GitHub Environment values are absent; it proves the job did not receive them.
+- KDS/POS/Stock positive E2E run [44579674219](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674219) stopped at preflight because Owner QA username/password resolved empty. The business-flow step was skipped and no transaction mutation ran.
+- P0 HTTP bootstrap run [44579674185](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674185) stopped because Owner QA credentials were empty.
+- Authenticated negative-probe run [44579674333](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674333) stopped because Tenant A credentials and the Tenant B branch fixture were empty.
+- Staging CORS probes [44579674771](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674771) passed. This is not tenant-isolation acceptance.
+
+### Database and security state
+
+- Live migration parity is 48 applied / 52 source, with four pending source migrations and zero applied-without-source versions. The 52-migration clean replay and 67 pgTAP assertions passed in [44579674275](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674275).
+- No pending migration has been applied to shared staging. No production migration or deployment was performed in this checkpoint.
+- Owner Auth app_metadata.platform_owner=true and the server-side UUID allowlist remain unverified/blocked; do not use direct SQL against auth.users to bypass Auth Admin.
+- Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
+
+**Decision remains NO-GO.** Do not merge PR #104 to main, apply the four pending migrations to shared staging, deploy Edge Functions, or promote to production until the Owner/Auth prerequisites, all nine runtime probes, positive E2E flows, and independent release review pass.
