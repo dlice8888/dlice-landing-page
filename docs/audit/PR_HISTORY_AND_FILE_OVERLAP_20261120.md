@@ -328,3 +328,23 @@ After this inventory snapshot, PR #108 was created to carry this audit document.
 - Its resolver enforces distinct Auth identities and tenants, active membership, supported `sales_admin` global profile, `branch_manager` tenant role, equal non-empty tenant permission sets, branch assignment separation, and exact unique QA branch-code matches. It supports multiple same-tenant branch assignments for Tenant A.
 - Latest Free quality checks run `44593578517` completed SUCCESS. The job ran static checks, runtime probe contract tests, tenant permission tests, and the new authenticated-fixture-discovery unit tests. It did **not** run staging P01–P09; the four canonical login secrets remain unavailable/empty.
 - The candidate is more suitable than the six-ID-variable version for this staging fixture model. Preserve it for a narrow port/review into PR #71 or a single scoped follow-up; do not merge the branch or create another PR automatically. It still cannot close the runtime gate without valid canonical credentials for the corrected A and B users.
+
+
+### Current open-PR head/base reconciliation — 20 Nov 2026
+GitHub compare results against each PR's current base branch:
+
+| PR | Head commits ahead | Base commits behind head | Changed files | Compare state | Mergeable |
+|---:|---:|---:|---:|---|---|
+| #64 | 49 | 76 | 12 | Diverged | No |
+| #71 | 44 | 63 | 8 | Diverged | No |
+| #104 | 7 | 0 | 4 | Ahead | Yes |
+| #106 | 4 | 0 | 3 | Ahead | Yes |
+| #107 | 11 | 10 | 6 | Diverged | Yes |
+| #108 | 8 | 0 | 1 | Ahead | Yes |
+
+Implications:
+- #64 and #71 are stale against current staging and cannot be merged without explicit reconciliation/rebase. Do not use their stale base snapshots as integration targets.
+- #107 is technically mergeable but diverged from current staging; review the exact six-file patch and refresh its base before any merge.
+- #104 is a clean seven-commit production-source PR against current main, but remains Draft/HOLD pending production CORS runtime evidence and independent review.
+- #106 and #108 are clean, scoped staging PRs. #106 is source/history parity only; #108 is documentation only. Neither is a release authorization.
+
