@@ -1,6 +1,6 @@
 -- Add an explicit non-admin profile class for ordinary tenant workers.
 -- Tenant permissions remain sourced exclusively from active tenant_memberships.
--- This migration is source-only until reviewed and applied through the staging migration gate.
+-- Applied to Supabase staging as migration version 20261119155309; no profile rows were changed.
 alter table public.admin_profiles
   drop constraint if exists admin_profiles_role_check;
 
