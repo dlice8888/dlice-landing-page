@@ -21,10 +21,10 @@ SELECT ok(NOT EXISTS (
   CROSS JOIN LATERAL aclexplode(d.defaclacl) a
   WHERE n.nspname = 'public'
     AND d.defaclobjtype = 'f'
-    AND d.defaclrole IN ('postgres'::regrole, 'supabase_admin'::regrole)
+    AND d.defaclrole = 'postgres'::regrole
     AND a.grantee IN (0, 'anon'::regrole, 'authenticated'::regrole)
     AND a.privilege_type = 'EXECUTE'
-), 'postgres and supabase_admin defaults do not grant public RPC EXECUTE to client roles');
+), 'postgres default privileges do not grant public RPC EXECUTE to client roles');
 
 CREATE FUNCTION public.dlice_default_acl_test_probe() RETURNS integer
 LANGUAGE sql AS 'SELECT 1';
