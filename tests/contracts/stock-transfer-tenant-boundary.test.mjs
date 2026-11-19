@@ -32,8 +32,8 @@ test("database trigger covers insert and branch reassignment and is not directly
   assert.match(migration, /before insert or update of source_branch_id, destination_branch_id/i);
   assert.match(migration, /v_source_tenant is distinct from v_destination_tenant/i);
   assert.match(migration, /revoke all on function public\.enforce_stock_transfer_same_tenant\(\) from public, anon, authenticated/i);
-  assert.match(migration, /before update of tenant_id\\s+on public\\.branches/i);
+  assert.match(migration, /before update of tenant_id\s+on public\.branches/i);
   assert.match(migration, /branch_tenant_change_with_stock_transfers_forbidden/);
-  assert.match(migration, /revoke all on function public\\.prevent_branch_tenant_reassignment_with_stock_transfers\\(\\) from public, anon, authenticated/i);
+  assert.match(migration, /revoke all on function public\.prevent_branch_tenant_reassignment_with_stock_transfers\(\) from public, anon, authenticated/i);
   assert.match(migration, /set search_path = pg_catalog, public/i);
 });
