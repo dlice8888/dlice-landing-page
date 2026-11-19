@@ -10,6 +10,7 @@ on:
     branches: [staging]
     paths:
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
 
 permissions:
