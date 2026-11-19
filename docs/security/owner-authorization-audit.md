@@ -32,3 +32,8 @@ An active `admin_profiles.role='owner'` row is not sufficient to establish platf
 5. Run Owner and non-Owner runtime authorization tests, including server-side Command Center access and hierarchy drill-down.
 
 Do not create a replacement Owner, elevate the wrong account, or alter metadata/allowlist to make tests pass. Production was not accessed for mutation.
+
+
+## Current status — 20 November 2026
+
+The active Owner profile remains linked to an Auth identity, but the required JSON boolean `app_metadata.platform_owner=true` is still absent. The server-side UUID allowlist is still not independently verified. No Auth metadata was changed in this continuation. The linked identity must be updated through authorized Supabase Auth Admin while preserving existing app metadata; direct SQL updates to `auth.users` are not acceptable. See `docs/audit/FNB_OS_IMPLEMENTATION_DELTA_20261120.md`.
