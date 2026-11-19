@@ -115,7 +115,7 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 - PR #96 is merged to main and makes the P01–P09 workflow dispatchable from the default branch; its job remains guarded to run only on staging.
 - PR #97 is merged to staging and carries the P03 role-model correction plus E2E workflow configuration fixes.
 - PR #102 and PR #103 are merged to staging. PR #103 includes the Owner Command Center summary foundation; its clean-database replay ran before the final normalized Owner migration and atomic checklist migration landed, so use the newer staging-head replay below as the authoritative database test.
-- PR #104 contains production CORS source and static contract coverage. Its exact-head CORS contract and Deno type-check passed, but it remains Draft because merging to main triggers the Vercel production deployment. No production deployment was initiated by this checkpoint.
+- PR #104 contains production CORS source and static contract coverage. Its exact-head CORS contract and Deno type-check passed, but it remains Draft because merging to main triggers the Vercel production deployment. PR #96's earlier merge to main did trigger an automatic production deployment; details are recorded below.
 - PR #74's bulk staging-to-main promotion was closed without merge; no bulk promotion is authorized.
 
 ### Current runtime blockers
@@ -134,3 +134,15 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 - Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
 
 **Decision remains NO-GO.** Do not merge PR #104 to main, apply the four pending migrations to shared staging, deploy Edge Functions, or promote to production until the Owner/Auth prerequisites, all nine runtime probes, positive E2E flows, and independent release review pass.
+
+## Production deployment exception caused by PR #96 — 2026-11-20
+
+PR #96 was merged to main to expose the guarded P01–P09 workflow dispatch entrypoint. The merge triggered Vercel Git integration and created production deployment **dpl_6wzdyEyDiyif7KRRWsdhDoRAUH6Q**, state READY, from main commit **2bb254bfb06baa8a3847b9112552f9413420b9f0**. Vercel confirms that the deployment aliases include **dlice.vercel.app**; therefore this was a live production deployment, not merely a Preview build.
+
+The PR itself reported one changed file: .github/workflows/staging-tenant-isolation-acceptance.yml. However, main's post-merge tree comparison against the pre-PR restoration commit 85d889980da7d903db2348236b501b1b7281b533 shows two additions:
+- .github/workflows/staging-tenant-isolation-acceptance.yml
+- docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json
+
+The 92 KB audit matrix was reintroduced because the PR branch had been created from an earlier main snapshot before the documentation restoration commit; the file was already in the PR branch's base snapshot and was therefore not shown as a PR file change. A scan of the reintroduced matrix found no JWT, Supabase secret/publishable key, bearer credential, password literal, or email pattern. No application HTML/JS, Edge Function source, Supabase schema, Auth metadata, or business data changed in this merge. Nonetheless, a production deployment occurred and must not be described as “no production deployment.”
+
+No rollback, alias reassignment, production database change, or further production deployment has been performed in response to this finding. Keep all remaining main-target PRs Draft/HOLD. Any production rollback or corrective deployment requires an explicit release decision after assessing the live site and its prior deployment target.
