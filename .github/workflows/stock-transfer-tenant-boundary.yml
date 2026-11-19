@@ -1,0 +1,58 @@
+name: Stock transfer same-tenant boundary
+
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary-20261120.sql"
+      - "tests/contracts/stock-transfer-tenant-boundary.test.mjs"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+  push:
+    branches: [staging]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary-20261120.sql"
+      - "tests/contracts/stock-transfer-tenant-boundary.test.mjs"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stock-transfer-same-tenant-boundary
+  cancel-in-progress: false
+
+jobs:
+  boundary-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@1a4442cacd436585916779262731d5b1621c8ec2
+        with:
+          node-version: "22"
+      - name: Run API authorization contract
+        run: node --test tests/contracts/stock-transfer-tenant-boundary.test.mjs
+      - name: Run disposable PostgreSQL trigger regression
+        env:
+          PGPASSWORD: postgres
+        run: psql --host 127.0.0.1 --username postgres --dbname postgres --set ON_ERROR_STOP=1 --file tests/sql/stock-transfer-tenant-boundary-20261120.sql
