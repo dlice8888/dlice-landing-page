@@ -28,6 +28,9 @@ test("broker validates immutable GitHub workflow identity and exact staging trus
   assert.match(broker, /claims\.run_attempt/);
   assert.match(broker, /claims\.jti/);
   assert.match(broker, /staging_machine_session_issuances/);
+  assert.match(broker, /from\("tenant_memberships"\)/);
+  assert.match(broker, /activeTenantIds\.size !== 1/);
+  assert.match(broker, /membership\.role !== "branch_manager"/);
   assert.match(broker, /generateLink/);
   assert.match(broker, /verifyOtp/);
   assert.doesNotMatch(broker, /auth\.admin\.createUser|\.from\(["'](?:tenants|tenant_memberships|branch_assignments)["']\)\.(?:insert|upsert)/);
