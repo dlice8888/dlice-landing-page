@@ -923,3 +923,12 @@ This table is generated from the repository-wide paginated PR listing with diffs
 - The pending migration candidates that are present in current staging Git but not in Supabase history are #102 (`20261120100000_atomic_owner_and_tenant_bootstrap.sql`), #103 (`20261120110000_command_center_summary.sql`), #105 (`20261120120000_atomic_branch_checklist_audit.sql`), and #109 (`20261120130000_enforce_same_tenant_stock_transfers.sql`). #111 adds `20261120140000_staging_machine_session_issuance_audit.sql` on its feature branch and is not in current staging history.
 - #106 now aligns the source filename to already-applied version `20261119182606`; no shared-staging replay is needed or permitted.
 - The PR-level migration references are not an authorization to apply migrations. Each candidate still requires exact-head review, disposable replay, dependency ordering, and the P0 runtime/release gates before one-at-a-time application.
+
+
+## 22. Latest counts after #106 integration
+
+- **109 actual PRs**: **76 merged**, **26 closed without merge**, **7 open**. The earlier 75/26/8 count in section 18 was accurate at its earlier checkpoint but is superseded by #106's successful merge.
+- #106 merge commit: `cf15f33379a731c1952ec22b5d12739595a21a93`. The Supabase history remains 49 versions, latest `20261119182606`; this merge changed repository source alignment only, not the database.
+- #110 now has an explicit manual-dispatch-only trigger for P01–P09, preventing automatic blocked runs on a staging push before Environment preflight. It also records `executed=true/false` explicitly for every probe. The most recent source head is `df43b2b4707186ea31d7068f85f7caa8e252c057`; Vercel Preview is SUCCESS, but a fresh Free quality run for this exact final head has not yet been observed. Do not transfer the earlier `b53e4ee` quality PASS to this later head.
+- #108 audit branch now includes the 7 recovered #73 historical documents and the 109-PR / 78-migration-path cross-reference. Its latest Free quality checks completed SUCCESS on head `2f4604754a9e5261d8f8fd329bca21b7d2ce52b8` before this count addendum; confirm CI again on the final documentation head before treating it as complete.
+- Current connected Supabase project is ACTIVE_HEALTHY; migration history is unchanged at 49 rows. No pending migration was applied.
