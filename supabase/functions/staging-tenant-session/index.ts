@@ -2,6 +2,7 @@
 // This endpoint never creates users, memberships, tenants, roles, or branch assignments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { createRemoteJWKSet, jwtVerify } from "https://esm.sh/jose@5.9.6";
+import { isTrustedStagingWorkflowClaims } from "./claims.ts";
 
 const url = Deno.env.get("SUPABASE_URL") ?? "";
 const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -37,28 +38,11 @@ Deno.serve(async (req) => {
     return json({ error: "github_oidc_verification_failed" }, 401);
   }
 
-  const exact = (claim: string, expected: string) => claims[claim] === expected;
-  const required = {
-    repository_id: Deno.env.get("GITHUB_REPOSITORY_ID") ?? "",
-    repository_owner_id: Deno.env.get("GITHUB_OWNER_ID") ?? "",
-    ref: "refs/heads/staging",
-    workflow_ref: "dlice8888/dlice-landing-page/.github/workflows/staging-tenant-isolation-acceptance.yml@refs/heads/staging",
-    environment: "staging",
-  };
-  if (!required.repository_id || !required.repository_owner_id ||
-      !exact("repository", "dlice8888/dlice-landing-page") ||
-      !exact("sub", "repo:dlice8888/dlice-landing-page:environment:staging") ||
-      !exact("repository_id", required.repository_id) ||
-      !exact("repository_owner_id", required.repository_owner_id) ||
-      !exact("ref", required.ref) ||
-      !exact("workflow_ref", required.workflow_ref) ||
-      !exact("environment", required.environment) ||
-      !exact("event_name", "workflow_dispatch") ||
-      !/^\d+$/.test(String(claims.run_id ?? "")) ||
-      !/^\d+$/.test(String(claims.run_attempt ?? "")) ||
-      typeof claims.jti !== "string" || claims.jti.length < 8) {
-    return json({ error: "github_workflow_identity_not_allowed" }, 403);
-  }
+  const trustedWorkflow = isTrustedStagingWorkflowClaims(claims, {
+    repositoryId: Deno.env.get("GITHUB_REPOSITORY_ID") ?? "",
+    ownerId: Deno.env.get("GITHUB_OWNER_ID") ?? "",
+  });
+  if (!trustedWorkflow) return json({ error: "github_workflow_identity_not_allowed" }, 403);
 
   const userId = Deno.env.get(slot === "A" ? "STAGING_TENANT_A_USER_ID" : "STAGING_TENANT_B_USER_ID") ?? "";
   const otherId = Deno.env.get(slot === "A" ? "STAGING_TENANT_B_USER_ID" : "STAGING_TENANT_A_USER_ID") ?? "";
