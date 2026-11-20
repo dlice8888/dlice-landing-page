@@ -1932,8 +1932,8 @@
         {
           "requirement": "RLS on exposed public tables",
           "source_status": "PASS (database configuration)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Read-only SQL found 45/45 public tables with RLS enabled; policy correctness still needs per-table tests.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Live read-only SQL on 2026-11-20: 64/64 public tables have RLS enabled and 64 public policies exist. Per-table policy correctness and full role/tenant negative runtime tests remain outstanding, so this is PARTIAL rather than PASS.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 269
@@ -2563,6 +2563,20 @@
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_updates": [
+      {
+        "domain": 18,
+        "requirement": "RLS on exposed public tables",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "64/64 public tables RLS-enabled; 64 policies; policy correctness not fully tested"
+      }
+    ],
+    "feature_status_counts_current": {
+      "PARTIAL": 82,
+      "NOT VERIFIED": 98,
+      "BLOCKED": 9
     }
   },
   "historical_acceptance_coverage": {
