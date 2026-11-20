@@ -43,6 +43,7 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
+  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -56,7 +57,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed: true,
+    executed,
     status,
   };
   results.push(result);
