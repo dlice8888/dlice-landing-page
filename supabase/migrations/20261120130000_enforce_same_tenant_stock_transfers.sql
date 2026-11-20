@@ -11,6 +11,15 @@ declare
   v_source_tenant uuid;
   v_destination_tenant uuid;
 begin
+  -- Serialize tenant reassignment against transfer creation/update. Lock both
+  -- branch rows in deterministic order to avoid a check-then-write race and
+  -- reduce deadlock risk when opposite-direction transfers run concurrently.
+  perform b.id
+    from public.branches b
+   where b.id in (new.source_branch_id, new.destination_branch_id)
+   order by b.id
+   for share;
+
   select b.tenant_id
     into v_source_tenant
     from public.branches b
