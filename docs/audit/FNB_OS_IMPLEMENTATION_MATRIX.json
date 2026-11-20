@@ -2496,7 +2496,7 @@
         "head": "82edeeb848335259aa9076d41de0079f4ae9f6b5",
         "exact_head_quality": "SUCCESS",
         "kds_contract": "SUCCESS",
-        "disposable_migration_replay": "IN_PROGRESS",
+        "disposable_migration_replay": "SUCCESS",
         "migration_version": "20261120125000"
       }
     },
