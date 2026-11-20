@@ -21,7 +21,7 @@ test("staging tenant gate uses GitHub OIDC sessions and discovers fixture UUIDs 
   assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL/);
   assert.match(workflow, /staging-tenant-session/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
-  assert.match(workflow, /STAGING_TENANT_[AB]_ACCESS_TOKEN/);
+  assert.match(workflow, /STAGING_TENANT_%s_ACCESS_TOKEN=%s/);
   assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL:-/);
   assert.match(workflow, /OIDC session exchange did not complete/);
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
