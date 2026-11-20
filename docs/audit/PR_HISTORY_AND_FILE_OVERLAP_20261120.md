@@ -1102,3 +1102,22 @@ Current GitHub listing confirms **110 actual PRs: 77 merged, 26 closed without m
 - #107, #104 and #71 remain open Drafts; their code/security changes still require their respective dependency and release-gate review.
 
 No migration dated 20261120 has been applied to shared staging. Supabase migration history remains 49 rows through `20261119182606`. Owner metadata is still absent, P01–P09 are still NOT RUN, GitHub rulesets/branch protection are NOT VERIFIED, and release flags remain false.
+
+
+## 32. Detailed migration PR review and exact-head CI evidence
+
+| PR | Migration / function area | Exact-head CI evidence | Integration disposition |
+|---:|---|---|---|
+| #102 | `20261120100000_atomic_owner_and_tenant_bootstrap.sql` | Free quality SUCCESS; KDS contract SUCCESS; disposable migration replay SUCCESS | Source merged, not applied to shared staging. Its original text comparison accepted JSON string `"true"`; #112 adds forward-only boolean-type hardening. |
+| #103 | `20261120110000_command_center_summary.sql` | Free quality SUCCESS; KDS contract SUCCESS; staging runtime CORS probes SUCCESS; procurement receiving/requisition contracts SUCCESS; disposable replay SUCCESS | Source merged, not applied to shared staging. Owner-only route guard is present. Command Center remains partial: live finance/procurement/production tables are empty and the PRD still needs margin, anomaly, target, alert and drill-down acceptance. |
+| #105 | `20261120120000_atomic_branch_checklist_audit.sql` | Free quality SUCCESS; KDS contract SUCCESS; staging runtime CORS probes SUCCESS; procurement requisition/receiving contracts SUCCESS; disposable replay SUCCESS | Source merged, not applied to shared staging. Atomic write + audit, optimistic versioning and rollback tests are present. Its role-claim helper is updated by #112. |
+| #112 | `20261120125000_harden_owner_metadata_boolean.sql` | Free quality SUCCESS; KDS contract SUCCESS; disposable replay SUCCESS | Draft source PR; no shared-staging application. |
+| #109 | `20261120130000_enforce_same_tenant_stock_transfers.sql` | 7 relevant workflows SUCCESS, including concurrency regression and disposable replay | Ready for Review; independent review pending; no shared-staging application. |
+| #111 | `20261120140000_staging_machine_session_issuance_audit.sql` | Free quality SUCCESS; KDS contract SUCCESS; disposable replay SUCCESS | Draft source PR; broker secrets/deployment/runtime validation pending; no shared-staging application. |
+
+### Function-level conclusions
+- #102 Owner bootstrap/tenant creation RPCs are service-role-only and have disposable replay coverage. Strict JSON boolean validation is now a forward-only requirement in #112. The existing Owner identity still needs authorized Auth Admin metadata and protected allowlist reconciliation.
+- #103 `command_center_summary` is service-role-only with an Owner-only Edge route before service-role use. It is not yet a complete Executive Command Center implementation; no full 150-branch KPI, margin, anomaly, target, alert or drill-down acceptance has been demonstrated.
+- #105 checklist RPC is atomic and server-authorized before the service-role call. The current source and disposable regression tests pass; shared-staging execution and branch browser acceptance remain unproven.
+- #109 database triggers and API guards enforce same-tenant transfer endpoints, including the concurrent branch-reassignment race. The independent review step remains open.
+- #111's OIDC claim helper now has unit tests for exact repository/owner/ref/workflow/environment/event/run/JTI constraints. This is not a substitute for deploying the function with authorized secrets and executing real broker negative/replay tests.
