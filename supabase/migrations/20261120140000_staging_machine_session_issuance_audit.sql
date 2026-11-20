@@ -1,7 +1,7 @@
 -- Staging-only, one-time GitHub OIDC session issuance audit.
 -- This does not create Auth identities or grant tenant permissions.
 create table if not exists public.staging_machine_session_issuances (
-  id bigint generated always as identity primary key,
+  id uuid primary key default gen_random_uuid(),
   github_run_id text not null,
   github_run_attempt integer not null check (github_run_attempt > 0),
   github_jti text not null,
