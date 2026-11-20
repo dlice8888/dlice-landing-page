@@ -3,6 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 SELECT plan(27);
+SELECT set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 
 SELECT throws_ok(
@@ -46,6 +47,7 @@ INSERT INTO auth.users (
   now()
 ) ON CONFLICT (id) DO NOTHING;
 
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT set_config('request.jwt.claim.role', 'service_role', true);
 
 CREATE OR REPLACE FUNCTION public.test_reject_branch_checklist_audit()
