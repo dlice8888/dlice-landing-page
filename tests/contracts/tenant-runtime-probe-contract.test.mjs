@@ -53,7 +53,8 @@ test("runtime tenant gate records every required probe and validates active tena
     assert.ok(probe.includes(field), `probe evidence is missing ${field}`);
   }
   assert.match(probe, /erp-list-tenant-memberships/);
-  assert.match(probe, /balances\.length\s*>\s*0/, "own-branch read must prove at least one real inventory row");
+  assert.match(probe, /Array\.isArray\(balances\)\s*&&\s*balances\.every\(\(row\)\s*=>\s*row\.branch_id\s*===\s*requestedBranch\)/, "own-branch read must accept an empty authorized result but reject any foreign-branch row");
+  assert.doesNotMatch(probe, /balances\.length\s*>\s*0/, "empty stock must not be misreported as an authorization failure");
   assert.match(probe, /resolveTenantFixtures/);
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
