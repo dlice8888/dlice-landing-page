@@ -6,7 +6,7 @@ Replace four long-lived GitHub Environment username/password secrets with GitHub
 ## Trust boundary
 - GitHub Actions receives an OIDC token only in the trusted `staging` Environment workflow.
 - The Edge Function validates GitHub's signature/JWKS, issuer, audience, repository and immutable repository/owner IDs, exact staging ref, exact workflow ref, environment, event type, run ID, attempt, and JTI.
-- The broker maps slot A/B to two pre-provisioned Supabase Auth user UUIDs held as Supabase Function secrets. It verifies the Auth user exists and the D’Lice profile is active.
+- The broker maps slot A/B to two pre-provisioned Supabase Auth user UUIDs held as Supabase Function secrets. It verifies the Auth user exists, the D’Lice profile is active with global profile role `sales_admin`, and the tenant-scoped membership role is `branch_manager`.
 - It uses Supabase Auth Admin to create a one-time magic-link token and exchanges it immediately for an ordinary user session. No service-role token is returned.
 - A database uniqueness record prevents replay for the same run/attempt/slot and records issuance. Service-role is only inside the Edge Function's managed environment.
 - The runner keeps access tokens in process/job memory, masks them, and never prints or stores them as artifacts.
