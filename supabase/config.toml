@@ -1,0 +1,2 @@
+[functions.staging-tenant-session]
+verify_jwt = false
