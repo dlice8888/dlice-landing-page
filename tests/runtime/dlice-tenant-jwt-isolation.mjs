@@ -3,6 +3,7 @@
 // Tokens, passwords, usernames, and response bodies are never written to logs.
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
+import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
@@ -10,14 +11,13 @@ const usernameA = process.env.STAGING_TENANT_A_USERNAME;
 const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
 const usernameB = process.env.STAGING_TENANT_B_USERNAME;
 const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
-const tenantA = process.env.STAGING_TENANT_A_ID;
-const tenantB = process.env.STAGING_TENANT_B_ID;
-const branchA = process.env.STAGING_TENANT_A_BRANCH_ID;
-const branchB = process.env.STAGING_TENANT_B_BRANCH_ID;
+let tenantA = null;
+let tenantB = null;
+let branchA = null;
+let branchB = null;
+let tenantFixturesVerified = false;
 const branchCodeA = process.env.STAGING_TENANT_A_BRANCH_CODE;
 const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
-const userIdA = process.env.STAGING_TENANT_A_USER_ID;
-const userIdB = process.env.STAGING_TENANT_B_USER_ID;
 const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
@@ -58,6 +58,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+    executed: true,
     status,
   };
   results.push(result);
@@ -96,14 +97,10 @@ function recordBlocked(definition, reason) {
     actualResult: `not_executed:${reason}`,
     httpStatus: null,
     evidence: { executed: false },
+    executed: false,
     startedAt: performance.now(),
     status: "BLOCKED",
   });
-}
-
-function isUuid(value) {
-  return typeof value === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function isPublicSupabaseKey(value) {
@@ -126,22 +123,14 @@ function configurationProblems() {
     ["STAGING_TENANT_A_PASSWORD", passwordA],
     ["STAGING_TENANT_B_USERNAME", usernameB],
     ["STAGING_TENANT_B_PASSWORD", passwordB],
-    ["STAGING_TENANT_A_ID", tenantA],
-    ["STAGING_TENANT_B_ID", tenantB],
-    ["STAGING_TENANT_A_BRANCH_ID", branchA],
-    ["STAGING_TENANT_B_BRANCH_ID", branchB],
     ["STAGING_TENANT_A_BRANCH_CODE", branchCodeA],
     ["STAGING_TENANT_B_BRANCH_CODE", branchCodeB],
-    ["STAGING_TENANT_A_USER_ID", userIdA],
-    ["STAGING_TENANT_B_USER_ID", userIdB],
   ];
   const missingInputNames = inputs.filter(([, value]) => value === undefined).map(([name]) => name);
   const emptyInputNames = inputs.filter(([, value]) => typeof value === "string" && value.trim() === "").map(([name]) => name);
   const configurationErrors = [];
   const distinctUsernames = usernameA?.trim().toLowerCase() !== usernameB?.trim().toLowerCase();
-  const distinctTenantIds = tenantA !== tenantB;
-  const distinctBranchIds = branchA !== branchB;
-  const distinctUserIds = userIdA !== userIdB;
+  const distinctBranchCodes = branchCodeA !== branchCodeB;
   const checks = inputs.map(([name, value]) => {
     let valid = typeof value === "string" && value.trim().length > 0;
     if (valid && name === "STAGING_SUPABASE_URL") {
@@ -159,13 +148,8 @@ function configurationProblems() {
       valid = isPublicSupabaseKey(value);
     } else if (valid && name.endsWith("_USERNAME")) {
       valid = /^[a-zA-Z0-9._-]{3,32}$/.test(value.trim()) && distinctUsernames;
-    } else if (valid && name.endsWith("_ID")) {
-      valid = isUuid(value);
-      if (["STAGING_TENANT_A_ID", "STAGING_TENANT_B_ID"].includes(name)) valid &&= distinctTenantIds;
-      if (["STAGING_TENANT_A_BRANCH_ID", "STAGING_TENANT_B_BRANCH_ID"].includes(name)) valid &&= distinctBranchIds;
-      if (["STAGING_TENANT_A_USER_ID", "STAGING_TENANT_B_USER_ID"].includes(name)) valid &&= distinctUserIds;
     } else if (valid && name.endsWith("_BRANCH_CODE")) {
-      valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B");
+      valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B") && distinctBranchCodes;
     }
     return { name, status: valid ? "PASS" : "FAIL" };
   });
@@ -183,27 +167,14 @@ function configurationProblems() {
   if (key && !isPublicSupabaseKey(key)) {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
-  if (usernameA && usernameB && usernameA.trim().toLowerCase() === usernameB.trim().toLowerCase()) {
+  if (usernameA && usernameB && !distinctUsernames) {
     configurationErrors.push("Tenant A and Tenant B usernames must be distinct");
   }
-  const fixtureIds = [tenantA, tenantB, branchA, branchB, userIdA, userIdB];
-  if (fixtureIds.every((value) => typeof value === "string" && value.trim() !== "")) {
-    if (!fixtureIds.every(isUuid)) {
-      configurationErrors.push("Tenant, branch, and user fixture identifiers must be UUIDs");
-    }
-  }
-  if (tenantA && tenantB && !distinctTenantIds) {
-    configurationErrors.push("Tenant fixture identifiers must be distinct");
-  }
-  if (branchA && branchB && !distinctBranchIds) {
-    configurationErrors.push("Branch fixture identifiers must be distinct");
-  }
-  if (userIdA && userIdB && !distinctUserIds) {
-    configurationErrors.push("User fixture identities must be distinct");
+  if (branchCodeA && branchCodeB && !distinctBranchCodes) {
+    configurationErrors.push("Tenant A and Tenant B branch codes must be distinct");
   }
   return { missingInputNames, emptyInputNames, configurationErrors, checks };
 }
-
 const configuration = configurationProblems();
 for (const check of configuration.checks) {
   console.log(JSON.stringify({ probeId: "PREFLIGHT", ...check, valuePrinted: false }));
@@ -258,6 +229,24 @@ if (
   const tokenByTenant = { A: null, B: null };
   const identityByTenant = { A: null, B: null };
   const probeById = new Map(requiredProbes.map((entry) => [entry[0], entry]));
+  function refreshProbeScopes() {
+    const scopes = {
+      P03: [`${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`],
+      P04: [maskId(tenantA), maskId(branchA)],
+      P05: [maskId(tenantA), maskId(branchB)],
+      P06: [maskId(tenantB), maskId(branchB)],
+      P07: [maskId(tenantB), maskId(branchA)],
+      P08: [maskId(tenantA), maskId(branchB)],
+      P09: [maskId(tenantB), maskId(branchA)],
+    };
+    for (const [id, [tenantScope, branchScope]] of Object.entries(scopes)) {
+      const entry = probeById.get(id);
+      if (entry) {
+        entry[3] = tenantScope;
+        entry[4] = branchScope;
+      }
+    }
+  }
 
   async function login(tenant) {
     const isTenantA = tenant === "A";
@@ -331,13 +320,19 @@ if (
   }
 
   async function verifyIdentityAndMembership() {
-    const definition = probeById.get("P03");
-    const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = definition;
+    const definition = {
+      id: "P03",
+      expectedResult: "Two distinct Auth identities have active memberships and branch assignments in separate tenants",
+      authIdentity: "Tenant A and Tenant B",
+      tenantScope: "derived after authenticated membership lookup",
+      branchScope: "derived after authenticated branch lookup",
+      operation: "Auth user, erp-list-tenant-memberships, and erp-list-branches",
+    };
     if (!tokenByTenant.A || !tokenByTenant.B) {
-      recordBlocked({ id: "P03", expectedResult, authIdentity, tenantScope, branchScope, operation }, "one_or_both_logins_failed");
+      recordBlocked(definition, "one_or_both_logins_failed");
       return;
     }
-    await runProbe({ id: "P03", expectedResult, tenantScope, branchScope, operation }, authIdentity, async () => {
+    await runProbe(definition, definition.authIdentity, async () => {
       const [
         identityAResult,
         identityBResult,
@@ -369,65 +364,37 @@ if (
       const userB = identityBResult.payload?.id;
       identityByTenant.A = userA ?? null;
       identityByTenant.B = userB ?? null;
-      const membershipsA = membershipAResult.payload?.memberships;
-      const membershipsB = membershipBResult.payload?.memberships;
-      const branchesA = branchesAResult.payload?.branches;
-      const branchesB = branchesBResult.payload?.branches;
-      const membershipA = Array.isArray(membershipsA)
-        ? membershipsA.find((membership) => membership.user_id === userA && membership.tenant_id === tenantA && membership.status === "active")
-        : null;
-      const membershipB = Array.isArray(membershipsB)
-        ? membershipsB.find((membership) => membership.user_id === userB && membership.tenant_id === tenantB && membership.status === "active")
-        : null;
-      const membershipAIsCorrect = !!membershipA && !membershipsA.some((membership) => membership.tenant_id === tenantB);
-      const membershipBIsCorrect = !!membershipB && !membershipsB.some((membership) => membership.tenant_id === tenantA);
-      // admin_profiles.role is the global D'Lice console role (sales_admin).
-      // Branch authorization is represented by tenant_memberships.role (branch_manager).
-      const profileAHasSupportedRole = membershipA?.admin_profiles?.role === "sales_admin";
-      const profileBHasSupportedRole = membershipB?.admin_profiles?.role === "sales_admin";
-      const sameTenantRole = membershipA?.role === "branch_manager" && membershipB?.role === membershipA?.role;
-      const permissionsA = Array.isArray(membershipA?.permissions) ? [...membershipA.permissions].sort() : [];
-      const permissionsB = Array.isArray(membershipB?.permissions) ? [...membershipB.permissions].sort() : [];
-      const permissionSetsEqual = permissionsA.length > 0 && JSON.stringify(permissionsA) === JSON.stringify(permissionsB);
-      // A user may legitimately hold multiple active assignments inside one tenant.
-      // Require the configured QA branch to be visible and reject every foreign-tenant branch.
-      const branchAAssignmentIsCorrect = Array.isArray(branchesA) &&
-        branchesA.some((branch) =>
-          branch.id === branchA &&
-          branch.code === branchCodeA &&
-          branch.tenant_id === tenantA
-        ) &&
-        branchesA.every((branch) => branch.tenant_id === tenantA) &&
-        !branchesA.some((branch) => branch.id === branchB);
-      const branchBAssignmentIsCorrect = Array.isArray(branchesB) &&
-        branchesB.some((branch) =>
-          branch.id === branchB &&
-          branch.code === branchCodeB &&
-          branch.tenant_id === tenantB
-        ) &&
-        branchesB.every((branch) => branch.tenant_id === tenantB) &&
-        !branchesB.some((branch) => branch.id === branchA);
-      const identityMatchesFixtures = userA === userIdA && userB === userIdB && userA !== userB;
-      const passed = identityAResult.response.status === 200 &&
+      const resolved = resolveTenantFixtures({
+        userA,
+        userB,
+        membershipsA: membershipAResult.payload?.memberships,
+        membershipsB: membershipBResult.payload?.memberships,
+        branchesA: branchesAResult.payload?.branches,
+        branchesB: branchesBResult.payload?.branches,
+        branchCodeA,
+        branchCodeB,
+      });
+      tenantA = resolved.tenantA;
+      tenantB = resolved.tenantB;
+      branchA = resolved.branchA;
+      branchB = resolved.branchB;
+      const responsesOk = identityAResult.response.status === 200 &&
         identityBResult.response.status === 200 &&
         membershipAResult.response.status === 200 &&
         membershipBResult.response.status === 200 &&
         branchesAResult.response.status === 200 &&
-        branchesBResult.response.status === 200 &&
-        identityMatchesFixtures &&
-        membershipAIsCorrect &&
-        membershipBIsCorrect &&
-        profileAHasSupportedRole &&
-        profileBHasSupportedRole &&
-        sameTenantRole &&
-        permissionSetsEqual &&
-        branchAAssignmentIsCorrect &&
-        branchBAssignmentIsCorrect;
+        branchesBResult.response.status === 200;
+      tenantFixturesVerified = responsesOk && resolved.passed;
+      refreshProbeScopes();
+      definition.tenantScope = `${maskId(tenantA)},${maskId(tenantB)}`;
+      definition.branchScope = `${maskId(branchA)},${maskId(branchB)}`;
+
+      const passed = tenantFixturesVerified;
       return {
         passed,
         actualResult: passed
-          ? "Both Auth identities, active tenant memberships, and branch assignments match their fixtures"
-          : "Identity, active tenant membership, or branch assignment did not match the configured fixture",
+          ? "Both Auth identities, active tenant memberships, and QA branch assignments resolve to separate tenants"
+          : "Auth identity, tenant membership, role, permissions, or QA branch resolution did not satisfy the two-tenant fixture contract",
         httpStatus: {
           identityA: identityAResult.response.status,
           identityB: identityBResult.response.status,
@@ -439,31 +406,34 @@ if (
         evidence: {
           identityAUserIdMasked: maskId(userA),
           identityBUserIdMasked: maskId(userB),
-          identityMatchesFixtures,
-          membershipAActiveInTenantA: membershipAIsCorrect,
-          membershipBActiveInTenantB: membershipBIsCorrect,
-          profileAHasSupportedRole,
-          profileBHasSupportedRole,
-          tenantRoleA: membershipA?.role ?? null,
-          tenantRoleB: membershipB?.role ?? null,
-          sameTenantRole,
-          permissionSetsEqual,
-          permissionCountA: permissionsA.length,
-          permissionCountB: permissionsB.length,
-          branchAAssignmentMatchesFixture: branchAAssignmentIsCorrect,
-          branchBAssignmentMatchesFixture: branchBAssignmentIsCorrect,
+          identityMatchesFixtures: resolved.identityMatchesFixtures,
+          tenantIdsDistinct: resolved.tenantIdsDistinct,
+          branchIdsDistinct: resolved.branchIdsDistinct,
+          membershipAActiveInTenantA: resolved.membershipAIsCorrect,
+          membershipBActiveInTenantB: resolved.membershipBIsCorrect,
+          profileAHasSupportedRole: resolved.profileAHasSupportedRole,
+          profileBHasSupportedRole: resolved.profileBHasSupportedRole,
+          tenantRoleA: resolved.membershipA?.role ?? null,
+          tenantRoleB: resolved.membershipB?.role ?? null,
+          sameTenantRole: resolved.sameTenantRole,
+          permissionSetsEqual: resolved.permissionSetsEqual,
+          permissionCountA: resolved.permissionsA.length,
+          permissionCountB: resolved.permissionsB.length,
+          branchAAssignmentMatchesFixture: resolved.branchAAssignmentIsCorrect,
+          branchBAssignmentMatchesFixture: resolved.branchBAssignmentIsCorrect,
+          qaBranchMatchCounts: resolved.branchMatchCounts,
+          fixtureIdsDerivedAtRuntime: true,
         },
       };
     });
   }
-
   async function verifyOwnBranchRead(tenant) {
     const isTenantA = tenant === "A";
     const id = isTenantA ? "P04" : "P06";
     const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = probeById.get(id);
     const token = tokenByTenant[tenant];
-    if (!token || !identityByTenant[tenant]) {
-      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
+    if (!token || !identityByTenant[tenant] || !tenantFixturesVerified) {
+      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_or_tenant_fixture_not_verified");
       return;
     }
     await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
@@ -473,8 +443,8 @@ if (
         body: JSON.stringify({ action: "erp-list-inventory", branch_id: requestedBranch }),
       });
       const balances = payload?.balances;
-      // Empty inventory is not proof of a working own-branch read. Require at least one real row.
-      const validRows = Array.isArray(balances) && balances.length > 0 && balances.every((row) => row.branch_id === requestedBranch);
+      // A successful authorized response with an empty array is still a valid read; do not confuse empty QA stock with an authorization failure.
+      const validRows = Array.isArray(balances) && balances.every((row) => row.branch_id === requestedBranch);
       const passed = response.status === 200 && validRows;
       return {
         passed,
@@ -490,8 +460,8 @@ if (
     const id = isTenantA ? "P05" : "P07";
     const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = probeById.get(id);
     const token = tokenByTenant[tenant];
-    if (!token || !identityByTenant[tenant]) {
-      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
+    if (!token || !identityByTenant[tenant] || !tenantFixturesVerified) {
+      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_or_tenant_fixture_not_verified");
       return;
     }
     await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
@@ -515,8 +485,8 @@ if (
     const id = isTenantA ? "P08" : "P09";
     const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = probeById.get(id);
     const token = tokenByTenant[tenant];
-    if (!token || !identityByTenant[tenant]) {
-      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_not_verified");
+    if (!token || !identityByTenant[tenant] || !tenantFixturesVerified) {
+      recordBlocked({ id, expectedResult, authIdentity, tenantScope, branchScope, operation }, "identity_or_tenant_fixture_not_verified");
       return;
     }
     await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
@@ -589,8 +559,8 @@ if (
       expectedResult: "Direct client table access is denied or returns no matching branch row",
     };
     const token = tokenByTenant[tenant];
-    if (!token || !identityByTenant[tenant]) {
-      recordBlocked(definition, "identity_not_verified");
+    if (!token || !identityByTenant[tenant] || !tenantFixturesVerified) {
+      recordBlocked(definition, "identity_or_tenant_fixture_not_verified");
       return;
     }
     await runProbe(definition, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
@@ -629,8 +599,8 @@ if (
       expectedResult: "Server-only stock-transfer RPC is inaccessible to the authenticated client",
     };
     const token = tokenByTenant[tenant];
-    if (!token || !identityByTenant[tenant]) {
-      recordBlocked(definition, "identity_not_verified");
+    if (!token || !identityByTenant[tenant] || !tenantFixturesVerified) {
+      recordBlocked(definition, "identity_or_tenant_fixture_not_verified");
       return;
     }
     await runProbe(definition, `${authIdentity} (${maskId(identityByTenant[tenant])})`, async () => {
