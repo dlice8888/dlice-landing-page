@@ -23,6 +23,21 @@ insert into public.branches (id, tenant_id) values
 
 \i supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql
 
+
+-- The trigger must lock both branch rows before reading tenant IDs so a
+-- concurrent branch tenant reassignment cannot pass the same check.
+do $test$
+begin
+  if position(
+    'FOR SHARE' in upper(pg_get_functiondef(
+      'public.enforce_stock_transfer_same_tenant()'::regprocedure
+    ))
+  ) = 0 then
+    raise exception 'TEST_FAILURE: tenant guard does not lock branch rows';
+  end if;
+end
+$test$;
+
 -- A same-tenant transfer is valid.
 insert into public.stock_transfers (id, source_branch_id, destination_branch_id)
 values ('a0000000-0000-4000-8000-000000000001',
