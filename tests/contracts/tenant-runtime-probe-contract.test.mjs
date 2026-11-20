@@ -59,7 +59,8 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /resolveTenantFixtures/);
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
-  assert.match(probe, /executed:\s*true/);
+  assert.match(probe, /executed = true/);
+  assert.match(probe, /executed,\s*status/);
   assert.match(probe, /executed:\s*false/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
