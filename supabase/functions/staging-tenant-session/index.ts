@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
   }
   const expiresAt = sessionData.session.expires_at;
   const nowSeconds = Math.floor(Date.now() / 1000);
-  if (!Number.isInteger(expiresAt) || expiresAt <= nowSeconds || expiresAt - nowSeconds > 3600) {
+  if (typeof expiresAt !== "number" || !Number.isInteger(expiresAt) || expiresAt <= nowSeconds || expiresAt - nowSeconds > 3600) {
     return json({ error: "session_lifetime_out_of_policy" }, 503);
   }
   return json({
