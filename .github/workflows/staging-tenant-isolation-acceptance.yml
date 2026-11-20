@@ -10,9 +10,12 @@ on:
       - ".github/workflows/staging-tenant-isolation-acceptance.yml"
       - "supabase/functions/dlice-orders/index.ts"
       - "supabase/functions/dlice-orders/tenant-permissions.ts"
+      - "supabase/functions/staging-tenant-session/**"
+      - "supabase/migrations/20261120140000_staging_machine_session_issuance_audit.sql"
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: staging-tenant-isolation-acceptance
@@ -29,10 +32,6 @@ jobs:
     env:
       STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
-      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
-      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
-      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
       # Tenant/branch/user UUIDs are derived from the authenticated A/B identities at runtime.
       STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
       STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
@@ -40,6 +39,24 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Exchange GitHub OIDC identity for two short-lived staging user sessions
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          oidc_json="$(curl --fail --silent --show-error -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=dlice-staging-tenant-isolation")"
+          oidc_token="$(printf '%s' "$oidc_json" | jq -er '.value')"
+          unset oidc_json
+          for slot in A B; do
+            response="$(curl --fail --silent --show-error -X POST "${STAGING_SUPABASE_URL}/functions/v1/staging-tenant-session" -H "Authorization: Bearer ${oidc_token}" -H "Content-Type: application/json" --data "{\"tenant\":\"$slot\"}")"
+            access_token="$(printf '%s' "$response" | jq -er '.session.access_token')"
+            user_id="$(printf '%s' "$response" | jq -er '.identity.user_id')"
+            if [ "${#access_token}" -lt 100 ] || [ "${#user_id}" -ne 36 ]; then echo "::error::OIDC broker returned an invalid session envelope."; exit 1; fi
+            echo "::add-mask::$access_token"
+            echo "STAGING_TENANT_${slot}_ACCESS_TOKEN=$access_token" >> "$GITHUB_ENV"
+            unset response access_token user_id
+          done
+          unset oidc_token
       - name: Preflight and execute all tenant-isolation probes
         id: probes
         continue-on-error: true
