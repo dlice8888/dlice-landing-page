@@ -38,12 +38,19 @@ jobs:
           set -u
           set +x
           failed=0
-          oidc_json="$(curl --fail --silent --show-error -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=dlice-staging-tenant-isolation")" || failed=1
+          oidc_url="${ACTIONS_ID_TOKEN_REQUEST_URL:-}"
+          oidc_request_token="${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}"
+          oidc_json=""
           oidc_token=""
-          if [ "$failed" -eq 0 ]; then
-            oidc_token="$(printf '%s' "$oidc_json" | jq -er '.value' 2>/dev/null)" || failed=1
+          if [ -z "$oidc_url" ] || [ -z "$oidc_request_token" ] || [ -z "${STAGING_SUPABASE_URL:-}" ]; then
+            failed=1
+          else
+            oidc_json="$(curl --fail --silent --show-error -H "Authorization: bearer ${oidc_request_token}" "${oidc_url}&audience=dlice-staging-tenant-isolation")" || failed=1
+            if [ "$failed" -eq 0 ]; then
+              oidc_token="$(printf '%s' "$oidc_json" | jq -er '.value' 2>/dev/null)" || failed=1
+            fi
           fi
-          unset oidc_json
+          unset oidc_json oidc_url oidc_request_token
           for slot in A B; do
             if [ "$failed" -ne 0 ] || [ -z "$oidc_token" ]; then continue; fi
             response="$(curl --fail --silent --show-error -X POST "${STAGING_SUPABASE_URL}/functions/v1/staging-tenant-session" -H "Authorization: Bearer ${oidc_token}" -H "Content-Type: application/json" --data "{\"tenant\":\"$slot\"}")" || { failed=1; continue; }
