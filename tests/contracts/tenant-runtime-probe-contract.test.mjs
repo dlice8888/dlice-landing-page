@@ -19,7 +19,7 @@ test("staging tenant gate uses GitHub OIDC sessions and discovers fixture UUIDs 
   ]) {
     assert.match(workflow, new RegExp(`${secret}:\\s*\\$\\{\\{\\s*secrets\\.${secret}\\s*\\}\\}`));
   }
-  assert.match(workflow, /id-token:\\s*write/);
+  assert.match(workflow, /id-token:\s*write/);
   assert.match(workflow, /staging-tenant-session/);
   assert.doesNotMatch(workflow, /secrets\\.STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
