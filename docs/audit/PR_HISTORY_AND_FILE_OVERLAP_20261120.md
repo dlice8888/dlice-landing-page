@@ -1088,3 +1088,17 @@ On exact head `82edeeb848335259aa9076d41de0079f4ae9f6b5`, all three relevant wor
 - Disposable local Supabase migration replay — SUCCESS, including the #102/#105 service-role RPC regression tests and the new Owner metadata pgTAP assertions.
 
 The first replay attempt failed because historical tests only set the legacy single role setting. The tests were corrected to set the full `request.jwt.claims` JSON as well, and the exact-head replay then passed. The migration now has disposable replay evidence; it has **not** been applied to shared staging.
+
+
+## 31. Final repository snapshot after PR #112 validation
+
+Current GitHub listing confirms **110 actual PRs: 77 merged, 26 closed without merge, 7 open**. The seven open PRs are #71, #104, #107, #108, #109, #111 and #112.
+
+- #106 and #110 are merged to staging; no separate reviewer was requested, consistent with the user's clarification.
+- #109 is Ready for Review, mergeable, with 7 relevant CI workflows successful. The independent review requested in the original sequence remains pending; do not merge/apply its stock-transfer migration before that review and P0 gates.
+- #111 is Draft, rebased on staging, exact head `48fe855d5c19b769a05d15597de0f9a9fbd3708a`; Free quality, KDS contract and disposable migration replay all SUCCESS. OIDC Function Secrets, Edge Function deployment and runtime broker validation remain pending.
+- #112 is Draft, exact head `82edeeb848335259aa9076d41de0079f4ae9f6b5`; Free quality, KDS contract and disposable migration replay all SUCCESS. It remains unapplied to shared staging.
+- #108 is Draft and contains the complete 110-PR inventory, all 26 closed-unmerged dispositions, seven recovered #73 historical governance documents, local D’Lice `AGENTS.md`/Superpowers method, current feature matrix and live staging checkpoint.
+- #107, #104 and #71 remain open Drafts; their code/security changes still require their respective dependency and release-gate review.
+
+No migration dated 20261120 has been applied to shared staging. Supabase migration history remains 49 rows through `20261119182606`. Owner metadata is still absent, P01–P09 are still NOT RUN, GitHub rulesets/branch protection are NOT VERIFIED, and release flags remain false.
