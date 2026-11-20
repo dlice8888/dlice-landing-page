@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
   };
   if (!required.repository_id || !required.repository_owner_id ||
       !exact("repository", "dlice8888/dlice-landing-page") ||
+      !exact("sub", "repo:dlice8888/dlice-landing-page:environment:staging") ||
       !exact("repository_id", required.repository_id) ||
       !exact("repository_owner_id", required.repository_owner_id) ||
       !exact("ref", required.ref) ||
