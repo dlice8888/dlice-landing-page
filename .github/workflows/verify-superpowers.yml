@@ -7,6 +7,10 @@ on:
       - "tools/superpowers"
       - "AGENTS.md"
       - "docs/engineering/superpowers-integration.md"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
       - ".github/workflows/verify-superpowers.yml"
   push:
     branches:
@@ -17,6 +21,8 @@ on:
       - "tools/superpowers"
       - "AGENTS.md"
       - "docs/engineering/superpowers-integration.md"
+      - "supabase/functions/dlice-orders/index.ts"
+      - "tests/contracts/production-cors-contract.test.mjs"
       - ".github/workflows/verify-superpowers.yml"
   workflow_dispatch:
 
@@ -33,6 +39,18 @@ jobs:
         with:
           submodules: recursive
           persist-credentials: false
+
+      - name: Set up Node for repository contracts
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify production CORS contract
+        run: node --test tests/contracts/production-cors-contract.test.mjs
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.8
+      - name: Type-check production Edge Function
+        run: deno check supabase/functions/dlice-orders/index.ts
 
       - name: Verify pinned Superpowers commit
         shell: bash
