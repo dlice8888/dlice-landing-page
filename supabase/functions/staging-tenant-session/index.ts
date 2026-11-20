@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
 
   const { data: userResult, error: userError } = await admin.auth.admin.getUserById(userId);
   const user = userResult?.user;
-  if (userError || !user?.email || user.id !== userId || user.banned_until) {
+  if (userError || !user?.email || user.id !== userId || Boolean((user as unknown as { banned_until?: string | null }).banned_until)) {
     return json({ error: "staging_auth_identity_unavailable" }, 403);
   }
   const { data: profile, error: profileError } = await admin.from("admin_profiles")
