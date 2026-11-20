@@ -154,3 +154,21 @@ test("runtime probe evidence masks user, tenant, and branch identifiers in every
   const definitions = probe.slice(probe.indexOf("const requiredProbes = ["), probe.indexOf("];", probe.indexOf("const requiredProbes = [")));
   assert.doesNotMatch(definitions, /tenantA \?\?|tenantB \?\?|branchA \?\?|branchB \?\?/);
 });
+
+
+test("closed PR #31 cross-module negative scenarios are carried forward using dynamic A/B fixtures", () => {
+  assert.match(probe, /verifyBranchScopedList\("A", "erp-list-purchase-orders", "purchase_orders", "P2P"\)/);
+  assert.match(probe, /verifyBranchScopedList\("B", "erp-list-purchase-orders", "purchase_orders", "P2P"\)/);
+  assert.match(probe, /verifyBranchScopedList\("A", "erp-list-fulfillment-orders", "orders", "O2C"\)/);
+  assert.match(probe, /verifyBranchScopedList\("B", "erp-list-fulfillment-orders", "orders", "O2C"\)/);
+  assert.match(probe, /verifyFinanceLeastPrivilege\("A"\)/);
+  assert.match(probe, /verifyFinanceLeastPrivilege\("B"\)/);
+  assert.match(probe, /erp-create-settlement/);
+  assert.match(probe, /erp-create-cash-reconciliation/);
+  assert.match(probe, /erp-receive-purchase-order/);
+  assert.match(probe, /erp-update-fulfillment/);
+  assert.match(probe, /erp-transition-stock-transfer/);
+  assert.match(probe, /erp-post-stock-count/);
+  assert.match(probe, /impossibleIdUsed: true/);
+  assert.match(probe, /supplementalResults\.every\(\(result\) => result\.status === "PASS"\)/);
+});
