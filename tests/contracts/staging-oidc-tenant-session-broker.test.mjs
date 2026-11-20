@@ -12,7 +12,7 @@ test("tenant isolation workflow uses GitHub OIDC and no username/password secret
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL/);
   assert.match(workflow, /staging-tenant-session/);
-  assert.match(workflow, /STAGING_TENANT_\$\{slot\}_ACCESS_TOKEN/);
+  assert.match(workflow, /STAGING_TENANT_%s_ACCESS_TOKEN=%s/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TENANT_[AB]_(USERNAME|PASSWORD)/);
   assert.doesNotMatch(workflow, /STAGING_SUPABASE_(SERVICE_ROLE|SECRET)_KEY/);
   assert.match(workflow, /environment:\s*staging/);
