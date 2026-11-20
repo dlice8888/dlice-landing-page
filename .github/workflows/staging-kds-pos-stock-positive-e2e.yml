@@ -7,9 +7,6 @@ on:
         required: true
         type: boolean
         default: false
-  schedule:
-    # Daily 09:17 WIB; schedule is active on the repository default branch main.
-    - cron: "17 2 * * *"
 permissions:
   contents: read
 concurrency:
@@ -17,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   kds-pos-stock:
-    if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') && (github.event_name == 'schedule' || inputs.confirm_staging_mutations == true) }}
+    if: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging') && github.event_name == 'workflow_dispatch' && inputs.confirm_staging_mutations == true }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: staging
