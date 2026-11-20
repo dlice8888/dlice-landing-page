@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18T20:05:00+07:00",
+  "snapshot_at": "2026-11-20",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2137,144 +2137,127 @@
   "current_platform_evidence": {
     "supabase_project": "higoadrzxnhzbbwhdbmh",
     "supabase_status": "ACTIVE_HEALTHY",
+    "postgres_major": 17,
     "public_tables": 64,
     "public_tables_rls_enabled": 64,
     "public_tables_rls_disabled": 0,
-    "public_policies": 64,
     "public_functions": 29,
-    "security_definer_functions": 5,
-    "staging_migrations": 46,
-    "source_migration_files": 45,
-    "missing_source_migration": "20261022140302",
-    "latest_staging_migration": "20261027140145",
-    "pr64_migration_applied": false,
-    "tenants": 2,
-    "branches": 155,
+    "function_execute_grants": {
+      "anon": 0,
+      "authenticated": 0,
+      "service_role": 29,
+      "public": 0
+    },
+    "applied_migrations": 49,
+    "latest_applied_migration": "20261119182606",
+    "total_tenants": 2,
+    "active_tenants": 1,
+    "total_branches": 155,
+    "active_branches": 5,
     "active_tenant_memberships": 3,
-    "worker_memberships": 2,
-    "worker_role": "branch_manager",
-    "worker_permission_sets_equal": true,
-    "worker_A_active_branch_assignments": 2,
-    "worker_B_active_branch_assignments": 1,
-    "cross_tenant_assignment_rows": 0,
-    "inventory_balance_rows_per_QA_branch": 2,
-    "active_owner_profile": 1,
-    "owner_auth_user_exists": true,
-    "owner_app_metadata_platform_owner_boolean_true": 0,
-    "security_advisor": {
-      "leaked_password_protection": "WARN_DISABLED"
+    "distinct_active_members": 3,
+    "active_owner_profiles": 1,
+    "branch_assignments": 4,
+    "branch_inventory_rows": 4,
+    "pos_sales": 6,
+    "pos_shifts": 7,
+    "orders": 7,
+    "order_items": 21,
+    "payment_records": 6,
+    "kitchen_tickets": 6,
+    "kitchen_ticket_items": 6,
+    "stock_movements": 26,
+    "stock_transfers": 0,
+    "stock_counts": 0,
+    "purchase_requisitions": 0,
+    "purchase_orders": 0,
+    "purchase_receipts": 0,
+    "production_batches": 0,
+    "production_consumptions": 0,
+    "inventory_waste_events": 0,
+    "payment_settlements": 0,
+    "cash_reconciliations": 0,
+    "finance_journal_entries": 0,
+    "fiscal_periods": 0,
+    "branch_expenses": 0,
+    "branch_operation_checklist_runs": 1,
+    "shift_handover_records": 0,
+    "integration_connections": 0,
+    "integration_outbox": 0,
+    "backup_restore_runs": 0,
+    "notification_log": 3,
+    "owner_authorization": {
+      "active_owner_profile_exists": true,
+      "existing_auth_identity_must_be_used": true,
+      "app_metadata_platform_owner_true": "NOT VERIFIED / KNOWN ABSENT IN LAST AUTH AUDIT",
+      "protected_allowlist": "NOT VERIFIED",
+      "completion": "BLOCKED — requires authorized Supabase Auth Admin"
     },
-    "performance_advisor": {
-      "unindexed_foreign_keys": 26,
-      "unused_indexes": 49
+    "release_protection": {
+      "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "required_status_checks": "NOT VERIFIED",
+      "independent_review_policy": "USER WAIVES EXTRA INDEPENDENT REVIEW AS AN AUDIT PREREQUISITE; actual active GitHub rules still apply",
+      "staging_deployment_reviewers": "NOT VERIFIED",
+      "admin_mutation_available_via_current_connector": false
     },
-    "public_table_grants": {
-      "anon_authenticated_select": [
-        "public.products"
-      ]
+    "tenant_acceptance": {
+      "workflow": "manual-dispatch-only on staging after #110 change",
+      "required_probes": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09"
+      ],
+      "runtime_executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "result": "NOT RUN",
+      "latest_candidate_head": "df43b2b4707186ea31d7068f85f7caa8e252c057",
+      "latest_static_quality_for_exact_head": "NOT OBSERVED",
+      "latest_vercel": "SUCCESS",
+      "environment_secret_validity": "NOT VERIFIED — GitHub Environment API unavailable"
     },
-    "owner_auth_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52-55,92-100"
-    },
-    "release_gate_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52,135-144"
-    },
-    "deployed_edge_function": {
-      "name": "dlice-orders",
-      "version": 69,
-      "status": "ACTIVE",
-      "verify_jwt": false,
-      "sha256": "d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40"
-    },
-    "inventory_read_finding": {
-      "deployed_behavior": "erp-list-inventory is in TENANT_SCOPE_UNCERTIFIED_ACTIONS and returns HTTP 423 for non-platform-owner while release flag is false; legacy handler queries global inventory_items.",
-      "source": {
-        "file": "supabase/functions/dlice-orders/index.ts",
-        "lines": "71,454-455,1266-1275"
+    "pending_migrations": [
+      {
+        "pr": 102,
+        "file": "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
       },
-      "remediation_pr": 85,
-      "candidate_commit": "63575c051112b7ec621afc4f96a1beef62238c2b",
-      "candidate_behavior": "requires inventory permission, branch_id, active membership and exact active assignment; queries branch_inventory joined to inventory_items; no global catalog scan",
-      "ci_run": 44304941471,
-      "status": "PARTIAL"
-    },
-    "admin_profile_role_constraint": [
-      "sales_admin",
-      "owner"
-    ],
-    "worker_global_profile_roles": [
-      "sales_admin",
-      "sales_admin"
-    ],
-    "ordinary_worker_profile_type_available": false,
-    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner. PR #86 introduces branch_worker source-only; no staging profiles changed.",
-    "active_cross_tenant_assignment_rows": 0,
-    "branch_worker_role_candidate": {
-      "pr": 86,
-      "head": "eeda0bdd715dc5477969be3196c6800d6a23eac2",
-      "migration": "20261118190000_add_branch_worker_profile_role.sql",
-      "quality_run": 44306779658,
-      "quality_result": "SUCCESS",
-      "disposable_migration_replay_run": 44306779612,
-      "disposable_migration_replay_result": "SUCCESS",
-      "staging_migration_applied": false
-    },
-    "p03_probe_candidate": {
-      "pr": 87,
-      "head": "a44f27117c33f432ef467b5b52716bea028e0471",
-      "quality_run": 44307838730,
-      "quality_result": "SUCCESS",
-      "tenant_runtime_contract_tests": "7/7",
-      "masked_identifiers": true,
-      "multiple_same_tenant_assignments_allowed": true,
-      "staging_runtime_executed": false
-    },
-    "vercel_project": {
-      "name": "dlice-landing-page",
-      "password_protection_enabled": false,
-      "sso_protection_enabled": true,
-      "sso_deployment_type": "all_except_custom_domains",
-      "trusted_ips_enabled": false,
-      "preview_latest_status": "READY",
-      "production_deployment_performed": true,
-      "production_deployment_exception": {
-        "type": "unintended_documentation_only_deployment",
-        "initial_deployment_id": "dpl_FV4dAmvTdERXQupSkcvqvReXqqXP",
-        "initial_commit": "eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1",
-        "restoration_deployment_id": "dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e",
-        "restoration_commit": "ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4",
-        "production_alias": "dlice.vercel.app",
-        "alias_points_to_restoration": true,
-        "restored_main_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "preincident_parent_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "tree_restored_exactly": true,
-        "application_code_changed": false,
-        "production_database_or_auth_changed": false
+      {
+        "pr": 103,
+        "file": "20261120110000_command_center_summary.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 105,
+        "file": "20261120120000_atomic_branch_checklist_audit.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 109,
+        "file": "20261120130000_enforce_same_tenant_stock_transfers.sql",
+        "status": "OPEN DRAFT; NOT APPLIED"
+      },
+      {
+        "pr": 111,
+        "file": "20261120140000_staging_machine_session_issuance_audit.sql",
+        "status": "FEATURE BRANCH ONLY; NOT APPLIED"
       }
+    ],
+    "latest_pr_inventory": {
+      "actual_prs": 109,
+      "merged": 76,
+      "closed_without_merge": 26,
+      "open": 7,
+      "latest_issue_number": 111
     },
-    "source_migration_files_staging": 45,
-    "migration_source_recovery_candidate": {
-      "pr": 88,
-      "branch": "fix/recover-migration-source-20261022140302-20261118",
-      "file": "supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql",
-      "source_of_truth": "staging supabase_migrations.schema_migrations version 20261022140302",
-      "applied_name": "add_missing_fk_supporting_indexes",
-      "index_statements": 9,
-      "normalized_exact_match": true,
-      "staging_applied": false,
-      "quality_and_disposable_replay": "PASS",
-      "staging_indexes_exist": true,
-      "staging_index_count": 9,
-      "index_definition_verified": true,
-      "quality_run_id": 44309825502,
-      "disposable_replay_run_id": 44309825526,
-      "disposable_replay_job_id": 134821567927,
-      "disposable_replay_log": "Recovered migration applied successfully in disposable local database; complete repository migration set finished.",
-      "pr_status": "OPEN_DRAFT",
-      "preview": "READY"
-    }
+    "production_changes": "NONE in this audit"
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -2324,5 +2307,143 @@
     87,
     88
   ],
-  "open_pr_count": 18
+  "open_pr_count": 18,
+  "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
+  "current_reaudit": {
+    "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
+    "domains": [
+      {
+        "number": 1,
+        "name": "Executive Command Center",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "PR #103 Command Center implementation is merged to staging source, but its migration is not applied; owner authorization, KPI reconciliation, and 150-branch drill-down remain unproven."
+      },
+      {
+        "number": 2,
+        "name": "POS & Checkout",
+        "feature_count": 13,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six POS sales, seven shifts and six payment records exist; complete order/payment/fulfillment/settlement reconciliation and offline fault-injection E2E are not proven."
+      },
+      {
+        "number": 3,
+        "name": "Order Management",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Seven orders and 21 order items exist; multi-channel routing, exception handling and consistent end-to-end status reconciliation remain unproven."
+      },
+      {
+        "number": 4,
+        "name": "Kitchen & Production",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six kitchen tickets and six ticket items exist; production batches and production consumptions are zero. KDS-to-POS-to-stock positive reconciliation remains unproven."
+      },
+      {
+        "number": 5,
+        "name": "Menu, Recipe & Product Engineering",
+        "feature_count": 11,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Product/recipe structures and version activation exist; nested BOM, yield/unit conversion, allergens, food cost and POS/production approved-version parity remain unproven."
+      },
+      {
+        "number": 6,
+        "name": "Inventory & Warehouse",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Four branch-inventory rows and 26 stock movements exist; transfers and stock counts are zero. PR #109 is not integrated and no full ledger reconciliation is accepted."
+      },
+      {
+        "number": 7,
+        "name": "Procurement & Supplier",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Purchase requisitions, purchase orders and receipts are zero. PR-to-approval-to-PO-to-GRN-to-AP positive E2E remains unproven."
+      },
+      {
+        "number": 8,
+        "name": "Branch Operations",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One branch checklist run exists. Atomic checklist migration #105 is in staging source but not applied; multi-branch SOP/audit rollback acceptance remains unproven."
+      },
+      {
+        "number": 9,
+        "name": "Delivery & Fulfillment",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Delivery/final-mile provider integration, courier booking, tracking and proof-of-delivery reconciliation are not evidenced."
+      },
+      {
+        "number": 10,
+        "name": "CRM, Loyalty & Marketing",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "No CRM/loyalty customer, consent, points, campaign or redemption lifecycle is accepted."
+      },
+      {
+        "number": 11,
+        "name": "Finance & Accounting",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Settlements, cash reconciliations, journal entries and fiscal periods are zero; Record-to-Report and close/reopen reconciliation remain unproven."
+      },
+      {
+        "number": 12,
+        "name": "HR & Workforce",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Job-position scaffolding exists; employee lifecycle, attendance, scheduling, payroll and labor-cost reconciliation remain unproven."
+      },
+      {
+        "number": 13,
+        "name": "Franchise & Expansion",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Franchise agreement, site approval, royalty, compliance and franchisee reporting lifecycle are not evidenced."
+      },
+      {
+        "number": 14,
+        "name": "BI & Analytics",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Funnel metrics and source operational data exist; KPI dictionary, forecasting, cohort comparison and anomaly-to-action are not accepted."
+      },
+      {
+        "number": 15,
+        "name": "Admin, Identity & Access Control",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One active Owner profile, three active memberships and four branch assignments exist; platform Owner Auth metadata/allowlist remains blocked and role/branch E2E is not run."
+      },
+      {
+        "number": 16,
+        "name": "SaaS Tenant Management",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Two tenant records exist but only one is active; no proven subscription, entitlement, billing, metering, suspension, export or offboarding lifecycle. P01-P09 not run."
+      },
+      {
+        "number": 17,
+        "name": "Integrations & Automation",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Three notification-log records exist; integration connections and outbox are zero. Provider callbacks, durable retry/dead-letter and integration health are not proven."
+      },
+      {
+        "number": 18,
+        "name": "Quality, Compliance & Security",
+        "feature_count": 20,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "64/64 public tables have RLS; 29 functions show anon/authenticated EXECUTE=0 and service_role=29. This is not a substitute for P01-P09, backup/restore, 150-branch load, food-safety controls or verified GitHub release protection."
+      }
+    ],
+    "prior_feature_status_distribution": {
+      "PARTIAL": 81,
+      "NOT VERIFIED": 99,
+      "BLOCKED": 9
+    },
+    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS."
+  }
 }
