@@ -1,0 +1,113 @@
+name: Staging Workflow Mutation Policy Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily policy-only audit; this workflow never authenticates to staging or writes business data.
+    - cron: "37 2 * * *"
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - ".github/workflows/staging-procurement-positive-e2e.yml"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - ".github/workflows/staging-mutation-policy-audit.yml"
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - ".github/workflows/staging-procurement-positive-e2e.yml"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - ".github/workflows/staging-mutation-policy-audit.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-workflow-mutation-policy-audit
+  cancel-in-progress: true
+
+jobs:
+  policy-audit:
+    name: Verify staging mutation and audit workflow separation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Enforce workflow trigger and permission policy
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+
+          const files = {
+            kds: ".github/workflows/staging-kds-pos-stock-positive-e2e.yml",
+            procurement: ".github/workflows/staging-procurement-positive-e2e.yml",
+            tenant: ".github/workflows/staging-tenant-isolation-acceptance.yml",
+            audit: ".github/workflows/staging-mutation-policy-audit.yml",
+          };
+          const source = Object.fromEntries(Object.entries(files).map(([key, path]) => [key, readFileSync(path, "utf8")]));
+          const failures = [];
+          const pass = (message) => console.log("PASS " + message);
+          const fail = (message) => failures.push(message);
+
+          function triggerBlock(name, text) {
+            const match = text.match(/^on:\s*\r?\n([\s\S]*?)(?=^permissions:)/m);
+            if (!match) {
+              fail(name + ": trigger block missing or malformed");
+              return "";
+            }
+            return match[1];
+          }
+
+          function assertManualOnly(name, text) {
+            const block = triggerBlock(name, text);
+            if (!/^  workflow_dispatch:\s*$/m.test(block)) fail(name + ": workflow_dispatch trigger missing");
+            if (/^  (push|schedule|pull_request|pull_request_target):/m.test(block)) fail(name + ": automatic or PR trigger is not allowed");
+            else pass(name + ": manual-only trigger");
+          }
+
+          for (const name of ["kds", "procurement", "tenant"]) assertManualOnly(name, source[name]);
+
+          const auditTriggers = triggerBlock("audit", source.audit);
+          if (!/^  workflow_dispatch:\s*$/m.test(auditTriggers)) fail("audit: manual trigger missing");
+          if (!/^  schedule:\s*$/m.test(auditTriggers) || !/cron:\s*"37 2 \* \* \*"/.test(auditTriggers)) fail("audit: daily schedule missing");
+          else pass("audit: separate daily policy-only schedule");
+
+          function assertConfirmation(name, text) {
+            if (!/confirm_staging_mutations:\s*[\s\S]{0,220}?required:\s*true[\s\S]{0,120}?type:\s*boolean[\s\S]{0,120}?default:\s*false/.test(text)) {
+              fail(name + ": required boolean confirmation defaulting to false is missing");
+            } else pass(name + ": explicit confirmation input is required");
+            if (!/github\.ref\s*==\s*['"]refs\/heads\/staging['"]/.test(text)) fail(name + ": job is not restricted to staging ref");
+            if (!/github\.event_name\s*==\s*['"]workflow_dispatch['"]/.test(text)) fail(name + ": job is not restricted to workflow_dispatch");
+            if (!/inputs\.confirm_staging_mutations\s*==\s*true/.test(text)) fail(name + ": job does not require confirmation=true");
+            if (/github\.event_name\s*==\s*['"]schedule['"]|github\.event_name\s*==\s*['"]push['"]/.test(text)) fail(name + ": mutating job still permits automatic execution");
+            else pass(name + ": job gate requires staging + manual dispatch + confirmation=true");
+          }
+
+          assertConfirmation("kds", source.kds);
+          assertConfirmation("procurement", source.procurement);
+
+          if (!/github\.ref\s*==\s*['"]refs\/heads\/staging['"]/.test(source.tenant)) fail("tenant: acceptance job is not restricted to staging");
+          else pass("tenant: authenticated probes restricted to staging");
+
+          if (!/^permissions:\s*\r?\n  contents:\s*read\s*$/m.test(source.audit)) fail("audit: permissions must be contents: read only");
+          else pass("audit: contents: read only");
+          if (/id-token:\s*write|secrets\./.test(source.audit)) fail("audit: must not request OIDC token or reference repository secrets");
+          else pass("audit: no OIDC token, staging secrets, or workload credentials");
+          if (/^\s*environment:\s*staging\s*$/m.test(source.audit)) fail("audit: must not attach staging Environment");
+          else pass("audit: no staging Environment");
+
+          if (failures.length) {
+            for (const item of failures) console.error("FAIL " + item);
+            process.exitCode = 1;
+          } else {
+            console.log("POLICY AUDIT PASS: mutation workflows are manual-only; scheduled workflow is policy-only.");
+          }
+          NODE
