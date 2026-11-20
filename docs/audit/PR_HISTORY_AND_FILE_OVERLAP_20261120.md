@@ -608,6 +608,7 @@ This supersedes any assumption that staging has no Owner profile. It has an Owne
 This section is the current read-only checkpoint. Sections 1–17 are retained as historical evidence and must not be interpreted as current PR totals or current runtime proof.
 
 ### Repository and PR checkpoint
+- The paginated repository PR listing returned **109 actual pull requests** (not 111; issue-number gaps exist): **75 merged**, **26 closed without merge**, and **8 open**. This is the current count at this checkpoint; older totals in historical sections are superseded.
 - Latest PR number observed: **#111**. This does not mean there are 111 PRs; issue-number gaps exist.
 - Current relevant open PRs:
   - #71 — legacy staging fixture workflow; remains a runtime-gate predecessor, not proof of tenant isolation.
