@@ -61,7 +61,8 @@ Deno.serve(async (req) => {
 
   const userId = Deno.env.get(slot === "A" ? "STAGING_TENANT_A_USER_ID" : "STAGING_TENANT_B_USER_ID") ?? "";
   const otherId = Deno.env.get(slot === "A" ? "STAGING_TENANT_B_USER_ID" : "STAGING_TENANT_A_USER_ID") ?? "";
-  if (!/^[0-9a-f-]{36}$/i.test(userId) || userId === otherId) return json({ error: "staging_identity_configuration_invalid" }, 503);
+  const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  if (!isUuid(userId) || !isUuid(otherId) || userId === otherId) return json({ error: "staging_identity_configuration_invalid" }, 503);
 
   const { data: userResult, error: userError } = await admin.auth.admin.getUserById(userId);
   const user = userResult?.user;
@@ -71,6 +72,13 @@ Deno.serve(async (req) => {
   const { data: profile, error: profileError } = await admin.from("admin_profiles")
     .select("is_active").eq("user_id", userId).maybeSingle();
   if (profileError || profile?.is_active !== true) return json({ error: "staging_identity_inactive" }, 403);
+  const { data: memberships, error: membershipError } = await admin.from("tenant_memberships")
+    .select("tenant_id,role,status").eq("user_id", userId).eq("status", "active");
+  const activeTenantIds = new Set((memberships ?? []).map((membership) => membership.tenant_id));
+  if (membershipError || !memberships?.length || activeTenantIds.size !== 1 ||
+      memberships.some((membership) => membership.role !== "branch_manager" || !membership.tenant_id)) {
+    return json({ error: "staging_tenant_membership_not_eligible" }, 403);
+  }
 
   // Reserve this run/attempt/slot before issuing. Unique constraints make replay/concurrent
   // requests fail closed. The migration must be applied before enabling this endpoint.
