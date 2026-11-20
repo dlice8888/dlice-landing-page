@@ -3,6 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
 SELECT plan(23);
+SELECT set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 
 SELECT throws_ok(
@@ -43,6 +44,7 @@ INSERT INTO auth.users (
   ('b0000000-0000-4000-8000-000000000013', 'authenticated', 'authenticated', 'legacy-owner@accounts.dlice.internal', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT set_config('request.jwt.claim.role', 'service_role', true);
 
 CREATE OR REPLACE FUNCTION public.test_reject_bootstrap_audit()
