@@ -41,6 +41,8 @@ jobs:
           deno-version: v2.9.8
       - name: Type-check staging OIDC session broker
         run: deno check supabase/functions/staging-tenant-session/index.ts
+      - name: Test GitHub OIDC claim allowlist and rejection cases
+        run: deno test supabase/functions/staging-tenant-session/claims_test.ts
       - name: Run staging OIDC session broker security contracts
         run: node --test tests/contracts/staging-oidc-tenant-session-broker.test.mjs
       - name: Run tenant permission unit tests
