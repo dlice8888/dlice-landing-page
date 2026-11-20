@@ -994,3 +994,12 @@ The user has explicitly waived an additional independent-review prerequisite for
 ## 25. CI observability qualification for #111
 
 The GitHub workflow-run reader exposed to this audit returns only pull-request-triggered runs; it does not expose all push-triggered workflow runs. Therefore the precise statement is: **an exact-head GitHub Actions result for #111 cannot currently be verified through the connected integration**. The combined commit status currently exposes only the Vercel context, which failed due to a build-rate-limit context and is not a source-code diagnostic. Do not state that GitHub Actions definitely did not run, and do not treat Vercel as the required quality CI. An authorized maintainer must inspect the Actions page for exact head `b5e3edb345ac07ca474d30951ccbd14bda1f8e89` and provide the disposable replay result before #111 can advance.
+
+
+## 26. Preserve D’Lice engineering method without importing an external submodule
+
+Closed PR #62's project-specific engineering instructions were important even though the upstream Superpowers submodule was not required for runtime. To avoid losing the method while avoiding an unreviewed external dependency, this audit branch now contains:
+- Root `AGENTS.md` with the D’Lice engineering operating standard: clarify, plan, TDD/reproduce, review full diffs, run exact-head checks, integrate PR/migrations incrementally, and keep production/staging behind explicit gates.
+- `docs/engineering/superpowers-integration.md` recording the local method and provenance from #62 without adding `.gitmodules`, a submodule gitlink or an automatic upstream fetch.
+
+These are documentation/governance changes in PR #108's branch, not yet merged into staging. They do not install or activate a third-party agent plugin. The user's saved Superpowers work standard remains the working method for this audit.
