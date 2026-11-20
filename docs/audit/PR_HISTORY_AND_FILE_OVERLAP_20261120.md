@@ -1003,3 +1003,14 @@ Closed PR #62's project-specific engineering instructions were important even th
 - `docs/engineering/superpowers-integration.md` recording the local method and provenance from #62 without adding `.gitmodules`, a submodule gitlink or an automatic upstream fetch.
 
 These are documentation/governance changes in PR #108's branch, not yet merged into staging. They do not install or activate a third-party agent plugin. The user's saved Superpowers work standard remains the working method for this audit.
+
+
+### Open PR inventory at this checkpoint (6)
+- #111 — OIDC tenant session broker, Draft, rebased on staging, exact-head CI not verifiable through current integration.
+- #109 — same-tenant stock-transfer enforcement, Ready for Review, exact-head 7 relevant workflows SUCCESS; independent review pending.
+- #108 — full PR/file/migration audit and recovered governance artifacts, Draft.
+- #107 — environment-validated Supabase frontend runtime config, Draft.
+- #104 — production CORS source/contract tracking, Draft, targets `main`.
+- #71 — staging tenant fixture externalization, Draft.
+
+All 26 closed-unmerged PR numbers were confirmed in the current repository listing: #1, #2, #3, #9, #21, #22, #31, #38, #43, #62, #63, #64, #73, #74, #76, #77, #79, #80, #82, #83, #85, #86, #87, #93, #95, #101. No additional closed-unmerged PR was omitted from the 26-row disposition table.
