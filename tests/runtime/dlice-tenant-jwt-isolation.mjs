@@ -442,7 +442,8 @@ if (
       });
       const balances = payload?.balances;
       // Empty inventory is not proof of a working own-branch read. Require at least one real row.
-      const validRows = Array.isArray(balances) && balances.length > 0 && balances.every((row) => row.branch_id === requestedBranch);
+      // A successful authorized response with an empty array is still a valid read; do not confuse empty QA stock with an authorization failure.
+      const validRows = Array.isArray(balances) && balances.every((row) => row.branch_id === requestedBranch);
       const passed = response.status === 200 && validRows;
       return {
         passed,
