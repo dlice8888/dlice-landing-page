@@ -1078,3 +1078,13 @@ On exact head `48fe855d5c19b769a05d15597de0f9a9fbd3708a`, all three relevant wor
 The broker's claim allowlist was extracted into a pure validator and unit-tested against wrong repository/owner IDs, wrong ref/workflow/environment, push event, missing protected IDs, malformed run ID/attempt and malformed JTI. The broker additionally enforces active global `sales_admin` profile and exactly one active tenant membership with `branch_manager` role.
 
 This remains source/disposable validation only. No Supabase Function Secrets have been verified/configured, no `staging-tenant-session` Edge Function has been deployed, no audit migration has been applied to shared staging, and P01–P09 have not run. #111 remains Draft/HOLD until authorized staging configuration and runtime broker validation are complete.
+
+
+## 30. PR #112 exact-head validation completed
+
+On exact head `82edeeb848335259aa9076d41de0079f4ae9f6b5`, all three relevant workflows completed SUCCESS:
+- Free quality checks — SUCCESS, including the new Owner metadata boolean / JWT role contract.
+- Staging Kitchen KDS Offline Contract Tests — SUCCESS.
+- Disposable local Supabase migration replay — SUCCESS, including the #102/#105 service-role RPC regression tests and the new Owner metadata pgTAP assertions.
+
+The first replay attempt failed because historical tests only set the legacy single role setting. The tests were corrected to set the full `request.jwt.claims` JSON as well, and the exact-head replay then passed. The migration now has disposable replay evidence; it has **not** been applied to shared staging.
