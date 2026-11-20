@@ -932,3 +932,50 @@ This table is generated from the repository-wide paginated PR listing with diffs
 - #110 now has an explicit manual-dispatch-only trigger for P01–P09, preventing automatic blocked runs on a staging push before Environment preflight. It also records `executed=true/false` explicitly for every probe. The most recent source head is `df43b2b4707186ea31d7068f85f7caa8e252c057`; Vercel Preview is SUCCESS, but a fresh Free quality run for this exact final head has not yet been observed. Do not transfer the earlier `b53e4ee` quality PASS to this later head.
 - #108 audit branch now includes the 7 recovered #73 historical documents and the 109-PR / 78-migration-path cross-reference. Its latest Free quality checks completed SUCCESS on head `2f4604754a9e5261d8f8fd329bca21b7d2ce52b8` before this count addendum; confirm CI again on the final documentation head before treating it as complete.
 - Current connected Supabase project is ACTIVE_HEALTHY; migration history is unchanged at 49 rows. No pending migration was applied.
+
+
+## 23. Current live checkpoint — 20 November 2026 (supersedes earlier counts)
+
+### Repository state
+- Actual PR inventory remains **109** (issue-number gaps exist): **77 merged**, **26 closed without merge**, **6 open**.
+- #106 merged to staging at `cf15f33379a731c1952ec22b5d12739595a21a93`.
+- #110 merged to staging at `78f929dac2b05f436aaa7f50005310166f8a4779`.
+- #109 remains Draft. Exact-head CI has 7 completed successful workflows, including same-tenant transfer regression, disposable migration replay, CORS probes, KDS/offline contract, procurement requisition/receiving contracts and Free quality checks. Vercel Preview is SUCCESS. This is not a staging migration application.
+- #111 has been reconstructed on top of the merged #110 staging head. The old stacked head was preserved in `backup/oidc-stacked-before-rebase-20261120`; the PR head branch now points to `295fdd69922703182e2e1512c79e23b2477f2895`, base `staging`, compare 15 ahead / 0 behind / 9 changed files. The broker now accepts only `workflow_dispatch`, not push events. The workflow remains manual-only and password-free. Exact-head GitHub CI has not yet been observed; Vercel's build-rate-limit failure is not a code test result.
+- The seven historical #73 governance documents remain recovered on this audit branch with explicit 13-Nov historical-snapshot warnings.
+- PR #108 remains a Draft documentation/audit PR; no production or shared-staging changes are included.
+
+### Live Supabase read-only checkpoint
+The connected staging project `higoadrzxnhzbbwhdbmh` is ACTIVE_HEALTHY. Current direct read-only SQL results:
+- Migration history: 49 rows; latest `20261119182606`.
+- Public schema: 64 tables, all 64 RLS-enabled; 64 policies; 29 public functions. `anon` has EXECUTE on 0 functions; `authenticated` on 0; `service_role` on 29.
+- Data inventory: 2 tenants, 155 branches, 3 active tenant memberships across 3 distinct identities, 4 branch assignments, 4 branch inventory rows, 26 stock movements, 0 stock transfers.
+- POS/operations: 6 POS sales and 7 POS shifts. Procurement: 0 purchase orders and 0 purchase receipts. Production: 0 production batches. Finance: 0 settlements, 0 refunds, 0 cash reconciliations, 0 finance journal entries.
+- One active Owner profile exists. Its Auth `app_metadata.platform_owner` key is absent; boolean true is not present. No Auth mutation was performed.
+- Edge Function `dlice-orders` is ACTIVE at version 70 with `verify_jwt=false`; handler-level authorization remains the controlling trust boundary and must be tested at runtime.
+
+These row counts are existence/smoke indicators, not business-flow E2E proof. In particular, empty procurement, production, and finance tables mean those positive flows are not evidenced by current staging data.
+
+### P01–P09 and release protection
+- P01–P09 have **not run**. Required probes executed: 0. This is NOT PASS and does not satisfy the no-BLOCKED/no-SKIPPED acceptance rule.
+- Current `staging` workflow is manual-dispatch-only but still uses the four Environment username/password inputs. Their presence/validity cannot be read through the connected GitHub integration, and this integration exposes no workflow-dispatch action.
+- PR #111 replaces those password inputs with OIDC broker sessions, but its new head CI is not yet observed, its disposable migration replay has not run, its four Supabase Function Secrets are not configured/verified through the available connector, and its Edge Function/migration are not deployed/applied.
+- Existing Owner metadata must be set on the existing Owner identity through authorized Supabase Auth Admin; the connected Supabase tools do not expose Auth Admin metadata mutation.
+- GitHub rulesets, branch protection and required Environment reviewers cannot be read or changed through the connected GitHub actions. Prior ruleset listing was empty and branch-protection reads returned 403; therefore repository release protection remains NOT VERIFIED.
+- Vercel currently reports SSO protection enabled for all deployments except custom domains; password protection and trusted-IP protection are disabled. This is not equivalent to verified GitHub Environment required reviewers or branch rules.
+- Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+### Feature matrix freshness
+`docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json` still contains 18 domains and 189 features. The 18-Nov per-feature classification remains **81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED**. It has not been reclassified to PASS based on PR merges or static CI. A separate 20-Nov operational checkpoint was added with the live database/repository evidence above and explicitly records that per-feature statuses were not re-audited. This avoids falsely presenting stale feature statuses as fresh runtime acceptance.
+
+### Next execution sequence
+1. Observe exact-head GitHub CI for #111; fix any failures; run disposable replay for `20261120140000_staging_machine_session_issuance_audit.sql`.
+2. Authorized Supabase Admin configures OIDC Function Secrets for repository/owner IDs and the two existing distinct Auth UUIDs; validate broker against wrong repo/ref/event, invalid/expired token, replay, missing secrets and identity mismatch before deployment.
+3. Authorized GitHub admin verifies Environment protection and triggers the workflow on trusted `staging`. If staying on the legacy path, validate the four existing A/B username/password secrets without exposing values. If moving to OIDC, configure the four Supabase Function Secrets and deploy only after CI/disposable replay.
+4. Run P01–P09. Require nine executed probes, all expected outcomes, no BLOCKED/SKIPPED, plus all supplemental direct-table/RPC negative tests passing.
+5. Complete existing Owner `platform_owner=true` metadata through Auth Admin and verify the protected allowlist; verify GitHub rulesets/branch protection and Vercel deployment protection.
+6. Only then complete #109 review and one-at-a-time migration reconciliation for #102, #103, #105, #109. #106 is source parity only; #111 OIDC migration is separate.
+7. Re-run POS–KDS–inventory, procurement, finance, negative tenant tests, backup/restore, and staged load at 1→10→25→50→100→150 branches. Do not infer capacity from the current 155 branch rows.
+
+### Review policy clarification
+The user has explicitly waived an additional independent-review prerequisite for #106 and #110 when technical checks pass. Both are already merged. This does not fabricate a GitHub approval or bypass an active branch rule. PR #109 remains subject to the user's separately stated independent review sequence.
