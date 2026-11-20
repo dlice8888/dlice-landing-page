@@ -2,14 +2,9 @@ name: Staging Tenant Isolation Acceptance
 
 # Run only from the trusted staging branch; never expose staging credentials to PR code.
 on:
+  # Explicit manual dispatch only: prevent an unverified Environment from
+  # generating a BLOCKED acceptance run automatically on every staging push.
   workflow_dispatch:
-  push:
-    branches: [staging]
-    paths:
-      - "tests/runtime/dlice-tenant-jwt-isolation.mjs"
-      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
-      - "supabase/functions/dlice-orders/index.ts"
-      - "supabase/functions/dlice-orders/tenant-permissions.ts"
 
 permissions:
   contents: read
