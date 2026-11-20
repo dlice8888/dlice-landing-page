@@ -718,3 +718,208 @@ The latest #110 head after the empty-inventory test clarification is `b53e4ee4ee
 - P01–P09 have not run. The workflow should be triggered from `staging` only after an admin confirms the six required credential/configuration inputs without disclosing values. Required outcome: P01–P09 all executed, all expected outcomes pass, no BLOCKED/SKIPPED, and no supplemental negative test fails.
 - The seven #73 audit documents have been restored to this branch with a warning that they are historical snapshots dated 13 November 2026. Their old branch counts and protection/migration findings are not current operational evidence.
 - User policy update: a separate reviewer is not an extra prerequisite imposed by this audit. Technical acceptance is based on exact-head source review and all relevant checks. Do not fabricate a second identity or an independent approval. Actual repository rules, if any are active, still govern merge operations.
+
+
+## 21. Complete 109-PR inventory and migration cross-reference
+
+This table is generated from the repository-wide paginated PR listing with diffs enabled at the current checkpoint. It includes all 109 actual PRs (issue numbering has gaps), not merely the latest or open PRs. File counts are parsed from each PR diff. Migration filenames are shown when a migration path appears in that PR's diff. A PR can mention the same migration as a later PR because of recovery, version reconciliation, or a superseding implementation; that is why PR counts and applied migration counts are not interchangeable.
+
+| PR | State | Subject | Base ← head | Diff files | Migration paths in diff |
+|---:|---|---|---|---:|---|
+| #111 | OPEN/DRAFT | security(ci): replace staging tenant test passwords with GitHub OIDC sessions | `fix/tenant-isolation-discover-fixtures-20261120` ← `feat/staging-oidc-tenant-session-broker-20261120` | 9 | `20261120140000_staging_machine_session_issuance_audit.sql` |
+| #110 | OPEN/READY | test(security): discover staging tenant fixtures from authenticated memberships | `staging` ← `fix/tenant-isolation-discover-fixtures-20261120` | 6 | — |
+| #109 | OPEN/DRAFT | security(stock): enforce same-tenant stock transfers | `staging` ← `security/stock-transfer-same-tenant-20261120` | 7 | `20261120130000_enforce_same_tenant_stock_transfers.sql` |
+| #108 | OPEN/DRAFT | docs(audit): add full PR history and file-overlap inventory | `staging` ← `docs/pr-history-inventory-20261120` | 8 | — |
+| #107 | OPEN/DRAFT | feat(frontend): use environment-validated Supabase runtime config | `staging` ← `feat/staging-runtime-config-smoke-20261118` | 6 | — |
+| #106 | MERGED | fix(db): align RPC ACL migration source with staging history | `staging` ← `reconcile/migration-version-rpc-acl-20261120` | 3 | `20261119182606_revoke_default_public_function_execute.sql` |
+| #105 | MERGED | feat(branch-ops): make branch checklist mutations atomic | `staging` ← `feat/branch-ops-atomic-checklist-staging-20261120` | 7 | `20261120120000_atomic_branch_checklist_audit.sql` |
+| #104 | OPEN/DRAFT | security(cors): track production Edge Function source and fail-closed contract | `main` ← `security/production-cors-contract-main-20261120` | 4 | — |
+| #103 | MERGED | feat(erp): add Owner Command Center summary | `staging` ← `feat/command-center-summary-staging-20261120` | 7 | `20261120110000_command_center_summary.sql` |
+| #102 | MERGED | fix(db): preserve monotonic staging migration order for Owner bootstrap | `staging` ← `fix/migration-order-owner-bootstrap-20261120` | 3 | `20261120100000_atomic_owner_and_tenant_bootstrap.sql` |
+| #101 | CLOSED/UNMERGED | fix(db): restore exact applied FK index migration source | `staging` ← `reconcile/recovered-migration-source-20261022140302-20261120` | 1 | — |
+| #100 | MERGED | fix(staging): consolidate validated tenant and CI contract fixes | `staging` ← `reconcile/staging-ci-and-tenant-fixtures-20261119` | 5 | — |
+| #99 | MERGED | security(db): revoke default client EXECUTE on future public RPCs | `staging` ← `security/revoke-default-public-function-execute-20261119` | 6 | `20261119160000_revoke_default_public_function_execute.sql` |
+| #98 | MERGED | chore(db): reconcile applied branch worker migration source | `staging` ← `chore/reconcile-applied-branch-worker-migration-20261119` | 4 | `20261119155309_add_branch_worker_profile_role.sql` |
+| #97 | MERGED | fix(staging): reconcile CI parser and tenant E2E fixtures | `staging` ← `reconcile/staging-ci-and-tenant-fixtures-20261119` | 5 | — |
+| #96 | MERGED | ci(staging): enable P01-P09 manual dispatch from main | `main` ← `fix/enable-staging-tenant-isolation-dispatch-main-20261119` | 1 | — |
+| #95 | CLOSED/UNMERGED | fix(staging): align tenant isolation roles and E2E config | `staging` ← `fix/staging-tenant-p03-role-and-env-reconciliation-20261119` | 4 | — |
+| #94 | MERGED | fix(security): revoke public execute on stock workflow RPCs | `staging` ← `security/staging-stock-workflow-rpc-acl-20261118` | 4 | `20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql` |
+| #93 | CLOSED/UNMERGED | fix(ci): validate inline ES modules without rejecting top-level await | `staging` ← `fix/staging-module-inline-contract-20261118` | 1 | — |
+| #92 | MERGED | Use staging Environment secrets in KDS/POS/Stock E2E | `staging` ← `fix/kds-staging-env-secret-scope-20261118` | 2 | — |
+| #91 | MERGED | Fix authenticated staging negative-probe preflight | `staging` ← `fix/staging-auth-negative-preflight-20261118` | 3 | — |
+| #90 | MERGED | Add ordinary worker identity and P03 tenant acceptance | `staging` ← `feat/staging-worker-identity-acceptance-20261118` | 8 | `20261118190000_add_branch_worker_profile_role.sql` |
+| #89 | MERGED | Fix staging tenant-isolation probe scope | `staging` ← `fix/staging-tenant-probe-scope-20261118` | 4 | — |
+| #88 | MERGED | fix(db): restore missing applied migration source | `staging` ← `fix/recover-migration-source-20261022140302-20261118` | 4 | `20261022140302_add_missing_fk_supporting_indexes.sql` |
+| #87 | CLOSED/UNMERGED | test(security): verify ordinary worker identity and masked P03 evidence | `staging` ← `test/tenant-p03-worker-identity-evidence-20261118` | 4 | — |
+| #86 | CLOSED/UNMERGED | fix(authz): distinguish branch workers from admin profiles | `staging` ← `fix/tenant-worker-profile-role-20261118` | 6 | `20261118190000_add_branch_worker_profile_role.sql` |
+| #85 | CLOSED/UNMERGED | fix(security): scope inventory reads to authorized branch | `staging` ← `fix/tenant-scoped-inventory-read-20261118` | 3 | — |
+| #84 | MERGED | docs(audit): reconcile FnB OS implementation and release evidence | `staging` ← `audit/fnb-os-continuation-20261118` | 10 | — |
+| #83 | CLOSED/UNMERGED | fix(security): fail closed on missing tenant probe inputs | `staging` ← `fix/p0-tenant-isolation-preflight-20261118` | 4 | — |
+| #82 | CLOSED/UNMERGED | docs(release): normalize staging evidence whitespace | `staging` ← `docs/reconcile-tenant-evidence-20261118` | 2 | — |
+| #81 | MERGED | fix(staging): align tenant negative probes with canonical fixtures | `staging` ← `fix/staging-tenant-negative-probes-canonical-fixtures-20261118` | 3 | — |
+| #80 | CLOSED/UNMERGED | docs(release): record verified staging execution baseline | `staging` ← `docs/staging-execution-baseline-20261117` | 6 | — |
+| #79 | CLOSED/UNMERGED | Feat/enterprise fnb os integration | `main` ← `feat/enterprise-fnb-os-integration` | 135 | `20261017183506_initial_dlice_ordering_schema.sql`<br>`20261017183509_index_ordering_foreign_keys.sql`<br>`20261017183535_atomic_checkout_and_private_payment_proofs.sql`<br>`20261017183537_seed_dlice_catalog.sql`<br>`20261017183540_admin_role_permissions.sql`<br>`20261017183542_product_catalog_storage.sql`<br>`20261017184921_admin_username_accounts.sql`<br>`20261017205317_receipt_payment_notification_gates.sql`<br>`20261017205718_payment_assets_and_settings_seed.sql`<br>`20261019183939_add_free_rate_limiting.sql`<br>`20261019184047_add_privacy_preserving_funnel_metrics.sql`<br>`20261019185240_atomic_payment_verification.sql`<br>`20261019185629_atomic_operational_status_changes.sql`<br>`20261020160307_lock_internal_table_rls.sql`<br>`20261020171825_safe_operational_retention_and_rpc_acl.sql`<br>`20261020185740_align_product_copy_and_prices.sql`<br>`20261020193327_multi_branch_pos_erp_foundation.sql`<br>`20261020193920_index_erp_foreign_keys.sql`<br>`20261020194817_order_fulfillment_production_finance_controls.sql`<br>`20261020195004_atomic_purchase_receiving_and_production_consumption.sql`<br>`20261020201601_branch_routed_online_checkout_capacity.sql`<br>`20261020201654_finance_refund_settlement_and_period_guards.sql`<br>`20261020201715_branch_capacity_on_order_edits.sql`<br>`20261020201812_atomic_payment_settlement_matching.sql`<br>`20261020202158_immutable_final_refund_records.sql`<br>`20261020202449_settlement_match_only_paid_payments.sql`<br>`20261020202805_refund_guard_all_updates.sql`<br>`20261020202830_atomic_recipe_version_activation.sql`<br>`20261020202841_deterministic_production_stock_lock_order.sql`<br>`20261021150339_deny_direct_client_access_on_internal_tables.sql`<br>`20261021151246_branch_timezone_checkout_cutoff.sql`<br>`20261021151524_index_remaining_erp_foreign_keys.sql`<br>`20261021182634_branch_operation_checklists.sql`<br>`20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql`<br>`20261023003006_revoke_direct_client_access_stock_workflows.sql`<br>`20261023160257_purchase_requisitions.sql`<br>`20261023160440_purchase_requisition_conversion_index.sql`<br>`20261023175347_kitchen_kds_idempotency_modifiers.sql`<br>`20261023175514_tenant_branch_platform_foundation.sql`<br>`20261023175946_tenant_branch_integrity_constraints.sql`<br>`20261023180455_kds_pos_deferred_dispatch.sql`<br>`20261025115812_fix_pos_idempotency_digest_schema.sql`<br>`20261027112330_explicit_deny_policies_server_only_tables.sql`<br>`20261027140145_revoke_client_execute_on_trigger_only_functions.sql` |
+| #78 | MERGED | fix(authz): bootstrap tenant membership atomically | `staging` ← `fix/atomic-tenant-bootstrap-staging-20261114` | 7 | `20261114150000_atomic_owner_and_tenant_bootstrap.sql` |
+| #77 | CLOSED/UNMERGED | fix(branch-ops): make checklist audits atomic | `staging` ← `fix/branch-checklist-audit-atomicity-20261114` | 8 | `20261114120000_atomic_branch_checklist_audit.sql` |
+| #76 | CLOSED/UNMERGED | feat(erp): add owner command-center summary | `staging` ← `feat/erp-command-center-foundation` | 9 | `20261114110000_command_center_summary.sql` |
+| #75 | MERGED | fix(authz): resolve tenant-scoped permissions and staging isolation probes | `staging` ← `fix/tenant-scoped-permissions-qa` | 28 | — |
+| #74 | CLOSED/UNMERGED | Staging | `main` ← `staging` | 162 | `20261017183506_initial_dlice_ordering_schema.sql`<br>`20261017183509_index_ordering_foreign_keys.sql`<br>`20261017183535_atomic_checkout_and_private_payment_proofs.sql`<br>`20261017183537_seed_dlice_catalog.sql`<br>`20261017183540_admin_role_permissions.sql`<br>`20261017183542_product_catalog_storage.sql`<br>`20261017184921_admin_username_accounts.sql`<br>`20261017205317_receipt_payment_notification_gates.sql`<br>`20261017205718_payment_assets_and_settings_seed.sql`<br>`20261019183939_add_free_rate_limiting.sql`<br>`20261019184047_add_privacy_preserving_funnel_metrics.sql`<br>`20261019185240_atomic_payment_verification.sql`<br>`20261019185629_atomic_operational_status_changes.sql`<br>`20261020160307_lock_internal_table_rls.sql`<br>`20261020171825_safe_operational_retention_and_rpc_acl.sql`<br>`20261020185740_align_product_copy_and_prices.sql`<br>`20261020193327_multi_branch_pos_erp_foundation.sql`<br>`20261020193920_index_erp_foreign_keys.sql`<br>`20261020194817_order_fulfillment_production_finance_controls.sql`<br>`20261020195004_atomic_purchase_receiving_and_production_consumption.sql`<br>`20261020201601_branch_routed_online_checkout_capacity.sql`<br>`20261020201654_finance_refund_settlement_and_period_guards.sql`<br>`20261020201715_branch_capacity_on_order_edits.sql`<br>`20261020201812_atomic_payment_settlement_matching.sql`<br>`20261020202158_immutable_final_refund_records.sql`<br>`20261020202449_settlement_match_only_paid_payments.sql`<br>`20261020202805_refund_guard_all_updates.sql`<br>`20261020202830_atomic_recipe_version_activation.sql`<br>`20261020202841_deterministic_production_stock_lock_order.sql`<br>`20261021150339_deny_direct_client_access_on_internal_tables.sql`<br>`20261021151246_branch_timezone_checkout_cutoff.sql`<br>`20261021151524_index_remaining_erp_foreign_keys.sql`<br>`20261021182634_branch_operation_checklists.sql`<br>`20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql`<br>`20261022140302_add_missing_fk_supporting_indexes.sql`<br>`20261023003006_revoke_direct_client_access_stock_workflows.sql`<br>`20261023160257_purchase_requisitions.sql`<br>`20261023160440_purchase_requisition_conversion_index.sql`<br>`20261023175347_kitchen_kds_idempotency_modifiers.sql`<br>`20261023175514_tenant_branch_platform_foundation.sql`<br>`20261023175946_tenant_branch_integrity_constraints.sql`<br>`20261023180455_kds_pos_deferred_dispatch.sql`<br>`20261025115812_fix_pos_idempotency_digest_schema.sql`<br>`20261027112330_explicit_deny_policies_server_only_tables.sql`<br>`20261027140145_revoke_client_execute_on_trigger_only_functions.sql`<br>`20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql`<br>`20261119155309_add_branch_worker_profile_role.sql`<br>`20261119160000_revoke_default_public_function_execute.sql`<br>`20261120100000_atomic_owner_and_tenant_bootstrap.sql`<br>`20261120110000_command_center_summary.sql`<br>`20261120120000_atomic_branch_checklist_audit.sql` |
+| #73 | CLOSED/UNMERGED | Audit/branch cleanup 20261113 | `main` ← `audit/branch-cleanup-20261113` | 126 | `20261017183506_initial_dlice_ordering_schema.sql`<br>`20261017183509_index_ordering_foreign_keys.sql`<br>`20261017183535_atomic_checkout_and_private_payment_proofs.sql`<br>`20261017183537_seed_dlice_catalog.sql`<br>`20261017183540_admin_role_permissions.sql`<br>`20261017183542_product_catalog_storage.sql`<br>`20261017184921_admin_username_accounts.sql`<br>`20261017205317_receipt_payment_notification_gates.sql`<br>`20261017205718_payment_assets_and_settings_seed.sql`<br>`20261019183939_add_free_rate_limiting.sql`<br>`20261019184047_add_privacy_preserving_funnel_metrics.sql`<br>`20261019185240_atomic_payment_verification.sql`<br>`20261019185629_atomic_operational_status_changes.sql`<br>`20261020160307_lock_internal_table_rls.sql`<br>`20261020171825_safe_operational_retention_and_rpc_acl.sql`<br>`20261020185740_align_product_copy_and_prices.sql`<br>`20261020193327_multi_branch_pos_erp_foundation.sql`<br>`20261020193920_index_erp_foreign_keys.sql`<br>`20261020194817_order_fulfillment_production_finance_controls.sql`<br>`20261020195004_atomic_purchase_receiving_and_production_consumption.sql`<br>`20261020201601_branch_routed_online_checkout_capacity.sql`<br>`20261020201654_finance_refund_settlement_and_period_guards.sql`<br>`20261020201715_branch_capacity_on_order_edits.sql`<br>`20261020201812_atomic_payment_settlement_matching.sql`<br>`20261020202158_immutable_final_refund_records.sql`<br>`20261020202449_settlement_match_only_paid_payments.sql`<br>`20261020202805_refund_guard_all_updates.sql`<br>`20261020202830_atomic_recipe_version_activation.sql`<br>`20261020202841_deterministic_production_stock_lock_order.sql`<br>`20261021150339_deny_direct_client_access_on_internal_tables.sql`<br>`20261021151246_branch_timezone_checkout_cutoff.sql`<br>`20261021151524_index_remaining_erp_foreign_keys.sql`<br>`20261021182634_branch_operation_checklists.sql`<br>`20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql`<br>`20261023003006_revoke_direct_client_access_stock_workflows.sql`<br>`20261023160257_purchase_requisitions.sql`<br>`20261023160440_purchase_requisition_conversion_index.sql`<br>`20261023175347_kitchen_kds_idempotency_modifiers.sql`<br>`20261023175514_tenant_branch_platform_foundation.sql`<br>`20261023175946_tenant_branch_integrity_constraints.sql`<br>`20261023180455_kds_pos_deferred_dispatch.sql`<br>`20261025115812_fix_pos_idempotency_digest_schema.sql`<br>`20261027112330_explicit_deny_policies_server_only_tables.sql`<br>`20261027140145_revoke_client_execute_on_trigger_only_functions.sql` |
+| #72 | MERGED | security(ci): restrict staging auth probes to trusted pushes | `staging` ← `audit/staging-completion-20261113` | 3 | — |
+| #71 | OPEN/DRAFT | ci(security): externalize and validate staging tenant fixtures | `staging` ← `fix/staging-tenant-fixtures-20261103` | 8 | `20261108090000_atomic_tenant_audit_operations.sql` |
+| #70 | MERGED | fix(ci): support per-tenant staging login and JWT fallback | `staging` ← `fix-staging-tenant-auth-fallback-20261102` | 2 | — |
+| #69 | MERGED | fix(ci): align runtime gate with current staging tenant secrets | `staging` ← `fix-staging-tenant-secret-map-20261102` | 1 | — |
+| #68 | MERGED | ci(security): stage trusted two-tenant runtime isolation gate | `staging` ← `staging-runtime-tenant-gate-20261102` | 2 | — |
+| #67 | MERGED | chore(db): sync applied staging ACL migration source | `staging` ← `staging-acl-source-sync-20261102` | 1 | `20261027140145_revoke_client_execute_on_trigger_only_functions.sql` |
+| #66 | MERGED | test: run public staging P0 checks independently of Owner login | `staging` ← `fix/staging-public-p0-independent-20261030` | 1 | — |
+| #65 | MERGED | fix(auth): set staff password minimum to 8 characters | `staging` ← `fix/staff-password-minimum-8-20261029` | 1 | — |
+| #64 | CLOSED/UNMERGED | docs(security): staging tenant isolation audit and release gates | `staging` ← `audit/tenant-isolation-inventory-20261028` | 12 | `20261028120000_enforce_same_tenant_stock_transfers.sql` |
+| #63 | CLOSED/UNMERGED | Security: fail closed on production order-function CORS | `main` ← `security/production-cors-fail-closed-20261027` | 1 | — |
+| #62 | CLOSED/UNMERGED | Security: revoke client RPC access to trigger-only functions | `staging` ← `security/revoke-trigger-rpc-execute-20261027` | 11 | `20261027140145_revoke_client_execute_on_trigger_only_functions.sql` |
+| #61 | MERGED | audit(staging): reconcile migration provenance and add runtime deny probes | `staging` ← `audit/migration-reconciliation-runtime-tests-20261027` | 21 | `20261017183506_initial_dlice_ordering_schema.sql`<br>`20261017183509_index_ordering_foreign_keys.sql`<br>`20261017183535_atomic_checkout_and_private_payment_proofs.sql`<br>`20261017183537_seed_dlice_catalog.sql`<br>`20261017183540_admin_role_permissions.sql`<br>`20261017183542_product_catalog_storage.sql`<br>`20261017184921_admin_username_accounts.sql`<br>`20261020160307_lock_internal_table_rls.sql`<br>`20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql`<br>`20261023175347_kitchen_kds_idempotency_modifiers.sql`<br>`20261023175514_tenant_branch_platform_foundation.sql`<br>`20261023175946_tenant_branch_integrity_constraints.sql`<br>`20261023180455_kds_pos_deferred_dispatch.sql` |
+| #60 | MERGED | docs(staging): migration drift and denied-access no-mutation evidence | `staging` ← `audit/staging-migration-drift-denial-evidence-20261027` | 1 | — |
+| #59 | MERGED | chore(staging): align deny-policy migration history | `staging` ← `fix/staging-migration-history-align-20261027` | 4 | `20261027112330_explicit_deny_policies_server_only_tables.sql` |
+| #58 | MERGED | fix(security): fail closed for unscoped refund processing | `staging` ← `fix/refund-tenant-scope-guard-20261027` | 4 | — |
+| #57 | MERGED | fix(staging): clarify Owner credential preflight | `staging` ← `fix/staging-owner-preflight-wording` | 1 | — |
+| #56 | MERGED | ci(staging): run POS/KDS E2E after staging branch updates | `feat/staging-kds-offline-tenant-20261024` ← `ci/trigger-staging-pos-e2e-on-push` | 1 | — |
+| #55 | MERGED | chore(db): align migration file with applied staging version | `feat/staging-kds-offline-tenant-20261024` ← `chore/align-applied-migration-version` | 2 | `20261025115812_fix_pos_idempotency_digest_schema.sql` |
+| #54 | MERGED | test(contract): align staging E2E contract with automated vertical slice | `feat/staging-kds-offline-tenant-20261024` ← `test/contracts-match-vertical-slice` | 1 | — |
+| #53 | MERGED | test(staging): isolate required POS to report acceptance slice | `feat/staging-kds-offline-tenant-20261024` ← `test/strict-pos-kds-stock-report-slice-v2` | 2 | — |
+| #52 | MERGED | test(staging): keep QA recipe reusable between E2E runs | `feat/staging-kds-offline-tenant-20261024` ← `fix/qa-recipe-repeatable-e2e` | 1 | — |
+| #51 | MERGED | fix(db): qualify pgcrypto digest in POS idempotency | `feat/staging-kds-offline-tenant-20261024` ← `fix/pos-idempotency-digest-schema` | 3 | `20261025120000_fix_pos_idempotency_digest_schema.sql` |
+| #50 | MERGED | test(staging): scope positive E2E to POS/KDS/stock/report vertical slice | `feat/staging-kds-offline-tenant-20261024` ← `fix/owner-only-pos-e2e-scope` | 1 | — |
+| #49 | MERGED | fix(staging): restore Owner operational profile for POS E2E | `feat/staging-kds-offline-tenant-20261024` ← `fix/staging-owner-profile-e2e` | 2 | — |
+| #48 | MERGED | ci(staging): remove manual dispatch gate for POS/KDS/stock E2E | `feat/staging-kds-offline-tenant-20261024` ← `fix/auto-run-staging-pos-kds-e2e` | 2 | — |
+| #47 | MERGED | test(staging): align KDS E2E contract with Owner-only auth | `feat/staging-kds-offline-tenant-20261024` ← `fix/kds-e2e-owner-auth-contract` | 1 | — |
+| #46 | MERGED | test(staging): unblock POS to KDS to stock E2E without Branch A login | `feat/staging-kds-offline-tenant-20261024` ← `feat/staging-pos-kds-stock-reconciliation-owner-e2e` | 2 | — |
+| #44 | MERGED | ci: run guarded staging E2E schedules from main | `main` ← `fix/staging-e2e-schedule-main-20261025` | 2 | — |
+| #43 | CLOSED/UNMERGED | ci: automate guarded staging procurement E2E | `staging` ← `ci/staging-e2e-auto-schedule-20261025` | 1 | — |
+| #42 | MERGED | [DRAFT] P0: make server-only table denial explicit | `staging` ← `fix/staging-explicit-deny-policies-20261025` | 4 | `20261025010000_explicit_deny_policies_server_only_tables.sql` |
+| #41 | MERGED | Expose guarded staging E2E workflows on the default branch | `main` ← `chore/default-branch-staging-e2e-entrypoints` | 4 | — |
+| #40 | MERGED | [DRAFT] Kitchen/KDS, offline POS and SaaS branch platform foundation | `staging` ← `feat/staging-kds-offline-tenant-20261024` | 20 | `20261023180000_tenant_branch_integrity_constraints.sql`<br>`20261023181000_kds_pos_deferred_dispatch.sql`<br>`20261023232000_kitchen_kds_idempotency_modifiers.sql`<br>`20261023233000_tenant_branch_platform_foundation.sql`<br>`20261025115812_fix_pos_idempotency_digest_schema.sql` |
+| #39 | MERGED | test(staging): verify updated requisition-to-stock harness | `staging` ← `test/staging-procurement-e2e-contract-v2` | 1 | — |
+| #38 | CLOSED/UNMERGED | test(staging): verify requisition-to-stock E2E harness | `staging` ← `test/staging-purchase-requisition-e2e-contract` | 1 | — |
+| #37 | MERGED | ci(staging): gate Edge Function changes on runtime CORS | `staging` ← `ci/staging-cors-runtime-gate-20261023` | 1 | — |
+| #36 | MERGED | feat(staging): add purchase requisition workflow | `staging` ← `feat/staging-purchase-requisitions-20261023` | 6 | `20261023170000_purchase_requisitions.sql` |
+| #35 | MERGED | fix(staging): restore PO receiving line IDs and add positive E2E gate | `staging` ← `fix/staging-procurement-receipt-item-ids-20261023` | 5 | — |
+| #33 | MERGED | docs: map all 18 FnB OS domains to verified staging evidence | `staging` ← `docs/fnb-os-prd-traceability-superpowers-20261023` | 1 | — |
+| #32 | MERGED | fix(staging): make CORS depend only on exact origin secret | `staging` ← `fix/staging-cors-secret-only-20261023` | 1 | — |
+| #31 | CLOSED/UNMERGED | test(staging): add next FnB OS workflow acceptance gate | `staging` ← `feat/staging-next-workflow-acceptance-20261023` | 2 | — |
+| #30 | MERGED | feat(staging): integrate P0 security and P1 stock workflows | `staging` ← `feat/p1-stock-transfer-count-20261022` | 14 | `20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql`<br>`20261023003006_revoke_direct_client_access_stock_workflows.sql` |
+| #29 | MERGED | chore: pin Superpowers submodule and engineering workflow | `main` ← `chore/integrate-superpowers` | 5 | — |
+| #28 | MERGED | P0: Harden CORS responses for staging origin allowlist | `feat/p1-stock-transfer-count-20261022` ← `feat/p0-cors-origin-hardening-20261022` | 2 | — |
+| #27 | MERGED | P1: Add branch stock transfer and cycle count workflows | `feat/fnb-os-branch-ops-checklists-20261022` ← `feat/p1-stock-transfer-count-20261022` | 4 | `20261023003006_revoke_direct_client_access_stock_workflows.sql` |
+| #26 | MERGED | feat: add branch opening and closing checklists | `feat/fnb-os-staging-implementation-20261021` ← `feat/fnb-os-branch-ops-checklists-20261022` | 8 | `20261021182634_branch_operation_checklists.sql`<br>`20261022124132_stock_transfers_and_counts.sql`<br>`20261022130135_stock_transfer_approval_pick_reconcile.sql` |
+| #25 | MERGED | docs: audit FnB OS staging capability and track implementation | `fix/staging-security-timezone-20261021` ← `feat/fnb-os-staging-implementation-20261021` | 13 | — |
+| #24 | MERGED | fix: harden staging CORS and branch timezone handling | `feat/staging-ux-cx-final-reconcile-20261021` ← `fix/staging-security-timezone-20261021` | 7 | `20261021150339_deny_direct_client_access_on_internal_tables.sql`<br>`20261021151246_branch_timezone_checkout_cutoff.sql`<br>`20261021151524_index_remaining_erp_foreign_keys.sql` |
+| #23 | MERGED | feat: reconcile staging responsive UX and motion | `feat/staging-erp-workflows-api` ← `feat/staging-ux-cx-final-reconcile-20261021` | 2 | — |
+| #22 | CLOSED/UNMERGED | feat: wire order fulfillment, production and finance workflows | `feat/staging-order-receipt-gates` ← `feat/staging-erp-workflows-api` | 17 | `20261020194817_order_fulfillment_production_finance_controls.sql`<br>`20261020195004_atomic_purchase_receiving_and_production_consumption.sql`<br>`20261020201601_branch_routed_online_checkout_capacity.sql`<br>`20261020201654_finance_refund_settlement_and_period_guards.sql`<br>`20261020201715_branch_capacity_on_order_edits.sql`<br>`20261020201812_atomic_payment_settlement_matching.sql`<br>`20261020202158_immutable_final_refund_records.sql`<br>`20261020202449_settlement_match_only_paid_payments.sql`<br>`20261020202805_refund_guard_all_updates.sql`<br>`20261020202830_atomic_recipe_version_activation.sql`<br>`20261020202841_deterministic_production_stock_lock_order.sql` |
+| #21 | CLOSED/UNMERGED | feat: add staged order fulfillment, production and finance controls | `feat/staging-order-receipt-gates` ← `feat/staging-order-fulfillment-finance-production` | 3 | `20261020194817_order_fulfillment_production_finance_controls.sql`<br>`20261020195004_atomic_purchase_receiving_and_production_consumption.sql` |
+| #20 | MERGED | fix: align ERP index migration version with staging | `feat/staging-order-receipt-gates` ← `fix/staging-erp-index-migration-version` | 2 | `20261020193920_index_erp_foreign_keys.sql` |
+| #19 | MERGED | perf: index ERP foreign-key lookup columns | `feat/staging-order-receipt-gates` ← `perf/staging-erp-foreign-key-indexes` | 2 | `20261021195000_index_erp_foreign_keys.sql` |
+| #18 | MERGED | fix: enforce ERP branch isolation and job-based permissions | `feat/staging-order-receipt-gates` ← `fix/erp-branch-scope-and-role-permissions` | 3 | — |
+| #17 | MERGED | fix: align ERP migration history with staging | `feat/staging-order-receipt-gates` ← `fix/staging-erp-migration-version` | 2 | `20261020193327_multi_branch_pos_erp_foundation.sql` |
+| #16 | MERGED | feat: add multi-branch POS ERP workspace for staging | `feat/staging-order-receipt-gates` ← `feat/staging-multi-branch-erp-foundation` | 6 | `20261021194500_multi_branch_pos_erp_foundation.sql` |
+| #15 | MERGED | fix: align catalog migration history with staging | `feat/staging-order-receipt-gates` ← `fix/staging-product-copy-migration-version` | 3 | `20261020185740_align_product_copy_and_prices.sql`<br>`20261021190000_align_product_copy_and_prices.sql` |
+| #14 | MERGED | feat: elegant responsive D’lice staging experience | `feat/staging-order-receipt-gates` ← `feat/staging-elegant-responsive-motion` | 3 | `20261021190000_align_product_copy_and_prices.sql` |
+| #13 | MERGED | docs: record staging-only implementation audit | `feat/staging-order-receipt-gates` ← `docs/2026-10-21-staging-audit` | 1 | — |
+| #12 | MERGED | Fix staging migration version parity | `feat/staging-order-receipt-gates` ← `fix/staging-migration-version-parity` | 3 | `20261020171825_safe_operational_retention_and_rpc_acl.sql` |
+| #11 | MERGED | Staging: add safe operational retention and tighten RPC ACLs | `feat/staging-order-receipt-gates` ← `feat/staging-safe-retention-rpc-audit` | 4 | `20261021120000_safe_operational_retention_and_rpc_acl.sql` |
+| #10 | MERGED | Fix: validate payment proof file signatures on staging | `feat/staging-order-receipt-gates` ← `fix/staging-payment-proof-signature-validation` | 2 | — |
+| #9 | CLOSED/UNMERGED | Integration audit: reconcile free hardening branch with staging | `feat/staging-order-receipt-gates` ← `feat/free-hardening-optimizations` | 14 | `20261019183939_add_free_rate_limiting.sql`<br>`20261019184047_add_privacy_preserving_funnel_metrics.sql`<br>`20261019185240_atomic_payment_verification.sql`<br>`20261019185629_atomic_operational_status_changes.sql` |
+| #8 | MERGED | Docs: integrate production-branch PRD updates into staging | `feat/staging-order-receipt-gates` ← `main` | 1 | — |
+| #7 | MERGED | Test: add staging order release contract gates | `feat/staging-order-receipt-gates` ← `test/staging-release-contract-gates` | 2 | — |
+| #6 | MERGED | Docs: track 23-item staging readiness and production blockers | `feat/staging-order-receipt-gates` ← `docs/23-item-staging-readiness` | 1 | — |
+| #5 | MERGED | Staging: lock internal tables to service_role | `feat/staging-order-receipt-gates` ← `fix/rls-advisor-service-role-policies` | 2 | `20261020160000_lock_down_internal_table_rls.sql` |
+| #4 | MERGED | Staging: free hardening, security, and release gates | `feat/staging-order-receipt-gates` ← `feat/free-hardening-optimizations` | 14 | `20261019183939_add_free_rate_limiting.sql`<br>`20261019184047_add_privacy_preserving_funnel_metrics.sql`<br>`20261019185240_atomic_payment_verification.sql`<br>`20261019185629_atomic_operational_status_changes.sql` |
+| #3 | CLOSED/UNMERGED | Gunakan bahasa Indonesia untuk operasional D’Lice | `feat/supabase-product-catalog` ← `feat/indonesian-operations-ui` | 3 | — |
+| #2 | CLOSED/UNMERGED | Draft: Supabase-backed D’Lice product catalog | `feat/supabase-ordering-backend` ← `feat/supabase-product-catalog` | 8 | `20261018002000_atomic_checkout_and_private_payment_proofs.sql`<br>`20261018003000_seed_dlice_catalog.sql`<br>`20261018005000_product_catalog_storage.sql`<br>`20261018006000_admin_username_accounts.sql` |
+| #1 | CLOSED/UNMERGED | feat: integrate Supabase ordering backend and admin panel | `main` ← `feat/supabase-ordering-backend` | 7 | `20261018002000_atomic_checkout_and_private_payment_proofs.sql`<br>`20261018003000_seed_dlice_catalog.sql`<br>`20261018004000_admin_role_permissions.sql` |
+
+### Migration references across the PR history
+
+| Migration source file | PR references | Supabase history |
+|---|---|---|
+| `20261017183506_initial_dlice_ordering_schema.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017183509_index_ordering_foreign_keys.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017183535_atomic_checkout_and_private_payment_proofs.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017183537_seed_dlice_catalog.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017183540_admin_role_permissions.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017183542_product_catalog_storage.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017184921_admin_username_accounts.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261017205317_receipt_payment_notification_gates.sql` | #79, #74, #73 | APPLIED in Supabase history |
+| `20261017205718_payment_assets_and_settings_seed.sql` | #79, #74, #73 | APPLIED in Supabase history |
+| `20261018002000_atomic_checkout_and_private_payment_proofs.sql` | #2, #1 | NOT in Supabase history |
+| `20261018003000_seed_dlice_catalog.sql` | #2, #1 | NOT in Supabase history |
+| `20261018004000_admin_role_permissions.sql` | #1 | NOT in Supabase history |
+| `20261018005000_product_catalog_storage.sql` | #2 | NOT in Supabase history |
+| `20261018006000_admin_username_accounts.sql` | #2 | NOT in Supabase history |
+| `20261019183939_add_free_rate_limiting.sql` | #79, #74, #73, #9, #4 | APPLIED in Supabase history |
+| `20261019184047_add_privacy_preserving_funnel_metrics.sql` | #79, #74, #73, #9, #4 | APPLIED in Supabase history |
+| `20261019185240_atomic_payment_verification.sql` | #79, #74, #73, #9, #4 | APPLIED in Supabase history |
+| `20261019185629_atomic_operational_status_changes.sql` | #79, #74, #73, #9, #4 | APPLIED in Supabase history |
+| `20261020160000_lock_down_internal_table_rls.sql` | #5 | NOT in Supabase history |
+| `20261020160307_lock_internal_table_rls.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261020171825_safe_operational_retention_and_rpc_acl.sql` | #79, #74, #73, #12 | APPLIED in Supabase history |
+| `20261020185740_align_product_copy_and_prices.sql` | #79, #74, #73, #15 | APPLIED in Supabase history |
+| `20261020193327_multi_branch_pos_erp_foundation.sql` | #79, #74, #73, #17 | APPLIED in Supabase history |
+| `20261020193920_index_erp_foreign_keys.sql` | #79, #74, #73, #20 | APPLIED in Supabase history |
+| `20261020194817_order_fulfillment_production_finance_controls.sql` | #79, #74, #73, #22, #21 | APPLIED in Supabase history |
+| `20261020195004_atomic_purchase_receiving_and_production_consumption.sql` | #79, #74, #73, #22, #21 | APPLIED in Supabase history |
+| `20261020201601_branch_routed_online_checkout_capacity.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020201654_finance_refund_settlement_and_period_guards.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020201715_branch_capacity_on_order_edits.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020201812_atomic_payment_settlement_matching.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020202158_immutable_final_refund_records.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020202449_settlement_match_only_paid_payments.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020202805_refund_guard_all_updates.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020202830_atomic_recipe_version_activation.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261020202841_deterministic_production_stock_lock_order.sql` | #79, #74, #73, #22 | APPLIED in Supabase history |
+| `20261021120000_safe_operational_retention_and_rpc_acl.sql` | #11 | NOT in Supabase history |
+| `20261021150339_deny_direct_client_access_on_internal_tables.sql` | #79, #74, #73, #24 | APPLIED in Supabase history |
+| `20261021151246_branch_timezone_checkout_cutoff.sql` | #79, #74, #73, #24 | APPLIED in Supabase history |
+| `20261021151524_index_remaining_erp_foreign_keys.sql` | #79, #74, #73, #24 | APPLIED in Supabase history |
+| `20261021182634_branch_operation_checklists.sql` | #79, #74, #73, #26 | APPLIED in Supabase history |
+| `20261021190000_align_product_copy_and_prices.sql` | #15, #14 | NOT in Supabase history |
+| `20261021194500_multi_branch_pos_erp_foundation.sql` | #16 | NOT in Supabase history |
+| `20261021195000_index_erp_foreign_keys.sql` | #19 | NOT in Supabase history |
+| `20261022124132_stock_transfers_and_counts.sql` | #79, #74, #73, #61, #30, #26 | APPLIED in Supabase history |
+| `20261022130135_stock_transfer_approval_pick_reconcile.sql` | #79, #74, #73, #61, #30, #26 | APPLIED in Supabase history |
+| `20261022140302_add_missing_fk_supporting_indexes.sql` | #88, #74 | APPLIED in Supabase history |
+| `20261023003006_revoke_direct_client_access_stock_workflows.sql` | #79, #74, #73, #30, #27 | APPLIED in Supabase history |
+| `20261023160257_purchase_requisitions.sql` | #79, #74, #73 | APPLIED in Supabase history |
+| `20261023160440_purchase_requisition_conversion_index.sql` | #79, #74, #73 | APPLIED in Supabase history |
+| `20261023170000_purchase_requisitions.sql` | #36 | NOT in Supabase history |
+| `20261023175347_kitchen_kds_idempotency_modifiers.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261023175514_tenant_branch_platform_foundation.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261023175946_tenant_branch_integrity_constraints.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261023180000_tenant_branch_integrity_constraints.sql` | #40 | NOT in Supabase history |
+| `20261023180455_kds_pos_deferred_dispatch.sql` | #79, #74, #73, #61 | APPLIED in Supabase history |
+| `20261023181000_kds_pos_deferred_dispatch.sql` | #40 | NOT in Supabase history |
+| `20261023232000_kitchen_kds_idempotency_modifiers.sql` | #40 | NOT in Supabase history |
+| `20261023233000_tenant_branch_platform_foundation.sql` | #40 | NOT in Supabase history |
+| `20261025010000_explicit_deny_policies_server_only_tables.sql` | #42 | NOT in Supabase history |
+| `20261025115812_fix_pos_idempotency_digest_schema.sql` | #79, #74, #73, #55, #40 | APPLIED in Supabase history |
+| `20261025120000_fix_pos_idempotency_digest_schema.sql` | #51 | NOT in Supabase history |
+| `20261027112330_explicit_deny_policies_server_only_tables.sql` | #79, #74, #73, #59 | APPLIED in Supabase history |
+| `20261027140145_revoke_client_execute_on_trigger_only_functions.sql` | #79, #74, #73, #67, #62 | APPLIED in Supabase history |
+| `20261028120000_enforce_same_tenant_stock_transfers.sql` | #64 | NOT in Supabase history |
+| `20261108090000_atomic_tenant_audit_operations.sql` | #71 | NOT in Supabase history |
+| `20261114110000_command_center_summary.sql` | #76 | NOT in Supabase history |
+| `20261114120000_atomic_branch_checklist_audit.sql` | #77 | NOT in Supabase history |
+| `20261114150000_atomic_owner_and_tenant_bootstrap.sql` | #78 | NOT in Supabase history |
+| `20261118165519_20261118193000_revoke_public_stock_workflow_rpc_execute.sql` | #94, #74 | APPLIED in Supabase history |
+| `20261118190000_add_branch_worker_profile_role.sql` | #90, #86 | NOT in Supabase history |
+| `20261119155309_add_branch_worker_profile_role.sql` | #98, #74 | APPLIED in Supabase history |
+| `20261119160000_revoke_default_public_function_execute.sql` | #99, #74 | NOT in Supabase history |
+| `20261119182606_revoke_default_public_function_execute.sql` | #106 | APPLIED in Supabase history |
+| `20261120100000_atomic_owner_and_tenant_bootstrap.sql` | #102, #74 | NOT in Supabase history |
+| `20261120110000_command_center_summary.sql` | #103, #74 | NOT in Supabase history |
+| `20261120120000_atomic_branch_checklist_audit.sql` | #105, #74 | NOT in Supabase history |
+| `20261120130000_enforce_same_tenant_stock_transfers.sql` | #109 | NOT in Supabase history |
+| `20261120140000_staging_machine_session_issuance_audit.sql` | #111 | NOT in Supabase history |
+
+- Supabase staging history at this checkpoint contains 49 versions; latest version is 20261119182606.
+- The pending migration candidates that are present in current staging Git but not in Supabase history are #102 (`20261120100000_atomic_owner_and_tenant_bootstrap.sql`), #103 (`20261120110000_command_center_summary.sql`), #105 (`20261120120000_atomic_branch_checklist_audit.sql`), and #109 (`20261120130000_enforce_same_tenant_stock_transfers.sql`). #111 adds `20261120140000_staging_machine_session_issuance_audit.sql` on its feature branch and is not in current staging history.
+- #106 now aligns the source filename to already-applied version `20261119182606`; no shared-staging replay is needed or permitted.
+- The PR-level migration references are not an authorization to apply migrations. Each candidate still requires exact-head review, disposable replay, dependency ordering, and the P0 runtime/release gates before one-at-a-time application.
