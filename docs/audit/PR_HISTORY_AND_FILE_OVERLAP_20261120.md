@@ -989,3 +989,8 @@ The user has explicitly waived an additional independent-review prerequisite for
 - Broker requires both an active global `admin_profiles.role = sales_admin` profile and exactly one active tenant membership with `role = branch_manager`. This prevents an Owner identity from being accidentally configured as a QA test identity and matches the existing staging role model.
 - OIDC exchange failure no longer stops the workflow before probe evidence is written. The runner emits nine BLOCKED records, each with `executed=false`; real HTTP probes emit `executed=true`. This fixes a prior evidence integrity issue where the BLOCKED status could be paired with a misleading `executed=true` field.
 - The new exact head has no observed GitHub Actions CI run yet. The connected GitHub toolset exposes no workflow-dispatch action; Vercel build-rate-limit failure is not CI evidence. Keep #111 Draft/HOLD until exact-head quality CI and disposable migration replay pass.
+
+
+## 25. CI observability qualification for #111
+
+The GitHub workflow-run reader exposed to this audit returns only pull-request-triggered runs; it does not expose all push-triggered workflow runs. Therefore the precise statement is: **an exact-head GitHub Actions result for #111 cannot currently be verified through the connected integration**. The combined commit status currently exposes only the Vercel context, which failed due to a build-rate-limit context and is not a source-code diagnostic. Do not state that GitHub Actions definitely did not run, and do not treat Vercel as the required quality CI. An authorized maintainer must inspect the Actions page for exact head `b5e3edb345ac07ca474d30951ccbd14bda1f8e89` and provide the disposable replay result before #111 can advance.
