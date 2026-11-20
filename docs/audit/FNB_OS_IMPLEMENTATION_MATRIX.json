@@ -2445,5 +2445,92 @@
       "BLOCKED": 9
     },
     "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS."
+  },
+  "operational_checkpoint": {
+    "date": "2026-11-20",
+    "staging_baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "feature_statuses_last_full_review": "2026-11-20",
+    "feature_statuses_reaudited": false,
+    "feature_status_note": "The 189 per-feature statuses below remain the 18-Nov baseline. They are not promoted to PASS based on PR merges or static CI. Runtime and end-to-end acceptance must update each feature with current evidence.",
+    "pull_requests": {
+      "actual_total": 109,
+      "merged": 77,
+      "closed_without_merge": 26,
+      "open": 6,
+      "pr106": "MERGED",
+      "pr110": "MERGED",
+      "pr109": "OPEN_DRAFT",
+      "pr111": {
+        "state": "OPEN_DRAFT",
+        "base": "staging",
+        "head": "295fdd69922703182e2e1512c79e23b2477f2895",
+        "rebased_on_pr110": true,
+        "exact_head_ci": "NOT_OBSERVED"
+      }
+    },
+    "supabase_live_read_only": {
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "project_status": "ACTIVE_HEALTHY",
+      "migration_history_rows": 49,
+      "latest_migration": "20261119182606",
+      "tenants": 2,
+      "branches_total": 155,
+      "active_tenant_memberships": 3,
+      "distinct_active_members": 3,
+      "branch_assignments": 4,
+      "branch_inventory_rows": 4,
+      "stock_movements": 26,
+      "stock_transfers": 0,
+      "pos_sales": 6,
+      "pos_shifts": 7,
+      "purchase_orders": 0,
+      "purchase_receipts": 0,
+      "production_batches": 0,
+      "payment_settlements": 0,
+      "refund_records": 0,
+      "cash_reconciliations": 0,
+      "finance_journal_entries": 0,
+      "active_owner_profiles": 1,
+      "owner_app_metadata_platform_owner_key_present": false,
+      "owner_app_metadata_platform_owner_boolean_true": false,
+      "public_tables": 64,
+      "public_tables_rls_enabled": 64,
+      "public_tables_rls_disabled": 0,
+      "public_policies": 64,
+      "public_functions": 29,
+      "anon_execute_function_count": 0,
+      "authenticated_execute_function_count": 0,
+      "service_role_execute_function_count": 29
+    },
+    "edge_functions": {
+      "dlice_orders": {
+        "version": 70,
+        "status": "ACTIVE",
+        "verify_jwt": false
+      }
+    },
+    "tenant_acceptance": {
+      "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
+      "on_staging": "manual_dispatch_only",
+      "p01_p09_runtime_status": "NOT_RUN",
+      "executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "note": "No run is recorded; zero executed is not a passing result. Current staging workflow still uses Environment A/B username/password inputs until PR #111 is merged and its OIDC broker is configured/deployed."
+    },
+    "release_protection": {
+      "github_rulesets": "NOT_VERIFIED",
+      "github_branch_protection": "NOT_VERIFIED",
+      "github_environment_secret_values": "NOT_VERIFIED",
+      "workflow_dispatch_capability": "NOT_AVAILABLE_IN_CONNECTED_GITHUB_ACTIONS",
+      "supabase_owner_auth_admin_mutation": "NOT_AVAILABLE_IN_CONNECTED_SUPABASE_ACTIONS",
+      "vercel_sso_protection": "ENABLED_ALL_EXCEPT_CUSTOM_DOMAINS",
+      "vercel_password_protection": "DISABLED",
+      "vercel_trusted_ips": "DISABLED"
+    },
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    }
   }
 }
