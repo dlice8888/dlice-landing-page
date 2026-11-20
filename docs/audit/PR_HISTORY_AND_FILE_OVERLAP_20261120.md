@@ -708,3 +708,13 @@ The user has explicitly stated that a separate reviewer different from `dlice888
 ### Current PR #110 head correction
 
 The latest #110 head after the empty-inventory test clarification is `b53e4ee4ee7511823653cf802e34625056c8049a`. The earlier recorded head `7b0f84d` is stale. At the time of this audit, no workflow run had yet appeared for `b53e4ee`; do not transfer the previous commit's green CI status to this new head.
+
+
+## 20. Execution update — after closed-PR audit
+
+- PR #106 was technically accepted and **squash-merged to staging** after exact-head Free quality checks, KDS contract tests, and disposable migration replay all passed. Merge commit: `cf15f33379a731c1952ec22b5d12739595a21a93`. The Vercel status on the PR head had failed specifically with the build-rate-limit context; this was not a source/build diagnostic and did not change the SQL. No migration was replayed against shared staging.
+- PR #110 latest head is `b53e4ee4ee7511823653cf802e34625056c8049a`. Exact-head Free quality checks passed and Vercel status succeeded. This supersedes the earlier recorded #110 head `7b0f84d`. The CI is static/contract verification only, not P01–P09 runtime evidence.
+- PR #110 is technically ready for the runtime gate, but **must not be merged until the protected staging Environment inputs have been verified by an authorized administrator**. The available GitHub connector has no Environment secret/variable inspection or workflow-dispatch action. Do not infer secret validity from secret names existing or from static CI.
+- P01–P09 have not run. The workflow should be triggered from `staging` only after an admin confirms the six required credential/configuration inputs without disclosing values. Required outcome: P01–P09 all executed, all expected outcomes pass, no BLOCKED/SKIPPED, and no supplemental negative test fails.
+- The seven #73 audit documents have been restored to this branch with a warning that they are historical snapshots dated 13 November 2026. Their old branch counts and protection/migration findings are not current operational evidence.
+- User policy update: a separate reviewer is not an extra prerequisite imposed by this audit. Technical acceptance is based on exact-head source review and all relevant checks. Do not fabricate a second identity or an independent approval. Actual repository rules, if any are active, still govern merge operations.
