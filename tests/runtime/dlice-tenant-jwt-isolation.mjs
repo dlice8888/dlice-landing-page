@@ -58,6 +58,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
+    executed: true,
     status,
   };
   results.push(result);
@@ -96,6 +97,7 @@ function recordBlocked(definition, reason) {
     actualResult: `not_executed:${reason}`,
     httpStatus: null,
     evidence: { executed: false },
+    executed: false,
     startedAt: performance.now(),
     status: "BLOCKED",
   });
