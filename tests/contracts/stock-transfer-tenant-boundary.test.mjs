@@ -30,6 +30,7 @@ test("every stock-transfer transition rejects cross-tenant rows, including platf
 
 test("database trigger covers insert and branch reassignment and is not directly executable by client roles", () => {
   assert.match(migration, /before insert or update of source_branch_id, destination_branch_id/i);
+  assert.match(migration, /perform b\\.id[\\s\\S]*?order by b\\.id[\\s\\S]*?for share/i, "tenant reads must be serialized against branch tenant reassignment");
   assert.match(migration, /v_source_tenant is distinct from v_destination_tenant/i);
   assert.match(migration, /revoke all on function public\.enforce_stock_transfer_same_tenant\(\) from public, anon, authenticated/i);
   assert.match(migration, /before update of tenant_id\s+on public\.branches/i);
