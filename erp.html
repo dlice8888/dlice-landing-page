@@ -55,9 +55,10 @@
 </main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-const PROD=['dlice.vercel.app','dlice-landing-page.vercel.app'].includes(location.hostname);
-const URL=PROD?'https://gdjlkrmlsurcdbwnmqgg.supabase.co':'https://higoadrzxnhzbbwhdbmh.supabase.co';
-const KEY=PROD?'sb_publishable_5Y2R3Z33ovSH7rC9IDImvw_hKFLdGR0':'sb_publishable_IdIMH7cyqSpQzlOttr2HNw_EA0kJOVo';
+const runtimeResponse=await fetch('/api/runtime-config',{cache:'no-store'});
+if(!runtimeResponse.ok)throw new Error('Konfigurasi layanan tidak tersedia.');
+const runtimeConfig=await runtimeResponse.json();
+const URL=runtimeConfig.supabaseUrl,KEY=runtimeConfig.publishableKey;
 const API=URL+'/functions/v1/dlice-orders',supabase=createClient(URL,KEY);
 const $=id=>document.getElementById(id),money=n=>'Rp'+Number(n||0).toLocaleString('id-ID'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let session=null,profile=null,branches=[],positions=[],staff=[],inventory=[],balances=[],shifts=[],sales=[],expenses=[],purchaseOrders=[],purchaseRequisitions=[],products=[],recipeCache=[],modifierCache=[],substitutionCache=[],activeView='dashboard',prLineIds=[0],prNextLineId=1;
