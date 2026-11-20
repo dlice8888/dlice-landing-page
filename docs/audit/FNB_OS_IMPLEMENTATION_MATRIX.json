@@ -2459,7 +2459,13 @@
       "open": 6,
       "pr106": "MERGED",
       "pr110": "MERGED",
-      "pr109": "OPEN_DRAFT",
+      "pr109": {
+        "state": "OPEN_READY_FOR_REVIEW",
+        "head": "9cfe616bd95735dba39b7bf60c8b055f0f53e9cf",
+        "exact_head_ci": "7_RELEVANT_WORKFLOWS_SUCCESS",
+        "independent_review": "PENDING",
+        "staging_migration_applied": false
+      },
       "pr111": {
         "state": "OPEN_DRAFT",
         "base": "staging",
@@ -2468,6 +2474,19 @@
         "exact_head_ci": "NOT_VERIFIABLE_WITH_CONNECTED_INTEGRATION",
         "ahead": 18,
         "behind": 0
+      },
+      "open_pr_numbers": [
+        71,
+        104,
+        107,
+        108,
+        109,
+        111
+      ],
+      "pr108": {
+        "state": "OPEN_DRAFT",
+        "head": "31cdc8aa6a6b6315740b298d090bedb9c483f98c",
+        "purpose": "full PR inventory, closed-PR recovery, current feature matrix and engineering standard"
       }
     },
     "supabase_live_read_only": {
