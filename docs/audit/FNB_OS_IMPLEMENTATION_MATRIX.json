@@ -2465,7 +2465,7 @@
         "base": "staging",
         "head": "b5e3edb345ac07ca474d30951ccbd14bda1f8e89",
         "rebased_on_pr110": true,
-        "exact_head_ci": "NOT_OBSERVED",
+        "exact_head_ci": "NOT_VERIFIABLE_WITH_CONNECTED_INTEGRATION",
         "ahead": 18,
         "behind": 0
       }
