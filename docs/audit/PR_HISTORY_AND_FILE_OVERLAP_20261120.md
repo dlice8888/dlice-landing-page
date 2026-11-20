@@ -1014,3 +1014,26 @@ These are documentation/governance changes in PR #108's branch, not yet merged i
 - #71 — staging tenant fixture externalization, Draft.
 
 All 26 closed-unmerged PR numbers were confirmed in the current repository listing: #1, #2, #3, #9, #21, #22, #31, #38, #43, #62, #63, #64, #73, #74, #76, #77, #79, #80, #82, #83, #85, #86, #87, #93, #95, #101. No additional closed-unmerged PR was omitted from the 26-row disposition table.
+
+
+## 27. New PR #112 and updated repository totals
+
+A forward-only security hardening PR was opened after the full migration review found that the #102 Owner RPCs compared `platform_owner` as text rather than JSON boolean. The user contract requires the boolean `true`, and the Edge Function already uses strict boolean comparison. #105's checklist RPC also used the legacy `auth.role()` helper.
+
+- #112 `security(db): require boolean platform_owner metadata in service RPCs`, Draft, base `staging`, head `82edeeb848335259aa9076d41de0079f4ae9f6b5`.
+- Adds migration `20261120125000_harden_owner_metadata_boolean.sql` after #105 (120000) and before #109 (130000). It replaces the two #102 RPC bodies with strict JSONB boolean comparison and replaces `auth.role()` in the two #102 RPCs and #105 checklist RPC with `auth.jwt() ->> 'role'`.
+- Adds a pgTAP database test and Node contract test; adds release documentation. No merged migration is edited.
+- Exact-head Free quality checks SUCCESS and KDS contract SUCCESS. Disposable local Supabase migration replay is still IN_PROGRESS at this checkpoint; do not claim it passed until the workflow completes.
+- The first replay attempt exposed that two historical SQL tests set only `request.jwt.claim.role`; after switching the tests to set the full `request.jwt.claims` JSON as well, the exact-head replay is being rerun. This is a test-fixture compatibility fix, not a production database change.
+
+The actual PR count is now **110** because #112 has been opened: **77 merged, 26 closed without merge, 7 open**. The 26 closed-unmerged classifications remain unchanged. Current open PRs are #71, #104, #107, #108, #109, #111 and #112.
+
+### Current dependency-ordered migration source sequence
+1. #102 — `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+2. #103 — `20261120110000_command_center_summary.sql`
+3. #105 — `20261120120000_atomic_branch_checklist_audit.sql`
+4. #112 — `20261120125000_harden_owner_metadata_boolean.sql` (new forward-only hardening; pending CI replay)
+5. #109 — `20261120130000_enforce_same_tenant_stock_transfers.sql` (independent review pending)
+6. #111 — `20261120140000_staging_machine_session_issuance_audit.sql` (OIDC broker; exact-head quality and KDS checks pass, disposable replay in progress)
+
+This is source ordering, not permission to apply any migration. Shared staging history remains 49 versions through `20261119182606`; none of the 20261120 candidates above has been applied.
