@@ -495,3 +495,51 @@ PR #31's `tests/staging/next-workflow-acceptance.mjs` is not present at that pat
 - Stock: unknown transfer/count identifiers must fail closed without changing ledger state.
 - The PR's workflow provisions temporary QA users and writes evidence artifacts, but uses legacy Owner/Branch A secrets and a hard-coded old Branch B UUID. Do not merge it unchanged. Port the scenarios into the current dynamic fixture-discovery runner, use the verified A/B branch-manager identities, and preserve no-SKIPPED semantics.
 - PR #31 is a test scenario source, not runtime acceptance evidence; it was closed without merge and no qualifying staging run is recorded.
+
+## 14. Live verification addendum — 20 November 2026
+
+This addendum corrects the PR metadata totals and records direct read-only verification from GitHub, Supabase staging, and Vercel. It does not authorize merging, applying migrations, deploying Edge Functions, or changing release flags.
+
+### Corrected PR inventory
+- Re-enumerated all actual PRs, including the first seven PRs separately because the repository search result page returns at most 100 records.
+- Actual PR count: **107** (PR numbers #1–#109 with gaps; #34 and #45 are not PRs).
+- Current disposition: **75 merged**, **26 closed without merge**, **6 open**.
+- Sum of the current GitHub PR `commits` metadata: **2,198**. The previous aggregate of 2,195 is stale by 3 because PR #108 currently reports 30 commits, not 27.
+- Current open Draft PRs: #71, #104, #106, #107, #108, #109. PR #64 is now closed without merge; its stock-transfer finding is superseded by the narrower #109 candidate.
+- No PR was merged or closed as part of this addendum. No code PR was created.
+
+### Direct Supabase staging verification
+Project: `higoadrzxnhzbbwhdbmh`.
+- Applied migration history: **49** rows.
+- Public tables: **64**, with RLS enabled on **64/64**.
+- Public functions: **29**; current effective EXECUTE counts: anon **0**, authenticated **0**, service_role **29**.
+- The repository staging branch still contains `20261119160000_revoke_default_public_function_execute.sql`, while staging history records the applied version as `20261119182606`. PR #106 is therefore a required source/history reconciliation before the next migration push. Do not reapply the ACL SQL.
+- The three unapplied staging-source migrations remain ordered: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`. PR #109 adds the later `20261120130000_enforce_same_tenant_stock_transfers.sql`; it is not applied.
+- No same-tenant stock-transfer trigger currently exists in shared staging. Current `stock_transfers` row count is zero.
+- Read-only membership/assignment checks confirm two distinct branch-manager identities with active memberships and active branch assignments: Tenant A (`dlice-default`) and Tenant B (`dlice-qa-isolation-b`). This does not prove username/password login or authenticated P01–P09 runtime behavior.
+
+### P0 runtime and PR CI evidence
+- PR #71 current head has successful static checks, migration replay, CORS, KDS and procurement contract workflows. No P01–P09 runtime workflow run was returned for that head. Treat tenant isolation as **NOT VERIFIED**, not PASS.
+- A separate candidate branch `fix/tenant-isolation-discover-fixtures-20261120` is 8 commits ahead and 0 behind `staging`. It removes the six hard-coded fixture UUID Environment variables and derives tenants/branches from authenticated membership and branch responses; it still requires the four canonical Tenant A/B username/password secrets. It is a salvage candidate, not runtime evidence and not yet a PR.
+- PR #109 exact head `2d1a7249ad5e8e00a164b08af8137b033294c59b` has seven relevant workflow runs completed SUCCESS: Free quality checks, disposable local Supabase migration replay, same-tenant API/PostgreSQL boundary regression, runtime CORS probes, KDS offline contract, procurement receiving contract, and procurement requisition contract. It remains Draft/HOLD because authenticated P01–P09 and independent review are outstanding.
+- No submitted reviews were found on PRs #106, #107, or #109 at this verification point.
+
+### Vercel and Edge Function alignment
+- Vercel project `dlice-landing-page` has SSO protection enabled for deployments except custom domains.
+- Latest staging deployment is READY at commit `4a13e70ce29e3fe117b6b6e7705089fa4241298a`. Current staging base `39a9c96156b5c0af8b70e689da10cdd9b3b10122` is one commit ahead; the only changed paths in that commit are ten audit documents.
+- Latest Production deployment remains READY from `main` commit `2bb254bfb06baa8a3847b9112552f9413420b9f0`. No production deployment, alias change, rollback, or promotion was performed during this audit.
+- Supabase staging `dlice-orders` remains ACTIVE at version **70**. No Edge Function deployment was performed. Do not deploy newer staging source until its ordered migrations and P0 runtime acceptance are reviewed and passed.
+- PR #107 still does not cover `track.html`, which retains hostname-based Supabase project selection. Its exact Preview runtime-config smoke has not been executed.
+
+### Remaining release-protection findings
+- The active GitHub ruleset still does not require an independent approval, mandatory status checks, or a staging deployment reviewer. The current connected actor can bypass the ruleset. `protected=true` is not sufficient evidence of an effective release gate.
+- Main contains scheduled positive-path staging workflows whose schedule condition bypasses the manual `confirm_staging_mutations` input. The previously inspected scheduled runs failed preflight before business mutations, but the latent write path remains. Disable those schedules or convert them to read-only monitoring before legacy credentials are populated.
+- Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Do not merge PR #64/#71/#104/#106/#107/#108/#109, apply the four pending migrations, deploy Edge Functions, or change Production until the relevant independent review and runtime gates pass.
+
+### Immediate sequence
+1. Reconcile PR #106's ACL source filename with applied migration history before any future migration push.
+2. Selectively port/review the authenticated fixture-discovery runner; populate canonical A/B credentials only through the protected GitHub Environment.
+3. Run P01–P09 with two distinct real identities; require all nine probes executed with no BLOCKED or SKIPPED result.
+4. Independently review PR #109 and then integrate/apply migrations in forward order: Owner bootstrap, Command Center, atomic checklist, same-tenant stock-transfer guard. Verify each migration separately before deploying the matching Edge Function source.
+5. Fix PR #107's `track.html` coverage and execute exact-Preview runtime smoke.
+6. Tighten GitHub ruleset and scheduled staging mutation workflows before treating staging as release-gated.
