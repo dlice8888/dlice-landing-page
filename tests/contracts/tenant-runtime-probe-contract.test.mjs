@@ -22,6 +22,8 @@ test("staging tenant gate uses GitHub OIDC sessions and discovers fixture UUIDs 
   assert.match(workflow, /staging-tenant-session/);
   assert.doesNotMatch(workflow, /secrets\\.STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
   assert.match(workflow, /STAGING_TENANT_[AB]_ACCESS_TOKEN/);
+  assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL:\\:-/);
+  assert.match(workflow, /OIDC session exchange did not complete/);
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
   assert.doesNotMatch(workflow, /vars\.STAGING_TENANT_(?:A|B)_(?:ID|USER_ID|BRANCH_ID)/);
@@ -91,6 +93,7 @@ test("missing staging configuration is reported as blocked, never as a passing p
   const probes = records.filter((record) => /^P\d\d$/.test(record.probeId));
   assert.equal(probes.length, 9);
   assert.ok(probes.every((record) => record.status === "BLOCKED"));
+  assert.ok(probes.every((record) => record.executed === false && record.evidence?.executed === false), "BLOCKED probes must be explicitly marked not executed");
   const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
   assert.equal(preflight.length, 6);
   assert.ok(preflight.every((record) => record.valuePrinted === false));
