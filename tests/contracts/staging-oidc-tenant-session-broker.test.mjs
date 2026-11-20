@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const workflow = readFileSync(".github/workflows/staging-tenant-isolation-acceptance.yml", "utf8");
 const runtime = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const broker = readFileSync("supabase/functions/staging-tenant-session/index.ts", "utf8");
+const claims = readFileSync("supabase/functions/staging-tenant-session/claims.ts", "utf8");
 const migration = readFileSync("supabase/migrations/20261120140000_staging_machine_session_issuance_audit.sql", "utf8");
 const config = readFileSync("supabase/config.toml", "utf8");
 
@@ -24,9 +25,10 @@ test("broker validates immutable GitHub workflow identity and exact staging trus
   assert.match(broker, /jwtVerify/);
   assert.match(broker, /refs\/heads\/staging/);
   assert.ok(broker.includes('repo:dlice8888/dlice-landing-page:environment:staging'));
-  assert.match(broker, /workflow_dispatch/);
-  assert.match(broker, /!exact\("event_name", "workflow_dispatch"\)/);
-  assert.doesNotMatch(broker, /"push"/);
+  assert.match(broker, /isTrustedStagingWorkflowClaims/);
+  assert.match(claims, /event_name/);
+  assert.match(claims, /workflow_dispatch/);
+  assert.doesNotMatch(claims, /"push"/);
   assert.match(broker, /claims\.run_id/);
   assert.match(broker, /claims\.run_attempt/);
   assert.match(broker, /claims\.jti/);
