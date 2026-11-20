@@ -7,11 +7,11 @@ const workflow = readFileSync(".github/workflows/staging-tenant-isolation-accept
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const edgeSource = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 
-test("staging tenant gate uses six canonical credentials and discovers fixture UUIDs from authenticated membership and branch responses", () => {
+test("staging tenant gate is manually dispatched from trusted staging and discovers fixture UUIDs from authenticated membership and branch responses", () => {
   const triggers = workflow.split(/^permissions:\s*$/m, 1)[0];
   assert.match(workflow, /^\s+environment:\s*staging\s*$/m);
   assert.match(triggers, /^  workflow_dispatch:\s*$/m);
-  assert.match(triggers, /^  push:\s*\n\s+branches:\s*\[staging\]/m);
+  assert.doesNotMatch(triggers, /^  push:/m, "runtime acceptance must not run automatically before Environment preflight is confirmed");
   assert.match(workflow, /if:\s*github\.ref\s*==\s*'refs\/heads\/staging'/);
   assert.doesNotMatch(triggers, /\bpull_request\b/);
   for (const secret of [
