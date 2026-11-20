@@ -594,3 +594,12 @@ Consequences:
 - The Owner bootstrap migration #102 may still be applied as schema code only after P0 gates; its initial-owner action must remain unused for this already-provisioned account.
 
 This supersedes any assumption that staging has no Owner profile. It has an Owner profile, but it is not currently a verified platform Owner.
+
+## 17. PR #109 concurrency hardening — pending CI
+
+- Security review identified a check-then-write race between stock-transfer creation/update and concurrent `branches.tenant_id` reassignment.
+- Patched `enforce_stock_transfer_same_tenant()` to lock both referenced branch rows with `FOR SHARE` in deterministic ID order before reading tenant IDs.
+- Added disposable PostgreSQL regression assertion that the installed trigger function contains the row-lock guard, and a contract assertion for deterministic lock ordering.
+- Updated PR #109 head: `ec01b23bec9c7cc96f3893dbaa9e0b184c97dbfb`.
+- A review note was posted on PR #109. CI for the updated head is currently running: disposable migration replay, KDS, quality, procurement receiving, and stock-transfer boundary workflow. Procurement requisition and CORS checks have completed successfully. Do not treat the new head as passing until every relevant run completes successfully.
+- PR #109 remains Draft/HOLD with no independent submitted review. No shared staging migration or Edge Function deployment was performed.
