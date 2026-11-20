@@ -1037,3 +1037,32 @@ The actual PR count is now **110** because #112 has been opened: **77 merged, 26
 6. #111 — `20261120140000_staging_machine_session_issuance_audit.sql` (OIDC broker; exact-head quality and KDS checks pass, disposable replay in progress)
 
 This is source ordering, not permission to apply any migration. Shared staging history remains 49 versions through `20261119182606`; none of the 20261120 candidates above has been applied.
+
+
+## 28. 18-domain / 189-feature status reconciliation
+
+The matrix contains all **18 PRD domains and 189 feature rows**. One feature status was updated from NOT VERIFIED to PARTIAL based on the fresh 20-Nov live SQL evidence that 64/64 public tables have RLS enabled. It is not marked PASS because policy correctness and role/tenant negative runtime tests are still outstanding. All other feature classifications remain at their last full audit baseline and have not been promoted based on static CI.
+
+| # | PRD domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
+|---:|---|---:|---:|---:|---:|
+| 1 | Executive Command Center | 10 | 4 | 5 | 1 |
+| 2 | POS & Checkout | 13 | 7 | 5 | 1 |
+| 3 | Order Management | 10 | 7 | 2 | 1 |
+| 4 | Kitchen & Production | 10 | 5 | 4 | 1 |
+| 5 | Menu, Recipe & Product Engineering | 11 | 6 | 4 | 1 |
+| 6 | Inventory & Warehouse | 12 | 8 | 4 | 0 |
+| 7 | Procurement & Supplier | 10 | 5 | 5 | 0 |
+| 8 | Branch Operations | 10 | 4 | 5 | 1 |
+| 9 | Delivery & Fulfillment | 8 | 2 | 6 | 0 |
+| 10 | CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 |
+| 11 | Finance & Accounting | 12 | 7 | 4 | 1 |
+| 12 | HR & Workforce | 9 | 1 | 8 | 0 |
+| 13 | Franchise & Expansion | 8 | 2 | 6 | 0 |
+| 14 | BI & Analytics | 10 | 3 | 7 | 0 |
+| 15 | Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| 16 | SaaS Tenant Management | 8 | 0 | 8 | 0 |
+| 17 | Integrations & Automation | 9 | 5 | 4 | 0 |
+| 18 | Quality, Compliance & Security | 20 | 10 | 9 | 1 |
+| **Total** | **18 domains** | **189** | **82** | **98** | **9** |
+
+No domain currently has complete acceptance across frontend, backend, database, authorization, runtime tests, E2E reconciliation and operational readiness. The next domain audit should proceed feature-by-feature with source file, API/RPC, migration, role/tenant boundary, test and runtime evidence recorded; do not infer domain completion from the domain-level status.
