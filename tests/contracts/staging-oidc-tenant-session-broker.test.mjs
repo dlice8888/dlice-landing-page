@@ -34,6 +34,8 @@ test("broker validates immutable GitHub workflow identity and exact staging trus
   assert.match(broker, /from\("tenant_memberships"\)/);
   assert.match(broker, /activeTenantIds\.size !== 1/);
   assert.match(broker, /membership\.role !== "branch_manager"/);
+  assert.match(broker, /select\("is_active,role"\)/);
+  assert.match(broker, /profile\?\.role !== "sales_admin"/);
   assert.match(broker, /generateLink/);
   assert.match(broker, /verifyOtp/);
   assert.match(broker, /expiresAt - nowSeconds > 3600/);
