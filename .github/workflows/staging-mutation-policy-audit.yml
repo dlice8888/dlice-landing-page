@@ -67,8 +67,8 @@ jobs:
           for (const name of ["kds", "procurement", "tenant"]) assertManualOnly(name, source[name]);
 
           const auditTriggers = triggerBlock("audit", source.audit);
-          if (!/^  workflow_dispatch:\\s*$/m.test(auditTriggers)) fail("audit: manual trigger missing");
-          if (!/^  schedule:\\s*$/m.test(auditTriggers) || !/cron:\\s*"37 2 \\* \\* \\*"/.test(auditTriggers)) fail("audit: daily schedule missing");
+          if (!/^  workflow_dispatch:\s*$/m.test(auditTriggers)) fail("audit: manual trigger missing");
+          if (!/^  schedule:\s*$/m.test(auditTriggers) || !/cron:\s*"37 2 \* \* \*"/.test(auditTriggers)) fail("audit: daily schedule missing");
           else pass("audit: separate daily policy-only schedule");
 
           function assertConfirmation(name, text) {
