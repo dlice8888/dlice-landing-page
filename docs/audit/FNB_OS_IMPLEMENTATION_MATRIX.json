@@ -2534,5 +2534,37 @@
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
     }
+  },
+  "historical_acceptance_coverage": {
+    "source_pr": 31,
+    "source_result": "21 historical PASS",
+    "source_script": "tests/staging/next-workflow-acceptance.mjs",
+    "source_workflow": ".github/workflows/staging-next-workflow-acceptance.yml",
+    "current_staging_artifacts_present": false,
+    "current_status": "PORT_REQUIRED_NOT_RUNTIME_VERIFIED",
+    "note": "Do not restore the old workflow unchanged: it uses legacy password inputs, a hard-coded Branch B UUID and a QA-account bootstrap step. Port its assertions into a fixture-discovery/OIDC-based harness without creating identities or mutating real business records.",
+    "cases": [
+      "P2P Owner purchase-order list returns a valid purchase_orders collection",
+      "P2P Branch A purchase-order list succeeds",
+      "P2P Branch A cannot read Branch B purchase orders",
+      "P2P no-permission identity is denied purchase-order list",
+      "P2P inactive identity is denied purchase-order list",
+      "O2C Owner fulfillment list returns a valid orders collection",
+      "O2C Branch A fulfillment list succeeds",
+      "O2C Branch A cannot read Branch B fulfillment orders",
+      "O2C no-permission identity is denied fulfillment list",
+      "O2C inactive identity is denied fulfillment list",
+      "Finance Owner settlement list returns a valid settlements collection",
+      "Branch identity cannot create settlement",
+      "Finance no-permission identity is denied settlement list",
+      "Finance inactive identity is denied settlement list",
+      "Branch identity cannot create cash reconciliation for another branch",
+      "No-permission identity cannot create cash reconciliation",
+      "Receiving an unknown purchase order returns 404 and writes nothing",
+      "Updating an unknown fulfillment order returns 404 and writes nothing",
+      "Transitioning an unknown stock transfer returns 404 and writes nothing",
+      "Posting an unknown stock count returns 404 and writes nothing",
+      "Reviewing an unknown cash reconciliation returns 404 and writes nothing"
+    ]
   }
 }
