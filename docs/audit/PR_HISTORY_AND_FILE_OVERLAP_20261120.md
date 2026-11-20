@@ -1066,3 +1066,15 @@ The matrix contains all **18 PRD domains and 189 feature rows**. One feature sta
 | **Total** | **18 domains** | **189** | **82** | **98** | **9** |
 
 No domain currently has complete acceptance across frontend, backend, database, authorization, runtime tests, E2E reconciliation and operational readiness. The next domain audit should proceed feature-by-feature with source file, API/RPC, migration, role/tenant boundary, test and runtime evidence recorded; do not infer domain completion from the domain-level status.
+
+
+## 29. PR #111 exact-head validation completed
+
+On exact head `48fe855d5c19b769a05d15597de0f9a9fbd3708a`, all three relevant workflows completed SUCCESS:
+- Free quality checks — SUCCESS, including Deno type-check, three pure OIDC claim-validator tests, and OIDC broker contract tests.
+- Staging Kitchen KDS Offline Contract Tests — SUCCESS.
+- Disposable local Supabase migration replay — SUCCESS.
+
+The broker's claim allowlist was extracted into a pure validator and unit-tested against wrong repository/owner IDs, wrong ref/workflow/environment, push event, missing protected IDs, malformed run ID/attempt and malformed JTI. The broker additionally enforces active global `sales_admin` profile and exactly one active tenant membership with `branch_manager` role.
+
+This remains source/disposable validation only. No Supabase Function Secrets have been verified/configured, no `staging-tenant-session` Edge Function has been deployed, no audit migration has been applied to shared staging, and P01–P09 have not run. #111 remains Draft/HOLD until authorized staging configuration and runtime broker validation are complete.
