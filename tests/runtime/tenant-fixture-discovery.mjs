@@ -34,6 +34,8 @@ export function resolveTenantFixtures({
 
   const membershipA = activeMembershipsA.find((membership) => membership.tenant_id === tenantA) ?? null;
   const membershipB = activeMembershipsB.find((membership) => membership.tenant_id === tenantB) ?? null;
+  const branchAIsActive = branchARecord?.status === "active";
+  const branchBIsActive = branchBRecord?.status === "active";
   const membershipAIsCorrect = tenantIdsDistinct &&
     !!membershipA &&
     activeMembershipsA.every((membership) => membership.tenant_id === tenantA) &&
@@ -45,12 +47,14 @@ export function resolveTenantFixtures({
 
   const branchAAssignmentIsCorrect = tenantIdsDistinct &&
     branchIdsDistinct &&
+    branchAIsActive &&
     !!branchARecord &&
     list(branchesA).length > 0 &&
     list(branchesA).every((branch) => branch?.tenant_id === tenantA) &&
     !list(branchesA).some((branch) => branch?.id === branchB || branch?.code === branchCodeB);
   const branchBAssignmentIsCorrect = tenantIdsDistinct &&
     branchIdsDistinct &&
+    branchBIsActive &&
     !!branchBRecord &&
     list(branchesB).length > 0 &&
     list(branchesB).every((branch) => branch?.tenant_id === tenantB) &&
@@ -104,6 +108,8 @@ export function resolveTenantFixtures({
     permissionSetsEqual,
     branchAAssignmentIsCorrect,
     branchBAssignmentIsCorrect,
+    branchAIsActive,
+    branchBIsActive,
     branchMatchCounts: {
       tenantA: branchMatchesA.length,
       tenantB: branchMatchesB.length,
