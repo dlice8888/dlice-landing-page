@@ -543,3 +543,38 @@ Project: `higoadrzxnhzbbwhdbmh`.
 4. Independently review PR #109 and then integrate/apply migrations in forward order: Owner bootstrap, Command Center, atomic checklist, same-tenant stock-transfer guard. Verify each migration separately before deploying the matching Edge Function source.
 5. Fix PR #107's `track.html` coverage and execute exact-Preview runtime smoke.
 6. Tighten GitHub ruleset and scheduled staging mutation workflows before treating staging as release-gated.
+
+## 15. Follow-up execution checkpoint — 20 November 2026
+
+### ACL migration reconciliation
+- PR #106 contains the exact migration SQL under `supabase/migrations/20261119182606_revoke_default_public_function_execute.sql`; the prior `20261119160000_...` filename is absent from the PR head.
+- Supabase staging history records version `20261119182606`; the current staging branch still contains the stale `20261119160000_...` filename until PR #106 is integrated.
+- PR #106's disposable migration replay, free quality checks, and KDS contract workflow all completed successfully.
+- PR #106 was moved from Draft to Ready for Review. It remains open and unmerged. No SQL was replayed or applied.
+
+### Tenant fixture discovery port
+- Created PR #110 from `fix/tenant-isolation-discover-fixtures-20261120` to `staging`, with six changed files and 8 commits. It is Ready for Review, open, and mergeable.
+- Its Free quality checks completed successfully; Vercel status is success.
+- Direct read-only staging inspection confirmed QA branch codes `QA-DLICE-A` and `QA-TENANT-B` are active and belong to different tenants. The two QA identities have distinct user IDs, active `branch_manager` memberships, and `sales_admin` admin profiles. Tenant A has two active branch assignments; the discovery logic permits multiple assignments within the same tenant.
+- The four credential values were not read. GitHub Environment secret metadata is not exposed through the available connected actions, and workflow dispatch is not exposed either. Therefore P01–P09 have **not** been run; runtime acceptance remains NOT VERIFIED.
+- No credentials were changed, no user passwords were reset, and no test JWTs were generated.
+
+### Migration integration status — source vs shared staging
+- PR #102 (Owner bootstrap), #103 (Command Center), and #105 (atomic branch checklist) are already **merged into the GitHub staging branch**. Their disposable migration replay and relevant contract workflows completed successfully.
+- Supabase shared staging migration history still has 49 applied rows and does not include those three versions. They remain pending database application; GitHub merge is not equivalent to Supabase apply.
+- PR #109 adds the fourth pending migration `20261120130000_enforce_same_tenant_stock_transfers.sql`. Its disposable local migration replay, same-tenant API/PostgreSQL boundary regression, Free quality checks, CORS, KDS, and procurement workflows all completed successfully.
+- PR #109 remains Draft, open, mergeable, and has no submitted independent review. No migration was applied to shared staging.
+
+### Code-review notes
+- PR #109's SQL trigger rejects cross-tenant stock-transfer INSERT and source/destination UPDATE, and blocks tenant reassignment for branches referenced by transfer history. Its Edge Function checks source/destination tenant equality on create and rechecks tenant equality on every transition, including platform-owner requests. The disposable SQL regression covers valid same-tenant insert, cross-tenant insert, both endpoint updates, branch reassignment, no partial mutation, and client EXECUTE denial.
+- Independent security review is still outstanding; static inspection and CI do not replace it.
+- PR #102 and #105 service-role-only RPCs use `auth.role()` as a role guard. Supabase currently deprecates `auth.role()`; treat replacement with a JWT role claim check as a follow-up hardening item, after confirming the supported claim contract and testing in disposable replay. Do not alter the already merged migration in place; use a forward-only follow-up migration if needed.
+- PR #103 Command Center is called only from the `erp-overview` route, which checks `isOwner` before querying branch IDs and invoking the service-role RPC. Keep this owner-only guard in regression coverage.
+- PR #105 checklist writes use server-side branch access checks before calling the service-role atomic RPC; its migration test verifies rollback of checklist state when audit insertion fails.
+
+### Updated execution blockers
+1. PR #106 needs independent review and merge to reconcile the migration filename in the GitHub staging branch. Do not replay SQL.
+2. PR #110 needs independent review, then trusted staging workflow dispatch after a maintainer verifies the four canonical Tenant A/B username/password Environment secrets. Require P01–P09 all executed, zero BLOCKED/SKIPPED.
+3. PR #109 needs independent security review; keep it Draft/HOLD until review and runtime acceptance are complete.
+4. Only after P0 runtime acceptance and the relevant reviews may migrations be applied to shared staging, one at a time in order: #102, #103, #105, #109. Verify the database history and postconditions after each apply.
+5. Deploy `dlice-orders` only after the matching database migration and API source are both verified. Production remains untouched and both release flags remain false.
