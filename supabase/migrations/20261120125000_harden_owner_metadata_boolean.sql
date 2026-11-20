@@ -1,7 +1,7 @@
 -- Forward-only hardening for the merged Owner bootstrap and branch checklist RPCs.
 -- Apply after 20261120120000 and before 20261120130000.
 -- Require a JSON boolean true (not the string "true") for platform_owner metadata.
--- Replace deprecated auth.role() checks with the JWT role claim helper.
+-- Replace the deprecated legacy role helper with the JWT role claim helper.
 
 CREATE OR REPLACE FUNCTION public.dlice_bootstrap_initial_owner(
   p_user_id uuid,
