@@ -979,3 +979,13 @@ These row counts are existence/smoke indicators, not business-flow E2E proof. In
 
 ### Review policy clarification
 The user has explicitly waived an additional independent-review prerequisite for #106 and #110 when technical checks pass. Both are already merged. This does not fabricate a GitHub approval or bypass an active branch rule. PR #109 remains subject to the user's separately stated independent review sequence.
+
+
+## 24. OIDC broker rebase hardening addendum
+
+- #111's old stacked branch was backed up at `67af978eca050785d5375efc33cdaa2afd7c544b` before reconstructing it from the merged #110 staging tree.
+- Current #111 head: `b5e3edb345ac07ca474d30951ccbd14bda1f8e89`; base `staging`; compare 18 ahead, 0 behind, 9 changed files.
+- Broker accepts only the exact `workflow_dispatch` event; push-triggered token issuance is rejected.
+- Broker requires both an active global `admin_profiles.role = sales_admin` profile and exactly one active tenant membership with `role = branch_manager`. This prevents an Owner identity from being accidentally configured as a QA test identity and matches the existing staging role model.
+- OIDC exchange failure no longer stops the workflow before probe evidence is written. The runner emits nine BLOCKED records, each with `executed=false`; real HTTP probes emit `executed=true`. This fixes a prior evidence integrity issue where the BLOCKED status could be paired with a misleading `executed=true` field.
+- The new exact head has no observed GitHub Actions CI run yet. The connected GitHub toolset exposes no workflow-dispatch action; Vercel build-rate-limit failure is not CI evidence. Keep #111 Draft/HOLD until exact-head quality CI and disposable migration replay pass.
