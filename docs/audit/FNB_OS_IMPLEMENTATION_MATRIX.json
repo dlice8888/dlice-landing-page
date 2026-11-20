@@ -2453,10 +2453,10 @@
     "feature_statuses_reaudited": false,
     "feature_status_note": "The 189 per-feature statuses below remain the 18-Nov baseline. They are not promoted to PASS based on PR merges or static CI. Runtime and end-to-end acceptance must update each feature with current evidence.",
     "pull_requests": {
-      "actual_total": 109,
+      "actual_total": 110,
       "merged": 77,
       "closed_without_merge": 26,
-      "open": 6,
+      "open": 7,
       "pr106": "MERGED",
       "pr110": "MERGED",
       "pr109": {
@@ -2469,11 +2469,12 @@
       "pr111": {
         "state": "OPEN_DRAFT",
         "base": "staging",
-        "head": "b5e3edb345ac07ca474d30951ccbd14bda1f8e89",
+        "head": "48fe855d5c19b769a05d15597de0f9a9fbd3708a",
         "rebased_on_pr110": true,
-        "exact_head_ci": "NOT_VERIFIABLE_WITH_CONNECTED_INTEGRATION",
-        "ahead": 18,
-        "behind": 0
+        "exact_head_quality": "SUCCESS",
+        "kds_contract": "SUCCESS",
+        "disposable_migration_replay": "IN_PROGRESS",
+        "runtime_p01_p09": "NOT_RUN"
       },
       "open_pr_numbers": [
         71,
@@ -2481,12 +2482,22 @@
         107,
         108,
         109,
-        111
+        111,
+        112
       ],
       "pr108": {
         "state": "OPEN_DRAFT",
         "head": "31cdc8aa6a6b6315740b298d090bedb9c483f98c",
         "purpose": "full PR inventory, closed-PR recovery, current feature matrix and engineering standard"
+      },
+      "pr112": {
+        "state": "OPEN_DRAFT",
+        "base": "staging",
+        "head": "82edeeb848335259aa9076d41de0079f4ae9f6b5",
+        "exact_head_quality": "SUCCESS",
+        "kds_contract": "SUCCESS",
+        "disposable_migration_replay": "IN_PROGRESS",
+        "migration_version": "20261120125000"
       }
     },
     "supabase_live_read_only": {
