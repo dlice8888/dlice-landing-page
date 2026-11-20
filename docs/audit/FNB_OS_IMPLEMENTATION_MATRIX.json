@@ -2473,7 +2473,7 @@
         "rebased_on_pr110": true,
         "exact_head_quality": "SUCCESS",
         "kds_contract": "SUCCESS",
-        "disposable_migration_replay": "IN_PROGRESS",
+        "disposable_migration_replay": "SUCCESS",
         "runtime_p01_p09": "NOT_RUN"
       },
       "open_pr_numbers": [
