@@ -27,6 +27,9 @@ test("broker validates immutable GitHub workflow identity and exact staging trus
   assert.match(broker, /jwtVerify/);
   assert.match(broker, /refs\/heads\/staging/);
   assert.match(broker, /workflow_dispatch/);
+  assert.match(broker, /claims\\.run_id/);
+  assert.match(broker, /claims\\.run_attempt/);
+  assert.match(broker, /claims\\.jti/);
   assert.match(broker, /staging_machine_session_issuances/);
   assert.match(broker, /generateLink/);
   assert.match(broker, /verifyOtp/);
