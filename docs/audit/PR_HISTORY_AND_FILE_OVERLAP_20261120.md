@@ -578,3 +578,19 @@ Project: `higoadrzxnhzbbwhdbmh`.
 3. PR #109 needs independent security review; keep it Draft/HOLD until review and runtime acceptance are complete.
 4. Only after P0 runtime acceptance and the relevant reviews may migrations be applied to shared staging, one at a time in order: #102, #103, #105, #109. Verify the database history and postconditions after each apply.
 5. Deploy `dlice-orders` only after the matching database migration and API source are both verified. Production remains untouched and both release flags remain false.
+
+## 16. Owner authorization preflight — critical correction
+
+A further read-only Supabase staging check found:
+- One active `admin_profiles.role='owner'` row already exists.
+- Its referenced Auth user exists.
+- The Auth user's `app_metadata` does **not** contain the `platform_owner` key.
+- There is one default tenant and one active `tenant_owner` membership.
+
+Consequences:
+- Do **not** call `dlice_bootstrap_initial_owner` or the initial-owner Edge Function as a way to create a second owner. Both intentionally reject when an owner profile already exists.
+- The existing Owner authorization must be reconciled through the authorized Supabase Auth Admin path: preserve existing app_metadata, set `platform_owner` to boolean `true` only after verifying the account owner, then update the protected `DLICE_PLATFORM_OWNER_USER_IDS` allowlist with that exact existing Auth UUID. Do not expose credentials or metadata values in chat/logs.
+- Re-read the resulting metadata/allowlist safely and verify the Owner route before any Owner-only action. This is a human/admin authorization gate; no metadata or environment secret was changed by this audit.
+- The Owner bootstrap migration #102 may still be applied as schema code only after P0 gates; its initial-owner action must remain unused for this already-provisioned account.
+
+This supersedes any assumption that staging has no Owner profile. It has an Owner profile, but it is not currently a verified platform Owner.
