@@ -23,11 +23,15 @@ test("tenant isolation workflow uses GitHub OIDC and no username/password secret
 test("broker validates immutable GitHub workflow identity and exact staging trust boundary", () => {
   assert.match(broker, /createRemoteJWKSet/);
   assert.match(broker, /jwtVerify/);
-  assert.match(broker, /refs\/heads\/staging/);
-  assert.ok(broker.includes('repo:dlice8888/dlice-landing-page:environment:staging'));
+  assert.match(claims, /refs\\/heads\\/staging/);
+  assert.ok(claims.includes('repo:dlice8888/dlice-landing-page:environment:staging'));
   assert.match(broker, /isTrustedStagingWorkflowClaims/);
   assert.match(claims, /event_name/);
   assert.match(claims, /workflow_dispatch/);
+  assert.match(claims, /repository_id/);
+  assert.match(claims, /repository_owner_id/);
+  assert.match(claims, /workflow_ref/);
+  assert.match(claims, /environment/);
   assert.doesNotMatch(claims, /"push"/);
   assert.match(broker, /claims\.run_id/);
   assert.match(broker, /claims\.run_attempt/);
