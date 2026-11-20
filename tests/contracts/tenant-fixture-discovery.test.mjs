@@ -104,3 +104,13 @@ test("rejects empty or different permission sets", () => {
   assert.equal(resolveTenantFixtures(different).permissionSetsEqual, false);
   assert.equal(resolveTenantFixtures(different).passed, false);
 });
+
+
+test("rejects inactive QA branch fixtures even when identity and tenant membership match", () => {
+  const input = validFixture();
+  input.branchesA = [branch(ids.branchA, ids.tenantA, "QA-DLICE-A")];
+  input.branchesA[0].status = "suspended";
+  const result = resolveTenantFixtures(input);
+  assert.equal(result.branchAIsActive, false);
+  assert.equal(result.passed, false);
+});
