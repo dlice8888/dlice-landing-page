@@ -2487,7 +2487,7 @@
       ],
       "pr108": {
         "state": "OPEN_DRAFT",
-        "head": "31cdc8aa6a6b6315740b298d090bedb9c483f98c",
+        "head": "7e37b4689fbfa658d715531a3b2e92fa3cc625c2",
         "purpose": "full PR inventory, closed-PR recovery, current feature matrix and engineering standard"
       },
       "pr112": {
