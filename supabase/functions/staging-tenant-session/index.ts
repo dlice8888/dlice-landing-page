@@ -71,8 +71,8 @@ Deno.serve(async (req) => {
     return json({ error: "staging_auth_identity_unavailable" }, 403);
   }
   const { data: profile, error: profileError } = await admin.from("admin_profiles")
-    .select("is_active").eq("user_id", userId).maybeSingle();
-  if (profileError || profile?.is_active !== true) return json({ error: "staging_identity_inactive" }, 403);
+    .select("is_active,role").eq("user_id", userId).maybeSingle();
+  if (profileError || profile?.is_active !== true || profile?.role !== "sales_admin") return json({ error: "staging_identity_inactive_or_wrong_profile_role" }, 403);
   const { data: memberships, error: membershipError } = await admin.from("tenant_memberships")
     .select("tenant_id,role,status").eq("user_id", userId).eq("status", "active");
   const activeTenantIds = new Set((memberships ?? []).map((membership) => membership.tenant_id));
