@@ -25,7 +25,7 @@ test("broker validates immutable GitHub workflow identity and exact staging trus
   assert.match(broker, /refs\/heads\/staging/);
   assert.ok(broker.includes('repo:dlice8888/dlice-landing-page:environment:staging'));
   assert.match(broker, /workflow_dispatch/);
-  assert.match(broker, /!exact\\("event_name", "workflow_dispatch"\\)/);
+  assert.match(broker, /!exact\("event_name", "workflow_dispatch"\)/);
   assert.doesNotMatch(broker, /\\["workflow_dispatch", "push"\\]/);
   assert.match(broker, /claims\.run_id/);
   assert.match(broker, /claims\.run_attempt/);
