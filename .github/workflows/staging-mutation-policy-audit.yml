@@ -5,6 +5,14 @@ on:
   schedule:
     # Daily policy-only audit; this workflow never authenticates to staging or writes business data.
     - cron: "37 2 * * *"
+  pull_request:
+    branches:
+      - staging
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - ".github/workflows/staging-procurement-positive-e2e.yml"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - ".github/workflows/staging-mutation-policy-audit.yml"
   push:
     branches:
       - main
