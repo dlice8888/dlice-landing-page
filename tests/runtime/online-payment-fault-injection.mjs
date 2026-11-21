@@ -65,7 +65,8 @@ const waitForFunction = async () => {
   for (let attempt = 0; attempt < 90; attempt++) {
     try {
       const result = await post(functionUrl, { action: "__runtime_probe__" });
-      if (result.status < 500) return;
+      if (functionProcess.exitCode !== null) throw new Error("Local Edge Function process exited before becoming ready.");
+      if (result.status === 400) return;
     } catch {}
     await delay(1000);
   }
