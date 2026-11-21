@@ -49,7 +49,7 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 
 The current P01–P09 fixture contract expects sales_admin as the global profile role and branch_manager as the tenant membership role. Both existing Supabase identities satisfy these database prerequisites; their live login and authorization probes remain NOT RUN. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
 
-PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration passed disposable local replay (run 44306779612) but is not applied to staging and no account was changed. PR #87's exact-head quality workflow 44307838730 passed 7/7 tenant runtime contract tests; this is not P03 runtime acceptance. P03 remains BLOCKED.
+The branch_worker classification was a historical implementation path and is not required by the current P01–P09 fixture contract. No profile role change is needed for the two existing test identities. P03 database prerequisites are read-only verified; the runtime probe remains NOT RUN.
 
 
 ## Latest staging execution evidence — 2026-11-18
