@@ -18,10 +18,10 @@
 - PR #125 exact head 1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d passes exact-head CI and disposable replay; expiry lifecycle suite plan is 27.
 - PR #126 exact head 07d7c51c2cbea21b9cd49a480614e004fe7bf417 passes exact-head CI and disposable replay; RLS/onboarding/invitation suites declare plans 35/17/15. Real P01–P09 runtime has not been dispatched.
 - PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6 passes exact-head CI and disposable replay; payment-proof and supersession suites declare plans 16 and 14.
-- UNRESOLVED MIGRATION VERSION COLLISION: PR #123 and PR #126 both use version 20261121130000 but contain different SQL files (atomic_online_order_idempotency versus atomic_tenant_invite_lifecycle). They cannot both be applied as-is. Re-version one migration through the Supabase migration-generation workflow, update all references, and replay the combined candidate set.
-- IDENTICAL DUPLICATE MIGRATION: PR #125 and #127 carry byte-identical 20261121140000_order_expiry_payment_lifecycle.sql and test file blobs. Keep one canonical migration history entry; preserve PR #125 as the earlier expiry dependency slice and reconcile #127 to it.
+- NO VERSION COLLISION: PR #123 uses 20261121135000_atomic_online_order_idempotency.sql; PR #126 uses 20261121130000_atomic_tenant_invite_lifecycle.sql. Their versions are distinct. The earlier collision statement was a stale filename transcription and is superseded.
+- IDENTICAL DUPLICATE MIGRATION: PR #125 and #127 carried byte-identical 20261121140000_order_expiry_payment_lifecycle.sql, pgTAP test and documentation blobs. PR #125 is now CLOSED as superseded by #127; #127 is the canonical combined PR.
 - INVITATION OVERLAP: PR #120 and #126 both modify invite issue/accept behavior but use different RPC names/signatures. Consolidate to one canonical invitation path before integration; do not leave both Edge routes active with ambiguous contracts.
-- PR #124 is closed as superseded by #120; its password guard helper, unit tests and migration are consolidated into #120.
+- PR #124 is CLOSED as superseded by #120; its password guard helper, unit tests and migration are consolidated into #120. PR #125 is CLOSED as superseded by #127.
 - Project PR acceptance is test-evidence-only; no separate independent PR-review step is required. Protected staging Environment, secret-presence verification, explicit staging authorization and backup/rollback are separate release controls.
 - The active GitHub ruleset still has require_code_owner_review=true and require_last_push_approval=true; the connected integration cannot modify rulesets. It also has zero required status checks and zero required deployment environments, with 11 always-bypass actors.
 - STAGING_SUPABASE_SERVICE_ROLE_KEY presence and staging Environment protection are NOT VERIFIED. The secret value was not read or exposed. No workflow dispatch action is exposed, so P01–P09 remain NOT RUN.
@@ -141,8 +141,8 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 | PR | Migration file | Version | Current evidence |
 |---:|---|---|---|
 | #120 | `20261121100000_atomic_admin_permission_audit.sql` | 20261121100000 | Disposable replay PASS on exact PR head 471f4a33; no staging apply |
-| #123 | `20261121130000_atomic_online_order_idempotency.sql` | 20261121130000 | Disposable replay PASS; version collision with #126 |
-| #126 | `20261121130000_atomic_tenant_invite_lifecycle.sql` | 20261121130000 | Disposable replay PASS; version collision with #123 |
+| #123 | 20261121135000_atomic_online_order_idempotency.sql | 20261121135000 | Exact-head disposable replay PASS; no version collision with #126 |
+| #126 | 20261121130000_atomic_tenant_invite_lifecycle.sql | 20261121130000 | Exact-head disposable replay PASS; no version collision with #123 |
 | #125 / #127 | `20261121140000_order_expiry_payment_lifecycle.sql` | 20261121140000 | Blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd` is identical in both PRs; #127 descends from #125 |
 | #127 | `20261121150000_atomic_customer_payment_proof.sql` | 20261121150000 | Disposable replay PASS; runtime E2E pending |
 | #120 | `20261121160000_atomic_admin_profile_mutation_audit.sql` | 20261121160000 | Disposable replay PASS on exact PR head 471f4a33; includes 35 profile-mutation pgTAP assertions and password-reset audit intent/outcome |
@@ -170,9 +170,9 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 - PR #126 retains tenant invitation migration 20261121130000_atomic_tenant_invite_lifecycle.sql.
 - PR #123 and PR #126 still collide on migration version 20261121130000 with different SQL contents. The collision is NOT resolved; do not integrate both until one migration is re-versioned through the Supabase migration-generation workflow and combined disposable replay passes.
 - PR #123 disposable replay for exact head 6788c4d7da34144d279da06edea84f6d0763b796 was running at snapshot time; do not mark the combined migration set PASS until that run completes and a combined replay is executed with #126.
-- PR #120 migrations are 20261121100000 and 20261121160000; PR #125 is 20261121140000; PR #127 is 20261121150000 and 20261121180000. Preserve timestamp order and check dependencies before integration.
+- PR #120 migrations are 20261121100000 and 20261121160000; PR #127 contains 20261121140000, 20261121150000 and 20261121180000; #125 is closed as superseded. Preserve timestamp order and check dependencies before integration.
 - No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
-- PR reviewer identity/approval is not an acceptance criterion. Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
+- PR reviewer identity and approval count are not feature acceptance criteria. Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
 
 
 ## Live source/database and open-PR reconciliation — 21 November 2026, latest snapshot
@@ -232,3 +232,13 @@ PR #111 updated head: `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
 - Required runtime outcome: P01–P09 **9/9 executed and PASS**, supplemental direct-RLS/RPC probes all PASS, **0 BLOCKED, 0 SKIPPED, 0 NOT RUN**, with persisted database evidence and no cross-tenant read/write success.
 
 No independent review, shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
+
+
+## Authoritative migration and PR reconciliation — 21 November 2026
+
+- Supabase staging has **49 applied migration versions**; the staging source tree has **52 SQL migration files**. There are exactly three source-only versions (20261120100000, 20261120110000, 20261120120000), zero database-only versions, and zero duplicate versions in the staging source tree.
+- The earlier reported #123/#126 collision at 20261121130000 was incorrect. Current PR filenames are #123=20261121135000_atomic_online_order_idempotency.sql and #126=20261121130000_atomic_tenant_invite_lifecycle.sql; there is no collision.
+- #120 and #124 shared byte-identical 20261121100000_atomic_admin_permission_audit.sql; #124 is closed as superseded by #120. #125 and #127 shared byte-identical expiry migration, test and documentation blobs; #125 is closed as superseded by #127.
+- PR #120 exact-head replay 44908566908 passed 7 pgTAP files / 124 assertions. PR #126 exact-head replay 44909241076 passed 7 pgTAP files / 134 assertions, including the 15 invitation assertions. PR #123 replay 44909182869 and PR #127 replay 44897171322 passed on their exact candidate heads.
+- The #120/#126 invitation handler overlap remains a code-level consolidation item: select one canonical create/accept RPC contract and remove unused overloads before integration. No migration was applied to shared staging or production.
+- No separate PR-review prerequisite remains in project acceptance. Migration completion requires combined disposable replay, pgTAP, ACL/RLS and application regression, runtime E2E, persisted-data invariants, and explicit staging authorization.
