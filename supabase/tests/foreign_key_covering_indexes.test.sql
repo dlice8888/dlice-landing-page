@@ -1,4 +1,5 @@
 BEGIN;
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SELECT plan(24);
 SELECT has_index('public', 'backup_restore_runs', 'idx_backup_restore_runs_started_by', 'covers FK columns started_by on backup_restore_runs');
 SELECT has_index('public', 'backup_restore_runs', 'idx_backup_restore_runs_tenant_id', 'covers FK columns tenant_id on backup_restore_runs');
