@@ -28,7 +28,7 @@ jobs:
       # no QA user/password secrets or account/password mutations are required.
       # Keep this service-role key scoped to the protected staging Environment only.
       STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-      STAGING_TENANT_A_EMAIL: dlice8888@accounts.dlice.internal
+      STAGING_TENANT_A_EMAIL: qa_dlice_staging_no_permission@accounts.dlice.internal
       STAGING_TENANT_B_EMAIL: qa_dlice_staging_branch_a@accounts.dlice.internal
       # Tenant/branch/user UUIDs are derived from the authenticated A/B identities at runtime.
       STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
