@@ -49,6 +49,8 @@ SET search_path = public, pg_temp
 AS $function$
 DECLARE
   v_old_status text;
+  v_old_fulfillment_status text;
+  v_old_operational_status text;
   v_proof_path text;
   v_payment_status text;
   v_superseded_ids uuid[] := ARRAY[]::uuid[];
@@ -58,7 +60,8 @@ BEGIN
     RAISE EXCEPTION 'Invalid payment result';
   END IF;
 
-  SELECT payment_status INTO v_old_status
+  SELECT payment_status, fulfillment_status, operational_status
+    INTO v_old_status, v_old_fulfillment_status, v_old_operational_status
   FROM public.orders
   WHERE id = p_order_id
   FOR UPDATE;
@@ -143,13 +146,20 @@ BEGIN
     (p_order_id, 'payment', v_old_status, p_result, p_actor_user_id, nullif(left(coalesce(p_note,''),500),''));
 
   IF p_result = 'rejected' THEN
-    INSERT INTO public.order_status_history
-      (order_id, status_type, old_status, new_status, changed_by, note)
-    VALUES
-      (p_order_id, 'fulfillment', 'received', 'failed', p_actor_user_id,
-       'Payment verification rejected; order closed and reservations released.'),
-      (p_order_id, 'operational', 'received', 'cancelled', p_actor_user_id,
-       'Payment verification rejected; order closed and reservations released.');
+    IF v_old_fulfillment_status <> 'failed' THEN
+      INSERT INTO public.order_status_history
+        (order_id, status_type, old_status, new_status, changed_by, note)
+      VALUES
+        (p_order_id, 'fulfillment', v_old_fulfillment_status, 'failed', p_actor_user_id,
+         'Payment verification rejected; order closed and reservations released.');
+    END IF;
+    IF v_old_operational_status <> 'cancelled' THEN
+      INSERT INTO public.order_status_history
+        (order_id, status_type, old_status, new_status, changed_by, note)
+      VALUES
+        (p_order_id, 'operational', v_old_operational_status, 'cancelled', p_actor_user_id,
+         'Payment verification rejected; order closed and reservations released.');
+    END IF;
   END IF;
 
   IF v_closed_pending_attempts > 0 THEN
