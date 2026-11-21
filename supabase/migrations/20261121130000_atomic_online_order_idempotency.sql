@@ -95,8 +95,7 @@ begin
  insert into public.online_order_idempotency(idempotency_key_hash,request_fingerprint,order_id,response)
  values(v_idempotency_key_hash,v_request_fingerprint,v_order_id,v_response);
  return v_response || jsonb_build_object('idempotent_replay',false);
-end; $function$
-
+end; $function$;
 
 REVOKE ALL ON FUNCTION public.create_order_with_reservations(jsonb,jsonb,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.create_order_with_reservations(jsonb,jsonb,text) TO service_role;
