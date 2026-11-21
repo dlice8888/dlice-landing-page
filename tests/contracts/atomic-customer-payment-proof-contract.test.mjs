@@ -40,3 +40,12 @@ test("customer browser keeps the same upload idempotency key across retries in t
   assert.match(checkout, /upload_request_id:activeOrder\.proofUploadRequestId/);
   assert.match(checkout, /activeOrder\.proofUploadRequestId=null/);
 });
+
+test("proof upload opportunistically removes only old unreferenced objects through Storage API", () => {
+  assert.match(edge, /const cleanupOrphanPaymentProofs = async/);
+  assert.match(edge, /Date\.now\(\) - 60 \* 60 \* 1000/);
+  assert.match(edge, /storage\.list\(orderId/);
+  assert.match(edge, /from\("payment_records"\)[\s\S]*?select\("proof_storage_path"\)/);
+  assert.match(edge, /storage\.remove\(orphans\)/);
+  assert.match(edge, /await cleanupOrphanPaymentProofs\(order\.id\)/);
+});
