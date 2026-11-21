@@ -3054,7 +3054,10 @@
     "supabase_advisors": {
       "security": {
         "leaked_password_protection": "DISABLED",
-        "finding": "auth_leaked_password_protection WARN"
+        "finding": "auth_leaked_password_protection WARN",
+        "organization_plan": "free",
+        "leaked_password_protection_available_on_plan": "Pro and above",
+        "leaked_password_protection_status": "DISABLED; current Free plan cannot enable native leaked-password protection"
       },
       "performance": {
         "unindexed_foreign_keys": 26,
@@ -3076,6 +3079,18 @@
         "state": "NOT FOUND"
       },
       "production_mutated": false
+    },
+    "password_mutation_bypass": {
+      "application_layer_guard": "PR #124 checks passwords before the app's admin create/reset actions",
+      "direct_auth_api": "not proven blocked; direct Supabase Auth updateUser path can bypass application Edge Function checks unless platform password-change protections are enabled",
+      "required_platform_controls": [
+        "require reauthentication when changing password",
+        "require current password when changing password",
+        "native leaked-password protection (requires Pro or above)"
+      ],
+      "organization_plan": "free",
+      "platform_settings_mutated": false,
+      "release_status": "BLOCKED"
     }
   },
   "tenant_acceptance": {
@@ -3771,7 +3786,8 @@
     "migration_reconciliation": "Repository staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three missing versions are 20261120100000, 20261120110000 and 20261120120000. No staging migration applied.",
     "pr126": "Exact head cf9d6781111f01c2da6d798c14fe70fd577d1ffd: free quality PASS; full disposable migration replay PASS; all 15 invitation pgTAP assertions PASS; CORS, KDS, procurement requisition and receiving contracts PASS. Existing matching branch-manager identities are selected from Supabase. Passwordless Auth Admin magic-link harness is implemented; live P01-P09 cannot run until PR is integrated to trusted staging and staging Environment protection plus service-role secret are verified. Vercel preview is still on older commit a3663697.",
     "supabase_advisors": "Security advisor: leaked password protection DISABLED. Performance advisor: 26 unindexed foreign keys and 49 unused indexes; do not drop unused indexes without workload/query-plan evidence. Health advisor: no findings.",
-    "passwordless_tenant_auth": "PR #126 uses the two matching existing branch-manager Auth identities via Auth Admin generateLink(type=magiclink), then verifies the token hash and revokes temporary sessions. Old username/password inputs removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY required. Exact-head quality and disposable replay are running on cf9d6781; live P01-P09 remains NOT RUN until PR integration and secret configuration."
+    "passwordless_tenant_auth": "PR #126 uses the two matching existing branch-manager Auth identities via Auth Admin generateLink(type=magiclink), then verifies the token hash and revokes temporary sessions. Old username/password inputs removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY required. Exact-head quality and disposable replay are running on cf9d6781; live P01-P09 remains NOT RUN until PR integration and secret configuration.",
+    "pr124": "Exact head a74200d60d6af06df5a5da4ed87a464283f0f9ff: quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. PR #124 application-layer HIBP k-anonymity checks guard admin create/reset routes, but direct Supabase Auth password updates are not proven blocked. Supabase org is on Free; native leaked-password protection requires Pro or above. Reauthentication/current-password controls must also be verified in Auth settings. No billing or Auth setting changed."
   },
   "current_open_prs": [
     127,
