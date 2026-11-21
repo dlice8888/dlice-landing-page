@@ -4116,7 +4116,7 @@
       "procurement_receiving_contract": "PASS",
       "disposable_migration_replay": "PASS",
       "invitation_pgtap_assertions": 15,
-      "invitation_assertions": "PASS in exact-head disposable replay; tenant_invite_audited.test.sql returned ok",
+      "invitation_assertions": "PASS: supabase/tests/tenant_invite_atomic.test.sql declares plan(15) and returned ok in exact-head disposable replay",
       "p01_p09_runtime": "NOT RUN — requires manual workflow_dispatch on PR126 branch and verified staging service-role secret",
       "release_flag": false,
       "shared_staging_mutation": false
