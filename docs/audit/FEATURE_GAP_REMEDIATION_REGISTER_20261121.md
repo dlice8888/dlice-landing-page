@@ -647,3 +647,19 @@ A weighted progress rubric has now been added to `FNB_OS_IMPLEMENTATION_MATRIX.j
 - Reconciliation/observability: 10%
 
 The score measures implementation completeness, not release readiness. Missing evidence receives zero; no score is inferred from a PR being open or a table existing. At this checkpoint, 2 of 89 PARTIAL features have evidence-backed provisional percentages (tenant isolation 38%, tenant directory/onboarding 30%); 87 remain explicitly marked `UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED`. Completing those 87 feature-level evidence breakdowns is itself an audit work item; I will not manufacture percentages.
+
+
+### PR #124 — password mutation and native Auth controls
+
+Exact-head quality, disposable migration replay, CORS, KDS and procurement contract workflows PASS on `a74200d6`. PR #124's application-level HIBP k-anonymity guard is present on the Edge Function's admin create/reset password actions.
+
+**Remaining security gap:** direct Supabase Auth `updateUser({ password })` calls do not traverse those application Edge Function checks. The project Security Advisor reports native leaked-password protection DISABLED. The Supabase organization is on the **Free** plan; Supabase documents native leaked-password protection as Pro-and-above. Therefore the native setting cannot be enabled on the current plan.
+
+**Required closure**
+1. Upgrade the Supabase organization to Pro (billing owner approval required) to enable native leaked-password protection.
+2. In Supabase Auth password security settings, enable both “Require reauthentication when changing password” and “Require current password when changing password”; verify actual settings because the connected API does not expose their current values.
+3. Test direct `/auth/v1/user` password mutation attempts with and without current-password/reauth proof; verify leaked-password rejection after Pro enablement.
+4. Keep the app-level HIBP check and atomic admin audit in PR #124; test that failed changes produce no password mutation and successful privileged resets have atomic audit.
+5. Do not mark password mutation protection DONE until both official Auth API paths and the application admin path pass.
+
+No billing plan or Auth security setting was changed.
