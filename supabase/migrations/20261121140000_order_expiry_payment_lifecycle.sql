@@ -57,7 +57,8 @@ begin
   set status = p_result,
       verified_by = p_actor_user_id,
       verified_at = now(),
-      admin_note = nullif(left(coalesce(p_note,''),500),'')
+      admin_note = nullif(left(coalesce(p_note,''),500),''),
+      updated_at = now()
   where id = p_payment_id;
 
   update public.orders
@@ -92,7 +93,8 @@ begin
   set status = 'rejected',
       verified_by = p_actor_user_id,
       verified_at = now(),
-      admin_note = 'Closed automatically: the order was resolved by another payment decision.'
+      admin_note = 'Closed automatically: the order was resolved by another payment decision.',
+      updated_at = now()
   where order_id = p_order_id
     and id <> p_payment_id
     and status = 'pending_verification'
@@ -145,6 +147,8 @@ DECLARE
   v_expired_reservations integer := 0;
   v_closed_payment_attempts integer := 0;
   v_rows integer := 0;
+  v_reservation_rows integer := 0;
+  v_payment_rows integer := 0;
 BEGIN
   IF p_batch_size IS NULL OR p_batch_size < 1 OR p_batch_size > 1000 THEN
     RAISE EXCEPTION 'invalid_batch_size' USING ERRCODE = '22023';
@@ -185,9 +189,9 @@ BEGIN
     WHERE order_id = v_order.id
       AND status = 'active'
       AND expires_at <= v_now;
-    GET DIAGNOSTICS v_rows = ROW_COUNT;
+    GET DIAGNOSTICS v_reservation_rows = ROW_COUNT;
 
-    IF v_rows > 0 THEN
+    IF v_reservation_rows > 0 THEN
       UPDATE public.orders
       SET fulfillment_status = 'failed',
           operational_status = 'cancelled',
@@ -198,7 +202,7 @@ BEGIN
 
       IF FOUND THEN
         v_expired_orders := v_expired_orders + 1;
-        v_expired_reservations := v_expired_reservations + v_rows;
+        v_expired_reservations := v_expired_reservations + v_reservation_rows;
 
         INSERT INTO public.order_status_history
           (order_id,status_type,old_status,new_status,changed_by,note)
@@ -214,14 +218,14 @@ BEGIN
         WHERE order_id = v_order.id
           AND status = 'pending_verification'
           AND proof_storage_path IS NULL;
-        GET DIAGNOSTICS v_rows = ROW_COUNT;
-        v_closed_payment_attempts := v_closed_payment_attempts + v_rows;
+        GET DIAGNOSTICS v_payment_rows = ROW_COUNT;
+        v_closed_payment_attempts := v_closed_payment_attempts + v_payment_rows;
 
-        IF v_rows > 0 THEN
+        IF v_payment_rows > 0 THEN
           INSERT INTO public.order_status_history
             (order_id,status_type,old_status,new_status,changed_by,note)
           VALUES (v_order.id,'payment','pending_verification','rejected',NULL,
-            format('%s payment attempt(s) without proof closed after reservation expiry.',v_rows));
+            format('%s payment attempt(s) without proof closed after reservation expiry.',v_payment_rows));
         END IF;
 
         INSERT INTO public.admin_audit_logs
@@ -256,18 +260,18 @@ BEGIN
     WHERE order_id = v_order.id
       AND status = 'pending_verification'
       AND proof_storage_path IS NULL;
-    GET DIAGNOSTICS v_rows = ROW_COUNT;
+    GET DIAGNOSTICS v_payment_rows = ROW_COUNT;
 
-    IF v_rows > 0 THEN
-      v_closed_payment_attempts := v_closed_payment_attempts + v_rows;
+    IF v_payment_rows > 0 THEN
+      v_closed_payment_attempts := v_closed_payment_attempts + v_payment_rows;
       INSERT INTO public.order_status_history
         (order_id,status_type,old_status,new_status,changed_by,note)
       VALUES (v_order.id,'payment','pending_verification','rejected',NULL,
-        format('%s stale no-proof payment attempt(s) closed because order is paid.',v_rows));
+        format('%s stale no-proof payment attempt(s) closed because order is paid.',v_payment_rows));
       INSERT INTO public.admin_audit_logs
         (actor_user_id,action,entity_type,entity_id,metadata)
       VALUES (NULL,'system_close_stale_payment_attempts','order',v_order.id::text,
-        jsonb_build_object('closed_attempts',v_rows,'reason','order_already_paid','checked_at',v_now));
+        jsonb_build_object('closed_attempts',v_payment_rows,'reason','order_already_paid','checked_at',v_now));
     END IF;
   END LOOP;
 
