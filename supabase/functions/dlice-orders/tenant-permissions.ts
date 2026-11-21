@@ -82,3 +82,55 @@ export function isTenantSensitiveAction(action: string): boolean {
   if (action === "admin-login" || action === "admin-session-info") return false;
   return action.startsWith("admin-") || action.startsWith("erp-");
 }
+
+export type TenantBranchMembership = {
+  tenant_id?: string;
+  role?: string;
+  status: string;
+};
+
+export type TenantBranchAssignment = {
+  branch_id: string;
+};
+
+export type TenantBranch = {
+  id: string;
+  tenant_id?: string;
+};
+
+/**
+ * Resolve a user's branch set from active tenant memberships and active
+ * assignments. Tenant owners/admins receive only branches in their own tenant;
+ * other members receive only explicitly assigned branches within a tenant
+ * where they hold an active membership.
+ */
+export function resolveTenantScopedBranchIds(
+  memberships: TenantBranchMembership[],
+  assignments: TenantBranchAssignment[],
+  branches: TenantBranch[],
+): string[] {
+  if (!Array.isArray(memberships) || !Array.isArray(assignments) || !Array.isArray(branches)) return [];
+
+  const activeMemberships = memberships.filter(
+    (membership) => membership.status === "active" && typeof membership.tenant_id === "string",
+  );
+  const tenantIds = new Set(activeMemberships.map((membership) => membership.tenant_id as string));
+  if (tenantIds.size === 0) return [];
+
+  const ownerTenantIds = new Set(
+    activeMemberships
+      .filter((membership) => ["tenant_owner", "tenant_admin"].includes(String(membership.role)))
+      .map((membership) => membership.tenant_id as string),
+  );
+  const assignedBranchIds = new Set(assignments.map((assignment) => assignment.branch_id));
+
+  return [...new Set(
+    branches
+      .filter((branch) =>
+        typeof branch.tenant_id === "string" &&
+        tenantIds.has(branch.tenant_id) &&
+        (ownerTenantIds.has(branch.tenant_id) || assignedBranchIds.has(branch.id))
+      )
+      .map((branch) => branch.id),
+  )].sort();
+}
