@@ -128,3 +128,28 @@ The earlier wording that Tenant A/B credentials and all six fixture variables we
 - Both users have active `branch_manager` tenant memberships, six equal permissions, and active assignments within their own tenant. User A has two active same-tenant branches (`DLC-B001` and `QA-DLICE-A`); user B has one (`QA-TENANT-B`). The P03 runtime script on staging still requires exactly one branch for each identity, which incorrectly rejects User A's valid same-tenant second assignment. This is a code/test defect, not a missing assignment.
 
 Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_dispatch on branch `staging` without changing/recreating configuration. If the ten inputs still resolve empty, inspect the exact GitHub Environment scope/name and access settings with repository administration access. Before treating P03 as valid, correct its one-branch-only assertion to require the configured QA branch and reject only cross-tenant visibility. Inventory action authorization must also be repaired/deployed before P04/P06 can prove own-branch reads.
+
+
+## Superseding security audit — 21 November 2026, 19:42 WIB
+
+### Tenant fixture identities
+
+Read-only Supabase Auth and application-table joins confirm two real QA users:
+- Tenant A: `qa_dlice_staging_no_permission`, active `sales_admin` profile, empty global profile permission array, active `branch_manager` membership in `dlice-default`, six tenant membership permissions, active `QA-DLICE-A` branch assignment.
+- Tenant B: `qa_dlice_staging_branch_a`, active `sales_admin` profile, seven global profile permissions, active `branch_manager` membership in `dlice-qa-isolation-b`, the same six tenant membership permissions, active `QA-TENANT-B` branch assignment.
+- The runtime resolver deliberately derives tenant permissions from active tenant memberships, not global profile permissions. These fixtures match the PR #126 fixture resolver. No Auth user, password, metadata, membership or assignment was changed.
+- Existing Owner profile and tenant_owner membership are active, but Auth `app_metadata.platform_owner` is absent; the platform-owner allowlist is not independently readable. Owner bypass remains unavailable.
+
+### Password mutation control
+
+PR #120 includes the same HIBP k-anonymity guard as PR #124 on the three application-managed flows: initial Owner bootstrap, staff creation and staff password reset. It hashes locally, sends only the first five SHA-1 characters, uses padding, rejects compromised passwords and fails closed if the HIBP service is unavailable.
+
+This does **not** prevent direct calls to Supabase Auth password-update endpoints. Supabase native leaked-password protection is disabled on the current Free plan and the documented Password Verification Hook applies to password verification/sign-in, not password-change requests (and is plan-limited). No supported Free-plan hook closes the direct Auth password-change bypass. Keep leaked-password protection BLOCKED; do not claim universal enforcement. The staff reset path also updates Auth first and writes an audit record separately, so the Auth mutation and audit are not one transaction.
+
+### GitHub release protection
+
+Ruleset #27559290 is active on all branches but has zero required approvals, zero required status checks and zero required deployment environments. Eleven bypass actors have `always` bypass and the connected identity can bypass. Independent review/release governance is therefore not enforced. No ruleset mutation was made.
+
+### Runtime boundary
+
+P01–P09 are NOT RUN. PR #126's passwordless workflow requires a protected staging Environment service-role secret and can execute only from `refs/heads/staging` after the workflow is integrated there. No JWT, password, API key or secret was exposed in this audit.
