@@ -31,6 +31,8 @@ jobs:
         run: node scripts/staging-release-contract-tests.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
+      - name: Verify atomic tenant invite lifecycle contract
+        run: node --test tests/contracts/tenant-invite-atomic-contract.test.mjs
       - name: Run tenant refund authorization contract tests
         run: node --test tests/contracts/tenant-refund-scope-contract.test.mjs
       - name: Run service-role tenant-scope contract tests
