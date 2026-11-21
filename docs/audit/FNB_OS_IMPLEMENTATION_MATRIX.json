@@ -428,13 +428,15 @@
         {
           "requirement": "KDS and kitchen order tickets",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Station-level dispatch and live KDS behavior not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "KDS tables and dispatch/transition RPCs exist; staging has 6 tickets and 6 items. Station routing and positive live workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 77
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
         },
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
@@ -450,13 +452,15 @@
         {
           "requirement": "Queue priority and prep SLA",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Priority and overdue escalation missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "kitchen_tickets.priority exists and is persisted; SLA targets, overdue escalation and station-level queue behavior are not implemented/proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 79
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
@@ -573,13 +577,15 @@
         {
           "requirement": "Central, regional and branch-specific pricing",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Pricing policy and effective date approval missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "branch_settings has a pricing category and branch settings read/write handlers exist; central/regional hierarchy, effective-date approvals and branch parity remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 93
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
@@ -707,13 +713,15 @@
         {
           "requirement": "Warehouse/storage/bin hierarchy",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Multi-warehouse and storage-location hierarchy not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "warehouses table and ERP list/create handlers exist; storage zones/bins, location hierarchy and transfer integration remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 108
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
         },
         {
           "requirement": "Purchase/use units and conversions",
@@ -751,13 +759,15 @@
         {
           "requirement": "Min/max, safety stock and reorder point",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Reorder rules and purchase recommendations missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "inventory_items.min_stock exists; safety stock, reorder policy, supplier lead-time calculations and replenishment workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 112
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
         },
         {
           "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
@@ -3037,10 +3047,47 @@
     },
     "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
     "feature_status_counts_current": {
-      "PARTIAL": 84,
-      "NOT VERIFIED": 96,
+      "PARTIAL": 89,
+      "NOT VERIFIED": 91,
       "BLOCKED": 9
-    }
+    },
+    "feature_updates": [
+      {
+        "domain": 4,
+        "requirement": "KDS and kitchen order tickets",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 4,
+        "requirement": "Queue priority and prep SLA",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 5,
+        "requirement": "Central, regional and branch-specific pricing",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 6,
+        "requirement": "Warehouse/storage/bin hierarchy",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 6,
+        "requirement": "Min/max, safety stock and reorder point",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      }
+    ]
   },
   "operational_checkpoint": {
     "date": "2026-11-21",
@@ -3409,7 +3456,39 @@
         "20261120120000_atomic_branch_checklist_audit.sql"
       ],
       "shared_staging_migration_applied": false
-    }
+    },
+    "partial_reclassification_this_pass": [
+      {
+        "domain": "Kitchen & Production",
+        "requirement": "KDS and kitchen order tickets",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Kitchen & Production",
+        "requirement": "Queue priority and prep SLA",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "requirement": "Central, regional and branch-specific pricing",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "requirement": "Warehouse/storage/bin hierarchy",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "requirement": "Min/max, safety stock and reorder point",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      }
+    ]
   },
   "historical_acceptance_coverage": {
     "source_pr": 31,
@@ -3445,8 +3524,8 @@
   },
   "audit_reconciliation": {
     "source_snapshot": "2026-11-21 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
-    "arithmetic": "The supplied 18 domain rows in the latest request sum to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. Its total-row value 93 NOT VERIFIED is an arithmetic error. Two SaaS Tenant Management features then had concrete implementation work in PR #126; per the agreed status-transition rule they moved from NOT VERIFIED to PARTIAL, yielding the current evidence-based 84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189.",
-    "current_status_source": "Feature-level records, not manually typed total-row arithmetic.",
+    "arithmetic": "Latest 18-domain table in the remediation register now sums to 89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189. This is after two SaaS features and five additional features moved to PARTIAL when concrete implementation foundations were verified. The originally supplied 93 NOT VERIFIED total was an arithmetic error.",
+    "current_status_source": "Feature-level records plus read-only Supabase schema/function evidence and current PR/CI results.",
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
@@ -3455,7 +3534,8 @@
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
     "no_shared_staging_or_production_mutation": true,
-    "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists."
+    "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists.",
+    "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE."
   },
   "current_open_prs": [
     127,
@@ -3595,6 +3675,51 @@
         124
       ],
       "note": "Free k-anonymity breach check covers official Owner/staff password mutation flows. Native Supabase control and direct Auth bypass remain unresolved."
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "KDS and kitchen order tickets",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "Queue priority and prep SLA",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Menu, Recipe & Product Engineering",
+      "requirement": "Central, regional and branch-specific pricing",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Warehouse/storage/bin hierarchy",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Min/max, safety stock and reorder point",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
     }
   ],
   "latest_pr_inventory": {
@@ -3605,8 +3730,45 @@
     "latest_issue_number": 127
   },
   "feature_status_counts_current": {
-    "PARTIAL": 84,
-    "NOT VERIFIED": 96,
+    "PARTIAL": 89,
+    "NOT VERIFIED": 91,
     "BLOCKED": 9
-  }
+  },
+  "feature_updates": [
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "KDS and kitchen order tickets",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "Queue priority and prep SLA",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Menu, Recipe & Product Engineering",
+      "requirement": "Central, regional and branch-specific pricing",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Warehouse/storage/bin hierarchy",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Min/max, safety stock and reorder point",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    }
+  ]
 }
