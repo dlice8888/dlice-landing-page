@@ -126,3 +126,38 @@ P01–P09 have not been dispatched on the current passwordless workflow. The job
 | Permission mutation (PR #120) | Atomic RPC contract + migration replay PASS | NOT RUN | Positive/negative role tests; atomic before/after/audit row verification; direct mutation denial |
 
 No browser/API runtime E2E, shared staging mutation, migration application, or production mutation occurred in this continuation.
+
+## Current staging execution status — 21 November 2026
+
+### Tenant isolation P01–P09
+
+The current PR #126 workflow .github/workflows/staging-tenant-isolation-acceptance.yml is manual-dispatch-only and uses the two existing Supabase Auth identities via Auth Admin magic links. It defines nine required probes plus six supplemental direct-RLS/RPC probes. It must finish with P01–P09 = 9/9 PASS, zero FAIL/BLOCKED/SKIPPED, and all supplemental probes PASS. **No P01–P09 run has been dispatched in this continuation**; do not infer PASS from database fixture presence or local pgTAP.
+
+Read-only Supabase evidence confirms two tenants, three active membership rows, four Auth users, two distinct QA branches (QA-DLICE-A, QA-TENANT-B) and distinct existing Auth identities assigned to their own tenant branches. The required service-role Environment secret and staging Environment protection could not be queried through the connected GitHub integration; no secret was read or exposed. The workflow-dispatch action is not available in the connected tools.
+
+### Invitation tests and migration replay
+
+PR #126 disposable run 44903918177 passed all seven pgTAP files, **134 total assertions**, including tenant_invite_atomic.test.sql with plan(15) (15 invitation assertions). This is disposable database evidence, not shared-staging mutation or real invitation delivery.
+
+### Online checkout and payment lifecycle
+
+PR #123's online-order migration collision was corrected by moving its version to 20261121135000. Its updated quality run 44909182929 passed. Combined replay with #126 is still required. PR #125/#127 disposable tests pass on their individual heads; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
+
+### Operational staging baseline (read-only)
+
+| Measure | Current staging |
+|---|---:|
+| Orders | 7 |
+| Reservations | 21 (9 active expired, 9 consumed, 3 held expired) |
+| Payment records | 6 (3 paid, 3 pending verification) |
+| Recipes / ingredients | 1 / 2 |
+| Kitchen tickets / items | 6 / 6 |
+| Stock movements | 26 |
+| Inventory items / branch inventory rows | 2 / 4 |
+| Production batches / consumption | 0 / 0 |
+| Stock transfers / counts | 0 / 0 |
+| Procurement requisitions / POs / receipts | 0 / 0 / 0 |
+| Finance journal entries / cash reconciliations | 0 / 0 |
+| Scheduled online-order expiry worker | 0 |
+
+The current staging data proves table/schema presence, not completion of the business workflows. Do not mark Kitchen, Inventory, Procurement, Finance or Order Management DONE from these counts.
