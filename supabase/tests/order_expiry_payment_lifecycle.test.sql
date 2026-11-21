@@ -71,7 +71,7 @@ SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d1000000
 SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM test_payment_ids WHERE kind='expired_no_proof')),'rejected','no-proof pending attempt on expired order is closed');
 SELECT is((SELECT payment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000012'),'pending_verification','proof-bearing pending order is not auto-expired');
 SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d1000000-0000-4000-8000-000000000012'),'held_for_verification','proof-bearing reservation remains held');
-SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM test_payment_ids WHERE kind='paid_no_proof')),'rejected','stale no-proof attempt on an already-paid order is closed');
+SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM test_payment_ids WHERE kind='paid_no_proof')),'superseded','stale no-proof attempt on an already-paid order is superseded');
 
 SELECT is((SELECT payment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000015'),'rejected','pending payment without proof is rejected after its deadline');
 SELECT is((SELECT fulfillment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000015'),'failed','unproven pending order moves to failed fulfillment');
