@@ -255,3 +255,16 @@ PR #120 and #126 currently carry byte-identical 20261121130000_atomic_tenant_inv
 - PR #111 OIDC broker head `016715bfa00d6c400d8320cbd0d2001ff3335ee8`: quality, OIDC claim tests, KDS contract and disposable replay **PASS**. The function remains undeployed; no staging P01–P09 runtime evidence exists.
 - PR #120: exact-head CI exposed missing ACL grants/revokes for the three profile mutation RPCs. The branch now contains explicit REVOKE for PUBLIC/anon/authenticated and GRANT to service_role, with an expanded pgTAP ACL matrix. Latest exact-head replay and full CI are pending; do not mark #120 or #124 complete yet.
 - Supabase staging still has only `dlice-orders` Edge Function active (version 70). `staging-tenant-session` is not deployed. Supabase Function Secrets are not accessible through the connected Supabase tool surface.
+
+
+## PR branch overlap correction — 21 November 2026, 13:50 UTC
+
+The current PR #120 head has since incorporated additional candidate files. The live PR diff now lists migrations `20261121100000`, `20261121130000`, `20261121160000`, and `20261121170000`. Reconciled shared files:
+
+- #120 and #124 share the identical `20261121100000_atomic_admin_permission_audit.sql` blob SHA `947419c220a5f1e2d9160026a9862709c03fcb1b`.
+- #120 and #126 share the identical `20261121130000_atomic_tenant_invite_lifecycle.sql` blob SHA `b9dab9b7027e51bd5a4069b854b65a14563df6eb`, and the identical `tenant_invite_atomic.test.sql` blob SHA `9c778834a0eb5e6f0a12769f1e6a214c71130688`. Keep one canonical invitation migration and one test copy. The Edge Function invitation routes call the same atomic issue/accept RPC names in both branches; the tenant-permissions module remains different and still requires combined regression.
+- #120 additionally carries `20261121160000_atomic_admin_profile_mutation_audit.sql` and `20261121170000_atomic_branch_assignment_audit.sql`.
+- #123 currently carries `20261121135000_atomic_online_order_idempotency.sql`; #126 carries `20261121130000_atomic_tenant_invite_lifecycle.sql`. These versions do not collide.
+- #125/#127 still share identical `20261121140000_order_expiry_payment_lifecycle.sql` blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd`.
+
+Current unique candidate sequence across #111/#120/#123/#125/#126/#127 is therefore 20261120140000, 20261121100000, 20261121130000, 20261121135000, 20261121140000, 20261121150000, 20261121160000, 20261121170000, 20261121180000. This is a version-order inventory, not authorization to apply. Re-run combined disposable replay on the exact final candidate head after all branches are reconciled.
