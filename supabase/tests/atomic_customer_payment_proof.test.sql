@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(15);
+SELECT plan(16);
 
 INSERT INTO public.tenants (id,slug,legal_name)
 VALUES ('d2000000-0000-4000-8000-000000000001','qa-proof-20261121','QA Proof')
@@ -41,6 +41,7 @@ SELECT is((SELECT result->>'idempotent_replay' FROM proof_first),'false','first 
 SELECT is((SELECT count(*)::integer FROM public.payment_records WHERE order_id='d2000000-0000-4000-8000-000000000011'),1,'one payment record is created');
 SELECT is((SELECT payment_status FROM public.orders WHERE id='d2000000-0000-4000-8000-000000000011'),'pending_verification','order payment state advances atomically');
 SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d2000000-0000-4000-8000-000000000011'),'held_for_verification','reservation is held atomically');
+SELECT ok((SELECT payment_declared_at IS NOT NULL FROM public.order_reservations WHERE order_id='d2000000-0000-4000-8000-000000000011'),'payment declaration timestamp is committed with proof upload');
 SELECT ok(EXISTS(SELECT 1 FROM public.order_status_history WHERE order_id='d2000000-0000-4000-8000-000000000011' AND status_type='payment' AND new_status='pending_verification'),'payment history is written');
 SELECT ok(EXISTS(SELECT 1 FROM public.admin_audit_logs WHERE action='customer_payment_proof_uploaded' AND entity_id='d2000000-0000-4000-8000-000000000011'),'proof upload audit is written');
 
