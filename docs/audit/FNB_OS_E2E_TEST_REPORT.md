@@ -112,7 +112,7 @@ The positive KDS/POS/Stock workflow did not reach order creation, payment, KDS, 
 | P08 | Tenant A cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
 | P09 | Tenant B cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
 
-P01–P09 have not been dispatched on the current passwordless workflow. The job is manual-dispatch-only and has `if: github.ref == 'refs/heads/staging'`; merge/reconcile the workflow into staging after review, verify the protected Environment and service-role secret, then dispatch from staging. Do not select a feature branch; the job condition would not run. No credential values were read or logged.
+P01–P09 have not been dispatched on the current passwordless workflow. The job is manual-dispatch-only and has `if: github.ref == 'refs/heads/staging'`; integrate/reconcile the workflow into staging through the authorized staging path after required tests pass, verify the protected Environment and service-role secret, then dispatch from staging. Do not select a feature branch; the job condition would not run. No credential values were read or logged.
 
 ### Transaction E2E work
 
