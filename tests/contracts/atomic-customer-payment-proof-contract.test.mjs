@@ -55,3 +55,16 @@ test("proof upload opportunistically removes only old unreferenced objects throu
   assert.match(edge, /storage\.remove\(orphans\)/);
   assert.match(edge, /await cleanupOrphanPaymentProofs\(order\.id\)/);
 });
+
+test("legacy payment declaration endpoint is read-only after atomic proof submission", () => {
+  const start = edge.indexOf('if (action === "declare-payment")');
+  const end = edge.indexOf('\n    }\n    if (!allStillActive', start);
+  assert.notEqual(start, -1, "legacy declare-payment action exists");
+  assert.notEqual(end, -1, "legacy declaration route boundary exists");
+  const handler = edge.slice(start, end);
+  assert.match(handler, /proofStateCommitted/);
+  assert.match(handler, /payment_declared_at/);
+  assert.doesNotMatch(handler, /admin\.from\("order_reservations"\)\.update/);
+  assert.doesNotMatch(handler, /admin\.from\("orders"\)\.update/);
+  assert.doesNotMatch(handler, /admin\.from\("order_status_history"\)\.insert/);
+});
