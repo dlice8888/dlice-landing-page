@@ -65,9 +65,9 @@ Latest known staging runtime attempt `44208204366` was blocked at preflight befo
 
 1. Review/merge PR #87's P03 correction; do not alter Worker A's same-tenant assignments merely to satisfy the obsolete exact-one assertion.
 2. Verify canonical two-worker credentials and six fixture variables by presence/availability only in GitHub Environment `staging`.
-3. Verify Owner Auth metadata through official Supabase Auth Admin, preserving other metadata, and independently verify UUID allowlist.
+3. Verify Owner Auth metadata through official Supabase Auth Admin, preserving other metadata, and verify the UUID allowlist through a protected runtime configuration check.
 4. Run P01–P09 and supplemental direct REST/RPC tests on trusted staging; no SKIPPED or false PASS.
-5. Keep both release flags false and PR #64 Draft/HOLD until independent security review and runtime evidence pass.
+5. Keep both release flags false and PR #64 Draft/HOLD until the complete automated adversarial test matrix and runtime evidence pass.
 
 ## Ordinary worker identity classification — additional P0
 
@@ -94,7 +94,7 @@ All three CORS runtime probes passed. They are distinct from tenant authenticati
 - Free quality run [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) SUCCESS. The workflow includes staging secret workflow, tenant-isolation runtime evidence and public-routing gate checks. The log contains passing test groups of 5/5, 4/4, 11/11, 5/5 and 1/1.
 - `branchB` is declared before the fail-closed preflight in `tests/staging/tenant-isolation-existing-identity.mjs`, eliminating the previously observed temporal-dead-zone path.
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
-- The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
+- The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The GitHub Environment secret availability cannot be queried through the connected integration; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
 
 
@@ -138,7 +138,7 @@ Read-only Supabase Auth and application-table joins confirm two real QA users:
 - Tenant A: `qa_dlice_staging_no_permission`, active `sales_admin` profile, empty global profile permission array, active `branch_manager` membership in `dlice-default`, six tenant membership permissions, active `QA-DLICE-A` branch assignment.
 - Tenant B: `qa_dlice_staging_branch_a`, active `sales_admin` profile, seven global profile permissions, active `branch_manager` membership in `dlice-qa-isolation-b`, the same six tenant membership permissions, active `QA-TENANT-B` branch assignment.
 - The runtime resolver deliberately derives tenant permissions from active tenant memberships, not global profile permissions. These fixtures match the PR #126 fixture resolver. No Auth user, password, metadata, membership or assignment was changed.
-- Existing Owner profile and tenant_owner membership are active, but Auth `app_metadata.platform_owner` is absent; the platform-owner allowlist is not independently readable. Owner bypass remains unavailable.
+- Existing Owner profile and tenant_owner membership are active, but Auth `app_metadata.platform_owner` is absent; the platform-owner allowlist cannot be queried through the connected integration. Owner bypass remains unavailable.
 
 ### Password mutation control
 
