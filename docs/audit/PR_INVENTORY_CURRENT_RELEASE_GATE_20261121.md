@@ -19,7 +19,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
 | #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality and disposable replay pass; direct Auth bypass remains a blocker |
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
-| #122 | staging | Yes | Yes | 24 FK covering indexes for 26 warnings; latest head adds safe removal of two zero-scan prefix duplicates; quality/replay in progress; 47 other zero-scan indexes retained pending workload evidence |
+| #122 | staging | Yes | Yes | 24 FK covering indexes for 26 warnings; latest head adds safe removal of two zero-scan prefix duplicates; exact-head quality + replay PASS; 2 redundant prefix indexes proposed for removal, 47 other zero-scan indexes retained pending workload evidence |
 | #121 | staging | Yes | Yes | Current 189-feature matrix reconciliation and evidence-based progress scoring; documentation only |
 | #120 | staging | Yes | Yes | Atomic permission-change audit; exact-head quality and disposable migration replay pass; independent review and staging runtime acceptance pending |
 | #119 | main | No | Yes | Remove scheduled staging mutations and add read-only policy audit; verify exact workflow policy before merge |
@@ -54,3 +54,8 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 - Preserve staging mutation confirmation, deployment protection and both release flags as false.
 - Reconcile dependency order, changed-file overlap and migration lineage before integrating one PR at a time.
 - This inventory authorizes no database mutation, Auth change, Edge Function deployment or production release.
+
+
+## Vercel free-tier preview quota checkpoint
+
+The Vercel project is on Hobby. A manual preview deployment request for the latest PR heads returned the Vercel API's free daily deployment limit (>100 deployments in one day; retry after 24 hours). No paid upgrade or CLI workaround was attempted. Existing previews for PR #122 and #126 are READY but correspond to older commits; PR #127 has no preview in the current deployment listing. Latest-head preview validation is therefore pending until the free quota resets.
