@@ -58,7 +58,8 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /resolveTenantFixtures/);
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
-  assert.match(probe, /executed:\s*true/);
+  assert.match(probe, /executed\s*=\s*true/);
+  assert.match(probe, /^\s*executed,\s*$/m);
   assert.match(probe, /executed:\s*false/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
@@ -97,6 +98,8 @@ test("missing staging configuration is reported as blocked, never as a passing p
   const probes = records.filter((record) => /^P\d\d$/.test(record.probeId));
   assert.equal(probes.length, 9);
   assert.ok(probes.every((record) => record.status === "BLOCKED"));
+  assert.ok(probes.every((record) => record.executed === false),
+    "preflight-blocked probes must never be mislabeled as executed");
   const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
   assert.equal(preflight.length, 7);
   assert.ok(preflight.every((record) => record.valuePrinted === false));
