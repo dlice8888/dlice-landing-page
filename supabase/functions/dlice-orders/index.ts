@@ -958,7 +958,7 @@ if (action === "admin-set-profile-role") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin undangan tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),email=safeText(body.email,254).toLowerCase(),role=safeText(body.role,40);
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
-    if(!tenantId||!/^S+@S+.S+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
+    if(!tenantId||!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
     const rawToken=randomToken(),tokenHash=await sha256(rawToken),expiresAt=new Date(Date.now()+7*24*60*60*1000).toISOString();
     const {data:created,error}=await admin.rpc("dlice_create_tenant_invite_audited",{
       p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_email:email,p_role:role,
