@@ -589,9 +589,9 @@ Read-only reconciliation of the 7 staging orders, 6 payment records and 21 reser
 - 3 paid payment records and 3 pending-verification payment records.
 - 9 consumed, 3 held-for-verification and 9 active reservations.
 - No orphan payment records or orphan reservations; reservation states align with order states.
-- **Two paid orders still have an additional pending-verification payment attempt.** Their paid amount matches the order amount and reservations are consumed, but the sibling attempts remain pending/actionable.
+- **Two paid orders still have an additional pending-verification attempt with no proof attached.** Their paid amount matches the order amount and reservations are consumed; these no-proof attempts should be closed after payment approval. A separate pending attempt has proof attached and must remain pending for manual double-payment review.
 
 Root cause: the existing `admin_apply_payment_verification` RPC changes the selected payment record and order status but does not close sibling attempts. This is a real payment-attempt lifecycle gap, not an orphaned payment or reservation.
 
-PR #127 now proposes an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes other unpaid/pending attempts when one payment is approved. A 13-assertion pgTAP suite is being added. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
+PR #127 now proposes an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes only unpaid or no-proof pending sibling attempts when one payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. The 14-assertion pgTAP suite covers both paths. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
 
