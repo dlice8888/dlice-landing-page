@@ -14,7 +14,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
-| #127 | staging | Yes | Yes | Atomic customer payment-proof RPC + retry key; quality PASS, disposable migration replay IN_PROGRESS; Storage orphan sweeper remains a residual hardening item |
+| #127 | staging | Yes | Yes | Atomic customer payment-proof RPC + retry key; quality + disposable migration replay IN_PROGRESS; KDS/CORS/procurement contracts PASS; Storage orphan sweeper remains a residual hardening item |
 | #126 | staging | Yes | Yes | SaaS tenant direct-client RLS contract: 35 pgTAP assertions PASS; latest head adds default-deny for all admin/ERP routes; latest checks queued/in progress; API tenant A/B remains unproven |
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
 | #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality and disposable replay pass; direct Auth bypass remains a blocker |
