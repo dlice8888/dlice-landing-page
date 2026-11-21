@@ -988,29 +988,35 @@ if (action === "admin-set-profile-role") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin undangan tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),email=safeText(body.email,254).toLowerCase(),role=safeText(body.role,40);
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
-    if(!tenantId||!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
+    if(!tenantId||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
     const rawToken=randomToken(),tokenHash=await sha256(rawToken),expiresAt=new Date(Date.now()+7*24*60*60*1000).toISOString();
-    const {data:created,error}=await admin.rpc("dlice_create_tenant_invite_atomic",{
-      p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_email:email,p_role:role,
-      p_token_hash:tokenHash,p_expires_at:expiresAt,
+    const {data:result,error}=await admin.rpc("dlice_create_tenant_invite_atomic",{
+      p_actor_user_id:actor.user.id,
+      p_tenant_id:tenantId,
+      p_email:email,
+      p_role:role,
+      p_token_hash:tokenHash,
+      p_expires_at:expiresAt,
     });
-    if(error||!created?.ok)return fail("Undangan gagal dibuat atau audit tidak dapat dipastikan.",409,origin);
-    return json({ok:true,invite:created.invite,invite_token:rawToken,delivery:"manual_copy_required"},201,origin);
+    if(error||!result?.ok||!result?.invite)return fail("Undangan gagal dibuat secara atomik.",error?.code==="23505"?409:500,origin);
+    return json({ok:true,invite:result.invite,invite_token:rawToken,delivery:"manual_copy_required"},201,origin);
   }
 
   if (action === "erp-accept-tenant-invite") {
     if (!TENANT_ISOLATION_RELEASED) return fail("Tenant onboarding is paused until cross-tenant isolation tests pass.", 423, origin);
-    const token=safeText(body.invite_token,100),tokenHash=await sha256(token);
-    if(token.length<32||!actor.user.email)return fail("Token undangan atau email akun tidak valid.",422,origin);
-    const {data:accepted,error}=await admin.rpc("dlice_accept_tenant_invite_atomic",{
-      p_actor_user_id:actor.user.id,p_email:actor.user.email,p_token_hash:tokenHash,
+    if(!hasPerm("branches")&&!isOwner)return fail("Izin aktivasi keanggotaan tenant tidak diizinkan.",403,origin);
+    const token=safeText(body.invite_token,100),email=String(actor.user.email||"").toLowerCase();
+    if(token.length<32||!email)return fail("Token undangan atau email akun tidak valid.",422,origin);
+    const tokenHash=await sha256(token);
+    const {data:result,error}=await admin.rpc("dlice_accept_tenant_invite_atomic",{
+      p_actor_user_id:actor.user.id,
+      p_email:email,
+      p_token_hash:tokenHash,
     });
-    if(error||!accepted?.ok){
-      const code=String(error?.message||"");
-      const status=code.includes("email_mismatch")?403:code.includes("not_found")?404:409;
-      return fail("Undangan tidak dapat diaktifkan; status keanggotaan dan audit tidak berubah.",status,origin);
-    }
-    return json({ok:true,invite:accepted.invite,replayed:accepted.replayed===true},200,origin);
+    if(error)return fail("Undangan tidak dapat diproses; token mungkin sudah digunakan atau tidak valid.",error?.code==="42501"?403:error?.code==="23505"?409:404,origin);
+    if(result?.status==="expired")return fail("Undangan sudah kedaluwarsa.",410,origin);
+    if(!result?.ok||!result?.invite)return fail("Undangan tidak dapat diaktifkan.",409,origin);
+    return json({ok:true,invite:result.invite,replayed:result.replayed===true},200,origin);
   }
 
   if (action === "erp-list-branch-settings") {
