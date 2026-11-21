@@ -822,7 +822,7 @@ Only two PARTIAL features currently have defensible numeric progress scores: Ten
 | #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six workflows PASS; 35 profile mutation + 11 permission + 11 invitation pgTAP plans; 7 SQL test files / 124 total assertions PASS | Staging mutation runtime NOT RUN; password reset intent/outcome implemented |
 | #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
-| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
+| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | CLOSED / SUPERSEDED | Expiry migration, test and release documentation are byte-identical to canonical PR #127 | Do not reopen or merge; continue expiry/proof lifecycle work in #127 |
 | #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Six applicable workflows PASS; proof/supersession pgTAP plans 16/14; expiry suite shared with #125 | Browser proof concurrency, Storage orphan sweep and full payment reconciliation NOT RUN; no exact-head Vercel deployment |
 
 All six PRs remain OPEN/DRAFT and unmerged. Green CI and disposable replay do not equal staging runtime acceptance or release approval.
