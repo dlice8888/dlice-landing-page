@@ -580,3 +580,18 @@ Evidence source: read-only Supabase schema/function inspection on 2026-11-21 plu
 - Add alert lifecycle (detect→assign→acknowledge→resolve→audit) and target/variance reporting.
 - Reconcile every dashboard total to POS/order/payment/refund/stock/finance source rows; add 150-branch load and authorization tests.
 
+
+
+### Cross-domain payment / reservation reconciliation — live staging finding
+
+Read-only reconciliation of the 7 staging orders, 6 payment records and 21 reservations found:
+- 3 paid orders, 1 pending-verification order and 3 unpaid orders.
+- 3 paid payment records and 3 pending-verification payment records.
+- 9 consumed, 3 held-for-verification and 9 active reservations.
+- No orphan payment records or orphan reservations; reservation states align with order states.
+- **Two paid orders still have an additional pending-verification payment attempt.** Their paid amount matches the order amount and reservations are consumed, but the sibling attempts remain pending/actionable.
+
+Root cause: the existing `admin_apply_payment_verification` RPC changes the selected payment record and order status but does not close sibling attempts. This is a real payment-attempt lifecycle gap, not an orphaned payment or reservation.
+
+PR #127 now proposes an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes other unpaid/pending attempts when one payment is approved. A 13-assertion pgTAP suite is being added. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
+
