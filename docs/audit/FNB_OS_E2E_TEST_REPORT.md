@@ -256,3 +256,14 @@ Current exact-head candidate evidence:
 A read-only SQL impersonation test with the two Auth subject IDs returned zero direct branch-table rows for both own and foreign branches (4/4). This is supplemental RLS evidence only, not HTTP Data API or Edge Function acceptance.
 
 The Kitchen/KDS and Procurement workflow checks are CI contract tests. They do not prove the full live sequence POS→KDS→recipe consumption→stock ledger→shift closing, or PR→PO→GRN→stock/AP reconciliation. Those workflows remain NOT RUN.
+
+
+## Verified exact-head disposable test results — 21 November 2026, 14:00 UTC
+
+- **#120 prior candidate:** 8 files / 154 pgTAP tests PASS, including permission audit, staff profile mutation ACL, branch assignment and invitation atomic suites. Its current head has changed since that PASS and is being revalidated; the latest migration job was cancelled during subsequent pushes. Keep status PARTIAL until the newest exact head finishes without cancellation.
+- **#123:** 5 files / 74 pgTAP tests PASS on exact head `9024f2ce6067fe4252f5110942017e27ac1ed7b5`.
+- **#126:** 7 files / 139 pgTAP tests PASS on exact head `4a6aa8ccf07e25981579a805477dffc65a13a376`; invitation atomic suite **20/20 PASS**.
+- **#127:** 7 files / 124 pgTAP tests PASS on exact head `e52ea75a218eedecc513ec52311adaee25f241ba`; atomic proof and payment-attempt supersession suites pass.
+- **#111:** OIDC claim tests and full disposable migration replay PASS on exact head `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
+
+These are disposable database and CI results. They do not constitute live staging E2E. Browser checkout retries, actual Storage proof upload/retry, OIDC exchange with existing Supabase accounts, P01–P09, and the combined order/payment/reservation runtime matrix remain NOT RUN.
