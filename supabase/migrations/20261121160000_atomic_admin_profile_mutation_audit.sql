@@ -101,7 +101,7 @@ BEGIN
   END IF;
   IF p_actor_user_id IS NULL OR p_target_user_id IS NULL
      OR NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id)
-     OR p_next_role NOT IN ('sales_admin','branch_worker')
+     OR p_next_role IS NULL OR p_next_role NOT IN ('sales_admin','branch_worker')
   THEN
     RAISE EXCEPTION 'invalid_admin_role_change' USING ERRCODE = '22023';
   END IF;
