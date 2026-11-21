@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21T17:31:00+07:00",
+  "snapshot_at": "2026-11-21T18:00:00+07:00",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2790,55 +2790,69 @@
         "head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "database_contract_tests": "PASS — 7 files, 107 assertions",
-        "audited_invitation_tests": "PASS — 11 assertions",
-        "kds_contract": "PASS",
-        "cors_contract": "PASS",
-        "procurement_receiving_contract": "PASS",
-        "procurement_requisition_contract": "PASS",
-        "vercel_preview": "NOT FOUND for current head; last preview cfa72df is older",
-        "shared_staging_migration_applied": false
+        "cors": "PASS",
+        "kds": "PASS",
+        "procurement_requisition": "PASS",
+        "procurement_receiving": "PASS",
+        "status": "OPEN_DRAFT",
+        "staging_deploy": false
       },
       "pr123": {
         "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "browser_concurrency": "PENDING"
+        "cors": "PASS",
+        "kds": "PASS",
+        "procurement_requisition": "PASS",
+        "procurement_receiving": "PASS",
+        "status": "OPEN_DRAFT",
+        "browser_retry_concurrency": "PENDING"
       },
       "pr124": {
         "head": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "native_supabase_leaked_password_protection": "DISABLED",
-        "direct_auth_bypass": "UNRESOLVED"
+        "cors": "PASS",
+        "kds": "PASS",
+        "procurement_requisition": "PASS",
+        "procurement_receiving": "PASS",
+        "status": "OPEN_DRAFT",
+        "native_supabase_leaked_password_protection": "DISABLED"
       },
       "pr125": {
         "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
         "quality": "PASS",
-        "kds_contract": "PASS",
         "disposable_migration_replay": "PASS",
-        "shared_staging_migration_applied": false
+        "status": "OPEN_DRAFT",
+        "browser_expiry_race_and_provider_webhook_ordering": "PENDING"
       },
       "pr126": {
         "head": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "kds_contract": "PASS",
-        "cors_contract": "PASS",
-        "procurement_receiving_contract": "PASS",
-        "procurement_requisition_contract": "PASS",
         "invitation_pgtap_assertions": 15,
-        "real_tenant_a_b_runtime": "NOT RUN"
+        "invitation_tests": "PASS in disposable replay",
+        "cors": "PASS",
+        "kds": "PASS",
+        "procurement_requisition": "PASS",
+        "procurement_receiving": "PASS",
+        "actual_tenant_a_b_api_runtime": "NOT RUN",
+        "status": "OPEN_DRAFT",
+        "staging_deploy": false
       },
       "pr127": {
-        "head": "b3cdd8eb0d0445b04ed9a1f3e75e4401c548f7a7",
-        "quality": "IN_PROGRESS on current head; prior 195efa34 PASS",
-        "disposable_migration_replay": "IN_PROGRESS on current head",
-        "payment_attempt_supersession_migration": "ADDED; no-proof attempts superseded on paid decision; proof-bearing sibling attempts remain pending",
-        "payment_attempt_supersession_tests": "14 pgTAP assertions added",
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "payment_attempt_supersession_assertions": 14,
+        "cors": "PASS",
+        "kds": "PASS",
+        "procurement_requisition": "PASS",
+        "procurement_receiving": "PASS",
+        "status": "OPEN_DRAFT",
+        "staging_deploy": false,
         "browser_concurrency": "PENDING",
-        "global_storage_orphan_sweeper": "PENDING",
-        "shared_staging_migration_applied": false
+        "global_storage_orphan_sweeper": "PENDING"
       }
     },
     "domain_4_5_schema_gaps": {
@@ -2901,6 +2915,72 @@
       "root_cause": "public.admin_apply_payment_verification updates only the selected payment row and order status; it does not supersede other pending/unpaid payment attempts for the same order.",
       "remediation": "PR #127 adds an atomic superseded state and link for unpaid or no-proof pending sibling attempts when a payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. A 14-assertion pgTAP test verifies both paths. Existing staging rows remain unchanged until authorized reconciliation.",
       "no_staging_mutation": true
+    },
+    "supabase_auth_identity_audit": {
+      "project": "dlice-staging",
+      "auth_users_found": 4,
+      "tenant_records": 2,
+      "active_memberships_by_tenant": {
+        "dlice_default": 2,
+        "dlice_qa_isolation_b": 1
+      },
+      "existing_owner_identity": "present; active tenant_owner in dlice-default",
+      "existing_branch_a_qa_identity": "present; active branch_manager in dlice-qa-isolation-b",
+      "other_qa_identities": [
+        "no_permission_active_profile",
+        "inactive_profile_without_active_membership"
+      ],
+      "password_retrieval": "not possible; Supabase Auth stores password hashes",
+      "auth_admin_generate_link_or_passwordless_session_tool": "not available through current connected Supabase actions",
+      "account_mutation_performed": false,
+      "secrets_read_or_changed": false
+    },
+    "tenant_isolation_runtime": {
+      "direct_client_rls_boundary": "PASS: branches, tenants and tenant_memberships are explicitly deny_direct_client_access for anon/authenticated; expected zero rows",
+      "simulated_authenticated_role_checks": "Owner and QA Branch A identities resolve auth.uid(), but direct table SELECT is intentionally denied by restrictive/permissive deny policies",
+      "actual_edge_function_api_tenant_a_b": "NOT RUN: existing Auth identities found but workflow expects username/password; passwords cannot be recovered and current connector has no Auth Admin generate-link/session action",
+      "tenant_a_identity": "existing Owner in dlice-default",
+      "tenant_b_identity": "existing QA Branch A in dlice-qa-isolation-b",
+      "cross_tenant_api_read_write": "NOT PROVEN",
+      "storage_cache_background_jobs": "NOT PROVEN",
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "migration_reconciliation": {
+      "repository_staging_sql_files": 52,
+      "supabase_applied_migrations": 49,
+      "missing_on_staging": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "shared_staging_migration_applied": false,
+      "reconciliation_status": "GAP IDENTIFIED; 3 repository migrations not applied to staging; no new staging migrations applied"
+    },
+    "supabase_advisors": {
+      "security": {
+        "leaked_password_protection": "DISABLED",
+        "finding": "auth_leaked_password_protection WARN"
+      },
+      "performance": {
+        "unindexed_foreign_keys": 26,
+        "unused_indexes": 49
+      },
+      "health": {
+        "findings": 0
+      }
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "project_found": true,
+      "pr126_preview": {
+        "state": "READY",
+        "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
+      },
+      "pr127_preview": {
+        "state": "NOT FOUND"
+      },
+      "production_mutated": false
     }
   },
   "tenant_acceptance": {
@@ -3585,12 +3665,17 @@
     "pr120": "PR #120 exact head 29d6d808c2b56eb9596335805499266de4e1b4ba now passes free quality, disposable Supabase migration replay, KDS, CORS, procurement receiving and requisition contracts. Database test suite: 7 files, 107 pgTAP assertions, including 11 new audited invitation issuance assertions. PR remains Draft; no staging migration or Edge Function was applied/deployed; independent review and real staging runtime acceptance remain.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
-    "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
+    "vercel": "Vercel project dlice-landing-page exists. PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. No PR #127 preview found. Preview readiness is not runtime feature acceptance.",
     "no_shared_staging_or_production_mutation": true,
     "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists.",
     "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
     "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts.",
-    "pr127": "PR #127 adds migration 20261121180000_supersede_stale_payment_attempts.sql and a 14-assertion pgTAP suite. On paid approval, unpaid and no-proof pending sibling attempts are superseded; proof-bearing sibling attempts remain pending for manual double-payment review. Rejection continues to close no-proof pending attempts as rejected; expiry logic remains unchanged. Exact-head migration replay is IN_PROGRESS on b3cdd8eb; no shared staging mutation."
+    "pr127": "Exact-head commit 5c597c2ec37a130501ed19591cfc9383396ba1b6: disposable full migration replay PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS; 14 payment-attempt supersession assertions included. Browser concurrency and global Storage orphan sweep remain pending.",
+    "latest_auth_identity_audit": "Four existing Supabase Auth users found. Owner is an active tenant_owner in dlice-default; existing QA Branch A identity is an active branch_manager in dlice-qa-isolation-b. No passwords can be retrieved from Supabase Auth; no account or password was mutated. Actual Edge Function/API Tenant A/B login probes remain NOT RUN.",
+    "direct_client_rls": "Confirmed explicit deny_direct_client_access policies for branches, tenants and tenant_memberships; direct client queries returning zero rows are expected and do not prove or disprove tenant isolation through the service-role Edge Function API.",
+    "migration_reconciliation": "Repository staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three missing versions are 20261120100000, 20261120110000 and 20261120120000. No staging migration applied.",
+    "pr126": "Exact-head commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8: disposable full migration replay PASS; 15 tenant invitation pgTAP assertions PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS. Real Tenant A/B API runtime is not run because the existing accounts' passwords cannot be recovered and current connector exposes no Auth Admin magic-link/session action.",
+    "supabase_advisors": "Security advisor: leaked password protection DISABLED. Performance advisor: 26 unindexed foreign keys and 49 unused indexes; do not drop unused indexes without workload/query-plan evidence. Health advisor: no findings."
   },
   "current_open_prs": [
     127,
