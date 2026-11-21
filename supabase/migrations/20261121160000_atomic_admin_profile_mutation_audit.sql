@@ -409,6 +409,29 @@ BEGIN
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
+  TO service_role;
+
+REVOKE ALL ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  TO service_role;
+
+
 
 -- Supabase Auth password changes cannot share a PostgreSQL transaction.
 -- Persist an audit intent BEFORE calling Auth Admin, then finalize the same
@@ -479,30 +502,9 @@ BEGIN
   THEN
     RAISE EXCEPTION 'invalid_password_reset_audit_details' USING ERRCODE = '22023';
   END IF;
-  IF p_error_code IS NOT NULL AND p_error_code !~ '^[A-Za-z0-9_.-]{1,80}(uuid,uuid,text,text,text,timestamptz)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
-  FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
-  TO service_role;
-
-REVOKE ALL ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
-  FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
-  TO service_role;
-
-COMMIT;
- THEN
+  IF p_error_code IS NOT NULL AND (
+    length(p_error_code)>80 OR p_error_code ~ '[^A-Za-z0-9_.-]'
+  ) THEN
     RAISE EXCEPTION 'invalid_password_reset_error_code' USING ERRCODE = '22023';
   END IF;
 
@@ -547,26 +549,5 @@ GRANT EXECUTE ON FUNCTION public.dlice_begin_admin_password_reset_audit(uuid,uui
 GRANT EXECUTE ON FUNCTION public.dlice_finish_admin_password_reset_audit(uuid,uuid,boolean,text)
   TO service_role;
 
-REVOKE ALL ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
-  FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
-  TO service_role;
-
-REVOKE ALL ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
-  FROM PUBLIC,anon,authenticated;
-REVOKE ALL ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
-  FROM PUBLIC,anon,authenticated;
-GRANT EXECUTE ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
-  TO service_role;
 
 COMMIT;
