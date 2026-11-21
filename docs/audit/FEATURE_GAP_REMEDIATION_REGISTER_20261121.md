@@ -601,8 +601,9 @@ PR #127 now implements an atomic `superseded` payment state, `superseded_by_paym
 
 **Existing Auth identities (no account mutation)**
 - Supabase staging contains four existing Auth users.
-- The existing active Owner account has an active `tenant_owner` membership in `dlice-default`.
-- The existing active QA Branch A account has an active `branch_manager` membership in `dlice-qa-isolation-b`.
+- The correct Tenant A fixture is the existing `qa_dlice_staging_no_permission` identity in `dlice-default`, with active `sales_admin` profile, active `branch_manager` membership, non-empty permissions and an active `QA-DLICE-A` branch assignment.
+- The correct Tenant B fixture is the existing `qa_dlice_staging_branch_a` identity in `dlice-qa-isolation-b`, with active `sales_admin` profile, active `branch_manager` membership, matching non-empty permissions and an active `QA-TENANT-B` branch assignment.
+- The Owner account is not used for P01-P09 because the fixture contract specifically requires matching branch-manager memberships and assigned branches.
 - No new QA accounts were created. No password, membership, role, or Auth metadata was changed.
 - Passwords cannot be recovered from Supabase Auth because only password hashes are stored. The current connected Supabase actions do not expose an Auth Admin generate-link or passwordless-session action. Real Edge Function/API login probes therefore remain NOT RUN.
 - Direct-client RLS policies on `branches`, `tenants`, and `tenant_memberships` explicitly deny `anon` and `authenticated`. Simulated authenticated-role direct queries returning zero rows are expected by design and do not prove API-level tenant isolation.
@@ -626,8 +627,9 @@ PR #127 now implements an atomic `superseded` payment state, `superseded_by_paym
 ### Passwordless Tenant A/B acceptance harness — implementation update
 
 The previous staging tenant-isolation workflow was blocked because Owner and Tenant A/B username/password secrets were missing. The existing Supabase Auth identities are now used instead:
-- Tenant A: existing active Owner identity in `dlice-default`, with QA branch `QA-DLICE-A`.
-- Tenant B: existing active QA Branch A identity in `dlice-qa-isolation-b`, with QA branch `QA-TENANT-B`.
+- Tenant A: existing `qa_dlice_staging_no_permission` identity in `dlice-default`, with QA branch `QA-DLICE-A`.
+- Tenant B: existing `qa_dlice_staging_branch_a` identity in `dlice-qa-isolation-b`, with QA branch `QA-TENANT-B`.
+- Both identities satisfy the fixture's active `sales_admin` / `branch_manager` role contract and have matching non-empty permission sets.
 - PR #126 removes the old username/password inputs and uses Supabase Auth Admin `generateLink(type=magiclink)` plus token-hash verification to create short-lived sessions for the existing identities. It revokes the temporary sessions after the probes.
 - The new workflow requires one protected staging Environment secret: `STAGING_SUPABASE_SERVICE_ROLE_KEY`. This key is used only in the manually dispatched workflow on trusted `staging`; it is never printed or exposed to PR builds.
 - No existing user password, Auth metadata, membership or role was changed; no QA user was created.
