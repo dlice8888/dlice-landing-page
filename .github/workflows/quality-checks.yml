@@ -45,6 +45,8 @@ jobs:
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Run atomic admin permission audit contract tests
+        run: node --test tests/contracts/admin-permission-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
       - name: Verify tenant worker profile role boundary
