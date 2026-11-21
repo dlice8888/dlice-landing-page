@@ -120,3 +120,17 @@ No unused index is dropped by this change. The complete current Advisor candidat
 - [ ] Query-plan and workflow regression tests pass.
 - [ ] No index is removed solely because `idx_scan=0`.
 - [ ] No shared staging/production migration is applied by this PR.
+
+
+## Prefix-overlap review (read-only catalog check)
+
+A catalog comparison found four non-unique indexes whose ordered key columns are a prefix of a unique index on the same table:
+
+| Table | Candidate prefix index | Potential covering unique index |
+|---|---|---|
+| `branch_inventory` | `branch_inventory_branch_idx (branch_id)` | `branch_inventory_branch_id_inventory_item_id_key (branch_id, inventory_item_id)` |
+| `branch_operation_checklist_runs` | `branch_operation_checklist_branch_date_idx (branch_id, business_date DESC, checklist_type)` | `branch_operation_checklist_run_unique (branch_id, business_date, checklist_type)` |
+| `stock_count_items` | `stock_count_items_count_idx (stock_count_id)` | `stock_count_items_stock_count_id_inventory_item_id_key (stock_count_id, inventory_item_id)` |
+| `stock_transfer_items` | `stock_transfer_items_transfer_idx (transfer_id)` | `stock_transfer_items_transfer_id_inventory_item_id_key (transfer_id, inventory_item_id)` |
+
+These are **possible consolidation candidates, not approved drops**. The checklist index has a DESC key while the unique index is ASC; PostgreSQL can often scan B-trees backward, but actual query predicates/orderings still need plan verification. Before removing any prefix index, inspect all application/RPC/RLS queries and compare `EXPLAIN (ANALYZE, BUFFERS)` on realistic datasets. This PR deliberately retains all four.
