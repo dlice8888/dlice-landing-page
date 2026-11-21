@@ -14,14 +14,14 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
-| #127 | staging | Yes | Yes | Atomic customer payment-proof RPC + retry key; disposable migration replay PASS; quality checks pending; KDS/CORS/procurement contracts PASS; Storage orphan sweeper remains a residual hardening item |
-| #126 | staging | Yes | Yes | SaaS tenant/member isolation + tenant onboarding: 35 RLS pgTAP assertions, default-deny admin/ERP routes, active-membership branch resolver, 17 tenant-onboarding pgTAP assertions PASS; exact-head quality + disposable replay PASS; real tenant A/B runtime remains unproven |
+| #127 | staging | Yes | Yes | Atomic customer payment-proof RPC + retry key; exact-head quality, disposable replay, KDS, CORS and procurement contracts PASS; browser concurrency and global Storage orphan sweeper remain pending |
+| #126 | staging | Yes | Yes | SaaS tenant/member isolation + onboarding + invitation lifecycle; 35 RLS, 17 onboarding and 15 invitation pgTAP assertions; exact-head quality, disposable replay, KDS, CORS and procurement contracts PASS; real Tenant A/B runtime remains unproven |
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
-| #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality and disposable replay pass; direct Auth bypass remains a blocker |
+| #124 | staging | Yes | Yes | Free application-layer k-anonymity breached-password guard; quality and disposable replay PASS; Supabase native leaked-password protection remains DISABLED and direct Auth bypass remains unresolved |
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
 | #122 | staging | Yes | Yes | 24 FK covering indexes for 26 warnings; latest head adds safe removal of two zero-scan prefix duplicates; exact-head quality + replay PASS; 2 redundant prefix indexes proposed for removal, 47 other zero-scan indexes retained pending workload evidence |
 | #121 | staging | Yes | Yes | Current 189-feature matrix reconciliation and evidence-based progress scoring; documentation only |
-| #120 | staging | Yes | Yes | Atomic permission-change audit; exact-head quality and disposable migration replay pass; independent review and staging runtime acceptance pending |
+| #120 | staging | Yes | Yes | Atomic permission/profile mutation audit; old head failed ERP authorization coverage and SQL replay; regex and invite-authorization contract corrected in commits a98e565 and 03a1029; latest exact-head quality QUEUED and replay IN_PROGRESS; independent review and staging runtime acceptance pending |
 | #119 | main | No | Yes | Remove scheduled staging mutations and add read-only policy audit; verify exact workflow policy before merge |
 | #118 | staging | Yes | Yes | Explicit manual confirmation for staging mutation workflows; overlap with #119 requires PR-by-PR reconciliation |
 | #117 | main | No | No | OIDC session broker rebase; merge conflict / base reconciliation required |
@@ -42,8 +42,8 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 1. There are 22 open PRs, not 9 as shown in the 20-November snapshot.
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
-4. #108 is still open and Draft. Its updated 82/98/9 feature matrix is carried into #121 so the current matrix can be reviewed independently of the historical inventory PR.
-5. #120 is still Draft and has no independent reviewer. Its green quality and disposable replay checks do not authorize shared-staging deployment.
+4. #108 is still open and Draft. The current feature-level matrix in #121 is 84/96/9 after two SaaS features moved to PARTIAL when PR #126 began concrete implementation. The pre-PR126 domain rows sum to 82/98/9; 93 is an arithmetic typo in the supplied total row.
+5. #120 is still Draft and has no independent reviewer. Its latest fixes are awaiting exact-head CI; earlier green checks on other commits do not authorize shared-staging deployment.
 6. No reviewer is currently requested on these 22 PRs in the metadata returned by GitHub; #122–#127 also have no requested reviewer in their creation metadata.
 
 ## Safety and next action
@@ -56,10 +56,18 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 - This inventory authorizes no database mutation, Auth change, Edge Function deployment or production release.
 
 
-## Vercel free-tier preview quota checkpoint
+## Live platform audit delta — 21 November 2026
 
-The Vercel project is on Hobby. A manual preview deployment request for the latest PR heads returned the Vercel API's free daily deployment limit (>100 deployments in one day; retry after 24 hours). No paid upgrade or CLI workaround was attempted. Existing previews for PR #122 and #126 are READY but correspond to older commits; PR #127 has no preview in the current deployment listing. Latest-head preview validation is therefore pending until the free quota resets.
-
+- Supabase staging contains **49 applied migrations**.
+- The staging Git branch contains **52 migration SQL files**. The three source migrations not yet applied are:
+  - `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+  - `20261120110000_command_center_summary.sql`
+  - `20261120120000_atomic_branch_checklist_audit.sql`
+- No shared-staging migration was applied during this audit.
+- Supabase Security Advisor reports `auth_leaked_password_protection` WARN: native leaked-password protection is DISABLED.
+- Supabase Performance Advisor reports 26 unindexed foreign keys and 49 unused indexes. Do not drop unused indexes until representative query-plan and workload evidence exists.
+- Staging Procurement E2E run #44892019085 and KDS/POS/Stock/Offline E2E run #44891634215 are BLOCKED before business execution because `STAGING_TEST_OWNER_USERNAME`, `STAGING_TEST_OWNER_PASSWORD` and `STAGING_TEST_BRANCH_A_USERNAME` are absent. Secret values were not read or exposed.
+- Vercel preview for PR #126 is now READY on exact head `a36636974a625e4a56e84e6c61fcce3d2b7a95d8`. This supersedes the earlier stale-preview note for #126; it remains a build/deployment result, not runtime feature acceptance.
 
 ## Fresh GitHub release-protection read — 21 November 2026
 
