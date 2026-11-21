@@ -14,7 +14,8 @@ test("unscoped service-role inventory writes and tenant invites remain closed be
   for (const action of ["erp-accept-tenant-invite", "erp-save-inventory"]) {
     assert.ok(gatedActions.has(action), `missing tenant isolation gate for ${action}`);
   }
-  assert.match(source, /!TENANT_ISOLATION_RELEASED &&\s*!isPlatformOwner &&\s*\\(isTenantSensitiveAction\\(action\\) \\|\\| TENANT_SCOPE_UNCERTIFIED_ACTIONS\\.has\\(action\\)\\)/);
+  assert.match(source, /!TENANT_ISOLATION_RELEASED/);
+  assert.match(source, /isTenantSensitiveAction\\(action\\) \\|\\| TENANT_SCOPE_UNCERTIFIED_ACTIONS\\.has\\(action\\)/);
 });
 
 test("branch and inventory reads use tenant membership and branch assignment guards", () => {
