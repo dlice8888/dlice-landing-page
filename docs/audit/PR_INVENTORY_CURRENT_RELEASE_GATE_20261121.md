@@ -174,3 +174,18 @@ Combined disposable migration candidate 700c2edf: 60 migrations, 14 pgTAP files,
 Project feature acceptance is test-evidence-only. PR reviewer identity/approval is not a feature acceptance criterion. Protected staging Environment, secret handling, explicit mutation authorization and backup/rollback remain separate safety controls.
 
 No staging/production mutation was performed. P01–P09 and business E2E remain NOT RUN.
+
+
+## PR consolidation and exact-head test snapshot — 21 November 2026, 14:00 UTC
+
+| PR | State | Latest exact-head evidence | Disposition |
+|---:|---|---|---|
+| #111 | OPEN / DRAFT | OIDC claim tests, quality and disposable migration replay PASS at `016715bfa00d6c400d8320cbd0d2001ff3335ee8` | Passwordless broker code ready for authorized Supabase Function Secrets setup and staging deployment; P01–P09 NOT RUN |
+| #120 | OPEN / DRAFT | Previous candidate `735e429517655809899a4e942368b39eb96898a5` passed 8 files / 154 pgTAP assertions; latest head `f4438a023ba23ded8dc200c3f1a9173c2e0e386e` is being revalidated; migration job was cancelled during subsequent pushes | Do not mark complete until one stable exact head has every required job PASS |
+| #123 | OPEN / DRAFT | Exact head `9024f2ce6067fe4252f5110942017e27ac1ed7b5`: 5 files / 74 pgTAP tests PASS; quality, CORS, KDS and procurement contracts PASS | Contract/database evidence PASS; real browser retry/concurrency E2E still NOT RUN |
+| #124 | CLOSED / UNMERGED | Same password guard and permission migration/test blobs as #120 | Superseded by #120; do not apply separately |
+| #125 | CLOSED / UNMERGED | Expiry lifecycle migration/test blobs are carried by #127 | Superseded by #127; do not apply separately |
+| #126 | OPEN / DRAFT | Exact head `4a6aa8ccf07e25981579a805477dffc65a13a376`: 7 files / 139 pgTAP tests PASS; invitation suite 20/20 PASS; quality, CORS, KDS and procurement contracts PASS | Disposable tests PASS; actual A/B login and cross-tenant runtime P01–P09 NOT RUN |
+| #127 | OPEN / DRAFT | Exact head `e52ea75a218eedecc513ec52311adaee25f241ba`: 7 files / 124 pgTAP tests PASS; proof and supersession suites PASS; quality, CORS, KDS and procurement contracts PASS | Disposable tests PASS; Storage/browser retry, compensation and combined live reconciliation NOT RUN |
+
+No PR in this table has been merged to staging. CI and disposable replay do not authorize shared staging migration or Edge Function deployment.
