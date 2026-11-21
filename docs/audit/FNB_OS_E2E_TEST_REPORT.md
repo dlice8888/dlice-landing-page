@@ -119,7 +119,7 @@ P01–P09 have not been dispatched on the current passwordless workflow. The job
 | Flow | Code/contract evidence | Live E2E status | Required next proof |
 |---|---|---|---|
 | Online checkout retry (PR #123) | Exact-head CI + disposable replay PASS | NOT RUN | Drop committed HTTP response, retry same idempotency key, concurrent duplicate requests, verify one order/reservation |
-| Unpaid reservation expiry (PR #125/#127) | Exact-head CI + disposable replay PASS | NOT RUN | Install only after approval; run worker against disposable/live-approved fixture; prove expiry and no-proof compensation |
+| Unpaid reservation expiry (PR #125/#127) | Exact-head CI + disposable replay PASS | NOT RUN | Run worker only in disposable or explicitly authorized staging fixtures; prove expiry and no-proof compensation |
 | Payment proof upload (PR #127) | Atomic proof pgTAP/contract + replay PASS | NOT RUN | Storage upload/RPC failure compensation, same-key retry, concurrent upload, orphan object cleanup |
 | Payment attempt supersession (PR #127) | Supersession pgTAP + replay PASS | NOT RUN | Approve/reject race, one-paid-per-order invariant, preserve proof-bearing sibling for manual review |
 | Tenant invitation (PR #126) | 15 pgTAP assertions pass; full replay PASS | NOT RUN | Actual issue, delivery/manual copy, correct-email accept, wrong-email reject, replay reject, expiry/audit E2E |
