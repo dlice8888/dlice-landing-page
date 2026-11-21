@@ -372,7 +372,12 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            123
+          ],
+          "work_started_at": "2026-11-21",
+          "work_evidence": "PR #123 adds stable 256-bit checkout idempotency, canonical request fingerprint, advisory-lock replay protection, and pgTAP/Node contract tests. Delayed-payment expiry, rejection compensation, browser fault-injection, and concurrent runtime tests remain open."
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -2153,8 +2158,14 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
           },
-          "work_status": "EXTERNAL_ACTION_REQUIRED",
-          "work_note": "Supabase Security Advisor confirms disabled; authorized project owner must enable Auth password security on staging and verify with disposable identities."
+          "work_status": "IN_PROGRESS",
+          "work_note": "Supabase Security Advisor confirms disabled; authorized project owner must enable Auth password security on staging and verify with disposable identities.",
+          "active_prs": [
+            124
+          ],
+          "work_started_at": "2026-11-21",
+          "work_evidence": "PR #124 adds a free k-anonymity breached-password check to the official Owner bootstrap/staff create/staff reset flows. Supabase-native protection remains disabled; direct Auth API bypass and complete password mutation coverage remain external acceptance blockers.",
+          "external_action_required": true
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -2451,16 +2462,22 @@
     },
     "production_changes": "NONE in this audit",
     "database_performance": {
-      "advisor_observed_at": "2026-11-21T05:14:02Z",
+      "advisor_observed_at": "2026-11-21",
       "unindexed_foreign_keys": 26,
       "unused_indexes": 49,
       "statistics_reset_at": "2026-10-02T18:01:15Z",
       "remediation_pr": 122,
       "proposed_nonredundant_indexes": 24,
       "migration": "supabase/migrations/20261121120000_add_fk_covering_indexes.sql",
-      "pgtap_assertions": 24,
-      "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay pending; shared staging unchanged",
-      "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX in PR #122"
+      "pgTap_assertions": 24,
+      "ci": {
+        "free_quality_checks": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract_tests": "PASS",
+        "tested_head_sha": "621b1850d20f5571547d7a2b98aae9de05a4ec4c"
+      },
+      "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay and quality checks passed; shared staging unchanged",
+      "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX"
     }
   },
   "tenant_acceptance": {
@@ -2511,7 +2528,7 @@
     87,
     88
   ],
-  "open_pr_count": 17,
+  "open_pr_count": 19,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -2818,7 +2835,7 @@
     "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
     "target_branch_at_audit": "staging",
     "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 17 open PRs (#122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status.",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 17 open PRs (#122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, while disposable replay is pending. These PRs remain Draft and do not alter audit_status or shared staging.",
     "evidence_snapshot": {
       "supabase_project": "higoadrzxnhzbbwhdbmh",
       "applied_migrations": 49,
@@ -2859,7 +2876,9 @@
         "stats_reset_at": "2026-10-02T18:01:15Z",
         "remediation_pr": 122,
         "proposed_indexes": 24,
-        "status": "DRAFT / DISPOSABLE REPLAY PENDING"
+        "ci_status": "FREE_QUALITY_PASS_AND_DISPOSABLE_REPLAY_PASS",
+        "shared_staging_mutated": false,
+        "unused_indexes_dropped": 0
       }
     },
     "release_flags": {
@@ -2882,6 +2901,8 @@
     }
   },
   "current_open_prs": [
+    124,
+    123,
     122,
     121,
     120,
