@@ -168,7 +168,7 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
   - 20261120110000_command_center_summary.sql
   - 20261120120000_atomic_branch_checklist_audit.sql
 - PR #126 retains tenant invitation migration 20261121130000_atomic_tenant_invite_lifecycle.sql.
-- PR #123's colliding online-order migration was renamed to 20261121135000_atomic_online_order_idempotency.sql; the old duplicate filename was deleted from its head branch. The updated contract test and exact-head quality workflow now use the new filename.
+- PR #123 and PR #126 still collide on migration version 20261121130000 with different SQL contents. The collision is NOT resolved; do not integrate both until one migration is re-versioned through the Supabase migration-generation workflow and combined disposable replay passes.
 - PR #123 disposable replay for exact head 6788c4d7da34144d279da06edea84f6d0763b796 was running at snapshot time; do not mark the combined migration set PASS until that run completes and a combined replay is executed with #126.
 - PR #120 migrations are 20261121100000 and 20261121160000; PR #125 is 20261121140000; PR #127 is 20261121150000 and 20261121180000. Preserve timestamp order and check dependencies before integration.
 - No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
