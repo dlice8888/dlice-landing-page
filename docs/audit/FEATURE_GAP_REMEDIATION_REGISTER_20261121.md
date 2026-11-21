@@ -21,13 +21,13 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 
 The supplied 18-domain rows originally summed to **82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189** before the newest implementation evidence was counted. The supplied total-row value of 93 NOT VERIFIED was an arithmetic error; the domain rows sum to 98.
 
-Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth is **89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189**.
+Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth is **92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189**. Three previously BLOCKED features moved to PARTIAL after exact-head implementation and test evidence: duplicate/delayed order handling (#123/#125/#127), audited permission/profile/password mutations (#120), and application-layer leaked-password mitigation (#120). These are not DONE; runtime and platform gaps remain.
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
 |---|---:|---:|---:|---:|
 | Executive Command Center | 10 | 4 | 5 | 1 |
 | POS & Checkout | 13 | 7 | 5 | 1 |
-| Order Management | 10 | 7 | 2 | 1 |
+| Order Management | 10 | 8 | 2 | 0 |
 | Kitchen & Production | 10 | 7 | 2 | 1 |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 |
@@ -39,20 +39,20 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 | HR & Workforce | 9 | 1 | 8 | 0 |
 | Franchise & Expansion | 8 | 2 | 6 | 0 |
 | BI & Analytics | 10 | 3 | 7 | 0 |
-| Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| Admin, Identity & Access Control | 10 | 6 | 4 | 0 |
 | SaaS Tenant Management | 8 | 2 | 6 | 0 |
 | Integrations & Automation | 9 | 5 | 4 | 0 |
-| Quality, Compliance & Security | 20 | 10 | 9 | 1 |
-| **TOTAL** | **189** | **89** | **91** | **9** |
+| Quality, Compliance & Security | 20 | 11 | 9 | 0 |
+| **TOTAL** | **189** | **92** | **91** | **6** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
 - Menu & Recipe: branch-specific pricing settings (branch settings pricing category and read/write handlers exist).
 - Inventory & Warehouse: warehouse master (warehouse table and ERP handlers exist) and min-stock threshold (inventory_items.min_stock exists).
 
-These five are not DONE. Station routing, SLA escalation, central/regional pricing governance, storage/bin hierarchy, safety stock/reorder workflow and other acceptance gaps remain open. Two SaaS PARTIAL features have weighted progress of 30% and 38%; the other 87 PARTIAL features still require feature-level evidence decomposition before a defensible percentage can be assigned. No percentage is fabricated.
+These five are not DONE. Station routing, SLA escalation, central/regional pricing governance, storage/bin hierarchy, safety stock/reorder workflow and other acceptance gaps remain open. Two SaaS PARTIAL features have weighted progress of 30% and 38%; the other 90 PARTIAL features still require feature-level evidence decomposition before a defensible percentage can be assigned. No percentage is fabricated.
 
-## Per-domain feature gaps and work
+## Latest execution delta — PR #120 and order lifecycle (21 November 2026)\n\n- PR #120 exact head `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`: all six applicable workflows PASS, including disposable Supabase migration replay and exact-head quality checks.\n- `admin_profile_mutation_audit.test.sql` now has 35 pgTAP assertions. Forced audit-insert failures prove rollback for staff creation, role change and active-state mutation.\n- Password reset no longer updates Auth and then silently attempts a best-effort audit insert. It now writes a durable service-role-only audit intent before `updateUserById`, finalizes success/failure afterward, and preserves a pending event if finalization fails. This is a cross-service intent/outcome saga, not a single distributed transaction.\n- PR #124 is CLOSED as superseded by #120; its password guard source, tests and migration are consolidated into #120.\n- PR #123, #125 and #127 exact-head CI/disposable replay pass. Runtime retry/concurrency, late webhook, expiry worker, proof upload and reconciliation E2E remain NOT RUN.\n- No shared staging migration or Edge Function deployment was performed.\n\n## Per-domain feature gaps and work
 
 ### 1. Executive Command Center
 
@@ -848,3 +848,7 @@ Read-only staging joins confirm:
 GitHub ruleset #27559290 is active on all branches but requires **0 approving reviews**, **0 required status checks**, and **0 deployment environments**; 11 actors have always-bypass and the connected identity can bypass. No policy change was made. Vercel's latest deployment is READY with SSO protection, but PR #127 reports the Free daily deployment limit (>100/day); READY previews do not prove current-head E2E.
 
 No staging migration, Auth mutation, Edge Function deployment, production change, merge, or release-flag change was made. Both release flags remain false.
+
+
+### Test-only completion criteria
+PR reviewer assignment and independent approval are not acceptance criteria. A feature becomes DONE only when exact-head code/build checks, changed-code coverage, disposable migration replay, authorization positive/negative tests, runtime E2E, fault injection and persisted-data reconciliation all pass. No BLOCKED, SKIPPED or NOT RUN case is allowed at completion. Staging Environment protection, secret presence checks, explicit staging mutation authorization and backup/rollback remain separate release controls.
