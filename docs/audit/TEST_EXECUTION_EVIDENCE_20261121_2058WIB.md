@@ -86,3 +86,7 @@ The `public.erp_create_stock_transfer` RPC ACL is also verified read-only: EXECU
 - `PUBLIC_TENANT_ROUTING_RELEASED=false`
 - No shared staging migration, Edge Function deployment, cron activation, or production mutation was performed.
 - No feature may be marked DONE from disposable replay or contract tests alone.
+
+## PR #120 latest-head completion — 21 November 2026, 21:03 WIB
+
+The latest PR #120 head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` completed all six applicable workflows successfully. Disposable migration replay passed 10 pgTAP files / 206 assertions: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345. The configured Tenant A/B branch assignments were also rechecked read-only and both are active today. P01–P09 remain NOT RUN because protected Environment/secret presence and workflow dispatch are still unverified.
