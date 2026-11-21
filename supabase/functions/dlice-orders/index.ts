@@ -749,9 +749,26 @@ if (action === "admin-set-profile-role") {
     if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
     const passwordCheck = await checkNewPassword(password, origin);
     if (passwordCheck) return passwordCheck;
+    const { data: auditId, error: auditIntentError } = await admin.rpc("dlice_begin_admin_password_reset_audit", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+    });
+    if (auditIntentError || typeof auditId !== "string") {
+      return fail("Audit intent reset kata sandi gagal dicatat; kata sandi tidak diubah.", 503, origin);
+    }
+
     const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
-    if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
+    const resetSucceeded = !error && !!updated.user;
+    const { data: auditResult, error: auditFinishError } = await admin.rpc("dlice_finish_admin_password_reset_audit", {
+      p_actor_user_id: actor.user.id,
+      p_audit_log_id: auditId,
+      p_succeeded: resetSucceeded,
+      p_error_code: resetSucceeded ? null : "auth_admin_update_failed",
+    });
+    if (auditFinishError || !auditResult?.ok) {
+      return fail("Hasil reset kata sandi belum dapat direkonsiliasi; audit intent tetap tersimpan untuk pemulihan.", 500, origin);
+    }
+    if (!resetSucceeded) return fail("Kata sandi staf gagal diperbarui; kegagalan telah dicatat.", 500, origin);
     return json({ ok: true, user_id: userId }, 200, origin);
   }
 
