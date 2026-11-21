@@ -18,6 +18,10 @@ INSERT INTO public.branches(id,code,name,status,accepts_online_orders,pickup_ena
 VALUES('d7000000-0000-4000-8000-000000000003','QA-PAY-SUP-20261121','QA Payment Supersession','active',true,true,false,'d7000000-0000-4000-8000-000000000002')
 ON CONFLICT(id) DO UPDATE SET status='active',accepts_online_orders=true,pickup_enabled=true,delivery_enabled=false;
 
+INSERT INTO public.products(id,slug,name,unit_price_idr,is_active,category,display_order)
+VALUES('d7000000-0000-4000-8000-000000000004','qa-payment-supersession-20261121','QA Payment Supersession Product',1500,true,'other',99996)
+ON CONFLICT(id) DO UPDATE SET is_active=true,unit_price_idr=1500;
+
 INSERT INTO public.orders
 (id,tracking_token_hash,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,
  product_subtotal_idr,payment_status,operational_status,fulfillment_status,branch_id,
@@ -30,7 +34,7 @@ VALUES
 INSERT INTO public.order_reservations(order_id,product_id,service_date,quantity,status,expires_at,branch_id)
 VALUES
 ('d7000000-0000-4000-8000-000000000011',
- (SELECT id FROM public.products ORDER BY created_at LIMIT 1),
+ 'd7000000-0000-4000-8000-000000000004',
  current_date+3,1,'held_for_verification',now()+interval '10 minutes',
  'd7000000-0000-4000-8000-000000000003');
 
