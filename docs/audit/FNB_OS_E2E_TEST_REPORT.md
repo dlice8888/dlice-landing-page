@@ -267,3 +267,7 @@ The Kitchen/KDS and Procurement workflow checks are CI contract tests. They do n
 - **#111:** OIDC claim tests and full disposable migration replay PASS on exact head `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
 
 These are disposable database and CI results. They do not constitute live staging E2E. Browser checkout retries, actual Storage proof upload/retry, OIDC exchange with existing Supabase accounts, P01–P09, and the combined order/payment/reservation runtime matrix remain NOT RUN.
+
+## PR #120 exact-head test completion — 21 November 2026, 21:03 WIB
+
+PR #120 head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` now has all six applicable workflows PASS. Its exact-head disposable replay executed 10 pgTAP files / 206 assertions, all PASS. This proves migration and database contracts on a disposable database; live staff permission mutation, forced audit-failure rollback and password mutation runtime tests remain NOT RUN on shared staging.
