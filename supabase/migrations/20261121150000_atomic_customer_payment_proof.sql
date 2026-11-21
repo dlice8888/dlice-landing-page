@@ -1,7 +1,8 @@
 -- Atomic customer payment-proof declaration.
 -- Storage upload remains outside the Postgres transaction; the Edge Function removes
 -- the uploaded object when this RPC rejects or errors. A process crash between the
--- Storage upload and RPC can still leave an orphan object for scheduled cleanup.
+-- Storage upload and RPC can still leave an orphan object; the Edge Function performs
+-- best-effort per-order cleanup on subsequent successful proof uploads.
 ALTER TABLE public.payment_records
   ADD COLUMN IF NOT EXISTS proof_upload_key uuid;
 
