@@ -1,33 +1,37 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(19);
+SELECT plan(21);
 
 INSERT INTO auth.users
 (id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 VALUES
-('e7000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.owner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
+('e7000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.owner@example.invalid','',now(),'{"platform_owner":true}'::jsonb,'{}'::jsonb,now(),now()),
 ('e7000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.staff@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
-('e7000000-0000-4000-8000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.nonowner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now())
+('e7000000-0000-4000-8000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.nonowner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
+('e7000000-0000-4000-8000-000000000004','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.unclaimed-owner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now())
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO public.admin_profiles(user_id,username,role,display_name,is_active,permissions)
 VALUES
 ('e7000000-0000-4000-8000-000000000001','qa_assignment_owner','owner','QA Assignment Owner',true,'["*"]'::jsonb),
 ('e7000000-0000-4000-8000-000000000002','qa_assignment_staff','sales_admin','QA Assignment Staff',true,'["staff"]'::jsonb),
-('e7000000-0000-4000-8000-000000000003','qa_assignment_nonowner','sales_admin','QA Assignment Non Owner',true,'["staff"]'::jsonb)
+('e7000000-0000-4000-8000-000000000003','qa_assignment_nonowner','sales_admin','QA Assignment Non Owner',true,'["staff"]'::jsonb),
+('e7000000-0000-4000-8000-000000000004','qa_assignment_unclaimed_owner','owner','QA Assignment Unclaimed Owner',true,'["*"]'::jsonb)
 ON CONFLICT(user_id) DO UPDATE SET role=excluded.role,is_active=excluded.is_active;
 
 INSERT INTO public.tenants(id,slug,legal_name,status)
 VALUES
 ('e7000000-0000-4000-8000-000000000010','qa-assignment-a','QA Assignment A','active'),
-('e7000000-0000-4000-8000-000000000011','qa-assignment-b','QA Assignment B','active')
+('e7000000-0000-4000-8000-000000000011','qa-assignment-b','QA Assignment B','active'),
+('e7000000-0000-4000-8000-000000000012','qa-assignment-c','QA Assignment C','suspended')
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO public.branches(id,code,name,status,tenant_id)
 VALUES
 ('e7000000-0000-4000-8000-000000000020','QA-ASG-A','QA Assignment Branch A','active','e7000000-0000-4000-8000-000000000010'),
 ('e7000000-0000-4000-8000-000000000021','QA-ASG-B','QA Assignment Branch B','active','e7000000-0000-4000-8000-000000000011'),
-('e7000000-0000-4000-8000-000000000022','QA-ASG-S','QA Assignment Suspended Branch','suspended','e7000000-0000-4000-8000-000000000010')
+('e7000000-0000-4000-8000-000000000022','QA-ASG-S','QA Assignment Suspended Branch','suspended','e7000000-0000-4000-8000-000000000010'),
+('e7000000-0000-4000-8000-000000000023','QA-ASG-T','QA Assignment Suspended Tenant Branch','active','e7000000-0000-4000-8000-000000000012')
 ON CONFLICT(id) DO NOTHING;
 
 INSERT INTO public.tenant_memberships(tenant_id,user_id,role,permissions,status)
@@ -48,15 +52,23 @@ SELECT ok(
 );
 SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT throws_ok(
- $SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000099','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
- )$,
+ )$$,
  '22023','invalid_branch_assignment_details','rejects an unknown actor identity'
 );
 SELECT throws_ok(
- $SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
+  'e7000000-0000-4000-8000-000000000004','e7000000-0000-4000-8000-000000000020',
+  'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
+  'active',current_date,NULL
+ )$$,
+ '42501','platform_owner_required','requires platform_owner Auth claim as well as Owner profile role'
+);
+SELECT throws_ok(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000003','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
@@ -110,6 +122,15 @@ SELECT throws_ok(
   'active',current_date,NULL
  )$$,
  'P0002','branch_not_assignable','rejects a suspended branch'
+);
+
+SELECT throws_ok(
+ $$SELECT public.dlice_save_branch_assignment_audited(
+  'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000023',
+  'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
+  'active',current_date,NULL
+ )$$,
+ '55000','tenant_not_active_for_assignments','rejects assignment under a suspended tenant'
 );
 
 SELECT is(
