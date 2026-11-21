@@ -146,7 +146,6 @@ DECLARE
   v_expired_orders integer := 0;
   v_expired_reservations integer := 0;
   v_closed_payment_attempts integer := 0;
-  v_rows integer := 0;
   v_reservation_rows integer := 0;
   v_payment_rows integer := 0;
 BEGIN
@@ -214,7 +213,8 @@ BEGIN
         UPDATE public.payment_records
         SET status = 'rejected',
             verified_at = v_now,
-            admin_note = 'Closed automatically: order reservation expired before payment proof was submitted.'
+            admin_note = 'Closed automatically: order reservation expired before payment proof was submitted.',
+            updated_at = v_now
         WHERE order_id = v_order.id
           AND status = 'pending_verification'
           AND proof_storage_path IS NULL;
@@ -232,7 +232,7 @@ BEGIN
           (actor_user_id,action,entity_type,entity_id,metadata)
         VALUES
           (NULL,'system_expire_unpaid_order','order',v_order.id::text,
-           jsonb_build_object('expired_reservations',v_expired_reservations,
+           jsonb_build_object('expired_reservations',v_reservation_rows,
              'reason','unpaid_reservation_expired','checked_at',v_now));
       END IF;
     END IF;
@@ -256,7 +256,8 @@ BEGIN
     UPDATE public.payment_records
     SET status = 'rejected',
         verified_at = v_now,
-        admin_note = 'Closed automatically: order is already paid; no proof was attached to this pending attempt.'
+        admin_note = 'Closed automatically: order is already paid; no proof was attached to this pending attempt.',
+        updated_at = v_now
     WHERE order_id = v_order.id
       AND status = 'pending_verification'
       AND proof_storage_path IS NULL;
