@@ -754,7 +754,7 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 
 ### PR #120/#124 combined implementation update — 21 November 2026
 - PR #120 branch now includes the unique application-layer password guard from #124: k-anonymous Pwned Passwords range check, padding, fail-closed behavior, Deno unit tests and Node contract tests on initial Owner bootstrap, staff creation and staff password reset.
-- Current PR #120 head: `d9aa2fbc813da48abcae38769be90de1e981c13d`. Quality, KDS contract, CORS, procurement requisition and receiving contracts PASS; disposable migration replay was still IN_PROGRESS at last poll.
+- Current PR #120 head: `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`. Six applicable workflows PASS, including disposable migration replay; profile mutation suite plan 35, permission suite plan 11, invitation suite plan 11.
 - The shared atomic permission audit migration and pgTAP test remain a single canonical copy on #120; no duplicate migration was added from #124.
 - The app-level password guard does **not** close direct Supabase Auth API password mutation. Native leaked-password protection remains disabled. The password reset path also updates Auth first and writes its audit afterward; a separate audit-intent/result lifecycle is still required if the product requires durable traceability across Auth/database failure boundaries. Do not mark the password-control feature DONE.
 
@@ -776,7 +776,7 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 
 ### Exact-head CI closure update — 21 November 2026
 - PR #126 exact head `07d7c51c2cbea21b9cd49a480614e004fe7bf417`: quality PASS; KDS, CORS, procurement requisition and procurement receiving contracts PASS; full disposable migration replay PASS. The replay included the 15-assertion audited tenant invitation suite, which returned `ok`. The P01–P09 runtime workflow itself has not been dispatched.
-- PR #120 exact head `d9aa2fbc813da48abcae38769be90de1e981c13d`: quality PASS, including the new breached-password guard unit and contract tests; admin permission audit contract PASS; KDS/CORS/procurement contracts PASS; full disposable migration replay PASS.
+- PR #120 exact head `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`: six applicable workflows PASS; profile mutation suite plan 35 includes forced audit-failure rollback for staff creation, role and active-state changes plus password-reset audit intent/outcome.
 - PR #123 exact head `31976673a9289add4c1bb10d6f29f3ff6c3c15a5`: quality, contracts and disposable migration replay PASS; real checkout retry, concurrent duplicate, pending payment and late-webhook E2E NOT RUN.
 - PR #125 exact head `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d`: quality, KDS contract and disposable migration replay PASS; expiry scheduler/worker runtime NOT RUN and no expiry worker is installed.
 - PR #127 exact head `5c597c2ec37a130501ed19591cfc9383396ba1b`: quality, KDS/CORS/procurement contracts and disposable migration replay PASS; payment proof upload retry, expiry, stale-attempt supersession and compensation runtime E2E NOT RUN.
@@ -818,12 +818,12 @@ Only two PARTIAL features currently have defensible numeric progress scores: Ten
 
 | PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
 |---:|---|---|---|---|
-| #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
-| #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
+| #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Six applicable workflows PASS; RLS/onboarding/invitation pgTAP plans 35/17/15 | P01–P09 NOT RUN; service-role secret presence and staging Environment protection unverified; no dispatch action |
+| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six workflows PASS; 35 profile mutation + 11 permission + 11 invitation pgTAP assertions | Staging mutation runtime NOT RUN; password reset intent/outcome implemented |
 | #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
 | #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
-| #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
+| #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Six applicable workflows PASS; proof/supersession pgTAP plans 16/14; expiry suite shared with #125 | Browser proof concurrency, Storage orphan sweep and full payment reconciliation NOT RUN; no exact-head Vercel deployment |
 
 All six PRs remain OPEN/DRAFT and unmerged. Green CI and disposable replay do not equal staging runtime acceptance or release approval.
 
