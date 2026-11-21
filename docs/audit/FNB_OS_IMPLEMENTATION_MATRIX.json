@@ -2454,11 +2454,11 @@
       }
     ],
     "latest_pr_inventory": {
-      "actual_prs": 109,
-      "merged": 76,
+      "actual_prs": 123,
+      "merged": 77,
       "closed_without_merge": 26,
-      "open": 7,
-      "latest_issue_number": 111
+      "open": 20,
+      "latest_issue_number": 125
     },
     "production_changes": "NONE in this audit",
     "database_performance": {
@@ -2478,6 +2478,41 @@
       },
       "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay and quality checks passed; shared staging unchanged",
       "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX"
+    },
+    "order_lifecycle_findings": {
+      "orders_by_state": {
+        "paid": 3,
+        "unpaid": 3,
+        "pending_verification": 1,
+        "all_fulfillment_unassigned": 7,
+        "all_operational_received": 7
+      },
+      "reservation_rows": {
+        "active_expired": 9,
+        "consumed": 9,
+        "held_for_verification_expired": 3
+      },
+      "payment_records": {
+        "paid_with_proof": 3,
+        "pending_without_proof_on_paid_orders": 2,
+        "pending_with_proof_on_pending_order": 1
+      },
+      "cron_jobs": [
+        {
+          "name": "dlice-operational-retention",
+          "schedule": "17 3 * * *",
+          "active": true
+        }
+      ],
+      "expiry_worker": "NOT INSTALLED",
+      "source": "read-only aggregate SQL on staging 2026-11-21",
+      "data_mutation": "NONE"
+    },
+    "free_tier_policy": {
+      "supabase_organization_plan": "FREE",
+      "vercel_project_plan": "HOBBY",
+      "spend_policy": "NO PAID UPGRADE / NO PAID SERVICE",
+      "feature_limits": "If a required native feature is unavailable on free tier, document blocker and use only safe free mitigations; do not claim equivalence."
     }
   },
   "tenant_acceptance": {
@@ -2528,7 +2563,7 @@
     87,
     88
   ],
-  "open_pr_count": 19,
+  "open_pr_count": 20,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -2668,56 +2703,81 @@
     "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS."
   },
   "operational_checkpoint": {
-    "date": "2026-11-20",
+    "date": "2026-11-21",
     "staging_baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "feature_statuses_last_full_review": "2026-11-20",
     "feature_statuses_reaudited": false,
     "feature_status_note": "The 189 per-feature statuses below remain the 18-Nov baseline. They are not promoted to PASS based on PR merges or static CI. Runtime and end-to-end acceptance must update each feature with current evidence.",
     "pull_requests": {
-      "actual_total": 110,
+      "actual_total": 123,
       "merged": 77,
       "closed_without_merge": 26,
-      "open": 7,
-      "pr106": "MERGED",
-      "pr110": "MERGED",
-      "pr109": {
-        "state": "OPEN_READY_FOR_REVIEW",
-        "head": "9cfe616bd95735dba39b7bf60c8b055f0f53e9cf",
-        "exact_head_ci": "7_RELEVANT_WORKFLOWS_SUCCESS",
-        "independent_review": "PENDING",
-        "staging_migration_applied": false
-      },
-      "pr111": {
-        "state": "OPEN_DRAFT",
-        "base": "staging",
-        "head": "48fe855d5c19b769a05d15597de0f9a9fbd3708a",
-        "rebased_on_pr110": true,
-        "exact_head_quality": "SUCCESS",
-        "kds_contract": "SUCCESS",
-        "disposable_migration_replay": "SUCCESS",
-        "runtime_p01_p09": "NOT_RUN"
-      },
+      "open": 20,
       "open_pr_numbers": [
-        71,
-        104,
-        107,
-        108,
-        109,
+        125,
+        124,
+        123,
+        122,
+        121,
+        120,
+        119,
+        118,
+        117,
+        116,
+        115,
+        114,
+        113,
+        112,
         111,
-        112
+        109,
+        108,
+        107,
+        104,
+        71
       ],
-      "pr108": {
+      "pr120": {
         "state": "OPEN_DRAFT",
-        "purpose": "full PR inventory, closed-PR recovery, current feature matrix and engineering standard"
+        "purpose": "atomic permission-change audit",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "independent_review": "PENDING",
+        "shared_staging_migration_applied": false
       },
-      "pr112": {
+      "pr121": {
         "state": "OPEN_DRAFT",
-        "base": "staging",
-        "head": "82edeeb848335259aa9076d41de0079f4ae9f6b5",
-        "exact_head_quality": "SUCCESS",
-        "kds_contract": "SUCCESS",
-        "disposable_migration_replay": "SUCCESS",
-        "migration_version": "20261120125000"
+        "purpose": "189-feature matrix, progress standard, gap register and current PR inventory"
+      },
+      "pr122": {
+        "state": "OPEN_DRAFT",
+        "purpose": "24 non-redundant FK covering indexes for 26 Advisor warnings",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "shared_staging_migration_applied": false,
+        "unused_indexes_dropped": 0
+      },
+      "pr123": {
+        "state": "OPEN_DRAFT",
+        "purpose": "atomic online order idempotency",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "pgtap_assertions": 74,
+        "browser_fault_injection": "PENDING",
+        "concurrent_runtime_test": "PENDING"
+      },
+      "pr124": {
+        "state": "OPEN_DRAFT",
+        "purpose": "free k-anonymity breached-password guard for official password mutation flows",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "native_supabase_protection": "DISABLED",
+        "direct_auth_bypass": "UNRESOLVED"
+      },
+      "pr125": {
+        "state": "OPEN_DRAFT",
+        "purpose": "unpaid order expiry and payment attempt compensation",
+        "quality": "PENDING",
+        "disposable_migration_replay": "PENDING",
+        "shared_staging_migration_applied": false
       }
     },
     "supabase_live_read_only": {
@@ -2735,6 +2795,11 @@
       "stock_transfers": 0,
       "pos_sales": 6,
       "pos_shifts": 7,
+      "orders": 7,
+      "order_items": 21,
+      "payment_records": 6,
+      "kitchen_tickets": 6,
+      "kitchen_ticket_items": 6,
       "purchase_orders": 0,
       "purchase_receipts": 0,
       "production_batches": 0,
@@ -2752,7 +2817,35 @@
       "public_functions": 29,
       "anon_execute_function_count": 0,
       "authenticated_execute_function_count": 0,
-      "service_role_execute_function_count": 29
+      "service_role_execute_function_count": 29,
+      "order_lifecycle": {
+        "orders_by_state": {
+          "paid": 3,
+          "unpaid": 3,
+          "pending_verification": 1,
+          "all_fulfillment_unassigned": 7,
+          "all_operational_received": 7
+        },
+        "reservation_rows": {
+          "active_expired": 9,
+          "consumed": 9,
+          "held_for_verification_expired": 3
+        },
+        "payment_records": {
+          "paid_with_proof": 3,
+          "pending_without_proof_on_paid_orders": 2,
+          "pending_with_proof_on_pending_order": 1
+        },
+        "cron_jobs": [
+          {
+            "name": "dlice-operational-retention",
+            "schedule": "17 3 * * *",
+            "active": true
+          }
+        ],
+        "expiry_worker": "NOT INSTALLED",
+        "reconciliation": "READ ONLY; no order/payment/reservation records modified"
+      }
     },
     "edge_functions": {
       "dlice_orders": {
@@ -2771,7 +2864,7 @@
       "note": "No run is recorded; zero executed is not a passing result. Current staging workflow still uses Environment A/B username/password inputs until PR #111 is merged and its OIDC broker is configured/deployed."
     },
     "release_protection": {
-      "github_rulesets": "NOT_VERIFIED",
+      "github_rulesets": "NOT_VERIFIED; prior ruleset query empty and branch-protection read 403",
       "github_branch_protection": "NOT_VERIFIED",
       "github_environment_secret_values": "NOT_VERIFIED",
       "workflow_dispatch_capability": "NOT_AVAILABLE_IN_CONNECTED_GITHUB_ACTIONS",
@@ -2835,7 +2928,7 @@
     "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
     "target_branch_at_audit": "staging",
     "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 17 open PRs (#122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, while disposable replay is pending. These PRs remain Draft and do not alter audit_status or shared staging.",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 17 open PRs (#122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, while disposable replay is pending. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending.",
     "evidence_snapshot": {
       "supabase_project": "higoadrzxnhzbbwhdbmh",
       "applied_migrations": 49,
@@ -2879,6 +2972,34 @@
         "ci_status": "FREE_QUALITY_PASS_AND_DISPOSABLE_REPLAY_PASS",
         "shared_staging_mutated": false,
         "unused_indexes_dropped": 0
+      },
+      "order_lifecycle": {
+        "orders_by_state": {
+          "paid": 3,
+          "unpaid": 3,
+          "pending_verification": 1,
+          "all_fulfillment_unassigned": 7,
+          "all_operational_received": 7
+        },
+        "reservation_rows": {
+          "active_expired": 9,
+          "consumed": 9,
+          "held_for_verification_expired": 3
+        },
+        "payment_records": {
+          "paid_with_proof": 3,
+          "pending_without_proof_on_paid_orders": 2,
+          "pending_with_proof_on_pending_order": 1
+        },
+        "cron_jobs": [
+          {
+            "name": "dlice-operational-retention",
+            "schedule": "17 3 * * *",
+            "active": true
+          }
+        ],
+        "expiry_worker": "NOT INSTALLED",
+        "no_live_mutation": true
       }
     },
     "release_flags": {
@@ -2901,6 +3022,7 @@
     }
   },
   "current_open_prs": [
+    125,
     124,
     123,
     122,
@@ -2920,5 +3042,28 @@
     107,
     104,
     71
+  ],
+  "feature_work_updates": [
+    {
+      "domain": "Order Management",
+      "requirement": "Duplicate orders, delayed payment, failed order handling",
+      "audit_status": "BLOCKED",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        123,
+        125
+      ],
+      "note": "PR #123 covers idempotent order creation/replay; PR #125 adds reservation expiry and payment failure compensation. Customer proof-upload atomic RPC and browser/concurrency tests remain."
+    },
+    {
+      "domain": "Quality, Compliance & Security",
+      "requirement": "Leaked-password protection",
+      "audit_status": "BLOCKED",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        124
+      ],
+      "note": "Free k-anonymity breach check covers official Owner/staff password mutation flows. Native Supabase control and direct Auth API bypass remain unresolved."
+    }
   ]
 }
