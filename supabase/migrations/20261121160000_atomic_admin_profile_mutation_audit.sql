@@ -409,6 +409,144 @@ BEGIN
 END;
 $function$;
 
+
+-- Supabase Auth password changes cannot share a PostgreSQL transaction.
+-- Persist an audit intent BEFORE calling Auth Admin, then finalize the same
+-- audit row with the external mutation outcome. A crash leaves a durable
+-- pending event instead of an unaudited password change.
+CREATE OR REPLACE FUNCTION public.dlice_begin_admin_password_reset_audit(
+  p_actor_user_id uuid,
+  p_target_user_id uuid
+) RETURNS uuid
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_target_role text;
+  v_audit_id uuid;
+BEGIN
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
+  END IF;
+  IF p_actor_user_id IS NULL OR p_target_user_id IS NULL
+     OR NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id)
+  THEN
+    RAISE EXCEPTION 'valid_actor_and_target_required' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT role INTO v_target_role
+  FROM public.admin_profiles
+  WHERE user_id=p_target_user_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'staff_profile_not_found' USING ERRCODE = 'P0002';
+  END IF;
+  IF v_target_role='owner' THEN
+    RAISE EXCEPTION 'owner_password_is_not_editable' USING ERRCODE = '55000';
+  END IF;
+
+  INSERT INTO public.admin_audit_logs
+    (actor_user_id,action,entity_type,entity_id,metadata)
+  VALUES
+    (p_actor_user_id,'admin_password_reset_started','admin_profile',p_target_user_id::text,
+     jsonb_build_object('status','pending','password_reset',true))
+  RETURNING id INTO v_audit_id;
+
+  RETURN v_audit_id;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dlice_finish_admin_password_reset_audit(
+  p_actor_user_id uuid,
+  p_audit_log_id uuid,
+  p_succeeded boolean,
+  p_error_code text DEFAULT NULL
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_event public.admin_audit_logs%ROWTYPE;
+  v_next_status text;
+BEGIN
+  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+    RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
+  END IF;
+  IF p_actor_user_id IS NULL OR p_audit_log_id IS NULL OR p_succeeded IS NULL
+     OR NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id)
+  THEN
+    RAISE EXCEPTION 'invalid_password_reset_audit_details' USING ERRCODE = '22023';
+  END IF;
+  IF p_error_code IS NOT NULL AND p_error_code !~ '^[A-Za-z0-9_.-]{1,80}(uuid,uuid,text,text,text,timestamptz)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
+  TO service_role;
+
+REVOKE ALL ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  TO service_role;
+
+COMMIT;
+ THEN
+    RAISE EXCEPTION 'invalid_password_reset_error_code' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT * INTO v_event
+  FROM public.admin_audit_logs
+  WHERE id=p_audit_log_id
+    AND actor_user_id=p_actor_user_id
+    AND entity_type='admin_profile'
+    AND action IN ('admin_password_reset_started','reset_admin_password','reset_admin_password_failed')
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'password_reset_audit_event_not_found' USING ERRCODE = 'P0002';
+  END IF;
+
+  v_next_status := CASE WHEN p_succeeded THEN 'succeeded' ELSE 'failed' END;
+  IF v_event.metadata->>'status' IS DISTINCT FROM 'pending' THEN
+    IF v_event.metadata->>'status'=v_next_status THEN
+      RETURN jsonb_build_object('ok',true,'changed',false,'status',v_next_status,'audit_id',v_event.id);
+    END IF;
+    RAISE EXCEPTION 'password_reset_audit_already_finalized' USING ERRCODE = '55000';
+  END IF;
+
+  UPDATE public.admin_audit_logs
+  SET action=CASE WHEN p_succeeded THEN 'reset_admin_password' ELSE 'reset_admin_password_failed' END,
+      metadata=metadata || jsonb_build_object(
+        'status',v_next_status,
+        'password_reset',p_succeeded,
+        'error_code',CASE WHEN p_succeeded THEN NULL ELSE coalesce(p_error_code,'auth_admin_update_failed') END
+      )
+  WHERE id=p_audit_log_id;
+
+  RETURN jsonb_build_object('ok',true,'changed',true,'status',v_next_status,'audit_id',p_audit_log_id);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.dlice_begin_admin_password_reset_audit(uuid,uuid)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_finish_admin_password_reset_audit(uuid,uuid,boolean,text)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_begin_admin_password_reset_audit(uuid,uuid)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_finish_admin_password_reset_audit(uuid,uuid,boolean,text)
+  TO service_role;
+
 REVOKE ALL ON FUNCTION public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)
   FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION public.dlice_accept_tenant_invite_atomic(uuid,text)
