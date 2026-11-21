@@ -3663,7 +3663,7 @@
   },
   "audit_reconciliation": {
     "source_snapshot": "2026-11-21 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
-    "arithmetic": "Latest 18-domain table in the remediation register now sums to 89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189. This is after two SaaS features and five additional features moved to PARTIAL when concrete implementation foundations were verified. The originally supplied 93 NOT VERIFIED total was an arithmetic error.",
+    "arithmetic": "The user-supplied status columns sum to 184 (82 PARTIAL + 93 NOT VERIFIED + 9 BLOCKED) despite 189 domain feature rows, leaving 5 features unclassified in the supplied table. This audit reclassified 7 implemented foundations from NOT VERIFIED to PARTIAL (2 SaaS + 5 other domains) and assigned the 5 previously unclassified records to NOT VERIFIED. The current feature-level register therefore reconciles to 89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189.",
     "current_status_source": "Feature-level records plus read-only Supabase schema/function evidence and current PR/CI results.",
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
