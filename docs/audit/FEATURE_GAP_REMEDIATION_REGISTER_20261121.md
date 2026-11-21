@@ -20,12 +20,12 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 ## Baseline reconciliation
 | Audit status | Count | Meaning |
 |---|---:|---|
-| PARTIAL | 83 | Code/schema/UI foundation exists; acceptance gaps remain; one SaaS tenant-isolation feature newly moved from NOT VERIFIED after implementation started |
-| NOT VERIFIED | 97 | Insufficient implementation evidence; highest backlog priority |
+| PARTIAL | 84 | Code/schema/UI foundation exists; acceptance gaps remain; one SaaS tenant-isolation feature newly moved from NOT VERIFIED after implementation started |
+| NOT VERIFIED | 96 | Insufficient implementation evidence; highest backlog priority |
 | BLOCKED | 9 | Release or external gate prevents acceptance |
 | **Total** | **189** | **18 domains** |
 
-Latest snapshot after PR #126 began concrete implementation: **83 PARTIAL + 97 NOT VERIFIED + 9 BLOCKED = 189**. Only the feature “Tenant/member isolation in database and APIs” changed from NOT VERIFIED to PARTIAL; all other baseline statuses are unchanged.
+Latest snapshot after PR #126 began concrete implementation: **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**. Only the feature “Tenant/member isolation in database and APIs” changed from NOT VERIFIED to PARTIAL; all other baseline statuses are unchanged.
 
 Note: domain rows sum to 98 NOT VERIFIED. The supplied total row's 93 is a summation error; the per-domain rows are the baseline source.
 
@@ -417,3 +417,15 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 - Read-only catalog analysis: 126 zero-scan indexes total (77 primary/unique constraint indexes + 49 non-unique), 488 kB for the 49 non-unique indexes; stats reset 2026-10-02.
 - Two exact prefix duplicates are proposed for removal in PR #122: `stock_count_items_count_idx` and `stock_transfer_items_transfer_idx`. Composite unique indexes remain to cover their leading FK keys.
 - The other 47 non-unique zero-scan indexes are retained pending representative workload and EXPLAIN evidence; many support FK/query paths or empty modules. No production or shared-staging index has been dropped.
+
+### SaaS Tenant Management — Tenant directory and tenant onboarding
+- **Audit status:** PARTIAL (moved from NOT VERIFIED because PR #126 now adds runtime pgTAP coverage to the existing atomic bootstrap implementation).
+- **Weighted implementation progress:** 20%.
+  - Code/UI: 5/20 — atomic tenant creation and initial-owner bootstrap RPCs are wired in the Edge Function; tenant onboarding UI remains unproven.
+  - Database: 5/20 — tenant, owner membership and audit are committed in one database transaction; latest exact-head migration replay with the new tests is pending.
+  - Authorization: 5/15 — service_role-only RPCs require an active owner profile and Auth platform_owner metadata; real runtime acceptance remains.
+  - Automated tests: 5/15 — existing static source-contract tests pass; 17 new pgTAP assertions are pending.
+  - Browser/API E2E: 0/20.
+  - Operational reconciliation: 0/10.
+- **Remaining gaps:** invite acceptance and expiry, tenant default-branch provisioning, plans/entitlements, usage limits, suspension/grace periods, tenant settings, support access, data export/offboarding/deletion policy, and browser/API acceptance.
+- **PR:** #126.
