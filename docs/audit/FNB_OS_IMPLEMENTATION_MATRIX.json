@@ -2829,10 +2829,10 @@
       "pr126": {
         "head": "cf9d6781111f01c2da6d798c14fe70fd577d1ffd",
         "quality": "PASS",
-        "disposable_migration_replay": "IN_PROGRESS on exact head; prior exact head a3663697 PASS",
+        "disposable_migration_replay": "PASS on exact head cf9d6781",
         "invitation_pgtap_assertions": 15,
-        "invitation_tests": "PASS on prior exact head disposable replay",
-        "passwordless_existing_auth_workflow": "IMPLEMENTED in PR branch; exact-head source contract tests PASS",
+        "invitation_tests": "PASS on exact head cf9d6781",
+        "passwordless_existing_auth_workflow": "IMPLEMENTED; source-contract tests PASS; live manual dispatch pending integration and protected service-role secret",
         "identity_a": "qa_dlice_staging_no_permission@accounts.dlice.internal",
         "identity_b": "qa_dlice_staging_branch_a@accounts.dlice.internal",
         "old_username_password_secrets": "REMOVED from workflow",
@@ -3680,7 +3680,7 @@
     "latest_auth_identity_audit": "Four existing Supabase Auth users found. The two correct P01-P09 fixture identities are qa_dlice_staging_no_permission in dlice-default and qa_dlice_staging_branch_a in dlice-qa-isolation-b. Both have active sales_admin profiles, active branch_manager memberships, matching non-empty permission sets, and active assignments to QA-DLICE-A / QA-TENANT-B respectively. The tenant_owner account is not used for P01-P09 because the probe fixture requires matching branch_manager memberships. No account or password was mutated.",
     "direct_client_rls": "Confirmed explicit deny_direct_client_access policies for branches, tenants and tenant_memberships; direct client queries returning zero rows are expected and do not prove or disprove tenant isolation through the service-role Edge Function API.",
     "migration_reconciliation": "Repository staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three missing versions are 20261120100000, 20261120110000 and 20261120120000. No staging migration applied.",
-    "pr126": "Exact-head commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8: disposable full migration replay PASS; 15 tenant invitation pgTAP assertions PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS. Real Tenant A/B API runtime is not run because the existing accounts' passwords cannot be recovered and current connector exposes no Auth Admin magic-link/session action.",
+    "pr126": "Exact head cf9d6781111f01c2da6d798c14fe70fd577d1ffd: free quality PASS; full disposable migration replay PASS; all 15 invitation pgTAP assertions PASS; CORS, KDS, procurement requisition and receiving contracts PASS. Existing matching branch-manager identities are selected from Supabase. Passwordless Auth Admin magic-link harness is implemented; live P01-P09 cannot run until PR is integrated to trusted staging and staging Environment protection plus service-role secret are verified. Vercel preview is still on older commit a3663697.",
     "supabase_advisors": "Security advisor: leaked password protection DISABLED. Performance advisor: 26 unindexed foreign keys and 49 unused indexes; do not drop unused indexes without workload/query-plan evidence. Health advisor: no findings.",
     "passwordless_tenant_auth": "PR #126 uses the two matching existing branch-manager Auth identities via Auth Admin generateLink(type=magiclink), then verifies the token hash and revokes temporary sessions. Old username/password inputs removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY required. Exact-head quality and disposable replay are running on cf9d6781; live P01-P09 remains NOT RUN until PR integration and secret configuration."
   },
