@@ -426,7 +426,7 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
   - Automated tests: 8/15 — 35 RLS contract assertions passed; new default-deny unit tests are running on the latest head.
   - Browser/API E2E: 0/20 — no real Tenant A/B own-tenant read/write and cross-tenant negative tests.
   - Operational reconciliation: 0/10 — no Storage/cache/job isolation or tenant-level reconciliation evidence.
-- **Remaining gaps:** create/verify two distinct tenant identities; test own-tenant read/write; reject cross-tenant read/write through every Edge Function; test Storage object isolation, caches, exports, cron/jobs and platform-owner bypass; prove role and permission changes cannot cross tenants; run browser/API negative probes with no BLOCKED/SKIPPED; independently review before release.
+- **Remaining gaps:** create/verify two distinct tenant identities; test own-tenant read/write; reject cross-tenant read/write through every Edge Function; test Storage object isolation, caches, exports, cron/jobs and platform-owner bypass; prove role and permission changes cannot cross tenants; run browser/API negative probes with no BLOCKED/SKIPPED; pass the complete automated adversarial test matrix before release.
 - **PR:** #126. Tenant isolation release flag remains false. The default-deny barrier is a safety control, not a tenant-isolation pass.
 
 ### Order Management — Duplicate orders, delayed payment, failed order handling
@@ -703,7 +703,7 @@ The user's source table's domain rows add to 82 PARTIAL + 98 NOT VERIFIED + 9 BL
 - Supabase project `dlice-staging`: 49 recorded applied migrations.
 - All 49 applied database versions exist in repository; no database-only version was found.
 - Three repository-only migrations remain pending: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, `20261120120000_atomic_branch_checklist_audit.sql`.
-- Status: DRIFT_3_PENDING_NOT_APPLIED. Do not apply these migrations until owner bootstrap preconditions, command-center tenant/branch scope, checklist authorization/audit semantics, dependencies and disposable replay have been independently reviewed and staging approval is granted.
+- Status: DRIFT_3_PENDING_NOT_APPLIED. Do not apply these migrations until owner bootstrap preconditions, command-center tenant/branch scope, checklist authorization/audit semantics, dependencies and disposable replay have been validated by disposable replay and regression tests and staging approval is granted.
 
 ### Supabase advisor findings
 - Security: one warning — Auth leaked-password protection disabled.
@@ -735,7 +735,7 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 ### Legacy staging E2E authentication mismatch
 - Latest staging KDS/POS/stock run `44741192566` failed in preflight because the legacy workflow still requires `STAGING_TEST_OWNER_USERNAME` and `STAGING_TEST_OWNER_PASSWORD`; the business-flow step was SKIPPED. This is not a KDS business assertion failure.
 - The staging procurement workflow still requires Owner username/password and Tenant A username/password. It has not yet been converted to the Supabase existing-account magic-link method.
-- The existing Owner Auth user is active with profile role `owner` and tenant_owner membership, but `app_metadata.platform_owner` is false and it has no branch assignment. No password, role, metadata or membership was changed. Platform Owner allowlist/claim must be completed through authorized Auth Admin only if the account is independently verified as the intended platform Owner.
+- The existing Owner Auth user is active with profile role `owner` and tenant_owner membership, but `app_metadata.platform_owner` is false and it has no branch assignment. No password, role, metadata or membership was changed. Platform Owner allowlist/claim must be completed through authorized Auth Admin only after the account is confirmed as the intended platform Owner through the authorized identity-verification procedure.
 
 ### GitHub release protection — current ruleset read
 - Active repository ruleset `27559290` applies to `~ALL` branches.
