@@ -464,3 +464,114 @@ The database RPCs commit each profile mutation and before/after audit row in one
 
 
 **Validation update (21 November):** PR #126 exact-head disposable replay PASS. All repository migrations applied successfully and all six pgTAP files passed, 119 assertions total. This does not replace live Tenant A/B staging tests or onboarding browser/API E2E.
+
+
+## Live technical gap audit — priority domains 4, 5, 6, 7 and 1
+
+Evidence source: read-only Supabase schema/function inspection on 2026-11-21 plus exact-head GitHub workflow results. No shared database or production data was mutated.
+
+### Domain 4 — Kitchen & Production
+
+**Verified foundations**
+- `kitchen_tickets` and `kitchen_ticket_items` exist; staging has 6 tickets and 6 ticket items.
+- Ticket status transition RPC supports queued → accepted → preparing → ready → served, with blocked/cancelled paths, version increment and audit.
+- Kitchen ticket dispatch trigger creates tickets for paid POS sales and paid orders entering confirmed/preparing.
+- `production_batches`, `production_consumptions`, and `inventory_waste_events` exist; staging has 0 production batches, 0 production consumptions and 0 waste events.
+- Production completion RPC records planned and actual consumption and creates stock movements; waste recording has idempotency and stock-ledger mutation.
+
+**Gaps**
+1. No kitchen station table or product-to-station routing is present; dispatch creates a branch-level ticket only. Hot/cold/beverage/packing separation is unproven.
+2. Ticket priority exists, but no verified queue priority policy, SLA target, overdue escalation, or station-level performance metrics.
+3. Recipe consumption on an order transition selects the highest active recipe version at consumption time. An immutable order-time recipe-version snapshot is not evidenced; a recipe activation between order and payment could change the consumed BOM.
+4. Production batch has a recipe row reference, but the lifecycle does not prove historical immutability/effective-date parity with POS order snapshots.
+5. Planned-vs-actual consumption is recorded, but there is no accepted variance approval/escalation workflow tied to thresholds and waste events.
+6. No verified QC temperature, shelf-life, expiry, spoilage and corrective-action data model/workflow.
+7. No positive staging workflow proves POS/order → KDS → batch → recipe consumption → waste → stock ledger reconciliation.
+
+**Required implementation**
+- Add tenant/branch-scoped kitchen stations, product/station routing, station assignment on ticket items, SLA/priority rules and immutable status history.
+- Pin recipe version IDs and ingredient snapshots when the order is accepted; production and stock consumption must use that exact version, not whichever version is active later.
+- Add expected/actual/waste variance calculations, configurable tolerances, approval and audit.
+- Add food-safety QC, temperature and shelf-life controls with corrective actions.
+- Test station routing, ticket idempotency, concurrency, recipe cutover timing, partial production, waste, reversal and stock reconciliation.
+
+### Domain 5 — Menu, Recipe & Product Engineering
+
+**Verified foundations**
+- `products`, `product_modifiers`, `recipes`, `recipe_ingredients` and `recipe_substitutions` exist.
+- Recipe rows have version, yield, effective_from/effective_to and approval fields.
+- Atomic activation RPC retires the current active recipe and activates a draft version.
+
+**Gaps**
+1. No separate immutable recipe-version entity or demonstrated immutable historical ingredient snapshot.
+2. Activation retires the prior recipe but does not demonstrate effective_to closure, non-overlapping effective windows or future-dated activation.
+3. No nested BOM/sub-recipe graph or validated unit-conversion/rounding engine.
+4. Cost-per-serving and contribution-margin calculations are not evidenced.
+5. No allergen declarations, cross-contact warnings or regulated product information lifecycle.
+6. Branch schedule + available stock parity is not proven.
+7. POS and production do not yet prove they use the same approved recipe version for the same order.
+
+**Required implementation**
+- Define immutable recipe versions with explicit effective intervals, approval and rollout state.
+- Add BOM graph validation (cycle prevention), UOM conversion, yield/prep-loss calculations and cost snapshots.
+- Add allergens/compliance attributes and customer/production visibility.
+- Persist recipe version and costing snapshot on accepted order lines; production batch consumes the pinned version.
+- Test effective-date boundaries, concurrent activation, historical order replay, nested BOM, conversion rounding, allergen changes and branch availability.
+
+### Domain 6 — Inventory & Warehouse
+
+**Verified foundations**
+- Inventory items, branch inventory and stock movement ledger exist.
+- Transfer/count workflows and restricted RPC foundations exist.
+- Staging currently has 26 stock movements, but 0 stock transfers and 0 stock counts.
+
+**Gaps**
+- No lot/batch traceability or FIFO/FEFO expiry allocation is evidenced.
+- No warehouse/bin hierarchy is evidenced in the current operational schema.
+- UOM conversion and stock bucket accounting (available/reserved/in-transit/blocked) remain incomplete.
+- Min/max, safety stock and reorder recommendations are not proven.
+- Stock valuation and historical valuation are not proven.
+- Transfer and cycle-count positive E2E plus full ledger/balance reconciliation have not run.
+
+**Required implementation**
+- Add warehouse/bin, lot/expiry and allocation ledgers; enforce FEFO/FIFO policy by item class.
+- Define available/reserved/in-transit/blocked balances as derived or ledger-backed values with a single source of truth.
+- Implement unit conversions, reorder rules, valuation and approval thresholds.
+- Run transfer draft→approve→pick→ship→receive→reconcile and cycle count→variance→approval→posting E2E; reconcile opening + receipts − issues − waste ± adjustments = closing.
+
+### Domain 7 — Procurement & Supplier
+
+**Verified foundations**
+- Supplier master and requisition/PO/receiving schema and atomic RPC foundations exist.
+- PR #126's procurement contract workflows pass on its exact head; PR #123/#125/#127 also carry passing procurement contract jobs.
+
+**Gaps**
+- Staging has 0 purchase orders and 0 purchase receipts; positive business workflow is not proven.
+- Supplier price lists/contracts/history and consolidated cross-branch demand are not proven.
+- Three-way match (PO ↔ GRN ↔ supplier invoice), AP handoff and supplier payment are not evidenced.
+- Supplier return and supplier performance/scorecard lifecycle are not evidenced.
+- The latest staging positive-path Procurement E2E was blocked before execution by missing Owner/Branch A QA credentials.
+
+**Required implementation**
+- Complete supplier price/contract effective dates, consolidated requisition and approval limits.
+- Implement invoice intake, tolerance matching, exception queue and approved AP posting.
+- Test duplicate receipts, over/under delivery, quality rejection, partial receipt, invoice variance, supplier return and payment reconciliation.
+
+### Domain 1 — Executive Command Center
+
+**Verified foundations**
+- ERP overview/funnel foundations and a Command Center summary migration exist in staging source.
+- The summary migration is not yet applied to shared staging; Owner authorization and multi-level drill-down remain unproven.
+
+**Gaps**
+- KPI dictionary/formula governance and gross/net/refund/discount/margin reconciliation are incomplete.
+- Company/region/branch/shift/transaction drill-down is blocked pending role-scoped positive/negative E2E.
+- 150-branch ranking, targets vs actual, stock/expiry/waste alerts, anomaly detection and alert-to-task closure are not proven.
+- Finance source tables such as settlements, cash reconciliations, journals and fiscal periods have zero staging rows.
+
+**Required implementation**
+- Define canonical business date/timezone, KPI formulas and source-of-truth data lineage.
+- Build aggregate queries and drill-down APIs with tenant/branch scope enforced at every level.
+- Add alert lifecycle (detect→assign→acknowledge→resolve→audit) and target/variance reporting.
+- Reconcile every dashboard total to POS/order/payment/refund/stock/finance source rows; add 150-branch load and authorization tests.
+
