@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(26);
+SELECT plan(27);
 
 INSERT INTO public.tenants (id,slug,legal_name)
 VALUES ('d1000000-0000-4000-8000-000000000001','qa-expiry-20261121','QA Expiry')
@@ -84,6 +84,11 @@ SELECT ok(public.admin_apply_payment_verification(
   (SELECT id FROM test_payment_ids WHERE kind='reject_proof'),
   NULL,'rejected','QA lifecycle rejection'
 ),'admin rejection applies atomically');
+SELECT ok(NOT public.admin_apply_payment_verification(
+  'd1000000-0000-4000-8000-000000000013',
+  (SELECT id FROM test_payment_ids WHERE kind='reject_proof'),
+  NULL,'paid','late payment after order rejection'
+),'rejected order cannot be reopened by a late payment decision');
 SELECT is((SELECT payment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000013'),'rejected','rejected payment marks payment state rejected');
 SELECT is((SELECT fulfillment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000013'),'failed','rejected payment marks fulfillment failed');
 SELECT is((SELECT operational_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000013'),'cancelled','rejected payment cancels operational state');
