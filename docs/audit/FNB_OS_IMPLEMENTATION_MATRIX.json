@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21 20:58 WIB",
+  "snapshot_at": "2026-11-21 21:03 WIB",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -4180,7 +4180,7 @@
     }
   },
   "latest_live_audit": {
-    "as_of": "2026-11-21 20:58 WIB",
+    "as_of": "2026-11-21 21:03 WIB",
     "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4351,8 +4351,7 @@
         "membership_status": "active",
         "tenant_permission_count": 6,
         "active_branch_assignments": [
-          "QA-DLICE-A",
-          "DLC-B001"
+          "QA-DLICE-A"
         ]
       },
       "tenant_b": {
@@ -4370,7 +4369,8 @@
           "QA-TENANT-B"
         ]
       },
-      "fixture_resolution": "Two distinct existing Supabase Auth identities, two distinct active tenant memberships, active profiles and branch assignments verified read-only. Tenant A has two active assignments within Tenant A; Tenant B has one. Both last signed in 2026-10-25; current real login has not been proven. No password, Auth metadata, membership or assignment was changed."
+      "fixture_resolution": "Two distinct existing Supabase Auth identities, two distinct active tenant memberships, active profiles and branch assignments verified read-only. Tenant A has two active assignments within Tenant A; Tenant B has one. Both last signed in 2026-10-25; current real login has not been proven. No password, Auth metadata, membership or assignment was changed.",
+      "branch_assignment_status": "Both configured QA branch assignments are active today (read-only SQL confirmed)."
     },
     "pull_requests": {
       "open_unmerged": [
@@ -4384,7 +4384,7 @@
         "125": 127
       },
       "current_heads": {
-        "120": "f37b581f43dc250a8ee7ff0eb04ae1b0e80a42f0",
+        "120": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
         "123": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
         "126": "4a6aa8ccf07e25981579a805477dffc65a13a376",
         "127": "e52ea75a218eedecc513ec52311adaee25f241ba"
@@ -4551,17 +4551,17 @@
       }
     },
     "pr120": {
-      "state": "OPEN_DRAFT",
       "head_sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+      "state": "OPEN_DRAFT",
       "quality": "PASS",
-      "disposable_migration_replay": "IN_PROGRESS",
-      "database_contract_tests": "PASS — 7 files / 124 assertions",
-      "staging_runtime": "NOT RUN",
       "cors": "PASS",
       "kds_contract": "PASS",
       "procurement_requisition": "PASS",
       "procurement_receiving": "PASS",
-      "latest_replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
+      "disposable_migration_replay": "PASS",
+      "pg_tap_files": 10,
+      "pg_tap_assertions": 206,
+      "replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
     },
     "pr126": {
       "state": "OPEN_DRAFT",
@@ -4576,7 +4576,7 @@
     },
     "open_pr_count": 20,
     "latest_test_execution": {
-      "as_of": "2026-11-21 20:58 WIB",
+      "as_of": "2026-11-21 21:03 WIB",
       "combined_migration": {
         "branch": "audit/combined-migration-replay-20261121",
         "commit": "700c2edf2f5f1bee2e5ac4c3afaece7c60efb3e3",
@@ -4594,10 +4594,10 @@
           "kds_contract": "PASS",
           "procurement_requisition": "PASS",
           "procurement_receiving": "PASS",
-          "disposable_replay": "IN_PROGRESS",
-          "prior_tested_head": "735e429517655809899a4e942368b39eb96898a5",
-          "prior_head_assertions": 154,
-          "prior_head_replay": "PASS"
+          "disposable_replay": "PASS",
+          "pg_tap_files": 10,
+          "assertions": 206,
+          "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
         },
         "123": {
           "head": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
