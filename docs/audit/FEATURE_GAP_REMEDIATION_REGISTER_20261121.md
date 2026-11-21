@@ -429,3 +429,5 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
   - Operational reconciliation: 0/10.
 - **Remaining gaps:** invite acceptance and expiry, tenant default-branch provisioning, plans/entitlements, usage limits, suspension/grace periods, tenant settings, support access, data export/offboarding/deletion policy, and browser/API acceptance.
 - **PR:** #126.
+
+The latest PR #127 hardening also makes the legacy `declare-payment` endpoint read-only/idempotent: the atomic proof RPC now commits `payment_declared_at` with the payment record, reservation hold, order state, history and audit. The endpoint only checks this committed state; it no longer issues separate writes.
