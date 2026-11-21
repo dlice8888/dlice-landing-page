@@ -24,12 +24,17 @@ For each feature, each dimension is split into explicit pass/fail acceptance cri
 - PARTIAL → DONE: 100% weighted score, every required workflow passes, code and database checks pass, no BLOCKED/SKIPPED, and independent review/release gates pass where required.
 - BLOCKED remains visible while an external prerequisite prevents execution. Track its work status separately (e.g. IN_PROGRESS or EXTERNAL_ACTION_REQUIRED).
 
-## Current snapshot
+## Current snapshot — live audit 21 November 2026
 
 - 189 PRD features across 18 domains.
-- 84 PARTIAL, 96 NOT VERIFIED, 9 BLOCKED.
-- Two features have current weighted scores in SaaS Tenant Management: Tenant/member isolation = 38% and Tenant directory/tenant onboarding = 30% (both PR #126). The other 82 PARTIAL features still require per-feature decomposition and evidence before a score is assigned; historical domain estimates are not substituted.
-- Feature 8 (permission-change audit) is IN_PROGRESS in Draft PR #120. Feature 9 (leaked-password protection) has free application-layer mitigation in Draft PR #124 but native Supabase protection and direct Auth bypass remain unresolved. Tenant/member isolation moved to PARTIAL at 28%, and tenant directory/onboarding moved to PARTIAL at 20% after PR #126 implementation and test work.
+- **84 PARTIAL, 96 NOT VERIFIED, 9 BLOCKED.** The 18 domain rows supplied in the latest request sum to 82/98/9 before two SaaS Tenant Management features began concrete implementation in PR #126. The total-row value 93 NOT VERIFIED is incorrect; the current feature-level count is 84/96/9.
+- Tenant/member isolation = **38%** (3 code/UI + 15 database + 5 authorization + 15 automated tests; 0 browser/API E2E; 0 operational reconciliation).
+- Tenant directory/onboarding = **30%** (5 code/UI + 10 database + 5 authorization + 10 automated tests; 0 browser/API E2E; 0 operational reconciliation).
+- The other **82 PARTIAL features are not yet assigned a defensible numeric score**. Their foundations are evidenced, but each must be decomposed into the six weighted dimensions above before percentages are published. Do not substitute a domain-level estimate or invent 0%/50%/100%.
+- PR #126 exact-head disposable migration replay and quality suite pass; invitation lifecycle adds 15 pgTAP assertions. Real Tenant A/B runtime remains unproven.
+- PR #120 is under remediation: its earlier exact-head quality run failed an over-broad ERP authorization coverage contract, and its disposable replay exposed a malformed tenant-invite email regex. The regex and contract were corrected on the current branch head; new exact-head validation is pending.
+- PR #124 application-layer breached-password guard passes CI, but native Supabase leaked-password protection remains disabled and direct Auth bypass remains unresolved.
+- Two staging positive-path E2E workflows (Procurement and KDS/POS/Stock/Offline) are BLOCKED at credential preflight; missing Owner username/password and Branch A username prevented business steps from executing.
 
 ## Non-negotiable reporting rule
 
