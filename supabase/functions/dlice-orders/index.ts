@@ -644,10 +644,15 @@ Deno.serve(async (req: Request) => {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Izin akun Pemilik tidak dapat dibatasi melalui panel ini.", 409, origin);
-    const { error } = await admin.from("admin_profiles").update({ permissions: [...new Set(permissions)] }).eq("user_id", userId);
-    if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
-    return json({ ok: true }, 200, origin);
+    const normalizedPermissions = [...new Set(permissions)].sort();
+    const { data: result, error } = await admin.rpc("dlice_update_admin_permissions_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_permissions: normalizedPermissions,
+    });
+    if (error) return fail("Izin akses staf gagal disimpan dan audit tidak dapat dipastikan.", 500, origin);
+    if (!result?.ok) return fail("Izin akses staf tidak berhasil diperbarui.", 409, origin);
+    return json({ ok: true, permissions: result.permissions }, 200, origin);
   }
 
 
