@@ -159,7 +159,7 @@ try {
   record("payment_compensation_failure_and_operator_cleanup", "PASS", { orphanObserved: Number(orphanCount), orphanAfterCleanup: 0 });
 
   // Deterministically expire the reservation after Storage accepts the object but before the RPC.
-  await psql(`create or replace function public.dlice_fault_expire_after_upload() returns trigger language plpgsql as $$ begin if new.bucket_id='dlice-payment-proofs' and new.name like 'd2000000-0000-4000-8000-000000000104/%' then update public.order_reservations set status='expired',expires_at=now()-interval '1 second' where order_id='d2000000-0000-4000-8000-000000000104'; end if; return new; end $$; create trigger dlice_fault_expire_after_upload after insert on storage.objects for each row execute function public.dlice_fault_expire_after_upload();`);
+  await psql(`create or replace function public.dlice_fault_expire_after_upload() returns trigger language plpgsql security definer set search_path=public,storage,pg_temp as $ begin if new.bucket_id='dlice-payment-proofs' and new.name like 'd2000000-0000-4000-8000-000000000104/%' then update public.order_reservations set status='expired',expires_at=now()-interval '1 second' where order_id='d2000000-0000-4000-8000-000000000104'; end if; return new; end $$; create trigger dlice_fault_expire_after_upload after insert on storage.objects for each row execute function public.dlice_fault_expire_after_upload();`);
   const expiryRace = await callPayment("d".repeat(64), "d2000000-0000-4000-8000-000000000104");
   assert.equal(expiryRace.status, 409, "RPC must reject a reservation expired during upload");
   assert.equal(await paymentCount("d2000000-0000-4000-8000-000000000104"), "0", "expiry race must not create a payment record");
