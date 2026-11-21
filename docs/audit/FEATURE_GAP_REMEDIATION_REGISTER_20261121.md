@@ -420,11 +420,11 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 
 ### SaaS Tenant Management — Tenant directory and tenant onboarding
 - **Audit status:** PARTIAL (moved from NOT VERIFIED because PR #126 now adds runtime pgTAP coverage to the existing atomic bootstrap implementation).
-- **Weighted implementation progress:** 20%.
+- **Weighted implementation progress:** 30%.
   - Code/UI: 5/20 — atomic tenant creation and initial-owner bootstrap RPCs are wired in the Edge Function; tenant onboarding UI remains unproven.
-  - Database: 5/20 — tenant, owner membership and audit are committed in one database transaction; latest exact-head migration replay with the new tests is pending.
+  - Database: 10/20 — tenant, owner membership and audit are committed in one database transaction; exact-head disposable replay passes with all 17 new pgTAP assertions.
   - Authorization: 5/15 — service_role-only RPCs require an active owner profile and Auth platform_owner metadata; real runtime acceptance remains.
-  - Automated tests: 5/15 — existing static source-contract tests pass; 17 new pgTAP assertions are pending.
+  - Automated tests: 10/15 — 17 pgTAP assertions pass in exact-head disposable replay; existing static source-contract tests pass.
   - Browser/API E2E: 0/20.
   - Operational reconciliation: 0/10.
 - **Remaining gaps:** invite acceptance and expiry, tenant default-branch provisioning, plans/entitlements, usage limits, suspension/grace periods, tenant settings, support access, data export/offboarding/deletion policy, and browser/API acceptance.
