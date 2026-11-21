@@ -27,7 +27,7 @@ For each feature, each dimension is split into explicit pass/fail acceptance cri
 ## Current snapshot — live audit 21 November 2026
 
 - 189 PRD features across 18 domains.
-- **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED.** The 18 domain rows supplied in the latest request originally sum to 82/98/9; the total-row value 93 NOT VERIFIED is incorrect. Two SaaS features began concrete implementation in PR #126, and five more features were reclassified after live schema/function evidence confirmed existing foundations. Current count is 89/91/9.
+- **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED.** The 18 domain rows supplied in the latest request originally sum to 82/98/9; the total-row value 93 NOT VERIFIED is incorrect. Two SaaS features began concrete implementation in PR #126, and five more features were reclassified after live schema/function evidence confirmed existing foundations. Current count is 92/91/6.
 - Tenant/member isolation = **38%** (3 code/UI + 15 database + 5 authorization + 15 automated tests; 0 browser/API E2E; 0 operational reconciliation).
 - Tenant directory/onboarding = **30%** (5 code/UI + 10 database + 5 authorization + 10 automated tests; 0 browser/API E2E; 0 operational reconciliation).
 - The other **90 PARTIAL features are not yet assigned a defensible numeric score**. Their foundations are evidenced, but each must be decomposed into the six weighted dimensions above before percentages are published. Do not substitute a domain-level estimate or invent 0%/50%/100%.
