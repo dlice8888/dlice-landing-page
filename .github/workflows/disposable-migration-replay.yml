@@ -16,6 +16,7 @@ on:
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
+      - "supabase/functions/dlice-orders/**"
       - ".github/workflows/disposable-migration-replay.yml"
       - ".github/workflows/staging-tenant-isolation-acceptance.yml"
       - ".github/workflows/quality-checks.yml"
