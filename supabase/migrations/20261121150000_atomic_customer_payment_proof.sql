@@ -151,6 +151,7 @@ BEGIN
   UPDATE public.order_reservations
   SET status = 'held_for_verification',
       proof_received_at = v_now,
+      payment_declared_at = COALESCE(payment_declared_at, v_now),
       updated_at = v_now
   WHERE order_id = p_order_id
     AND status IN ('active','held_for_verification');
