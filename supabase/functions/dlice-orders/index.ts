@@ -990,7 +990,7 @@ if (action === "admin-set-profile-role") {
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
     if(!tenantId||!/^[^@ ]+@[^@ ]+[.][^@ ]+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
     const rawToken=randomToken(),tokenHash=await sha256(rawToken),expiresAt=new Date(Date.now()+7*24*60*60*1000).toISOString();
-    const {data:created,error}=await admin.rpc("dlice_create_tenant_invite_audited",{
+    const {data:created,error}=await admin.rpc("dlice_create_tenant_invite_atomic",{
       p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_email:email,p_role:role,
       p_token_hash:tokenHash,p_expires_at:expiresAt,
     });
@@ -1003,7 +1003,7 @@ if (action === "admin-set-profile-role") {
     const token=safeText(body.invite_token,100),tokenHash=await sha256(token);
     if(token.length<32||!actor.user.email)return fail("Token undangan atau email akun tidak valid.",422,origin);
     const {data:accepted,error}=await admin.rpc("dlice_accept_tenant_invite_atomic",{
-      p_actor_user_id:actor.user.id,p_token_hash:tokenHash,
+      p_actor_user_id:actor.user.id,p_email:actor.user.email,p_token_hash:tokenHash,
     });
     if(error||!accepted?.ok){
       const code=String(error?.message||"");
