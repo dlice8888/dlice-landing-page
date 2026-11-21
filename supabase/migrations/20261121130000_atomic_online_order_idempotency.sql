@@ -1,20 +1,18 @@
 -- Online checkout idempotency: exactly-once order creation across retries/timeouts.
+-- Source function body was read from the live staging catalog on 2026-11-21;
+-- existing branch-timezone, capacity-locking, and reservation behavior is preserved.
 -- The raw idempotency key is never persisted; only its SHA-256 hash is stored.
 CREATE TABLE IF NOT EXISTS public.online_order_idempotency (
-  idempotency_key_hash text PRIMARY KEY
-    CHECK (idempotency_key_hash ~ '^[0-9a-f]{64}$'),
-  request_fingerprint text NOT NULL
-    CHECK (request_fingerprint ~ '^[0-9a-f]{64}$'),
+  idempotency_key_hash text PRIMARY KEY CHECK (idempotency_key_hash ~ '^[0-9a-f]{64}$'),
+  request_fingerprint text NOT NULL CHECK (request_fingerprint ~ '^[0-9a-f]{64}$'),
   order_id uuid NOT NULL UNIQUE REFERENCES public.orders(id) ON DELETE CASCADE,
-  response jsonb NOT NULL
-    CHECK (jsonb_typeof(response) = 'object'),
+  response jsonb NOT NULL CHECK (jsonb_typeof(response) = 'object'),
   created_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE public.online_order_idempotency ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.online_order_idempotency FROM PUBLIC, anon, authenticated;
 GRANT ALL ON TABLE public.online_order_idempotency TO service_role;
 
--- Applied to staging as migration 20261020201601.
 CREATE OR REPLACE FUNCTION public.create_order_with_reservations(p_order jsonb, p_items jsonb, p_tracking_token_hash text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -23,7 +21,7 @@ AS $function$
 declare
  v_order_id uuid; v_item jsonb; v_product public.products%rowtype; v_capacity public.product_capacity%rowtype;
  v_branch public.branches%rowtype; v_branch_capacity public.branch_product_capacity%rowtype;
- v_qty integer; v_subtotal bigint:=0; v_now_local timestamp; v_requested_date date; v_reserved bigint;
+ v_qty integer; v_subtotal bigint:=0; v_now_local timestamp; v_requested_date date; v_reserved bigint; v_timezone text;
  v_idempotency_key_hash text; v_request_fingerprint text;
  v_existing public.online_order_idempotency%rowtype; v_response jsonb;
  v_reservation_expires_at timestamptz;
@@ -38,7 +36,6 @@ begin
    or p_tracking_token_hash is distinct from v_idempotency_key_hash then
    raise exception 'invalid_idempotency_key' using errcode='22023';
  end if;
- -- Serialize concurrent retries for the same opaque key before any capacity locks or writes.
  perform pg_advisory_xact_lock(hashtextextended(v_idempotency_key_hash,0));
  select * into v_existing from public.online_order_idempotency
  where idempotency_key_hash=v_idempotency_key_hash for update;
@@ -50,16 +47,19 @@ begin
  end if;
  if jsonb_typeof(p_items)<>'array' or jsonb_array_length(p_items)<1 or jsonb_array_length(p_items)>20 then raise exception 'invalid_items' using errcode='22023'; end if;
  if nullif(trim(p_order->>'customer_name'),'') is null or nullif(trim(p_order->>'customer_whatsapp'),'') is null or nullif(trim(p_order->>'requested_date'),'') is null or nullif(trim(p_order->>'requested_time'),'') is null or p_order->>'receiving_method' not in ('pickup','delivery') then raise exception 'invalid_order' using errcode='22023'; end if;
- v_requested_date:=(p_order->>'requested_date')::date; v_now_local:=now() at time zone 'Asia/Makassar';
- if v_requested_date<v_now_local::date then raise exception 'date_in_past' using errcode='22023'; end if;
- if v_requested_date=v_now_local::date and v_now_local::time>=time '18:00' then raise exception 'same_day_cutoff_passed' using errcode='22023'; end if;
  if p_order->>'receiving_method'='delivery' and nullif(trim(p_order->>'delivery_address'),'') is null then raise exception 'delivery_address_required' using errcode='22023'; end if;
  if p_order->>'receiving_method'='pickup' and nullif(trim(p_order->>'delivery_address'),'') is not null then raise exception 'unexpected_delivery_address' using errcode='22023'; end if;
  if p_tracking_token_hash is null or length(p_tracking_token_hash)<>64 then raise exception 'invalid_tracking_token' using errcode='22023'; end if;
  if nullif(p_order->>'branch_id','') is null then raise exception 'branch_required' using errcode='22023'; end if;
- -- Lock the selected branch row so concurrent checkouts cannot exceed a branch-wide daily cap.
+ -- Lock the selected branch first; date validation and transaction codes use this branch's timezone.
  select * into v_branch from public.branches where id=(p_order->>'branch_id')::uuid and status='active' and accepts_online_orders=true for update;
  if not found then raise exception 'branch_not_online' using errcode='22023'; end if;
+ select coalesce(nullif(v_branch.timezone,''),'Asia/Jakarta') into v_timezone;
+ if not exists (select 1 from pg_catalog.pg_timezone_names where name=v_timezone) then v_timezone:='Asia/Jakarta'; end if;
+ v_requested_date:=(p_order->>'requested_date')::date;
+ v_now_local:=now() at time zone v_timezone;
+ if v_requested_date<v_now_local::date then raise exception 'date_in_past' using errcode='22023'; end if;
+ if v_requested_date=v_now_local::date and v_now_local::time>=time '18:00' then raise exception 'same_day_cutoff_passed' using errcode='22023'; end if;
  if p_order->>'receiving_method'='pickup' and not v_branch.pickup_enabled then raise exception 'branch_method_unavailable' using errcode='22023'; end if;
  if p_order->>'receiving_method'='delivery' and not v_branch.delivery_enabled then raise exception 'branch_method_unavailable' using errcode='22023'; end if;
  if v_branch.daily_order_capacity is not null and
@@ -80,8 +80,8 @@ begin
   if v_branch_capacity.capacity-v_reserved<(v_item->>'quantity')::integer then raise exception 'branch_capacity_exceeded' using errcode='22023'; end if;
   v_subtotal:=v_subtotal+v_product.unit_price_idr::bigint*(v_item->>'quantity')::integer;
  end loop;
- insert into public.orders(branch_id,branch_selection_source,fulfillment_status,tracking_token_hash,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr)
- values(v_branch.id,coalesce(nullif(p_order->>'branch_selection_source',''),'customer_choice'),'queued',p_tracking_token_hash,trim(p_order->>'customer_name'),trim(p_order->>'customer_whatsapp'),v_requested_date,trim(p_order->>'requested_time'),p_order->>'receiving_method',nullif(trim(p_order->>'delivery_address'),''),nullif(trim(p_order->>'customer_notes'),''),v_subtotal::integer)
+ insert into public.orders(branch_id,branch_selection_source,fulfillment_status,tracking_token_hash,customer_name,customer_whatsapp,requested_date,requested_time,timezone,receiving_method,delivery_address,customer_notes,product_subtotal_idr)
+ values(v_branch.id,coalesce(nullif(p_order->>'branch_selection_source',''),'customer_choice'),'queued',p_tracking_token_hash,trim(p_order->>'customer_name'),trim(p_order->>'customer_whatsapp'),v_requested_date,trim(p_order->>'requested_time'),v_timezone,p_order->>'receiving_method',nullif(trim(p_order->>'delivery_address'),''),nullif(trim(p_order->>'customer_notes'),''),v_subtotal::integer)
  returning id into v_order_id;
  for v_item in select value from jsonb_array_elements(p_items) loop
   select * into v_product from public.products where id=(v_item->>'product_id')::uuid;
@@ -96,7 +96,7 @@ begin
  values(v_idempotency_key_hash,v_request_fingerprint,v_order_id,v_response);
  return v_response || jsonb_build_object('idempotent_replay',false);
 end; $function$
-;
-revoke all on function public.create_order_with_reservations(jsonb,jsonb,text) from public,anon,authenticated;
-grant execute on function public.create_order_with_reservations(jsonb,jsonb,text) to service_role;
 
+
+REVOKE ALL ON FUNCTION public.create_order_with_reservations(jsonb,jsonb,text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_order_with_reservations(jsonb,jsonb,text) TO service_role;
