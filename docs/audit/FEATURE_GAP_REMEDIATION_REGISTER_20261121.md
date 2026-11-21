@@ -383,3 +383,9 @@ PR #125 now implements a minute-level reservation/payment lifecycle worker:
 - 27 pgTAP assertions cover these behaviors, cron schedule and partial indexes. Exact-head free quality checks, KDS contract tests and disposable migration replay passed.
 
 The current 7 legacy orders are not modified by PR #125 until the migration is applied during the final authorized rollout and reconciliation stage.
+
+## NOT VERIFIED work started — SaaS tenant/member isolation
+
+PR #126 adds 35 pgTAP assertions over 17 sensitive tables. It verifies RLS is enabled and that no permissive PUBLIC/anon/authenticated policy grants direct access; existing deny policies must have false USING and WITH CHECK, while service_role_only tables expose no client policy.
+
+This is only the database direct-client boundary. It does not prove tenant A/B isolation through service-role Edge Functions, Storage, caches, webhooks or background jobs. Two real staging identities and negative cross-tenant API probes remain mandatory. The feature stays NOT VERIFIED until the disposable database replay passes and the full API tenant-scope evidence is obtained.
