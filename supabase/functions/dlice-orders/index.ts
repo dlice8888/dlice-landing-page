@@ -418,11 +418,12 @@ Deno.serve(async (req: Request) => {
       const { data: proofPayment, error: proofLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").not("proof_storage_path", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (proofLookupError) return fail("Status bukti pembayaran belum dapat diperiksa.", 500, origin);
       if (!proofPayment?.proof_storage_path) return fail("Unggah bukti pembayaran terlebih dahulu. Bukti wajib tersedia sebelum pembayaran dapat diverifikasi.", 422, origin);
-      if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Batas 15 menit telah lewat. Hubungi admin; jangan melakukan pembayaran baru sebelum dikonfirmasi.", 409, origin);
-      const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
-      if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
-      await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
-      await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer confirmed payment after uploading proof" });
+      const proofStateCommitted = order.payment_status === "pending_verification" &&
+        reservations.length > 0 &&
+        reservations.every((reservation) => reservation.status === "held_for_verification" && reservation.payment_declared_at !== null);
+      if (!proofStateCommitted) return fail("Status bukti dan reservasi belum konsisten. Hubungi admin untuk pemeriksaan.", 409, origin);
+      // The atomic upload RPC already commits the declaration, reservation hold,
+      // payment state, history and audit. This legacy action is read-only/idempotent.
       return json({ ok: true, message: "Bukti pembayaran sudah tercatat dan menunggu pemeriksaan admin." }, 200, origin);
     }
     if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Reservasi sudah berakhir; hubungi admin sebelum mengunggah bukti.", 409, origin);
