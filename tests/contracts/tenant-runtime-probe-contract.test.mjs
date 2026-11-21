@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { isServiceRoleKey, serviceRoleHeaders } from "../runtime/supabase-api-key.mjs";
 
 const workflow = readFileSync(".github/workflows/staging-tenant-isolation-acceptance.yml", "utf8");
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
@@ -166,4 +167,17 @@ test("runtime probe evidence masks user, tenant, and branch identifiers in every
   assert.ok(!probe.includes("identityAUserId: userA") && !probe.includes("identityBUserId: userB"));
   const definitions = probe.slice(probe.indexOf("const requiredProbes = ["), probe.indexOf("];", probe.indexOf("const requiredProbes = [")));
   assert.doesNotMatch(definitions, /tenantA \?\?|tenantB \?\?|branchA \?\?|branchB \?\?/);
+});
+
+
+test("staging passwordless harness accepts modern Supabase secret keys without Bearer and legacy service_role JWTs with Bearer", () => {
+  const modern = `sb_secret_${"A".repeat(32)}`;
+  assert.equal(isServiceRoleKey(modern), true);
+  assert.deepEqual(serviceRoleHeaders(modern), { apikey: modern });
+
+  const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
+  const legacy = `eyJhbGciOiJIUzI1NiJ9.${payload}.signature`;
+  assert.equal(isServiceRoleKey(legacy), true);
+  assert.deepEqual(serviceRoleHeaders(legacy), { apikey: legacy, authorization: `Bearer ${legacy}` });
+  assert.equal(isServiceRoleKey(`sb_publishable_${"B".repeat(32)}`), false);
 });

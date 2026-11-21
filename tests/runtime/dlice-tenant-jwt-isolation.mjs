@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
+import { isServiceRoleKey, serviceRoleHeaders } from "./supabase-api-key.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
@@ -120,12 +121,6 @@ function isPublicSupabaseKey(value) {
   const payload = decodeJwtPayload(value);
   if (payload) return payload.role === "anon";
   return /^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value);
-}
-
-function isServiceRoleKey(value) {
-  if (value.startsWith("sb_secret_")) return true;
-  const payload = decodeJwtPayload(value);
-  return payload?.role === "service_role";
 }
 
 function isUuid(value) {
@@ -272,8 +267,7 @@ if (
 
   async function existingSupabaseUserToken(userId) {
     const adminHeaders = {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
+      ...serviceRoleHeaders(serviceRoleKey),
       "content-type": "application/json",
     };
     const userResponse = await fetch(`${base}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
