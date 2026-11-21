@@ -25,11 +25,12 @@ SELECT has_index('public', 'shift_handover_records', 'idx_shift_handover_records
 SELECT has_index('public', 'tenant_invites', 'idx_tenant_invites_accepted_by', 'covers FK columns accepted_by on tenant_invites');
 SELECT has_index('public', 'tenant_invites', 'idx_tenant_invites_invited_by', 'covers FK columns invited_by on tenant_invites');
 SELECT has_index('public', 'warehouses', 'idx_warehouses_tenant_branch', 'covers FK columns tenant_id, branch_id on warehouses');
-SELECT * FROM finish();
-ROLLBACK;
 
 SELECT ok(to_regclass('public.stock_count_items_count_idx') IS NULL,'redundant stock count single-column index is removed');
 SELECT has_index('public','stock_count_items','stock_count_items_stock_count_id_inventory_item_id_key','composite unique index still covers stock_count_id prefix');
 SELECT ok(to_regclass('public.stock_transfer_items_transfer_idx') IS NULL,'redundant stock transfer single-column index is removed');
 SELECT has_index('public','stock_transfer_items','stock_transfer_items_transfer_id_inventory_item_id_key','composite unique index still covers transfer_id prefix');
+
+SELECT * FROM finish();
+ROLLBACK;
 
