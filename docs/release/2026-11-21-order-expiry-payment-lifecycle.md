@@ -14,11 +14,12 @@ No order, payment, reservation, or payment-proof record was modified during this
 
 ## Changes proposed
 
-- Add a one-minute pg_cron worker that expires unpaid orders only when every active reservation has passed expiry, no reservation is held for verification, and no pending proof exists.
+- Add a one-minute pg_cron worker that expires unpaid orders after all active reservations pass expiry, and also expires payment-declared orders whose held reservations pass expiry when no proof was uploaded. Proof-bearing orders remain held for human review.
 - Mark expired reservations as expired, the order fulfillment state as failed, and operational state as cancelled. Record reservation, fulfillment, operational and audit events.
 - Close pending payment attempts without proof for expired orders and already-paid orders. Proof-bearing duplicate attempts are deliberately left open for manual double-payment/refund review.
 - Update atomic admin payment verification so a rejected payment closes the order (fulfillment failed, operational cancelled), releases reservations, and closes other no-proof pending attempts.
 - Add fulfillment to the order status-history event types.
+- Close pending no-proof attempts on expired unpaid orders, expired declared-payment orders, and already-paid orders. Proof-bearing attempts remain open for manual double-payment/refund review.
 - Add two partial indexes for the expiry worker's access paths.
 
 ## Remaining limitations
