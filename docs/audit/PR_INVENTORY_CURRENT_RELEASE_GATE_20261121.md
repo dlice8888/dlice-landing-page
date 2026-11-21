@@ -189,3 +189,7 @@ No staging/production mutation was performed. P01–P09 and business E2E remain 
 | #127 | OPEN / DRAFT | Exact head `e52ea75a218eedecc513ec52311adaee25f241ba`: 7 files / 124 pgTAP tests PASS; proof and supersession suites PASS; quality, CORS, KDS and procurement contracts PASS | Disposable tests PASS; Storage/browser retry, compensation and combined live reconciliation NOT RUN |
 
 No PR in this table has been merged to staging. CI and disposable replay do not authorize shared staging migration or Edge Function deployment.
+
+## PR #120 latest exact-head completion — 21 November 2026, 21:03 WIB
+
+PR #120 current head is `223e0ad22e1eac15394ec9b2025ba4aaaa153108`. All six applicable workflows PASS, including disposable migration replay with 10 pgTAP files / 206 assertions. Replay: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345. No live staging mutation was executed.
