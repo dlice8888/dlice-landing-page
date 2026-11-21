@@ -21,7 +21,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. This snapshot ha
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; 7 pgTAP assertions; exact-head quality and disposable replay PASS; browser response-drop/concurrent request runtime NOT RUN |
 | #122 | staging | Yes | Yes | 24 FK covering indexes for 26 warnings; latest head adds safe removal of two zero-scan prefix duplicates; exact-head quality + replay PASS; 2 redundant prefix indexes proposed for removal, 47 other zero-scan indexes retained pending workload evidence |
 | #121 | staging | Yes | Yes | Current 189-feature matrix reconciliation and evidence-based progress scoring; documentation only |
-| #120 | staging | Yes | Yes | Canonical atomic permission/profile/password mutation audit; exact head 471f4a33 has all six workflows PASS. 35 profile-mutation + 11 permission + 11 invite pgTAP assertions; password reset uses durable audit intent/outcome; staging mutation runtime NOT RUN |
+| #120 | staging | Yes | Yes | Canonical atomic permission/profile/password mutation audit; exact head 471f4a33 has all six workflows PASS. 35 profile-mutation + 11 permission + 11 invite pgTAP plans; 7 SQL test files / 124 total pgTAP assertions PASS; password reset uses durable audit intent/outcome; staging mutation runtime NOT RUN |
 | #119 | main | No | Yes | Remove scheduled staging mutations and add read-only policy audit; verify exact workflow policy before merge |
 | #118 | staging | Yes | Yes | Explicit manual confirmation for staging mutation workflows; overlap with #119 requires PR-by-PR reconciliation |
 | #117 | main | No | No | OIDC session broker rebase; merge conflict / base reconciliation required |
@@ -97,7 +97,7 @@ The ruleset currently has zero required status checks and zero required deployme
 | PR | Current head | State | Exact-head CI / disposable replay | Runtime / test disposition |
 |---:|---|---|---|---|
 | #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; 35 RLS + 17 onboarding + 15 invitation pgTAP plans | P01–P09 NOT RUN; service-role secret presence and staging Environment protection not verified; no dispatch action available |
-| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | All six applicable CI/disposable replay workflows PASS; profile-mutation pgTAP suite plan(35), permission suite plan(11), invitation suite plan(11) | Staging mutation-path runtime NOT RUN; password reset now uses durable audit intent/outcome |
+| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | All six applicable CI/disposable replay workflows PASS; profile-mutation pgTAP plan(35), permission plan(11), invitation plan(11); 7 SQL test files / 124 total assertions PASS | Staging mutation-path runtime NOT RUN; password reset now uses durable audit intent/outcome |
 | #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED | Superseded by #120; shared password-guard helper, unit test, migration and SQL test have identical blob SHAs | Do not reopen or merge; #120 is canonical |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
 
