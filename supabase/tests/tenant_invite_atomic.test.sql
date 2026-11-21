@@ -38,7 +38,7 @@ SELECT is(
  'invite starts pending'
 );
 SELECT ok(
- EXISTS(SELECT 1 FROM public.admin_audit_logs WHERE action='tenant_member_invited' AND entity_id=(SELECT id FROM public.tenant_invites WHERE token_hash=repeat('a',64))),
+ EXISTS(SELECT 1 FROM public.admin_audit_logs WHERE action='tenant_member_invited' AND entity_id=(SELECT id::text FROM public.tenant_invites WHERE token_hash=repeat('a',64))),
  'invite and audit are committed together'
 );
 SELECT throws_ok(
@@ -84,7 +84,7 @@ SELECT is(
  'invite is consumed exactly once'
 );
 SELECT ok(
- EXISTS(SELECT 1 FROM public.admin_audit_logs WHERE action='tenant_invite_accepted' AND entity_id=(SELECT id FROM public.tenant_invites WHERE token_hash=repeat('a',64))),
+ EXISTS(SELECT 1 FROM public.admin_audit_logs WHERE action='tenant_invite_accepted' AND entity_id=(SELECT id::text FROM public.tenant_invites WHERE token_hash=repeat('a',64))),
  'membership activation and acceptance audit are committed together'
 );
 SELECT throws_ok(
