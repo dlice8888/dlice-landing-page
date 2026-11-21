@@ -242,3 +242,17 @@ Current high-level state invariants:
 **Outstanding live anomaly:** two `pending_verification` payment attempts with no proof belong to orders already marked `paid` (2 attempts across 2 orders). These are stale sibling attempts. They are the exact target of PR #127's `20261121180000_supersede_stale_payment_attempts.sql`; the migration is not applied to shared staging. Do not mutate those rows manually. Require #127 disposable tests, combined order/payment/reservation regression, and explicit authorized staging workflow before applying the fix.
 
 This snapshot is current-state reconciliation only; it does not prove retry/concurrency behavior, webhook timing, compensation, expiry-worker recovery, browser upload, or future event consistency. The three pending attempts are not all stale: one proof-bearing attempt belongs to the one order still in `pending_verification` and must remain pending for verification.
+
+## Current runtime acceptance addendum — 21 November 2026, 20:58 WIB
+
+The passwordless P01–P09 workflow is implemented in PR #126 and uses the two existing Supabase Auth identities. Their tenant memberships and branch fixtures were confirmed read-only in staging. The runtime workflow has not been dispatched; all nine P01–P09 probes remain NOT RUN. Do not interpret SQL fixture mapping or disposable pgTAP tests as live authentication.
+
+Current exact-head candidate evidence:
+- PR #123: 74 pgTAP assertions / 5 files PASS; checkout browser/network response-drop, retry and concurrency E2E NOT RUN.
+- PR #126: 139 pgTAP assertions / 7 files PASS; P01–P09 live Auth/Edge Function tests NOT RUN.
+- PR #127: 124 pgTAP assertions / 7 files PASS; live Storage lifecycle, proof retry, proof-vs-expiry concurrency, payment webhook and browser fault injection NOT RUN.
+- Combined migration: 60 migration files; 14 pgTAP files; 270 assertions PASS on disposable local Supabase.
+
+A read-only SQL impersonation test with the two Auth subject IDs returned zero direct branch-table rows for both own and foreign branches (4/4). This is supplemental RLS evidence only, not HTTP Data API or Edge Function acceptance.
+
+The Kitchen/KDS and Procurement workflow checks are CI contract tests. They do not prove the full live sequence POS→KDS→recipe consumption→stock ledger→shift closing, or PR→PO→GRN→stock/AP reconciliation. Those workflows remain NOT RUN.
