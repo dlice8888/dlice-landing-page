@@ -268,3 +268,14 @@ The current PR #120 head has since incorporated additional candidate files. The 
 - #125/#127 still share identical `20261121140000_order_expiry_payment_lifecycle.sql` blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd`.
 
 Current unique candidate sequence across #111/#120/#123/#125/#126/#127 is therefore 20261120140000, 20261121100000, 20261121130000, 20261121135000, 20261121140000, 20261121150000, 20261121160000, 20261121170000, 20261121180000. This is a version-order inventory, not authorization to apply. Re-run combined disposable replay on the exact final candidate head after all branches are reconciled.
+
+## Current test execution addendum — 21 November 2026, 20:58 WIB
+
+- Live staging remains at 49 applied migrations; staging source has 52 files. The three source-only versions are 20261120100000, 20261120110000 and 20261120120000.
+- Combined candidate commit 700c2edf2f5f1bee2e5ac4c3afaece7c60efb3e3 replayed 60 migration files against a disposable local Supabase database; 14 pgTAP files / 270 assertions PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911080939.
+- PR #120 and #126 share byte-identical invitation migration/test blobs at version 20261121130000. PR #125 and #127 share byte-identical expiry migration at 20261121140000. No same-version/different-SQL collision was found.
+- PR #124 is CLOSED unmerged, superseded by #120. PR #125 is CLOSED unmerged, superseded by #127.
+- Latest PR #120 head f37b581f43dc250a8ee7ff0eb04ae1b0e80a42f0 has five required workflows PASS and disposable replay IN PROGRESS. Its preceding tested head 735e429517655809899a4e942368b39eb96898a5 passed 154 pgTAP assertions; that earlier PASS is not attributed to the latest head.
+- PR #123 exact head 9024f2ce6067fe4252f5110942017e27ac1ed7b5: 74 assertions / 5 files PASS. PR #126 exact head 4a6aa8ccf07e25981579a805477dffc65a13a376: 139 assertions / 7 files PASS. PR #127 exact head e52ea75a218eedecc513ec52311adaee25f241ba: 124 assertions / 7 files PASS.
+- P01–P09 remain NOT RUN. Passwordless Auth Admin magic-link flow is in PR #126; staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are not verifiable through the connected tools, and workflow_dispatch is unavailable.
+- No shared staging migration was applied.
