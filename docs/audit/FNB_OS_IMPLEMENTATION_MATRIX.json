@@ -4152,7 +4152,19 @@
         "20261120110000_command_center_summary.sql",
         "20261120120000_atomic_branch_checklist_audit.sql"
       ],
-      "status": "DRIFT_3_PENDING_NOT_APPLIED"
+      "disposable_replay": "PASS on commit cf15f33379a731c1952ec22b5d12739595a21a93; latest staging commit 78f929dac2b05f436aaa7f50005310166f8a4779 adds only workflow/test files, no migration changes",
+      "pgtap_suites": {
+        "tenant_bootstrap_atomic": 23,
+        "command_center_summary": 7,
+        "branch_checklist_atomic_audit": 27,
+        "total": 57
+      },
+      "review_findings": [
+        "Owner bootstrap RPC requires raw_app_meta_data.platform_owner=true; current existing Owner identity has the claim false, so runtime bootstrap/tenant creation remains blocked until authorized Auth Admin verification.",
+        "Command Center summary is service_role-only and branch/date bounded, but its sales KPI currently derives from paid POS sales; online order revenue, discounts, refunds, food cost/margin and unified financial reconciliation remain outside this summary.",
+        "Branch checklist mutation RPC is service_role-only; Edge Function contract checks active tenant membership and branch assignment before calling it; mutation and audit are transactional."
+      ],
+      "status": "DRIFT_3_PENDING_REVIEW_AND_EXPLICIT_STAGING_APPROVAL_NOT_APPLIED"
     },
     "github_release_protection": {
       "ruleset_id": 27559290,
@@ -4185,6 +4197,28 @@
       "PUBLIC_TENANT_ROUTING_RELEASED": false,
       "production_mutated": false,
       "shared_staging_migrations_applied": false
+    },
+    "pr120_pr124_consolidation": {
+      "target_branch": "feat/permission-change-atomic-audit-20261121",
+      "current_head": "d9aa2fbc813da48abcae38769be90de1e981c13d",
+      "changes": [
+        "PR #120 atomic audited RPCs for permission, profile creation, role and active-state mutations retained.",
+        "PR #124 k-anonymous breached-password checker, Deno unit tests, Node source contract test and free-plan limitation documentation copied into PR #120 branch.",
+        "Duplicate 20261121100000_atomic_admin_permission_audit.sql and its pgTAP suite remain single canonical copies from PR #120; no duplicate migration was added."
+      ],
+      "ci": {
+        "quality": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "disposable_migration_replay": "IN_PROGRESS_AT_LAST_POLL"
+      },
+      "remaining": [
+        "Supabase native leaked-password protection remains disabled; application guard cannot intercept direct Auth API password mutation.",
+        "Password reset still uses Auth Admin updateUserById followed by a separate audit insert; this is not a cross-system atomic transaction and needs an intent/result audit lifecycle or an explicit limitation.",
+        "Staging runtime mutation-path tests and independent review remain pending."
+      ]
     }
   }
 }
