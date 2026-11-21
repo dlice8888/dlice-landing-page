@@ -4519,7 +4519,8 @@
       "invitation_assertions": 15,
       "p01_p09_runtime": "NOT RUN",
       "release_flag": false
-    }
+    },
+    "open_pr_count": 20
   },
   "latest_reaudit": {
     "feature_distribution": {
