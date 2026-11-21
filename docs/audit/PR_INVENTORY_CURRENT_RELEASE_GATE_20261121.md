@@ -105,7 +105,7 @@ The ruleset currently has zero required status checks and zero required deployme
 
 ### Reconciliation notes
 
-- #120 and #124 are overlapping/diverged branches. The password guard module, Deno test, Node contract test, documentation and quality workflow are byte-identical across both. #120 also contains those guard calls plus the atomic permission/profile RPCs; #124 adds no unique guard artifact. Keep #124 from being merged independently; close as superseded after #120's review disposition is accepted.
+- #120 contains the audited permission/profile mutation paths and password guard. PR #124 is CLOSED and superseded; do not reopen or merge it independently. #120 remains the canonical implementation branch.
 - #120 and #126 both modify invitation issue/accept paths and `supabase/functions/dlice-orders/index.ts`. Their RPC signatures differ. Rebase/reconcile to one canonical invite flow before merge.
 - #123 and #126 have a hard migration version collision at `20261121130000` with different SQL contents. Resolve through the Supabase migration generator and rerun combined disposable replay.
 - #127 is 30 commits ahead of #125 and contains the exact same `20261121140000_order_expiry_payment_lifecycle.sql` blob. Treat #125 as the earlier dependency slice; do not apply duplicate migration content.
@@ -114,3 +114,13 @@ The ruleset currently has zero required status checks and zero required deployme
 ### GitHub ruleset recheck
 
 Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0 status checks and 0 deployment environments. Eleven bypass actors have `always` bypass; the connected identity can bypass. The ruleset is not a sufficient release gate. No mutation was made because the connected GitHub integration does not expose ruleset administration.
+
+## Current execution delta — 21 November 2026
+
+- PR #124 is confirmed CLOSED; #120 remains OPEN/Draft and is the canonical permission/profile/password-guard implementation.
+- PR #123's migration collision with #126 is resolved in source: #126 uses 20261121130000_atomic_tenant_invite_lifecycle.sql and #123 uses 20261121135000_atomic_online_order_idempotency.sql.
+- PR #123 exact-head quality run 44909182929 PASS; CORS, KDS and procurement contract jobs PASS. Disposable replay 44909182869 was still in progress at snapshot time.
+- PR #126 exact-head disposable replay 44903918177 PASS: all 52 migration files applied on disposable DB; 7 pgTAP files / 134 assertions PASS. Invitation suite declares 15 assertions and its file passed.
+- P01–P09 have not been dispatched. The manual workflow requires the protected staging Environment and STAGING_SUPABASE_SERVICE_ROLE_KEY; current GitHub integration exposes neither Environment secret metadata nor workflow-dispatch action. No credential value was read or printed.
+- The two existing Auth identities, active memberships, QA branches and same-tenant branch assignments are present in Supabase. This is fixture evidence only; real magic-link sessions and cross-tenant probes remain NOT RUN.
+- No staging migration or Edge Function deployment was performed. Tenant-isolation and public-tenant-routing release flags remain false.
