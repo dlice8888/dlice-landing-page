@@ -4407,6 +4407,27 @@
       "same_version_different_sql": [],
       "identical_duplicate_source": [
         {
+          "version": "20261121100000",
+          "prs": [
+            120,
+            124
+          ],
+          "file": "20261121100000_atomic_admin_permission_audit.sql",
+          "blob_sha": "947419c220a5f1e2d9160026a9862709c03fcb1b",
+          "status": "same blob; #124 closed superseded by #120"
+        },
+        {
+          "version": "20261121130000",
+          "prs": [
+            120,
+            126
+          ],
+          "file": "20261121130000_atomic_tenant_invite_lifecycle.sql",
+          "blob_sha": "b9dab9b7027e51bd5a4069b854b65a14563df6eb",
+          "test_blob_sha": "9c778834a0eb5e6f0a12769f1e6a214c71130688",
+          "status": "same migration and pgTAP test blobs; canonical invitation RPC path shared by both PR branches"
+        },
+        {
           "version": "20261121140000",
           "prs": [
             125,
@@ -4442,7 +4463,7 @@
           "20261121180000_supersede_stale_payment_attempts.sql"
         ]
       },
-      "invitation_overlap": "PR #120 and #126 both modify tenant invite issue/accept paths. The current #120 candidate uses dlice_create_tenant_invite_audited and a two-argument dlice_accept_tenant_invite_atomic overload; #126 uses dlice_create_tenant_invite_atomic and a three-argument overload. A single canonical invitation RPC path must be selected and regression-tested before integration."
+      "invitation_overlap": "Resolved at the RPC/migration layer: PR #120 and #126 now carry identical 20261121130000_atomic_tenant_invite_lifecycle.sql (blob b9dab9b7027e51bd5a4069b854b65a14563df6eb) and tenant_invite_atomic.test.sql (blob 9c778834a0eb5e6f0a12769f1e6a214c71130688). Both Edge Function branches call dlice_create_tenant_invite_atomic and dlice_accept_tenant_invite_atomic with the same arguments. Minor response-envelope difference remains: #120 returns replayed on invite acceptance while #126 omits it; align this field or keep the response contract stable before final merge. No migration version collision or duplicate SQL conflict exists."
     },
     "github_release_protection": {
       "active_ruleset_id": 27559290,
