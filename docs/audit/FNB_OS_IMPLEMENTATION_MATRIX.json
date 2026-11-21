@@ -4494,10 +4494,13 @@
     },
     "acceptance_policy": "No separate independent PR-review prerequisite. Feature completion is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
     "staging_environment_verification": {
-      "environment_protection": "NOT VERIFIED",
-      "service_role_secret_presence": "NOT VERIFIED; secret value was not read",
-      "workflow_dispatch": "NOT RUN; connected GitHub tool exposes no workflow-dispatch action",
-      "passwordless_workflow": "Implemented in PR #126 candidate branch; uses existing Supabase Auth identities and one-time magic links"
+      "environment_protection": "NOT VERIFIED; GitHub Environment endpoint is not exposed by the connected GitHub integration",
+      "service_role_secret_presence": "NOT VERIFIED; GitHub secrets endpoints are not exposed; secret value was not read",
+      "main_workflow": "workflow_dispatch exists on main but still references legacy Tenant A/B username/password secrets",
+      "staging_workflow": "staging branch workflow_dispatch still references legacy Tenant A/B username/password secrets",
+      "passwordless_candidate_workflow": "PR #126 branch uses existing Auth emails and STAGING_SUPABASE_SERVICE_ROLE_KEY; job guard requires refs/heads/staging, so the PR branch cannot execute it",
+      "workflow_dispatch": "NOT RUN; connected GitHub tool exposes no dispatch action",
+      "next_safe_step": "After Environment protection and secret presence are verified, port only the passwordless workflow plus its test script/helper into a test-only staging change. Do not merge PR #126 wholesale just to make the workflow available; it also contains tenant/invitation code and a migration."
     },
     "pr120_pr124_consolidation": {
       "target_branch": "feat/permission-change-atomic-audit-20261121",
@@ -4559,15 +4562,23 @@
       "replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
     },
     "pr126": {
+      "head_sha": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
       "state": "OPEN_DRAFT",
-      "head_sha": "bb008c55a4d98afe5264b4ccde4f28f129fbde85",
       "quality": "PASS",
-      "disposable_migration_replay": "PASS — 7 files / 134 assertions",
-      "tenant_rls_assertions": 35,
-      "onboarding_assertions": 17,
-      "invitation_assertions": 15,
-      "p01_p09_runtime": "NOT RUN",
-      "release_flag": false
+      "cors": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition": "PASS",
+      "procurement_receiving": "PASS",
+      "disposable_migration_replay": "IN_PROGRESS",
+      "previous_tested_head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+      "previous_head_assertions": 139,
+      "previous_head_pg_tap_files": 7,
+      "p01_p09": "NOT RUN",
+      "latest_candidate_changes": [
+        "P01/P02 fixture-scope evidence now reports resolved branch codes",
+        "P08/P09 now assert zero persisted stock-transfer rows after denied writes",
+        "Supabase sb_secret_ keys use apikey only; legacy service_role JWTs use apikey plus Authorization Bearer"
+      ]
     },
     "open_pr_count": 20,
     "latest_test_execution": {
@@ -4602,11 +4613,16 @@
           "assertions": 74
         },
         "126": {
-          "head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
-          "required_workflows": "PASS",
-          "disposable_replay": "PASS",
-          "pg_tap_files": 7,
-          "assertions": 139,
+          "head": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
+          "quality": "PASS",
+          "cors": "PASS",
+          "kds_contract": "PASS",
+          "procurement_requisition": "PASS",
+          "procurement_receiving": "PASS",
+          "disposable_replay": "IN_PROGRESS",
+          "previous_tested_head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+          "previous_head_pg_tap_files": 7,
+          "previous_head_assertions": 139,
           "p01_p09": "NOT RUN"
         },
         "127": {
