@@ -112,7 +112,7 @@ SELECT throws_ok(
   'valid@example.test','root',repeat('d',64),
   (SELECT expires_at FROM invite_test_args)
  )$$,
- '22023','invalid_tenant_invite_details',
+ '22023','invalid_tenant_invite',
  'unsupported tenant role is rejected'
 );
 
@@ -123,7 +123,7 @@ SELECT throws_ok(
   'valid@example.test','viewer',repeat('e',64),
   now() + interval '8 days'
  )$$,
- '22023','invalid_tenant_invite_details',
+ '22023','invalid_tenant_invite',
  'invitation expiry cannot exceed seven days'
 );
 
