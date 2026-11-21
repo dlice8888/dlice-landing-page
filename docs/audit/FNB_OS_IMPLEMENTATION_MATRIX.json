@@ -4077,15 +4077,31 @@
       "health": "0 findings"
     },
     "vercel": {
-      "pr126_preview": "READY only on stale older commit; current PR head preview not confirmed",
-      "production_changed": false,
       "exact_head_previews": {
-        "pr120": "NOT FOUND",
-        "pr123": "NOT FOUND",
-        "pr125": "NOT FOUND",
-        "pr126": "NOT FOUND",
-        "pr127": "NOT FOUND"
-      }
+        "pr120": {
+          "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+          "state": "NOT FOUND"
+        },
+        "pr123": {
+          "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+          "state": "READY",
+          "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
+        },
+        "pr125": {
+          "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+          "state": "READY",
+          "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
+        },
+        "pr126": {
+          "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+          "state": "NOT FOUND"
+        },
+        "pr127": {
+          "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+          "state": "NOT FOUND"
+        }
+      },
+      "production_changed": false
     },
     "release_controls": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4443,12 +4459,34 @@
     },
     "vercel": {
       "project": "dlice-landing-page",
-      "latest_deployment_state": "READY",
-      "sso_protection": true,
-      "pr126_latest_preview_sha": "1bd648704172fecb2885b62fb3c51b7720da469c",
-      "pr126_current_head_sha": "bb008c55a4d98afe5264b4ccde4f28f129bc162",
-      "pr126_preview_matches_current_head": false,
-      "production_mutated": false
+      "project_id": "prj_A7097nEdgzi54NQRJ9NK2h2fxPLw",
+      "team_slug": "dlice8888-7332",
+      "exact_head_previews": {
+        "pr120": {
+          "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+          "state": "NOT FOUND"
+        },
+        "pr123": {
+          "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+          "state": "READY",
+          "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
+        },
+        "pr125": {
+          "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+          "state": "READY",
+          "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
+        },
+        "pr126": {
+          "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+          "state": "NOT FOUND"
+        },
+        "pr127": {
+          "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+          "state": "NOT FOUND"
+        }
+      },
+      "production_mutated": false,
+      "note": "Vercel Preview readiness is deployment evidence only, not feature runtime acceptance."
     },
     "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection, secret presence, explicit mutation authorization and backup/rollback remain separate controls.",
     "staging_environment_verification": {
@@ -4530,5 +4568,33 @@
       "DONE": 0,
       "TOTAL": 189
     }
+  },
+  "vercel": {
+    "project": "dlice-landing-page",
+    "exact_head_previews": {
+      "pr120": {
+        "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+        "state": "NOT FOUND"
+      },
+      "pr123": {
+        "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "state": "READY",
+        "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
+      },
+      "pr125": {
+        "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "READY",
+        "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
+      },
+      "pr126": {
+        "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+        "state": "NOT FOUND"
+      },
+      "pr127": {
+        "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "NOT FOUND"
+      }
+    },
+    "production_changed": false
   }
 }
