@@ -18,16 +18,34 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 6. Start all remaining NOT VERIFIED features in dependency/risk order. A feature is moved to PARTIAL only after its first concrete vertical slice is implemented and tested.
 
 ## Baseline reconciliation
-| Audit status | Count | Meaning |
-|---|---:|---|
-| PARTIAL | 84 | Code/schema/UI foundation exists; acceptance gaps remain; two SaaS Tenant Management features newly moved from NOT VERIFIED after implementation started |
-| NOT VERIFIED | 96 | Insufficient implementation evidence; highest backlog priority |
-| BLOCKED | 9 | Release or external gate prevents acceptance |
-| **Total** | **189** | **18 domains** |
 
-Latest snapshot after PR #126 began concrete implementation: **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**. Two features changed from NOT VERIFIED to PARTIAL: “Tenant/member isolation in database and APIs” and “Tenant directory, tenant onboarding”; all other baseline statuses are unchanged.
+The supplied 18-domain rows in the latest request sum to **82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189** before the newest PR #126 work is counted. The supplied total-row value of 93 NOT VERIFIED is arithmetically incorrect: the domain rows sum to 98.
 
-Note: domain rows sum to 98 NOT VERIFIED. The supplied total row's 93 is a summation error; the per-domain rows are the baseline source.
+Two SaaS Tenant Management features have since crossed the agreed implementation-start threshold in PR #126 and have concrete code/database/test evidence. They therefore move from NOT VERIFIED to PARTIAL. The current feature-level source of truth is **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**.
+
+| Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
+|---|---:|---:|---:|---:|
+| Executive Command Center | 10 | 4 | 5 | 1 |
+| POS & Checkout | 13 | 7 | 5 | 1 |
+| Order Management | 10 | 7 | 2 | 1 |
+| Kitchen & Production | 10 | 5 | 4 | 1 |
+| Menu, Recipe & Product Engineering | 11 | 6 | 4 | 1 |
+| Inventory & Warehouse | 12 | 8 | 4 | 0 |
+| Procurement & Supplier | 10 | 5 | 5 | 0 |
+| Branch Operations | 10 | 4 | 5 | 1 |
+| Delivery & Fulfillment | 8 | 2 | 6 | 0 |
+| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 |
+| Finance & Accounting | 12 | 7 | 4 | 1 |
+| HR & Workforce | 9 | 1 | 8 | 0 |
+| Franchise & Expansion | 8 | 2 | 6 | 0 |
+| BI & Analytics | 10 | 3 | 7 | 0 |
+| Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| SaaS Tenant Management | 8 | 2 | 6 | 0 |
+| Integrations & Automation | 9 | 5 | 4 | 0 |
+| Quality, Compliance & Security | 20 | 10 | 9 | 1 |
+| **TOTAL** | **189** | **84** | **96** | **9** |
+
+The current SaaS Tenant Management row is 2 PARTIAL / 6 NOT VERIFIED, not 0 / 8: tenant onboarding and tenant/member isolation have active implementation evidence in PR #126. This is the status transition required by the agreed rule that a feature moves to PARTIAL once concrete implementation has started. The two PARTIAL features have weighted progress of 30% and 38%, respectively; the other 82 PARTIAL features still require feature-level evidence decomposition before a defensible percentage can be assigned. No percentage is fabricated.
 
 ## Per-domain feature gaps and work
 
