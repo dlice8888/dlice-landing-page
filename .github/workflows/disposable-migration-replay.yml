@@ -1,5 +1,7 @@
 name: Disposable local Supabase migration replay
 on:
+  # Manual dispatch is safe: this workflow uses only an isolated local Supabase stack.
+  workflow_dispatch:
   pull_request:
     branches: [staging]
     paths:
