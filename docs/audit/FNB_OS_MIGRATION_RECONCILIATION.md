@@ -34,7 +34,7 @@ The five SECURITY DEFINER stock functions are executable by `service_role` and d
 2. Map every open PR migration path and blob SHA; resolve duplicates before review.
 3. Run disposable PostgreSQL replay from zero and from the current staging baseline; include pgTAP, rollback and grants/RLS checks.
 4. Run Supabase advisors and inspect query plans for any index changes.
-5. Obtain independent migration/security review and backup/rollback plan.
+5. Run the complete migration/security regression matrix and verify backup/rollback readiness.
 6. Apply only to staging through the authorized migration workflow after explicit authorization; never apply PR #64 migration while acceptance is incomplete.
 7. Verify migration history, schema diff, policies, grants, functions and data invariants after application.
 
@@ -134,5 +134,19 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 1. Resolve the #123/#126 version collision and #120/#126 invitation RPC overlap.
 2. Rebuild a single combined candidate branch in dependency order; run full disposable replay from zero and all pgTAP suites.
 3. Reconcile the three existing staging-source-only migrations with their approved rollout plan.
-4. Obtain independent migration/security review, backup/rollback plan and explicit staging approval.
+4. Complete disposable replay, the full migration/security regression matrix, backup/rollback verification and explicit staging authorization.
 5. Only then use the authorized staging migration workflow; never apply candidates directly or to production.
+
+## Live reconciliation — 21 November 2026 (current)
+
+- Supabase staging dlice-staging migration history: **49 applied versions**.
+- GitHub staging source tree: **52 migration SQL files**; there are **zero database-only versions** and exactly three source-only candidates:
+  - 20261120100000_atomic_owner_and_tenant_bootstrap.sql
+  - 20261120110000_command_center_summary.sql
+  - 20261120120000_atomic_branch_checklist_audit.sql
+- PR #126 retains tenant invitation migration 20261121130000_atomic_tenant_invite_lifecycle.sql.
+- PR #123's colliding online-order migration was renamed to 20261121135000_atomic_online_order_idempotency.sql; the old duplicate filename was deleted from its head branch. The updated contract test and exact-head quality workflow now use the new filename.
+- PR #123 disposable replay for exact head 6788c4d7da34144d279da06edea84f6d0763b796 was running at snapshot time; do not mark the combined migration set PASS until that run completes and a combined replay is executed with #126.
+- PR #120 migrations are 20261121100000 and 20261121160000; PR #125 is 20261121140000; PR #127 is 20261121150000 and 20261121180000. Preserve timestamp order and check dependencies before integration.
+- No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
+- PR reviewer identity/approval is not an acceptance criterion. Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
