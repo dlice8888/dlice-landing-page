@@ -77,7 +77,7 @@ GitHub currently returns one active repository ruleset, **#27559290**, applied t
 - The active connection reports `current_user_can_bypass=always`.
 - Branch-protection reads for `main` and `staging` still return 403; staging environment protection settings are not readable through the current connector.
 
-The ruleset currently has zero required status checks and zero required deployment environments, so automated CI and deployment gating are incomplete. It also has `require_code_owner_review=true` and `require_last_push_approval=true`; the project has removed these as acceptance criteria, but the active repository ruleset still enforces them. The connected GitHub integration exposes no ruleset-write action, so repository-admin action is needed to disable those two settings. No ruleset/branch-protection write action is exposed in the connected GitHub tools. Do not treat the ruleset as a complete release gate until the required checks and deployment protections are configured.
+The ruleset currently has zero required status checks and zero required deployment environments, so automated CI and deployment gating are incomplete. It also has `require_code_owner_review=true` and `require_last_push_approval=true` as repository-level settings. These are platform constraints, not feature acceptance criteria; the connected GitHub integration exposes no ruleset-write action. They may still affect merge eligibility. Do not treat the ruleset as a complete release gate until the required checks and deployment protections are configured.
 
 
 ## Supabase existing-identity and latest exact-head verification — 21 November 2026
