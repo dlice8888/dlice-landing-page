@@ -221,3 +221,27 @@ Therefore the passwordless implementation is not yet runnable on trusted staging
 The GitHub Environment endpoint and GitHub Secrets endpoints are not exposed by the connected integration. No secret values were read. No staging workflow was dispatched.
 
 PR #126 candidate head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` has quality, CORS, KDS and Procurement checks PASS; disposable migration replay remains IN PROGRESS. Its preceding tested head `4a6aa8ccf07e25981579a805477dffc65a13a376` passed 139 assertions / 7 pgTAP files. P01–P09 remain NOT RUN.
+
+## GitHub ruleset policy mismatch — 21 November 2026, 21:15 WIB
+
+Read-only GitHub API inspection found active repository ruleset `27559290` (`Ruleset`) still enforces reviewer-related settings:
+- `required_approving_review_count=0`, `required_reviewers=[]`
+- `require_code_owner_review=true`
+- `require_last_push_approval=true`
+- `require_review_thread_resolution=true`
+- `require_extra_approval_for_unattributed_changes=true`
+- Copilot code review: `review_on_push=true`, `review_draft_pull_requests=true`
+
+At the same time, the ruleset has **zero required status checks** and **zero required deployment environments**. This is the opposite of the requested test-only governance: reviewer controls are active while automated test gates are not required by the ruleset.
+
+The D’Lice project instructions and all currently open PR descriptions have been changed to remove the separate independent PR-review prerequisite. The repository-level ruleset has **not** been modified: the connected GitHub integration exposes no ruleset write action, and branch-protection reads return 403. Do not claim the review settings are disabled.
+
+Target settings for a GitHub repository administrator:
+1. Disable `require_code_owner_review`, `require_last_push_approval`, `require_review_thread_resolution`, `require_extra_approval_for_unattributed_changes`, and the Copilot review rule.
+2. Keep `required_approving_review_count=0` and `required_reviewers=[]`.
+3. Require the six exact-head CI checks: Free quality checks, disposable migration replay, runtime CORS probes, KDS contract, Procurement receiving contract and Procurement requisition contract. Add P01–P09 only after the passwordless workflow is safely integrated to trusted staging.
+4. Keep required signatures, linear history, deletion/force-push protections, high-severity code scanning and code-quality errors.
+5. Configure the staging deployment environment separately; do not use reviewer approval as a substitute for test evidence.
+
+No ruleset setting was changed.
+
