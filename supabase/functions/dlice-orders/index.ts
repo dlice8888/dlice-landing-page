@@ -629,9 +629,19 @@ Deno.serve(async (req: Request) => {
     if (!validUsername(username) || !displayName || password.length < 8 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 8 karakter), atau izin akses tidak valid.", 422, origin);
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
-    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "sales_admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
-    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail(profileError.code === "23505" ? "Username sudah digunakan." : "Profil admin gagal dibuat.", 500, origin); }
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "create_admin_account", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username, permissions: [...new Set(permissions)] } });
+    const normalizedPermissions = [...new Set(permissions)].sort();
+    const { data: profileResult, error: profileError } = await admin.rpc("dlice_create_admin_profile_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: created.user.id,
+      p_username: username,
+      p_display_name: displayName,
+      p_permissions: normalizedPermissions,
+    });
+    if (profileError) return fail("Akun Auth telah dibuat, tetapi hasil penyimpanan profil/audit belum dapat dipastikan. Jangan membuat akun baru; minta pemeriksaan admin.", 500, origin);
+    if (!profileResult?.ok) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      return fail("Profil staf tidak berhasil dibuat; akun Auth sementara dibersihkan.", 409, origin);
+    }
     return json({ ok: true, username }, 201, origin);
   }
 
@@ -691,17 +701,13 @@ if (action === "admin-set-profile-role") {
       }
     }
 
-    const { error } = await admin.from("admin_profiles")
-      .update({ role: nextRole, updated_at: new Date().toISOString() }).eq("user_id", userId);
-    if (error) return fail("Klasifikasi profil gagal diperbarui.", 409, origin);
-    await admin.from("admin_audit_logs").insert({
-      actor_user_id: actor.user.id,
-      action: "set_staff_profile_role",
-      entity_type: "admin_profile",
-      entity_id: userId,
-      metadata: { previous_role: target.role, profile_role: nextRole },
+    const { data: roleResult, error: roleError } = await admin.rpc("dlice_update_admin_profile_role_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_next_role: nextRole,
     });
-    return json({ ok: true, user_id: userId, profile_role: nextRole }, 200, origin);
+    if (roleError || !roleResult?.ok) return fail("Klasifikasi profil dan audit tidak dapat dipastikan; perubahan dibatalkan.", 409, origin);
+    return json({ ok: true, user_id: userId, profile_role: roleResult.profile_role }, 200, origin);
   }
 
     if (action === "admin-set-active") {
@@ -712,10 +718,13 @@ if (action === "admin-set-profile-role") {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Status akun Pemilik tidak dapat diubah melalui aksi ini.", 409, origin);
-    const { data: updated, error } = await admin.from("admin_profiles").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("user_id", userId).select("user_id,is_active").single();
-    if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
-    return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
+    const { data: activeResult, error: activeError } = await admin.rpc("dlice_set_admin_profile_active_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_is_active: isActive,
+    });
+    if (activeError || !activeResult?.ok) return fail("Status akun staf dan audit tidak dapat dipastikan; perubahan dibatalkan.", 500, origin);
+    return json({ ok: true, user_id: userId, is_active: activeResult.is_active }, 200, origin);
   }
 
 
