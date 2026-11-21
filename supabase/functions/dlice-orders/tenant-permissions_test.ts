@@ -1,5 +1,7 @@
 import {
   hasTenantScopedHeadOfficePermission,
+  isTenantSensitiveAction,
+  resolveTenantScopedBranchIds,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 
@@ -92,4 +94,83 @@ Deno.test("inactive memberships cannot contribute permissions", () => {
   if (permissions.join(",") !== "orders") {
     throw new Error(`Expected only active membership grants, got: ${permissions.join(",")}`);
   }
+});
+
+Deno.test("only the narrow tenant-scoped P01-P09 probe surface is available before release", () => {
+  const protectedActions = [
+    "admin-list-orders",
+    "admin-set-permissions",
+    "erp-create-pos-sale",
+    "erp-list-finance",
+    "erp-accept-tenant-invite",
+    "erp-stock-movement",
+    "erp-save-inventory",
+  ];
+  if (protectedActions.some((action) => !isTenantSensitiveAction(action))) {
+    throw new Error("Uncertified admin/ERP routes must remain tenant-sensitive");
+  }
+  const scopedAcceptanceActions = [
+    "erp-list-tenant-memberships",
+    "erp-list-branches",
+    "erp-list-inventory",
+    "erp-create-stock-transfer",
+  ];
+  if (scopedAcceptanceActions.some((action) => isTenantSensitiveAction(action))) {
+    throw new Error("Only the four branch/tenant-scoped P01-P09 probes may pass the pre-release gate");
+  }
+  const exemptActions = ["admin-login", "admin-session-info", "track-order"];
+  if (exemptActions.some((action) => isTenantSensitiveAction(action))) {
+    throw new Error("Authentication bootstrap, session introspection and customer tracking are not admin/ERP routes");
+  }
+});
+
+Deno.test("tenant owners receive only their own tenant branches", () => {
+  const ids = resolveTenantScopedBranchIds(
+    [
+      { tenant_id: "tenant-a", role: "tenant_owner", status: "active" },
+      { tenant_id: "tenant-b", role: "member", status: "active" },
+    ],
+    [{ branch_id: "branch-b-1" }],
+    [
+      { id: "branch-a-1", tenant_id: "tenant-a" },
+      { id: "branch-a-2", tenant_id: "tenant-a" },
+      { id: "branch-b-1", tenant_id: "tenant-b" },
+      { id: "branch-c-1", tenant_id: "tenant-c" },
+    ],
+  );
+  if (ids.join(",") !== "branch-a-1,branch-a-2,branch-b-1") {
+    throw new Error(`Unexpected tenant branch scope: ${ids.join(",")}`);
+  }
+});
+
+Deno.test("ordinary tenant members receive only explicitly assigned branches inside active tenants", () => {
+  const ids = resolveTenantScopedBranchIds(
+    [
+      { tenant_id: "tenant-a", role: "member", status: "active" },
+      { tenant_id: "tenant-b", role: "member", status: "inactive" },
+    ],
+    [
+      { branch_id: "branch-a-1" },
+      { branch_id: "branch-b-1" },
+      { branch_id: "branch-c-1" },
+    ],
+    [
+      { id: "branch-a-1", tenant_id: "tenant-a" },
+      { id: "branch-b-1", tenant_id: "tenant-b" },
+      { id: "branch-c-1", tenant_id: "tenant-c" },
+      { id: "branch-a-2", tenant_id: "tenant-a" },
+    ],
+  );
+  if (ids.join(",") !== "branch-a-1") {
+    throw new Error(`Cross-tenant or unassigned branch leaked: ${ids.join(",")}`);
+  }
+});
+
+Deno.test("missing tenant membership or malformed branch scope fails closed", () => {
+  const ids = resolveTenantScopedBranchIds(
+    [{ tenant_id: "tenant-a", role: "member", status: "inactive" }],
+    [{ branch_id: "branch-a-1" }],
+    [{ id: "branch-a-1", tenant_id: "tenant-a" }],
+  );
+  if (ids.length !== 0) throw new Error("Inactive membership must produce an empty branch scope");
 });
