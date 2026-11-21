@@ -47,7 +47,7 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 
 ## Additional P03 identity blocker
 
-A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
+The current P01–P09 fixture contract expects sales_admin as the global profile role and branch_manager as the tenant membership role. Both existing Supabase identities satisfy these database prerequisites; their live login and authorization probes remain NOT RUN. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
 
 PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration passed disposable local replay (run 44306779612) but is not applied to staging and no account was changed. PR #87's exact-head quality workflow 44307838730 passed 7/7 tenant runtime contract tests; this is not P03 runtime acceptance. P03 remains BLOCKED.
 
@@ -141,7 +141,7 @@ PR #126 disposable run 44903918177 passed all seven pgTAP files, **134 total ass
 
 ### Online checkout and payment lifecycle
 
-PR #123 and PR #126 still have an unresolved migration version collision: both source branches use 20261121130000 with different SQL contents. Each branch's own exact-head disposable replay passes, but the combined candidate set cannot be replayed until one migration is re-versioned. PR #123's browser response-drop/concurrency runtime remains NOT RUN. PR #125/#127 disposable tests pass on their individual heads; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
+PR #123 and PR #126 still have an unresolved migration version collision: both source branches use 20261121130000 with different SQL contents. Each branch's own exact-head disposable replay passes, but the combined candidate set cannot be replayed until one migration is re-versioned. PR #123's browser response-drop/concurrency runtime remains NOT RUN. PR #127 disposable tests pass; PR #125 is closed as superseded by #127; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
 
 ### Operational staging baseline (read-only)
 
@@ -180,3 +180,24 @@ The pgTAP plans are per disposable test file; they are not shared-staging execut
 Two existing Supabase Auth identities were verified read-only and mapped to different active tenants. Tenant A has active branch assignments QA-DLICE-A and DLC-B001; Tenant B has QA-TENANT-B. Both last signed in on 2026-10-25. This verifies fixture existence and mapping only; no current login, JWT session, own-read/write or cross-tenant negative probe has run. The staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED; the secret value was not read or exposed. The connected GitHub tool does not expose workflow_dispatch.
 
 - Vercel exact-head Preview: PR #123 READY at https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app; PR #125 READY at https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app. No exact-head deployment record exists for #120, #126 or #127. Preview READY does not establish runtime feature acceptance; production remains unchanged.
+
+
+## Authoritative execution update — 21 November 2026
+
+### Existing Supabase Tenant A/B fixtures
+
+Read-only staging queries confirm two distinct existing Auth identities, two distinct active tenant memberships, active profiles and branch assignments. Both have tenant role branch_manager and global profile role sales_admin. Tenant A's active QA branch is QA-DLICE-A (it also has an assignment to DLC-B001, whose branch status is planned); Tenant B's active QA branch is QA-TENANT-B. No account, password, Auth metadata, membership or assignment was changed.
+
+### PR #126 passwordless test path and exact-head tests
+
+PR #126 now uses Supabase Auth Admin generate_link for the existing email identities and verifies the one-time magic-link hash. It does not require the four old username/password secrets or create/reset any user. The workflow validates the service-role key's presence/shape without printing it, verifies the returned Auth identity matches the requested account, revokes temporary sessions after probes, and derives tenant/branch UUIDs from authenticated membership responses.
+
+A test-evidence defect was found and corrected: blocked preflight records previously inherited executed=true. recordProbe now accepts the explicit execution flag; preflight BLOCKED records are executed=false, and the contract test asserts this. The fix is in PR #126 exact head bb008c55a4d98afe5264b4ccde4f28f129bc162; exact-head quality checks PASS. Disposable replay 44909241076 PASS: 7 pgTAP files / 134 assertions, including 35 tenant RLS, 17 onboarding and 15 invitation assertions. KDS, CORS and procurement contract workflows also PASS.
+
+P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted staging; the connected GitHub integration does not expose workflow dispatch or staging Environment settings. Presence of STAGING_SUPABASE_SERVICE_ROLE_KEY is NOT VERIFIED; its value was not read or exposed. No probe is to be marked PASS based on fixture existence or disposable pgTAP.
+
+### Order/payment lifecycle tests
+
+- PR #123 exact head 6788c4d7da34144d279da06edea84f6d0763b796: quality, disposable replay, KDS, CORS and procurement contracts PASS; checkout response-drop, retry, concurrency and late-webhook E2E NOT RUN.
+- PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6: quality, disposable replay, KDS, CORS and procurement contracts PASS; proof upload retry/concurrency, expiry worker, compensation and payment-attempt supersession E2E NOT RUN. PR #125 is CLOSED as superseded by #127.
+- PR #124 is CLOSED as superseded by #120. No shared staging migration or Edge Function deployment was performed.
