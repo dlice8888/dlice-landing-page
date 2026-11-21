@@ -3,6 +3,7 @@ import {
   hasTenantScopedHeadOfficePermission,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
+import { checkPwnedPassword } from "./password-security.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -37,6 +38,12 @@ const fail = (message: string, status = 400, origin: string | null = null) => js
 const sha256 = async (value: string) => {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+const checkNewPassword = async (password: string, origin: string | null): Promise<Response | null> => {
+  const result = await checkPwnedPassword(password);
+  if (result === "compromised") return fail("Kata sandi ini terdeteksi dalam daftar kebocoran. Gunakan kata sandi baru yang unik.", 422, origin);
+  if (result === "unavailable") return fail("Pemeriksaan keamanan kata sandi sementara tidak tersedia. Tidak ada perubahan akun yang dilakukan; coba lagi nanti.", 503, origin);
+  return null;
 };
 const usernameEmail = (username: string) => `${username.toLowerCase()}@accounts.dlice.internal`;
 const validUsername = (username: string) => /^[a-zA-Z0-9._-]{3,32}$/.test(username);
@@ -441,6 +448,8 @@ Deno.serve(async (req: Request) => {
     const username = safeText(body.username, 32);
     const password = typeof body.password === "string" ? body.password : "";
     if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Nama pengguna atau kata sandi penyiapan awal tidak memenuhi ketentuan.", 422, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, app_metadata: { platform_owner: true }, user_metadata: { username } });
     if (createError || !created.user) return fail("Akun Pemilik gagal dibuat.", 500, origin);
     const { data: bootstrapResult, error: bootstrapError } = await admin.rpc("dlice_bootstrap_initial_owner", { p_user_id: created.user.id, p_username: username });
@@ -627,6 +636,8 @@ Deno.serve(async (req: Request) => {
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
     if (!validUsername(username) || !displayName || password.length < 8 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 8 karakter), atau izin akses tidak valid.", 422, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
     const normalizedPermissions = [...new Set(permissions)].sort();
@@ -736,6 +747,8 @@ if (action === "admin-set-profile-role") {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
     const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
     if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
     await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
