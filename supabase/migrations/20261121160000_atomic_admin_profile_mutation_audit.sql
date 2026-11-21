@@ -320,6 +320,19 @@ BEGIN
 END;
 $function$;
 
+REVOKE ALL ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_update_admin_profile_role_audited(uuid,uuid,text)
+  TO service_role;
+GRANT EXECUTE ON FUNCTION public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)
+  TO service_role;
+
 REVOKE ALL ON FUNCTION public.dlice_begin_admin_password_reset_audit(uuid,uuid)
   FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION public.dlice_finish_admin_password_reset_audit(uuid,uuid,boolean,text)
