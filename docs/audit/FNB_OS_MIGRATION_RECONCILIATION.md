@@ -285,3 +285,9 @@ Current unique candidate sequence across #111/#120/#123/#125/#126/#127 is theref
 A fresh source comparison of the current PR #120 and PR #126 `supabase/functions/dlice-orders/index.ts` branches confirms the complete `erp-invite-tenant-member` and `erp-accept-tenant-invite` route blocks are byte-identical, including RPC arguments, replay response envelope, expiry handling and error mapping. Both return `replayed: result.replayed===true`. The earlier note that PR #126 omitted the replay field is stale and is superseded.
 
 Both branches also share the exact invitation migration blob `b9dab9b7027e51bd5a4069b854b65a14563df6eb` and pgTAP test blob `9c778834a0eb5e6f0a12769f1e6a214c71130688`. The duplicate invitation path is therefore consolidated at source-contract level; live invitation delivery/acceptance/expiry E2E remains NOT RUN.
+
+## PR #120 exact-head replay completion — 21 November 2026, 21:03 WIB
+
+PR #120 current head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` has now completed disposable migration replay successfully. Exact-head results: quality, CORS, KDS contract, Procurement requisition, Procurement receiving and disposable migration replay all PASS. The migration job ran 10 pgTAP files / 206 assertions, all PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345.
+
+The prior note that PR #120's latest-head replay was still in progress is superseded. This remains disposable CI evidence, not shared staging mutation-path acceptance.
