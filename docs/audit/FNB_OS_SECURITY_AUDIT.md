@@ -144,12 +144,21 @@ Read-only Supabase Auth and application-table joins confirm two real QA users:
 
 PR #120 includes the same HIBP k-anonymity guard as PR #124 on the three application-managed flows: initial Owner bootstrap, staff creation and staff password reset. It hashes locally, sends only the first five SHA-1 characters, uses padding, rejects compromised passwords and fails closed if the HIBP service is unavailable.
 
-This does **not** prevent direct calls to Supabase Auth password-update endpoints. Supabase native leaked-password protection is disabled on the current Free plan and the documented Password Verification Hook applies to password verification/sign-in, not password-change requests (and is plan-limited). No supported Free-plan hook closes the direct Auth password-change bypass. Keep leaked-password protection BLOCKED; do not claim universal enforcement. The staff reset path also updates Auth first and writes an audit record separately, so the Auth mutation and audit are not one transaction.
+This does **not** prevent direct calls to Supabase Auth password-update endpoints. Supabase native leaked-password protection is disabled on the current Free plan and the documented Password Verification Hook applies to password verification/sign-in, not password-change requests (and is plan-limited). No supported Free-plan hook closes the direct Auth password-change bypass. Classify leaked-password protection as PARTIAL: official application password paths have an HIBP k-anonymity guard and passing tests, but native Auth leaked-password protection is disabled and direct Auth password updates remain an uncovered bypass. Do not claim universal enforcement or DONE. The staff reset path now writes a durable audit intent before Auth Admin updateUserById, then finalizes success/failure. If finalization fails, the pending intent remains for reconciliation. Auth and Postgres still cannot share a single distributed transaction; this is an explicit intent/outcome saga, not a claim of cross-service atomicity.
 
 ### GitHub release protection
 
-Ruleset #27559290 is active on all branches but has zero required approvals, zero required status checks and zero required deployment environments. Eleven bypass actors have `always` bypass and the connected identity can bypass. The ruleset currently requires zero PR approvals; this matches the test-evidence acceptance policy. Deployment protections and explicit staging authorization remain separate controls. No ruleset mutation was made.
+Ruleset #27559290 is active on all branches but has zero required approvals, zero required status checks and zero required deployment environments. Eleven bypass actors have `always` bypass and the connected identity can bypass. Project acceptance is test-evidence-only and does not require separate independent PR review. However, the active repository ruleset still has require_code_owner_review=true and require_last_push_approval=true; these repository settings remain enabled and cannot be edited through the connected GitHub integration. It also has zero required status checks, zero required deployment environments and 11 always-bypass actors. Deployment protections and explicit staging authorization remain separate controls. No ruleset mutation was made.
 
 ### Runtime boundary
 
 P01–P09 are NOT RUN. PR #126's passwordless workflow requires a protected staging Environment service-role secret and can execute only from `refs/heads/staging` after the workflow is integrated there. No JWT, password, API key or secret was exposed in this audit.
+
+
+## Current verification update — 21 November 2026
+
+- PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six applicable workflows, including disposable migration replay. Permission, staff creation, role, active-state and password reset audit paths now have code/DB tests; password reset uses a durable intent/outcome event.
+- PR #124 is closed/superseded by #120.
+- Two existing Auth identities are distinct and have active memberships. Tenant A active assignments: QA-DLICE-A and DLC-B001. Tenant B active assignment: QA-TENANT-B. Both last signed in 2026-10-25; no current passwordless session was minted in this execution.
+- P01–P09 are NOT RUN. Staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED. The secret value was not read or exposed; no workflow dispatch action is available through the connected GitHub integration.
+- No staging migration, Auth metadata, password, Edge Function or production state was changed.
