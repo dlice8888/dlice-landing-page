@@ -36,11 +36,11 @@
 |---:|---|---|---|
 | [#64](https://github.com/dlice8888/dlice-landing-page/pull/64) | `staging` → `audit/tenant-isolation-inventory-20261028` | docs(security): staging tenant isolation audit and release gates | STRICT HOLD — tenant stock-transfer migration and tenant runtime acceptance incomplete |
 | [#71](https://github.com/dlice8888/dlice-landing-page/pull/71) | `staging` → `fix/staging-tenant-fixtures-20261103` | ci(security): externalize and validate staging tenant fixtures | HOLD — canonical A/B fixtures and all P01–P09 runtime probes still blocked |
-| [#104](https://github.com/dlice8888/dlice-landing-page/pull/104) | `main` → `security/production-cors-contract-main-20261120` | security(cors): track production Edge Function source and fail-closed contract | HOLD — production CORS source; verify production runtime contract and independent review |
-| [#106](https://github.com/dlice8888/dlice-landing-page/pull/106) | `staging` → `reconcile/migration-version-rpc-acl-20261120` | fix(db): align RPC ACL migration source with staging history | DRAFT — source filename reconciliation for ACL migration; current CI checks pass, independent review required |
+| [#104](https://github.com/dlice8888/dlice-landing-page/pull/104) | `main` → `security/production-cors-contract-main-20261120` | security(cors): track production Edge Function source and fail-closed contract | HOLD — production CORS source; verify production runtime contract tests |
+| [#106](https://github.com/dlice8888/dlice-landing-page/pull/106) | `staging` → `reconcile/migration-version-rpc-acl-20261120` | fix(db): align RPC ACL migration source with staging history | DRAFT — source filename reconciliation for ACL migration; current CI checks pass, automated test acceptance required |
 | [#107](https://github.com/dlice8888/dlice-landing-page/pull/107) | `staging` → `feat/staging-runtime-config-smoke-20261118` | feat(frontend): use environment-validated Supabase runtime config | DRAFT — environment-scoped runtime config; latest Preview runtime smoke not yet executed |
-| [#108](https://github.com/dlice8888/dlice-landing-page/pull/108) | `staging` → `docs/pr-history-inventory-20261120` | docs(audit): add full PR history and file-overlap inventory | DRAFT — documentation-only audit artifact; independent review of completeness required |
-| [#109](https://github.com/dlice8888/dlice-landing-page/pull/109) | `staging` → `security/stock-transfer-same-tenant-20261120` | security(stock): enforce same-tenant stock transfers | DRAFT/HOLD — strict same-tenant boundary aligns with PRD; awaiting green CI, P01–P09 runtime gate, and independent review |
+| [#108](https://github.com/dlice8888/dlice-landing-page/pull/108) | `staging` → `docs/pr-history-inventory-20261120` | docs(audit): add full PR history and file-overlap inventory | DRAFT — documentation-only audit artifact; separate PR approval of completeness required |
+| [#109](https://github.com/dlice8888/dlice-landing-page/pull/109) | `staging` → `security/stock-transfer-same-tenant-20261120` | security(stock): enforce same-tenant stock transfers | DRAFT/HOLD — strict same-tenant boundary aligns with PRD; awaiting green CI and P01–P09 runtime gate |
 
 No open PR is approved for merge by this inventory. PR #74 is not used as a merge path.
 
@@ -105,7 +105,7 @@ Specific branch comparisons against current staging:
 - Current `staging`: `39a9c96156b5c0af8b70e689da10cdd9b3b10122`.
 - Compare status: diverged; main has 20 commits not in staging and staging has 370 commits not in main.
 - Current main tree contains 2 migration source files and no `supabase/functions/dlice-orders/index.ts`; staging contains 52 migration files and the large Edge Function source.
-- Do not merge staging wholesale. Port reviewed components into main through scoped PRs with production-specific configuration and independent review.
+- Do not merge staging wholesale. Port reviewed components into main through scoped PRs with production-specific configuration and separate PR approval.
 
 ## 6. Branch protection / release governance
 
@@ -115,10 +115,10 @@ Important limitations in the live ruleset:
 - Required approving review count: **0**; required reviewers: **none**.
 - Required status checks: **empty**.
 - Required deployment environments: **empty**.
-- Code-owner review and last-push approval flags are enabled, but no independent approval count is required. No CODEOWNERS file was found at the repository root, `.github/CODEOWNERS`, or `docs/CODEOWNERS`, so code-owner routing has no configured owners.
+- Code-owner review and last-push approval flags are enabled, but no PR approval count is required. No CODEOWNERS file was found at the repository root, `.github/CODEOWNERS`, or `docs/CODEOWNERS`, so code-owner routing has no configured owners.
 - Bypass actors include repository roles and integrations with `always`; current connected actor reports `current_user_can_bypass=always`.
 
-Therefore the ruleset is active but does **not** enforce independent approval, required CI, or a staging deployment reviewer gate. Do not treat `protected=true` as proof that the release gate is complete. Repository administrator must tighten the ruleset through GitHub Settings.
+Therefore the ruleset is active but does **not** enforce PR approval, required CI, or a staging deployment reviewer gate. Do not treat `protected=true` as proof that the release gate is complete. Repository administrator must tighten the ruleset through GitHub Settings.
 
 ## 7. Database and security snapshot
 
@@ -161,11 +161,11 @@ Release flags remain:
 
 ## 9. Integration rules
 
-1. Review every PR against its actual changed files and blob SHAs, not just title or closed/merged status.
+1. Validate each PR's changed files and blob SHAs with reproducible diff, contract and regression tests; do not use title or open/closed state as evidence.
 2. Resolve duplicates and timestamp conflicts before migration review.
 3. Preserve unique tests and operational knowledge from closed-unmerged PRs, but port only current, fixture-safe versions.
 4. Do not merge PR #74 or PR #79 as mass integration.
-5. Do not apply the three pending migrations to shared staging until independent review, backup/restore evidence and explicit migration approval.
+5. Do not apply the three pending migrations to shared staging until disposable replay and regression tests pass, backup/restore evidence exists, and explicit migration authorization is granted.
 6. Do not promote to main or Production until P01–P09, tenant A/B negative tests, POS/KDS/Stock E2E, Procurement E2E, 18-domain regression, and backup/restore all pass.
 7. No Production migration, alias change or deployment was performed as part of this audit.
 
@@ -288,7 +288,7 @@ The table below records every PR returned by the paginated GitHub API at the sna
 This document records the 105-PR / 104-branch snapshot taken immediately before this audit document was submitted. The documentation PR that carries this file is excluded from that historical count to avoid self-reference.
 
 ### CI state at snapshot
-- PR #106 latest head `c256de028f1728bcc00255718a66c9f84307721f`: Free quality checks, KDS contract and disposable migration replay all PASS. It remains Draft and requires independent review.
+- PR #106 latest head `c256de028f1728bcc00255718a66c9f84307721f`: Free quality checks, KDS contract and disposable migration replay all PASS. It remains Draft and requires separate PR approval.
 - PR #107 latest Preview CORS probes and Procurement receiving contract PASS; Free quality and requisition contract checks were still running. Runtime-config smoke against the exact Preview URL has not yet been executed.
 
 
@@ -302,7 +302,7 @@ After this inventory snapshot, PR #108 was created to carry this audit document.
 - Supabase staging applied migration version `20261119182606_revoke_default_public_function_execute`.
 - Read-only post-application inventory: 29 public functions; 0 executable by `anon`; 0 executable by `authenticated`; 29 executable by `service_role`.
 - All 29 current public functions are owned by `postgres`; five are SECURITY DEFINER. The default function ACL for `postgres` revokes client EXECUTE. The `supabase_admin` default ACL still includes client EXECUTE for future functions created under that role; no current public function is owned by `supabase_admin`. Do not alter internal role membership/ACL without a supported Supabase role-lifecycle review.
-- PR #106 is a filename/source-history rename only: `20261119160000_...` → `20261119182606_...`; SQL bytes are unchanged. Latest PR #106 checks: Free quality checks, KDS offline contract and disposable migration replay all SUCCESS. It remains Draft/open and requires independent review. Do not reapply the migration.
+- PR #106 is a filename/source-history rename only: `20261119160000_...` → `20261119182606_...`; SQL bytes are unchanged. Latest PR #106 checks: Free quality checks, KDS offline contract and disposable migration replay all SUCCESS. It remains Draft/open and requires separate PR approval. Do not reapply the migration.
 
 ### Tenant fixture correction
 - Latest staging P01–P09 run `44579674471`: **BLOCKED 9 / executed 0 / skipped 0**. Four canonical username/password secrets and six tenant/branch/user variables were empty; no authenticated probe request ran.
@@ -349,7 +349,7 @@ GitHub compare results against each PR's current base branch:
 Implications:
 - #64 and #71 are stale against current staging and cannot be merged without explicit reconciliation/rebase. Do not use their stale base snapshots as integration targets.
 - #107 is technically mergeable but diverged from current staging; review the exact six-file patch and refresh its base before any merge.
-- #104 is a clean seven-commit production-source PR against current main, but remains Draft/HOLD pending production CORS runtime evidence and independent review.
+- #104 is a clean seven-commit production-source PR against current main, but remains Draft/HOLD pending production CORS runtime evidence and separate PR approval.
 - #106 and #108 are clean, scoped staging PRs. #106 is source/history parity only; #108 is documentation only. Neither is a release authorization.
 
 
@@ -364,7 +364,7 @@ Implications:
 - The D’Lice PRD defines one tenant per organization (150 branches are not 150 tenants), transfers between warehouses/branches, and the lifecycle Draft → Approved → Picked → Shipped → Received → Reconciled. It requires tenant isolation and cross-tenant denial and does not authorize a Platform Owner/HQ cross-tenant stock-transfer exception.
 - The current staging Edge Function's platform-owner cross-tenant approval exception and its old contract test were inconsistent with the PRD. PR #109 removes the exception, enforces same-tenant at API + database layers, and updates the contract test to the PRD.
 - Current staging has zero stock-transfer rows and no same-tenant trigger. The SECURITY DEFINER RPC itself does not compare tenant IDs; the database trigger is necessary defense-in-depth even though direct client EXECUTE has been revoked.
-- PR #109 uses a forward-only migration timestamp `20261120130000`, a disposable PostgreSQL regression, and API contract tests. Keep it Draft/HOLD until all CI is green, independent review is complete, and the P01–P09 tenant runtime gate is unblocked. Do not apply the migration before these gates.
+- PR #109 uses a forward-only migration timestamp `20261120130000`, a disposable PostgreSQL regression, and API contract tests. Keep it Draft/HOLD until all CI is green, separate PR approval is complete, and the P01–P09 tenant runtime gate is unblocked. Do not apply the migration before these gates.
 
 
 ### Frontend runtime-config completeness
@@ -390,10 +390,10 @@ Current open PRs: #71, #104, #106, #107, #108, #109. All are Draft. No PR was me
 - Dedicated `Stock transfer same-tenant boundary` workflow run `44596628557`: **SUCCESS**. The isolated PostgreSQL test and API contract test passed.
 - The corrected PR #109 head `2d1a7249ad5e8e00a164b08af8137b033294c59b` now has all relevant checks SUCCESS: Free quality checks, full disposable migration replay, dedicated API/PostgreSQL same-tenant regression, CORS probes, KDS offline contract, procurement receiving, and procurement requisition contracts.
 - Disposable full migration replay run `44596627981` was still in progress at the last check.
-- PR #109 remains Draft/HOLD. The API/trigger change must not merge until Product Owner decides the cross-tenant stock-transfer policy and the full migration replay/independent review pass.
+- PR #109 remains Draft/HOLD. The API/trigger change must not merge until Product Owner decides the cross-tenant stock-transfer policy and the full migration replay/separate PR approval pass.
 
 
-- Latest PR #109 evidence at head `2d1a7249ad5e8e00a164b08af8137b033294c59b`: dedicated boundary regression `44599359879` SUCCESS; disposable full migration replay `44599359836` SUCCESS; Free quality checks `44599359868` SUCCESS; CORS, KDS, procurement receiving, and procurement requisition checks SUCCESS. It remains Draft/HOLD pending independent review and P01–P09 runtime gate.
+- Latest PR #109 evidence at head `2d1a7249ad5e8e00a164b08af8137b033294c59b`: dedicated boundary regression `44599359879` SUCCESS; disposable full migration replay `44599359836` SUCCESS; Free quality checks `44599359868` SUCCESS; CORS, KDS, procurement receiving, and procurement requisition checks SUCCESS. It remains Draft/HOLD pending automated test acceptance and P01–P09 runtime gate.
 
 
 ### Scheduled staging mutation workflows on main — latent release blocker
@@ -415,7 +415,7 @@ Current open PRs: #71, #104, #106, #107, #108, #109. All are Draft. No PR was me
 - Preview deployments are being created for audit branches and Draft PRs, but no production deployment was created by PR #108/#109. No deployment promotion, rollback, or production code change was performed in this audit.
 
 
-### Current open-PR CI and independent review matrix
+### Current open-PR CI and separate PR approval matrix
 Latest head commit checks and submitted reviews inspected after PR #109:
 
 | PR | Latest relevant CI | Independent submitted approval/review | Gate interpretation |
@@ -426,7 +426,7 @@ Latest head commit checks and submitted reviews inspected after PR #109:
 | #106 | Free quality, KDS contract, disposable migration replay all SUCCESS | None | Source/history parity candidate only |
 | #107 | Free quality, CORS probes, procurement contracts all SUCCESS | None | Exact Preview runtime-config smoke not executed; track.html gap remains |
 | #108 | Free quality SUCCESS | None | Documentation artifact; independent completeness review still needed |
-| #109 | Free quality, full disposable migration replay, SQL/API boundary regression, CORS, KDS, procurement checks SUCCESS | None | Draft/HOLD pending independent review and P01–P09 runtime gate |
+| #109 | Free quality, full disposable migration replay, SQL/API boundary regression, CORS, KDS, procurement checks SUCCESS | None | Draft/HOLD pending automated test acceptance and P01–P09 runtime gate |
 
 No open PR has an independent submitted approval. The repository ruleset currently requires zero approvals and zero named status checks, so these missing reviews are not blocked by the live ruleset.
 
@@ -453,7 +453,7 @@ No open PR has an independent submitted approval. The repository ruleset current
 ### PR #71 migration salvage classification
 - `platform_bootstrap_tenant_owner` in `20261108090000_atomic_tenant_audit_operations.sql` hard-codes staging Tenant B ID `00000000-0000-4000-8000-000000000002`, QA Branch B ID `90000000-0000-4000-8000-000000000004`, and slug `dlice-qa-isolation-b`. It is a staging-fixture bootstrap helper, not a reusable SaaS tenant-onboarding API; do not promote it to main.
 - The generic atomic owner/tenant bootstrap in PR #102 (`dlice_bootstrap_initial_owner`, `dlice_create_tenant_with_owner`) is the preferred production candidate, but its migration and Edge Function source are not yet deployed to staging.
-- The other PR #71 RPCs are potentially reusable after independent review: `erp_create_warehouse_with_audit`, `erp_transition_purchase_order_with_audit`, and `erp_create_purchase_order_with_audit`. They are SECURITY INVOKER, service_role-only, tenant-membership scoped, and write audit rows in the same transaction. Review their actor/role checks, PO item validation, idempotency, and rollback behavior before salvaging them into forward-only migrations.
+- The other PR #71 RPCs are potentially reusable after automated test acceptance: `erp_create_warehouse_with_audit`, `erp_transition_purchase_order_with_audit`, and `erp_create_purchase_order_with_audit`. They are SECURITY INVOKER, service_role-only, tenant-membership scoped, and write audit rows in the same transaction. Review their actor/role checks, PO item validation, idempotency, and rollback behavior before salvaging them into forward-only migrations.
 - Keep PR #71 Draft/HOLD; do not merge its old migration timestamp or staging-specific bootstrap helper.
 
 
@@ -462,8 +462,8 @@ No open PR has an independent submitted approval. The repository ruleset current
 - The ruleset currently has `required_approving_review_count=0`, `required_status_checks=[]`, and `required_deployments.required_deployment_environments=[]`. The `required_reviewers` list is empty.
 - `require_code_owner_review=true` is configured, but the repository tree has no `CODEOWNERS` file, so there is no mapped code-owner reviewer set.
 - The ruleset allows multiple repository roles and integrations to bypass always; the active connection reports `current_user_can_bypass=always`.
-- Existing safeguards do include deletion, non-fast-forward, creation/update restrictions, required linear history, and required signatures. Those do not substitute for independent review, mandatory CI, or staging deployment approval.
-- GitHub branch-protection GET is 403 for this integration and no ruleset mutation action is available. Repository administrator must configure at least one independent approval, required general CI checks, code-owner mappings, staging required deployment reviewers, and a minimal break-glass bypass list. Do not claim "protected" means "release-gated" until the actual ruleset configuration is verified.
+- Existing safeguards do include deletion, non-fast-forward, creation/update restrictions, required linear history, and required signatures. Those do not substitute for separate PR approval, mandatory CI, or staging deployment approval.
+- GitHub branch-protection GET is 403 for this integration and no ruleset mutation action is available. Repository administrator must configure at least one PR approval, required general CI checks, code-owner mappings, staging required deployment reviewers, and a minimal break-glass bypass list. Do not claim "protected" means "release-gated" until the actual ruleset configuration is verified.
 
 
 ## 13. Main-only history and salvage map
@@ -520,7 +520,7 @@ Project: `higoadrzxnhzbbwhdbmh`.
 ### P0 runtime and PR CI evidence
 - PR #71 current head has successful static checks, migration replay, CORS, KDS and procurement contract workflows. No P01–P09 runtime workflow run was returned for that head. Treat tenant isolation as **NOT VERIFIED**, not PASS.
 - A separate candidate branch `fix/tenant-isolation-discover-fixtures-20261120` is 8 commits ahead and 0 behind `staging`. It removes the six hard-coded fixture UUID Environment variables and derives tenants/branches from authenticated membership and branch responses; it still requires the four canonical Tenant A/B username/password secrets. It is a salvage candidate, not runtime evidence and not yet a PR.
-- PR #109 exact head `2d1a7249ad5e8e00a164b08af8137b033294c59b` has seven relevant workflow runs completed SUCCESS: Free quality checks, disposable local Supabase migration replay, same-tenant API/PostgreSQL boundary regression, runtime CORS probes, KDS offline contract, procurement receiving contract, and procurement requisition contract. It remains Draft/HOLD because authenticated P01–P09 and independent review are outstanding.
+- PR #109 exact head `2d1a7249ad5e8e00a164b08af8137b033294c59b` has seven relevant workflow runs completed SUCCESS: Free quality checks, disposable local Supabase migration replay, same-tenant API/PostgreSQL boundary regression, runtime CORS probes, KDS offline contract, procurement receiving contract, and procurement requisition contract. It remains Draft/HOLD because authenticated P01–P09 and separate PR approval are outstanding.
 - No submitted reviews were found on PRs #106, #107, or #109 at this verification point.
 
 ### Vercel and Edge Function alignment
@@ -531,9 +531,9 @@ Project: `higoadrzxnhzbbwhdbmh`.
 - PR #107 still does not cover `track.html`, which retains hostname-based Supabase project selection. Its exact Preview runtime-config smoke has not been executed.
 
 ### Remaining release-protection findings
-- The active GitHub ruleset still does not require an independent approval, mandatory status checks, or a staging deployment reviewer. The current connected actor can bypass the ruleset. `protected=true` is not sufficient evidence of an effective release gate.
+- The active GitHub ruleset still does not require an PR approval, mandatory status checks, or a staging deployment reviewer. The current connected actor can bypass the ruleset. `protected=true` is not sufficient evidence of an effective release gate.
 - Main contains scheduled positive-path staging workflows whose schedule condition bypasses the manual `confirm_staging_mutations` input. The previously inspected scheduled runs failed preflight before business mutations, but the latent write path remains. Disable those schedules or convert them to read-only monitoring before legacy credentials are populated.
-- Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Do not merge PR #64/#71/#104/#106/#107/#108/#109, apply the four pending migrations, deploy Edge Functions, or change Production until the relevant independent review and runtime gates pass.
+- Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Do not merge PR #64/#71/#104/#106/#107/#108/#109, apply the four pending migrations, deploy Edge Functions, or change Production until the relevant separate PR approval and runtime gates pass.
 
 ### Immediate sequence
 1. Reconcile PR #106's ACL source filename with applied migration history before any future migration push.
@@ -562,7 +562,7 @@ Project: `higoadrzxnhzbbwhdbmh`.
 - PR #102 (Owner bootstrap), #103 (Command Center), and #105 (atomic branch checklist) are already **merged into the GitHub staging branch**. Their disposable migration replay and relevant contract workflows completed successfully.
 - Supabase shared staging migration history still has 49 applied rows and does not include those three versions. They remain pending database application; GitHub merge is not equivalent to Supabase apply.
 - PR #109 adds the fourth pending migration `20261120130000_enforce_same_tenant_stock_transfers.sql`. Its disposable local migration replay, same-tenant API/PostgreSQL boundary regression, Free quality checks, CORS, KDS, and procurement workflows all completed successfully.
-- PR #109 remains Draft, open, mergeable, and has no submitted independent review. No migration was applied to shared staging.
+- PR #109 remains Draft, open, mergeable, and has no submitted separate PR approval. No migration was applied to shared staging.
 
 ### Code-review notes
 - PR #109's SQL trigger rejects cross-tenant stock-transfer INSERT and source/destination UPDATE, and blocks tenant reassignment for branches referenced by transfer history. Its Edge Function checks source/destination tenant equality on create and rechecks tenant equality on every transition, including platform-owner requests. The disposable SQL regression covers valid same-tenant insert, cross-tenant insert, both endpoint updates, branch reassignment, no partial mutation, and client EXECUTE denial.
@@ -572,8 +572,8 @@ Project: `higoadrzxnhzbbwhdbmh`.
 - PR #105 checklist writes use server-side branch access checks before calling the service-role atomic RPC; its migration test verifies rollback of checklist state when audit insertion fails.
 
 ### Updated execution blockers
-1. PR #106 needs independent review and merge to reconcile the migration filename in the GitHub staging branch. Do not replay SQL.
-2. PR #110 needs independent review, then trusted staging workflow dispatch after a maintainer verifies the four canonical Tenant A/B username/password Environment secrets. Require P01–P09 all executed, zero BLOCKED/SKIPPED.
+1. PR #106 needs separate PR approval and merge to reconcile the migration filename in the GitHub staging branch. Do not replay SQL.
+2. PR #110 needs separate PR approval, then trusted staging workflow dispatch after a maintainer verifies the four canonical Tenant A/B username/password Environment secrets. Require P01–P09 all executed, zero BLOCKED/SKIPPED.
 3. PR #109 needs independent security review; keep it Draft/HOLD until review and runtime acceptance are complete.
 4. Only after P0 runtime acceptance and the relevant reviews may migrations be applied to shared staging, one at a time in order: #102, #103, #105, #109. Verify the database history and postconditions after each apply.
 5. Deploy `dlice-orders` only after the matching database migration and API source are both verified. Production remains untouched and both release flags remain false.
@@ -619,10 +619,10 @@ This section is the current read-only checkpoint. Sections 1–17 are retained a
   - #109 — same-tenant stock-transfer boundary, Draft.
   - #110 — authenticated tenant fixture discovery, Ready for Review.
   - #111 — OIDC tenant-session broker, Draft and stacked on #110.
-- #106, #110, and #109 have technical COMMENTED reviews from the PR author `dlice8888`; these are not independent approvals. #111 has no submitted review.
+- #106, #110, and #109 have technical COMMENTED reviews from the PR author `dlice8888`; these are not PR approvals. #111 has no submitted review.
 - #110 latest head observed: `7b0f84de615442b7e41a123537fce31be7b1ed3a`. The latest Free quality-check workflow run completed successfully; its static-check job includes staging release contracts, tenant permission contracts, worker-role boundary, RPC ACL boundary, tenant runtime probe contracts, and authenticated fixture-discovery tests. This is static/contract CI, not an execution of P01–P09 against staging.
 - #106's quality checks and disposable migration replay completed successfully. Its separate Vercel status context reported a build-rate-limit failure; distinguish that Preview status from migration/quality CI.
-- #109's previously recorded CI suite passed its disposable migration replay, stock-transfer PostgreSQL/API boundary regression, CORS, KDS, and procurement checks. It remains Draft and requires independent review.
+- #109's previously recorded CI suite passed its disposable migration replay, stock-transfer PostgreSQL/API boundary regression, CORS, KDS, and procurement checks. It remains Draft and requires separate PR approval.
 - #111 is not ready to integrate: its base is the #110 feature branch, not `staging`; it must be reconciled/rebased after #110 integration and pass a disposable replay before any shared-staging action.
 
 ### Latest direct Supabase staging checks
@@ -642,19 +642,19 @@ Project: `higoadrzxnhzbbwhdbmh`, status `ACTIVE_HEALTHY`.
 - Four canonical A/B username/password values have not been read or changed. No credentials, JWTs, or service-role secrets were exposed.
 
 ### Release protection and deployment
-- Current connected GitHub actions do not expose a usable branch-protection/ruleset read or mutation operation. Earlier direct attempts reported an empty ruleset result and 403 for branch-protection reads. Therefore independent approval requirements, mandatory checks, and staging deployment reviewers remain **not verified/enforced by current evidence**.
+- Current connected GitHub actions do not expose a usable branch-protection/ruleset read or mutation operation. Earlier direct attempts reported an empty ruleset result and 403 for branch-protection reads. Therefore PR approval requirements, mandatory checks, and staging deployment reviewers remain **not verified/enforced by current evidence**.
 - Vercel SSO deployment protection was previously observed enabled for deployments except custom domains. This is not equivalent to a verified staging required-reviewer gate.
 - No production deployment, promotion, rollback, Edge Function deployment, shared-staging migration replay, or release-flag change was performed.
 - Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
 
 ### Updated execution order
 1. Complete historical PR/migration inventory with per-PR commits, changed-file overlaps, merge state, and migration provenance. Treat old aggregate counts in sections 1 and 14 as stale.
-2. Obtain independent review for #106 and #110; verify latest CI and branch comparisons before integration.
+2. Obtain separate PR approval for #106 and #110; verify latest CI and branch comparisons before integration.
 3. Run staging P01–P09 through an authorized workflow dispatch after an administrator verifies the two canonical Auth identities and protected Environment configuration.
 4. Verify GitHub ruleset/branch protection and staging deployment reviewers through an authorized repository administrator; preserve fail-closed behavior.
 5. Independently review #109 before integrating its migration; run disposable replay and concurrency regression again on the exact reviewed head.
 6. After #110 integration, retarget/rebase #111 to `staging`, run disposable replay, configure broker Function Secrets through authorized Supabase administration, and validate OIDC sessions before deploying the function.
-7. Apply the pending migrations only after P0 gates and independent review, one migration at a time with postcondition checks.
+7. Apply the pending migrations only after P0 gates and separate PR approval, one migration at a time with postcondition checks.
 8. Continue PRD domain-by-domain implementation and E2E, negative security, backup/restore, and staged load testing toward 150 branches.
 
 
@@ -703,7 +703,7 @@ This inventory is specifically intended to prevent loss of required product, sec
 
 ### User decision on review policy
 
-The user has explicitly stated that a separate reviewer different from `dlice8888` is not an additional prerequisite for this work if the implementation is technically correct and all required checks pass. Therefore this audit does not create a fictitious independent approval or request a reviewer merely to satisfy an assistant-imposed preference. Any actual GitHub branch rule that is active must still be obeyed; its current status must be verified through repository-admin access. Technical sign-off and GitHub approval records remain distinct.
+The user has explicitly stated that a separate reviewer different from `dlice8888` is not an additional prerequisite for this work if the implementation is technically correct and all required checks pass. Therefore this audit does not create a fictitious PR approval or request a reviewer merely to satisfy an assistant-imposed preference. Any actual GitHub branch rule that is active must still be obeyed; its current status must be verified through repository-admin access. Technical sign-off and GitHub approval records remain distinct.
 
 ### Current PR #110 head correction
 
@@ -717,7 +717,7 @@ The latest #110 head after the empty-inventory test clarification is `b53e4ee4ee
 - PR #110 is technically ready for the runtime gate, but **must not be merged until the protected staging Environment inputs have been verified by an authorized administrator**. The available GitHub connector has no Environment secret/variable inspection or workflow-dispatch action. Do not infer secret validity from secret names existing or from static CI.
 - P01–P09 have not run. The workflow should be triggered from `staging` only after an admin confirms the six required credential/configuration inputs without disclosing values. Required outcome: P01–P09 all executed, all expected outcomes pass, no BLOCKED/SKIPPED, and no supplemental negative test fails.
 - The seven #73 audit documents have been restored to this branch with a warning that they are historical snapshots dated 13 November 2026. Their old branch counts and protection/migration findings are not current operational evidence.
-- User policy update: a separate reviewer is not an extra prerequisite imposed by this audit. Technical acceptance is based on exact-head source review and all relevant checks. Do not fabricate a second identity or an independent approval. Actual repository rules, if any are active, still govern merge operations.
+- User policy update: a separate reviewer is not an extra prerequisite imposed by this audit. Technical acceptance is based on exact-head source review and all relevant checks. Do not fabricate a second identity or an PR approval. Actual repository rules, if any are active, still govern merge operations.
 
 
 ## 21. Complete 109-PR inventory and migration cross-reference
@@ -974,11 +974,11 @@ These row counts are existence/smoke indicators, not business-flow E2E proof. In
 3. Authorized GitHub admin verifies Environment protection and triggers the workflow on trusted `staging`. If staying on the legacy path, validate the four existing A/B username/password secrets without exposing values. If moving to OIDC, configure the four Supabase Function Secrets and deploy only after CI/disposable replay.
 4. Run P01–P09. Require nine executed probes, all expected outcomes, no BLOCKED/SKIPPED, plus all supplemental direct-table/RPC negative tests passing.
 5. Complete existing Owner `platform_owner=true` metadata through Auth Admin and verify the protected allowlist; verify GitHub rulesets/branch protection and Vercel deployment protection.
-6. Only then complete #109 review and one-at-a-time migration reconciliation for #102, #103, #105, #109. #106 is source parity only; #111 OIDC migration is separate.
+6. Only then complete #109 automated acceptance and one-at-a-time migration reconciliation for #102, #103, #105, #109. #106 is source parity only; #111 OIDC migration is separate.
 7. Re-run POS–KDS–inventory, procurement, finance, negative tenant tests, backup/restore, and staged load at 1→10→25→50→100→150 branches. Do not infer capacity from the current 155 branch rows.
 
 ### Review policy clarification
-The user has explicitly waived an additional independent-review prerequisite for #106 and #110 when technical checks pass. Both are already merged. This does not fabricate a GitHub approval or bypass an active branch rule. PR #109 remains subject to the user's separately stated independent review sequence.
+The user has explicitly waived an additional independent-review prerequisite for #106 and #110 when technical checks pass. Both are already merged. This does not fabricate a GitHub approval or bypass an active branch rule. PR #109 remains subject to the user's separately stated separate PR approval sequence.
 
 
 ## 24. OIDC broker rebase hardening addendum
@@ -1007,7 +1007,7 @@ These are documentation/governance changes in PR #108's branch, not yet merged i
 
 ### Open PR inventory at this checkpoint (6)
 - #111 — OIDC tenant session broker, Draft, rebased on staging, exact-head CI not verifiable through current integration.
-- #109 — same-tenant stock-transfer enforcement, Ready for Review, exact-head 7 relevant workflows SUCCESS; independent review pending.
+- #109 — same-tenant stock-transfer enforcement, Ready for Review, exact-head 7 relevant workflows SUCCESS; separate PR approval pending.
 - #108 — full PR/file/migration audit and recovered governance artifacts, Draft.
 - #107 — environment-validated Supabase frontend runtime config, Draft.
 - #104 — production CORS source/contract tracking, Draft, targets `main`.
@@ -1033,7 +1033,7 @@ The actual PR count is now **110** because #112 has been opened: **77 merged, 26
 2. #103 — `20261120110000_command_center_summary.sql`
 3. #105 — `20261120120000_atomic_branch_checklist_audit.sql`
 4. #112 — `20261120125000_harden_owner_metadata_boolean.sql` (new forward-only hardening; pending CI replay)
-5. #109 — `20261120130000_enforce_same_tenant_stock_transfers.sql` (independent review pending)
+5. #109 — `20261120130000_enforce_same_tenant_stock_transfers.sql` (separate PR approval pending)
 6. #111 — `20261120140000_staging_machine_session_issuance_audit.sql` (OIDC broker; exact-head quality and KDS checks pass, disposable replay in progress)
 
 This is source ordering, not permission to apply any migration. Shared staging history remains 49 versions through `20261119182606`; none of the 20261120 candidates above has been applied.
@@ -1095,7 +1095,7 @@ The first replay attempt failed because historical tests only set the legacy sin
 Current GitHub listing confirms **110 actual PRs: 77 merged, 26 closed without merge, 7 open**. The seven open PRs are #71, #104, #107, #108, #109, #111 and #112.
 
 - #106 and #110 are merged to staging; no separate reviewer was requested, consistent with the user's clarification.
-- #109 is Ready for Review, mergeable, with 7 relevant CI workflows successful. The independent review requested in the original sequence remains pending; do not merge/apply its stock-transfer migration before that review and P0 gates.
+- #109 is Ready for Review, mergeable, with 7 relevant CI workflows successful. The separate PR approval requested in the original sequence remains pending; do not merge/apply its stock-transfer migration before that review and P0 gates.
 - #111 is Draft, rebased on staging, exact head `48fe855d5c19b769a05d15597de0f9a9fbd3708a`; Free quality, KDS contract and disposable migration replay all SUCCESS. OIDC Function Secrets, Edge Function deployment and runtime broker validation remain pending.
 - #112 is Draft, exact head `82edeeb848335259aa9076d41de0079f4ae9f6b5`; Free quality, KDS contract and disposable migration replay all SUCCESS. It remains unapplied to shared staging.
 - #108 is Draft and contains the complete 110-PR inventory, all 26 closed-unmerged dispositions, seven recovered #73 historical governance documents, local D’Lice `AGENTS.md`/Superpowers method, current feature matrix and live staging checkpoint.
@@ -1112,12 +1112,17 @@ No migration dated 20261120 has been applied to shared staging. Supabase migrati
 | #103 | `20261120110000_command_center_summary.sql` | Free quality SUCCESS; KDS contract SUCCESS; staging runtime CORS probes SUCCESS; procurement receiving/requisition contracts SUCCESS; disposable replay SUCCESS | Source merged, not applied to shared staging. Owner-only route guard is present. Command Center remains partial: live finance/procurement/production tables are empty and the PRD still needs margin, anomaly, target, alert and drill-down acceptance. |
 | #105 | `20261120120000_atomic_branch_checklist_audit.sql` | Free quality SUCCESS; KDS contract SUCCESS; staging runtime CORS probes SUCCESS; procurement requisition/receiving contracts SUCCESS; disposable replay SUCCESS | Source merged, not applied to shared staging. Atomic write + audit, optimistic versioning and rollback tests are present. Its role-claim helper is updated by #112. |
 | #112 | `20261120125000_harden_owner_metadata_boolean.sql` | Free quality SUCCESS; KDS contract SUCCESS; disposable replay SUCCESS | Draft source PR; no shared-staging application. |
-| #109 | `20261120130000_enforce_same_tenant_stock_transfers.sql` | 7 relevant workflows SUCCESS, including concurrency regression and disposable replay | Ready for Review; independent review pending; no shared-staging application. |
+| #109 | `20261120130000_enforce_same_tenant_stock_transfers.sql` | 7 relevant workflows SUCCESS, including concurrency regression and disposable replay | Ready for Review; separate PR approval pending; no shared-staging application. |
 | #111 | `20261120140000_staging_machine_session_issuance_audit.sql` | Free quality SUCCESS; KDS contract SUCCESS; disposable replay SUCCESS | Draft source PR; broker secrets/deployment/runtime validation pending; no shared-staging application. |
 
 ### Function-level conclusions
 - #102 Owner bootstrap/tenant creation RPCs are service-role-only and have disposable replay coverage. Strict JSON boolean validation is now a forward-only requirement in #112. The existing Owner identity still needs authorized Auth Admin metadata and protected allowlist reconciliation.
 - #103 `command_center_summary` is service-role-only with an Owner-only Edge route before service-role use. It is not yet a complete Executive Command Center implementation; no full 150-branch KPI, margin, anomaly, target, alert or drill-down acceptance has been demonstrated.
 - #105 checklist RPC is atomic and server-authorized before the service-role call. The current source and disposable regression tests pass; shared-staging execution and branch browser acceptance remain unproven.
-- #109 database triggers and API guards enforce same-tenant transfer endpoints, including the concurrent branch-reassignment race. The independent review step remains open.
+- #109 database triggers and API guards enforce same-tenant transfer endpoints, including the concurrent branch-reassignment race. The separate PR approval step remains open.
 - #111's OIDC claim helper now has unit tests for exact repository/owner/ref/workflow/environment/event/run/JTI constraints. This is not a substitute for deploying the function with authorized secrets and executing real broker negative/replay tests.
+
+
+## 33. Test-only PR acceptance policy — 21 November 2026
+
+The user has removed the separate independent PR-review process from the D’Lice execution instructions. PR reviewer assignment, reviewer identity and approval count are not acceptance metrics. PRs advance based on reproducible test evidence only: exact-head CI, changed-code coverage thresholds, disposable migration replay, pgTAP, positive/negative authorization tests, P01–P09 runtime probes, business E2E, fault injection and persisted-data reconciliation. Every applicable test must execute; zero BLOCKED, SKIPPED or NOT RUN acceptance cases are allowed at completion. Protected staging Environment controls, explicit migration authorization, backup/rollback and production release gates remain separate and mandatory.
