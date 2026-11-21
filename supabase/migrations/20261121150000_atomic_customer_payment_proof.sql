@@ -31,7 +31,7 @@ DECLARE
   v_reservations_valid boolean := false;
   v_now timestamptz := clock_timestamp();
 BEGIN
-  IF p_order_id IS NULL OR p_upload_key IS NULL
+  IF p_order_id IS NULL OR p_upload_key IS NULL OR p_method IS NULL
      OR p_method NOT IN ('bank_transfer','dlice_qris')
      OR p_amount_idr IS NULL OR p_amount_idr < 0
      OR p_receipt_version IS NULL OR p_receipt_version < 1
