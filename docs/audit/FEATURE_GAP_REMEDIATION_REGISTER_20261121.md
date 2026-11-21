@@ -668,7 +668,7 @@ No billing plan or Auth security setting was changed.
 ## Audit refresh — 2026-11-21 19:07 WIB
 
 ### Current feature status
-The machine-readable matrix now contains 189 feature records: **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE**. Of the 89 PARTIAL records, only 2 have a defensible numeric progress score in the current evidence model; 87 remain unscored because their six evidence layers have not been decomposed. Do not fill those percentages with guesses. The progress rubric is code/UI 25, database/data integrity 20, authorization/tenant scope 15, automated tests 15, workflow E2E 15, reconciliation/observability 10. DONE requires all six layers and release acceptance to pass.
+The machine-readable matrix now contains 189 feature records: **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE**. Of the 92 PARTIAL records, only 2 have a defensible numeric progress score in the current evidence model; 90 remain unscored because their six evidence layers have not been decomposed. Do not fill those percentages with guesses. The progress rubric is code/UI 25, database/data integrity 20, authorization/tenant scope 15, automated tests 15, workflow E2E 15, reconciliation/observability 10. DONE requires all six layers and release acceptance to pass.
 
 The user's source table's domain rows add to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. Its total row stating 93 NOT VERIFIED is arithmetically wrong. Seven features were moved from NOT VERIFIED to PARTIAL after code/DB/test foundations were evidenced; current register totals 89 + 91 + 9 = 189.
 
@@ -746,7 +746,7 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 ### Feature count reconciliation
 - The latest user-supplied per-domain rows sum to 189 with 82 PARTIAL, 98 NOT VERIFIED and 9 BLOCKED; the supplied total row's 93 NOT VERIFIED is incorrect.
 - The evidence-backed current matrix is 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED and 0 DONE. Seven features have moved from NOT VERIFIED to PARTIAL based on concrete code/schema/test foundations: two Kitchen/KDS, one Menu/Pricing, two Inventory/Warehouse & reorder, and two SaaS Tenant Management.
-- The PARTIAL status does not imply successful runtime acceptance. Progress percentages remain evidence-scored only: two PARTIAL features scored, 87 remain unscored pending six-layer evidence decomposition.
+- The PARTIAL status does not imply successful runtime acceptance. Progress percentages remain evidence-scored only: two PARTIAL features scored, 90 remain unscored pending six-layer evidence decomposition.
 
 ### Release safety
 No production deployment, shared-staging migration, Auth identity mutation, tenant-isolation release flag change, or public tenant-routing release flag change occurred. Keep both release flags false.
