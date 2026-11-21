@@ -32,6 +32,14 @@ const erpAuthorizationCoverage = () => {
     if (action === "erp-list-tenant-memberships" &&
       /\.eq\("user_id",\s*actor\.user\.id\)/.test(block) &&
       /\.eq\("status",\s*"active"\)/.test(block)) continue;
+    // Invite acceptance is an identity-bound action, not an administrator permission.
+    // The tenant release flag keeps it closed until isolation is accepted; the service RPC
+    // binds the one-time token to the authenticated user's email and commits membership + audit.
+    if (action === "erp-accept-tenant-invite" &&
+      /if \(!TENANT_ISOLATION_RELEASED\)/.test(block) &&
+      /admin\.rpc\("dlice_accept_tenant_invite_atomic"/.test(block) &&
+      /p_actor_user_id:\s*actor\.user\.id/.test(block) &&
+      /tokenHash/.test(block)) continue;
     if (!/hasPerm\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
