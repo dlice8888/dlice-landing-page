@@ -646,7 +646,7 @@ A weighted progress rubric has now been added to `FNB_OS_IMPLEMENTATION_MATRIX.j
 - Workflow E2E: 15%
 - Reconciliation/observability: 10%
 
-The score measures implementation completeness, not release readiness. Missing evidence receives zero; no score is inferred from a PR being open or a table existing. At this checkpoint, 2 of 89 PARTIAL features have evidence-backed provisional percentages (tenant isolation 38%, tenant directory/onboarding 30%); 87 remain explicitly marked `UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED`. Completing those 87 feature-level evidence breakdowns is itself an audit work item; I will not manufacture percentages.
+The score measures implementation completeness, not release readiness. Missing evidence receives zero; no score is inferred from a PR being open or a table existing. At this checkpoint, 2 of 92 PARTIAL features have evidence-backed provisional percentages (tenant isolation 38%, tenant directory/onboarding 30%); 90 remain explicitly marked `UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED`. Completing those 90 feature-level evidence breakdowns is itself an audit work item; I will not manufacture percentages.
 
 
 ### PR #124 — password mutation and native Auth controls
@@ -668,7 +668,7 @@ No billing plan or Auth security setting was changed.
 ## Audit refresh — 2026-11-21 19:07 WIB
 
 ### Current feature status
-The machine-readable matrix now contains 189 feature records: **89 PARTIAL, 91 NOT VERIFIED, 9 BLOCKED, 0 DONE**. Of the 89 PARTIAL records, only 2 have a defensible numeric progress score in the current evidence model; 87 remain unscored because their six evidence layers have not been decomposed. Do not fill those percentages with guesses. The progress rubric is code/UI 25, database/data integrity 20, authorization/tenant scope 15, automated tests 15, workflow E2E 15, reconciliation/observability 10. DONE requires all six layers and release acceptance to pass.
+The machine-readable matrix now contains 189 feature records: **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE**. Of the 89 PARTIAL records, only 2 have a defensible numeric progress score in the current evidence model; 87 remain unscored because their six evidence layers have not been decomposed. Do not fill those percentages with guesses. The progress rubric is code/UI 25, database/data integrity 20, authorization/tenant scope 15, automated tests 15, workflow E2E 15, reconciliation/observability 10. DONE requires all six layers and release acceptance to pass.
 
 The user's source table's domain rows add to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. Its total row stating 93 NOT VERIFIED is arithmetically wrong. Seven features were moved from NOT VERIFIED to PARTIAL after code/DB/test foundations were evidenced; current register totals 89 + 91 + 9 = 189.
 
@@ -745,7 +745,7 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 
 ### Feature count reconciliation
 - The latest user-supplied per-domain rows sum to 189 with 82 PARTIAL, 98 NOT VERIFIED and 9 BLOCKED; the supplied total row's 93 NOT VERIFIED is incorrect.
-- The evidence-backed current matrix is 89 PARTIAL, 91 NOT VERIFIED, 9 BLOCKED and 0 DONE. Seven features have moved from NOT VERIFIED to PARTIAL based on concrete code/schema/test foundations: two Kitchen/KDS, one Menu/Pricing, two Inventory/Warehouse & reorder, and two SaaS Tenant Management.
+- The evidence-backed current matrix is 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED and 0 DONE. Seven features have moved from NOT VERIFIED to PARTIAL based on concrete code/schema/test foundations: two Kitchen/KDS, one Menu/Pricing, two Inventory/Warehouse & reorder, and two SaaS Tenant Management.
 - The PARTIAL status does not imply successful runtime acceptance. Progress percentages remain evidence-scored only: two PARTIAL features scored, 87 remain unscored pending six-layer evidence decomposition.
 
 ### Release safety
@@ -788,7 +788,7 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 
 ### Reconfirmed feature inventory
 
-The current feature-level matrix remains **89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189**, with **0 DONE**. The latest user-supplied total row (82/93/9) is not the current source of truth: the original supplied domain rows sum to 82/98/9, and seven evidence-backed features have already moved to PARTIAL (five from schema/function evidence and two SaaS features from PR #126).
+The current feature-level matrix remains **92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189**, with **0 DONE**. The latest user-supplied total row (82/93/9) is not the current source of truth: the original supplied domain rows sum to 82/98/9, and seven evidence-backed features have already moved to PARTIAL (five from schema/function evidence and two SaaS features from PR #126).
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
 |---|---:|---:|---:|---:|
@@ -812,7 +812,7 @@ The current feature-level matrix remains **89 PARTIAL + 91 NOT VERIFIED + 9 BLOC
 | Quality, Compliance & Security | 20 | 10 | 9 | 1 |
 | **TOTAL** | **189** | **89** | **91** | **9** |
 
-Only two PARTIAL features currently have defensible numeric progress scores: Tenant/member isolation 38% and Tenant directory/onboarding 30%. The remaining 87 PARTIAL features remain explicitly unscored until their six weighted evidence dimensions are decomposed; do not invent percentages.
+Only two PARTIAL features currently have defensible numeric progress scores: Tenant/member isolation 38% and Tenant directory/onboarding 30%. The remaining 90 PARTIAL features remain explicitly unscored until their six weighted evidence dimensions are decomposed; do not invent percentages.
 
 ### Latest exact-head PR verification
 
@@ -820,7 +820,7 @@ Only two PARTIAL features currently have defensible numeric progress scores: Ten
 |---:|---|---|---|---|
 | #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
 | #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
-| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | OPEN / DRAFT | Quality, password guard unit/contract tests, CORS, KDS, procurement contracts and disposable replay PASS | No review; guard files are byte-identical to #120 and its behavior is included in #120; treat as superseded/overlap, do not merge separately |
+| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
 | #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
 | #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
@@ -852,3 +852,8 @@ No staging migration, Auth mutation, Edge Function deployment, production change
 
 ### Test-only completion criteria
 A feature becomes DONE only when exact-head code/build checks, changed-code coverage, disposable migration replay, authorization positive/negative tests, runtime E2E, fault injection and persisted-data reconciliation all pass. No BLOCKED, SKIPPED or NOT RUN case is allowed at completion. Staging Environment protection, secret presence checks, explicit staging mutation authorization and backup/rollback remain separate release controls.
+
+
+## Latest status correction — 21 November 2026
+
+The current source-of-truth distribution is **92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189**, 0 DONE. PR #124 is CLOSED as superseded by #120. The three additional PARTIAL classifications are order lifecycle/idempotency, permission/profile/password audit, and application-layer leaked-password mitigation; they remain incomplete until runtime E2E and reconciliation pass. The other 90 PARTIAL features are unscored; do not infer percentages.
