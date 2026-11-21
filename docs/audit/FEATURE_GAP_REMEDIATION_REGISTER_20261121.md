@@ -19,18 +19,18 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 
 ## Baseline reconciliation
 
-The supplied 18-domain rows in the latest request sum to **82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189** before the newest PR #126 work is counted. The supplied total-row value of 93 NOT VERIFIED is arithmetically incorrect: the domain rows sum to 98.
+The supplied 18-domain rows originally summed to **82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189** before the newest implementation evidence was counted. The supplied total-row value of 93 NOT VERIFIED was an arithmetic error; the domain rows sum to 98.
 
-Two SaaS Tenant Management features have since crossed the agreed implementation-start threshold in PR #126 and have concrete code/database/test evidence. They therefore move from NOT VERIFIED to PARTIAL. The current feature-level source of truth is **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**.
+Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth is **89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189**.
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
 |---|---:|---:|---:|---:|
 | Executive Command Center | 10 | 4 | 5 | 1 |
 | POS & Checkout | 13 | 7 | 5 | 1 |
 | Order Management | 10 | 7 | 2 | 1 |
-| Kitchen & Production | 10 | 5 | 4 | 1 |
-| Menu, Recipe & Product Engineering | 11 | 6 | 4 | 1 |
-| Inventory & Warehouse | 12 | 8 | 4 | 0 |
+| Kitchen & Production | 10 | 7 | 2 | 1 |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 |
 | Procurement & Supplier | 10 | 5 | 5 | 0 |
 | Branch Operations | 10 | 4 | 5 | 1 |
 | Delivery & Fulfillment | 8 | 2 | 6 | 0 |
@@ -43,9 +43,14 @@ Two SaaS Tenant Management features have since crossed the agreed implementation
 | SaaS Tenant Management | 8 | 2 | 6 | 0 |
 | Integrations & Automation | 9 | 5 | 4 | 0 |
 | Quality, Compliance & Security | 20 | 10 | 9 | 1 |
-| **TOTAL** | **189** | **84** | **96** | **9** |
+| **TOTAL** | **189** | **89** | **91** | **9** |
 
-The current SaaS Tenant Management row is 2 PARTIAL / 6 NOT VERIFIED, not 0 / 8: tenant onboarding and tenant/member isolation have active implementation evidence in PR #126. This is the status transition required by the agreed rule that a feature moves to PARTIAL once concrete implementation has started. The two PARTIAL features have weighted progress of 30% and 38%, respectively; the other 82 PARTIAL features still require feature-level evidence decomposition before a defensible percentage can be assigned. No percentage is fabricated.
+The five additional PARTIAL classifications are evidence-based:
+- Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
+- Menu & Recipe: branch-specific pricing settings (branch settings pricing category and read/write handlers exist).
+- Inventory & Warehouse: warehouse master (warehouse table and ERP handlers exist) and min-stock threshold (inventory_items.min_stock exists).
+
+These five are not DONE. Station routing, SLA escalation, central/regional pricing governance, storage/bin hierarchy, safety stock/reorder workflow and other acceptance gaps remain open. Two SaaS PARTIAL features have weighted progress of 30% and 38%; the other 87 PARTIAL features still require feature-level evidence decomposition before a defensible percentage can be assigned. No percentage is fabricated.
 
 ## Per-domain feature gaps and work
 
