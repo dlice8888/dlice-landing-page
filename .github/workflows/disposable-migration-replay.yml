@@ -7,7 +7,7 @@ on:
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
   push:
-    branches: [staging]
+    branches: [staging, audit/combined-migration-replay-20261121]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
