@@ -137,11 +137,14 @@ test("P03 requires supported global sales_admin profiles, branch_manager tenant 
 test("runtime probe evidence masks user, tenant, and branch identifiers in every probe", () => {
   assert.ok(probe.includes("const maskId ="));
   assert.ok(probe.includes("resolveTenantFixtures"));
-  assert.match(probe, /STAGING_TENANT_A_USER_ID/);\n  assert.match(probe, /STAGING_TENANT_B_USER_ID/);\n  assert.doesNotMatch(probe, /console\\.(?:log|error)\\([^)]*userId[AB]/);
+  assert.match(probe, /STAGING_TENANT_A_USER_ID/);
+  assert.match(probe, /STAGING_TENANT_B_USER_ID/);
+  assert.doesNotMatch(probe, /console\.(?:log|error)\([^)]*userId[AB]/);
   assert.ok(probe.includes("maskId(tenantA)"));
   assert.ok(probe.includes("maskId(branchA)"));
   assert.ok(probe.includes("maskId(tenantB)"));
   assert.ok(probe.includes("maskId(branchB)"));
+  assert.ok(probe.includes("configuredUserIdMasked: maskId(userId)"));
   assert.ok(probe.includes("identityAUserIdMasked: maskId(userA)"));
   assert.ok(probe.includes("identityBUserIdMasked: maskId(userB)"));
   assert.ok(!probe.includes("identityAUserId: userA") && !probe.includes("identityBUserId: userB"));
