@@ -3984,7 +3984,9 @@
   "feature_status_counts_current": {
     "PARTIAL": 89,
     "NOT VERIFIED": 91,
-    "BLOCKED": 9
+    "BLOCKED": 9,
+    "DONE": 0,
+    "TOTAL": 189
   },
   "feature_updates": [
     {
