@@ -98,11 +98,11 @@ jobs:
           sudo apt-get install -y postgresql-client
           set +x
           eval "$(supabase status -o env)"
-          export SUPABASE_URL="http://127.0.0.1:$((base_port + 1))"
-          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:?local service role key unavailable}"
-          export SUPABASE_ANON_KEY="${ANON_KEY:?local anon key unavailable}"
-          export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:$((base_port + 2))/postgres"
+          export LOCAL_SUPABASE_URL="http://127.0.0.1:$((base_port + 1))"
+          export LOCAL_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:?local service role key unavailable}"
+          export LOCAL_ANON_KEY="${ANON_KEY:?local anon key unavailable}"
+          export LOCAL_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:$((base_port + 2))/postgres"
           export SUPABASE_WORKDIR="$tmp"
-          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/runtime/online-payment-fault-fixtures.sql"
+          psql "$LOCAL_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/runtime/online-payment-fault-fixtures.sql"
           node "$GITHUB_WORKSPACE/tests/runtime/online-payment-fault-injection.mjs"
           echo "PASS: disposable HTTP/API runtime fault injection completed."
