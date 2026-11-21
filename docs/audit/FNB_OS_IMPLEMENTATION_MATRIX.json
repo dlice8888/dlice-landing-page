@@ -4467,35 +4467,30 @@
       "policy_note": "Project acceptance is test-evidence-only; no separate independent PR approval is an acceptance metric. Active GitHub ruleset still enforces CODEOWNERS and last-push approval controls and cannot be edited through current connector."
     },
     "vercel": {
-      "project": "dlice-landing-page",
-      "project_id": "prj_A7097nEdgzi54NQRJ9NK2h2fxPLw",
-      "team_slug": "dlice8888-7332",
       "exact_head_previews": {
-        "pr120": {
-          "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+        "120": {
+          "sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
           "state": "NOT FOUND"
         },
-        "pr123": {
-          "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
-          "state": "READY",
-          "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
-        },
-        "pr125": {
-          "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
-          "state": "READY",
-          "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
-        },
-        "pr126": {
-          "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+        "123": {
+          "sha": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
           "state": "NOT FOUND"
         },
-        "pr127": {
-          "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "126": {
+          "sha": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+          "state": "NOT FOUND"
+        },
+        "127": {
+          "sha": "e52ea75a218eedecc513ec52311adaee25f241ba",
           "state": "NOT FOUND"
         }
       },
-      "production_mutated": false,
-      "note": "Vercel Preview readiness is deployment evidence only, not feature runtime acceptance."
+      "latest_audit_branch_preview": {
+        "commit": "30beb0824ce22b123e9d782be272661c58ca6308",
+        "state": "READY",
+        "url": "https://dlice-landing-page-kombm3oru-dlice8888-7332.vercel.app"
+      },
+      "note": "No exact-head Preview deployment was found for PR #120/#123/#126/#127. The audit-branch Preview is documentation-only and is not a candidate feature E2E environment."
     },
     "acceptance_policy": "No separate independent PR-review prerequisite. Feature completion is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
     "staging_environment_verification": {
@@ -4651,6 +4646,19 @@
           "PUBLIC_TENANT_ROUTING_RELEASED": false
         }
       }
+    },
+    "deployed_edge_function": {
+      "slug": "dlice-orders",
+      "status": "ACTIVE",
+      "version": 70,
+      "sha256": "597a371d2c05cbfa7b0e04a749e422bf826667b4539ce2b44ffe0a2efb0ff9f6",
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false,
+      "inventory_read": "erp-list-inventory checks branchAccess (active tenant membership + active branch assignment) before querying branch_inventory and returns only referenced item metadata",
+      "stock_transfer_create": "erp-create-stock-transfer checks branchAccess for both source and destination branch and calls erp_create_stock_transfer with an idempotency key",
+      "stock_transfer_transition": "approval enforces same-tenant source/destination unless platform owner; other transitions require branch access",
+      "admin_mutations": "admin-set-permissions, admin-create-staff and admin-reset-staff-password remain behind the uncertified-action 423 gate for non-platform owners",
+      "invitation": "deployed v70 still contains the legacy multi-step invitation route; atomic invitation route is candidate-only in PR #120/#126 and is not deployed"
     }
   },
   "latest_reaudit": {
