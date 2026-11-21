@@ -754,7 +754,7 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 
 ### PR #120/#124 combined implementation update — 21 November 2026
 - PR #120 branch now includes the unique application-layer password guard from #124: k-anonymous Pwned Passwords range check, padding, fail-closed behavior, Deno unit tests and Node contract tests on initial Owner bootstrap, staff creation and staff password reset.
-- Current PR #120 head: `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`. Six applicable workflows PASS, including disposable migration replay; profile mutation suite plan 35, permission suite plan 11, invitation suite plan 11.
+- Current PR #120 head: `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`. Six applicable workflows PASS, including disposable migration replay; profile mutation suite plan 35, permission suite plan 11, invitation suite plan 11; 7 files / 124 total assertions PASS; 7 SQL test files / 124 total assertions PASS.
 - The shared atomic permission audit migration and pgTAP test remain a single canonical copy on #120; no duplicate migration was added from #124.
 - The app-level password guard does **not** close direct Supabase Auth API password mutation. Native leaked-password protection remains disabled. The password reset path also updates Auth first and writes its audit afterward; a separate audit-intent/result lifecycle is still required if the product requires durable traceability across Auth/database failure boundaries. Do not mark the password-control feature DONE.
 
@@ -819,7 +819,7 @@ Only two PARTIAL features currently have defensible numeric progress scores: Ten
 | PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
 |---:|---|---|---|---|
 | #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Six applicable workflows PASS; RLS/onboarding/invitation pgTAP plans 35/17/15 | P01–P09 NOT RUN; service-role secret presence and staging Environment protection unverified; no dispatch action |
-| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six workflows PASS; 35 profile mutation + 11 permission + 11 invitation pgTAP assertions | Staging mutation runtime NOT RUN; password reset intent/outcome implemented |
+| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six workflows PASS; 35 profile mutation + 11 permission + 11 invitation pgTAP plans; 7 SQL test files / 124 total assertions PASS | Staging mutation runtime NOT RUN; password reset intent/outcome implemented |
 | #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
 | #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
