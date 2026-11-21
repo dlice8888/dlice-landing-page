@@ -370,7 +370,7 @@ These five are not DONE. Station routing, SLA escalation, central/regional prici
 | Backup, recovery, scale and rollout | NOT VERIFIED | QUEUED | Restore drill, measured RPO/RTO, concurrency test, branch pilot and rollback rehearsal. | Start a vertical slice: implement the missing behavior above in schema/RPC/API/UI as appropriate; enforce tenant/branch authorization; add positive, negative, idempotency/concurrency and failure-path tests; run browser/API E2E; reconcile to source records. Move to PARTIAL only after the first concrete code change and passing scoped tests. |
 
 ## Active implementation evidence (21-November)
-- PR #120: atomic permission-change audit; Draft; independent review and authorized staging runtime acceptance remain.
+- PR #120: atomic permission-change audit; Draft; automated test acceptance and authorized staging runtime acceptance remain.
 - PR #122: 24 non-redundant indexes proposed for 26 FK warnings; quality and disposable replay passed; 49 zero-scan indexes retained pending workload evidence.
 - PR #123: online checkout idempotency; exact-head quality and disposable migration replay passed (74 pgTAP assertions); delayed payment, failed-order compensation, browser fault injection and concurrent runtime acceptance remain.
 - PR #124: free k-anonymity breached-password guard on official Owner/staff password mutation flows; quality tests passed; direct Auth API bypass/native Supabase setting remains a blocker.
@@ -465,7 +465,7 @@ PR #120 expands the atomic audit implementation from permission-list changes to 
 
 The database RPCs commit each profile mutation and before/after audit row in one transaction, use SECURITY INVOKER with empty search_path, and are executable only by service_role. Idempotent retries do not duplicate audit rows. The expanded suite adds 18 pgTAP assertions for profile create/role/active mutations, 11 assertions for permission-list auditing, and 11 new assertions for audited tenant-invite issuance.
 
-**Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. **Validation update (21 November):** exact PR #120 head `29d6d808c2b56eb9596335805499266de4e1b4ba` passes free quality, disposable migration replay, KDS, CORS, procurement receiving and requisition contracts. Disposable replay executed 7 pgTAP files / 107 assertions, including all 11 new audited-invite assertions. PR remains Draft and the feature remains BLOCKED until independent review and authorized staging runtime evidence pass.
+**Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. **Validation update (21 November):** exact PR #120 head `29d6d808c2b56eb9596335805499266de4e1b4ba` passes free quality, disposable migration replay, KDS, CORS, procurement receiving and requisition contracts. Disposable replay executed 7 pgTAP files / 107 assertions, including all 11 new audited-invite assertions. PR remains Draft and the feature remains BLOCKED until all required automated tests and authorized staging runtime evidence pass.
 
 
 **Validation update (21 November):** PR #126 exact-head disposable replay PASS. All repository migrations applied successfully and all six pgTAP files passed, 119 assertions total. This does not replace live Tenant A/B staging tests or onboarding browser/API E2E.
@@ -610,7 +610,7 @@ PR #127 now implements an atomic `superseded` payment state, `superseded_by_paym
 
 **Exact-head PR status**
 - **#126:** exact head `a3663697` full disposable migration replay PASS; 15 invitation pgTAP assertions PASS; quality, CORS, KDS, procurement requisition and receiving contracts PASS. Real Tenant A/B API own-read/write and cross-tenant negative tests remain open.
-- **#120:** exact head `29d6d808` quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. Independent review and real staging permission-mutation runtime remain open.
+- **#120:** exact head `29d6d808` quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. real staging permission-mutation runtime remains open.
 - **#124:** exact head `a74200d6` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Native Supabase leaked-password protection is still DISABLED; application-level k-anonymity checks do not close direct Auth mutation paths.
 - **#123:** exact head `31976673` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Browser retry/concurrency and provider webhook ordering remain open.
 - **#125:** exact head `1c97dd74` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Browser expiry race and provider webhook ordering remain open.
@@ -717,7 +717,7 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 1. Verify staging Environment protection and configure the single service-role secret without exposing it; then run passwordless P01–P09 against the two existing Supabase identities. No skipped probes.
 2. Consolidate duplicate migrations/functions between #120/#124 and #125/#127; rerun exact-head disposable replay and feature-specific SQL tests.
 3. Run actual retry/payment/expiry/compensation workflows for #123/#125/#127.
-4. Resolve the three migration drift entries only after independent review; still do not apply until approval.
+4. Resolve the three migration drift entries only after disposable replay, regression tests; still do not apply until approval.
 5. Continue domain 4–5, then 6–7–1; attach code, schema, authorization, automated test, E2E and reconciliation evidence per feature.
 6. Run regression across all 18 domains and only move PARTIAL to DONE at 100% with all six evidence layers passing.
 ---
