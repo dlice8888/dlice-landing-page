@@ -64,6 +64,7 @@ test("legacy payment declaration endpoint is read-only after atomic proof submis
   const handler = edge.slice(start, end);
   assert.match(handler, /proofStateCommitted/);
   assert.match(handler, /payment_declared_at/);
+  assert.match(edge, /select\("id,status,expires_at,payment_declared_at"\)/);
   assert.doesNotMatch(handler, /admin\.from\("order_reservations"\)\.update/);
   assert.doesNotMatch(handler, /admin\.from\("orders"\)\.update/);
   assert.doesNotMatch(handler, /admin\.from\("order_status_history"\)\.insert/);
