@@ -148,7 +148,7 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 | #120 | `20261121160000_atomic_admin_profile_mutation_audit.sql` | 20261121160000 | Disposable replay PASS on exact PR head 471f4a33; includes 35 profile-mutation pgTAP assertions and password-reset audit intent/outcome |
 | #127 | `20261121180000_supersede_stale_payment_attempts.sql` | 20261121180000 | Disposable replay PASS; runtime E2E pending |
 
-**P0 migration collision:** PR #123 and PR #126 both introduce version `20261121130000` with different SQL and different blob SHAs. They cannot both be integrated unchanged. Use the Supabase CLI migration generator to assign a unique version to one migration, then replay the combined candidate set. Do not hand-invent or silently rename the migration timestamp.
+**No PR #123/#126 version collision:** #123 currently uses version 20261121135000 and #126 uses 20261121130000. Both can coexist by timestamp. The #120/#126 invitation RPC overlap is a separate code-level integration issue.
 
 **Invitation overlap:** PR #120 and #126 both add invitation mutation functions with different names/signatures and modify the same Edge Function routes. The final combined branch must retain one canonical issue/accept flow, one audit model and a single set of RPC signatures before merge.
 
@@ -168,7 +168,7 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
   - 20261120110000_command_center_summary.sql
   - 20261120120000_atomic_branch_checklist_audit.sql
 - PR #126 retains tenant invitation migration 20261121130000_atomic_tenant_invite_lifecycle.sql.
-- PR #123 and PR #126 still collide on migration version 20261121130000 with different SQL contents. The collision is NOT resolved; do not integrate both until one migration is re-versioned through the Supabase migration-generation workflow and combined disposable replay passes.
+- PR #123 and PR #126 do NOT collide on migration version: #123=20261121135000, #126=20261121130000. Do not renumber either migration; resolve the separate invitation RPC overlap and replay the combined candidate set.
 - PR #123 disposable replay for exact head 6788c4d7da34144d279da06edea84f6d0763b796 was running at snapshot time; do not mark the combined migration set PASS until that run completes and a combined replay is executed with #126.
 - PR #120 migrations are 20261121100000 and 20261121160000; PR #127 contains 20261121140000, 20261121150000 and 20261121180000; #125 is closed as superseded. Preserve timestamp order and check dependencies before integration.
 - No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
@@ -231,7 +231,7 @@ PR #111 updated head: `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
 - Once secrets and Environment protection are configured, deploy the OIDC function and apply its migration only through the authorized staging mutation path, then dispatch P01–P09.
 - Required runtime outcome: P01–P09 **9/9 executed and PASS**, supplemental direct-RLS/RPC probes all PASS, **0 BLOCKED, 0 SKIPPED, 0 NOT RUN**, with persisted database evidence and no cross-tenant read/write success.
 
-No independent review, shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
+No separate PR review, shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
 
 
 ## Authoritative migration and PR reconciliation — 21 November 2026
