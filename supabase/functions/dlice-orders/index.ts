@@ -1368,10 +1368,17 @@ if (action === "admin-set-profile-role") {
     if(!isOwner)return fail("Hanya Owner yang dapat mengubah penugasan jabatan.",403,origin);
     const branchId=safeText(body.branch_id,80),userId=safeText(body.user_id,80),positionId=safeText(body.job_position_id,80),status=safeText(body.employment_status,20)||"active";
     if(!branchId||!userId||!positionId||!["active","on_leave","inactive"].includes(status))return fail("Cabang, akun, jabatan, atau status tidak valid.",422,origin);
-    const {data,error}=await admin.from("branch_assignments").upsert({branch_id:branchId,user_id:userId,job_position_id:positionId,employment_status:status,starts_on:safeText(body.starts_on,10)||new Date().toISOString().slice(0,10),ends_on:safeText(body.ends_on,10)||null,assigned_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"branch_id,user_id,job_position_id"}).select("*").single();
-    if(error||!data)return fail("Penugasan gagal disimpan.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_assign_job_position",entity_type:"branch_assignment",entity_id:data.id,metadata:{branch_id:branchId,user_id:userId,job_position_id:positionId}});
-    return json({ok:true,assignment:data},200,origin);
+    const {data,error}=await admin.rpc("dlice_save_branch_assignment_audited",{
+      p_actor_user_id:actor.user.id,
+      p_branch_id:branchId,
+      p_user_id:userId,
+      p_job_position_id:positionId,
+      p_employment_status:status,
+      p_starts_on:safeText(body.starts_on,10)||todayDate(),
+      p_ends_on:safeText(body.ends_on,10)||null,
+    });
+    if(error||!data?.ok)return fail("Penugasan dan audit tidak dapat disimpan secara atomik.",409,origin);
+    return json({ok:true,assignment:data.assignment},200,origin);
   }
 
   if (action === "erp-list-inventory") {
