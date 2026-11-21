@@ -178,3 +178,5 @@ The pgTAP plans are per disposable test file; they are not shared-staging execut
 ### Current P01–P09 fixture facts
 
 Two existing Supabase Auth identities were verified read-only and mapped to different active tenants. Tenant A has active branch assignments QA-DLICE-A and DLC-B001; Tenant B has QA-TENANT-B. Both last signed in on 2026-10-25. This verifies fixture existence and mapping only; no current login, JWT session, own-read/write or cross-tenant negative probe has run. The staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED; the secret value was not read or exposed. The connected GitHub tool does not expose workflow_dispatch.
+
+- Vercel exact-head Preview: PR #123 READY at https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app; PR #125 READY at https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app. No exact-head deployment record exists for #120, #126 or #127. Preview READY does not establish runtime feature acceptance; production remains unchanged.
