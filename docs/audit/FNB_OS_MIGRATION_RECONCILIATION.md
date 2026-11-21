@@ -303,3 +303,39 @@ This exact head includes:
 
 P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
 
+
+
+## Live reconciliation checkpoint — 21 November 2026
+
+Read-only inventory was repeated against Supabase staging project `higoadrzxnhzbbwhdbmh` and GitHub branch `staging`:
+
+| Measure | Result |
+|---|---:|
+| Applied Supabase migration versions | 49 |
+| SQL migration source files on staging | 52 |
+| Applied versions missing source files | 0 |
+| Source-only migration files | 3 |
+| Duplicate source versions | 0 |
+
+The three source-only files are:
+
+- `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+- `20261120110000_command_center_summary.sql`
+- `20261120120000_atomic_branch_checklist_audit.sql`
+
+No applied version is missing its source file. No duplicate migration version was found. These three source-only migrations remain unapplied to shared staging. The previously recorded clean disposable replay run [44579674275](https://github.com/dlice8888/dlice-landing-page/actions/runs/44579674275) reported all 52 repository migrations applied and 67 pgTAP assertions passing; confirm that run's exact commit and artifact still correspond to the current source hashes before using it as the final replay evidence. No shared staging migration was applied during this checkpoint.
+
+## Tenant identity preflight checkpoint — 21 November 2026
+
+Read-only Supabase Auth and tenant records identify two existing, confirmed identities with active memberships in distinct tenants and active QA branch assignments:
+
+- Tenant A user ID suffix `b31446`, membership role `branch_manager`, active profile role `sales_admin`, QA branch `QA-DLICE-A`.
+- Tenant B user ID suffix `b631`, membership role `branch_manager`, active profile role `sales_admin`, QA branch `QA-TENANT-B`.
+
+Both memberships have six permission entries. Tenant A has two active branch assignments within its own tenant; Tenant B has one. The fixture discovery implementation supports multiple same-tenant branches and verifies the configured QA branch.
+
+The staging tenant-isolation workflow was changed to authenticate these existing identities with one-time Supabase Auth magic links, instead of requiring missing username/password secrets. It uses the protected Environment's `STAGING_SUPABASE_SERVICE_ROLE_KEY` only to request a magic link for the fixed existing user IDs, and the public key to verify the one-time token. It does not create users, reset passwords, or print email addresses, magic-link hashes, or access tokens.
+
+The workflow run [44913966280](https://github.com/dlice8888/dlice-landing-page/actions/runs/44913966280) confirmed the two fixed user IDs and public key inputs were present, but the `STAGING_SUPABASE_SERVICE_ROLE_KEY` Environment secret was empty/unavailable. Consequently P01–P09 were all BLOCKED before network authentication (0 PASS, 0 FAIL, 9 BLOCKED, 0 SKIPPED). This is a configuration blocker, not a tenant authorization result. Do not treat the DB identity inventory as authenticated runtime isolation proof.
+
+The test harness and workflow changes are on staging commits `e4b6aa4` and `0cacd81`; the contract-test adjustment is on `6105c74`. The current quality-check run must pass before accepting the harness change. The required next action is to add the existing Supabase service-role JWT as the protected GitHub Environment secret named `STAGING_SUPABASE_SERVICE_ROLE_KEY`, without exposing its value in chat or logs, then rerun the staging workflow. No migration, business data, or production resource was changed.
