@@ -46,6 +46,7 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
+  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -59,7 +60,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed: true,
+    executed,
     status,
   };
   results.push(result);
@@ -122,6 +123,7 @@ function isPublicSupabaseKey(value) {
 }
 
 function isServiceRoleKey(value) {
+  if (value.startsWith("sb_secret_")) return true;
   const payload = decodeJwtPayload(value);
   return payload?.role === "service_role";
 }
@@ -185,7 +187,7 @@ function configurationProblems() {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
   if (serviceRoleKey && !isServiceRoleKey(serviceRoleKey)) {
-    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a service_role JWT");
+    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a supported Supabase service-role key");
   }
   if (userIdA && userIdB && !distinctUsers) {
     configurationErrors.push("Tenant A and Tenant B user IDs must be distinct");
@@ -697,6 +699,34 @@ if (
   await verifyDirectBranchRlsDenied("B", "foreign");
   await verifyDirectStockTransferRpcDenied("A");
   await verifyDirectStockTransferRpcDenied("B");
+
+  // Revoke both temporary sessions after all probes; never print tokens or response bodies.
+  for (const tenant of ["A", "B"]) {
+    const token = tokenByTenant[tenant];
+    if (!token) continue;
+    try {
+      const response = await fetch(`${base}/auth/v1/logout`, {
+        method: "POST",
+        headers: {
+          apikey: key,
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+      });
+      console.log(JSON.stringify({
+        probeId: `CLEANUP-${tenant}`,
+        status: response.ok ? "PASS" : "FAIL",
+        actualResult: `temporary Auth session revocation HTTP ${response.status}`,
+        tokenPrinted: false,
+      }));
+      if (!response.ok) results.push({
+        probeId: `CLEANUP-${tenant}`,
+        status: "FAIL",
+      });
+    } catch {
+      results.push({ probeId: `CLEANUP-${tenant}`, status: "FAIL" });
+    }
+  }
 
   const requiredResults = results.filter((result) => /^P\d\d$/.test(result.probeId));
   const supplementalResults = results.filter((result) => !/^P\d\d$/.test(result.probeId));
