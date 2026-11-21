@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { setTimeout as delay } from "node:timers/promises";
 
-const required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_ANON_KEY", "DATABASE_URL", "SUPABASE_WORKDIR"];
+const required = ["LOCAL_SUPABASE_URL", "LOCAL_SERVICE_ROLE_KEY", "LOCAL_ANON_KEY", "LOCAL_DATABASE_URL", "SUPABASE_WORKDIR"];
 for (const name of required) {
   if (!process.env[name]) throw new Error(`Missing required local runtime input: ${name}`);
 }
@@ -71,8 +71,10 @@ const waitForFunction = async () => {
   }
   throw new Error("Local Edge Function did not become ready within 90 seconds.");
 };
+const functionEnv = { ...process.env };
+for (const key of ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEYS"]) delete functionEnv[key];
 const functionProcess = spawn("supabase", ["functions", "serve", "dlice-orders", "--no-verify-jwt"], {
-  cwd: workdir, stdio: "ignore", env: process.env,
+  cwd: workdir, stdio: "ignore", env: functionEnv,
 });
 let lostResponseServer;
 try {
