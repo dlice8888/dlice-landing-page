@@ -2788,10 +2788,15 @@
     "pr_statuses": {
       "pr120": {
         "head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
-        "previous_quality": "PASS on cfa72df3fa8e9147e585f18e02470df1b5c17300",
-        "latest_quality": "QUEUED / IN_PROGRESS",
-        "previous_migration_replay": "FAIL due orphaned SQL fragments after COMMIT in migration 20261121160000; 22,067 trailing characters removed",
-        "latest_migration_replay": "QUEUED",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "database_contract_tests": "PASS — 7 files, 107 assertions",
+        "audited_invitation_tests": "PASS — 11 assertions",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "vercel_preview": "NOT FOUND for current head; last preview cfa72df is older",
         "shared_staging_migration_applied": false
       },
       "pr123": {
@@ -3134,9 +3139,15 @@
         "state": "OPEN_DRAFT",
         "head_sha": "29d6d808c2b56eb9596335805499266de4e1b4ba",
         "purpose": "atomic permission/profile mutation audit",
-        "quality": "QUEUED / IN_PROGRESS",
-        "disposable_migration_replay": "QUEUED",
-        "migration_fix": "Removed 22,067 characters of orphaned SQL fragments after COMMIT from 20261121160000_atomic_admin_profile_mutation_audit.sql; added 11 invitation issuance pgTAP assertions.",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "database_contract_tests": "PASS — 7 files, 107 assertions",
+        "audited_invitation_tests": "PASS — 11 assertions",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "vercel_preview": "NOT FOUND for current head",
         "shared_staging_migration_applied": false
       },
       "pr121": {
@@ -3534,7 +3545,7 @@
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "Latest PR #120 head 29d6d808c2b56eb9596335805499266de4e1b4ba removes 22,067 characters of orphaned SQL fragments that had remained after the migration COMMIT and caused statement 17 syntax errors. It also includes 11 pgTAP assertions for audited invitation issuance. Exact-head quality and disposable migration replay are queued; shared staging remains unchanged.",
+    "pr120": "PR #120 exact head 29d6d808c2b56eb9596335805499266de4e1b4ba now passes free quality, disposable Supabase migration replay, KDS, CORS, procurement receiving and requisition contracts. Database test suite: 7 files, 107 pgTAP assertions, including 11 new audited invitation issuance assertions. PR remains Draft; no staging migration or Edge Function was applied/deployed; independent review and real staging runtime acceptance remain.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
