@@ -74,7 +74,7 @@ SELECT throws_ok(
 );
 
 CREATE OR REPLACE FUNCTION public.test_reject_tenant_invite_audit()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $test$
 BEGIN
   IF NEW.action='tenant_member_invited'
      AND current_setting('test.reject_tenant_invite_audit',true)='true' THEN
@@ -82,7 +82,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$test$;
 CREATE TRIGGER test_reject_tenant_invite_audit
 BEFORE INSERT ON public.admin_audit_logs
 FOR EACH ROW EXECUTE FUNCTION public.test_reject_tenant_invite_audit();
