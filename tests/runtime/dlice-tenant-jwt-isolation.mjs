@@ -7,10 +7,9 @@ import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
-const usernameA = process.env.STAGING_TENANT_A_USERNAME;
-const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
-const usernameB = process.env.STAGING_TENANT_B_USERNAME;
-const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
+const serviceRoleKey = process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY;
+const emailA = process.env.STAGING_TENANT_A_EMAIL;
+const emailB = process.env.STAGING_TENANT_B_EMAIL;
 let tenantA = null;
 let tenantB = null;
 let branchA = null;
@@ -21,8 +20,8 @@ const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
 const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
-  ["P01", "Tenant A username/password login", "Tenant A", maskId(tenantA), maskId(branchA), "D'Lice admin-login"],
-  ["P02", "Tenant B username/password login", "Tenant B", maskId(tenantB), maskId(branchB), "D'Lice admin-login"],
+  ["P01", "Tenant A existing Supabase Auth magic-link session", "Tenant A", maskId(tenantA), maskId(branchA), "Auth Admin generateLink + verify OTP"],
+  ["P02", "Tenant B existing Supabase Auth magic-link session", "Tenant B", maskId(tenantB), maskId(branchB), "Auth Admin generateLink + verify OTP"],
   ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
   ["P04", "Tenant A own-branch inventory read", "Tenant A", maskId(tenantA), maskId(branchA), "erp-list-inventory"],
   ["P05", "Tenant A cross-tenant inventory read denied", "Tenant A", maskId(tenantA), maskId(branchB), "erp-list-inventory"],
@@ -45,6 +44,7 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
+  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -58,7 +58,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed: true,
+    executed,
     status,
   };
   results.push(result);
@@ -115,21 +115,32 @@ function isPublicSupabaseKey(value) {
   }
 }
 
+function isServiceRoleKey(value) {
+  if (value.startsWith("sb_secret_")) return true;
+  const parts = value.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    return payload.role === "service_role";
+  } catch {
+    return false;
+  }
+}
+
 function configurationProblems() {
   const inputs = [
     ["STAGING_SUPABASE_URL", process.env.STAGING_SUPABASE_URL],
     ["STAGING_SUPABASE_PUBLIC_KEY", key],
-    ["STAGING_TENANT_A_USERNAME", usernameA],
-    ["STAGING_TENANT_A_PASSWORD", passwordA],
-    ["STAGING_TENANT_B_USERNAME", usernameB],
-    ["STAGING_TENANT_B_PASSWORD", passwordB],
+    ["STAGING_SUPABASE_SERVICE_ROLE_KEY", serviceRoleKey],
+    ["STAGING_TENANT_A_EMAIL", emailA],
+    ["STAGING_TENANT_B_EMAIL", emailB],
     ["STAGING_TENANT_A_BRANCH_CODE", branchCodeA],
     ["STAGING_TENANT_B_BRANCH_CODE", branchCodeB],
   ];
   const missingInputNames = inputs.filter(([, value]) => value === undefined).map(([name]) => name);
   const emptyInputNames = inputs.filter(([, value]) => typeof value === "string" && value.trim() === "").map(([name]) => name);
   const configurationErrors = [];
-  const distinctUsernames = usernameA?.trim().toLowerCase() !== usernameB?.trim().toLowerCase();
+  const distinctEmails = emailA?.trim().toLowerCase() !== emailB?.trim().toLowerCase();
   const distinctBranchCodes = branchCodeA !== branchCodeB;
   const checks = inputs.map(([name, value]) => {
     let valid = typeof value === "string" && value.trim().length > 0;
@@ -146,8 +157,10 @@ function configurationProblems() {
       }
     } else if (valid && name === "STAGING_SUPABASE_PUBLIC_KEY") {
       valid = isPublicSupabaseKey(value);
-    } else if (valid && name.endsWith("_USERNAME")) {
-      valid = /^[a-zA-Z0-9._-]{3,32}$/.test(value.trim()) && distinctUsernames;
+    } else if (valid && name === "STAGING_SUPABASE_SERVICE_ROLE_KEY") {
+      valid = isServiceRoleKey(value);
+    } else if (valid && name.endsWith("_EMAIL")) {
+      valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && distinctEmails;
     } else if (valid && name.endsWith("_BRANCH_CODE")) {
       valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B") && distinctBranchCodes;
     }
@@ -167,8 +180,11 @@ function configurationProblems() {
   if (key && !isPublicSupabaseKey(key)) {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
-  if (usernameA && usernameB && !distinctUsernames) {
-    configurationErrors.push("Tenant A and Tenant B usernames must be distinct");
+  if (emailA && emailB && !distinctEmails) {
+    configurationErrors.push("Tenant A and Tenant B Auth emails must be distinct");
+  }
+  if (serviceRoleKey && !isServiceRoleKey(serviceRoleKey)) {
+    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a supported Supabase service-role key");
   }
   if (branchCodeA && branchCodeB && !distinctBranchCodes) {
     configurationErrors.push("Tenant A and Tenant B branch codes must be distinct");
@@ -259,32 +275,69 @@ if (
       branchScope,
       operation,
     }, authIdentity, async () => {
-      const response = await fetch(`${base}/functions/v1/dlice-orders`, {
+      const email = isTenantA ? emailA : emailB;
+      const generated = await fetch(`${base}/auth/v1/admin/generate_link`, {
         method: "POST",
-        headers: { apikey: key, "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "admin-login",
-          username: isTenantA ? usernameA : usernameB,
-          password: isTenantA ? passwordA : passwordB,
-        }),
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ type: "magiclink", email }),
         redirect: "manual",
       });
-      const text = await response.text();
-      let payload = null;
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        payload = null;
+      const generatedText = await generated.text();
+      let generatedPayload = null;
+      try { generatedPayload = JSON.parse(generatedText); } catch { generatedPayload = null; }
+      const tokenHash = generatedPayload?.properties?.hashed_token ??
+        generatedPayload?.hashed_token ??
+        generatedPayload?.data?.properties?.hashed_token ??
+        null;
+      const verificationType = generatedPayload?.properties?.verification_type ??
+        generatedPayload?.verification_type ??
+        "magiclink";
+      if (!generated.ok || typeof tokenHash !== "string" || tokenHash.length < 20) {
+        return {
+          passed: false,
+          actualResult: `Auth Admin generateLink returned HTTP ${generated.status}; no token was logged`,
+          httpStatus: generated.status,
+          evidence: { generateLinkResponseBytes: generatedText.length, tokenPrinted: false },
+        };
       }
-      const token = payload?.session?.access_token;
+
+      const verified = await fetch(`${base}/auth/v1/verify`, {
+        method: "POST",
+        headers: { apikey: key, "content-type": "application/json" },
+        body: JSON.stringify({ type: verificationType, token_hash: tokenHash }),
+        redirect: "manual",
+      });
+      const verifiedText = await verified.text();
+      let payload = null;
+      try { payload = JSON.parse(verifiedText); } catch { payload = null; }
+      const token = payload?.access_token ?? payload?.session?.access_token;
+      const userId = payload?.user?.id ?? payload?.session?.user?.id;
+      const returnedEmail = String(payload?.user?.email ?? payload?.session?.user?.email ?? "").toLowerCase();
       const validTokenShape = typeof token === "string" && token.split(".").length === 3 && !token.startsWith("Bearer ");
-      const passed = response.ok && validTokenShape;
-      if (passed) tokenByTenant[tenant] = token;
+      const identityMatches = returnedEmail === email.toLowerCase();
+      const passed = verified.ok && validTokenShape && identityMatches && typeof userId === "string";
+      if (passed) {
+        tokenByTenant[tenant] = token;
+        identityByTenant[tenant] = userId;
+      }
       return {
         passed,
-        actualResult: passed ? `HTTP ${response.status}; authenticated session returned` : `HTTP ${response.status}; ${token ? "invalid_session_token_shape" : "login_failed_or_session_missing"}`,
-        httpStatus: response.status,
-        evidence: { responseBodyBytes: text.length, validAccessTokenShape: validTokenShape, tokenPrinted: false },
+        actualResult: passed
+          ? `HTTP ${verified.status}; existing Supabase Auth identity authenticated by one-time magic link`
+          : `Auth verify returned HTTP ${verified.status}; session or identity mismatch`,
+        httpStatus: verified.status,
+        evidence: {
+          generateLinkHttpStatus: generated.status,
+          validAccessTokenShape: validTokenShape,
+          identityEmailMatched: identityMatches,
+          userIdMasked: maskId(userId),
+          tokenPrinted: false,
+          responseBodyBytes: verifiedText.length,
+        },
       };
     });
   }
@@ -645,6 +698,34 @@ if (
   await verifyDirectBranchRlsDenied("B", "foreign");
   await verifyDirectStockTransferRpcDenied("A");
   await verifyDirectStockTransferRpcDenied("B");
+
+  // Revoke both temporary sessions after all probes; never print tokens or response bodies.
+  for (const tenant of ["A", "B"]) {
+    const token = tokenByTenant[tenant];
+    if (!token) continue;
+    try {
+      const response = await fetch(`${base}/auth/v1/logout`, {
+        method: "POST",
+        headers: {
+          apikey: key,
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+      });
+      console.log(JSON.stringify({
+        probeId: `CLEANUP-${tenant}`,
+        status: response.ok ? "PASS" : "FAIL",
+        actualResult: `temporary Auth session revocation HTTP ${response.status}`,
+        tokenPrinted: false,
+      }));
+      if (!response.ok) results.push({
+        probeId: `CLEANUP-${tenant}`,
+        status: "FAIL",
+      });
+    } catch {
+      results.push({ probeId: `CLEANUP-${tenant}`, status: "FAIL" });
+    }
+  }
 
   const requiredResults = results.filter((result) => /^P\d\d$/.test(result.probeId));
   const supplementalResults = results.filter((result) => !/^P\d\d$/.test(result.probeId));
