@@ -50,7 +50,7 @@ This PR does not apply the migration to shared staging or production. Disposable
 
 A zero `idx_scan` count is not proof an index is unnecessary. The staging workload has limited business data and the statistics window is approximately 50 days. Many listed indexes support workflows not yet exercised (orders, POS, stock, procurement, production, finance, refunds, offline replay, tenant invites and integrations). Dropping them now could regress features as soon as those workflows become active.
 
-No unused index is dropped by this change. The complete current Advisor candidate list is:
+Only two indexes proven to be fully prefix-redundant are removed by the separate migration `20261121153000_remove_redundant_zero_scan_indexes.sql`: `stock_count_items_count_idx` and `stock_transfer_items_transfer_idx`. Their existing composite unique indexes retain the leading FK lookup paths. The other 47 non-unique zero-scan indexes are retained pending representative workload and query-plan evidence. The complete current Advisor candidate list is:
 
 1. Index \`orders_branch_fulfillment_date_idx\` on table \`public.orders\` has not been used
 2. Index \`order_reservations_branch_date_status_idx\` on table \`public.order_reservations\` has not been used
