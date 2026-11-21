@@ -31,3 +31,8 @@ Do not put these values in Git, workflow YAML, or GitHub Secrets. Do not create 
 
 ## Important
 The broker is intentionally fail-closed. If the audit migration is absent, any secret is missing, the workflow claims do not match, or Auth cannot issue the session, no session is returned. This PR does not deploy the function, apply the migration, modify Auth identities, or change release flags.
+
+
+## Acceptance policy update — 21 November 2026
+
+No separate independent PR-review or approval step is part of the D’Lice acceptance process. PR #111 is accepted only through exact-head CI, Deno type-check, OIDC trust-claim tests, disposable migration replay, broker negative/replay tests, and the P01–P09 authenticated runtime matrix. Reviewer assignment and approval counts are not completion metrics. Protected staging Environment configuration, Supabase Function Secrets administration, explicit staging mutation authorization, and release flags remain separate safety controls.
