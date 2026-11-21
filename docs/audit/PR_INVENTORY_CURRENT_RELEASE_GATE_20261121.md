@@ -92,3 +92,27 @@ Therefore independent human review and required CI/deployment checks are not enf
 - Vercel project `dlice-landing-page` is present. PR #126 preview is READY on its exact head. No preview deployment was found for PR #127's current head.
 - Supabase staging migration drift remains 52 repository migration files versus 49 applied migrations. The three outstanding source migrations remain `20261120100000`, `20261120110000`, and `20261120120000`. No shared staging migration was applied.
 - Security Advisor: native leaked-password protection DISABLED. Performance Advisor: 26 unindexed foreign keys and 49 unused indexes. Health Advisor: no findings.
+
+
+## Superseding live PR inventory — 21 November 2026, 19:42 WIB
+
+| PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
+|---:|---|---|---|---|
+| #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
+| #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
+| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | OPEN / DRAFT | Quality, password guard unit/contract tests, CORS, KDS, procurement contracts and disposable replay PASS | No review; guard files are byte-identical to #120 and its behavior is included in #120; treat as superseded/overlap, do not merge separately |
+| #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
+| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
+| #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
+
+### Reconciliation notes
+
+- #120 and #124 are overlapping/diverged branches. The password guard module, Deno test, Node contract test, documentation and quality workflow are byte-identical across both. #120 also contains those guard calls plus the atomic permission/profile RPCs; #124 adds no unique guard artifact. Keep #124 from being merged independently; close as superseded after #120's review disposition is accepted.
+- #120 and #126 both modify invitation issue/accept paths and `supabase/functions/dlice-orders/index.ts`. Their RPC signatures differ. Rebase/reconcile to one canonical invite flow before merge.
+- #123 and #126 have a hard migration version collision at `20261121130000` with different SQL contents. Resolve through the Supabase migration generator and rerun combined disposable replay.
+- #127 is 30 commits ahead of #125 and contains the exact same `20261121140000_order_expiry_payment_lifecycle.sql` blob. Treat #125 as the earlier dependency slice; do not apply duplicate migration content.
+- No submitted independent review exists for #120/#123/#124/#125/#126/#127. Do not self-approve or merge on green CI alone.
+
+### GitHub ruleset recheck
+
+Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0 status checks and 0 deployment environments. Eleven bypass actors have `always` bypass; the connected identity can bypass. The ruleset is not a sufficient release gate. No mutation was made because the connected GitHub integration does not expose ruleset administration.
