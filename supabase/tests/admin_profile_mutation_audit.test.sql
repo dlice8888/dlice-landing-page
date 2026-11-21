@@ -119,6 +119,10 @@ SELECT ok(
  NOT has_function_privilege('authenticated','public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)','EXECUTE'),
  'authenticated cannot execute staff active status RPC'
 );
+SELECT ok(
+ NOT has_function_privilege('anon','public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)','EXECUTE'),
+ 'anon cannot execute staff profile creation RPC'
+);
 
 SELECT * FROM finish();
 ROLLBACK;
