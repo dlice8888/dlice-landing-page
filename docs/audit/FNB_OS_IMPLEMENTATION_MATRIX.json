@@ -2777,17 +2777,12 @@
     },
     "pr_statuses": {
       "pr120": {
-        "head": "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
-        "previous_head_failures": [
-          "ERP action authorization coverage contract: email-bound invite acceptance was not recognized",
-          "Disposable migration replay SQL parse error in tenant invite email regex"
-        ],
-        "remediation_commits": [
-          "a98e565f069cf0c8a67a26c62dcd82cd9b76c3ec",
-          "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d"
-        ],
-        "latest_quality": "QUEUED",
-        "latest_migration_replay": "IN_PROGRESS"
+        "head": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
+        "previous_quality": "PASS on commit 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
+        "latest_quality": "IN_PROGRESS",
+        "previous_migration_replay": "FAIL on commit 4894f28829438844254e1a07291839f6508d1ac4 at statement 17 near OR p_role after email regex edit",
+        "latest_migration_replay": "IN_PROGRESS after replacing !~ with explicit NOT (email ~ regex)",
+        "shared_staging_migration_applied": false
       },
       "pr123": {
         "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
@@ -2830,6 +2825,24 @@
         "procurement_requisition_contract": "PASS",
         "browser_concurrency": "PENDING",
         "global_storage_orphan_sweeper": "PENDING"
+      }
+    },
+    "domain_4_5_schema_gaps": {
+      "kitchen_station_table": "ABSENT",
+      "product_station_routing": "ABSENT",
+      "recipe_versions_table": "ABSENT; version/effective dates currently stored on recipes rows",
+      "allergen_compliance_tables": "ABSENT",
+      "lot_batch_expiry_tables": "ABSENT",
+      "recipe_consumption_behavior": "dlice_consume_order_recipe_stock selects the highest active recipe version at consumption time; no order-time recipe-version snapshot is evidenced",
+      "production_batch_recipe_reference": "production_batches.recipe_id references a recipe row, but no explicit immutable version snapshot contract is evidenced",
+      "kitchen_dispatch_behavior": "dlice_dispatch_kitchen_ticket creates tickets on paid orders/POS sales; station assignment and station queue routing are absent",
+      "production_batch_behavior": "erp_complete_production_batch records planned/actual consumption and waste, but theoretical-vs-actual variance approval workflow is not evidenced",
+      "staging_records": {
+        "kitchen_tickets": 6,
+        "kitchen_ticket_items": 6,
+        "production_batches": 0,
+        "production_consumptions": 0,
+        "inventory_waste_events": 0
       }
     }
   },
@@ -3066,12 +3079,12 @@
       ],
       "pr120": {
         "state": "OPEN_DRAFT",
-        "head_sha": "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
+        "head_sha": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
         "purpose": "atomic permission-change audit",
-        "previous_quality": "FAIL on old head due to ERP action coverage contract",
-        "previous_migration_replay": "FAIL on old head due malformed invite email regex and transient registry rate limit",
-        "latest_quality": "QUEUED",
-        "latest_disposable_migration_replay": "IN_PROGRESS",
+        "previous_quality": "PASS on 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
+        "latest_quality": "IN_PROGRESS",
+        "previous_disposable_migration_replay": "FAIL on 4894f28829438844254e1a07291839f6508d1ac4 at invite validation SQL statement",
+        "latest_disposable_migration_replay": "IN_PROGRESS on cfa72df3fa8e9147e585f18e02470df1b5c17300",
         "shared_staging_migration_applied": false
       },
       "pr121": {
@@ -3437,11 +3450,12 @@
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "PR #120 had a SQL email-regex parse defect and an over-broad ERP authorization contract failure. The regex was fixed and the contract now explicitly recognizes email-bound one-time invite acceptance guarded by TENANT_ISOLATION_RELEASED=false. Exact-head validation is running; not yet accepted.",
+    "pr120": "Current PR #120 head cfa72df3fa8e9147e585f18e02470df1b5c17300: previous authorization coverage test now passes on commit 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d, but disposable migration replay failed at invite validation statement near OR p_role on commit 4894f28829438844254e1a07291839f6508d1ac4. The email validation predicate has now been rewritten as NOT (p_email ~ regex); latest exact-head quality and disposable replay are still running.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
-    "no_shared_staging_or_production_mutation": true
+    "no_shared_staging_or_production_mutation": true,
+    "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists."
   },
   "current_open_prs": [
     127,
