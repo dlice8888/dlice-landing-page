@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import {
   hasTenantScopedHeadOfficePermission,
   isTenantSensitiveAction,
+  resolveTenantScopedBranchIds,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 
@@ -485,16 +486,12 @@ Deno.serve(async (req: Request) => {
     const membershipRows = memberships || [];
     const tenantIds = [...new Set(membershipRows.map((x: { tenant_id: string }) => x.tenant_id))];
     if (!tenantIds.length) return [];
-    const ownerTenantIds = [...new Set(membershipRows.filter((x: { role: string }) => ["tenant_owner", "tenant_admin"].includes(String(x.role))).map((x: { tenant_id: string }) => x.tenant_id))];
     const assigned = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (assigned.error) throw new Error("Penugasan cabang gagal dimuat.");
-    const assignedIds = [...new Set((assigned.data || []).map((x: { branch_id: string }) => x.branch_id))];
-    const [ownedBranches, assignedBranches] = await Promise.all([
-      ownerTenantIds.length ? admin.from("branches").select("id").in("tenant_id", ownerTenantIds) : Promise.resolve({ data: [], error: null }),
-      assignedIds.length ? admin.from("branches").select("id,tenant_id").in("id", assignedIds).in("tenant_id", tenantIds) : Promise.resolve({ data: [], error: null }),
-    ]);
-    if (ownedBranches.error || assignedBranches.error) throw new Error("Pemetaan tenant-cabang gagal dimuat.");
-    return [...new Set([...(ownedBranches.data || []).map((x: { id: string }) => x.id), ...(assignedBranches.data || []).map((x: { id: string }) => x.id)])];
+    const assignedRows = (assigned.data || []).map((x: { branch_id: string }) => ({ branch_id: x.branch_id }));
+    const { data: branches, error: branchesError } = await admin.from("branches").select("id,tenant_id").in("tenant_id", tenantIds);
+    if (branchesError) throw new Error("Pemetaan tenant-cabang gagal dimuat.");
+    return resolveTenantScopedBranchIds(membershipRows, assignedRows, branches || []);
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (isPlatformOwner) return true;
