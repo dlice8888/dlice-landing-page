@@ -21,7 +21,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
 | #122 | staging | Yes | Yes | 24 FK covering indexes for 26 warnings; latest head adds safe removal of two zero-scan prefix duplicates; exact-head quality + replay PASS; 2 redundant prefix indexes proposed for removal, 47 other zero-scan indexes retained pending workload evidence |
 | #121 | staging | Yes | Yes | Current 189-feature matrix reconciliation and evidence-based progress scoring; documentation only |
-| #120 | staging | Yes | Yes | Atomic permission/profile mutation audit; old head failed ERP authorization coverage and SQL replay; regex and invite-authorization contract corrected in commits a98e565 and 03a1029; latest exact-head quality QUEUED and replay IN_PROGRESS; independent review and staging runtime acceptance pending |
+| #120 | staging | Yes | Yes | Atomic permission/profile mutation audit; ERP authorization coverage contract passes on 03a1029; invite email regex failed replay on 4894 and was rewritten to explicit NOT (email ~ regex) on cfa72df; latest exact-head quality and disposable replay IN_PROGRESS; no staging mutation |
 | #119 | main | No | Yes | Remove scheduled staging mutations and add read-only policy audit; verify exact workflow policy before merge |
 | #118 | staging | Yes | Yes | Explicit manual confirmation for staging mutation workflows; overlap with #119 requires PR-by-PR reconciliation |
 | #117 | main | No | No | OIDC session broker rebase; merge conflict / base reconciliation required |
