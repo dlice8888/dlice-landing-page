@@ -341,6 +341,7 @@ Deno.serve(async (req: Request) => {
       delivery_address: receivingMethod === "delivery" ? deliveryAddress : null,
       customer_notes: notes || null,
       branch_id: selectedBranchId,
+      branch_selection_source: branchSelectionSource,
       items: [...items].sort((a, b) => a.product_id.localeCompare(b.product_id)).map((item) => ({
         product_id: item.product_id, quantity: item.quantity,
       })),
