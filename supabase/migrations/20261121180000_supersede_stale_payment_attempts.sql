@@ -1,6 +1,7 @@
 BEGIN;
 
 -- Keep proof-bearing sibling attempts pending for manual double-payment review.
+-- The expiry worker separately closes no-proof attempts on paid orders as rejected.
 
 ALTER TABLE public.payment_records
   ADD COLUMN IF NOT EXISTS superseded_by_payment_id uuid
