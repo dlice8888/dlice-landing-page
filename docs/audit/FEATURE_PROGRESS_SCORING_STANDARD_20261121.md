@@ -53,7 +53,7 @@ Never count a code artifact, schema/table, green build, preview deployment, nega
 
 ## Test-only acceptance policy — effective 21 November 2026
 
-PR reviewer assignment, reviewer identity, independent approval count and review-submission status are **not** feature-completion criteria. No extra independent PR-review step is required by this project acceptance policy. A PR/feature advances only on reproducible, machine-verifiable evidence:
+Feature acceptance is based only on reproducible, machine-verifiable evidence:
 
 1. **Build and static checks:** every required workflow for the exact head SHA completes successfully; lint, typecheck, formatting, security/static analysis and build have zero failures.
 2. **Changed-code coverage:** line and branch coverage is at least 80% for changed production code and at least 90% for changed authorization, tenant-boundary, payment and mutation-critical code. Any uncovered security decision branch must have an explicit negative/positive test or remains NOT VERIFIED.
