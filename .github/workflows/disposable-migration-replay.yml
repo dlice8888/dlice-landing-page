@@ -37,6 +37,10 @@ jobs:
           trap cleanup EXIT
           cd "$tmp"
           supabase init
+          # Avoid intermittent host-port collisions for the temporary Inbucket service.
+          if grep -q '^port = 54324$' supabase/config.toml; then
+            sed -i 's/^port = 54324$/port = 55324/' supabase/config.toml
+          fi
           mkdir -p supabase/migrations supabase/tests
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
           cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/
