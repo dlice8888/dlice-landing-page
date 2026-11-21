@@ -175,3 +175,12 @@ PR #126 now implements the passwordless Supabase Auth Admin magic-link path for 
 Supplemental read-only SQL impersonation using each Auth subject verified auth.uid() and auth.role() and returned zero direct branch-table rows for own and foreign QA branch reads (4/4). This is not a live Auth session or Edge Function authorization test. The stock-transfer RPC remains inaccessible to anon/authenticated and executable by service_role only.
 
 Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false until all live runtime acceptance passes.
+
+## Branch assignment fixture verification — 21 November 2026, 21:03 WIB
+
+Read-only SQL confirmed the exact runtime fixture assignments used by the passwordless harness:
+- Tenant A existing Auth identity has active assignment to `QA-DLICE-A`, starts 2026-11-14, no end date.
+- Tenant B existing Auth identity has active assignment to `QA-TENANT-B`, starts 2026-10-25, no end date.
+- Both assignments satisfy today's date and the deployed `branchAccess` helper's active/date predicates.
+
+This is fixture evidence only. No Auth login or Edge Function HTTP probe was executed.
