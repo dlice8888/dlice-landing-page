@@ -396,7 +396,7 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 
 ### SaaS Tenant Management — Tenant/member isolation in database and APIs
 - **Audit status:** PARTIAL (moved from NOT VERIFIED because PR #126 contains concrete code and test work).
-- **Weighted implementation progress:** 28%.
+- **Weighted implementation progress:** 38%.
   - Code/UI: 3/20 — PR #126 extracts and wires a tenant-scoped branch resolver into actorBranchIds; full tenant-aware UI/API route coverage remains.
   - Database: 10/20 — 64/64 public tables have RLS; 35 pgTAP policy-shape assertions passed on the previous PR #126 head; actual tenant row visibility is not yet proven.
   - Authorization: 0/15 — latest PR #126 adds a fail-closed default-deny for every admin/ERP route while tenant isolation remains unreleased; positive tenant-specific access is not yet accepted.
@@ -443,3 +443,6 @@ PR #120 expands the atomic audit implementation from permission-list changes to 
 The database RPCs commit each profile mutation and before/after audit row in one transaction, use SECURITY INVOKER with empty search_path, and are executable only by service_role. Idempotent retries do not duplicate audit rows. The expanded suite adds 18 pgTAP assertions on top of the existing 11 permission assertions; exact-head CI is pending.
 
 **Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. Feature remains BLOCKED until exact-head quality + disposable replay pass, independent review, and authorized staging runtime evidence pass.
+
+
+**Validation update (21 November):** PR #126 exact-head disposable replay PASS. All repository migrations applied successfully and all six pgTAP files passed, 119 assertions total. This does not replace live Tenant A/B staging tests or onboarding browser/API E2E.
