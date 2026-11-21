@@ -37,7 +37,7 @@ begin
   where id = p_order_id
   for update;
 
-  if not found or v_old_status in ('paid','refunded') then
+  if not found or v_old_status in ('paid','refunded','rejected') then
     return false;
   end if;
 
