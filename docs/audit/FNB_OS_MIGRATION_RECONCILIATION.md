@@ -247,3 +247,11 @@ No separate PR review, shared staging mutation, production change, or release-fl
 ### Invitation path reconciliation
 
 PR #120 and #126 currently carry byte-identical 20261121130000_atomic_tenant_invite_lifecycle.sql (blob b9dab9b7027e51bd5a4069b854b65a14563df6eb) and tenant_invite_atomic.test.sql (blob 9c778834a0eb5e6f0a12769f1e6a214c71130688). Both Edge Function branches call dlice_create_tenant_invite_atomic and dlice_accept_tenant_invite_atomic using the same parameters. This is one canonical invitation RPC path, not a migration collision. The only remaining contract delta is that #120 returns replayed on acceptance while #126 omits it; align that response field and rerun the exact-head contract suite.
+
+
+## Post-fix test evidence — 21 November 2026, 13:49 UTC
+
+- PR #126 head `56bee4d9e8fbf3ee49d70f36302d174845a4c312`: disposable full migration replay **PASS**. The runner applied all source migrations, including the three source-only 20261120 migrations and #126's invitation migration. pgTAP result: **7 files / 139 assertions PASS**; invitation atomic suite: **20/20 PASS**. Quality, KDS, CORS, procurement receiving and requisition contract checks also PASS. No shared staging migration was applied.
+- PR #111 OIDC broker head `016715bfa00d6c400d8320cbd0d2001ff3335ee8`: quality, OIDC claim tests, KDS contract and disposable replay **PASS**. The function remains undeployed; no staging P01–P09 runtime evidence exists.
+- PR #120: exact-head CI exposed missing ACL grants/revokes for the three profile mutation RPCs. The branch now contains explicit REVOKE for PUBLIC/anon/authenticated and GRANT to service_role, with an expanded pgTAP ACL matrix. Latest exact-head replay and full CI are pending; do not mark #120 or #124 complete yet.
+- Supabase staging still has only `dlice-orders` Edge Function active (version 70). `staging-tenant-session` is not deployed. Supabase Function Secrets are not accessible through the connected Supabase tool surface.
