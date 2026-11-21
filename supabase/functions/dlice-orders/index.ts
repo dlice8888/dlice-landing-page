@@ -288,6 +288,8 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "create-order") {
+    const idempotencyKey = safeText(body.idempotency_key, 64).toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(idempotencyKey)) return fail("Kunci checkout tidak valid. Muat ulang formulir dan coba kembali.", 422, origin);
     const customerName = safeText(body.customer_name, 120);
     const customerWhatsapp = normPhone(safeText(body.customer_whatsapp, 30));
     const requestedDate = safeText(body.requested_date, 10);
@@ -326,13 +328,31 @@ Deno.serve(async (req: Request) => {
     const branchSelectionSource=ipMatches.length===1&&ipMatches[0].id===chosen.id?"ip_estimate":requestedBranchId?"customer_choice":"customer_choice";
     if(receivingMethodKey==="delivery"&&(!deliveryAddress||deliveryAddress.length<8))return fail("Alamat delivery wajib diisi lengkap.",422,origin);
     const items = normalized.map((item) => ({ product_id: products.find((p) => p.slug === item.slug)!.id, quantity: item.quantity }));
-    const trackingToken = randomToken();
+    // The browser supplies one cryptographically random 256-bit token and persists it per checkout attempt.
+    // Its hash is both the tracking-token hash and the opaque idempotency key; the raw value is never stored.
+    const trackingToken = idempotencyKey;
     const trackingHash = await sha256(trackingToken);
+    const canonicalRequest = {
+      customer_name: customerName,
+      customer_whatsapp: customerWhatsapp,
+      requested_date: requestedDate,
+      requested_time: requestedTime,
+      receiving_method: receivingMethod,
+      delivery_address: receivingMethod === "delivery" ? deliveryAddress : null,
+      customer_notes: notes || null,
+      branch_id: selectedBranchId,
+      branch_selection_source: branchSelectionSource,
+      items: [...items].sort((a, b) => a.product_id.localeCompare(b.product_id)).map((item) => ({
+        product_id: item.product_id, quantity: item.quantity,
+      })),
+    };
+    const requestFingerprint = await sha256(JSON.stringify(canonicalRequest));
     const { data: created, error } = await admin.rpc("create_order_with_reservations", {
       p_order: {
         customer_name: customerName, customer_whatsapp: customerWhatsapp, requested_date: requestedDate,
         requested_time: requestedTime, receiving_method: receivingMethod, delivery_address: receivingMethod === "delivery" ? deliveryAddress : null,
         customer_notes: notes || null, branch_id: selectedBranchId, branch_selection_source: branchSelectionSource,
+        idempotency_key_hash: trackingHash, idempotency_request_fingerprint: requestFingerprint,
       },
       p_items: items,
       p_tracking_token_hash: trackingHash,
@@ -350,6 +370,8 @@ Deno.serve(async (req: Request) => {
         same_day_cutoff_passed: "Batas pemesanan hari ini pukul 18.00 waktu lokal cabang sudah lewat.",
         date_in_past: "Tanggal pesanan tidak boleh di masa lalu.",
         product_unavailable_or_price_missing: "Harga atau ketersediaan menu belum disiapkan.",
+        idempotency_key_payload_mismatch: "Kunci checkout sudah digunakan untuk isi pesanan yang berbeda. Gunakan data pesanan semula atau mulai checkout baru.",
+        invalid_idempotency_key: "Kunci checkout tidak valid. Muat ulang formulir dan coba kembali.",
       };
       const key = Object.keys(messages).find((k) => e.includes(k));
       return fail(messages[key ?? ""] ?? "Pesanan belum dapat dibuat. Periksa tanggal, menu, dan kapasitas.", 409, origin);
@@ -364,7 +386,7 @@ Deno.serve(async (req: Request) => {
       reservation_expires_at: created.reservation_expires_at, receipt_version: orderMeta.receipt_version, items: lines ?? [],
       receipt: { transaction_code: transactionCode, receipt_version: orderMeta.receipt_version, customer_name: orderMeta.customer_name, customer_whatsapp: orderMeta.customer_whatsapp, requested_date: orderMeta.requested_date, requested_time: orderMeta.requested_time, receiving_method: orderMeta.receiving_method, delivery_address: orderMeta.delivery_address, customer_notes: orderMeta.customer_notes, items: lines ?? [], subtotal_idr: orderMeta.product_subtotal_idr },
       message: "Pesanan tersimpan. Lanjutkan pembayaran dalam 15 menit; jika Anda menyatakan sudah membayar atau mengirim bukti sebelum tenggat, kapasitas akan ditahan sampai admin memeriksa.",
-    }, 201, origin);
+    }, created.idempotent_replay === true ? 200 : 201, origin);
   }
 
   if (action === "declare-payment" || action === "upload-proof") {
