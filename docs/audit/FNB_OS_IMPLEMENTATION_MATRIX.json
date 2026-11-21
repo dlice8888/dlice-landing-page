@@ -115,7 +115,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Alert → assign task → resolve → audit result",
@@ -249,7 +249,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 55
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
@@ -372,7 +372,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -528,7 +528,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 86
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -662,7 +662,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 101
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -976,7 +976,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 138
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Daily tasks, due dates and escalation",
@@ -1312,7 +1312,7 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 177
           },
-          "work_status": "BLOCKED"
+          "work_status": "QUEUED"
         },
         {
           "requirement": "AR/AP subledgers and aging",
@@ -1872,7 +1872,7 @@
           },
           "work_status": "IN_PROGRESS",
           "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
-          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP/contract coverage and disposable replay implemented on draft branch; shared staging runtime acceptance and independent review remain pending."
+          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance and independent review remain pending."
         }
       ],
       "status": "PARTIAL",
@@ -2153,7 +2153,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
           },
-          "work_status": "BLOCKED"
+          "work_status": "EXTERNAL_ACTION_REQUIRED",
+          "work_note": "Supabase Security Advisor confirms disabled; authorized project owner must enable Auth password security on staging and verify with disposable identities."
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -2845,6 +2846,19 @@
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
     },
-    "status_policy": "audit_status remains evidence-based. work_status tracks remediation separately. Do not change NOT VERIFIED to PARTIAL until a concrete implementation work item/PR has begun; do not change PARTIAL to DONE without workflow, codebase, database and runtime acceptance."
+    "status_policy": "audit_status remains evidence-based. work_status tracks remediation separately. Do not change NOT VERIFIED to PARTIAL until a concrete implementation work item/PR has begun; do not change PARTIAL to DONE without workflow, codebase, database and runtime acceptance.",
+    "progress_scoring": {
+      "policy": "Do not invent a percentage from a PARTIAL label or historical domain estimate. Each feature must first be decomposed into evidence-backed acceptance criteria.",
+      "weights": {
+        "code_and_ui": 20,
+        "database_integrity_and_migrations": 20,
+        "authorization_and_tenant_scope": 15,
+        "automated_contract_and_unit_tests": 15,
+        "end_to_end_browser_or_api_workflow": 20,
+        "operational_reconciliation_and_observability": 10
+      },
+      "calculation": "progress_pct = sum of weights for criteria with a passing, linked evidence artifact. Any BLOCKED or SKIPPED acceptance criterion scores 0 for that criterion. DONE requires 100%, no BLOCKED/SKIPPED, and independent review where release policy requires it.",
+      "current_scoring_state": "Feature-level percentages are intentionally unscored until each feature has explicit criteria and evidence links; historical_estimate_pct is not a current completion score."
+    }
   }
 }
