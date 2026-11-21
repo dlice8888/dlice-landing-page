@@ -4117,7 +4117,7 @@
       "disposable_migration_replay": "IN_PROGRESS_AT_LAST_POLL",
       "invitation_pgtap_assertions": 15,
       "invitation_assertions": "PASS on prior exact head cf9d6781; must be reconfirmed on new exact head",
-      "p01_p09_runtime": "NOT RUN",
+      "p01_p09_runtime": "NOT RUN — workflow dispatch not available via connector",
       "release_flag": false,
       "shared_staging_mutation": false
     },
@@ -4137,7 +4137,13 @@
         "erp-list-inventory",
         "erp-create-stock-transfer"
       ],
-      "rationale": "These routes are self-only or explicitly tenant/branch scoped and are the minimum P01-P09 surface. Other admin/ERP actions remain fail-closed before release."
+      "rationale": "These routes are self-only or explicitly tenant/branch scoped and are the minimum P01-P09 surface. Other admin/ERP actions remain fail-closed before release.",
+      "dispatch_ref_requirement": {
+        "main": "workflow_dispatch file exists but uses legacy STAGING_TENANT_A/B_USERNAME/PASSWORD secrets",
+        "staging": "workflow still uses legacy username/password secrets",
+        "pr126_head": "uses STAGING_SUPABASE_SERVICE_ROLE_KEY plus the two existing Supabase Auth emails; no Tenant A/B username/password secrets",
+        "instruction": "When manually running Actions, select branch feat/tenant-direct-client-rls-contract-20261121. Do not select main or staging. GitHub requires the workflow file on the default branch, but the selected ref determines the workflow contents."
+      }
     },
     "staging_positive_e2e": {
       "kds_pos_stock": "BLOCKED at preflight on run 44741192566; legacy workflow still requires STAGING_TEST_OWNER_USERNAME/PASSWORD; business-flow step SKIPPED",
