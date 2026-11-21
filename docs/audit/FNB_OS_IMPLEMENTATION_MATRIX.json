@@ -1916,7 +1916,7 @@
             "database": {
               "weight": 20,
               "earned": 10,
-              "evidence": "Atomic tenant creation/owner membership/audit migration passes exact-head disposable migration replay; 17 pgTAP assertions cover successful bootstrap, duplicate/invalid slug and non-owner rejection."
+              "evidence": "Atomic tenant+owner membership+audit migration applied successfully in exact-head disposable replay."
             },
             "authorization": {
               "weight": 15,
@@ -1926,7 +1926,7 @@
             "automated_tests": {
               "weight": 15,
               "earned": 10,
-              "evidence": "17 pgTAP assertions passed in exact-head disposable replay; existing tenant bootstrap static source-contract tests also pass in quality workflow."
+              "evidence": "17 new tenant onboarding pgTAP assertions passed in the latest exact-head disposable replay; source contract checks passed."
             },
             "browser_api_e2e": {
               "weight": 20,
@@ -1940,7 +1940,7 @@
             },
             "total_weight": 100,
             "earned_total": 30,
-            "scoring_note": "Work-in-progress score only; tenant onboarding UI, invite acceptance, default branch provisioning, subscription/entitlement lifecycle and operational reconciliation remain."
+            "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
           }
         },
         {
@@ -1957,7 +1957,7 @@
             126
           ],
           "work_started_at": "2026-11-21",
-          "progress_percent": 28,
+          "progress_percent": 38,
           "progress_breakdown": {
             "code_ui": {
               "weight": 20,
@@ -1966,8 +1966,8 @@
             },
             "database": {
               "weight": 20,
-              "earned": 10,
-              "evidence": "64/64 public tables RLS-enabled; 35 pgTAP assertions pass on prior PR #126 head for 17 sensitive tables; policy behavior with real tenant rows still unproven."
+              "earned": 15,
+              "evidence": "35 pgTAP RLS policy assertions passed in latest exact-head disposable replay; all repository migrations applied cleanly."
             },
             "authorization": {
               "weight": 15,
@@ -1976,8 +1976,8 @@
             },
             "automated_tests": {
               "weight": 15,
-              "earned": 10,
-              "evidence": "35 pgTAP RLS contract assertions plus latest exact-head quality workflow PASS, including Deno branch-scope tests and tenant/service-role contract tests."
+              "earned": 15,
+              "evidence": "Latest exact-head disposable replay passed 119 pgTAP assertions across six files; latest quality checks and branch-scope unit/contract tests passed."
             },
             "browser_api_e2e": {
               "weight": 20,
@@ -1990,8 +1990,8 @@
               "evidence": "No tenant A/B operational reconciliation, Storage/cache/job evidence."
             },
             "total_weight": 100,
-            "earned_total": 28,
-            "scoring_note": "Conservative implementation progress, not release acceptance; latest exact-head disposable replay pending and real tenant A/B runtime gates remain."
+            "earned_total": 38,
+            "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
           }
         },
         {
@@ -3031,7 +3031,9 @@
         "shared_staging_mutation": false,
         "tenant_a_b_runtime": "PENDING",
         "branch_scope_unit_tests": 3,
-        "tenant_onboarding_pgtap_assertions": 17
+        "tenant_onboarding_pgtap_assertions": 17,
+        "pgtap_assertions": 52,
+        "rls_contract_assertions": 35
       },
       "pr127": {
         "state": "OPEN_DRAFT",
@@ -3310,7 +3312,7 @@
     "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
     "target_branch_at_audit": "staging",
     "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 21 open PRs (#126, #125, #124, #123, #122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #125 adds order reservation expiry/payment compensation; its exact-head free quality checks, KDS contract tests and disposable migration replay passed, including 27 pgTAP assertions. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, and disposable replay passed. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending. The 49 Advisor unused-index findings were inspected: catalog query confirms 49 zero-scan non-unique secondary indexes across 30 tables, combined 488 kB; primary/unique indexes are excluded. None were dropped. Full index inventory and safe-removal gate are in docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md. PR #126 begins work on one NOT VERIFIED SaaS Tenant Management feature by contract-testing the existing direct-client RLS boundary; quality checks pass and disposable migration replay is running. No audit status is changed until the database test passes. PR #126 starts the previously NOT VERIFIED SaaS tenant/member isolation feature: it adds 35 RLS contract assertions and a fail-closed default-deny for all admin/ERP API actions while tenant isolation is unreleased. This moves exactly one feature to PARTIAL (18% weighted work progress); tenant A/B runtime remains untested and the release flag stays false. PR #127 adds atomic customer proof-upload submission; quality and KDS pass, disposable migration replay is running. PR #122 now proposes removal of two exact-prefix redundant zero-scan indexes; 47 other zero-scan non-unique indexes remain retained pending representative workload evidence. Open PR inventory is now 22 (125 total PRs). Latest PR #126 exact-head quality workflow passed all steps (including Deno tenant-permission tests); exact-head disposable migration replay is still running. Its weighted work progress is now 20% (0 code/UI + 10 DB + 0 positive authorization + 10 automated tests + 0 E2E + 0 ops). PR #127 adds four source-contract tests and best-effort per-order orphan cleanup; exact-head quality and replay are running. Vercel preview creation hit the Hobby/free API deployment daily limit (>100/day); no plan upgrade or paid fallback is being used. PR #126 exact-head quality and disposable migration replay are now both PASS; this confirms the direct-client RLS contract suite and default-deny API barrier tests on its latest head, but does not replace real Tenant A/B API/Storage/cache/job probes. PR #127 exact-head disposable migration replay now PASS; quality checks including four new source-contract tests remain queued/running. The 15 pgTAP assertions and migration chain replayed successfully in the disposable local database. PR #126 added the active-membership/branch-assignment resolver and tests; latest exact-head quality passes. SaaS tenant isolation weighted progress is now 28% (3 code/UI + 10 database + 5 authorization + 10 automated tests + 0 browser/API E2E + 0 operational reconciliation); exact-head migration replay and real tenant A/B runtime remain pending. PR #127 latest exact-head quality passes all steps, including four source-contract tests; exact-head disposable replay remains in progress. PR #127 latest exact-head quality, disposable migration replay, KDS, CORS and procurement contract workflows all PASS; no skipped steps in its quality workflow. PR #126 quality passes, but its disposable replay previously failed on an Inbucket host-port collision; the workflow now moves that temporary service to port 55324 and the rerun is in progress. Fresh GitHub ruleset read found active ruleset #27559290 on ~ALL branches, but it is not an effective release gate: required approving review count=0, required status checks=[], required deployment environments=[], and 11 bypass actors have bypass_mode=always; the active connection itself reports current_user_can_bypass=always. Ruleset does require signed commits, linear history, deletion/non-fast-forward protection, CODEOWNERS review and thread resolution, but branch protection endpoints for main/staging still return 403 and staging environment reviewer settings are not readable. No write action for rulesets/branch protection is exposed through this connector. PR #126 also starts the previously NOT VERIFIED feature 'Tenant directory, tenant onboarding': existing atomic Owner/tenant creation RPCs are now backed by 17 new pgTAP assertions for owner bootstrap, tenant row, owner membership, audit trail, invalid/duplicate slugs and non-owner rejection. It is moved to PARTIAL at 20% while exact-head replay runs; invitation acceptance, default branch provisioning, subscription entitlements, suspension/offboarding and browser E2E remain gaps. Current PRD status is now 84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189. PR #126 latest exact-head quality and disposable Supabase migration replay are now both PASS, including all 17 tenant onboarding pgTAP assertions and 35 RLS contract assertions. Tenant directory/onboarding progress is now 30% (5 code/UI + 10 DB + 5 authorization + 10 automated tests + 0 E2E + 0 operations). Tenant A/B runtime and the remaining onboarding lifecycle gaps are still open. PR #127 expanded atomic payment-proof coverage to 16 pgTAP assertions and five source-contract tests. The legacy declare-payment endpoint is now read-only/idempotent and verifies the atomic proof transaction already committed payment_declared_at, held reservations and pending order state. Latest quality workflow PASS; exact-head disposable replay is still running.",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 21 open PRs (#126, #125, #124, #123, #122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #125 adds order reservation expiry/payment compensation; its exact-head free quality checks, KDS contract tests and disposable migration replay passed, including 27 pgTAP assertions. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, and disposable replay passed. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending. The 49 Advisor unused-index findings were inspected: catalog query confirms 49 zero-scan non-unique secondary indexes across 30 tables, combined 488 kB; primary/unique indexes are excluded. None were dropped. Full index inventory and safe-removal gate are in docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md. PR #126 begins work on one NOT VERIFIED SaaS Tenant Management feature by contract-testing the existing direct-client RLS boundary; quality checks pass and disposable migration replay is running. No audit status is changed until the database test passes. PR #126 starts the previously NOT VERIFIED SaaS tenant/member isolation feature: it adds 35 RLS contract assertions and a fail-closed default-deny for all admin/ERP API actions while tenant isolation is unreleased. This moves exactly one feature to PARTIAL (18% weighted work progress); tenant A/B runtime remains untested and the release flag stays false. PR #127 adds atomic customer proof-upload submission; quality and KDS pass, disposable migration replay is running. PR #122 now proposes removal of two exact-prefix redundant zero-scan indexes; 47 other zero-scan non-unique indexes remain retained pending representative workload evidence. Open PR inventory is now 22 (125 total PRs). Latest PR #126 exact-head quality workflow passed all steps (including Deno tenant-permission tests); exact-head disposable migration replay is still running. Its weighted work progress is now 20% (0 code/UI + 10 DB + 0 positive authorization + 10 automated tests + 0 E2E + 0 ops). PR #127 adds four source-contract tests and best-effort per-order orphan cleanup; exact-head quality and replay are running. Vercel preview creation hit the Hobby/free API deployment daily limit (>100/day); no plan upgrade or paid fallback is being used. PR #126 exact-head quality and disposable migration replay are now both PASS; this confirms the direct-client RLS contract suite and default-deny API barrier tests on its latest head, but does not replace real Tenant A/B API/Storage/cache/job probes. PR #127 exact-head disposable migration replay now PASS; quality checks including four new source-contract tests remain queued/running. The 15 pgTAP assertions and migration chain replayed successfully in the disposable local database. PR #126 added the active-membership/branch-assignment resolver and tests; latest exact-head quality passes. SaaS tenant isolation weighted progress is now 28% (3 code/UI + 10 database + 5 authorization + 10 automated tests + 0 browser/API E2E + 0 operational reconciliation); exact-head migration replay and real tenant A/B runtime remain pending. PR #127 latest exact-head quality passes all steps, including four source-contract tests; exact-head disposable replay remains in progress. PR #127 latest exact-head quality, disposable migration replay, KDS, CORS and procurement contract workflows all PASS; no skipped steps in its quality workflow. PR #126 quality passes, but its disposable replay previously failed on an Inbucket host-port collision; the workflow now moves that temporary service to port 55324 and the rerun is in progress. Fresh GitHub ruleset read found active ruleset #27559290 on ~ALL branches, but it is not an effective release gate: required approving review count=0, required status checks=[], required deployment environments=[], and 11 bypass actors have bypass_mode=always; the active connection itself reports current_user_can_bypass=always. Ruleset does require signed commits, linear history, deletion/non-fast-forward protection, CODEOWNERS review and thread resolution, but branch protection endpoints for main/staging still return 403 and staging environment reviewer settings are not readable. No write action for rulesets/branch protection is exposed through this connector. PR #126 also starts the previously NOT VERIFIED feature 'Tenant directory, tenant onboarding': existing atomic Owner/tenant creation RPCs are now backed by 17 new pgTAP assertions for owner bootstrap, tenant row, owner membership, audit trail, invalid/duplicate slugs and non-owner rejection. It is moved to PARTIAL at 20% while exact-head replay runs; invitation acceptance, default branch provisioning, subscription entitlements, suspension/offboarding and browser E2E remain gaps. Current PRD status is now 84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189. PR #126 latest exact-head quality and disposable Supabase migration replay are now both PASS, including all 17 tenant onboarding pgTAP assertions and 35 RLS contract assertions. Tenant directory/onboarding progress is now 30% (5 code/UI + 10 DB + 5 authorization + 10 automated tests + 0 E2E + 0 operations). Tenant A/B runtime and the remaining onboarding lifecycle gaps are still open. PR #127 expanded atomic payment-proof coverage to 16 pgTAP assertions and five source-contract tests. The legacy declare-payment endpoint is now read-only/idempotent and verifies the atomic proof transaction already committed payment_declared_at, held reservations and pending order state. Latest quality workflow PASS; exact-head disposable replay is still running. PR #126 exact-head disposable migration replay completed PASS after port 55324 workaround. The log confirms all repository migrations applied and all six pgTAP files passed: 119 assertions total, including 35 tenant RLS contract assertions and 17 tenant onboarding assertions. SaaS tenant/member isolation progress rises to 38% (15/20 DB + 15/15 automated tests, plus prior 3/20 code and 5/15 authorization). Tenant directory/onboarding rises to 30% (10/20 DB + 10/15 automated tests, plus 5/20 code and 5/15 authorization). Real Tenant A/B runtime and full onboarding lifecycle remain unproven.",
     "evidence_snapshot": {
       "supabase_project": "higoadrzxnhzbbwhdbmh",
       "applied_migrations": 49,
@@ -3484,7 +3486,7 @@
       "active_prs": [
         126
       ],
-      "progress_percent": 28,
+      "progress_percent": 38,
       "progress_breakdown": {
         "code_ui": {
           "weight": 20,
@@ -3493,8 +3495,8 @@
         },
         "database": {
           "weight": 20,
-          "earned": 10,
-          "evidence": "64/64 public tables RLS-enabled; 35 pgTAP assertions pass on prior PR #126 head for 17 sensitive tables; policy behavior with real tenant rows still unproven."
+          "earned": 15,
+          "evidence": "35 pgTAP RLS policy assertions passed in latest exact-head disposable replay; all repository migrations applied cleanly."
         },
         "authorization": {
           "weight": 15,
@@ -3503,8 +3505,8 @@
         },
         "automated_tests": {
           "weight": 15,
-          "earned": 10,
-          "evidence": "35 pgTAP RLS contract assertions plus latest exact-head quality workflow PASS, including Deno branch-scope tests and tenant/service-role contract tests."
+          "earned": 15,
+          "evidence": "Latest exact-head disposable replay passed 119 pgTAP assertions across six files; latest quality checks and branch-scope unit/contract tests passed."
         },
         "browser_api_e2e": {
           "weight": 20,
@@ -3517,10 +3519,10 @@
           "evidence": "No tenant A/B operational reconciliation, Storage/cache/job evidence."
         },
         "total_weight": 100,
-        "earned_total": 28,
-        "scoring_note": "Conservative implementation progress, not release acceptance; latest exact-head disposable replay pending and real tenant A/B runtime gates remain."
+        "earned_total": 38,
+        "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
       },
-      "note": "Default-deny all admin/ERP routes while unreleased; active membership/branch assignment scope helper with unit tests; real tenant A/B runtime remains."
+      "note": "Exact-head disposable replay now passes; 35 RLS pgTAP assertions and Deno scope tests pass. Real tenant A/B runtime still pending."
     },
     {
       "domain": "SaaS Tenant Management",
@@ -3540,7 +3542,7 @@
         "database": {
           "weight": 20,
           "earned": 10,
-          "evidence": "Atomic tenant creation/owner membership/audit migration passes exact-head disposable migration replay; 17 pgTAP assertions cover successful bootstrap, duplicate/invalid slug and non-owner rejection."
+          "evidence": "Atomic tenant+owner membership+audit migration applied successfully in exact-head disposable replay."
         },
         "authorization": {
           "weight": 15,
@@ -3550,7 +3552,7 @@
         "automated_tests": {
           "weight": 15,
           "earned": 10,
-          "evidence": "17 pgTAP assertions passed in exact-head disposable replay; existing tenant bootstrap static source-contract tests also pass in quality workflow."
+          "evidence": "17 new tenant onboarding pgTAP assertions passed in the latest exact-head disposable replay; source contract checks passed."
         },
         "browser_api_e2e": {
           "weight": 20,
@@ -3564,9 +3566,9 @@
         },
         "total_weight": 100,
         "earned_total": 30,
-        "scoring_note": "Work-in-progress score only; tenant onboarding UI, invite acceptance, default branch provisioning, subscription/entitlement lifecycle and operational reconciliation remain."
+        "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
       },
-      "note": "Atomic tenant/owner bootstrap RPCs and static contract tests; 17 new pgTAP assertions in progress; invite/default branch/plan/offboarding E2E gaps remain."
+      "note": "17 new tenant onboarding pgTAP assertions and all migrations pass exact-head disposable replay. Invite acceptance/default branch/plan/offboarding/browser E2E gaps remain."
     },
     {
       "domain": "Order Management",
