@@ -8,7 +8,7 @@ A feature marked PARTIAL only means that some implementation evidence exists. It
 
 | Acceptance dimension | Weight |
 |---|---:|
-| Code and UI implementation | 20% |
+| Code and UI implementation | 28% |
 | Database integrity and migrations | 20% |
 | Authorization and tenant/branch scope | 15% |
 | Automated contract and unit tests | 15% |
