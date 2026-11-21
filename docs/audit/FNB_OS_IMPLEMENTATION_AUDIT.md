@@ -136,3 +136,56 @@ The current staging implementation has advanced since the 18 Nov snapshot, but t
 - Supabase Advisor reports 26 unindexed foreign keys, 49 unused-index suggestions, and leaked-password protection disabled. These are follow-up performance/security work items, not proof that the database is unhealthy; no Advisor-driven DDL was applied.
 
 The implementation matrix should continue to mark runtime-dependent requirements PARTIAL/BLOCKED until authenticated tenant tests, transaction-level E2E reconciliation, backup/restore, and 150-branch load evidence exist. Keep both release flags false.
+
+
+## Superseding implementation audit — 21 November 2026, 19:42 WIB
+
+### Current platform facts
+
+| Area | Current evidence | Result |
+|---|---|---|
+| GitHub staging | `78f929dac2b05f436aaa7f50005310166f8a4779` | Target branch head verified |
+| Supabase staging | `higoadrzxnhzbbwhdbmh`, ACTIVE_HEALTHY, PostgreSQL 17.11 | Read-only checks succeeded |
+| Migration history/source | 49 applied / 52 source files; 3 source-only; 0 applied versions missing from source | No migration applied |
+| Auth fixtures | Existing Owner + Tenant A + Tenant B + inactive QA identity | A/B mapping and membership/branch assignments verified; no Auth mutation |
+| GitHub release protection | Ruleset #27559290, 0 required approvals, 0 checks, 0 deployments, 11 always-bypass actors | P0 BLOCKED |
+| Vercel | Latest deployment READY; SSO protection enabled | Preview only; PR #127 hit daily deployment limit; no production change |
+
+### Feature inventory (189 total)
+
+| Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
+|---|---:|---:|---:|---:|
+| Executive Command Center | 10 | 4 | 5 | 1 |
+| POS & Checkout | 13 | 7 | 5 | 1 |
+| Order Management | 10 | 7 | 2 | 1 |
+| Kitchen & Production | 10 | 7 | 2 | 1 |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 |
+| Procurement & Supplier | 10 | 5 | 5 | 0 |
+| Branch Operations | 10 | 4 | 5 | 1 |
+| Delivery & Fulfillment | 8 | 2 | 6 | 0 |
+| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 |
+| Finance & Accounting | 12 | 7 | 4 | 1 |
+| HR & Workforce | 9 | 1 | 8 | 0 |
+| Franchise & Expansion | 8 | 2 | 6 | 0 |
+| BI & Analytics | 10 | 3 | 7 | 0 |
+| Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| SaaS Tenant Management | 8 | 2 | 6 | 0 |
+| Integrations & Automation | 9 | 5 | 4 | 0 |
+| Quality, Compliance & Security | 20 | 10 | 9 | 1 |
+| **TOTAL** | **189** | **89** | **91** | **9** |
+
+No feature is DONE. Two PARTIAL SaaS features have current weighted scores (38% and 30%); the other 87 PARTIAL features remain unscored until evidence decomposition. Do not turn successful CI into a runtime completion claim.
+
+### Latest PR and runtime disposition
+
+| PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
+|---:|---|---|---|---|
+| #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
+| #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
+| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | OPEN / DRAFT | Quality, password guard unit/contract tests, CORS, KDS, procurement contracts and disposable replay PASS | No review; guard files are byte-identical to #120 and its behavior is included in #120; treat as superseded/overlap, do not merge separately |
+| #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
+| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
+| #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
+
+The six PRs remain Draft/open/unmerged. P01–P09, order/payment E2E and cross-domain transaction reconciliation remain NOT RUN. Both release flags remain false.
