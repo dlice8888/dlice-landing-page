@@ -28,6 +28,7 @@ test("tenant invite issuance uses atomic RPC and remains fail-closed before isol
 test("tenant invite acceptance uses atomic RPC and remains fail-closed before isolation release", () => {
   assert.match(acceptRoute, /if\s*\(\s*!TENANT_ISOLATION_RELEASED\s*\)[\s\S]*?return fail/);
   assert.match(acceptRoute, /admin\.rpc\("dlice_accept_tenant_invite_atomic"/);
+  assert.match(acceptRoute, /replayed:result\.replayed===true/);
   assert.doesNotMatch(acceptRoute, /from\("tenant_invites"\)\.(?:select|update)/);
   assert.doesNotMatch(acceptRoute, /from\("tenant_memberships"\)\.(?:upsert|insert)/);
   assert.doesNotMatch(acceptRoute, /from\("admin_audit_logs"\)\.insert/);
