@@ -127,6 +127,14 @@ function isServiceRoleKey(value) {
   }
 }
 
+function serviceRoleHeaders() {
+  // New sb_secret_ keys are opaque, not JWTs: send them only as apikey.
+  // Legacy service_role keys are JWTs and may also be sent as Bearer tokens.
+  return serviceRoleKey.startsWith("sb_secret_")
+    ? { apikey: serviceRoleKey }
+    : { apikey: serviceRoleKey, authorization: `Bearer ${serviceRoleKey}` };
+}
+
 function configurationProblems() {
   const inputs = [
     ["STAGING_SUPABASE_URL", process.env.STAGING_SUPABASE_URL],
@@ -279,8 +287,7 @@ if (
       const generated = await fetch(`${base}/auth/v1/admin/generate_link`, {
         method: "POST",
         headers: {
-          apikey: serviceRoleKey,
-          authorization: `Bearer ${serviceRoleKey}`,
+          ...serviceRoleHeaders(),
           "content-type": "application/json",
         },
         body: JSON.stringify({ type: "magiclink", email }),
@@ -375,8 +382,7 @@ if (
   async function serviceRoleRequest(path) {
   const response = await fetch(`${base}${path}`, {
     headers: {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
+      ...serviceRoleHeaders(),
       accept: "application/json",
     },
     redirect: "manual",
