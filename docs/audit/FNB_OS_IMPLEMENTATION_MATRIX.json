@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21",
+  "snapshot_at": "2026-11-21 20:58 WIB",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -4180,7 +4180,7 @@
     }
   },
   "latest_live_audit": {
-    "as_of": "2026-11-21",
+    "as_of": "2026-11-21 20:58 WIB",
     "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4374,34 +4374,22 @@
     },
     "pull_requests": {
       "open_unmerged": [
-        127,
-        126,
-        123,
-        122,
-        121,
         120,
-        119,
-        118,
-        117,
-        116,
-        115,
-        114,
-        113,
-        112,
-        111,
-        109,
-        108,
-        107,
-        104,
-        71
+        123,
+        126,
+        127
       ],
-      "closed_superseded": [
-        124,
-        125
-      ],
-      "all_mergeable": false,
-      "exact_head_ci": "PR #120, #123, #126 and #127 pass applicable exact-head CI/disposable replay; #124 is closed as superseded by #120; #125 is closed as superseded by #127.",
-      "runtime_acceptance": "P01-P09 and business E2E flows not run"
+      "closed_superseded": {
+        "124": 120,
+        "125": 127
+      },
+      "current_heads": {
+        "120": "f37b581f43dc250a8ee7ff0eb04ae1b0e80a42f0",
+        "123": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+        "126": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+        "127": "e52ea75a218eedecc513ec52311adaee25f241ba"
+      },
+      "note": "No separate independent PR-review step is part of feature acceptance. PR #120 latest-head migration replay is still in progress; #123/#126/#127 exact-head required CI and disposable replay passed."
     },
     "migration_candidate_conflicts": {
       "same_version_different_sql": [],
@@ -4509,11 +4497,12 @@
       "production_mutated": false,
       "note": "Vercel Preview readiness is deployment evidence only, not feature runtime acceptance."
     },
-    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection, secret presence, explicit mutation authorization and backup/rollback remain separate controls.",
+    "acceptance_policy": "No separate independent PR-review prerequisite. Feature completion is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
     "staging_environment_verification": {
-      "environment_protection": "NOT VERIFIED through available GitHub connector",
-      "service_role_secret_presence": "NOT VERIFIED; value not read or exposed",
-      "workflow_dispatch": "NOT RUN; no workflow-dispatch action exposed"
+      "environment_protection": "NOT VERIFIED",
+      "service_role_secret_presence": "NOT VERIFIED; secret value was not read",
+      "workflow_dispatch": "NOT RUN; connected GitHub tool exposes no workflow-dispatch action",
+      "passwordless_workflow": "Implemented in PR #126 candidate branch; uses existing Supabase Auth identities and one-time magic links"
     },
     "pr120_pr124_consolidation": {
       "target_branch": "feat/permission-change-atomic-audit-20261121",
@@ -4580,7 +4569,84 @@
       "p01_p09_runtime": "NOT RUN",
       "release_flag": false
     },
-    "open_pr_count": 20
+    "open_pr_count": 20,
+    "latest_test_execution": {
+      "as_of": "2026-11-21 20:58 WIB",
+      "combined_migration": {
+        "branch": "audit/combined-migration-replay-20261121",
+        "commit": "700c2edf2f5f1bee2e5ac4c3afaece7c60efb3e3",
+        "source_migrations": 60,
+        "pg_tap_files": 14,
+        "assertions": 270,
+        "status": "PASS",
+        "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911080939"
+      },
+      "pull_requests": {
+        "120": {
+          "head": "f37b581f43dc250a8ee7ff0eb04ae1b0e80a42f0",
+          "quality": "PASS",
+          "cors": "PASS",
+          "kds_contract": "PASS",
+          "procurement_requisition": "PASS",
+          "procurement_receiving": "PASS",
+          "disposable_replay": "IN_PROGRESS",
+          "prior_head": "735e429517655809899a4e942368b39eb96898a5",
+          "prior_head_replay": "PASS",
+          "prior_head_assertions": 154
+        },
+        "123": {
+          "head": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+          "required_workflows": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 5,
+          "assertions": 74
+        },
+        "126": {
+          "head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+          "required_workflows": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 7,
+          "assertions": 139,
+          "p01_p09": "NOT RUN"
+        },
+        "127": {
+          "head": "e52ea75a218eedecc513ec52311adaee25f241ba",
+          "required_workflows": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 7,
+          "assertions": 124
+        }
+      },
+      "migration_parity": {
+        "applied_staging": 49,
+        "staging_source_files": 52,
+        "source_only": [
+          "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+          "20261120110000_command_center_summary.sql",
+          "20261120120000_atomic_branch_checklist_audit.sql"
+        ],
+        "candidate_combined_source_files": 60,
+        "divergent_same_version_collisions": 0
+      },
+      "supersession": {
+        "pr124": "CLOSED_UNMERGED_SUPERSEDED_BY_PR120",
+        "pr125": "CLOSED_UNMERGED_SUPERSEDED_BY_PR127",
+        "identical_invitation_migration_blob": "b9dab9b7027e51bd5a4069b854b65a14563df6eb",
+        "identical_expiry_migration_blob": "c1d1de05b61055a0003a889d70b5e41a298caffd"
+      },
+      "staging_runtime": {
+        "p01_p09": "NOT RUN",
+        "reason": [
+          "staging Environment protection not verified",
+          "STAGING_SUPABASE_SERVICE_ROLE_KEY presence not verifiable through connected GitHub tools",
+          "workflow_dispatch action not exposed"
+        ],
+        "release_flags": {
+          "TENANT_ISOLATION_RELEASED": false,
+          "PUBLIC_TENANT_ROUTING_RELEASED": false
+        }
+      }
+    }
   },
   "latest_reaudit": {
     "feature_distribution": {
