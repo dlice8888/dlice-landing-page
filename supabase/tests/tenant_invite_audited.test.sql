@@ -30,7 +30,7 @@ SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
 
 SELECT is(
- (public.dlice_create_tenant_invite_audited(
+ (public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'Invitee@Example.Test','cashier',repeat('a',64),
@@ -62,7 +62,7 @@ SELECT ok(
 );
 
 SELECT is(
- (public.dlice_create_tenant_invite_audited(
+ (public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'invitee@example.test','cashier',repeat('a',64),
@@ -73,7 +73,7 @@ SELECT is(
 );
 
 SELECT throws_ok(
- $$SELECT public.dlice_create_tenant_invite_audited(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'different@example.test','cashier',repeat('a',64),
@@ -84,29 +84,29 @@ SELECT throws_ok(
 );
 
 SELECT throws_ok(
- $$SELECT public.dlice_create_tenant_invite_audited(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000002',
   'd6000000-0000-4000-8000-000000000003',
   'other@example.test','cashier',repeat('b',64),
   (SELECT expires_at FROM invite_test_args)
  )$$,
- '42501','tenant_owner_or_admin_required',
+ '42501','tenant_invite_permission_denied',
  'ordinary tenant member cannot issue invitations'
 );
 
 SELECT throws_ok(
- $$SELECT public.dlice_create_tenant_invite_audited(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'not-an-email','cashier',repeat('c',64),
   (SELECT expires_at FROM invite_test_args)
  )$$,
- '22023','invalid_tenant_invite_details',
+ '22023','invalid_tenant_invite',
  'malformed email is rejected'
 );
 
 SELECT throws_ok(
- $$SELECT public.dlice_create_tenant_invite_audited(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'valid@example.test','root',repeat('d',64),
@@ -117,7 +117,7 @@ SELECT throws_ok(
 );
 
 SELECT throws_ok(
- $$SELECT public.dlice_create_tenant_invite_audited(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd6000000-0000-4000-8000-000000000001',
   'd6000000-0000-4000-8000-000000000003',
   'valid@example.test','viewer',repeat('e',64),
@@ -128,8 +128,8 @@ SELECT throws_ok(
 );
 
 SELECT ok(
- NOT has_function_privilege('authenticated','public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)','EXECUTE')
- AND has_function_privilege('service_role','public.dlice_create_tenant_invite_audited(uuid,uuid,text,text,text,timestamptz)','EXECUTE'),
+ NOT has_function_privilege('authenticated','public.dlice_create_tenant_invite_atomic(uuid,uuid,text,text,text,timestamptz)','EXECUTE')
+ AND has_function_privilege('service_role','public.dlice_create_tenant_invite_atomic(uuid,uuid,text,text,text,timestamptz)','EXECUTE'),
  'invitation RPC is service-role only'
 );
 
