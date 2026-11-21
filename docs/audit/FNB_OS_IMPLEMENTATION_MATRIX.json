@@ -3729,7 +3729,7 @@
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes quality, disposable migration replay, CORS, KDS and procurement contracts. The profile-mutation pgTAP suite now has 35 assertions, including forced audit-insert rollback for staff creation, role and active-state mutations, plus durable password-reset intent/finalization failure handling. No staging migration or Edge Function was applied.",
+    "pr120": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes quality, disposable migration replay, CORS, KDS and procurement contracts. The profile-mutation pgTAP suite now has 35 assertions, including forced audit-insert rollback for staff creation, role and active-state mutations, plus durable password-reset intent/finalization failure handling. No staging migration or Edge Function was applied. Disposable replay log confirms 7 SQL test files and 124 total pgTAP assertions PASS.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "Vercel project dlice-landing-page exists. PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. No PR #127 preview found. Preview readiness is not runtime feature acceptance.",
@@ -4505,7 +4505,8 @@
         "procurement_requisition_contract": "PASS",
         "procurement_receiving_contract": "PASS",
         "disposable_migration_replay": "PASS",
-        "database_contract_tests": "PASS — 7 files / 124 assertions"
+        "database_contract_tests": "PASS — 7 files / 124 assertions",
+        "total_pg_tap_assertions": 124
       },
       "remaining": [
         "Real staging mutation-path runtime tests not run.",
