@@ -148,7 +148,7 @@ This does **not** prevent direct calls to Supabase Auth password-update endpoint
 
 ### GitHub release protection
 
-Ruleset #27559290 is active on all branches but has zero required approvals, zero required status checks and zero required deployment environments. Eleven bypass actors have `always` bypass and the connected identity can bypass. Independent review/release governance is therefore not enforced. No ruleset mutation was made.
+Ruleset #27559290 is active on all branches but has zero required approvals, zero required status checks and zero required deployment environments. Eleven bypass actors have `always` bypass and the connected identity can bypass. The ruleset currently requires zero PR approvals; this matches the test-evidence acceptance policy. Deployment protections and explicit staging authorization remain separate controls. No ruleset mutation was made.
 
 ### Runtime boundary
 
