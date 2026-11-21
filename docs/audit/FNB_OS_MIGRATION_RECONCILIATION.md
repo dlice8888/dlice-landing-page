@@ -173,3 +173,62 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 - PR #120 migrations are 20261121100000 and 20261121160000; PR #125 is 20261121140000; PR #127 is 20261121150000 and 20261121180000. Preserve timestamp order and check dependencies before integration.
 - No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
 - PR reviewer identity/approval is not an acceptance criterion. Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
+
+
+## Live source/database and open-PR reconciliation — 21 November 2026, latest snapshot
+
+This section supersedes the older collision statements above where the current PR heads differ.
+
+### Staging migration parity (read-only)
+
+- Supabase project `higoadrzxnhzbbwhdbmh` is `ACTIVE_HEALTHY`, PostgreSQL 17, region `ap-southeast-1`.
+- Live migration history contains **49 applied versions**; latest applied version is `20261119182606`.
+- GitHub `staging` contains **52 migration files**.
+- Applied versions missing from the staging source tree: **0**.
+- Source-only versions: **3**:
+  - `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+  - `20261120110000_command_center_summary.sql`
+  - `20261120120000_atomic_branch_checklist_audit.sql`
+- Duplicate timestamp versions in the staging source tree: **0**.
+- No migration was applied to shared staging or production during this snapshot.
+
+### Current PR migration candidates and exact duplicate blobs
+
+| PR | Candidate migration version(s) | Blob-level reconciliation |
+|---:|---|---|
+| #111 | 20261120140000 | OIDC issuance audit migration; unique candidate version |
+| #120 | 20261121100000, 20261121160000 | #124 carries an exact duplicate of #120's 20261121100000 migration (blob SHA `947419c220a5f1e2d9160026a9862709c03fcb1b`); keep one canonical copy |
+| #124 | 20261121100000 | Exact duplicate of #120's permission-audit migration; do not apply twice |
+| #126 | 20261121130000 | Tenant invitation lifecycle |
+| #123 | 20261121135000 | Online-order idempotency; this is a distinct version from #126 in the current PR head |
+| #125 | 20261121140000 | Order-expiry/payment lifecycle |
+| #127 | 20261121140000, 20261121150000, 20261121180000 | Its 20261121140000 migration is byte-identical to #125's (blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd`); keep one canonical copy |
+
+**Correction to prior snapshot:** the currently inspected PR #123 head uses version `20261121135000`, not `20261121130000`. Therefore #123 and #126 do **not** have a version collision at their current heads. The actual duplication is exact same-version/same-blob overlap for #120/#124 and #125/#127. Recheck these facts against exact PR head SHAs before building the combined candidate branch.
+
+### Existing Supabase Auth test identities (read-only verification)
+
+Two already-existing Auth identities were found from Supabase and matched to distinct active QA tenant/branch fixtures. No users, passwords, memberships, roles, tenants or branches were created or changed.
+
+- Tenant A fixture: `QA-DLICE-A`; tenant and branch are distinct from Tenant B; Auth identity has confirmed email, active `sales_admin` profile and active `branch_manager` membership.
+- Tenant B fixture: `QA-TENANT-B`; tenant and branch are distinct from Tenant A; Auth identity has confirmed email, active `sales_admin` profile and active `branch_manager` membership.
+- The OIDC broker in PR #111 is configured to map slots A/B to these existing Auth UUIDs using Supabase Function Secrets. The UUIDs are not stored in Git or exposed in this report.
+
+### Exact-head CI for passwordless OIDC broker
+
+PR #111 updated head: `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
+
+- Free quality checks: **PASS** (Deno type-check, OIDC claim tests and contract checks).
+- Staging Kitchen KDS Offline Contract Tests: **PASS**.
+- Disposable local Supabase migration replay: **IN PROGRESS** at snapshot time; do not mark this exact-head replay PASS until the run completes successfully.
+- These are CI/disposable results only. The OIDC broker has not been deployed to staging and the issuance-audit migration has not been applied to shared staging.
+
+### Remaining staging runtime prerequisites
+
+- Configure the broker's four Supabase Function Secrets through an authorized Supabase Edge Function Secrets path: immutable GitHub repository ID, immutable owner ID, and the two existing Auth user UUIDs.
+- The connected Supabase actions expose project/database/migration/function deployment operations but do not expose an Edge Function Secrets write operation. Do not substitute a GitHub or Vercel secret or put the service-role key or user UUIDs into Git.
+- Verify the GitHub `staging` Environment protection rules and secret-name presence through the authorized repository settings path. The available GitHub connector did not return Environment configuration through its API endpoint; secret values must never be read or logged.
+- Once secrets and Environment protection are configured, deploy the OIDC function and apply its migration only through the authorized staging mutation path, then dispatch P01–P09.
+- Required runtime outcome: P01–P09 **9/9 executed and PASS**, supplemental direct-RLS/RPC probes all PASS, **0 BLOCKED, 0 SKIPPED, 0 NOT RUN**, with persisted database evidence and no cross-tenant read/write success.
+
+No independent review, shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
