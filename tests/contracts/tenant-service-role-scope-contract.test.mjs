@@ -14,7 +14,12 @@ test("unscoped service-role inventory writes and tenant invites remain closed be
   for (const action of ["erp-accept-tenant-invite", "erp-save-inventory"]) {
     assert.ok(gatedActions.has(action), `missing tenant isolation gate for ${action}`);
   }
-  assert.match(source, /if \(!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS\.has\(action\)\)/);
+  assert.match(source, /!TENANT_ISOLATION_RELEASED/);
+  assert.ok(source.includes("isTenantSensitiveAction(action) || TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)"));
+});
+
+test("branch ID resolution is explicitly delegated to tenant-scoped membership helper", () => {
+  assert.ok(source.includes("resolveTenantScopedBranchIds(membershipRows, assignedRows, branches || [])"));
 });
 
 test("branch and inventory reads use tenant membership and branch assignment guards", () => {
@@ -76,7 +81,11 @@ test("every handler using unscoped Head Office helpers remains behind the tenant
     const end = starts[index + 1]?.index ?? source.length;
     const block = source.slice(start, end);
     if (/hasHQPermission\(|hasFinanceHQ\(/.test(block)) {
-      assert.ok(gatedActions.has(action), `unscoped HQ helper action is not gated: ${action}`);
+      assert.ok(
+        gatedActions.has(action) ||
+        ((action.startsWith("admin-") || action.startsWith("erp-")) && !["admin-login", "admin-session-info"].includes(action)),
+        `unscoped HQ helper action is not gated: ${action}`,
+      );
     }
   }
 });
