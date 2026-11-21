@@ -100,3 +100,39 @@ Supabase Advisor recheck:
 - Health: no findings.
 
 The 26 unindexed foreign keys require a table/column/index coverage review before a new index migration is authored. Do not blindly add indexes where an existing composite index may already cover the FK prefix. The ACL migration is included in the successful disposable replay; it is still pending on live staging and must not be described as applied there.
+
+
+## Superseding reconciliation — 21 November 2026, 19:42 WIB
+
+Fresh read-only queries against the current `staging` branch and Supabase project confirm:
+
+- Staging Git branch head: `78f929dac2b05f436aaa7f50005310166f8a4779`.
+- Applied Supabase migration history: **49** versions, latest `20261119182606_revoke_default_public_function_execute`.
+- Staging source directory: **52** SQL files.
+- Applied versions missing from source: **0**.
+- Source files not yet applied to staging: exactly **3** — `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`.
+- No staging migration was applied during this audit.
+
+### Additional open-PR migration candidates — do not apply yet
+
+| PR | Migration file | Version | Current evidence |
+|---:|---|---|---|
+| #120 | `20261121100000_atomic_admin_permission_audit.sql` | 20261121100000 | Disposable replay PASS on exact PR head; review pending |
+| #123 | `20261121130000_atomic_online_order_idempotency.sql` | 20261121130000 | Disposable replay PASS; version collision with #126 |
+| #126 | `20261121130000_atomic_tenant_invite_lifecycle.sql` | 20261121130000 | Disposable replay PASS; version collision with #123 |
+| #125 / #127 | `20261121140000_order_expiry_payment_lifecycle.sql` | 20261121140000 | Blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd` is identical in both PRs; #127 descends from #125 |
+| #127 | `20261121150000_atomic_customer_payment_proof.sql` | 20261121150000 | Disposable replay PASS; runtime E2E pending |
+| #120 | `20261121160000_atomic_admin_profile_mutation_audit.sql` | 20261121160000 | Disposable replay PASS; review pending |
+| #127 | `20261121180000_supersede_stale_payment_attempts.sql` | 20261121180000 | Disposable replay PASS; runtime E2E pending |
+
+**P0 migration collision:** PR #123 and PR #126 both introduce version `20261121130000` with different SQL and different blob SHAs. They cannot both be integrated unchanged. Use the Supabase CLI migration generator to assign a unique version to one migration, then replay the combined candidate set. Do not hand-invent or silently rename the migration timestamp.
+
+**Invitation overlap:** PR #120 and #126 both add invitation mutation functions with different names/signatures and modify the same Edge Function routes. The final combined branch must retain one canonical issue/accept flow, one audit model and a single set of RPC signatures before merge.
+
+### Required closeout
+
+1. Resolve the #123/#126 version collision and #120/#126 invitation RPC overlap.
+2. Rebuild a single combined candidate branch in dependency order; run full disposable replay from zero and all pgTAP suites.
+3. Reconcile the three existing staging-source-only migrations with their approved rollout plan.
+4. Obtain independent migration/security review, backup/rollback plan and explicit staging approval.
+5. Only then use the authorized staging migration workflow; never apply candidates directly or to production.
