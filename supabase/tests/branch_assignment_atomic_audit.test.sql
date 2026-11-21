@@ -40,19 +40,23 @@ VALUES
 ('e7000000-0000-4000-8000-000000000031','qa_assignment_inactive','QA Assignment Inactive','operations','Test inactive position',false)
 ON CONFLICT(id) DO NOTHING;
 
-SELECT set_config('request.jwt.claim.role','authenticated',true);
-SELECT throws_ok(
- $$SELECT public.dlice_save_branch_assignment_audited(
-  'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
-  'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
-  'active',current_date,NULL
- )$$,
- '42501','service_role_required','rejects non-service callers'
+SELECT ok(
+ NOT has_function_privilege('anon','public.dlice_save_branch_assignment_audited(uuid,uuid,uuid,uuid,text,date,date)','EXECUTE')
+ AND NOT has_function_privilege('authenticated','public.dlice_save_branch_assignment_audited(uuid,uuid,uuid,uuid,text,date,date)','EXECUTE')
+ AND has_function_privilege('service_role','public.dlice_save_branch_assignment_audited(uuid,uuid,uuid,uuid,text,date,date)','EXECUTE'),
+ 'grants assignment RPC only to service_role'
 );
-
 SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT throws_ok(
- $$SELECT public.dlice_save_branch_assignment_audited(
+ $SELECT public.dlice_save_branch_assignment_audited(
+  'e7000000-0000-4000-8000-000000000099','e7000000-0000-4000-8000-000000000020',
+  'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
+  'active',current_date,NULL
+ )$,
+ '22023','invalid_branch_assignment_details','rejects an unknown actor identity'
+);
+SELECT throws_ok(
+ $SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000003','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
