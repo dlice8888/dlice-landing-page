@@ -144,3 +144,13 @@ A catalog comparison found two exact leading-key redundancies among the 49:
 - `stock_transfer_items_transfer_idx(transfer_id)` is covered by unique `stock_transfer_items_transfer_id_inventory_item_id_key(transfer_id, inventory_item_id)`.
 
 PR #122 now proposes removing only these two redundant indexes and adds pgTAP assertions that the single-column indexes are absent while the unique composite indexes remain. The remaining 47 zero-scan non-unique indexes are retained pending representative query/workflow evidence, because many are the only index on an FK or are for currently empty procurement, finance, refund, production, or settlement tables. Do not remove those blindly; re-evaluate after staged workload and EXPLAIN (ANALYZE, BUFFERS) evidence.
+
+## Detailed zero-scan index classification — 21-November read-only catalog
+
+The 49 non-unique zero-scan indexes split into:
+- **42** indexes whose leading key supports a declared foreign-key column.
+- **7** indexes whose leading key is not an FK; these are query-path/maintenance indexes (backup run type/date, branch capacity date, finance journal date/branch, integration outbox retry, POS idempotency creation time, purchase requisition status/date, refund status/date).
+- **37 of the 49** indexes are on tables with zero estimated live tuples across 20 tables, explaining why the staging workload has not exercised them.
+- Total size is only 488 kB.
+
+This is not sufficient evidence to delete the 47 remaining indexes. Most are the only FK-leading index for a relation, and the seven non-FK-leading indexes support queue retry, idempotency cleanup, date/status listing or finance/backup reporting. Two indexes are safe prefix duplicates because an existing unique composite index begins with the same FK key; those two alone are removed in the PR #122 migration proposal. After that proposal, 40 FK-leading and 7 non-FK-leading zero-scan indexes remain for review. The next measurement must use representative staged data/workload and EXPLAIN (ANALYZE, BUFFERS), not zero-scan counters alone.
