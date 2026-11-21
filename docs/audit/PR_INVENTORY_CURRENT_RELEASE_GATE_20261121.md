@@ -42,7 +42,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 1. There are 22 open PRs, not 9 as shown in the 20-November snapshot.
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
-4. #108 is still open and Draft. The current feature-level matrix in #121 is 84/96/9 after two SaaS features moved to PARTIAL when PR #126 began concrete implementation. The pre-PR126 domain rows sum to 82/98/9; 93 is an arithmetic typo in the supplied total row.
+4. #108 is still open and Draft. The current feature-level matrix in #121 is 84/96/9 after two SaaS features moved to PARTIAL when PR #126 began concrete implementation. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Two SaaS and five additional features have since moved to PARTIAL based on concrete implementation evidence, so the current feature-level matrix is 89/91/9.
 5. #120 is still Draft and has no independent reviewer. Its latest fixes are awaiting exact-head CI; earlier green checks on other commits do not authorize shared-staging deployment.
 6. No reviewer is currently requested on these 22 PRs in the metadata returned by GitHub; #122–#127 also have no requested reviewer in their creation metadata.
 
@@ -67,7 +67,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 - Supabase Security Advisor reports `auth_leaked_password_protection` WARN: native leaked-password protection is DISABLED.
 - Supabase Performance Advisor reports 26 unindexed foreign keys and 49 unused indexes. Do not drop unused indexes until representative query-plan and workload evidence exists.
 - Staging Procurement E2E run #44892019085 and KDS/POS/Stock/Offline E2E run #44891634215 are BLOCKED before business execution because `STAGING_TEST_OWNER_USERNAME`, `STAGING_TEST_OWNER_PASSWORD` and `STAGING_TEST_BRANCH_A_USERNAME` are absent. Secret values were not read or exposed.
-- Vercel preview for PR #126 is now READY on exact head `a36636974a625e4a56e84e6c61fcce3d2b7a95d8`. This supersedes the earlier stale-preview note for #126; it remains a build/deployment result, not runtime feature acceptance.
+- Vercel previews for PR #126 (`a36636974a625e4a56e84e6c61fcce3d2b7a95d8`) and PR #120 (`cfa72df3fa8e9147e585f18e02470df1b5c17300`) are READY on their exact heads. This is a build/deployment result, not runtime feature acceptance. Project SSO protection is enabled for all deployment types except custom domains; password protection and trusted IP restrictions are disabled. Custom-domain staging/production exposure must be verified before treating those domains as protected QA surfaces.
 
 ## Fresh GitHub release-protection read — 21 November 2026
 
