@@ -380,6 +380,6 @@ PR #125 now implements a minute-level reservation/payment lifecycle worker:
 - Proof-bearing pending orders remain held for human review.
 - No-proof payment attempts are closed on expired orders and already-paid orders; proof-bearing attempts on paid orders remain for double-payment/refund review.
 - Payment rejection now releases reservations and moves fulfillment/operational states to terminal failure/cancellation; late payment cannot reopen a rejected order.
-- 27 pgTAP assertions cover these behaviors, cron schedule and partial indexes. Exact-head disposable replay remains in progress at this snapshot.
+- 27 pgTAP assertions cover these behaviors, cron schedule and partial indexes. Exact-head free quality checks, KDS contract tests and disposable migration replay passed.
 
 The current 7 legacy orders are not modified by PR #125 until the migration is applied during the final authorized rollout and reconciliation stage.
