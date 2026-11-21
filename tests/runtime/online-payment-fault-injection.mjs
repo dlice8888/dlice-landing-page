@@ -8,11 +8,11 @@ const required = ["LOCAL_SUPABASE_URL", "LOCAL_SERVICE_ROLE_KEY", "LOCAL_ANON_KE
 for (const name of required) {
   if (!process.env[name]) throw new Error(`Missing required local runtime input: ${name}`);
 }
-const baseUrl = process.env.SUPABASE_URL.replace(/\/$/, "");
+const baseUrl = process.env.LOCAL_SUPABASE_URL.replace(/\/$/, "");
 const functionUrl = `${baseUrl}/functions/v1/dlice-orders`;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const anonKey = process.env.SUPABASE_ANON_KEY;
-const databaseUrl = process.env.DATABASE_URL;
+const serviceKey = process.env.LOCAL_SERVICE_ROLE_KEY;
+const anonKey = process.env.LOCAL_ANON_KEY;
+const databaseUrl = process.env.LOCAL_DATABASE_URL;
 const workdir = process.env.SUPABASE_WORKDIR;
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const records = [];
