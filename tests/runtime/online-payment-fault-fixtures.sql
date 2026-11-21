@@ -34,11 +34,11 @@ INSERT INTO public.orders
  product_subtotal_idr,payment_status,operational_status,fulfillment_status,branch_id,
  receipt_version,receipt_confirmed_version,receipt_snapshot)
 VALUES
-('d2000000-0000-4000-8000-000000000101',encode(digest(repeat('a',64),'sha256'),'hex'),'QA Upload Failure','6280000000001',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
-('d2000000-0000-4000-8000-000000000102',encode(digest(repeat('b',64),'sha256'),'hex'),'QA RPC Failure','6280000000002',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
-('d2000000-0000-4000-8000-000000000103',encode(digest(repeat('c',64),'sha256'),'hex'),'QA Compensation Failure','6280000000003',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
-('d2000000-0000-4000-8000-000000000104',encode(digest(repeat('d',64),'sha256'),'hex'),'QA Expiry Race','6280000000004',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
-('d2000000-0000-4000-8000-000000000105',encode(digest(repeat('e',64),'sha256'),'hex'),'QA Expiry Worker','6280000000005',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}')
+('d2000000-0000-4000-8000-000000000101',encode(extensions.digest(repeat('a',64),'sha256'),'hex'),'QA Upload Failure','6280000000001',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
+('d2000000-0000-4000-8000-000000000102',encode(extensions.digest(repeat('b',64),'sha256'),'hex'),'QA RPC Failure','6280000000002',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
+('d2000000-0000-4000-8000-000000000103',encode(extensions.digest(repeat('c',64),'sha256'),'hex'),'QA Compensation Failure','6280000000003',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
+('d2000000-0000-4000-8000-000000000104',encode(extensions.digest(repeat('d',64),'sha256'),'hex'),'QA Expiry Race','6280000000004',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}'),
+('d2000000-0000-4000-8000-000000000105',encode(extensions.digest(repeat('e',64),'sha256'),'hex'),'QA Expiry Worker','6280000000005',current_date+3,'12:00','pickup',1500,'unpaid','received','unassigned','c1000000-0000-4000-8000-000000000002',1,1,'{"payment_method":"bank_transfer","payment_instruction":{"bank":"LOCAL QA","account":"0000"}}')
 ON CONFLICT (id) DO UPDATE SET payment_status='unpaid',operational_status='received',fulfillment_status='unassigned',receipt_version=1,receipt_confirmed_version=1;
 
 INSERT INTO public.order_reservations(order_id,product_id,service_date,quantity,status,expires_at,branch_id)
@@ -48,4 +48,4 @@ VALUES
 ('d2000000-0000-4000-8000-000000000103','c1000000-0000-4000-8000-000000000003',current_date+3,1,'active',now()+interval '1 hour','c1000000-0000-4000-8000-000000000002'),
 ('d2000000-0000-4000-8000-000000000104','c1000000-0000-4000-8000-000000000003',current_date+3,1,'active',now()+interval '1 hour','c1000000-0000-4000-8000-000000000002'),
 ('d2000000-0000-4000-8000-000000000105','c1000000-0000-4000-8000-000000000003',current_date+3,1,'active',now()-interval '2 minutes','c1000000-0000-4000-8000-000000000002')
-ON CONFLICT (order_id,product_id,service_date) DO UPDATE SET status='active',expires_at=now()+interval '1 hour';
+;
