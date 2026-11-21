@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21",
+  "snapshot_at": "2026-11-21T17:31:00+07:00",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -2716,9 +2716,12 @@
       "latest_admin_erp_default_deny_guard": "IN_PROGRESS",
       "tenant_a_b_runtime": "NOT_RUN",
       "tenant_isolation_released": false,
-      "progress_percent": 20,
+      "progress_percent": 38,
       "latest_quality": "PASS",
-      "latest_disposable_migration_replay": "PASS"
+      "latest_disposable_migration_replay": "PASS",
+      "tenant_onboarding_progress_percent": 30,
+      "invitation_lifecycle_pgtap_assertions": 15,
+      "invitation_lifecycle_replay": "PASS on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
     },
     "vercel_preview_status": {
       "plan": "HOBBY",
@@ -2738,6 +2741,96 @@
       "storage_postgres_atomicity": "NOT_POSSIBLE; COMPENSATING_DELETE + PER_ORDER BEST_EFFORT ORPHAN CLEANUP",
       "browser_concurrency_runtime": "PENDING",
       "global_storage_orphan_sweeper": "PENDING"
+    },
+    "repo_staging_migration_files": 52,
+    "unapplied_staging_migrations": [
+      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+      "20261120110000_command_center_summary.sql",
+      "20261120120000_atomic_branch_checklist_audit.sql"
+    ],
+    "staging_positive_path_e2e": {
+      "procurement": {
+        "run_id": 44892019085,
+        "status": "BLOCKED",
+        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
+      },
+      "kds_pos_stock_offline": {
+        "run_id": 44891634215,
+        "status": "BLOCKED",
+        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
+      },
+      "secret_values_exposed": false
+    },
+    "security_advisors": {
+      "leaked_password_protection": "DISABLED",
+      "finding": "auth_leaked_password_protection",
+      "level": "WARN"
+    },
+    "performance_advisors": {
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49,
+      "observed_at": "2026-11-21T10:32:23Z"
+    },
+    "vercel_latest_preview_pr126": {
+      "state": "READY",
+      "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
+    },
+    "pr_statuses": {
+      "pr120": {
+        "head": "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
+        "previous_head_failures": [
+          "ERP action authorization coverage contract: email-bound invite acceptance was not recognized",
+          "Disposable migration replay SQL parse error in tenant invite email regex"
+        ],
+        "remediation_commits": [
+          "a98e565f069cf0c8a67a26c62dcd82cd9b76c3ec",
+          "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d"
+        ],
+        "latest_quality": "QUEUED",
+        "latest_migration_replay": "IN_PROGRESS"
+      },
+      "pr123": {
+        "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "browser_concurrency": "PENDING"
+      },
+      "pr124": {
+        "head": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "native_supabase_leaked_password_protection": "DISABLED",
+        "direct_auth_bypass": "UNRESOLVED"
+      },
+      "pr125": {
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "quality": "PASS",
+        "kds_contract": "PASS",
+        "disposable_migration_replay": "PASS",
+        "shared_staging_migration_applied": false
+      },
+      "pr126": {
+        "head": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "invitation_pgtap_assertions": 15,
+        "real_tenant_a_b_runtime": "NOT RUN"
+      },
+      "pr127": {
+        "head": "1b9fdaf8026f698d8426ea724836dafc72546098",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "browser_concurrency": "PENDING",
+        "global_storage_orphan_sweeper": "PENDING"
+      }
     }
   },
   "tenant_acceptance": {
@@ -2769,24 +2862,28 @@
     "p03_candidate": "PR #87 requires branch_worker profile, branch_manager tenant role, equal non-empty permission sets, active tenant membership, configured QA branch visibility, and masks all identity/tenant/branch IDs; allows multiple same-tenant assignments"
   },
   "open_prs": [
-    83,
-    82,
-    74,
-    71,
-    78,
-    77,
-    76,
-    80,
-    62,
-    63,
-    64,
-    31,
-    22,
-    84,
-    85,
-    86,
-    87,
-    88
+    127,
+    126,
+    125,
+    124,
+    123,
+    122,
+    121,
+    120,
+    119,
+    118,
+    117,
+    116,
+    115,
+    114,
+    113,
+    112,
+    111,
+    109,
+    108,
+    107,
+    104,
+    71
   ],
   "open_pr_count": 22,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
@@ -2925,7 +3022,12 @@
       "NOT VERIFIED": 99,
       "BLOCKED": 9
     },
-    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS."
+    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
+    "feature_status_counts_current": {
+      "PARTIAL": 84,
+      "NOT VERIFIED": 96,
+      "BLOCKED": 9
+    }
   },
   "operational_checkpoint": {
     "date": "2026-11-21",
@@ -2964,10 +3066,12 @@
       ],
       "pr120": {
         "state": "OPEN_DRAFT",
+        "head_sha": "03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
         "purpose": "atomic permission-change audit",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "independent_review": "PENDING",
+        "previous_quality": "FAIL on old head due to ERP action coverage contract",
+        "previous_migration_replay": "FAIL on old head due malformed invite email regex and transient registry rate limit",
+        "latest_quality": "QUEUED",
+        "latest_disposable_migration_replay": "IN_PROGRESS",
         "shared_staging_migration_applied": false
       },
       "pr121": {
@@ -2989,72 +3093,53 @@
       },
       "pr123": {
         "state": "OPEN_DRAFT",
-        "purpose": "atomic online order idempotency",
+        "head_sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "pgtap_assertions": 74,
         "browser_fault_injection": "PENDING",
-        "concurrent_runtime_test": "PENDING",
-        "head_sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5"
+        "concurrent_runtime_test": "PENDING"
       },
       "pr124": {
         "state": "OPEN_DRAFT",
-        "purpose": "free k-anonymity breached-password guard for official password mutation flows",
+        "head_sha": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
         "native_supabase_protection": "DISABLED",
-        "direct_auth_bypass": "UNRESOLVED",
-        "head_sha": "a74200d60d6af06df5a5da4ed87a464283f0f9ff"
+        "direct_auth_bypass": "UNRESOLVED"
       },
       "pr125": {
         "state": "OPEN_DRAFT",
-        "purpose": "unpaid and unproven payment expiry, rejected-payment compensation, stale no-proof attempt cleanup",
-        "tested_head_sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "head_sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
         "quality": "PASS",
         "kds_contract_tests": "PASS",
         "disposable_migration_replay": "PASS",
-        "pgtap_assertions": 27,
         "shared_staging_migration_applied": false,
-        "cron_activated": false,
-        "head_sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d"
+        "cron_activated": false
       },
       "pr126": {
         "state": "OPEN_DRAFT",
-        "purpose": "tenant RLS contract tests + default-deny admin/ERP routes",
-        "tested_head_sha": "7d7eeec501e93b6a550195f4a28b6b39d4c48d9a",
-        "previous_rls_contract_quality": "PASS",
-        "previous_rls_contract_migration_replay": "PASS",
+        "head_sha": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
+        "purpose": "tenant RLS contract + onboarding + invite lifecycle",
         "latest_quality": "PASS",
-        "latest_disposable_migration_replay": "IN_PROGRESS",
-        "rls_assertions": 35,
-        "real_tenant_ab_runtime": "PENDING",
-        "shared_staging_mutation": false,
-        "tenant_a_b_runtime": "PENDING",
-        "branch_scope_unit_tests": 3,
-        "tenant_onboarding_pgtap_assertions": 17,
-        "pgtap_assertions": 52,
-        "rls_contract_assertions": 35,
-        "invite_lifecycle": {
-          "atomic_rpc_implementation": "IN_PROGRESS_VALIDATION",
-          "pgtap_assertions": 15,
-          "source_contract": "PASS"
-        }
+        "latest_disposable_migration_replay": "PASS",
+        "latest_kds_contract": "PASS",
+        "latest_cors_contract": "PASS",
+        "latest_procurement_contracts": "PASS",
+        "invitation_pgtap_assertions": 15,
+        "real_tenant_ab_runtime": "NOT RUN",
+        "shared_staging_mutation": false
       },
       "pr127": {
         "state": "OPEN_DRAFT",
-        "purpose": "atomic customer payment-proof upload and retry-safe transaction",
-        "tested_head_sha": "3b00dfc0b72bb0d1cbe65120df7e32b055ee4db8",
+        "head_sha": "1b9fdaf8026f698d8426ea724836dafc72546098",
         "quality": "PASS",
         "disposable_migration_replay": "PASS",
-        "pgtap_assertions": 16,
-        "storage_compensation": "BEST_EFFORT; orphan sweeper remains",
-        "shared_staging_migration_applied": false,
-        "source_contract_tests": 5,
-        "storage_orphan_cleanup": "BEST_EFFORT_PER_ORDER_ON_SUBSEQUENT_UPLOAD",
         "kds_contract": "PASS",
         "cors_contract": "PASS",
         "procurement_contracts": "PASS",
-        "legacy_declare_payment": "READ_ONLY_IDEMPOTENT"
+        "browser_concurrency": "PENDING",
+        "storage_orphan_cleanup": "BEST_EFFORT; global sweeper pending",
+        "shared_staging_migration_applied": false
       }
     },
     "supabase_live_read_only": {
@@ -3279,6 +3364,38 @@
       "latest_preview_pr126": "READY on older commit c86f93a360c7579596f11f61529a5217fb8ec73f; latest PR head not previewed",
       "latest_preview_pr127": "No preview deployment found",
       "no_plan_upgrade": true
+    },
+    "staging_e2e": {
+      "procurement": {
+        "run_id": 44892019085,
+        "status": "BLOCKED",
+        "missing_secrets": [
+          "STAGING_TEST_OWNER_USERNAME",
+          "STAGING_TEST_OWNER_PASSWORD",
+          "STAGING_TEST_BRANCH_A_USERNAME"
+        ],
+        "business_flow_executed": false
+      },
+      "kds_pos_stock_offline": {
+        "run_id": 44891634215,
+        "status": "BLOCKED",
+        "missing_secrets": [
+          "STAGING_TEST_OWNER_USERNAME",
+          "STAGING_TEST_OWNER_PASSWORD",
+          "STAGING_TEST_BRANCH_A_USERNAME"
+        ],
+        "business_flow_executed": false
+      }
+    },
+    "migration_reconciliation": {
+      "repository_staging_sql_files": 52,
+      "supabase_applied_migrations": 49,
+      "unapplied_staging_migrations": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "shared_staging_migration_applied": false
     }
   },
   "historical_acceptance_coverage": {
@@ -3314,149 +3431,17 @@
     ]
   },
   "audit_reconciliation": {
-    "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
-    "target_branch_at_audit": "staging",
-    "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 21 open PRs (#126, #125, #124, #123, #122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #125 adds order reservation expiry/payment compensation; its exact-head free quality checks, KDS contract tests and disposable migration replay passed, including 27 pgTAP assertions. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, and disposable replay passed. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending. The 49 Advisor unused-index findings were inspected: catalog query confirms 49 zero-scan non-unique secondary indexes across 30 tables, combined 488 kB; primary/unique indexes are excluded. None were dropped. Full index inventory and safe-removal gate are in docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md. PR #126 begins work on one NOT VERIFIED SaaS Tenant Management feature by contract-testing the existing direct-client RLS boundary; quality checks pass and disposable migration replay is running. No audit status is changed until the database test passes. PR #126 starts the previously NOT VERIFIED SaaS tenant/member isolation feature: it adds 35 RLS contract assertions and a fail-closed default-deny for all admin/ERP API actions while tenant isolation is unreleased. This moves exactly one feature to PARTIAL (18% weighted work progress); tenant A/B runtime remains untested and the release flag stays false. PR #127 adds atomic customer proof-upload submission; quality and KDS pass, disposable migration replay is running. PR #122 now proposes removal of two exact-prefix redundant zero-scan indexes; 47 other zero-scan non-unique indexes remain retained pending representative workload evidence. Open PR inventory is now 22 (125 total PRs). Latest PR #126 exact-head quality workflow passed all steps (including Deno tenant-permission tests); exact-head disposable migration replay is still running. Its weighted work progress is now 20% (0 code/UI + 10 DB + 0 positive authorization + 10 automated tests + 0 E2E + 0 ops). PR #127 adds four source-contract tests and best-effort per-order orphan cleanup; exact-head quality and replay are running. Vercel preview creation hit the Hobby/free API deployment daily limit (>100/day); no plan upgrade or paid fallback is being used. PR #126 exact-head quality and disposable migration replay are now both PASS; this confirms the direct-client RLS contract suite and default-deny API barrier tests on its latest head, but does not replace real Tenant A/B API/Storage/cache/job probes. PR #127 exact-head disposable migration replay now PASS; quality checks including four new source-contract tests remain queued/running. The 15 pgTAP assertions and migration chain replayed successfully in the disposable local database. PR #126 added the active-membership/branch-assignment resolver and tests; latest exact-head quality passes. SaaS tenant isolation weighted progress is now 28% (3 code/UI + 10 database + 5 authorization + 10 automated tests + 0 browser/API E2E + 0 operational reconciliation); exact-head migration replay and real tenant A/B runtime remain pending. PR #127 latest exact-head quality passes all steps, including four source-contract tests; exact-head disposable replay remains in progress. PR #127 latest exact-head quality, disposable migration replay, KDS, CORS and procurement contract workflows all PASS; no skipped steps in its quality workflow. PR #126 quality passes, but its disposable replay previously failed on an Inbucket host-port collision; the workflow now moves that temporary service to port 55324 and the rerun is in progress. Fresh GitHub ruleset read found active ruleset #27559290 on ~ALL branches, but it is not an effective release gate: required approving review count=0, required status checks=[], required deployment environments=[], and 11 bypass actors have bypass_mode=always; the active connection itself reports current_user_can_bypass=always. Ruleset does require signed commits, linear history, deletion/non-fast-forward protection, CODEOWNERS review and thread resolution, but branch protection endpoints for main/staging still return 403 and staging environment reviewer settings are not readable. No write action for rulesets/branch protection is exposed through this connector. PR #126 also starts the previously NOT VERIFIED feature 'Tenant directory, tenant onboarding': existing atomic Owner/tenant creation RPCs are now backed by 17 new pgTAP assertions for owner bootstrap, tenant row, owner membership, audit trail, invalid/duplicate slugs and non-owner rejection. It is moved to PARTIAL at 20% while exact-head replay runs; invitation acceptance, default branch provisioning, subscription entitlements, suspension/offboarding and browser E2E remain gaps. Current PRD status is now 84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189. PR #126 latest exact-head quality and disposable Supabase migration replay are now both PASS, including all 17 tenant onboarding pgTAP assertions and 35 RLS contract assertions. Tenant directory/onboarding progress is now 30% (5 code/UI + 10 DB + 5 authorization + 10 automated tests + 0 E2E + 0 operations). Tenant A/B runtime and the remaining onboarding lifecycle gaps are still open. PR #127 expanded atomic payment-proof coverage to 16 pgTAP assertions and five source-contract tests. The legacy declare-payment endpoint is now read-only/idempotent and verifies the atomic proof transaction already committed payment_declared_at, held reservations and pending order state. Latest quality workflow PASS; exact-head disposable replay is still running. PR #126 exact-head disposable migration replay completed PASS after port 55324 workaround. The log confirms all repository migrations applied and all six pgTAP files passed: 119 assertions total, including 35 tenant RLS contract assertions and 17 tenant onboarding assertions. SaaS tenant/member isolation progress rises to 38% (15/20 DB + 15/15 automated tests, plus prior 3/20 code and 5/15 authorization). Tenant directory/onboarding rises to 30% (10/20 DB + 10/15 automated tests, plus 5/20 code and 5/15 authorization). Real Tenant A/B runtime and full onboarding lifecycle remain unproven. PR #126 adds atomic tenant invitation issuance and acceptance RPCs, serialized duplicate invitation issuance, expired-invite persistence, membership activation, one-time invite consumption and atomic audit logging. Edge routes now call RPCs and remain fail-closed until tenant isolation release. Fifteen pgTAP assertions and a dedicated source-contract suite were added; latest exact-head quality checks pass, but exact-head disposable migration replay is still running after a previous failed replay exposed an orphaned SQL fragment, which has been removed in the latest head. Invitation feature progress is not increased until replay passes.",
-    "evidence_snapshot": {
-      "supabase_project": "higoadrzxnhzbbwhdbmh",
-      "applied_migrations": 49,
-      "latest_applied_migration": "20261119182606",
-      "public_tables": 64,
-      "public_tables_rls_enabled": 64,
-      "public_tables_rls_disabled": 0,
-      "tenants": 2,
-      "branches": 155,
-      "tenant_memberships": 3,
-      "purchase_orders": 0,
-      "purchase_receipts": 0,
-      "production_batches": 0,
-      "payment_settlements": 0,
-      "refund_records": 0,
-      "finance_journal_entries": 0,
-      "leaked_password_protection": "DISABLED (Supabase Security Advisor warning)",
-      "owner_platform_owner_claims_true": 0,
-      "dlice_orders_edge_function": {
-        "version": 70,
-        "verify_jwt": false
-      },
-      "vercel": {
-        "plan": "Hobby",
-        "latest_pr120_preview": "READY",
-        "sso_protection": "enabled_except_custom_domains"
-      },
-      "github": {
-        "pr120": "OPEN_DRAFT",
-        "pr120_quality_checks": "PASS",
-        "pr120_disposable_migration_replay": "PASS",
-        "independent_review": "PENDING",
-        "shared_staging_migration": "NOT_APPLIED"
-      },
-      "performance": {
-        "unindexed_foreign_keys": 26,
-        "unused_indexes": 49,
-        "stats_reset_at": "2026-10-02T18:01:15Z",
-        "remediation_pr": 122,
-        "proposed_indexes": 24,
-        "ci_status": "FREE_QUALITY_PASS_AND_DISPOSABLE_REPLAY_PASS",
-        "shared_staging_mutated": false,
-        "unused_indexes_dropped": 0,
-        "unused_index_review": {
-          "count": 49,
-          "affected_tables": 30,
-          "combined_size": "488 kB",
-          "all_nonunique_secondary": true,
-          "drop_index_proposed": false,
-          "stats_reset_at": "2026-10-02T18:01:15Z"
-        }
-      },
-      "order_lifecycle": {
-        "orders_by_state": {
-          "paid": 3,
-          "unpaid": 3,
-          "pending_verification": 1,
-          "all_fulfillment_unassigned": 7,
-          "all_operational_received": 7
-        },
-        "reservation_rows": {
-          "active_expired": 9,
-          "consumed": 9,
-          "held_for_verification_expired": 3
-        },
-        "payment_records": {
-          "paid_with_proof": 3,
-          "pending_without_proof_on_paid_orders": 2,
-          "pending_with_proof_on_pending_order": 1
-        },
-        "cron_jobs": [
-          {
-            "name": "dlice-operational-retention",
-            "schedule": "17 3 * * *",
-            "active": true
-          }
-        ],
-        "expiry_worker": "NOT INSTALLED",
-        "no_live_mutation": true
-      },
-      "index_performance": {
-        "performance_advisor_unindexed_foreign_keys": 26,
-        "performance_advisor_unused_indexes": 49,
-        "zero_scan_indexes_total": 126,
-        "zero_scan_constraint_or_unique_indexes": 77,
-        "zero_scan_nonunique_indexes": 49,
-        "nonunique_zero_scan_size": "488 kB",
-        "stats_reset": "2026-10-02",
-        "exact_prefix_redundancies": 2,
-        "proposed_drop_indexes": [
-          "stock_count_items_count_idx",
-          "stock_transfer_items_transfer_idx"
-        ],
-        "retained_zero_scan_nonunique_indexes": 47,
-        "applied_to_shared_staging": false,
-        "fk_leading_zero_scan_nonunique_indexes": 42,
-        "non_fk_query_path_zero_scan_nonunique_indexes": 7,
-        "zero_scan_indexes_on_empty_tables": 37,
-        "empty_tables_with_zero_scan_indexes": 20
-      },
-      "saas_tenant_isolation": {
-        "status": "PARTIAL_WORK_IN_PROGRESS",
-        "public_tables_rls_enabled": 64,
-        "public_tables_total": 64,
-        "direct_client_rls_contract_assertions": 35,
-        "direct_client_rls_contract_previous_head": "PASS",
-        "latest_admin_erp_default_deny_guard": "IN_PROGRESS",
-        "tenant_a_b_runtime": "NOT_RUN",
-        "tenant_isolation_released": false
-      },
-      "order_lifecycle_atomicity": {
-        "pr123_idempotency_pgtap": 74,
-        "pr125_expiry_compensation_pgtap": 27,
-        "pr127_payment_proof_pgtap": 16,
-        "pr127_source_contract_tests": 5,
-        "legacy_declare_payment": "READ_ONLY_IDEMPOTENT",
-        "storage_postgres_atomicity": "NOT_POSSIBLE; COMPENSATING_DELETE + PER_ORDER BEST_EFFORT ORPHAN CLEANUP",
-        "browser_concurrency_runtime": "PENDING",
-        "global_storage_orphan_sweeper": "PENDING"
-      }
-    },
-    "release_flags": {
-      "TENANT_ISOLATION_RELEASED": false,
-      "PUBLIC_TENANT_ROUTING_RELEASED": false
-    },
-    "status_policy": "audit_status remains evidence-based. work_status tracks remediation separately. Do not change NOT VERIFIED to PARTIAL until a concrete implementation work item/PR has begun; do not change PARTIAL to DONE without workflow, codebase, database and runtime acceptance.",
-    "progress_scoring": {
-      "policy": "Do not invent a percentage from a PARTIAL label or historical domain estimate. Each feature must first be decomposed into evidence-backed acceptance criteria.",
-      "weights": {
-        "code_and_ui": 20,
-        "database_integrity_and_migrations": 20,
-        "authorization_and_tenant_scope": 15,
-        "automated_contract_and_unit_tests": 15,
-        "end_to_end_browser_or_api_workflow": 20,
-        "operational_reconciliation_and_observability": 10
-      },
-      "calculation": "progress_pct = sum of weights for criteria with a passing, linked evidence artifact. Any BLOCKED or SKIPPED acceptance criterion scores 0 for that criterion. DONE requires 100%, no BLOCKED/SKIPPED, and independent review where release policy requires it.",
-      "current_scoring_state": "Feature-level percentages are intentionally unscored until each feature has explicit criteria and evidence links; historical_estimate_pct is not a current completion score."
-    }
+    "source_snapshot": "2026-11-21 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
+    "arithmetic": "The supplied 18 domain rows in the latest request sum to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. Its total-row value 93 NOT VERIFIED is an arithmetic error. Two SaaS Tenant Management features then had concrete implementation work in PR #126; per the agreed status-transition rule they moved from NOT VERIFIED to PARTIAL, yielding the current evidence-based 84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189.",
+    "current_status_source": "Feature-level records, not manually typed total-row arithmetic.",
+    "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
+    "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
+    "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
+    "pr120": "PR #120 had a SQL email-regex parse defect and an over-broad ERP authorization contract failure. The regex was fixed and the contract now explicitly recognizes email-bound one-time invite acceptance guarded by TENANT_ISOLATION_RELEASED=false. Exact-head validation is running; not yet accepted.",
+    "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
+    "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
+    "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
+    "no_shared_staging_or_production_mutation": true
   },
   "current_open_prs": [
     127,
@@ -3597,5 +3582,17 @@
       ],
       "note": "Free k-anonymity breach check covers official Owner/staff password mutation flows. Native Supabase control and direct Auth bypass remain unresolved."
     }
-  ]
+  ],
+  "latest_pr_inventory": {
+    "actual_prs": 125,
+    "merged": 77,
+    "closed_without_merge": 26,
+    "open": 22,
+    "latest_issue_number": 127
+  },
+  "feature_status_counts_current": {
+    "PARTIAL": 84,
+    "NOT VERIFIED": 96,
+    "BLOCKED": 9
+  }
 }
