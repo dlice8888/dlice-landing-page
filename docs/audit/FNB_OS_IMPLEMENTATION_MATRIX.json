@@ -3025,7 +3025,31 @@
       "account_mutation_performed": false,
       "secrets_read_or_changed": false,
       "tenant_a_identity": "existing active qa_dlice_staging_no_permission user; sales_admin profile, branch_manager membership in dlice-default, non-empty permissions, active QA-DLICE-A assignment",
-      "tenant_b_identity": "existing active qa_dlice_staging_branch_a user; sales_admin profile, branch_manager membership in dlice-qa-isolation-b, same non-empty permission set, active QA-TENANT-B assignment"
+      "tenant_b_identity": "existing active qa_dlice_staging_branch_a user; sales_admin profile, branch_manager membership in dlice-qa-isolation-b, same non-empty permission set, active QA-TENANT-B assignment",
+      "last_reverified": "2026-11-21T19:07:00+07:00",
+      "tenant_a_permissions": [
+        "orders",
+        "branches",
+        "inventory",
+        "pos",
+        "procurement",
+        "reports"
+      ],
+      "tenant_b_permissions": [
+        "orders",
+        "branches",
+        "inventory",
+        "pos",
+        "procurement",
+        "reports"
+      ],
+      "tenant_a_active_branches": [
+        "DLC-B001",
+        "QA-DLICE-A"
+      ],
+      "tenant_b_active_branches": [
+        "QA-TENANT-B"
+      ]
     },
     "tenant_isolation_runtime": {
       "direct_client_rls_boundary": "PASS: branches, tenants and tenant_memberships are explicitly deny_direct_client_access for anon/authenticated; expected zero rows",
@@ -3094,7 +3118,21 @@
       "platform_settings_mutated": false,
       "release_status": "BLOCKED"
     },
-    "last_audit_at": "2026-11-21T19:07:00+07:00"
+    "last_audit_at": "2026-11-21T19:07:00+07:00",
+    "vercel_staging": {
+      "latest_ready_deployments": [
+        {
+          "commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+          "state": "READY"
+        },
+        {
+          "commit": "cf15f33379a731c1952ec22b5d12739595a21a93",
+          "state": "READY"
+        }
+      ],
+      "status": "BUILD_READY_NOT_FUNCTIONAL_ACCEPTANCE",
+      "note": "Staging deployments are READY, but this does not prove authenticated browser E2E, tenant isolation, database consistency or 150-branch load readiness."
+    }
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -3793,7 +3831,8 @@
     "pr124": "Exact head a74200d60d6af06df5a5da4ed87a464283f0f9ff: quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. PR #124 application-layer HIBP k-anonymity checks guard admin create/reset routes, but direct Supabase Auth password updates are not proven blocked. Supabase org is on Free; native leaked-password protection requires Pro or above. Reauthentication/current-password controls must also be verified in Auth settings. No billing or Auth setting changed.",
     "pr120_124_overlap": "PR #120 and #124 share 20261121100000_atomic_admin_permission_audit.sql with identical blob SHA 947419c2; migration content is not divergent. Both edit dlice-orders Edge Function, so reconcile the combined diff against staging and ensure one migration history entry.",
     "pr125_127_overlap": "PR #125 and #127 share 20261121140000_order_expiry_payment_lifecycle.sql with identical blob SHA c1d1de05; migration content is not divergent. Preserve one canonical migration history entry and verify #127's later payment-proof/supersession migrations replay after it.",
-    "latest_pr_statuses": "PR #120/#123/#124/#125/#126/#127 remain OPEN DRAFT, all targeting staging. Latest recorded CI for each branch has quality and disposable migration replay PASS; #120 permission tests 8/8; #124 password guard tests 3/3. Staging runtime identity isolation still NOT RUN."
+    "latest_pr_statuses": "PR #120/#123/#124/#125/#126/#127 remain OPEN DRAFT, all targeting staging. Latest recorded CI for each branch has quality and disposable migration replay PASS; #120 permission tests 8/8; #124 password guard tests 3/3. Staging runtime identity isolation still NOT RUN.",
+    "partial_progress_detail": "Only two PARTIAL feature progress values are currently scored: SaaS tenant directory/onboarding 30%; tenant/member isolation foundation 38%. The other 87 PARTIAL features remain unscored until evidence is decomposed across code/UI, database, authorization, automated tests, workflow E2E and reconciliation/observability."
   },
   "current_open_prs": [
     127,
