@@ -20,8 +20,8 @@ const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
 const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
-  ["P01", "Tenant A existing Supabase Auth magic-link session", "Tenant A", maskId(tenantA), maskId(branchA), "Auth Admin generateLink + verify OTP"],
-  ["P02", "Tenant B existing Supabase Auth magic-link session", "Tenant B", maskId(tenantB), maskId(branchB), "Auth Admin generateLink + verify OTP"],
+  ["P01", "Tenant A existing Supabase Auth magic-link session", "Tenant A", "resolved from authenticated identity", branchCodeA, "Auth Admin generateLink + verify OTP"],
+  ["P02", "Tenant B existing Supabase Auth magic-link session", "Tenant B", "resolved from authenticated identity", branchCodeB, "Auth Admin generateLink + verify OTP"],
   ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
   ["P04", "Tenant A own-branch inventory read", "Tenant A", maskId(tenantA), maskId(branchA), "erp-list-inventory"],
   ["P05", "Tenant A cross-tenant inventory read denied", "Tenant A", maskId(tenantA), maskId(branchB), "erp-list-inventory"],
