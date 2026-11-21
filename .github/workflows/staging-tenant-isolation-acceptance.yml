@@ -17,17 +17,19 @@ jobs:
   tenant-isolation:
     # Manual dispatch is accepted only when the selected ref is the trusted staging branch.
     if: github.ref == 'refs/heads/staging'
-    name: Authenticated tenant isolation P01-P09
+    name: Supabase Auth magic-link tenant isolation P01-P09
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 10
     env:
       STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
-      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
-      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
-      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
+      # A one-time Supabase Auth Admin magic link authenticates the existing users;
+      # no QA user/password secrets or account/password mutations are required.
+      # Keep this service-role key scoped to the protected staging Environment only.
+      STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      STAGING_TENANT_A_EMAIL: dlice8888@accounts.dlice.internal
+      STAGING_TENANT_B_EMAIL: qa_dlice_staging_branch_a@accounts.dlice.internal
       # Tenant/branch/user UUIDs are derived from the authenticated A/B identities at runtime.
       STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
       STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
