@@ -1,5 +1,7 @@
 BEGIN;
 
+-- Keep proof-bearing sibling attempts pending for manual double-payment review.
+
 ALTER TABLE public.payment_records
   ADD COLUMN IF NOT EXISTS superseded_by_payment_id uuid
     REFERENCES public.payment_records(id) ON DELETE RESTRICT,
