@@ -7,22 +7,23 @@ const workflow = readFileSync(".github/workflows/staging-tenant-isolation-accept
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const edgeSource = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 
-test("staging tenant gate is manually dispatched from trusted staging and discovers fixture UUIDs from authenticated membership and branch responses", () => {
+test("staging tenant gate uses GitHub OIDC sessions and discovers fixture UUIDs from authenticated membership and branch responses", () => {
   const triggers = workflow.split(/^permissions:\s*$/m, 1)[0];
   assert.match(workflow, /^\s+environment:\s*staging\s*$/m);
   assert.match(triggers, /^  workflow_dispatch:\s*$/m);
   assert.doesNotMatch(triggers, /^  push:/m, "runtime acceptance must not run automatically before Environment preflight is confirmed");
   assert.match(workflow, /if:\s*github\.ref\s*==\s*'refs\/heads\/staging'/);
   assert.doesNotMatch(triggers, /\bpull_request\b/);
-  for (const secret of [
-    "STAGING_SUPABASE_URL",
-    "STAGING_TENANT_A_USERNAME",
-    "STAGING_TENANT_A_PASSWORD",
-    "STAGING_TENANT_B_USERNAME",
-    "STAGING_TENANT_B_PASSWORD",
-  ]) {
+  for (const secret of ["STAGING_SUPABASE_URL"]) {
     assert.match(workflow, new RegExp(`${secret}:\\s*\\$\\{\\{\\s*secrets\\.${secret}\\s*\\}\\}`));
   }
+  assert.match(workflow, /id-token:\s*write/);
+  assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL/);
+  assert.match(workflow, /staging-tenant-session/);
+  assert.doesNotMatch(workflow, /secrets\.STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
+  assert.match(workflow, /STAGING_TENANT_%s_ACCESS_TOKEN=%s/);
+  assert.match(workflow, /ACTIONS_ID_TOKEN_REQUEST_URL:-/);
+  assert.match(workflow, /OIDC session exchange did not complete/);
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
   assert.doesNotMatch(workflow, /vars\.STAGING_TENANT_(?:A|B)_(?:ID|USER_ID|BRANCH_ID)/);
@@ -58,13 +59,15 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /resolveTenantFixtures/);
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
-  assert.match(probe, /executed:\s*true/);
+  assert.match(probe, /executed = true/);
+  assert.match(probe, /executed,\s*status/);
   assert.match(probe, /executed:\s*false/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
   assert.match(probe, /valuePrinted:\s*false/);
   assert.match(probe, /timestamp:\s*new Date\(\)\.toISOString\(\)/);
-  assert.doesNotMatch(probe, /console\.(?:log|error)\([^)]*(?:tokenA|tokenB|passwordA|passwordB)/);
+  assert.doesNotMatch(probe, /STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
+  assert.doesNotMatch(probe, /console\.(?:log|error)\([^)]*(?:tokenA|tokenB)/);
 });
 
 
@@ -91,8 +94,9 @@ test("missing staging configuration is reported as blocked, never as a passing p
   const probes = records.filter((record) => /^P\d\d$/.test(record.probeId));
   assert.equal(probes.length, 9);
   assert.ok(probes.every((record) => record.status === "BLOCKED"));
+  assert.ok(probes.every((record) => record.executed === false && record.evidence?.executed === false), "BLOCKED probes must be explicitly marked not executed");
   const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
-  assert.equal(preflight.length, 8);
+  assert.equal(preflight.length, 6);
   assert.ok(preflight.every((record) => record.valuePrinted === false));
   assert.ok(preflight.every((record) => record.status === "FAIL"));
   const summary = records.find((record) => record.probeId === "SUMMARY");

@@ -1,5 +1,5 @@
 // Authenticated tenant-boundary probes for staging Supabase Data API.
-// Credentials are accepted only from the trusted staging GitHub Environment.
+// Short-lived sessions are exchanged from a trusted GitHub OIDC job identity.
 // Tokens, passwords, usernames, and response bodies are never written to logs.
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
@@ -7,10 +7,8 @@ import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
-const usernameA = process.env.STAGING_TENANT_A_USERNAME;
-const passwordA = process.env.STAGING_TENANT_A_PASSWORD;
-const usernameB = process.env.STAGING_TENANT_B_USERNAME;
-const passwordB = process.env.STAGING_TENANT_B_PASSWORD;
+const tokenA = process.env.STAGING_TENANT_A_ACCESS_TOKEN;
+const tokenB = process.env.STAGING_TENANT_B_ACCESS_TOKEN;
 let tenantA = null;
 let tenantB = null;
 let branchA = null;
@@ -21,8 +19,8 @@ const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
 const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
-  ["P01", "Tenant A username/password login", "Tenant A", maskId(tenantA), maskId(branchA), "D'Lice admin-login"],
-  ["P02", "Tenant B username/password login", "Tenant B", maskId(tenantB), maskId(branchB), "D'Lice admin-login"],
+  ["P01", "Tenant A short-lived Auth session", "Tenant A", maskId(tenantA), maskId(branchA), "Supabase Auth session issued by GitHub OIDC broker"],
+  ["P02", "Tenant B short-lived Auth session", "Tenant B", maskId(tenantB), maskId(branchB), "Supabase Auth session issued by GitHub OIDC broker"],
   ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
   ["P04", "Tenant A own-branch inventory read", "Tenant A", maskId(tenantA), maskId(branchA), "erp-list-inventory"],
   ["P05", "Tenant A cross-tenant inventory read denied", "Tenant A", maskId(tenantA), maskId(branchB), "erp-list-inventory"],
@@ -45,6 +43,7 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
+  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -58,7 +57,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed: true,
+    executed,
     status,
   };
   results.push(result);
@@ -119,17 +118,15 @@ function configurationProblems() {
   const inputs = [
     ["STAGING_SUPABASE_URL", process.env.STAGING_SUPABASE_URL],
     ["STAGING_SUPABASE_PUBLIC_KEY", key],
-    ["STAGING_TENANT_A_USERNAME", usernameA],
-    ["STAGING_TENANT_A_PASSWORD", passwordA],
-    ["STAGING_TENANT_B_USERNAME", usernameB],
-    ["STAGING_TENANT_B_PASSWORD", passwordB],
+    ["STAGING_TENANT_A_ACCESS_TOKEN", tokenA],
+    ["STAGING_TENANT_B_ACCESS_TOKEN", tokenB],
     ["STAGING_TENANT_A_BRANCH_CODE", branchCodeA],
     ["STAGING_TENANT_B_BRANCH_CODE", branchCodeB],
   ];
   const missingInputNames = inputs.filter(([, value]) => value === undefined).map(([name]) => name);
   const emptyInputNames = inputs.filter(([, value]) => typeof value === "string" && value.trim() === "").map(([name]) => name);
   const configurationErrors = [];
-  const distinctUsernames = usernameA?.trim().toLowerCase() !== usernameB?.trim().toLowerCase();
+  const distinctTokens = tokenA !== tokenB;
   const distinctBranchCodes = branchCodeA !== branchCodeB;
   const checks = inputs.map(([name, value]) => {
     let valid = typeof value === "string" && value.trim().length > 0;
@@ -146,8 +143,8 @@ function configurationProblems() {
       }
     } else if (valid && name === "STAGING_SUPABASE_PUBLIC_KEY") {
       valid = isPublicSupabaseKey(value);
-    } else if (valid && name.endsWith("_USERNAME")) {
-      valid = /^[a-zA-Z0-9._-]{3,32}$/.test(value.trim()) && distinctUsernames;
+    } else if (valid && name.endsWith("_ACCESS_TOKEN")) {
+      valid = value.split(".").length === 3 && distinctTokens;
     } else if (valid && name.endsWith("_BRANCH_CODE")) {
       valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B") && distinctBranchCodes;
     }
@@ -167,8 +164,8 @@ function configurationProblems() {
   if (key && !isPublicSupabaseKey(key)) {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
-  if (usernameA && usernameB && !distinctUsernames) {
-    configurationErrors.push("Tenant A and Tenant B usernames must be distinct");
+  if (tokenA && tokenB && !distinctTokens) {
+    configurationErrors.push("Tenant A and Tenant B sessions must be distinct");
   }
   if (branchCodeA && branchCodeB && !distinctBranchCodes) {
     configurationErrors.push("Tenant A and Tenant B branch codes must be distinct");
@@ -249,42 +246,25 @@ if (
   }
 
   async function login(tenant) {
-    const isTenantA = tenant === "A";
-    const id = isTenantA ? "P01" : "P02";
+    const id = tenant === "A" ? "P01" : "P02";
+    const token = tenant === "A" ? tokenA : tokenB;
     const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = probeById.get(id);
-    await runProbe({
-      id,
-      expectedResult,
-      tenantScope,
-      branchScope,
-      operation,
-    }, authIdentity, async () => {
-      const response = await fetch(`${base}/functions/v1/dlice-orders`, {
-        method: "POST",
-        headers: { apikey: key, "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "admin-login",
-          username: isTenantA ? usernameA : usernameB,
-          password: isTenantA ? passwordA : passwordB,
-        }),
+    await runProbe({ id, expectedResult, tenantScope, branchScope, operation }, authIdentity, async () => {
+      const response = await fetch(`${base}/auth/v1/user`, {
+        headers: { apikey: key, authorization: `Bearer ${token}` },
         redirect: "manual",
       });
-      const text = await response.text();
-      let payload = null;
-      try {
-        payload = JSON.parse(text);
-      } catch {
-        payload = null;
-      }
-      const token = payload?.session?.access_token;
-      const validTokenShape = typeof token === "string" && token.split(".").length === 3 && !token.startsWith("Bearer ");
-      const passed = response.ok && validTokenShape;
+      const payload = await response.json().catch(() => null);
+      const validTokenShape = typeof token === "string" && token.split(".").length === 3;
+      const passed = response.status === 200 && validTokenShape &&
+        typeof payload?.id === "string" && payload.id.length === 36;
       if (passed) tokenByTenant[tenant] = token;
+      if (passed) identityByTenant[tenant] = payload.id;
       return {
         passed,
-        actualResult: passed ? `HTTP ${response.status}; authenticated session returned` : `HTTP ${response.status}; ${token ? "invalid_session_token_shape" : "login_failed_or_session_missing"}`,
+        actualResult: passed ? `HTTP ${response.status}; broker-issued Auth session validated` : `HTTP ${response.status}; broker-issued session invalid`,
         httpStatus: response.status,
-        evidence: { responseBodyBytes: text.length, validAccessTokenShape: validTokenShape, tokenPrinted: false },
+        evidence: { validAccessTokenShape: validTokenShape, authUserReturned: typeof payload?.id === "string", tokenPrinted: false },
       };
     });
   }
