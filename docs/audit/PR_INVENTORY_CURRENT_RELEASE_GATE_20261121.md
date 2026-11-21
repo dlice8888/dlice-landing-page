@@ -6,14 +6,15 @@ Source: live GitHub PR search and per-PR metadata reads.
 
 ## Totals
 
-**122 actual PRs = 77 merged + 26 closed without merge + 19 open.**
+**123 actual PRs = 77 merged + 26 closed without merge + 20 open.**
 
-The previous 20-November inventory recorded 112 PRs and 9 open. Six additional open PRs (#115–#120) were created after that snapshot; this audit adds #121–#124. The 19 open rows below were individually read. No PR is merged or closed by this audit. No PR is merged or closed by this audit.
+The previous 20-November inventory recorded 112 PRs and 9 open. Six additional open PRs (#115–#120) were created after that snapshot; this audit adds #121–#125. The 20 open rows below were individually read. No PR is merged or closed by this audit. No PR is merged or closed by this audit.
 
 ## Open PRs
 
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
+| #125 | staging | Yes | No | Unpaid order expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 22 pgTAP assertions; CI pending |
 | #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality tests pass, disposable replay pending; direct Auth bypass remains a blocker |
 | #123 | staging | Yes | No | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
 | #122 | staging | Yes | No | 24 non-redundant indexes to address 26 FK warnings; quality and disposable replay pass; 49 zero-scan indexes retained pending workload evidence |
@@ -36,12 +37,12 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 
 ## Governance observations
 
-1. There are 19 open PRs, not 9 as shown in the 20-November snapshot.
+1. There are 20 open PRs, not 9 as shown in the 20-November snapshot.
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
 4. #108 is still open and Draft. Its updated 82/98/9 feature matrix is carried into #121 so the current matrix can be reviewed independently of the historical inventory PR.
 5. #120 is still Draft and has no independent reviewer. Its green quality and disposable replay checks do not authorize shared-staging deployment.
-6. No reviewer is currently requested on these 19 PRs in the metadata returned by GitHub; #122–#124 also have no requested reviewer in their creation metadata.
+6. No reviewer is currently requested on these 20 PRs in the metadata returned by GitHub; #122–#125 also have no requested reviewer in their creation metadata.
 
 ## Safety and next action
 
