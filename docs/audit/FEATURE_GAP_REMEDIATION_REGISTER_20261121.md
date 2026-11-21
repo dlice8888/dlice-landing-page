@@ -794,7 +794,7 @@ The current feature-level matrix remains **92 PARTIAL + 91 NOT VERIFIED + 6 BLOC
 |---|---:|---:|---:|---:|
 | Executive Command Center | 10 | 4 | 5 | 1 |
 | POS & Checkout | 13 | 7 | 5 | 1 |
-| Order Management | 10 | 7 | 2 | 1 |
+| Order Management | 10 | 8 | 2 | 0 |
 | Kitchen & Production | 10 | 7 | 2 | 1 |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 |
@@ -806,11 +806,11 @@ The current feature-level matrix remains **92 PARTIAL + 91 NOT VERIFIED + 6 BLOC
 | HR & Workforce | 9 | 1 | 8 | 0 |
 | Franchise & Expansion | 8 | 2 | 6 | 0 |
 | BI & Analytics | 10 | 3 | 7 | 0 |
-| Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| Admin, Identity & Access Control | 10 | 6 | 4 | 0 |
 | SaaS Tenant Management | 8 | 2 | 6 | 0 |
 | Integrations & Automation | 9 | 5 | 4 | 0 |
-| Quality, Compliance & Security | 20 | 10 | 9 | 1 |
-| **TOTAL** | **189** | **89** | **91** | **9** |
+| Quality, Compliance & Security | 20 | 11 | 9 | 0 |
+| **TOTAL** | **189** | **92** | **91** | **6** |
 
 Only two PARTIAL features currently have defensible numeric progress scores: Tenant/member isolation 38% and Tenant directory/onboarding 30%. The remaining 90 PARTIAL features remain explicitly unscored until their six weighted evidence dimensions are decomposed; do not invent percentages.
 
@@ -857,3 +857,12 @@ A feature becomes DONE only when exact-head code/build checks, changed-code cove
 ## Latest status correction — 21 November 2026
 
 The current source-of-truth distribution is **92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189**, 0 DONE. PR #124 is CLOSED as superseded by #120. The three additional PARTIAL classifications are order lifecycle/idempotency, permission/profile/password audit, and application-layer leaked-password mitigation; they remain incomplete until runtime E2E and reconciliation pass. The other 90 PARTIAL features are unscored; do not infer percentages.
+
+
+## Current execution delta — 21 November 2026
+
+The authoritative feature-level matrix now counts **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED and 0 DONE**. Three previously gated features moved to PARTIAL because concrete implementation work is now present in active canonical branches: duplicate/delayed/failed order handling in PR #123, audited permission changes in PR #120, and leaked-password checking consolidated from #124 into #120. These are implementation-start classifications only; none is DONE.
+
+PR consolidation: #124 is CLOSED as superseded by #120; #125 is CLOSED as superseded by #127. The canonical execution PRs remain #120, #123, #126 and #127. PR #120 exact-head disposable replay passed 7 SQL test files / 124 assertions. PR #126 exact-head disposable replay passed 7 SQL test files / 134 assertions, including the 15 invitation assertions. PR #123 and #127 exact-head quality/replay/contract workflows passed. No shared-staging migration or production mutation was performed.
+
+Tenant A/B identities and active tenant/branch mappings have been confirmed read-only in Supabase. P01–P09 authentication and authorization probes remain NOT RUN because staging Environment protection and service-role secret presence are not verifiable through the current connector and no workflow-dispatch action is exposed. Do not count fixture discovery or disposable pgTAP as runtime acceptance.
