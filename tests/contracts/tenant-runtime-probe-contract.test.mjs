@@ -14,6 +14,8 @@ test("staging tenant gate runs only for trusted staging harness changes and uses
   assert.ok(triggers.includes("push:"));
   assert.ok(triggers.includes("- staging"));
   assert.ok(triggers.includes("- .github/workflows/staging-tenant-isolation-acceptance.yml"));
+  assert.ok(triggers.includes("- tests/runtime/dlice-tenant-jwt-isolation.mjs"));
+  assert.ok(triggers.includes("- tests/runtime/stock-transfer-postcondition.mjs"));
   assert.doesNotMatch(triggers, /pull_request/);
   assert.ok(workflow.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY:"));
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
@@ -59,6 +61,17 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /valuePrinted:\s*false/);
   assert.match(probe, /timestamp:\s*new Date\(\)\.toISOString\(\)/);
   assert.doesNotMatch(probe, /console\.(?:log|error)\([^)]*(?:tokenA|tokenB|passwordA|passwordB)/);
+});
+
+test("P08 and P09 require both HTTP denial and a read-only database absence postcondition", () => {
+  const start = probe.indexOf("async function verifyCrossTenantWriteDenied");
+  const end = probe.indexOf("async function verifyDirectBranchRlsDenied", start);
+  assert.ok(start >= 0 && end > start, "cross-tenant write probe must exist");
+  const writeProbe = probe.slice(start, end);
+  assert.match(writeProbe, /inspectStockTransferAbsence/);
+  assert.match(writeProbe, /response\.status\s*===\s*403/);
+  assert.match(writeProbe, /writeDenied\s*&&\s*databasePostcondition\.passed/);
+  assert.match(writeProbe, /databasePostcondition/);
 });
 
 

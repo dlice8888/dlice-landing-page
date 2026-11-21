@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
+import { inspectStockTransferAbsence } from "./stock-transfer-postcondition.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
@@ -565,12 +566,13 @@ if (
           evidence: { ...control.evidence, writeProbeSkipped: true },
         };
       }
+      const transferNumber = `SECURITY-DENY-${tenant}-${randomUUID()}`;
       const idempotencyKey = `tenant-isolation-${tenant.toLowerCase()}-${randomUUID()}`;
       const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
         body: JSON.stringify({
           action: "erp-create-stock-transfer",
-          transfer_number: `SECURITY-DENY-${tenant}-${randomUUID()}`,
+          transfer_number: transferNumber,
           source_branch_id: ownBranch,
           destination_branch_id: foreignBranch,
           inventory_item_id: "00000000-0000-4000-8000-000000000099",
@@ -579,13 +581,21 @@ if (
           notes: "Automated tenant-isolation negative test; must be rejected before mutation",
         }),
       });
-      const passed = response.status === 403;
+      const databasePostcondition = await inspectStockTransferAbsence({
+        base,
+        serviceRoleKey,
+        transferNumber,
+        idempotencyKey,
+      });
+      const writeDenied = response.status === 403;
+      const passed = writeDenied && databasePostcondition.passed;
       return {
         passed,
-        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied" : "not denied"}`,
+        actualResult: `HTTP ${response.status}; cross-tenant write ${writeDenied ? "denied" : "not denied"}; database postcondition ${databasePostcondition.passed ? "confirmed no matching rows" : "not confirmed"}`,
         httpStatus: response.status,
         evidence: {
           ...evidence,
+          ...databasePostcondition.evidence,
           sameTenantAuthorizationControlStatus: control.response.status,
           sameTenantControlRejectedBeforeMutation: true,
           idempotencyKeyGenerated: true,

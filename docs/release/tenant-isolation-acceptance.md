@@ -10,15 +10,15 @@ The established P01–P09 contract is retained:
 
 | Probe | Existing contract | Live status |
 |---|---|---|
-| P01 | Tenant A username/password login | BLOCKED |
-| P02 | Tenant B username/password login | BLOCKED |
+| P01 | Tenant A existing Supabase Auth identity passwordless magic-link login | BLOCKED |
+| P02 | Tenant B existing Supabase Auth identity passwordless magic-link login | BLOCKED |
 | P03 | Distinct Auth identities, active memberships, exact tenant membership, and exact one-branch assignment/code | BLOCKED |
 | P04 | Tenant A reads real inventory rows for its own branch | BLOCKED |
 | P05 | Tenant A is denied Tenant B inventory read | BLOCKED |
 | P06 | Tenant B reads real inventory rows for its own branch | BLOCKED |
 | P07 | Tenant B is denied Tenant A inventory read | BLOCKED |
-| P08 | Tenant A cross-tenant stock-transfer write is denied | BLOCKED |
-| P09 | Tenant B cross-tenant stock-transfer write is denied | BLOCKED |
+| P08 | Tenant A cross-tenant stock-transfer write is denied and no transfer row is created | BLOCKED |
+| P09 | Tenant B cross-tenant stock-transfer write is denied and no transfer row is created | BLOCKED |
 
 Supplemental direct REST branch-row and service-only RPC denial probes remain in
 the runner. The runtime evidence records timestamps, status, expected/actual
@@ -59,3 +59,11 @@ available.
 - The six staging secrets and six fixture variables remain unverified because the connected GitHub integration cannot read Environment metadata. The workflow preflight is the required value-free verification path.
 
 Do not mark this acceptance PASS until the fixture discrepancy and Owner/configuration blockers are resolved and a trusted staging workflow run proves all nine probes PASS with no BLOCKED or SKIPPED records.
+
+## Cross-tenant write postcondition
+
+P08 and P09 pass only when the authenticated write returns HTTP 403 **and**
+read-only service-role queries find no row in `public.stock_transfers` matching
+either generated `transfer_number` or `idempotency_key`. Evidence contains the
+query status and row counts, but not the generated identifiers or secret
+values. The postcondition does not write to staging.

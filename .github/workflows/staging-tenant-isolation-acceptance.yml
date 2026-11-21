@@ -8,6 +8,8 @@ on:
       - staging
     paths:
       - .github/workflows/staging-tenant-isolation-acceptance.yml
+      - tests/runtime/dlice-tenant-jwt-isolation.mjs
+      - tests/runtime/stock-transfer-postcondition.mjs
   workflow_dispatch:
 
 permissions:
