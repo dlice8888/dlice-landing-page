@@ -120,7 +120,8 @@ BEGIN
 
   IF p_actor_user_id IS NULL OR p_email IS NULL
     OR length(trim(p_email)) NOT BETWEEN 3 AND 254
-    OR p_email !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+ IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
+    OR p_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    OR p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
   THEN
     RAISE EXCEPTION 'invalid_tenant_invite_acceptance' USING ERRCODE = '22023';
   END IF;
