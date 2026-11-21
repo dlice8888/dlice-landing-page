@@ -41,7 +41,7 @@ VALUES
 INSERT INTO public.payment_records(id,order_id,method,amount_idr,status,proof_storage_path)
 VALUES
 ('d7000000-0000-4000-8000-000000000021','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/current.png'),
-('d7000000-0000-4000-8000-000000000022','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/older.png'),
+('d7000000-0000-4000-8000-000000000022','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification',NULL),
 ('d7000000-0000-4000-8000-000000000023','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'unpaid',NULL),
 ('d7000000-0000-4000-8000-000000000024','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/proof-bearing.png');
 
