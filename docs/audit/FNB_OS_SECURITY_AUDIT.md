@@ -198,3 +198,15 @@ Runtime source inspection (not an HTTP execution) confirms:
 
 Both existing QA branch assignments satisfy the deployed helper's active/date predicates. These source and fixture checks do not replace actual HTTP probes; P01–P09 remain NOT RUN.
 
+## Passwordless workflow staging integration boundary — 21 November 2026, 21:10 WIB
+
+The workflow versions are not yet aligned:
+- `main` workflow file: workflow_dispatch exists, but it still reads the legacy Tenant A/B username/password secrets.
+- `staging` workflow file: manual dispatch only, but it still reads the legacy Tenant A/B username/password secrets.
+- PR #126 candidate workflow: uses the two existing Auth email identities and `STAGING_SUPABASE_SERVICE_ROLE_KEY` to issue one-time magic links. Its job guard requires `github.ref == refs/heads/staging`, so it cannot execute from the PR branch.
+
+Therefore the passwordless implementation is not yet runnable on trusted staging. Do not merge PR #126 wholesale solely to install this workflow: PR #126 also contains tenant/RLS and invitation implementation plus a migration. After the protected Environment and secret presence are verified, the safe integration is a test-only staging change containing only the workflow, runtime probe script and fixture-discovery helper.
+
+The GitHub Environment endpoint and GitHub Secrets endpoints are not exposed by the connected integration. No secret values were read. No staging workflow was dispatched.
+
+The latest PR #126 test harness now sends new `sb_secret_` keys on `apikey` only and legacy service-role JWTs on both `apikey` and `Authorization: Bearer`. The P08/P09 tests now perform a narrow service-role read-only postcondition query and require zero persisted transfer rows after a 403. CI for head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` is still running the disposable migration replay.
