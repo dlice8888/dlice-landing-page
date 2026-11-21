@@ -108,7 +108,7 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 - Owner profile cannot be changed through this action.
 - Audit persistence failure rolls back the permission update and the API fails closed.
 - Atomic RPCs and source-contract/pgTAP tests are present. The latest branch changes fixed a malformed invite email regex and corrected the release-contract exception for email-bound one-time invite acceptance.
-- Previous PR #120 head failed: ERP authorization coverage contract and disposable replay SQL parse. New exact-head quality was queued and disposable migration replay was running at the latest audit; do not call PR #120 green until both finish PASS.
+- The ERP authorization coverage contract now passes. Disposable replay then exposed orphaned SQL fragments after `COMMIT` in `20261121160000_atomic_admin_profile_mutation_audit.sql`; 22,067 trailing characters were removed from current head `29d6d808`. Eleven pgTAP assertions now cover audited invitation issuance. Exact-head quality and procurement/KDS/CORS contracts pass; disposable migration replay remains IN_PROGRESS. Do not mark accepted until replay completes PASS.
 
 **Remaining work**
 1. Independent review of RPC ACL, function authorization, target locking and audit schema.
