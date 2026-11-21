@@ -238,6 +238,88 @@ BEGIN
     END IF;
   END LOOP;
 
+  -- A declared payment without uploaded proof also has a finite proof window.
+  -- Keep proof-bearing attempts held for human review; fail only pending attempts
+  -- whose reservation deadline passed and whose payment record has no proof.
+  FOR v_order IN
+    SELECT o.id, o.payment_status, o.fulfillment_status, o.operational_status
+    FROM public.orders o
+    WHERE o.payment_status = 'pending_verification'
+      AND o.fulfillment_status NOT IN ('failed','cancelled','fulfilled')
+      AND EXISTS (
+        SELECT 1 FROM public.order_reservations r
+        WHERE r.order_id = o.id AND r.status = 'held_for_verification' AND r.expires_at <= v_now
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM public.order_reservations r
+        WHERE r.order_id = o.id AND r.status = 'held_for_verification' AND r.expires_at > v_now
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM public.order_reservations r
+        WHERE r.order_id = o.id AND r.status = 'active' AND r.expires_at > v_now
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM public.payment_records p
+        WHERE p.order_id = o.id AND p.status = 'pending_verification'
+          AND p.proof_storage_path IS NOT NULL
+      )
+    ORDER BY o.created_at
+    LIMIT p_batch_size
+    FOR UPDATE OF o SKIP LOCKED
+  LOOP
+    UPDATE public.order_reservations
+    SET status = 'expired',
+        released_at = COALESCE(released_at, v_now),
+        updated_at = v_now
+    WHERE order_id = v_order.id
+      AND status = 'held_for_verification'
+      AND expires_at <= v_now;
+    GET DIAGNOSTICS v_reservation_rows = ROW_COUNT;
+
+    IF v_reservation_rows > 0 THEN
+      UPDATE public.orders
+      SET payment_status = 'rejected',
+          fulfillment_status = 'failed',
+          operational_status = 'cancelled',
+          updated_at = v_now
+      WHERE id = v_order.id
+        AND payment_status = 'pending_verification'
+        AND fulfillment_status NOT IN ('failed','cancelled','fulfilled');
+
+      IF FOUND THEN
+        v_expired_orders := v_expired_orders + 1;
+        v_expired_reservations := v_expired_reservations + v_reservation_rows;
+
+        UPDATE public.payment_records
+        SET status = 'rejected',
+            verified_at = v_now,
+            admin_note = 'Closed automatically: payment was declared but proof was not uploaded before reservation expiry.',
+            updated_at = v_now
+        WHERE order_id = v_order.id
+          AND status = 'pending_verification'
+          AND proof_storage_path IS NULL;
+        GET DIAGNOSTICS v_payment_rows = ROW_COUNT;
+        v_closed_payment_attempts := v_closed_payment_attempts + v_payment_rows;
+
+        INSERT INTO public.order_status_history
+          (order_id,status_type,old_status,new_status,changed_by,note)
+        VALUES
+          (v_order.id,'reservation','held_for_verification','expired',NULL,'Payment proof deadline elapsed; reservation capacity released.'),
+          (v_order.id,'payment','pending_verification','rejected',NULL,'Payment was declared but no proof was uploaded before reservation expiry.'),
+          (v_order.id,'fulfillment',v_order.fulfillment_status,'failed',NULL,'Order automatically failed because payment proof was not uploaded before reservation expiry.'),
+          (v_order.id,'operational',v_order.operational_status,'cancelled',NULL,'Order automatically cancelled after proof deadline elapsed.');
+
+        INSERT INTO public.admin_audit_logs
+          (actor_user_id,action,entity_type,entity_id,metadata)
+        VALUES
+          (NULL,'system_expire_unproven_payment_order','order',v_order.id::text,
+           jsonb_build_object('expired_reservations',v_reservation_rows,
+             'closed_payment_attempts',v_payment_rows,
+             'reason','payment_declared_without_proof_before_expiry','checked_at',v_now));
+      END IF;
+    END IF;
+  END LOOP;
+
   -- A paid order must not retain a pending no-proof payment attempt. Proof-bearing
   -- attempts are intentionally left open for manual double-payment/refund review.
   FOR v_order IN
