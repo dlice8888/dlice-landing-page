@@ -431,3 +431,15 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 - **PR:** #126.
 
 The latest PR #127 hardening also makes the legacy `declare-payment` endpoint read-only/idempotent: the atomic proof RPC now commits `payment_declared_at` with the payment record, reservation hold, order state, history and audit. The endpoint only checks this committed state; it no longer issues separate writes.
+
+## BLOCKED — Admin & Access Control: audit of access/permission mutations
+
+PR #120 expands the atomic audit implementation from permission-list changes to four staff profile mutation paths:
+- staff creation/profile insertion;
+- permission list changes;
+- profile role changes (with branch-worker assignment and tenant-membership checks);
+- active/inactive status changes.
+
+The database RPCs commit each profile mutation and before/after audit row in one transaction, use SECURITY INVOKER with empty search_path, and are executable only by service_role. Idempotent retries do not duplicate audit rows. The expanded suite adds 18 pgTAP assertions on top of the existing 11 permission assertions; exact-head CI is pending.
+
+**Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. Feature remains BLOCKED until exact-head quality + disposable replay pass, independent review, and authorized staging runtime evidence pass.
