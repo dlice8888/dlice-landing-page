@@ -15,7 +15,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
-| #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality tests pass, disposable replay pending; direct Auth bypass remains a blocker |
+| #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality and disposable replay pass; direct Auth bypass remains a blocker |
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
 | #122 | staging | Yes | No | 24 non-redundant indexes to address 26 FK warnings; quality and disposable replay pass; 49 zero-scan indexes retained pending workload evidence |
 | #121 | staging | Yes | Yes | Current 189-feature matrix reconciliation and evidence-based progress scoring; documentation only |
