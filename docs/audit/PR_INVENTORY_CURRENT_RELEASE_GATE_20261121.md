@@ -43,14 +43,12 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
 4. #108 is still open and Draft. The current feature-level matrix in #121 is 89/91/9. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Two SaaS and five additional features moved to PARTIAL based on concrete implementation/schema evidence.
-5. #120 remains Draft; PR reviewer assignment is not an acceptance criterion. Exact-head quality, disposable migration replay and contract jobs now PASS; staging runtime acceptance remains mandatory.
-6. No reviewer is currently requested on these 22 PRs in the metadata returned by GitHub; #122–#127 also have no requested reviewer in their creation metadata.
+5. #120 remains Draft. Exact-head quality, disposable migration replay and contract jobs now PASS; staging runtime acceptance remains mandatory.
 
 ## Safety and next action
 
 - Do not mass-merge PRs.
 - Do not merge #115–#117 while `mergeable=false`.
-- Do not use reviewer identity or approval count as a completion metric. Use only the defined test, migration, runtime and release-gate evidence.
 - Preserve staging mutation confirmation, deployment protection and both release flags as false.
 - Reconcile dependency order, changed-file overlap and migration lineage before integrating one PR at a time.
 - This inventory authorizes no database mutation, Auth change, Edge Function deployment or production release.
@@ -111,7 +109,7 @@ The ruleset currently has zero required status checks and zero required deployme
 - #120 and #126 both modify invitation issue/accept paths and `supabase/functions/dlice-orders/index.ts`. Their RPC signatures differ. Rebase/reconcile to one canonical invite flow before merge.
 - #123 and #126 have a hard migration version collision at `20261121130000` with different SQL contents. Resolve through the Supabase migration generator and rerun combined disposable replay.
 - #127 is 30 commits ahead of #125 and contains the exact same `20261121140000_order_expiry_payment_lifecycle.sql` blob. Treat #125 as the earlier dependency slice; do not apply duplicate migration content.
-- PR review submissions are not a completion metric. Merge readiness requires all scoped automated tests, migration replay, runtime probes and explicit staging/release gates to pass; green CI alone is insufficient.
+- Merge readiness requires all scoped automated tests, migration replay, runtime probes and explicit staging/release gates to pass; green CI alone is insufficient.
 
 ### GitHub ruleset recheck
 
