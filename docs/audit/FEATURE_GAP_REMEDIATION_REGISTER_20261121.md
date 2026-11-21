@@ -851,4 +851,4 @@ No staging migration, Auth mutation, Edge Function deployment, production change
 
 
 ### Test-only completion criteria
-PR reviewer assignment and independent approval are not acceptance criteria. A feature becomes DONE only when exact-head code/build checks, changed-code coverage, disposable migration replay, authorization positive/negative tests, runtime E2E, fault injection and persisted-data reconciliation all pass. No BLOCKED, SKIPPED or NOT RUN case is allowed at completion. Staging Environment protection, secret presence checks, explicit staging mutation authorization and backup/rollback remain separate release controls.
+A feature becomes DONE only when exact-head code/build checks, changed-code coverage, disposable migration replay, authorization positive/negative tests, runtime E2E, fault injection and persisted-data reconciliation all pass. No BLOCKED, SKIPPED or NOT RUN case is allowed at completion. Staging Environment protection, secret presence checks, explicit staging mutation authorization and backup/rollback remain separate release controls.
