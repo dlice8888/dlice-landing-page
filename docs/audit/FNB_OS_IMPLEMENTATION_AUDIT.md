@@ -60,13 +60,13 @@ Detailed feature-level requirements, historical evidence notes, and source line 
 - Each designated QA branch has 2 inventory balance rows, but no authenticated request has proved that either worker can read those rows.
 - The active Owner profile is linked to an Auth user. Its `app_metadata.platform_owner` claim is absent; count of Auth users with boolean `true` is 0. The UUID allowlist cannot be queried through the available integration.
 - The Edge Function explicitly requires both the platform-owner UUID allowlist and boolean Auth app metadata; see `supabase/functions/dlice-orders/index.ts:52-55,92-100`.
-- The tenant runtime workflow is `.github/workflows/staging-tenant-isolation-acceptance.yml`; its runner is `tests/runtime/dlice-tenant-jwt-isolation.mjs`. P01–P09 remain BLOCKED / NOT RUN; no probe is to be relabeled PASS or SKIPPED.
+- The tenant runtime workflow is `.github/workflows/staging-tenant-isolation-acceptance.yml`; its runner is `tests/runtime/dlice-tenant-jwt-isolation.mjs`. P01–P09 remain NOT RUN; no probe is to be relabeled PASS or SKIPPED.
 
 ## PR #83 execution
 
 PR #83 remains Draft/HOLD, targets staging, and has not been merged. The branch fixes the `branchB` temporal-dead-zone path, sources the publishable key from the staging Environment secret, and now rejects blank/whitespace key, username, password, and malformed/missing Tenant B branch UUID before network access. Login failure logging is sanitized to a constant error code. A table-driven no-network regression test covers eight missing/invalid input variants.
 
-Latest exact-head Free quality workflow run: [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) — SUCCESS. This is static/quality CI, not P01–P09. Vercel Preview is READY. P01–P09 remain BLOCKED because protected staging inputs cannot be independently verified, both candidate profiles remain sales_admin rather than branch_worker, and deployed Edge Function v69 still denies the own-branch inventory action.
+Latest exact-head Free quality workflow run: [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) — SUCCESS. This is static/quality CI, not P01–P09. Vercel Preview is READY. P01–P09 remain BLOCKED because protected staging inputs cannot be independently verified, the current P01–P09 contract expects sales_admin global profile role and branch_manager tenant role; both existing fixtures satisfy the DB-side role prerequisites, and deployed Edge Function v69 still denies the own-branch inventory action.
 
 ## Additional P0 inventory authorization finding
 
@@ -185,10 +185,10 @@ No feature is DONE. Two PARTIAL SaaS features have current weighted scores (38% 
 | #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six of six exact-head workflows PASS; 35 profile-mutation, 11 permission and 11 invitation pgTAP assertions | Staging mutation-path runtime NOT RUN; password reset intent/outcome implemented |
 | #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 with identical shared blob SHAs | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
-| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
+
 | #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
 
-Five execution PRs (#120, #123, #125, #126, #127) remain Draft/open/unmerged; #124 is closed as superseded. P01–P09, order/payment E2E and cross-domain transaction reconciliation remain NOT RUN. No feature is DONE. Both release flags remain false.
+Four canonical execution PRs (#120, #123, #126, #127) remain Draft/open/unmerged; #124 is closed as superseded by #120 and #125 is closed as superseded by #127. P01–P09, order/payment E2E and cross-domain transaction reconciliation remain NOT RUN. No feature is DONE. Both release flags remain false.
 
 
 ## Latest implementation delta — 21 November 2026
@@ -197,4 +197,32 @@ Five execution PRs (#120, #123, #125, #126, #127) remain Draft/open/unmerged; #1
 - PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six workflows, including full disposable migration replay. The profile mutation pgTAP suite has 35 assertions; audit failure injection proves rollback for staff creation, role and active-state mutation. Password reset now writes a durable intent before Auth Admin mutation and records the outcome; a failed finalization leaves a pending event for reconciliation.
 - PR #124 is CLOSED as superseded by #120.
 - Current distribution: 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two SaaS partial scores remain 30% and 38%; 90 other PARTIAL features are unscored pending evidence decomposition.
-- PR #123 and #126 still collide on migration version 20261121130000. PR #125/#127 share an identical expiry migration blob. No shared staging migration was applied.
+- PR #123 uses migration version 20261121135000 and #126 uses 20261121130000; no version collision exists. PR #125 is closed as superseded by #127, which retains the canonical identical expiry migration blob. No shared staging migration was applied.
+
+
+## Current execution and evidence correction — 21 November 2026
+
+The current feature-level source of truth is **92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE**. The three additional PARTIAL classifications are duplicate/delayed/failed order handling (PR #123), audited permission changes (PR #120), and application-layer leaked-password mitigation (consolidated from #124 into #120). These are not completed features.
+
+### Canonical PR status and test evidence
+
+| PR | Exact head | State | Automated evidence | Runtime evidence |
+|---|---|---|---|---|
+| #120 | 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 | OPEN / DRAFT | Quality, disposable replay, KDS, CORS and procurement contracts PASS; 7 pgTAP files / 124 assertions | Staging permission/profile/password mutation E2E NOT RUN |
+| #123 | 6788c4d7da34144d279da06edea84f6d0763b796 | OPEN / DRAFT | Quality, disposable replay, KDS, CORS and procurement contracts PASS | Response-drop retry, concurrent duplicate, pending/late payment and reservation E2E NOT RUN |
+| #126 | bb008c55a4d98afe5264b4ccde4f28f129bc162 | OPEN / DRAFT | Quality, disposable replay, KDS, CORS and procurement contracts PASS; 7 pgTAP files / 134 assertions including 35 RLS, 17 onboarding and 15 invitation | P01–P09 NOT RUN |
+| #127 | 5c597c2ec37a130501ed19591cfc9383396ba1b6 | OPEN / DRAFT | Quality, disposable replay, KDS, CORS and procurement contracts PASS | Payment-proof retry, expiry, compensation, supersession and Storage orphan recovery E2E NOT RUN |
+
+PR #124 is CLOSED as superseded by #120. PR #125 is CLOSED as superseded by #127. The #123/#126 migration-version collision previously reported was a transcription error: #123 is 20261121135000 and #126 is 20261121130000. The #120/#126 invitation RPC overlap remains a code-level integration gap and must be consolidated into one canonical create/accept contract before merging.
+
+### Tenant A/B identity and P01–P09
+
+Read-only Supabase inspection confirms two existing Auth users, two distinct active tenant memberships, active sales_admin profiles, branch_manager tenant roles and correct tenant-scoped QA branch assignments. Tenant A uses QA-DLICE-A; Tenant B uses QA-TENANT-B. No password, Auth metadata, membership or branch assignment was changed. PR #126's passwordless workflow uses Auth Admin generate_link/verify for these existing accounts and revokes temporary sessions after probes. A test-evidence defect that mislabeled blocked preflight probes as executed was fixed in the PR #126 test script and contract suite; exact-head quality checks pass.
+
+P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted staging. The connected GitHub integration does not expose workflow dispatch or Environment settings. Presence of STAGING_SUPABASE_SERVICE_ROLE_KEY is NOT VERIFIED; the secret value was not read or exposed. The latest PR #126 Vercel Preview is READY only on stale SHA 1bd648704172fecb2885b62fb3c51b7720da469c; current head bb008c55 has no matching Preview.
+
+### Migration and release boundary
+
+Supabase staging remains at 49 applied migrations versus 52 source files, with exactly three source-only candidates (20261120100000, 20261120110000, 20261120120000), zero DB-only versions and no duplicate version in the staging source tree. No migration or Edge Function was applied to shared staging or production. Both release flags remain false.
+
+The active GitHub ruleset #27559290 has zero required approving reviews, zero required status checks and zero required deployment environments, while CODEOWNERS and last-push approval controls remain enabled. The project acceptance policy does not require a separate independent PR review; the connected integration has no ruleset-write action to change repository-level settings. Staging Environment protection remains NOT VERIFIED. Vercel Preview SSO is enabled, but Preview readiness is not runtime acceptance.
