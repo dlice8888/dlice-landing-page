@@ -4109,15 +4109,15 @@
       "state": "OPEN_DRAFT",
       "head_sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
       "base": "staging",
-      "quality": "IN_PROGRESS_AT_LAST_POLL",
+      "quality": "PASS",
       "kds_contract": "PASS",
       "cors_contract": "PASS",
       "procurement_requisition_contract": "PASS",
-      "procurement_receiving_contract": "IN_PROGRESS_AT_LAST_POLL",
-      "disposable_migration_replay": "IN_PROGRESS_AT_LAST_POLL",
+      "procurement_receiving_contract": "PASS",
+      "disposable_migration_replay": "PASS",
       "invitation_pgtap_assertions": 15,
-      "invitation_assertions": "PASS on prior exact head cf9d6781; must be reconfirmed on new exact head",
-      "p01_p09_runtime": "NOT RUN — workflow dispatch not available via connector",
+      "invitation_assertions": "PASS in exact-head disposable replay; tenant_invite_audited.test.sql returned ok",
+      "p01_p09_runtime": "NOT RUN — requires manual workflow_dispatch on PR126 branch and verified staging service-role secret",
       "release_flag": false,
       "shared_staging_mutation": false
     },
@@ -4196,7 +4196,14 @@
     },
     "vercel": {
       "pr126_preview": "READY only on stale older commit; current PR head preview not confirmed",
-      "production_changed": false
+      "production_changed": false,
+      "exact_head_previews": {
+        "pr120": "NOT FOUND",
+        "pr123": "NOT FOUND",
+        "pr125": "NOT FOUND",
+        "pr126": "NOT FOUND",
+        "pr127": "NOT FOUND"
+      }
     },
     "release_controls": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4218,13 +4225,44 @@
         "cors_contract": "PASS",
         "procurement_requisition_contract": "PASS",
         "procurement_receiving_contract": "PASS",
-        "disposable_migration_replay": "IN_PROGRESS_AT_LAST_POLL"
+        "disposable_migration_replay": "PASS",
+        "password_guard_unit_tests": "PASS",
+        "password_guard_contract": "PASS",
+        "admin_permission_audit_contract": "PASS"
       },
       "remaining": [
         "Supabase native leaked-password protection remains disabled; application guard cannot intercept direct Auth API password mutation.",
-        "Password reset still uses Auth Admin updateUserById followed by a separate audit insert; this is not a cross-system atomic transaction and needs an intent/result audit lifecycle or an explicit limitation.",
+        "Password reset still uses Auth Admin updateUserById followed by a separate audit insert; durable intent/result tracking is not atomic across Auth/database.",
         "Staging runtime mutation-path tests and independent review remain pending."
       ]
+    },
+    "order_lifecycle_prs": {
+      "pr123": {
+        "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "contracts": "PASS",
+        "runtime_retry_and_late_webhook_e2e": "NOT RUN",
+        "public_checkout_gate": "PUBLIC_TENANT_ROUTING_RELEASED=false"
+      },
+      "pr125": {
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract": "PASS",
+        "expiry_scheduler_runtime": "NOT RUN",
+        "expiry_worker_installed": "NO"
+      },
+      "pr127": {
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "cors_kds_procurement_contracts": "PASS",
+        "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
+      }
     }
   }
 }
