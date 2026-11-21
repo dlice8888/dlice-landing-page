@@ -35,5 +35,5 @@ test("audited RPC is service-role-only and records before/after values transacti
   assert.match(migration, /grant execute on function[\s\S]*to service_role/i);
   assert.match(migration, /previous_permissions/);
   assert.match(migration, /new_permissions/);
-  assert.match(migration, /insert into public\.admin_audit_logs[\s\S]*?update public\.admin_profiles/i);
+  assert.match(migration, /update public\\.admin_profiles[\\s\\S]*?insert into public\\.admin_audit_logs/i);
 });
