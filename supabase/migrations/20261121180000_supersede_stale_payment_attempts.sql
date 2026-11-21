@@ -52,6 +52,7 @@ DECLARE
   v_proof_path text;
   v_payment_status text;
   v_superseded_ids uuid[] := ARRAY[]::uuid[];
+  v_closed_pending_attempts integer := 0;
 BEGIN
   IF p_result NOT IN ('paid','rejected') THEN
     RAISE EXCEPTION 'Invalid payment result';
@@ -62,7 +63,7 @@ BEGIN
   WHERE id = p_order_id
   FOR UPDATE;
 
-  IF NOT FOUND OR v_old_status IN ('paid','refunded') THEN
+  IF NOT FOUND OR v_old_status IN ('paid','refunded','rejected') THEN
     RETURN false;
   END IF;
 
@@ -82,9 +83,13 @@ BEGIN
   SET status = p_result,
       verified_by = p_actor_user_id,
       verified_at = now(),
-      admin_note = nullif(left(coalesce(p_note,''),500),'')
+      admin_note = nullif(left(coalesce(p_note,''),500),''),
+      updated_at = now()
   WHERE id = p_payment_id;
 
+  -- If one proof-bearing attempt is approved, close only sibling attempts that
+  -- have no proof. Other proof-bearing attempts remain pending for manual
+  -- double-payment review and must never be auto-discarded.
   IF p_result = 'paid' THEN
     WITH superseded AS (
       UPDATE public.payment_records
@@ -98,25 +103,62 @@ BEGIN
               'Superseded by approved payment record ' || p_payment_id::text
             ),
             500
-          )
+          ),
+          updated_at = now()
       WHERE order_id = p_order_id
         AND id <> p_payment_id
-        AND status IN ('unpaid','pending_verification')
+        AND (
+          status = 'unpaid'
+          OR (status = 'pending_verification' AND proof_storage_path IS NULL)
+        )
       RETURNING id
     )
     SELECT coalesce(array_agg(id), ARRAY[]::uuid[])
     INTO v_superseded_ids
     FROM superseded;
+  ELSE
+    UPDATE public.payment_records
+    SET status = 'rejected',
+        verified_by = p_actor_user_id,
+        verified_at = now(),
+        admin_note = 'Closed automatically: the order was resolved by another payment decision.',
+        updated_at = now()
+    WHERE order_id = p_order_id
+      AND id <> p_payment_id
+      AND status = 'pending_verification'
+      AND proof_storage_path IS NULL;
+    GET DIAGNOSTICS v_closed_pending_attempts = ROW_COUNT;
   END IF;
 
   UPDATE public.orders
-  SET payment_status = p_result
+  SET payment_status = p_result,
+      fulfillment_status = CASE WHEN p_result = 'rejected' THEN 'failed' ELSE fulfillment_status END,
+      operational_status = CASE WHEN p_result = 'rejected' THEN 'cancelled' ELSE operational_status END,
+      updated_at = now()
   WHERE id = p_order_id;
 
   INSERT INTO public.order_status_history
     (order_id, status_type, old_status, new_status, changed_by, note)
   VALUES
     (p_order_id, 'payment', v_old_status, p_result, p_actor_user_id, nullif(left(coalesce(p_note,''),500),''));
+
+  IF p_result = 'rejected' THEN
+    INSERT INTO public.order_status_history
+      (order_id, status_type, old_status, new_status, changed_by, note)
+    VALUES
+      (p_order_id, 'fulfillment', 'received', 'failed', p_actor_user_id,
+       'Payment verification rejected; order closed and reservations released.'),
+      (p_order_id, 'operational', 'received', 'cancelled', p_actor_user_id,
+       'Payment verification rejected; order closed and reservations released.');
+  END IF;
+
+  IF v_closed_pending_attempts > 0 THEN
+    INSERT INTO public.order_status_history
+      (order_id, status_type, old_status, new_status, changed_by, note)
+    VALUES
+      (p_order_id, 'payment', 'pending_verification', 'rejected', p_actor_user_id,
+       format('%s pending payment attempt(s) without proof were closed.', v_closed_pending_attempts));
+  END IF;
 
   INSERT INTO public.admin_audit_logs
     (actor_user_id, action, entity_type, entity_id, metadata)
@@ -127,16 +169,17 @@ BEGIN
        'payment_id',p_payment_id,
        'note',left(coalesce(p_note,''),500),
        'superseded_payment_ids',v_superseded_ids,
-       'superseded_payment_count',cardinality(v_superseded_ids)
+       'superseded_payment_count',cardinality(v_superseded_ids),
+       'closed_pending_no_proof_attempts',v_closed_pending_attempts
      ));
 
   IF p_result = 'paid' THEN
     UPDATE public.order_reservations
-    SET status = 'consumed'
+    SET status = 'consumed', updated_at = now()
     WHERE order_id = p_order_id AND status IN ('held_for_verification','active');
   ELSE
     UPDATE public.order_reservations
-    SET status = 'released', released_at = now()
+    SET status = 'released', released_at = now(), updated_at = now()
     WHERE order_id = p_order_id AND status IN ('held_for_verification','active');
   END IF;
 
