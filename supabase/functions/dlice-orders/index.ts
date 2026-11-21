@@ -409,7 +409,7 @@ Deno.serve(async (req: Request) => {
     const tokenHash = await sha256(token);
     const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot").eq("tracking_token_hash", tokenHash).maybeSingle();
     if (orderError || !order) return fail("Pesanan tidak ditemukan.", 404, origin);
-    const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at").eq("order_id", order.id);
+    const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at,payment_declared_at").eq("order_id", order.id);
     if (reservationError || !reservations?.length) return fail("Reservasi pesanan tidak ditemukan.", 409, origin);
     if (reservations.some((r) => r.status === "expired" || r.status === "released")) return fail("Reservasi sudah berakhir. Hubungi admin untuk memeriksa ketersediaan.", 409, origin);
     const allStillActive = reservations.every((r) => r.status === "active" && new Date(r.expires_at).getTime() > Date.now());
