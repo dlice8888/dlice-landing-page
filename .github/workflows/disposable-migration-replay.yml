@@ -6,12 +6,18 @@ on:
       - "supabase/migrations/**"
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - "tests/runtime/**"
+      - "tests/contracts/**"
   push:
     branches: [staging, audit/combined-migration-replay-20261121]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
+      - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - "tests/runtime/**"
+      - "tests/contracts/**"
 
 permissions:
   contents: read
