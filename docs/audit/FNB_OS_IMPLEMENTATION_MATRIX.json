@@ -2827,14 +2827,14 @@
         "browser_expiry_race_and_provider_webhook_ordering": "PENDING"
       },
       "pr126": {
-        "head": "c853a621774e3f3530160c057bbd8b258c472d9f",
+        "head": "cf9d6781111f01c2da6d798c14fe70fd577d1ffd",
         "quality": "PASS",
         "disposable_migration_replay": "IN_PROGRESS on exact head; prior exact head a3663697 PASS",
         "invitation_pgtap_assertions": 15,
         "invitation_tests": "PASS on prior exact head disposable replay",
         "passwordless_existing_auth_workflow": "IMPLEMENTED in PR branch; exact-head source contract tests PASS",
-        "identity_a": "existing Supabase Owner in dlice-default; QA-DLICE-A",
-        "identity_b": "existing Supabase QA Branch A in dlice-qa-isolation-b; QA-TENANT-B",
+        "identity_a": "qa_dlice_staging_no_permission@accounts.dlice.internal",
+        "identity_b": "qa_dlice_staging_branch_a@accounts.dlice.internal",
         "old_username_password_secrets": "REMOVED from workflow",
         "required_secret": "STAGING_SUPABASE_SERVICE_ROLE_KEY in protected staging GitHub Environment",
         "session_cleanup": "temporary magic-link sessions revoked after probes",
@@ -2936,14 +2936,16 @@
       "password_retrieval": "not possible; Supabase Auth stores password hashes",
       "auth_admin_generate_link_or_passwordless_session_tool": "not available through current connected Supabase actions",
       "account_mutation_performed": false,
-      "secrets_read_or_changed": false
+      "secrets_read_or_changed": false,
+      "tenant_a_identity": "existing active qa_dlice_staging_no_permission user; sales_admin profile, branch_manager membership in dlice-default, non-empty permissions, active QA-DLICE-A assignment",
+      "tenant_b_identity": "existing active qa_dlice_staging_branch_a user; sales_admin profile, branch_manager membership in dlice-qa-isolation-b, same non-empty permission set, active QA-TENANT-B assignment"
     },
     "tenant_isolation_runtime": {
       "direct_client_rls_boundary": "PASS: branches, tenants and tenant_memberships are explicitly deny_direct_client_access for anon/authenticated; expected zero rows",
       "simulated_authenticated_role_checks": "Owner and QA Branch A identities resolve auth.uid(), but direct table SELECT is intentionally denied by restrictive/permissive deny policies",
       "actual_edge_function_api_tenant_a_b": "NOT RUN: existing Auth identities found but workflow expects username/password; passwords cannot be recovered and current connector has no Auth Admin generate-link/session action",
-      "tenant_a_identity": "existing Owner in dlice-default",
-      "tenant_b_identity": "existing QA Branch A in dlice-qa-isolation-b",
+      "tenant_a_identity": "existing qa_dlice_staging_no_permission branch-manager account in dlice-default",
+      "tenant_b_identity": "existing qa_dlice_staging_branch_a branch-manager account in dlice-qa-isolation-b",
       "cross_tenant_api_read_write": "NOT PROVEN",
       "storage_cache_background_jobs": "NOT PROVEN",
       "TENANT_ISOLATION_RELEASED": false,
@@ -3675,12 +3677,12 @@
     "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
     "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts.",
     "pr127": "Exact-head commit 5c597c2ec37a130501ed19591cfc9383396ba1b6: disposable full migration replay PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS; 14 payment-attempt supersession assertions included. Browser concurrency and global Storage orphan sweep remain pending.",
-    "latest_auth_identity_audit": "Four existing Supabase Auth users found. Owner is an active tenant_owner in dlice-default; existing QA Branch A identity is an active branch_manager in dlice-qa-isolation-b. No passwords can be retrieved from Supabase Auth; no account or password was mutated. Actual Edge Function/API Tenant A/B login probes remain NOT RUN.",
+    "latest_auth_identity_audit": "Four existing Supabase Auth users found. The two correct P01-P09 fixture identities are qa_dlice_staging_no_permission in dlice-default and qa_dlice_staging_branch_a in dlice-qa-isolation-b. Both have active sales_admin profiles, active branch_manager memberships, matching non-empty permission sets, and active assignments to QA-DLICE-A / QA-TENANT-B respectively. The tenant_owner account is not used for P01-P09 because the probe fixture requires matching branch_manager memberships. No account or password was mutated.",
     "direct_client_rls": "Confirmed explicit deny_direct_client_access policies for branches, tenants and tenant_memberships; direct client queries returning zero rows are expected and do not prove or disprove tenant isolation through the service-role Edge Function API.",
     "migration_reconciliation": "Repository staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three missing versions are 20261120100000, 20261120110000 and 20261120120000. No staging migration applied.",
     "pr126": "Exact-head commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8: disposable full migration replay PASS; 15 tenant invitation pgTAP assertions PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS. Real Tenant A/B API runtime is not run because the existing accounts' passwords cannot be recovered and current connector exposes no Auth Admin magic-link/session action.",
     "supabase_advisors": "Security advisor: leaked password protection DISABLED. Performance advisor: 26 unindexed foreign keys and 49 unused indexes; do not drop unused indexes without workload/query-plan evidence. Health advisor: no findings.",
-    "passwordless_tenant_auth": "PR #126 now changes the staging-only manual tenant acceptance workflow to authenticate existing Supabase Owner and QA Branch A Auth users using Auth Admin generateLink(type=magiclink), exchange token_hash for a session, then revoke both temporary sessions. The three unavailable username/password inputs are removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY is required. Source contract tests and quality checks PASS on head c853a621; exact-head disposable replay is IN_PROGRESS. Live P01-P09 is not dispatched because workflow_dispatch is restricted to trusted staging and the PR is still Draft."
+    "passwordless_tenant_auth": "PR #126 uses the two matching existing branch-manager Auth identities via Auth Admin generateLink(type=magiclink), then verifies the token hash and revokes temporary sessions. Old username/password inputs removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY required. Exact-head quality and disposable replay are running on cf9d6781; live P01-P09 remains NOT RUN until PR integration and secret configuration."
   },
   "current_open_prs": [
     127,
