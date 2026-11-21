@@ -2449,7 +2449,19 @@
       "open": 7,
       "latest_issue_number": 111
     },
-    "production_changes": "NONE in this audit"
+    "production_changes": "NONE in this audit",
+    "database_performance": {
+      "advisor_observed_at": "2026-11-21T05:14:02Z",
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49,
+      "statistics_reset_at": "2026-10-02T18:01:15Z",
+      "remediation_pr": 122,
+      "proposed_nonredundant_indexes": 24,
+      "migration": "supabase/migrations/20261121120000_add_fk_covering_indexes.sql",
+      "pgtap_assertions": 24,
+      "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay pending; shared staging unchanged",
+      "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX in PR #122"
+    }
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -2499,7 +2511,7 @@
     87,
     88
   ],
-  "open_pr_count": 18,
+  "open_pr_count": 17,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -2806,7 +2818,7 @@
     "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
     "target_branch_at_audit": "staging",
     "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register.",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 17 open PRs (#122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status.",
     "evidence_snapshot": {
       "supabase_project": "higoadrzxnhzbbwhdbmh",
       "applied_migrations": 49,
@@ -2840,6 +2852,14 @@
         "pr120_disposable_migration_replay": "PASS",
         "independent_review": "PENDING",
         "shared_staging_migration": "NOT_APPLIED"
+      },
+      "performance": {
+        "unindexed_foreign_keys": 26,
+        "unused_indexes": 49,
+        "stats_reset_at": "2026-10-02T18:01:15Z",
+        "remediation_pr": 122,
+        "proposed_indexes": 24,
+        "status": "DRAFT / DISPOSABLE REPLAY PENDING"
       }
     },
     "release_flags": {
@@ -2860,5 +2880,24 @@
       "calculation": "progress_pct = sum of weights for criteria with a passing, linked evidence artifact. Any BLOCKED or SKIPPED acceptance criterion scores 0 for that criterion. DONE requires 100%, no BLOCKED/SKIPPED, and independent review where release policy requires it.",
       "current_scoring_state": "Feature-level percentages are intentionally unscored until each feature has explicit criteria and evidence links; historical_estimate_pct is not a current completion score."
     }
-  }
+  },
+  "current_open_prs": [
+    122,
+    121,
+    120,
+    119,
+    118,
+    117,
+    116,
+    115,
+    114,
+    113,
+    112,
+    111,
+    109,
+    108,
+    107,
+    104,
+    71
+  ]
 }
