@@ -16,6 +16,7 @@ AS $function$
 DECLARE
   v_tenant_id uuid;
   v_branch_status text;
+  v_tenant_status text;
   v_actor_role text;
   v_target_role text;
   v_membership_status text;
@@ -37,11 +38,14 @@ BEGIN
     RAISE EXCEPTION 'invalid_branch_assignment_details' USING ERRCODE = '22023';
   END IF;
 
-  SELECT role INTO v_actor_role
-  FROM public.admin_profiles
-  WHERE user_id = p_actor_user_id
-  FOR SHARE;
-  IF NOT FOUND OR v_actor_role <> 'owner' THEN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.admin_profiles ap
+    JOIN auth.users u ON u.id = ap.user_id
+    WHERE ap.user_id = p_actor_user_id
+      AND ap.role = 'owner'
+      AND coalesce(u.raw_app_meta_data->>'platform_owner','false') = 'true'
+  ) THEN
     RAISE EXCEPTION 'platform_owner_required' USING ERRCODE = '42501';
   END IF;
 
@@ -51,6 +55,13 @@ BEGIN
   FOR SHARE;
   IF NOT FOUND OR v_branch_status NOT IN ('planned','active') THEN
     RAISE EXCEPTION 'branch_not_assignable' USING ERRCODE = 'P0002';
+  END IF;
+  SELECT status INTO v_tenant_status
+  FROM public.tenants
+  WHERE id = v_tenant_id
+  FOR SHARE;
+  IF NOT FOUND OR v_tenant_status NOT IN ('active','trial') THEN
+    RAISE EXCEPTION 'tenant_not_active_for_assignments' USING ERRCODE = '55000';
   END IF;
 
   SELECT role INTO v_target_role
