@@ -5,7 +5,7 @@ SELECT plan(21);
 INSERT INTO auth.users
 (id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 VALUES
-('e7000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.owner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
+('e7000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.owner@example.invalid','',now(),'{"platform_owner":true}'::jsonb,'{}'::jsonb,now(),now()),
 ('e7000000-0000-4000-8000-000000000002','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.staff@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
 ('e7000000-0000-4000-8000-000000000003','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.nonowner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now()),
 ('e7000000-0000-4000-8000-000000000004','00000000-0000-0000-0000-000000000000','authenticated','authenticated','qa.assignment.unclaimed-owner@example.invalid','',now(),'{}'::jsonb,'{}'::jsonb,now(),now())
@@ -60,15 +60,15 @@ SELECT throws_ok(
  '22023','invalid_branch_assignment_details','rejects an unknown actor identity'
 );
 SELECT throws_ok(
- $SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000004','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
- )$,
+ )$$,
  '42501','platform_owner_required','requires platform_owner Auth claim as well as Owner profile role'
 );
 SELECT throws_ok(
- $SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000003','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
@@ -76,7 +76,7 @@ SELECT throws_ok(
  '42501','platform_owner_required','rejects a non-owner actor'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'terminated',current_date,NULL
@@ -84,7 +84,7 @@ SELECT throws_ok(
  '22023','invalid_branch_assignment_details','rejects unsupported employment status'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,current_date-1
@@ -92,7 +92,7 @@ SELECT throws_ok(
  '22023','invalid_branch_assignment_details','rejects an end date before the start date'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000021',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
@@ -100,7 +100,7 @@ SELECT throws_ok(
  '42501','active_tenant_membership_required','rejects assignment to another tenant without membership'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000031',
   'active',current_date,NULL
@@ -108,7 +108,7 @@ SELECT throws_ok(
  '22023','job_position_not_active','rejects an inactive job position'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
@@ -116,7 +116,7 @@ SELECT throws_ok(
  'P0002','staff_profile_not_assignable','does not assign a platform Owner as branch staff'
 );
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000022',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
@@ -125,11 +125,11 @@ SELECT throws_ok(
 );
 
 SELECT throws_ok(
- $SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000023',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'active',current_date,NULL
- )$,
+ )$$,
  '55000','tenant_not_active_for_assignments','rejects assignment under a suspended tenant'
 );
 
@@ -185,7 +185,7 @@ BEFORE INSERT ON public.admin_audit_logs
 FOR EACH ROW EXECUTE FUNCTION public.test_reject_branch_assignment_audit();
 SELECT set_config('test.reject_branch_assignment_audit','true',true);
 SELECT throws_ok(
- $$$SELECT public.dlice_save_branch_assignment_audited(
+ $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000001','e7000000-0000-4000-8000-000000000020',
   'e7000000-0000-4000-8000-000000000002','e7000000-0000-4000-8000-000000000030',
   'on_leave',current_date,NULL
