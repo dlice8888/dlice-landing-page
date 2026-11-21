@@ -634,3 +634,16 @@ The previous staging tenant-isolation workflow was blocked because Owner and Ten
 - The new workflow requires one protected staging Environment secret: `STAGING_SUPABASE_SERVICE_ROLE_KEY`. This key is used only in the manually dispatched workflow on trusted `staging`; it is never printed or exposed to PR builds.
 - No existing user password, Auth metadata, membership or role was changed; no QA user was created.
 - Exact-head quality and source-contract tests PASS on PR #126 head `cf9d6781`; full disposable migration replay PASS on the same head, including all 15 invitation pgTAP assertions. CORS, KDS, procurement requisition and receiving contracts also PASS. The live P01–P09 workflow remains NOT RUN until PR #126 is integrated into staging and the single service-role secret is configured. The PR remains Draft; no merge or staging deployment is authorized by this update.
+
+
+### Partial-feature progress scoring — evidence integrity
+
+A weighted progress rubric has now been added to `FNB_OS_IMPLEMENTATION_MATRIX.json`:
+- Code/UI implementation: 25%
+- Database/data integrity: 20%
+- Authorization/tenant scope: 15%
+- Automated tests: 15%
+- Workflow E2E: 15%
+- Reconciliation/observability: 10%
+
+The score measures implementation completeness, not release readiness. Missing evidence receives zero; no score is inferred from a PR being open or a table existing. At this checkpoint, 2 of 89 PARTIAL features have evidence-backed provisional percentages (tenant isolation 38%, tenant directory/onboarding 30%); 87 remain explicitly marked `UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED`. Completing those 87 feature-level evidence breakdowns is itself an audit work item; I will not manufacture percentages.
