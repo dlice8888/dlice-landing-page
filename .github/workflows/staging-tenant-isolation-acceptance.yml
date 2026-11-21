@@ -2,8 +2,12 @@ name: Staging Tenant Isolation Acceptance
 
 # Run only from the trusted staging branch; never expose staging credentials to PR code.
 on:
-  # Explicit manual dispatch only: prevent an unverified Environment from
-  # generating a BLOCKED acceptance run automatically on every staging push.
+  # Run only when the trusted staging test harness itself changes.
+  push:
+    branches:
+      - staging
+    paths:
+      - .github/workflows/staging-tenant-isolation-acceptance.yml
   workflow_dispatch:
 
 permissions:
@@ -17,20 +21,17 @@ jobs:
   tenant-isolation:
     # Manual dispatch is accepted only when the selected ref is the trusted staging branch.
     if: github.ref == 'refs/heads/staging'
-    name: Supabase Auth magic-link tenant isolation P01-P09
+    name: Authenticated tenant isolation P01-P09
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 10
     env:
       STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-      # A one-time Supabase Auth Admin magic link authenticates the existing users;
-      # no QA user/password secrets or account/password mutations are required.
-      # Keep this service-role key scoped to the protected staging Environment only.
       STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-      STAGING_TENANT_A_EMAIL: qa_dlice_staging_no_permission@accounts.dlice.internal
-      STAGING_TENANT_B_EMAIL: qa_dlice_staging_branch_a@accounts.dlice.internal
-      # Tenant/branch/user UUIDs are derived from the authenticated A/B identities at runtime.
+      # Fixed, pre-existing confirmed Auth identities; no account creation or password reset.
+      STAGING_TENANT_A_USER_ID:  b930897c-f8fb-443b-9056-e70c08b31446
+      STAGING_TENANT_B_USER_ID:  e1de1ffc-9fae-412f-9dd7-0993b54cb631
       STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
       STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
     steps:
