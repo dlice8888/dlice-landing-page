@@ -291,3 +291,15 @@ Both branches also share the exact invitation migration blob `b9dab9b7027e51bd5a
 PR #120 current head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` has now completed disposable migration replay successfully. Exact-head results: quality, CORS, KDS contract, Procurement requisition, Procurement receiving and disposable migration replay all PASS. The migration job ran 10 pgTAP files / 206 assertions, all PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345.
 
 The prior note that PR #120's latest-head replay was still in progress is superseded. This remains disposable CI evidence, not shared staging mutation-path acceptance.
+
+## PR #126 exact-head test completion — 21 November 2026, 21:18 WIB
+
+PR #126 exact head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` has completed all six applicable workflows successfully. Disposable migration replay: 7 pgTAP files / 139 assertions PASS. [Run](https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844).
+
+This exact head includes:
+- Correct P01/P02 fixture-scope labels.
+- P08/P09 postcondition query requiring zero persisted `stock_transfers` rows after a cross-tenant 403.
+- Supabase API key header compatibility: new `sb_secret_` keys are sent on `apikey` only; legacy service-role JWTs also use `Authorization: Bearer`.
+
+P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
+
