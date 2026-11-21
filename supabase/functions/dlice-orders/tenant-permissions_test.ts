@@ -1,5 +1,6 @@
 import {
   hasTenantScopedHeadOfficePermission,
+  isTenantSensitiveAction,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 
@@ -91,5 +92,22 @@ Deno.test("inactive memberships cannot contribute permissions", () => {
   ]);
   if (permissions.join(",") !== "orders") {
     throw new Error(`Expected only active membership grants, got: ${permissions.join(",")}`);
+  }
+});
+
+Deno.test("admin and ERP routes are tenant-sensitive by default until certified", () => {
+  const protectedActions = [
+    "admin-list-orders",
+    "admin-set-permissions",
+    "erp-create-pos-sale",
+    "erp-list-finance",
+    "erp-accept-tenant-invite",
+  ];
+  if (protectedActions.some((action) => !isTenantSensitiveAction(action))) {
+    throw new Error("Every admin/ERP route must be tenant-sensitive by default");
+  }
+  const exemptActions = ["admin-login", "admin-session-info", "track-order"];
+  if (exemptActions.some((action) => isTenantSensitiveAction(action))) {
+    throw new Error("Authentication bootstrap, session introspection and customer tracking are not admin/ERP routes");
   }
 });
