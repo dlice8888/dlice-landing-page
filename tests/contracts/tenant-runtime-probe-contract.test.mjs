@@ -20,8 +20,8 @@ test("staging tenant gate is manually dispatched from trusted staging and discov
   ]) {
     assert.match(workflow, new RegExp(`${secret}:\\s*\\$\\{\\{\\s*secrets\\.${secret}\\s*\\}\\}`));
   }
-  assert.match(workflow, /STAGING_TENANT_A_EMAIL:\\s*dlice8888@accounts\\.dlice\\.internal/);
-  assert.match(workflow, /STAGING_TENANT_B_EMAIL:\\s*qa_dlice_staging_branch_a@accounts\\.dlice\\.internal/);
+  assert.match(workflow, /STAGING_TENANT_A_EMAIL:\s*dlice8888@accounts\.dlice\.internal/);
+  assert.match(workflow, /STAGING_TENANT_B_EMAIL:\s*qa_dlice_staging_branch_a@accounts\.dlice\.internal/);
   assert.doesNotMatch(workflow, /STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
   assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
