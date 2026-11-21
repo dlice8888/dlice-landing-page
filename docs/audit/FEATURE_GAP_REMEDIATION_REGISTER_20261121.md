@@ -750,3 +750,16 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 
 ### Release safety
 No production deployment, shared-staging migration, Auth identity mutation, tenant-isolation release flag change, or public tenant-routing release flag change occurred. Keep both release flags false.
+
+
+### PR #120/#124 combined implementation update — 21 November 2026
+- PR #120 branch now includes the unique application-layer password guard from #124: k-anonymous Pwned Passwords range check, padding, fail-closed behavior, Deno unit tests and Node contract tests on initial Owner bootstrap, staff creation and staff password reset.
+- Current PR #120 head: `d9aa2fbc813da48abcae38769be90de1e981c13d`. Quality, KDS contract, CORS, procurement requisition and receiving contracts PASS; disposable migration replay was still IN_PROGRESS at last poll.
+- The shared atomic permission audit migration and pgTAP test remain a single canonical copy on #120; no duplicate migration was added from #124.
+- The app-level password guard does **not** close direct Supabase Auth API password mutation. Native leaked-password protection remains disabled. The password reset path also updates Auth first and writes its audit afterward; a separate audit-intent/result lifecycle is still required if the product requires durable traceability across Auth/database failure boundaries. Do not mark the password-control feature DONE.
+
+### Three-migration drift review — evidence update
+- All three repository-only migrations have corresponding pgTAP suites: owner/tenant bootstrap 23 assertions, Command Center summary 7, branch checklist atomic audit 27; total 57 assertions.
+- Disposable full migration replay passed on commit `cf15f33379a731c1952ec22b5d12739595a21a93`. Comparing that commit to current staging `78f929dac2b05f436aaa7f50005310166f8a4779` shows only workflow and test files changed; no migration changed after the passing replay.
+- The migrations remain unapplied to shared staging. Owner bootstrap still requires the current Owner identity to have the verified server-side platform-owner claim. Command Center's current sales KPI is POS-paid-sales based and does not yet reconcile online sales, refunds, discounts or margin. Branch checklist RPC has atomic audit and the Edge Function contract enforces branch access before the privileged RPC.
+- Status is now `DRIFT_3_PENDING_REVIEW_AND_EXPLICIT_STAGING_APPROVAL_NOT_APPLIED`; replay PASS is not staging approval.
