@@ -28,7 +28,7 @@ For each feature, each dimension is split into explicit pass/fail acceptance cri
 
 - 189 PRD features across 18 domains.
 - 84 PARTIAL, 96 NOT VERIFIED, 9 BLOCKED.
-- Two features have current weighted scores in SaaS Tenant Management: Tenant/member isolation = 28% and Tenant directory/tenant onboarding = 20% (both PR #126). The other 82 PARTIAL features still require per-feature decomposition and evidence before a score is assigned; historical domain estimates are not substituted.
+- Two features have current weighted scores in SaaS Tenant Management: Tenant/member isolation = 28% and Tenant directory/tenant onboarding = 30% (both PR #126). The other 82 PARTIAL features still require per-feature decomposition and evidence before a score is assigned; historical domain estimates are not substituted.
 - Feature 8 (permission-change audit) is IN_PROGRESS in Draft PR #120. Feature 9 (leaked-password protection) has free application-layer mitigation in Draft PR #124 but native Supabase protection and direct Auth bypass remain unresolved. Tenant/member isolation moved to PARTIAL at 28%, and tenant directory/onboarding moved to PARTIAL at 20% after PR #126 implementation and test work.
 
 ## Non-negotiable reporting rule
