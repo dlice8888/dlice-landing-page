@@ -240,7 +240,7 @@ BEGIN
   IF p_actor_user_id IS NULL OR p_tenant_id IS NULL
      OR NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id)
      OR p_email IS NULL OR length(p_email)<3 OR length(p_email)>254
-     OR p_email !~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$'
+     OR NOT (p_email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$')
      OR p_role IS NULL OR p_role NOT IN ('tenant_admin','branch_manager','cashier','inventory','production','finance','viewer','tenant_member')
      OR p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
      OR p_expires_at IS NULL OR p_expires_at <= now()
