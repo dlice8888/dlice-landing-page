@@ -17,14 +17,22 @@ BEGIN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
 
-  IF p_actor_user_id IS NULL OR p_tenant_id IS NULL
-    OR p_email IS NULL OR length(trim(p_email)) NOT BETWEEN 3 AND 254
-    OR p_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
-    OR p_role IS NULL OR p_role NOT IN ('tenant_admin','branch_manager','cashier','inventory','production','finance','viewer','tenant_member')
-    OR p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
-    OR p_expires_at IS NULL OR p_expires_at <= now()
-    OR p_expires_at > now() + interval '30 days'
+  IF p_actor_user_id IS NULL OR p_tenant_id IS NULL OR p_email IS NULL THEN
+    RAISE EXCEPTION 'invalid_tenant_invite' USING ERRCODE = '22023';
+  END IF;
+  IF length(trim(p_email)) NOT BETWEEN 3 AND 254
+    OR position('@' in p_email) <= 1
+    OR position('.' in split_part(p_email,'@',2)) <= 1
   THEN
+    RAISE EXCEPTION 'invalid_tenant_invite' USING ERRCODE = '22023';
+  END IF;
+  IF p_role IS NULL OR p_role NOT IN ('tenant_admin','branch_manager','cashier','inventory','production','finance','viewer','tenant_member') THEN
+    RAISE EXCEPTION 'invalid_tenant_invite' USING ERRCODE = '22023';
+  END IF;
+  IF p_token_hash IS NULL OR length(p_token_hash) <> 64 OR p_token_hash ~ '[^0-9a-f]' THEN
+    RAISE EXCEPTION 'invalid_tenant_invite' USING ERRCODE = '22023';
+  END IF;
+  IF p_expires_at IS NULL OR p_expires_at <= now() OR p_expires_at > now() + interval '30 days' THEN
     RAISE EXCEPTION 'invalid_tenant_invite' USING ERRCODE = '22023';
   END IF;
 
@@ -118,11 +126,16 @@ BEGIN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
 
-  IF p_actor_user_id IS NULL OR p_email IS NULL
-    OR length(trim(p_email)) NOT BETWEEN 3 AND 254
-    OR p_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
-    OR p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
+  IF p_actor_user_id IS NULL OR p_email IS NULL THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_acceptance' USING ERRCODE = '22023';
+  END IF;
+  IF length(trim(p_email)) NOT BETWEEN 3 AND 254
+    OR position('@' in p_email) <= 1
+    OR position('.' in split_part(p_email,'@',2)) <= 1
   THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_acceptance' USING ERRCODE = '22023';
+  END IF;
+  IF p_token_hash IS NULL OR length(p_token_hash) <> 64 OR p_token_hash ~ '[^0-9a-f]' THEN
     RAISE EXCEPTION 'invalid_tenant_invite_acceptance' USING ERRCODE = '22023';
   END IF;
 
