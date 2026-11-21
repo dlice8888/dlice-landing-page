@@ -55,26 +55,26 @@ SELECT is(
  'retrying the identical invitation request is idempotent'
 );
 SELECT throws_ok(
- $SELECT public.dlice_create_tenant_invite_atomic(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd4000000-0000-4000-8000-000000000001',
   (SELECT id FROM public.tenants WHERE slug='dlice-default'),
   'different@example.test','cashier',repeat('a',64),now()+interval '7 days'
- )$,
+ )$$,
  '23505','tenant_invite_token_conflict',
  'an invitation token cannot be rebound to a different payload'
 );
 SELECT throws_ok(
- $SELECT public.dlice_create_tenant_invite_atomic(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd4000000-0000-4000-8000-000000000001',
   (SELECT id FROM public.tenants WHERE slug='dlice-default'),
   'too-long@example.test','cashier',repeat('f',64),now()+interval '8 days'
- )$,
+ )$$,
  '22023','invalid_tenant_invite',
  'invitation expiry cannot exceed seven days'
 );
 
 CREATE OR REPLACE FUNCTION public.test_reject_tenant_invite_audit()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $test$
 BEGIN
   IF NEW.action='tenant_member_invited'
      AND current_setting('test.reject_tenant_invite_audit',true)='true' THEN
@@ -82,17 +82,17 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$test$;
 CREATE TRIGGER test_reject_tenant_invite_audit
 BEFORE INSERT ON public.admin_audit_logs
 FOR EACH ROW EXECUTE FUNCTION public.test_reject_tenant_invite_audit();
 SELECT set_config('test.reject_tenant_invite_audit','true',true);
 SELECT throws_ok(
- $SELECT public.dlice_create_tenant_invite_atomic(
+ $$SELECT public.dlice_create_tenant_invite_atomic(
   'd4000000-0000-4000-8000-000000000001',
   (SELECT id FROM public.tenants WHERE slug='dlice-default'),
   'auditfail@example.test','cashier',repeat('f',64),now()+interval '7 days'
- )$,
+ )$$,
  'P0001','forced tenant invite audit failure',
  'invite creation fails when its audit insert fails'
 );
