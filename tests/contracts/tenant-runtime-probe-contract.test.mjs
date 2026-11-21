@@ -16,6 +16,8 @@ test("staging tenant gate runs only for trusted staging harness changes and uses
   assert.ok(triggers.includes("- staging"));
   assert.ok(triggers.includes("- .github/workflows/staging-tenant-isolation-acceptance.yml"));
   assert.match(workflow, /if:\s*github\.ref\s*==\s*'refs\/heads\/staging'/);
+  assert.ok(triggers.includes("- tests/runtime/dlice-tenant-jwt-isolation.mjs"));
+  assert.ok(triggers.includes("- tests/runtime/supabase-api-key.mjs"));
   assert.doesNotMatch(triggers, /pull_request/);
   for (const secret of [
     "STAGING_SUPABASE_URL",
