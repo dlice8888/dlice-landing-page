@@ -27,7 +27,9 @@ test("only a verified platform Owner can change a non-owner profile classificati
   assert.match(handler, /branch_assignments/);
   assert.match(handler, /employment_status", "active"/);
   assert.match(handler, /tenantIds\.has\(assignment\.branches\?\.tenant_id\)/);
-  assert.match(handler, /set_staff_profile_role/);
+  assert.match(handler, /dlice_update_admin_profile_role_audited/);
+  assert.doesNotMatch(handler, /from\("admin_profiles"\)\.update/);
+  assert.doesNotMatch(handler, /from\("admin_audit_logs"\)\.insert/);
 });
 
 test("branch_worker UI uses the Owner-only role action and does not grant global permissions", () => {
