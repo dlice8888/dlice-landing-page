@@ -42,8 +42,8 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 1. There are 22 open PRs, not 9 as shown in the 20-November snapshot.
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
-4. #108 is still open and Draft. The current feature-level matrix in #121 is 84/96/9 after two SaaS features moved to PARTIAL when PR #126 began concrete implementation. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Two SaaS and five additional features have since moved to PARTIAL based on concrete implementation evidence, so the current feature-level matrix is 89/91/9.
-5. #120 is still Draft and has no independent reviewer. Its latest fixes are awaiting exact-head CI; earlier green checks on other commits do not authorize shared-staging deployment.
+4. #108 is still open and Draft. The current feature-level matrix in #121 is 89/91/9. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Two SaaS and five additional features moved to PARTIAL based on concrete implementation/schema evidence.
+5. #120 is still Draft and has no independent reviewer. Exact-head quality, disposable migration replay and contract jobs now PASS; staging runtime acceptance and independent review remain mandatory.
 6. No reviewer is currently requested on these 22 PRs in the metadata returned by GitHub; #122–#127 also have no requested reviewer in their creation metadata.
 
 ## Safety and next action
