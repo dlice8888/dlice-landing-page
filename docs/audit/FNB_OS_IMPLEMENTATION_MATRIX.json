@@ -2579,7 +2579,6 @@
       "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
       "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
       "required_status_checks": [],
-      "independent_review_policy": "USER WAIVES EXTRA INDEPENDENT REVIEW AS AN AUDIT PREREQUISITE; actual active GitHub rules still apply",
       "staging_deployment_reviewers": "NOT VERIFIED",
       "admin_mutation_available_via_current_connector": false,
       "github_ruleset_id": 27559290,
