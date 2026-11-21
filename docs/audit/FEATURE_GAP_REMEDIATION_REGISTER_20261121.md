@@ -593,5 +593,31 @@ Read-only reconciliation of the 7 staging orders, 6 payment records and 21 reser
 
 Root cause: the existing `admin_apply_payment_verification` RPC changes the selected payment record and order status but does not close sibling attempts. This is a real payment-attempt lifecycle gap, not an orphaned payment or reservation.
 
-PR #127 now implements an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes only unpaid or no-proof pending sibling attempts when one payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. The 14-assertion pgTAP suite covers both paths; exact-head migration replay is still IN_PROGRESS. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
+PR #127 now implements an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes only unpaid or no-proof pending sibling attempts when one payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. The 14-assertion pgTAP suite covers both paths; exact-head disposable migration replay now PASS on commit `5c597c2e`. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
 
+
+
+### Live acceptance checkpoint — Supabase identities, migration drift and current PR heads (21 November 2026)
+
+**Existing Auth identities (no account mutation)**
+- Supabase staging contains four existing Auth users.
+- The existing active Owner account has an active `tenant_owner` membership in `dlice-default`.
+- The existing active QA Branch A account has an active `branch_manager` membership in `dlice-qa-isolation-b`.
+- No new QA accounts were created. No password, membership, role, or Auth metadata was changed.
+- Passwords cannot be recovered from Supabase Auth because only password hashes are stored. The current connected Supabase actions do not expose an Auth Admin generate-link or passwordless-session action. Real Edge Function/API login probes therefore remain NOT RUN.
+- Direct-client RLS policies on `branches`, `tenants`, and `tenant_memberships` explicitly deny `anon` and `authenticated`. Simulated authenticated-role direct queries returning zero rows are expected by design and do not prove API-level tenant isolation.
+
+**Exact-head PR status**
+- **#126:** exact head `a3663697` full disposable migration replay PASS; 15 invitation pgTAP assertions PASS; quality, CORS, KDS, procurement requisition and receiving contracts PASS. Real Tenant A/B API own-read/write and cross-tenant negative tests remain open.
+- **#120:** exact head `29d6d808` quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. Independent review and real staging permission-mutation runtime remain open.
+- **#124:** exact head `a74200d6` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Native Supabase leaked-password protection is still DISABLED; application-level k-anonymity checks do not close direct Auth mutation paths.
+- **#123:** exact head `31976673` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Browser retry/concurrency and provider webhook ordering remain open.
+- **#125:** exact head `1c97dd74` quality, disposable migration replay, CORS, KDS and procurement contracts PASS. Browser expiry race and provider webhook ordering remain open.
+- **#127:** exact head `5c597c2e` quality, disposable migration replay, CORS, KDS and procurement contracts PASS; 14 payment-attempt supersession assertions are included. Browser concurrency and global Storage orphan cleanup remain open.
+
+**Migration and platform gates**
+- Repository staging branch: 52 migration SQL files. Supabase staging: 49 applied versions. Outstanding source-only migrations: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`.
+- No shared staging migration or production mutation occurred.
+- Vercel project `dlice-landing-page` exists; PR #126 preview is READY on exact head. No preview was found for current PR #127 head.
+- Supabase Security Advisor: native leaked-password protection disabled. Performance Advisor: 26 unindexed foreign keys and 49 unused indexes. Health Advisor: no findings.
+- `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
