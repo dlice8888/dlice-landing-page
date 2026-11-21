@@ -20,10 +20,12 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 ## Baseline reconciliation
 | Audit status | Count | Meaning |
 |---|---:|---|
-| PARTIAL | 82 | Code/schema/UI foundation exists; acceptance gaps remain |
-| NOT VERIFIED | 98 | Insufficient implementation evidence; highest backlog priority |
+| PARTIAL | 83 | Code/schema/UI foundation exists; acceptance gaps remain; one SaaS tenant-isolation feature newly moved from NOT VERIFIED after implementation started |
+| NOT VERIFIED | 97 | Insufficient implementation evidence; highest backlog priority |
 | BLOCKED | 9 | Release or external gate prevents acceptance |
 | **Total** | **189** | **18 domains** |
+
+Latest snapshot after PR #126 began concrete implementation: **83 PARTIAL + 97 NOT VERIFIED + 9 BLOCKED = 189**. Only the feature “Tenant/member isolation in database and APIs” changed from NOT VERIFIED to PARTIAL; all other baseline statuses are unchanged.
 
 Note: domain rows sum to 98 NOT VERIFIED. The supplied total row's 93 is a summation error; the per-domain rows are the baseline source.
 
@@ -389,3 +391,29 @@ The current 7 legacy orders are not modified by PR #125 until the migration is a
 PR #126 adds 35 pgTAP assertions over 17 sensitive tables. It verifies RLS is enabled and that no permissive PUBLIC/anon/authenticated policy grants direct access; existing deny policies must have false USING and WITH CHECK, while service_role_only tables expose no client policy.
 
 This is only the database direct-client boundary. It does not prove tenant A/B isolation through service-role Edge Functions, Storage, caches, webhooks or background jobs. Two real staging identities and negative cross-tenant API probes remain mandatory. The feature stays NOT VERIFIED until the disposable database replay passes and the full API tenant-scope evidence is obtained.
+
+## 21-November work started and evidence-linked progress
+
+### SaaS Tenant Management — Tenant/member isolation in database and APIs
+- **Audit status:** PARTIAL (moved from NOT VERIFIED because PR #126 contains concrete code and test work).
+- **Weighted implementation progress:** 18%.
+  - Code/UI: 0/20 — no tenant-aware UI/API implementation is certified yet.
+  - Database: 10/20 — 64/64 public tables have RLS; 35 pgTAP policy-shape assertions passed on the previous PR #126 head; actual tenant row visibility is not yet proven.
+  - Authorization: 0/15 — latest PR #126 adds a fail-closed default-deny for every admin/ERP route while tenant isolation remains unreleased; positive tenant-specific access is not yet accepted.
+  - Automated tests: 8/15 — 35 RLS contract assertions passed; new default-deny unit tests are running on the latest head.
+  - Browser/API E2E: 0/20 — no real Tenant A/B own-tenant read/write and cross-tenant negative tests.
+  - Operational reconciliation: 0/10 — no Storage/cache/job isolation or tenant-level reconciliation evidence.
+- **Remaining gaps:** create/verify two distinct tenant identities; test own-tenant read/write; reject cross-tenant read/write through every Edge Function; test Storage object isolation, caches, exports, cron/jobs and platform-owner bypass; prove role and permission changes cannot cross tenants; run browser/API negative probes with no BLOCKED/SKIPPED; independently review before release.
+- **PR:** #126. Tenant isolation release flag remains false. The default-deny barrier is a safety control, not a tenant-isolation pass.
+
+### Order Management — Duplicate orders, delayed payment, failed order handling
+- **PR #123:** checkout idempotency and replay; 74 pgTAP assertions and disposable replay PASS.
+- **PR #125:** unpaid/unproven payment expiry, rejection compensation and stale no-proof cleanup; 27 pgTAP assertions and disposable replay PASS.
+- **PR #127:** atomic payment-proof RPC, upload idempotency key, order/reservation/payment/history/audit transaction; quality checks PASS, exact-head disposable migration replay still running.
+- **Remaining gaps:** browser fault injection, concurrent upload/expiry runtime tests, provider webhook ordering, tenant-scoped runtime tests and a Storage orphan-object sweeper. Supabase Storage upload is outside the Postgres transaction; the Edge Function only compensates by deleting on RPC failure, so process-crash orphan risk remains explicit.
+
+### Supabase index performance
+- Performance Advisor: 26 unindexed FK warnings and 49 non-unique zero-scan indexes.
+- Read-only catalog analysis: 126 zero-scan indexes total (77 primary/unique constraint indexes + 49 non-unique), 488 kB for the 49 non-unique indexes; stats reset 2026-10-02.
+- Two exact prefix duplicates are proposed for removal in PR #122: `stock_count_items_count_idx` and `stock_transfer_items_transfer_idx`. Composite unique indexes remain to cover their leading FK keys.
+- The other 47 non-unique zero-scan indexes are retained pending representative workload and EXPLAIN evidence; many support FK/query paths or empty modules. No production or shared-staging index has been dropped.
