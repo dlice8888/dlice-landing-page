@@ -720,3 +720,33 @@ Latest Vercel preview located for #126 is READY on an older commit, so it is not
 4. Resolve the three migration drift entries only after independent review; still do not apply until approval.
 5. Continue domain 4–5, then 6–7–1; attach code, schema, authorization, automated test, E2E and reconciliation evidence per feature.
 6. Run regression across all 18 domains and only move PARTIAL to DONE at 100% with all six evidence layers passing.
+---
+
+## Re-audit execution update — 21 November 2026
+
+### PR #126 — P01–P09 readiness and scoped probe fix
+- Current PR head: `07d7c51c2cbea21b9cd49a480614e004fe7bf417`, OPEN/DRAFT against `staging`.
+- The two Tenant A/B identities are present in Supabase Auth and have active memberships/QA branch assignments. The existing Owner identity is also present, but its `app_metadata.platform_owner` claim is false; it must not be treated as a platform-owner bypass.
+- A code-level acceptance deadlock was identified: the blanket `isTenantSensitiveAction` pre-release gate also blocked the very positive/negative routes required by P01–P09. PR #126 now narrowly exempts only four routes with explicit scope enforcement: self-only tenant membership lookup, membership/assignment-derived branch listing, branch-authorized inventory read, and stock-transfer creation that validates both source and destination branch access. All other admin/ERP routes remain blocked before release.
+- The scoped allowlist implementation is commit `1bd648704172fecb2885b62fb3c51b7720da469c`; its unit-test pin is `07d7c51c2cbea21b9cd49a480614e004fe7bf417`.
+- Exact-head CI after these commits: KDS contract PASS, CORS PASS, procurement requisition contract PASS; quality checks, procurement receiving contract and disposable migration replay were still IN_PROGRESS at last poll. Invitation 15/15 and replay had passed on previous exact head `cf9d6781`; they must be reconfirmed on `07d7c51c`.
+- Live P01–P09 remains NOT RUN. The workflow requires protected staging Environment secret `STAGING_SUPABASE_SERVICE_ROLE_KEY`; Environment protection/secret state is not readable or writable with the current connector, and workflow dispatch is unavailable through the connected GitHub actions.
+
+### Legacy staging E2E authentication mismatch
+- Latest staging KDS/POS/stock run `44741192566` failed in preflight because the legacy workflow still requires `STAGING_TEST_OWNER_USERNAME` and `STAGING_TEST_OWNER_PASSWORD`; the business-flow step was SKIPPED. This is not a KDS business assertion failure.
+- The staging procurement workflow still requires Owner username/password and Tenant A username/password. It has not yet been converted to the Supabase existing-account magic-link method.
+- The existing Owner Auth user is active with profile role `owner` and tenant_owner membership, but `app_metadata.platform_owner` is false and it has no branch assignment. No password, role, metadata or membership was changed. Platform Owner allowlist/claim must be completed through authorized Auth Admin only if the account is independently verified as the intended platform Owner.
+
+### GitHub release protection — current ruleset read
+- Active repository ruleset `27559290` applies to `~ALL` branches.
+- It currently requires zero approving reviews, has an empty required-status-check list and no required deployment environments.
+- It includes 11 bypass actors with `always` bypass; the current connection itself reports `current_user_can_bypass=always`.
+- Required signatures, linear history, deletion prevention and non-fast-forward prevention are enabled, but this is not a sufficient release gate. No ruleset mutation was made because the connected tools expose read-only ruleset access only.
+
+### Feature count reconciliation
+- The latest user-supplied per-domain rows sum to 189 with 82 PARTIAL, 98 NOT VERIFIED and 9 BLOCKED; the supplied total row's 93 NOT VERIFIED is incorrect.
+- The evidence-backed current matrix is 89 PARTIAL, 91 NOT VERIFIED, 9 BLOCKED and 0 DONE. Seven features have moved from NOT VERIFIED to PARTIAL based on concrete code/schema/test foundations: two Kitchen/KDS, one Menu/Pricing, two Inventory/Warehouse & reorder, and two SaaS Tenant Management.
+- The PARTIAL status does not imply successful runtime acceptance. Progress percentages remain evidence-scored only: two PARTIAL features scored, 87 remain unscored pending six-layer evidence decomposition.
+
+### Release safety
+No production deployment, shared-staging migration, Auth identity mutation, tenant-isolation release flag change, or public tenant-routing release flag change occurred. Keep both release flags false.
