@@ -107,8 +107,8 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 - Database RPC locks the target profile and writes before/after permission sets in the same transaction.
 - Owner profile cannot be changed through this action.
 - Audit persistence failure rolls back the permission update and the API fails closed.
-- 11 pgTAP assertions and source-contract tests are included.
-- Exact-head quality checks and disposable local migration replay (including `supabase test db`) passed.
+- Atomic RPCs and source-contract/pgTAP tests are present. The latest branch changes fixed a malformed invite email regex and corrected the release-contract exception for email-bound one-time invite acceptance.
+- Previous PR #120 head failed: ERP authorization coverage contract and disposable replay SQL parse. New exact-head quality was queued and disposable migration replay was running at the latest audit; do not call PR #120 green until both finish PASS.
 
 **Remaining work**
 1. Independent review of RPC ACL, function authorization, target locking and audit schema.
@@ -140,6 +140,7 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 4. **Tenant runtime acceptance:** P01–P09 and supplemental probes have not been executed against real protected staging identities; blocked/skipped probes are not passes.
 5. **Business-data workflow evidence:** staging currently has zero purchase orders, receipts, production batches, settlements, refunds and finance journal entries. Use isolated, explicitly authorized test fixtures; never fabricate production transactions.
 6. **Vercel protection:** project is on Hobby; SSO protection is configured for all deployment types except custom domains. Verify actual staging URL protection before using preview as a protected QA surface.
+7. **Staging E2E credentials:** the latest Procurement and KDS/POS/Stock/Offline runs are BLOCKED at preflight because `STAGING_TEST_OWNER_USERNAME`, `STAGING_TEST_OWNER_PASSWORD` and `STAGING_TEST_BRANCH_A_USERNAME` are unavailable. An authorized repository/environment maintainer must verify and restore the correct QA secrets without disclosing their values. Do not substitute identities or weaken the preflight.
 
 ## Exit rule
 
