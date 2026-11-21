@@ -5,7 +5,7 @@
 
 ## 1. Acceptance principle
 
-A separate independent PR-review/approval step is not required by the D’Lice project execution policy. Reviewer assignment, reviewer identity and approval count are not feature-completion metrics. A PR advances only when its exact candidate commit passes the measurable test matrix below.
+Feature and PR completion are determined exclusively by reproducible test evidence on the exact candidate commit, using the measurable test matrix below.
 
 This policy does not disable GitHub branch/deployment protection, staging Environment controls, secret handling, explicit mutation authorization, backup/rollback requirements or production release gates.
 
@@ -43,7 +43,7 @@ P01–P09 must use the two existing Supabase Auth accounts. Do not create users 
 
 ## 5. Separate release controls
 
-The following remain mandatory and are not PR-review steps:
+The following release controls remain mandatory:
 - Verify protected GitHub Environment and secret availability without exposing secret values.
 - Use authorized workflow dispatch for shared staging mutations.
 - Complete disposable replay, backup/restore and rollback planning before staging migration.
