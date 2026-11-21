@@ -5,6 +5,7 @@ on:
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
+      - "supabase/functions/dlice-orders/**"
       - ".github/workflows/disposable-migration-replay.yml"
       - ".github/workflows/staging-tenant-isolation-acceptance.yml"
       - ".github/workflows/quality-checks.yml"
@@ -31,7 +32,7 @@ concurrency:
 jobs:
   migration-replay:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -81,9 +82,10 @@ jobs:
             -e "s/^port = 54323$/port = $((base_port + 3))/" \
             -e "s/^port = 54324$/port = $((base_port + 4))/" \
             supabase/config.toml
-          mkdir -p supabase/migrations supabase/tests
+          mkdir -p supabase/migrations supabase/tests supabase/functions
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
           cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/
+          cp -R "$GITHUB_WORKSPACE"/supabase/functions/dlice-orders supabase/functions/
           echo "Replay commit: $GITHUB_SHA"
           echo "Migration files in disposable replay: $(find supabase/migrations -maxdepth 1 -name '*.sql' | wc -l)"
           supabase start
@@ -91,3 +93,16 @@ jobs:
           echo "PASS: all repository migrations applied to the disposable local database."
           supabase test db
           echo "PASS: migration and database contract tests passed."
+          echo "Preparing free local Edge Function runtime fault injection."
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-client
+          set +x
+          eval "$(supabase status -o env)"
+          export SUPABASE_URL="http://127.0.0.1:$((base_port + 1))"
+          export SUPABASE_SERVICE_ROLE_KEY="${SERVICE_ROLE_KEY:?local service role key unavailable}"
+          export SUPABASE_ANON_KEY="${ANON_KEY:?local anon key unavailable}"
+          export DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:$((base_port + 2))/postgres"
+          export SUPABASE_WORKDIR="$tmp"
+          psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$GITHUB_WORKSPACE/tests/runtime/online-payment-fault-fixtures.sql"
+          node "$GITHUB_WORKSPACE/tests/runtime/online-payment-fault-injection.mjs"
+          echo "PASS: disposable HTTP/API runtime fault injection completed."
