@@ -396,8 +396,8 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 
 ### SaaS Tenant Management — Tenant/member isolation in database and APIs
 - **Audit status:** PARTIAL (moved from NOT VERIFIED because PR #126 contains concrete code and test work).
-- **Weighted implementation progress:** 20%.
-  - Code/UI: 0/20 — no tenant-aware UI/API implementation is certified yet.
+- **Weighted implementation progress:** 28%.
+  - Code/UI: 3/20 — PR #126 extracts and wires a tenant-scoped branch resolver into actorBranchIds; full tenant-aware UI/API route coverage remains.
   - Database: 10/20 — 64/64 public tables have RLS; 35 pgTAP policy-shape assertions passed on the previous PR #126 head; actual tenant row visibility is not yet proven.
   - Authorization: 0/15 — latest PR #126 adds a fail-closed default-deny for every admin/ERP route while tenant isolation remains unreleased; positive tenant-specific access is not yet accepted.
   - Automated tests: 8/15 — 35 RLS contract assertions passed; new default-deny unit tests are running on the latest head.
