@@ -772,3 +772,13 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
   - PR #126 head `feat/tenant-direct-client-rls-contract-20261121` uses only `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_PUBLIC_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`, and the existing Supabase Auth emails for Tenant A/B; no username/password secret is required.
 - To run the new passwordless workflow from GitHub Actions, select the branch `feat/tenant-direct-client-rls-contract-20261121` in the Run workflow branch selector. Do not select `main` or `staging`, or GitHub will execute the legacy workflow version.
 - The service-role secret and staging Environment protection remain unverifiable through the connected GitHub tools. No dispatch was triggered.
+
+
+### Exact-head CI closure update — 21 November 2026
+- PR #126 exact head `07d7c51c2cbea21b9cd49a480614e004fe7bf417`: quality PASS; KDS, CORS, procurement requisition and procurement receiving contracts PASS; full disposable migration replay PASS. The replay included the 15-assertion audited tenant invitation suite, which returned `ok`. The P01–P09 runtime workflow itself has not been dispatched.
+- PR #120 exact head `d9aa2fbc813da48abcae38769be90de1e981c13d`: quality PASS, including the new breached-password guard unit and contract tests; admin permission audit contract PASS; KDS/CORS/procurement contracts PASS; full disposable migration replay PASS.
+- PR #123 exact head `31976673a9289add4c1bb10d6f29f3ff6c3c15a5`: quality, contracts and disposable migration replay PASS; real checkout retry, concurrent duplicate, pending payment and late-webhook E2E NOT RUN.
+- PR #125 exact head `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d`: quality, KDS contract and disposable migration replay PASS; expiry scheduler/worker runtime NOT RUN and no expiry worker is installed.
+- PR #127 exact head `5c597c2ec37a130501ed19591cfc9383396ba1b`: quality, KDS/CORS/procurement contracts and disposable migration replay PASS; payment proof upload retry, expiry, stale-attempt supersession and compensation runtime E2E NOT RUN.
+- Vercel has no deployment for the exact current heads of #120, #123, #125, #126 or #127. A preview on an older commit does not qualify as current-head evidence.
+- These results are CI/disposable evidence only. No PR was merged, no shared-staging migration applied, and both release flags remain false.
