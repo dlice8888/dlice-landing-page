@@ -214,3 +214,31 @@ P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted stagin
 | #111 | Deno OIDC claim tests + disposable replay | Trust-claim validation and schema replay | Deployed broker, real OIDC exchange, P01–P09 runtime |
 
 All runtime rows above remain NOT RUN until authenticated staging evidence is captured. Source-contract tests are not browser E2E. Disposable replay is not shared-staging migration application.
+
+
+## Live staging order/payment/reservation snapshot — read-only, 21 November 2026
+
+Supabase staging `higoadrzxnhzbbwhdbmh` was queried read-only. No row was changed.
+
+| Entity/status | Rows |
+|---|---:|
+| Orders — paid | 3 |
+| Orders — pending_verification | 1 |
+| Orders — unpaid | 3 |
+| Payment records — paid | 3 |
+| Payment records — pending_verification | 3 |
+| Reservations — active | 9 |
+| Reservations — consumed | 9 |
+| Reservations — held_for_verification | 3 |
+
+Current high-level state invariants:
+- Paid orders without a paid payment record: **0**.
+- Pending-verification orders without a pending payment attempt: **0**.
+- Pending-verification orders without a held reservation: **0**.
+- Unpaid orders with reservations but no active reservation: **0**.
+- Paid orders with active or held reservations: **0**.
+- Orders without any reservation row: **0**.
+
+**Outstanding live anomaly:** two `pending_verification` payment attempts with no proof belong to orders already marked `paid` (2 attempts across 2 orders). These are stale sibling attempts. They are the exact target of PR #127's `20261121180000_supersede_stale_payment_attempts.sql`; the migration is not applied to shared staging. Do not mutate those rows manually. Require #127 disposable tests, combined order/payment/reservation regression, and explicit authorized staging workflow before applying the fix.
+
+This snapshot is current-state reconciliation only; it does not prove retry/concurrency behavior, webhook timing, compensation, expiry-worker recovery, browser upload, or future event consistency. The three pending attempts are not all stale: one proof-bearing attempt belongs to the one order still in `pending_verification` and must remain pending for verification.
