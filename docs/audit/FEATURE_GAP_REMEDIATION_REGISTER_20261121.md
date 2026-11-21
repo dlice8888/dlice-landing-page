@@ -763,3 +763,12 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 - Disposable full migration replay passed on commit `cf15f33379a731c1952ec22b5d12739595a21a93`. Comparing that commit to current staging `78f929dac2b05f436aaa7f50005310166f8a4779` shows only workflow and test files changed; no migration changed after the passing replay.
 - The migrations remain unapplied to shared staging. Owner bootstrap still requires the current Owner identity to have the verified server-side platform-owner claim. Command Center's current sales KPI is POS-paid-sales based and does not yet reconcile online sales, refunds, discounts or margin. Branch checklist RPC has atomic audit and the Edge Function contract enforces branch access before the privileged RPC.
 - Status is now `DRIFT_3_PENDING_REVIEW_AND_EXPLICIT_STAGING_APPROVAL_NOT_APPLIED`; replay PASS is not staging approval.
+
+
+### P01–P09 dispatch ref correction
+- The same workflow path differs by ref:
+  - `main` still maps Tenant A/B username/password secrets.
+  - `staging` still maps legacy username/password secrets.
+  - PR #126 head `feat/tenant-direct-client-rls-contract-20261121` uses only `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_PUBLIC_KEY`, `STAGING_SUPABASE_SERVICE_ROLE_KEY`, and the existing Supabase Auth emails for Tenant A/B; no username/password secret is required.
+- To run the new passwordless workflow from GitHub Actions, select the branch `feat/tenant-direct-client-rls-contract-20261121` in the Run workflow branch selector. Do not select `main` or `staging`, or GitHub will execute the legacy workflow version.
+- The service-role secret and staging Environment protection remain unverifiable through the connected GitHub tools. No dispatch was triggered.
