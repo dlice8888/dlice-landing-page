@@ -142,3 +142,14 @@ Target settings for a GitHub repository administrator:
 
 No ruleset setting was changed.
 
+## PR #126 exact-head test completion — 21 November 2026, 21:18 WIB
+
+PR #126 exact head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` has completed all six applicable workflows successfully. Disposable migration replay: 7 pgTAP files / 139 assertions PASS. [Run](https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844).
+
+This exact head includes:
+- Correct P01/P02 fixture-scope labels.
+- P08/P09 postcondition query requiring zero persisted `stock_transfers` rows after a cross-tenant 403.
+- Supabase API key header compatibility: new `sb_secret_` keys are sent on `apikey` only; legacy service-role JWTs also use `Authorization: Bearer`.
+
+P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
+
