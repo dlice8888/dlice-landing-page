@@ -2876,7 +2876,9 @@
       "payment_records": {
         "total": 6,
         "paid": 3,
-        "pending_verification": 3
+        "pending_verification": 3,
+        "pending_with_proof": 1,
+        "pending_without_proof": 2
       },
       "reservations": {
         "total": 21,
@@ -2894,11 +2896,11 @@
       "anomalies": [
         {
           "count": 2,
-          "issue": "Two paid orders still have an additional pending_verification payment attempt. Paid amount equals order subtotal and reservations are consumed, but the stale attempts remain actionable in payment_records."
+          "issue": "Two paid orders each retain a sibling pending_verification attempt with proof_storage_path NULL. These are safe to close/supersede after payment approval; proof-bearing attempts must remain pending for manual double-payment review."
         }
       ],
       "root_cause": "public.admin_apply_payment_verification updates only the selected payment row and order status; it does not supersede other pending/unpaid payment attempts for the same order.",
-      "remediation": "PR #127 adds an explicit superseded payment state, self-reference to the paid attempt, and atomic supersession of other attempts when a payment is approved. Existing staging rows remain unchanged until authorized reconciliation.",
+      "remediation": "PR #127 adds an atomic superseded state and link for unpaid or no-proof pending sibling attempts when a payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. A 14-assertion pgTAP test verifies both paths. Existing staging rows remain unchanged until authorized reconciliation.",
       "no_staging_mutation": true
     }
   },
@@ -3587,7 +3589,7 @@
     "no_shared_staging_or_production_mutation": true,
     "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists.",
     "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
-    "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. Two paid orders nevertheless retain an extra pending_verification payment attempt because admin_apply_payment_verification does not close sibling attempts. PR #127 now proposes an atomic superseded state and linkage; existing staging records are not modified."
+    "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts."
   },
   "current_open_prs": [
     127,
