@@ -21,7 +21,7 @@ jobs:
   tenant-isolation:
     # Manual dispatch is accepted only when the selected ref is the trusted staging branch.
     if: github.ref == 'refs/heads/staging'
-    name: Authenticated tenant isolation P01-P09
+    name: Supabase Auth magic-link tenant isolation P01-P09
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 10
