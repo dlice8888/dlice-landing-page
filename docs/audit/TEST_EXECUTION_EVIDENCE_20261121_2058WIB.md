@@ -90,3 +90,18 @@ The `public.erp_create_stock_transfer` RPC ACL is also verified read-only: EXECU
 ## PR #120 latest-head completion — 21 November 2026, 21:03 WIB
 
 The latest PR #120 head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` completed all six applicable workflows successfully. Disposable migration replay passed 10 pgTAP files / 206 assertions: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345. The configured Tenant A/B branch assignments were also rechecked read-only and both are active today. P01–P09 remain NOT RUN because protected Environment/secret presence and workflow dispatch are still unverified.
+
+## Deployed runtime contract inspection — 21 November 2026, 21:06 WIB
+
+Supabase reports `dlice-orders` ACTIVE at version 70 (source SHA-256 `597a371d2c05cbfa7b0e04a749e422bf826667b4539ce2b44ffe0a2efb0ff9f6`). The deployed source still hard-codes both `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+Runtime source inspection (not an HTTP execution) confirms:
+- `erp-list-inventory` requires `branchAccess(branch_id)` before reading `branch_inventory`; item metadata is limited to inventory item IDs already present in the authorized branch's balances.
+- `erp-create-stock-transfer` requires active access to both source and destination branches, validates an idempotency key, and calls the server-only stock-transfer RPC.
+- `erp-transition-stock-transfer` checks same-tenant source/destination for approval unless the actor is the platform owner; other transitions require branch access.
+- `admin-set-permissions`, `admin-create-staff` and `admin-reset-staff-password` remain in the uncertified-action denylist and return 423 to non-platform-owner users while tenant isolation remains unreleased.
+- Deployed v70 still has the legacy multi-step invitation handler. The atomic invitation route in PR #120/#126 is candidate code and has not been deployed.
+
+Both existing QA branch assignments satisfy the deployed helper's active/date predicates. These source and fixture checks do not replace actual HTTP probes; P01–P09 remain NOT RUN.
+
+Vercel exact-head query returned zero deployments for current PR #120, #123, #126 and #127 heads. The latest audit-branch Preview (commit `30beb0824ce22b123e9d782be272661c58ca6308`) is READY at https://dlice-landing-page-kombm3oru-dlice8888-7332.vercel.app, but it contains audit documentation and is not a feature E2E target.
