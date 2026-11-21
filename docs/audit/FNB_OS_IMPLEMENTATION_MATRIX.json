@@ -2831,15 +2831,14 @@
         "real_tenant_a_b_runtime": "NOT RUN"
       },
       "pr127": {
-        "head": "1b9fdaf8026f698d8426ea724836dafc72546098",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "kds_contract": "PASS",
-        "cors_contract": "PASS",
-        "procurement_receiving_contract": "PASS",
-        "procurement_requisition_contract": "PASS",
+        "head": "b3cdd8eb0d0445b04ed9a1f3e75e4401c548f7a7",
+        "quality": "IN_PROGRESS on current head; prior 195efa34 PASS",
+        "disposable_migration_replay": "IN_PROGRESS on current head",
+        "payment_attempt_supersession_migration": "ADDED; no-proof attempts superseded on paid decision; proof-bearing sibling attempts remain pending",
+        "payment_attempt_supersession_tests": "14 pgTAP assertions added",
         "browser_concurrency": "PENDING",
-        "global_storage_orphan_sweeper": "PENDING"
+        "global_storage_orphan_sweeper": "PENDING",
+        "shared_staging_migration_applied": false
       }
     },
     "domain_4_5_schema_gaps": {
@@ -3244,14 +3243,15 @@
       },
       "pr127": {
         "state": "OPEN_DRAFT",
-        "head_sha": "1b9fdaf8026f698d8426ea724836dafc72546098",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "kds_contract": "PASS",
-        "cors_contract": "PASS",
-        "procurement_contracts": "PASS",
-        "browser_concurrency": "PENDING",
-        "storage_orphan_cleanup": "BEST_EFFORT; global sweeper pending",
+        "head_sha": "b3cdd8eb0d0445b04ed9a1f3e75e4401c548f7a7",
+        "purpose": "atomic customer proof upload, order expiry, payment attempt supersession",
+        "previous_quality": "PASS on 195efa349278895516c8d8a869e87ff45eda012a",
+        "current_quality": "IN_PROGRESS",
+        "previous_contract_jobs": "CORS, KDS, procurement receiving and requisition PASS on 195efa34",
+        "current_disposable_replay": "IN_PROGRESS",
+        "new_migration": "20261121180000_supersede_stale_payment_attempts.sql",
+        "new_pgtap_assertions": 14,
+        "proof_bearing_attempts_preserved": true,
         "shared_staging_migration_applied": false
       }
     },
@@ -3589,7 +3589,8 @@
     "no_shared_staging_or_production_mutation": true,
     "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists.",
     "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
-    "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts."
+    "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts.",
+    "pr127": "PR #127 adds migration 20261121180000_supersede_stale_payment_attempts.sql and a 14-assertion pgTAP suite. On paid approval, unpaid and no-proof pending sibling attempts are superseded; proof-bearing sibling attempts remain pending for manual double-payment review. Rejection continues to close no-proof pending attempts as rejected; expiry logic remains unchanged. Exact-head migration replay is IN_PROGRESS on b3cdd8eb; no shared staging mutation."
   },
   "current_open_prs": [
     127,
