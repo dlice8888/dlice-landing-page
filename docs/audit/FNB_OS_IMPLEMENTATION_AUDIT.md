@@ -58,7 +58,7 @@ Detailed feature-level requirements, historical evidence notes, and source line 
 - Two worker memberships are distinct users in distinct tenants; both have role `branch_manager` and the same permission set: orders, branches, inventory, pos, procurement, reports.
 - Worker A has 2 active branch assignments in its own tenant; Worker B has 1. There are 0 cross-tenant assignment rows. Multiple same-tenant assignments satisfy the stated acceptance requirement. PR #87 removes the previous over-strict exact-one-visible-branch assertion and instead requires the configured branch to be present and the other tenant's branch to remain invisible.
 - Each designated QA branch has 2 inventory balance rows, but no authenticated request has proved that either worker can read those rows.
-- The active Owner profile is linked to an Auth user. Its `app_metadata.platform_owner` claim is absent; count of Auth users with boolean `true` is 0. The UUID allowlist cannot be independently inspected through the available integration.
+- The active Owner profile is linked to an Auth user. Its `app_metadata.platform_owner` claim is absent; count of Auth users with boolean `true` is 0. The UUID allowlist cannot be queried through the available integration.
 - The Edge Function explicitly requires both the platform-owner UUID allowlist and boolean Auth app metadata; see `supabase/functions/dlice-orders/index.ts:52-55,92-100`.
 - The tenant runtime workflow is `.github/workflows/staging-tenant-isolation-acceptance.yml`; its runner is `tests/runtime/dlice-tenant-jwt-isolation.mjs`. P01–P09 remain BLOCKED / NOT RUN; no probe is to be relabeled PASS or SKIPPED.
 
@@ -81,7 +81,7 @@ A separate Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/8
 3. Verify two real worker logins, tenant membership, exact branch assignment, and non-Owner/non-Admin role; then run P01–P09 on trusted staging.
 4. Complete Owner Auth Admin metadata and UUID allowlist verification using the official authorized route; do not bootstrap by bypass.
 5. Reconcile the missing migration source file and all PR migration overlaps before any schema change.
-6. Finish operational positive E2E and independent security review.
+6. Finish operational positive E2E and the complete automated adversarial security regression.
 7. Establish GitHub branch/ruleset and staging deployment protection through repository settings; do not weaken protections.
 
 ## Status definitions
@@ -120,7 +120,7 @@ A fresh read-only `pg_indexes` query confirmed all nine recovered indexes curren
 - Free quality run [44303062590](https://github.com/dlice8888/dlice-landing-page/actions/runs/44303062590) SUCCESS. The workflow includes staging secret workflow, tenant-isolation runtime evidence and public-routing gate checks. The log contains passing test groups of 5/5, 4/4, 11/11, 5/5 and 1/1.
 - `branchB` is declared before the fail-closed preflight in `tests/staging/tenant-isolation-existing-identity.mjs`, eliminating the previously observed temporal-dead-zone path.
 - Added subprocess regression cases for empty public key, Tenant A username, Tenant A password, Tenant B branch ID, whitespace-only public key/username/password and malformed branch UUID. Each expects exit code 2, BLOCKED, no stdout/network output, no credential/token disclosure and no ReferenceError.
-- The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The actual GitHub Environment secret's availability is still not independently readable; PR #83's quality run is not a tenant-isolation runtime proof.
+- The workflow now references `secrets.STAGING_SUPABASE_PUBLIC_KEY` rather than a literal public key. The GitHub Environment secret availability cannot be queried through the connected integration; PR #83's quality run is not a tenant-isolation runtime proof.
 - **P01–P09 remain BLOCKED / NOT RUN**; no claim of tenant isolation PASS is made.
 
 
