@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import {
   hasTenantScopedHeadOfficePermission,
+  isTenantSensitiveAction,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 
@@ -458,7 +459,11 @@ Deno.serve(async (req: Request) => {
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
   const isPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
-  if (!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
+  if (
+    !TENANT_ISOLATION_RELEASED &&
+    !isPlatformOwner &&
+    (isTenantSensitiveAction(action) || TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action))
+  ) {
     return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
   }
 
