@@ -79,9 +79,9 @@ test("all staff profile mutation RPCs are service-role-only and audit in their t
     "dlice_update_admin_profile_role_audited",
     "dlice_set_admin_profile_active_audited",
   ]) {
-    assert.match(profileMigration, new RegExp(`create or replace function public\\.${name}`));
-    assert.match(profileMigration, new RegExp(`revoke all on function public\\.${name}`));
-    assert.match(profileMigration, new RegExp(`grant execute on function public\\.${name}`));
+    assert.match(profileMigration, new RegExp(`create or replace function public\\.${name}`, 'i'));
+    assert.match(profileMigration, new RegExp(`revoke all on function public\\.${name}`, 'i'));
+    assert.match(profileMigration, new RegExp(`grant execute on function public\\.${name}`, 'i'));
   }
   assert.match(profileMigration, /insert into public\.admin_profiles[\s\S]*?insert into public\.admin_audit_logs/i);
   assert.match(profileMigration, /update public\.admin_profiles[\s\S]*?insert into public\.admin_audit_logs/i);
