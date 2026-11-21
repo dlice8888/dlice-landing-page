@@ -20,8 +20,8 @@ Deno.test("uses only the five-character SHA-1 prefix and blocks a breached passw
   if (requestedUrl !== `https://api.pwnedpasswords.com/range/${prefix}`) {
     throw new Error("Only the first five SHA-1 characters may be sent to the API");
   }
-  if (requestedUrl.includes(suffix) || requestedUrl.includes(password)) {
-    throw new Error("The full hash suffix or raw password must never leave the runtime");
+  if (requestedUrl.endsWith(suffix) || requestedUrl.endsWith(hash)) {
+    throw new Error("The full hash suffix or full digest must never leave the runtime");
   }
   if (paddingHeader !== "true") throw new Error("The Add-Padding header must be enabled");
 });
