@@ -175,17 +175,26 @@ The implementation matrix should continue to mark runtime-dependent requirements
 | Quality, Compliance & Security | 20 | 10 | 9 | 1 |
 | **TOTAL** | **189** | **89** | **91** | **9** |
 
-No feature is DONE. Two PARTIAL SaaS features have current weighted scores (38% and 30%); the other 87 PARTIAL features remain unscored until evidence decomposition. Do not turn successful CI into a runtime completion claim.
+No feature is DONE. Two PARTIAL SaaS features have current weighted scores (38% and 30%); the other 90 PARTIAL features remain unscored until evidence decomposition. Do not turn successful CI into a runtime completion claim.
 
 ### Latest PR and runtime disposition
 
 | PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
 |---:|---|---|---|---|
 | #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
-| #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
-| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | OPEN / DRAFT | Quality, password guard unit/contract tests, CORS, KDS, procurement contracts and disposable replay PASS | No review; guard files are byte-identical to #120 and its behavior is included in #120; treat as superseded/overlap, do not merge separately |
+| #120 | `471f4a330a4da0cb13afe60ddeeb520e28dc0e88` | OPEN / DRAFT | Six of six exact-head workflows PASS; 35 profile-mutation, 11 permission and 11 invitation pgTAP assertions | Staging mutation-path runtime NOT RUN; password reset intent/outcome implemented |
+| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | CLOSED / SUPERSEDED | Password guard source/tests/migration consolidated into #120 with identical shared blob SHAs | Do not reopen or merge separately |
 | #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
 | #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
 | #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
 
-The six PRs remain Draft/open/unmerged. P01–P09, order/payment E2E and cross-domain transaction reconciliation remain NOT RUN. Both release flags remain false.
+Five execution PRs (#120, #123, #125, #126, #127) remain Draft/open/unmerged; #124 is closed as superseded. P01–P09, order/payment E2E and cross-domain transaction reconciliation remain NOT RUN. No feature is DONE. Both release flags remain false.
+
+
+## Latest implementation delta — 21 November 2026
+
+- Three blocked features moved to PARTIAL after implementation and exact-head tests: duplicate/delayed order handling (#123/#125/#127), permission/profile/password mutation audit (#120), and application-layer leaked-password mitigation (#120). They are not DONE because runtime and external Auth gaps remain.
+- PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six workflows, including full disposable migration replay. The profile mutation pgTAP suite has 35 assertions; audit failure injection proves rollback for staff creation, role and active-state mutation. Password reset now writes a durable intent before Auth Admin mutation and records the outcome; a failed finalization leaves a pending event for reconciliation.
+- PR #124 is CLOSED as superseded by #120.
+- Current distribution: 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two SaaS partial scores remain 30% and 38%; 90 other PARTIAL features are unscored pending evidence decomposition.
+- PR #123 and #126 still collide on migration version 20261121130000. PR #125/#127 share an identical expiry migration blob. No shared staging migration was applied.
