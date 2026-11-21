@@ -1,7 +1,30 @@
 # FnB OS Migration Reconciliation
 
-**Snapshot:** 18 November 2026  
+**Historical baseline:** 18 November 2026  
 **Database:** Supabase staging `higoadrzxnhzbbwhdbmh`
+
+
+## Current authoritative status — 21 November 2026
+
+- Supabase staging dlice-staging (higoadrzxnhzbbwhdbmh) is ACTIVE_HEALTHY, PostgreSQL 17.
+- Applied migration history: 49 entries; latest applied version 20261119182606.
+- staging source branch: 52 SQL migration files. Three source-only migrations remain unapplied:
+  - 20261120100000_atomic_owner_and_tenant_bootstrap.sql
+  - 20261120110000_command_center_summary.sql
+  - 20261120120000_atomic_branch_checklist_audit.sql
+- No migration was applied to shared staging or production in this execution.
+- PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes exact-head quality and disposable migration replay; profile mutation suite plan is 35, permission suite plan 11 and invite suite plan 11.
+- PR #123 exact head 31976673a9289add4c1bb10d6f29f3ff6c3c15a5 passes exact-head CI and disposable replay; online-order idempotency suite plan is 7.
+- PR #125 exact head 1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d passes exact-head CI and disposable replay; expiry lifecycle suite plan is 27.
+- PR #126 exact head 07d7c51c2cbea21b9cd49a480614e004fe7bf417 passes exact-head CI and disposable replay; RLS/onboarding/invitation suites declare plans 35/17/15. Real P01–P09 runtime has not been dispatched.
+- PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6 passes exact-head CI and disposable replay; payment-proof and supersession suites declare plans 16 and 14.
+- UNRESOLVED MIGRATION VERSION COLLISION: PR #123 and PR #126 both use version 20261121130000 but contain different SQL files (atomic_online_order_idempotency versus atomic_tenant_invite_lifecycle). They cannot both be applied as-is. Re-version one migration through the Supabase migration-generation workflow, update all references, and replay the combined candidate set.
+- IDENTICAL DUPLICATE MIGRATION: PR #125 and #127 carry byte-identical 20261121140000_order_expiry_payment_lifecycle.sql and test file blobs. Keep one canonical migration history entry; preserve PR #125 as the earlier expiry dependency slice and reconcile #127 to it.
+- INVITATION OVERLAP: PR #120 and #126 both modify invite issue/accept behavior but use different RPC names/signatures. Consolidate to one canonical invitation path before integration; do not leave both Edge routes active with ambiguous contracts.
+- PR #124 is closed as superseded by #120; its password guard helper, unit tests and migration are consolidated into #120.
+- Project PR acceptance is test-evidence-only; no separate independent PR-review step is required. Protected staging Environment, secret-presence verification, explicit staging authorization and backup/rollback are separate release controls.
+- The active GitHub ruleset still has require_code_owner_review=true and require_last_push_approval=true; the connected integration cannot modify rulesets. It also has zero required status checks and zero required deployment environments, with 11 always-bypass actors.
+- STAGING_SUPABASE_SERVICE_ROLE_KEY presence and staging Environment protection are NOT VERIFIED. The secret value was not read or exposed. No workflow dispatch action is exposed, so P01–P09 remain NOT RUN.
 
 ## Migration parity
 
@@ -31,7 +54,7 @@ The five SECURITY DEFINER stock functions are executable by `service_role` and d
 ## Required migration workflow
 
 1. Recover the missing `20261022140302` source from a trusted backup/commit/artifact and compare checksum with applied SQL if available.
-2. Map every open PR migration path and blob SHA; resolve duplicates before review.
+2. Map every open PR migration path and blob SHA; resolve version collisions and identical duplicate blobs before integration.
 3. Run disposable PostgreSQL replay from zero and from the current staging baseline; include pgTAP, rollback and grants/RLS checks.
 4. Run Supabase advisors and inspect query plans for any index changes.
 5. Run the complete migration/security regression matrix and verify backup/rollback readiness.
@@ -117,12 +140,12 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 
 | PR | Migration file | Version | Current evidence |
 |---:|---|---|---|
-| #120 | `20261121100000_atomic_admin_permission_audit.sql` | 20261121100000 | Disposable replay PASS on exact PR head; review pending |
+| #120 | `20261121100000_atomic_admin_permission_audit.sql` | 20261121100000 | Disposable replay PASS on exact PR head 471f4a33; no staging apply |
 | #123 | `20261121130000_atomic_online_order_idempotency.sql` | 20261121130000 | Disposable replay PASS; version collision with #126 |
 | #126 | `20261121130000_atomic_tenant_invite_lifecycle.sql` | 20261121130000 | Disposable replay PASS; version collision with #123 |
 | #125 / #127 | `20261121140000_order_expiry_payment_lifecycle.sql` | 20261121140000 | Blob SHA `c1d1de05b61055a0003a889d70b5e41a298caffd` is identical in both PRs; #127 descends from #125 |
 | #127 | `20261121150000_atomic_customer_payment_proof.sql` | 20261121150000 | Disposable replay PASS; runtime E2E pending |
-| #120 | `20261121160000_atomic_admin_profile_mutation_audit.sql` | 20261121160000 | Disposable replay PASS; review pending |
+| #120 | `20261121160000_atomic_admin_profile_mutation_audit.sql` | 20261121160000 | Disposable replay PASS on exact PR head 471f4a33; includes 35 profile-mutation pgTAP assertions and password-reset audit intent/outcome |
 | #127 | `20261121180000_supersede_stale_payment_attempts.sql` | 20261121180000 | Disposable replay PASS; runtime E2E pending |
 
 **P0 migration collision:** PR #123 and PR #126 both introduce version `20261121130000` with different SQL and different blob SHAs. They cannot both be integrated unchanged. Use the Supabase CLI migration generator to assign a unique version to one migration, then replay the combined candidate set. Do not hand-invent or silently rename the migration timestamp.
