@@ -54,9 +54,9 @@ test("password reset audit intent and finalization RPCs are service-role-only", 
     "dlice_begin_admin_password_reset_audit",
     "dlice_finish_admin_password_reset_audit",
   ]) {
-    assert.match(profileMigration, new RegExp(`create or replace function public\\.${name}`, "i"));
-    assert.match(profileMigration, new RegExp(`revoke all on function public\\.${name}`, "i"));
-    assert.match(profileMigration, new RegExp(`grant execute on function public\\.${name}`, "i"));
+    assert.match(profileMigration, new RegExp("create or replace function public\\." + name, "i"));
+    assert.match(profileMigration, new RegExp("revoke all on function public\\." + name, "i"));
+    assert.match(profileMigration, new RegExp("grant execute on function public\\." + name, "i"));
   }
   assert.match(profileMigration, /admin_password_reset_started/);
   assert.match(profileMigration, /reset_admin_password_failed/);
