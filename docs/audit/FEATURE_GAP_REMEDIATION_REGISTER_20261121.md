@@ -395,7 +395,7 @@ No live business data was changed.
 
 **Required remediation now tracked in PR #125:** install a one-minute expiry worker; fail unpaid orders only when no proof/held reservation exists; mark reservations expired; set fulfillment failed and operational cancelled; close no-proof pending attempts on expired/paid orders; retain proof-bearing attempts for manual double-payment/refund review; extend payment rejection to release reservations and close the order; add audit/status history and supporting partial indexes.
 
-**Still open after PR #125:** atomic customer proof-upload/declaration RPC (the current Edge Function performs multiple DB writes), race/fault-injection around payment proof upload vs expiry, and manual reconciliation of the seven legacy orders. The 2 proof-bearing or pending records requiring review must not be auto-rejected.
+**Still open after PR #125:** browser race/fault-injection around payment proof upload vs expiry, global Storage orphan cleanup, and authorized reconciliation of legacy staging attempts. PR #127 now implements the atomic customer proof-upload/declaration RPC. Two paid orders have no-proof pending sibling attempts that will be superseded by the new migration; one proof-bearing pending attempt must remain open for manual double-payment review. No historical staging rows are mutated.
 
 ## Current implementation work — PR #125
 
@@ -432,7 +432,7 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 ### Order Management — Duplicate orders, delayed payment, failed order handling
 - **PR #123:** checkout idempotency and replay; 74 pgTAP assertions and disposable replay PASS.
 - **PR #125:** unpaid/unproven payment expiry, rejection compensation and stale no-proof cleanup; 27 pgTAP assertions and disposable replay PASS.
-- **PR #127:** atomic payment-proof RPC, upload idempotency key, order/reservation/payment/history/audit transaction; exact-head quality, disposable migration replay, KDS, CORS and procurement contract jobs PASS; browser concurrency and global Storage orphan sweep remain.
+- **PR #127:** atomic payment-proof RPC, upload idempotency key, expiry/compensation and payment-attempt supersession. Quality/CORS/KDS/procurement contracts PASS on commit `195efa34`; current head `b3cdd8eb` disposable migration replay is IN_PROGRESS; 14 supersession pgTAP assertions added. Browser concurrency and global Storage orphan sweep remain.
 - **Remaining gaps:** browser fault injection, concurrent upload/expiry runtime tests, provider webhook ordering, tenant-scoped runtime tests and a Storage orphan-object sweeper. Supabase Storage upload is outside the Postgres transaction; the Edge Function only compensates by deleting on RPC failure, so process-crash orphan risk remains explicit.
 
 ### Supabase index performance
@@ -593,5 +593,5 @@ Read-only reconciliation of the 7 staging orders, 6 payment records and 21 reser
 
 Root cause: the existing `admin_apply_payment_verification` RPC changes the selected payment record and order status but does not close sibling attempts. This is a real payment-attempt lifecycle gap, not an orphaned payment or reservation.
 
-PR #127 now proposes an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes only unpaid or no-proof pending sibling attempts when one payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. The 14-assertion pgTAP suite covers both paths. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
+PR #127 now implements an atomic `superseded` payment state, `superseded_by_payment_id` linkage, a one-paid-payment-per-order partial unique index, and a transaction that supersedes only unpaid or no-proof pending sibling attempts when one payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. The 14-assertion pgTAP suite covers both paths; exact-head migration replay is still IN_PROGRESS. The two existing staging rows are not being mutated; any historical cleanup requires a reviewed, authorized staging reconciliation after the new contract is validated.
 
