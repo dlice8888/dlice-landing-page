@@ -1,8 +1,8 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21T18:00:00+07:00",
-  "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
+  "snapshot_at": "2026-11-21T19:42:00+07:00",
+  "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
@@ -383,7 +383,7 @@
           "requirement": "Duplicate orders, delayed payment, failed order handling",
           "source_status": "GATE",
           "audit_status": "BLOCKED",
-          "evidence_or_gap": "Idempotency, replay, timeout and compensation tests missing.",
+          "evidence_or_gap": "PR #123 implements stable idempotency key, atomic order/reservation ledger and retry-safe response; PR #125/#127 add unpaid reservation expiry, cancellation/compensation and payment-attempt supersession. Exact-head contracts and disposable replay pass; browser response-drop/concurrency, live worker, late webhook and final reconciliation remain NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
@@ -1952,7 +1952,7 @@
           "requirement": "Permission changes themselves audited",
           "source_status": "GATE",
           "audit_status": "BLOCKED",
-          "evidence_or_gap": "Full audit and access review acceptance missing.",
+          "evidence_or_gap": "PR #120 implements audited service-role RPCs for permission changes, staff creation, role changes, active-state changes and tenant invite issue; exact-head permission contract and disposable replay pass. PR #120/#126 invite paths overlap; password reset remains Auth mutation followed by a separate audit write; independent review and live mutation-path regression remain outstanding.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 239
@@ -1978,7 +1978,7 @@
           "requirement": "Tenant directory, tenant onboarding",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Atomic dlice_create_tenant_with_owner RPC and dlice_bootstrap_initial_owner exist in migration 20261120100000; Edge Function uses RPCs and static contract tests pass. PR #126 adds 17 pgTAP assertions for initial Owner and tenant onboarding. Invitation acceptance, default branch provisioning, plan/entitlement lifecycle, suspension/offboarding, export and browser E2E remain unproven.",
+          "evidence_or_gap": "PR #126 adds atomic invite issue/accept RPCs, replay/expiry/audit handling and 15 invitation pgTAP assertions; exact-head full disposable replay passes. Existing Tenant A/B Auth identities and branch assignments are verified read-only. Runtime invitation delivery/acceptance/expiry, default branch provisioning, entitlements, suspension/offboarding/export and browser E2E remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 244
@@ -2030,7 +2030,7 @@
           "requirement": "Tenant/member isolation in database and APIs",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "64/64 public tables have RLS and 35 pgTAP assertions verify deny-policy shape on 17 sensitive tables. PR #126 adds default-deny for all admin/ERP routes while tenant isolation is unreleased. Real tenant A/B API, Storage, cache and job isolation remains unproven.",
+          "evidence_or_gap": "64/64 public tables have RLS; PR #126 adds 35 pgTAP assertions across 17 sensitive tables and narrowly scoped pre-release probe routes. Existing Tenant A/B Auth users, memberships, matching six-item tenant permission sets and QA branch assignments are verified. P01-P09 live Auth/API probes have NOT RUN; protected staging service-role secret and workflow dispatch remain prerequisites.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 245
@@ -2207,7 +2207,7 @@
           "requirement": "Idempotency and replay protection",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Some atomic/idempotent operations exist; complete per-action coverage not proven.",
+          "evidence_or_gap": "PR #123 adds online checkout idempotency and atomic order/reservation ledger; PR #127 adds idempotent proof upload and payment-attempt supersession. Exact-head contracts and disposable replays pass; browser concurrency, Storage orphan recovery and live transaction reconciliation remain NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 260
@@ -2325,7 +2325,7 @@
           "requirement": "Leaked-password protection",
           "source_status": "GATE / WARN",
           "audit_status": "BLOCKED",
-          "evidence_or_gap": "Supabase Security Advisor reports it disabled; enabling requires an explicit platform configuration decision.",
+          "evidence_or_gap": "PR #120 contains the same application-layer HIBP k-anonymity guard and tests as PR #124 for Owner bootstrap, staff creation and staff reset. Supabase native leaked-password protection is disabled on Free plan; direct Supabase Auth password changes can bypass the app Edge Function guard. Password Verification Hook is sign-in-only and plan-limited, not a password-change hook. Keep BLOCKED.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
@@ -4263,6 +4263,277 @@
         "cors_kds_procurement_contracts": "PASS",
         "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
       }
+    }
+  },
+  "latest_live_audit": {
+    "as_of": "2026-11-21T19:42:00+07:00",
+    "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_counts": {
+      "total": 189,
+      "partial": 89,
+      "not_verified": 91,
+      "blocked": 9,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 87
+    },
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "POS & Checkout",
+        "features": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "Order Management",
+        "features": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1
+      },
+      {
+        "domain": "Kitchen & Production",
+        "features": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "features": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "features": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "features": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "features": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1
+      },
+      {
+        "domain": "HR & Workforce",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "features": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "features": 10,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 1
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "features": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "features": 20,
+        "partial": 10,
+        "not_verified": 9,
+        "blocked": 1
+      }
+    ],
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "staging_source_migration_files": 52,
+      "source_only_migrations": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "applied_versions_missing_from_source": []
+    },
+    "existing_auth_fixtures": {
+      "tenant_a": {
+        "email": "qa_dlice_staging_no_permission@accounts.dlice.internal",
+        "tenant_slug": "dlice-default",
+        "branch_code": "QA-DLICE-A",
+        "profile_role": "sales_admin",
+        "profile_active": true,
+        "profile_permission_count": 0,
+        "tenant_role": "branch_manager",
+        "membership_status": "active",
+        "tenant_permission_count": 6,
+        "branch_assignment_status": "active"
+      },
+      "tenant_b": {
+        "email": "qa_dlice_staging_branch_a@accounts.dlice.internal",
+        "tenant_slug": "dlice-qa-isolation-b",
+        "branch_code": "QA-TENANT-B",
+        "profile_role": "sales_admin",
+        "profile_active": true,
+        "profile_permission_count": 7,
+        "tenant_role": "branch_manager",
+        "membership_status": "active",
+        "tenant_permission_count": 6,
+        "branch_assignment_status": "active"
+      },
+      "fixture_resolution": "distinct users, tenants and branches; active memberships; tenant permission sets match; no Auth account/password/metadata/membership/assignment was mutated",
+      "owner": {
+        "profile_role": "owner",
+        "tenant_membership_role": "tenant_owner",
+        "membership_status": "active",
+        "app_metadata_platform_owner_claim": null,
+        "platform_owner_allowlist_unverified": true
+      }
+    },
+    "pull_requests": {
+      "all_open_draft_unmerged": [
+        120,
+        123,
+        124,
+        125,
+        126,
+        127
+      ],
+      "all_mergeable": true,
+      "independent_reviews_recorded": 0,
+      "exact_head_ci": "all listed PR heads have successful quality/contract/disposable-replay runs",
+      "runtime_acceptance": "P01-P09 and business E2E flows not run"
+    },
+    "migration_candidate_conflicts": {
+      "same_version_different_sql": [
+        {
+          "version": "20261121130000",
+          "pr": 123,
+          "file": "20261121130000_atomic_online_order_idempotency.sql",
+          "blob_sha": "71845d67ccae7617b99bd903468ab27264da77d3"
+        },
+        {
+          "version": "20261121130000",
+          "pr": 126,
+          "file": "20261121130000_atomic_tenant_invite_lifecycle.sql",
+          "blob_sha": "21b7c49cfd5e48215aa9f332b1ddab8470e9e7"
+        }
+      ],
+      "identical_duplicate_source": [
+        {
+          "version": "20261121140000",
+          "prs": [
+            125,
+            127
+          ],
+          "file": "20261121140000_order_expiry_payment_lifecycle.sql",
+          "blob_sha": "c1d1de05b61055a0003a889d70b5e41a298caffd"
+        }
+      ],
+      "other_pr_migrations": [
+        {
+          "pr": 120,
+          "files": [
+            "20261121100000_atomic_admin_permission_audit.sql",
+            "20261121160000_atomic_admin_profile_mutation_audit.sql"
+          ]
+        },
+        {
+          "pr": 127,
+          "files": [
+            "20261121150000_atomic_customer_payment_proof.sql",
+            "20261121180000_supersede_stale_payment_attempts.sql"
+          ]
+        }
+      ],
+      "invitation_overlap": "PR #120 and #126 both modify tenant invite issue/accept paths; #120 uses dlice_create_tenant_invite_audited and a two-argument dlice_accept_tenant_invite_atomic overload, while #126 uses dlice_create_tenant_invite_atomic and a three-argument dlice_accept_tenant_invite_atomic overload. Reconcile to one canonical path before merge."
+    },
+    "github_release_protection": {
+      "active_ruleset_id": 27559290,
+      "branches": "~ALL",
+      "required_approving_reviews": 0,
+      "required_status_checks": 0,
+      "required_deployment_environments": 0,
+      "bypass_actors": 11,
+      "current_connection_can_bypass": "always",
+      "branch_protection_read": "403; unavailable",
+      "mutation_performed": false
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "latest_deployment_state": "READY",
+      "sso_protection": true,
+      "exact_current_head_previews_for_prs_120_123_125_126_127": "not verified / none found",
+      "pr127_error": "api-deployments-free-per-day (>100 deployments/day)",
+      "production_mutated": false
     }
   }
 }
