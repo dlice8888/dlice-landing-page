@@ -4,17 +4,21 @@ Date: 2026-11-21
 
 ## Scope
 
-The `admin-set-permissions` action now calls
-`public.dlice_update_admin_permissions_audited` instead of issuing a profile
-update and a separate best-effort audit insert from the Edge Function.
+The staff-access mutation paths now use transaction-scoped audited RPCs instead of split profile writes and best-effort audit inserts from the Edge Function:
+- `admin-set-permissions` → `dlice_update_admin_permissions_audited`.
+- `admin-create-staff` → `dlice_create_admin_profile_audited` (Auth user creation remains a separate Auth Admin operation; uncertain RPC outcomes fail closed and are not auto-deleted).
+- `admin-set-profile-role` → `dlice_update_admin_profile_role_audited` (including branch-worker assignment and tenant-membership checks).
+- `admin-set-active` → `dlice_set_admin_profile_active_audited`.
 
-The database function:
-- requires the `service_role` database role;
+The database functions:
+- require the `service_role` database role;
 - validates the actor, target profile, and permission allowlist;
 - refuses to modify the platform Owner profile;
 - locks the target profile row before reading and changing permissions;
-- stores previous and resulting permission sets in `admin_audit_logs`;
-- commits the permission update and audit record in the same transaction;
+- store before/after permission sets, profile role, active state, or profile creation snapshot in `admin_audit_logs`;
+- commit each profile mutation and its audit record in the same transaction;
+- make retries idempotent for unchanged profile creation/role/active state;
+- reject branch-worker role changes without active same-tenant branch assignments;
 - causes the complete operation to fail and roll back if audit insertion fails.
 
 The Edge Function returns an error if the RPC fails; it does not report a
@@ -41,6 +45,16 @@ isolation and public tenant routing release flags remain false.
 execution, invalid caller rejection, before/after audit metadata, allowlist
 validation, Owner protection, and transaction rollback when audit persistence
 fails.
+
+`supabase/tests/admin_profile_mutation_audit.test.sql` adds 18 pgTAP assertions
+for atomic staff profile creation, idempotent retry, permission allowlist,
+role changes, branch assignment prerequisites, active/inactive state changes,
+Owner protection, and RPC ACLs.
+
+Remaining audit work: Auth password resets and tenant-membership/branch-assignment
+mutations still need a full mutation inventory and append-only audit/transaction
+review; this PR does not claim every identity or tenant permission mutation is
+already covered.
 
 `tests/contracts/admin-permission-audit-contract.test.mjs` verifies that the
 Edge Function uses the audited RPC and fails closed on RPC errors.
