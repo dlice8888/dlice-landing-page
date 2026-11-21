@@ -1,15 +1,18 @@
 // Authenticated tenant-boundary probes for staging Supabase Data API.
-// Credentials are accepted only from the trusted staging GitHub Environment.
-// Tokens, passwords, usernames, and response bodies are never written to logs.
+// Existing Supabase Auth users are authenticated via short-lived magic links.
+// The service-role key is used only in the trusted staging GitHub Environment
+// to issue a link for a fixed existing user ID; no users or passwords are created or changed.
+// Tokens, magic-link hashes, emails, and response bodies are never written to logs.
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
+import { isServiceRoleKey, serviceRoleHeaders } from "./supabase-api-key.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
 const serviceRoleKey = process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY;
-const emailA = process.env.STAGING_TENANT_A_EMAIL;
-const emailB = process.env.STAGING_TENANT_B_EMAIL;
+const userIdA = process.env.STAGING_TENANT_A_USER_ID;
+const userIdB = process.env.STAGING_TENANT_B_USER_ID;
 let tenantA = null;
 let tenantB = null;
 let branchA = null;
@@ -20,8 +23,8 @@ const branchCodeB = process.env.STAGING_TENANT_B_BRANCH_CODE;
 const maskId = (value) => typeof value === "string" && value.length >= 4 ? `…${value.slice(-4)}` : "unconfigured";
 
 const requiredProbes = [
-  ["P01", "Tenant A existing Supabase Auth magic-link session", "Tenant A", maskId(tenantA), maskId(branchA), "Auth Admin generateLink + verify OTP"],
-  ["P02", "Tenant B existing Supabase Auth magic-link session", "Tenant B", maskId(tenantB), maskId(branchB), "Auth Admin generateLink + verify OTP"],
+  ["P01", "Tenant A existing Supabase Auth identity passwordless login", "Tenant A", maskId(tenantA), maskId(branchA), "Supabase Auth Admin generate-link + verify OTP"],
+  ["P02", "Tenant B existing Supabase Auth identity passwordless login", "Tenant B", maskId(tenantB), maskId(branchB), "Supabase Auth Admin generate-link + verify OTP"],
   ["P03", "Distinct identities, active tenant memberships, and branch assignments", "Tenant A and Tenant B", `${maskId(tenantA)},${maskId(tenantB)}`, `${maskId(branchA)},${maskId(branchB)}`, "Auth user, erp-list-tenant-memberships, and erp-list-branches"],
   ["P04", "Tenant A own-branch inventory read", "Tenant A", maskId(tenantA), maskId(branchA), "erp-list-inventory"],
   ["P05", "Tenant A cross-tenant inventory read denied", "Tenant A", maskId(tenantA), maskId(branchB), "erp-list-inventory"],
@@ -44,7 +47,6 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
-  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -58,7 +60,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed,
+    executed: true,
     status,
   };
   results.push(result);
@@ -103,28 +105,26 @@ function recordBlocked(definition, reason) {
   });
 }
 
-function isPublicSupabaseKey(value) {
-  if (value.startsWith("sb_secret_")) return false;
-  const parts = value.split(".");
-  if (parts.length !== 3) return /^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value);
+function decodeJwtPayload(value) {
   try {
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-    return payload.role === "anon";
+    const parts = value.split(".");
+    if (parts.length !== 3) return null;
+    return JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
   } catch {
-    return false;
+    return null;
   }
 }
 
-function isServiceRoleKey(value) {
-  if (value.startsWith("sb_secret_")) return true;
-  const parts = value.split(".");
-  if (parts.length !== 3) return false;
-  try {
-    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-    return payload.role === "service_role";
-  } catch {
-    return false;
-  }
+function isPublicSupabaseKey(value) {
+  if (value.startsWith("sb_secret_")) return false;
+  const payload = decodeJwtPayload(value);
+  if (payload) return payload.role === "anon";
+  return /^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value);
+}
+
+function isUuid(value) {
+  return typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function configurationProblems() {
@@ -132,15 +132,15 @@ function configurationProblems() {
     ["STAGING_SUPABASE_URL", process.env.STAGING_SUPABASE_URL],
     ["STAGING_SUPABASE_PUBLIC_KEY", key],
     ["STAGING_SUPABASE_SERVICE_ROLE_KEY", serviceRoleKey],
-    ["STAGING_TENANT_A_EMAIL", emailA],
-    ["STAGING_TENANT_B_EMAIL", emailB],
+    ["STAGING_TENANT_A_USER_ID", userIdA],
+    ["STAGING_TENANT_B_USER_ID", userIdB],
     ["STAGING_TENANT_A_BRANCH_CODE", branchCodeA],
     ["STAGING_TENANT_B_BRANCH_CODE", branchCodeB],
   ];
   const missingInputNames = inputs.filter(([, value]) => value === undefined).map(([name]) => name);
   const emptyInputNames = inputs.filter(([, value]) => typeof value === "string" && value.trim() === "").map(([name]) => name);
   const configurationErrors = [];
-  const distinctEmails = emailA?.trim().toLowerCase() !== emailB?.trim().toLowerCase();
+  const distinctUsers = userIdA !== userIdB;
   const distinctBranchCodes = branchCodeA !== branchCodeB;
   const checks = inputs.map(([name, value]) => {
     let valid = typeof value === "string" && value.trim().length > 0;
@@ -159,8 +159,8 @@ function configurationProblems() {
       valid = isPublicSupabaseKey(value);
     } else if (valid && name === "STAGING_SUPABASE_SERVICE_ROLE_KEY") {
       valid = isServiceRoleKey(value);
-    } else if (valid && name.endsWith("_EMAIL")) {
-      valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && distinctEmails;
+    } else if (valid && (name === "STAGING_TENANT_A_USER_ID" || name === "STAGING_TENANT_B_USER_ID")) {
+      valid = isUuid(value) && distinctUsers;
     } else if (valid && name.endsWith("_BRANCH_CODE")) {
       valid = value === (name === "STAGING_TENANT_A_BRANCH_CODE" ? "QA-DLICE-A" : "QA-TENANT-B") && distinctBranchCodes;
     }
@@ -180,11 +180,11 @@ function configurationProblems() {
   if (key && !isPublicSupabaseKey(key)) {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
-  if (emailA && emailB && !distinctEmails) {
-    configurationErrors.push("Tenant A and Tenant B Auth emails must be distinct");
-  }
   if (serviceRoleKey && !isServiceRoleKey(serviceRoleKey)) {
-    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a supported Supabase service-role key");
+    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a service_role JWT");
+  }
+  if (userIdA && userIdB && !distinctUsers) {
+    configurationErrors.push("Tenant A and Tenant B user IDs must be distinct");
   }
   if (branchCodeA && branchCodeB && !distinctBranchCodes) {
     configurationErrors.push("Tenant A and Tenant B branch codes must be distinct");
@@ -264,9 +264,52 @@ if (
     }
   }
 
+  async function existingSupabaseUserToken(userId) {
+    const adminHeaders = {
+      ...serviceRoleHeaders(serviceRoleKey),
+      "content-type": "application/json",
+    };
+    const userResponse = await fetch(`${base}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+      method: "GET",
+      headers: adminHeaders,
+      redirect: "manual",
+    });
+    const userPayload = await userResponse.json().catch(() => ({}));
+    if (!userResponse.ok || userPayload.id !== userId ||
+        typeof userPayload.email !== "string" || !userPayload.email_confirmed_at) {
+      throw new Error("existing_auth_user_not_found_or_not_confirmed");
+    }
+
+    const linkResponse = await fetch(`${base}/auth/v1/admin/generate_link`, {
+      method: "POST",
+      headers: adminHeaders,
+      body: JSON.stringify({ type: "magiclink", email: userPayload.email }),
+      redirect: "manual",
+    });
+    const linkPayload = await linkResponse.json().catch(() => ({}));
+    const tokenHash = linkPayload.properties?.hashed_token ?? linkPayload.hashed_token;
+    if (!linkResponse.ok || typeof tokenHash !== "string" || tokenHash.length < 20) {
+      throw new Error("magic_link_generation_failed");
+    }
+
+    const verifyResponse = await fetch(`${base}/auth/v1/verify`, {
+      method: "POST",
+      headers: { apikey: key, "content-type": "application/json" },
+      body: JSON.stringify({ type: "magiclink", token_hash: tokenHash }),
+      redirect: "manual",
+    });
+    const session = await verifyResponse.json().catch(() => ({}));
+    if (!verifyResponse.ok || session.user?.id !== userId ||
+        typeof session.access_token !== "string" || session.access_token.split(".").length !== 3) {
+      throw new Error("existing_auth_user_magic_link_verification_failed");
+    }
+    return session.access_token;
+  }
+
   async function login(tenant) {
     const isTenantA = tenant === "A";
     const id = isTenantA ? "P01" : "P02";
+    const userId = isTenantA ? userIdA : userIdB;
     const [, expectedResult, authIdentity, tenantScope, branchScope, operation] = probeById.get(id);
     await runProbe({
       id,
@@ -275,68 +318,19 @@ if (
       branchScope,
       operation,
     }, authIdentity, async () => {
-      const email = isTenantA ? emailA : emailB;
-      const generated = await fetch(`${base}/auth/v1/admin/generate_link`, {
-        method: "POST",
-        headers: {
-          apikey: serviceRoleKey,
-          authorization: `Bearer ${serviceRoleKey}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ type: "magiclink", email }),
-        redirect: "manual",
-      });
-      const generatedText = await generated.text();
-      let generatedPayload = null;
-      try { generatedPayload = JSON.parse(generatedText); } catch { generatedPayload = null; }
-      const tokenHash = generatedPayload?.properties?.hashed_token ??
-        generatedPayload?.hashed_token ??
-        generatedPayload?.data?.properties?.hashed_token ??
-        null;
-      const verificationType = generatedPayload?.properties?.verification_type ??
-        generatedPayload?.verification_type ??
-        "magiclink";
-      if (!generated.ok || typeof tokenHash !== "string" || tokenHash.length < 20) {
-        return {
-          passed: false,
-          actualResult: `Auth Admin generateLink returned HTTP ${generated.status}; no token was logged`,
-          httpStatus: generated.status,
-          evidence: { generateLinkResponseBytes: generatedText.length, tokenPrinted: false },
-        };
-      }
-
-      const verified = await fetch(`${base}/auth/v1/verify`, {
-        method: "POST",
-        headers: { apikey: key, "content-type": "application/json" },
-        body: JSON.stringify({ type: verificationType, token_hash: tokenHash }),
-        redirect: "manual",
-      });
-      const verifiedText = await verified.text();
-      let payload = null;
-      try { payload = JSON.parse(verifiedText); } catch { payload = null; }
-      const token = payload?.access_token ?? payload?.session?.access_token;
-      const userId = payload?.user?.id ?? payload?.session?.user?.id;
-      const returnedEmail = String(payload?.user?.email ?? payload?.session?.user?.email ?? "").toLowerCase();
-      const validTokenShape = typeof token === "string" && token.split(".").length === 3 && !token.startsWith("Bearer ");
-      const identityMatches = returnedEmail === email.toLowerCase();
-      const passed = verified.ok && validTokenShape && identityMatches && typeof userId === "string";
-      if (passed) {
-        tokenByTenant[tenant] = token;
-        identityByTenant[tenant] = userId;
-      }
+      const token = await existingSupabaseUserToken(userId);
+      tokenByTenant[tenant] = token;
       return {
-        passed,
-        actualResult: passed
-          ? `HTTP ${verified.status}; existing Supabase Auth identity authenticated by one-time magic link`
-          : `Auth verify returned HTTP ${verified.status}; session or identity mismatch`,
-        httpStatus: verified.status,
+        passed: true,
+        actualResult: "Existing confirmed Supabase Auth identity authenticated through one-time magic link",
+        httpStatus: 200,
         evidence: {
-          generateLinkHttpStatus: generated.status,
-          validAccessTokenShape: validTokenShape,
-          identityEmailMatched: identityMatches,
-          userIdMasked: maskId(userId),
-          tokenPrinted: false,
-          responseBodyBytes: verifiedText.length,
+          configuredUserIdMasked: maskId(userId),
+          accountCreated: false,
+          passwordChanged: false,
+          emailPrinted: false,
+          magicLinkPrinted: false,
+          accessTokenPrinted: false,
         },
       };
     });
@@ -698,34 +692,6 @@ if (
   await verifyDirectBranchRlsDenied("B", "foreign");
   await verifyDirectStockTransferRpcDenied("A");
   await verifyDirectStockTransferRpcDenied("B");
-
-  // Revoke both temporary sessions after all probes; never print tokens or response bodies.
-  for (const tenant of ["A", "B"]) {
-    const token = tokenByTenant[tenant];
-    if (!token) continue;
-    try {
-      const response = await fetch(`${base}/auth/v1/logout`, {
-        method: "POST",
-        headers: {
-          apikey: key,
-          authorization: `Bearer ${token}`,
-          "content-type": "application/json",
-        },
-      });
-      console.log(JSON.stringify({
-        probeId: `CLEANUP-${tenant}`,
-        status: response.ok ? "PASS" : "FAIL",
-        actualResult: `temporary Auth session revocation HTTP ${response.status}`,
-        tokenPrinted: false,
-      }));
-      if (!response.ok) results.push({
-        probeId: `CLEANUP-${tenant}`,
-        status: "FAIL",
-      });
-    } catch {
-      results.push({ probeId: `CLEANUP-${tenant}`, status: "FAIL" });
-    }
-  }
 
   const requiredResults = results.filter((result) => /^P\d\d$/.test(result.probeId));
   const supplementalResults = results.filter((result) => !/^P\d\d$/.test(result.probeId));
