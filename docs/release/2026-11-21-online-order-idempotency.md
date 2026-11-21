@@ -27,3 +27,7 @@ The public `create-order` handler called `create_order_with_reservations` withou
 - Concurrent duplicate-request test with same key and different request arrival times.
 - Verify tracking token remains recoverable only by the initiating checkout session.
 - Reconcile capacity reservation count and order count after replay.
+
+## Follow-up lifecycle remediation
+
+PR #125 separately adds unpaid/unproven-payment reservation expiry, rejected-payment compensation, stale no-proof payment-attempt cleanup and a one-minute pg_cron worker. PR #123 remains scoped to idempotent order creation/replay. The atomic customer proof-upload/declaration RPC and browser race/fault-injection test remain open, so the overall order lifecycle is not DONE.
