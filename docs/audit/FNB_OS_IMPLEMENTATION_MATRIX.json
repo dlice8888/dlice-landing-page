@@ -2787,11 +2787,11 @@
     },
     "pr_statuses": {
       "pr120": {
-        "head": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
-        "previous_quality": "PASS on commit 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
-        "latest_quality": "IN_PROGRESS",
-        "previous_migration_replay": "FAIL on commit 4894f28829438844254e1a07291839f6508d1ac4 at statement 17 near OR p_role after email regex edit",
-        "latest_migration_replay": "IN_PROGRESS after replacing !~ with explicit NOT (email ~ regex)",
+        "head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
+        "previous_quality": "PASS on cfa72df3fa8e9147e585f18e02470df1b5c17300",
+        "latest_quality": "QUEUED / IN_PROGRESS",
+        "previous_migration_replay": "FAIL due orphaned SQL fragments after COMMIT in migration 20261121160000; 22,067 trailing characters removed",
+        "latest_migration_replay": "QUEUED",
         "shared_staging_migration_applied": false
       },
       "pr123": {
@@ -2854,6 +2854,12 @@
         "production_consumptions": 0,
         "inventory_waste_events": 0
       }
+    },
+    "vercel_preview_status_pr120": {
+      "current_branch_head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
+      "latest_preview_commit": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
+      "latest_preview_state": "READY",
+      "current_head_preview": "NOT FOUND"
     }
   },
   "tenant_acceptance": {
@@ -3126,12 +3132,11 @@
       ],
       "pr120": {
         "state": "OPEN_DRAFT",
-        "head_sha": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
-        "purpose": "atomic permission-change audit",
-        "previous_quality": "PASS on 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d",
-        "latest_quality": "IN_PROGRESS",
-        "previous_disposable_migration_replay": "FAIL on 4894f28829438844254e1a07291839f6508d1ac4 at invite validation SQL statement",
-        "latest_disposable_migration_replay": "IN_PROGRESS on cfa72df3fa8e9147e585f18e02470df1b5c17300",
+        "head_sha": "29d6d808c2b56eb9596335805499266de4e1b4ba",
+        "purpose": "atomic permission/profile mutation audit",
+        "quality": "QUEUED / IN_PROGRESS",
+        "disposable_migration_replay": "QUEUED",
+        "migration_fix": "Removed 22,067 characters of orphaned SQL fragments after COMMIT from 20261121160000_atomic_admin_profile_mutation_audit.sql; added 11 invitation issuance pgTAP assertions.",
         "shared_staging_migration_applied": false
       },
       "pr121": {
@@ -3529,7 +3534,7 @@
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "Current PR #120 head cfa72df3fa8e9147e585f18e02470df1b5c17300: previous authorization coverage test now passes on commit 03a1029d05d4ec9fd2a65697d68a600a4afb7c6d, but disposable migration replay failed at invite validation statement near OR p_role on commit 4894f28829438844254e1a07291839f6508d1ac4. The email validation predicate has now been rewritten as NOT (p_email ~ regex); latest exact-head quality and disposable replay are still running.",
+    "pr120": "Latest PR #120 head 29d6d808c2b56eb9596335805499266de4e1b4ba removes 22,067 characters of orphaned SQL fragments that had remained after the migration COMMIT and caused statement 17 syntax errors. It also includes 11 pgTAP assertions for audited invitation issuance. Exact-head quality and disposable migration replay are queued; shared staging remains unchanged.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "The latest PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. Preview readiness is not feature acceptance.",
