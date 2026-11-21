@@ -210,3 +210,15 @@ Therefore the passwordless implementation is not yet runnable on trusted staging
 The GitHub Environment endpoint and GitHub Secrets endpoints are not exposed by the connected integration. No secret values were read. No staging workflow was dispatched.
 
 The latest PR #126 test harness now sends new `sb_secret_` keys on `apikey` only and legacy service-role JWTs on both `apikey` and `Authorization: Bearer`. The P08/P09 tests now perform a narrow service-role read-only postcondition query and require zero persisted transfer rows after a 403. CI for head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` is still running the disposable migration replay.
+
+## PR #126 exact-head test completion — 21 November 2026, 21:18 WIB
+
+PR #126 exact head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` has completed all six applicable workflows successfully. Disposable migration replay: 7 pgTAP files / 139 assertions PASS. [Run](https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844).
+
+This exact head includes:
+- Correct P01/P02 fixture-scope labels.
+- P08/P09 postcondition query requiring zero persisted `stock_transfers` rows after a cross-tenant 403.
+- Supabase API key header compatibility: new `sb_secret_` keys are sent on `apikey` only; legacy service-role JWTs also use `Authorization: Bearer`.
+
+P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
+
