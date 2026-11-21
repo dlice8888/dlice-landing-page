@@ -18,6 +18,10 @@ test("unscoped service-role inventory writes and tenant invites remain closed be
   assert.ok(source.includes("isTenantSensitiveAction(action) || TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)"));
 });
 
+test("branch ID resolution is explicitly delegated to tenant-scoped membership helper", () => {
+  assert.ok(source.includes("resolveTenantScopedBranchIds(membershipRows, assignedRows, branches || [])"));
+});
+
 test("branch and inventory reads use tenant membership and branch assignment guards", () => {
   assert.equal(gatedActions.has("erp-list-branches"), false);
   assert.equal(gatedActions.has("erp-list-inventory"), false);
