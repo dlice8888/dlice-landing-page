@@ -4492,7 +4492,7 @@
       },
       "note": "No exact-head Preview deployment was found for PR #120/#123/#126/#127. The audit-branch Preview is documentation-only and is not a candidate feature E2E environment."
     },
-    "acceptance_policy": "No separate independent PR-review prerequisite. Feature completion is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
+    "acceptance_policy": "No separate independent PR-review prerequisite in D’Lice project instructions or PR descriptions. Repository ruleset still has reviewer-related enforcement; this has not been disabled because the connected GitHub integration exposes no ruleset write action. Feature acceptance itself is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
     "staging_environment_verification": {
       "environment_protection": "NOT VERIFIED; GitHub Environment endpoint is not exposed by the connected GitHub integration",
       "service_role_secret_presence": "NOT VERIFIED; GitHub secrets endpoints are not exposed; secret value was not read",
@@ -4675,6 +4675,28 @@
       "stock_transfer_transition": "approval enforces same-tenant source/destination unless platform owner; other transitions require branch access",
       "admin_mutations": "admin-set-permissions, admin-create-staff and admin-reset-staff-password remain behind the uncertified-action 423 gate for non-platform owners",
       "invitation": "deployed v70 still contains the legacy multi-step invitation route; atomic invitation route is candidate-only in PR #120/#126 and is not deployed"
+    },
+    "github_ruleset": {
+      "id": 27559290,
+      "name": "Ruleset",
+      "enforcement": "active",
+      "target": "branch",
+      "current_user_can_bypass": "always",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "require_review_thread_resolution": true,
+      "require_extra_approval_for_unattributed_changes": true,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "required_status_checks": [],
+      "required_deployment_environments": [],
+      "branch_protection_api": "403 Resource not accessible by integration",
+      "mutation_capability": "No GitHub ruleset update/write action is exposed by the connected integration; settings were not changed",
+      "status": "MISALIGNED_WITH_TEST_ONLY_POLICY"
     }
   },
   "latest_reaudit": {
