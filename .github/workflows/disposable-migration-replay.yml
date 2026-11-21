@@ -7,6 +7,7 @@ on:
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
       - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - ".github/workflows/quality-checks.yml"
       - "tests/runtime/**"
       - "tests/contracts/**"
   push:
@@ -16,6 +17,7 @@ on:
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
       - ".github/workflows/staging-tenant-isolation-acceptance.yml"
+      - ".github/workflows/quality-checks.yml"
       - "tests/runtime/**"
       - "tests/contracts/**"
 
