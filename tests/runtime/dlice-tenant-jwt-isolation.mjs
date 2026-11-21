@@ -367,6 +367,25 @@ if (
     };
   }
 
+  async function serviceRoleRows(table, filters) {
+    const query = new URLSearchParams({ select: "id", ...filters });
+    const response = await fetch(`${base}/rest/v1/${table}?${query}`, {
+      method: "GET",
+      headers: {
+        ...serviceRoleHeaders(serviceRoleKey),
+        accept: "application/json",
+      },
+      redirect: "manual",
+    });
+    const text = await response.text();
+    let payload = null;
+    try { payload = JSON.parse(text); } catch { payload = null; }
+    if (!response.ok || !Array.isArray(payload)) {
+      throw new Error(`postcondition_query_failed:${table}:${response.status}`);
+    }
+    return payload;
+  }
+
   async function verifyIdentityAndMembership() {
     const definition = {
       id: "P03",
@@ -562,11 +581,12 @@ if (
         };
       }
       const idempotencyKey = `tenant-isolation-${tenant.toLowerCase()}-${randomUUID()}`;
+      const transferNumber = `SECURITY-DENY-${tenant}-${randomUUID()}`;
       const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
         body: JSON.stringify({
           action: "erp-create-stock-transfer",
-          transfer_number: `SECURITY-DENY-${tenant}-${randomUUID()}`,
+          transfer_number: transferNumber,
           source_branch_id: ownBranch,
           destination_branch_id: foreignBranch,
           inventory_item_id: "00000000-0000-4000-8000-000000000099",
@@ -575,15 +595,47 @@ if (
           notes: "Automated tenant-isolation negative test; must be rejected before mutation",
         }),
       });
-      const passed = response.status === 403;
+
+      // Verify the denial at the database boundary using the trusted service-role
+      // key. A 403 alone is insufficient: no transfer, child item, or linked
+      // stock-movement row may have been committed.
+      const transferRows = await serviceRoleRows("stock_transfers", {
+        transfer_number: `eq.${transferNumber}`,
+      });
+      const idempotencyRows = await serviceRoleRows("stock_transfers", {
+        idempotency_key: `eq.${idempotencyKey}`,
+      });
+      const transferIds = [...new Set([...transferRows, ...idempotencyRows].map((row) => row.id))];
+      let transferItemCount = 0;
+      let stockMovementCount = 0;
+      for (const transferId of transferIds) {
+        const [items, movements] = await Promise.all([
+          serviceRoleRows("stock_transfer_items", { transfer_id: `eq.${transferId}` }),
+          serviceRoleRows("stock_movements", { reference_id: `eq.${transferId}` }),
+        ]);
+        transferItemCount += items.length;
+        stockMovementCount += movements.length;
+      }
+      const postcondition = {
+        transferRowsByNumber: transferRows.length,
+        transferRowsByIdempotencyKey: idempotencyRows.length,
+        transferItemRows: transferItemCount,
+        linkedStockMovementRows: stockMovementCount,
+        verified: transferRows.length === 0 &&
+          idempotencyRows.length === 0 &&
+          transferItemCount === 0 &&
+          stockMovementCount === 0,
+      };
+      const passed = response.status === 403 && postcondition.verified;
       return {
         passed,
-        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied" : "not denied"}`,
+        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied with zero database side effects" : "not fully denied or database postcondition failed"}`,
         httpStatus: response.status,
         evidence: {
           ...evidence,
           sameTenantAuthorizationControlStatus: control.response.status,
           sameTenantControlRejectedBeforeMutation: true,
+          databasePostcondition: postcondition,
           idempotencyKeyGenerated: true,
           requestIdentifiersPrinted: false,
         },
