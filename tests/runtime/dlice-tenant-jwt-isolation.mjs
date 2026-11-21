@@ -682,6 +682,145 @@ if (
     });
   }
 
+
+  // Carry forward PR #31's cross-module negative scenarios using the current
+  // dynamically discovered Tenant A/B identities and branch assignments.
+  // These probes are supplemental to P01-P09 and use read-only lists or
+  // impossible identifiers; they never create or transition business rows.
+  async function verifyBranchScopedList(tenant, action, resultKey, label) {
+    const isTenantA = tenant === "A";
+    const token = tokenByTenant[tenant];
+    const ownBranch = isTenantA ? branchA : branchB;
+    const foreignBranch = isTenantA ? branchB : branchA;
+    const definition = {
+      id: `X-${label}-BRANCH-SCOPE-${tenant}`,
+      authIdentity: `Tenant ${tenant}`,
+      tenantScope: maskId(isTenantA ? tenantA : tenantB),
+      branchScope: `${maskId(ownBranch)},${maskId(foreignBranch)}`,
+      operation: action,
+      expectedResult: "Assigned branch list succeeds and foreign-tenant branch list is denied",
+    };
+    if (!token || !tenantFixturesVerified) {
+      recordBlocked(definition, "identity_or_tenant_fixture_not_verified");
+      return;
+    }
+    await runProbe(definition, `Tenant ${tenant} (${maskId(identityByTenant[tenant])})`, async () => {
+      const [own, foreign] = await Promise.all([
+        authorizedRequest(token, "/functions/v1/dlice-orders", {
+          method: "POST",
+          body: JSON.stringify({ action, branch_id: ownBranch }),
+        }),
+        authorizedRequest(token, "/functions/v1/dlice-orders", {
+          method: "POST",
+          body: JSON.stringify({ action, branch_id: foreignBranch }),
+        }),
+      ]);
+      const rows = own.payload?.[resultKey];
+      const ownRowsScoped = Array.isArray(rows) && rows.every((row) => row.branch_id === ownBranch);
+      const passed = own.response.status === 200 && ownRowsScoped && foreign.response.status === 403;
+      return {
+        passed,
+        actualResult: `own HTTP ${own.response.status} (${Array.isArray(rows) ? rows.length : "invalid"} rows; scope=${ownRowsScoped}); foreign HTTP ${foreign.response.status}`,
+        httpStatus: { own: own.response.status, foreign: foreign.response.status },
+        evidence: {
+          ownRows: Array.isArray(rows) ? rows.length : null,
+          ownRowsBranchScoped: ownRowsScoped,
+          foreignBranchDenied: foreign.response.status === 403,
+          responseBodiesPrinted: false,
+        },
+      };
+    });
+  }
+
+  async function verifyFinanceLeastPrivilege(tenant) {
+    const isTenantA = tenant === "A";
+    const token = tokenByTenant[tenant];
+    const ownBranch = isTenantA ? branchA : branchB;
+    const definition = {
+      id: `X-FINANCE-LEAST-PRIVILEGE-${tenant}`,
+      authIdentity: `Tenant ${tenant}`,
+      tenantScope: maskId(isTenantA ? tenantA : tenantB),
+      branchScope: maskId(ownBranch),
+      operation: "erp-list-settlements, erp-create-settlement, erp-create-cash-reconciliation",
+      expectedResult: "Branch-manager identities without Finance permission are denied before any write",
+    };
+    if (!token || !tenantFixturesVerified) {
+      recordBlocked(definition, "identity_or_tenant_fixture_not_verified");
+      return;
+    }
+    await runProbe(definition, `Tenant ${tenant} (${maskId(identityByTenant[tenant])})`, async () => {
+      const [list, createSettlement, createCashReconciliation] = await Promise.all([
+        authorizedRequest(token, "/functions/v1/dlice-orders", {
+          method: "POST",
+          body: JSON.stringify({ action: "erp-list-settlements" }),
+        }),
+        authorizedRequest(token, "/functions/v1/dlice-orders", {
+          method: "POST",
+          body: JSON.stringify({
+            action: "erp-create-settlement",
+            settlement_code: "DENY-ONLY-ACCEPTANCE",
+            payment_method: "qris",
+            settlement_date: new Date().toISOString().slice(0, 10),
+            gross_amount_idr: 0,
+            fee_amount_idr: 0,
+          }),
+        }),
+        authorizedRequest(token, "/functions/v1/dlice-orders", {
+          method: "POST",
+          body: JSON.stringify({
+            action: "erp-create-cash-reconciliation",
+            branch_id: ownBranch,
+            business_date: new Date().toISOString().slice(0, 10),
+            cash_expected_idr: 0,
+            cash_counted_idr: 0,
+            bank_expected_idr: 0,
+            bank_received_idr: 0,
+            qris_expected_idr: 0,
+            qris_received_idr: 0,
+          }),
+        }),
+      ]);
+      const statuses = [list.response.status, createSettlement.response.status, createCashReconciliation.response.status];
+      const passed = statuses.every((status) => status === 403);
+      return {
+        passed,
+        actualResult: `Finance-only actions returned HTTP ${statuses.join("/")}; no write was authorized`,
+        httpStatus: statuses,
+        evidence: { allDeniedBeforeMutation: passed, responseBodiesPrinted: false },
+      };
+    });
+  }
+
+  async function verifyImpossibleIdNoop(tenant, action, payload, expectedStatus, label) {
+    const isTenantA = tenant === "A";
+    const token = tokenByTenant[tenant];
+    const definition = {
+      id: `X-${label}-UNKNOWN-ID-NOOP-${tenant}`,
+      authIdentity: `Tenant ${tenant}`,
+      tenantScope: maskId(isTenantA ? tenantA : tenantB),
+      branchScope: maskId(isTenantA ? branchA : branchB),
+      operation: action,
+      expectedResult: `Impossible record ID returns HTTP ${expectedStatus} without mutation`,
+    };
+    if (!token || !tenantFixturesVerified) {
+      recordBlocked(definition, "identity_or_tenant_fixture_not_verified");
+      return;
+    }
+    await runProbe(definition, `Tenant ${tenant} (${maskId(identityByTenant[tenant])})`, async () => {
+      const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
+        method: "POST",
+        body: JSON.stringify({ action, ...payload }),
+      });
+      const passed = response.status === expectedStatus;
+      return {
+        passed,
+        actualResult: `HTTP ${response.status}; impossible-ID operation ${passed ? "rejected" : "unexpected"}`,
+        httpStatus: response.status,
+        evidence: { ...evidence, impossibleIdUsed: true, responseBodyPrinted: false },
+      };
+    });
+  }
+
   await login("A");
   await login("B");
   await verifyIdentityAndMembership();
@@ -697,6 +836,30 @@ if (
   await verifyDirectBranchRlsDenied("B", "foreign");
   await verifyDirectStockTransferRpcDenied("A");
   await verifyDirectStockTransferRpcDenied("B");
+
+  await verifyBranchScopedList("A", "erp-list-purchase-orders", "purchase_orders", "P2P");
+  await verifyBranchScopedList("B", "erp-list-purchase-orders", "purchase_orders", "P2P");
+  await verifyBranchScopedList("A", "erp-list-fulfillment-orders", "orders", "O2C");
+  await verifyBranchScopedList("B", "erp-list-fulfillment-orders", "orders", "O2C");
+  await verifyFinanceLeastPrivilege("A");
+  await verifyFinanceLeastPrivilege("B");
+  await verifyImpossibleIdNoop("A", "erp-receive-purchase-order", {
+    purchase_order_id: "00000000-0000-0000-0000-000000000000",
+    receipt_number: "NOOP-PR31-CARRY-FORWARD",
+    items: [],
+  }, 404, "P2P-RECEIVE");
+  await verifyImpossibleIdNoop("A", "erp-update-fulfillment", {
+    order_id: "00000000-0000-0000-0000-000000000000",
+    fulfillment_status: "accepted",
+    notes: "negative acceptance; impossible ID",
+  }, 404, "O2C-UPDATE");
+  await verifyImpossibleIdNoop("B", "erp-transition-stock-transfer", {
+    transfer_id: "00000000-0000-0000-0000-000000000000",
+    transition: "approve",
+  }, 404, "STOCK-TRANSFER");
+  await verifyImpossibleIdNoop("B", "erp-post-stock-count", {
+    count_id: "00000000-0000-0000-0000-000000000000",
+  }, 404, "STOCK-COUNT");
 
   const requiredResults = results.filter((result) => /^P\d\d$/.test(result.probeId));
   const supplementalResults = results.filter((result) => !/^P\d\d$/.test(result.probeId));
