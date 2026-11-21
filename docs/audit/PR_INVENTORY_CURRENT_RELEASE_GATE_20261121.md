@@ -6,9 +6,9 @@ Source: live GitHub PR search and per-PR metadata reads.
 
 ## Totals
 
-**125 actual PRs = 77 merged + 27 closed without merge + 21 open.**
+**125 actual PRs = 77 merged + 28 closed without merge + 20 open.**
 
-The previous 20-November inventory recorded 112 PRs and 9 open. Six additional open PRs (#115–#120) were created after that snapshot; this audit adds #121–#127. PR #124 is now closed as superseded by #120. The 21 open rows below were individually read; no other PR state was changed by this audit.
+The previous 20-November inventory recorded 112 PRs and 9 open. Six additional open PRs (#115–#120) were created after that snapshot; this audit adds #121–#127. PR #124 is now closed as superseded by #120. The 20 open rows below were individually read; no other PR state was changed by this audit.
 
 ## Open PRs
 
@@ -39,7 +39,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 
 ## Governance observations
 
-1. There are 21 open PRs, not 9 as shown in the 20-November snapshot.
+1. There are 20 open PRs, not 9 as shown in the 20-November snapshot.
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
 4. #108 is still open and Draft. The current feature-level matrix in #121 is 92/91/6. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Seven earlier features moved to PARTIAL from implementation/schema evidence; three additional blocked features now move to PARTIAL after exact-head tests passed.
@@ -128,7 +128,7 @@ Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0
 
 ## Latest verified execution update — 21 November 2026
 
-- Open PRs: **21**; merged: **77**; closed without merge: **27**. PR #124 is closed/superseded by #120. Remaining open execution PRs: #120, #123, #125, #126 and #127.
+- Open PRs: **20**; merged: **77**; closed without merge: **28**. PR #124 is closed/superseded by #120. Remaining open execution PRs: #120, #123, #125, #126 and #127.
 - PR #120 exact head `471f4a330a4da0cb13afe60ddeeb520e28dc0e88`: six of six applicable workflows PASS, including disposable migration replay and exact-head quality. The new profile-mutation suite has 35 assertions; permission mutation suite 11; invitation suite 11. No staging mutation or Edge Function deployment occurred.
 - PR #123 exact head `31976673a9289add4c1bb10d6f29f3ff6c3c15a5`: six of six applicable workflows PASS; online checkout pgTAP plan is 7. Parallel browser/runtime duplicate-submission test remains NOT RUN.
 - PR #125 exact head `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d`: all three applicable workflows PASS; expiry suite plan is 27. Live scheduler/expiry-worker test remains NOT RUN.
