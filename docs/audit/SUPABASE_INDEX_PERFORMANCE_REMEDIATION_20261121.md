@@ -134,3 +134,13 @@ A catalog comparison found four non-unique indexes whose ordered key columns are
 | `stock_transfer_items` | `stock_transfer_items_transfer_idx (transfer_id)` | `stock_transfer_items_transfer_id_inventory_item_id_key (transfer_id, inventory_item_id)` |
 
 These are **possible consolidation candidates, not approved drops**. The checklist index has a DESC key while the unique index is ASC; PostgreSQL can often scan B-trees backward, but actual query predicates/orderings still need plan verification. Before removing any prefix index, inspect all application/RPC/RLS queries and compare `EXPLAIN (ANALYZE, BUFFERS)` on realistic datasets. This PR deliberately retains all four.
+
+## Zero-scan index review (read-only staging stats, 2026-11-21)
+
+PostgreSQL reports 126 zero-scan indexes total: 77 primary/unique constraint indexes and 49 non-unique indexes. The 49 non-unique indexes occupy approximately 488 kB. Statistics have been collected since 2026-10-02, but staging has very low row counts and several operational tables have no representative workflow volume; zero scans are therefore not sufficient evidence to drop most of these indexes.
+
+A catalog comparison found two exact leading-key redundancies among the 49:
+- `stock_count_items_count_idx(stock_count_id)` is covered by unique `stock_count_items_stock_count_id_inventory_item_id_key(stock_count_id, inventory_item_id)`.
+- `stock_transfer_items_transfer_idx(transfer_id)` is covered by unique `stock_transfer_items_transfer_id_inventory_item_id_key(transfer_id, inventory_item_id)`.
+
+PR #122 now proposes removing only these two redundant indexes and adds pgTAP assertions that the single-column indexes are absent while the unique composite indexes remain. The remaining 47 zero-scan non-unique indexes are retained pending representative query/workflow evidence, because many are the only index on an FK or are for currently empty procurement, finance, refund, production, or settlement tables. Do not remove those blindly; re-evaluate after staged workload and EXPLAIN (ANALYZE, BUFFERS) evidence.
