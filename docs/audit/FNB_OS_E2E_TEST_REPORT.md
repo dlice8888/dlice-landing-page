@@ -201,3 +201,16 @@ P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted stagin
 - PR #123 exact head 6788c4d7da34144d279da06edea84f6d0763b796: quality, disposable replay, KDS, CORS and procurement contracts PASS; checkout response-drop, retry, concurrency and late-webhook E2E NOT RUN.
 - PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6: quality, disposable replay, KDS, CORS and procurement contracts PASS; proof upload retry/concurrency, expiry worker, compensation and payment-attempt supersession E2E NOT RUN. PR #125 is CLOSED as superseded by #127.
 - PR #124 is CLOSED as superseded by #120. No shared staging migration or Edge Function deployment was performed.
+
+
+## Runtime versus contract evidence — 21 November 2026
+
+| PR | Automated evidence | What it proves | Still NOT proven |
+|---:|---|---|---|
+| #123 | 7 pgTAP assertions + Node source-contract checks | DB idempotency ledger, advisory lock, mismatch rejection, browser storage key contract | Real browser retry, concurrent double-submit, timeout/retry against running staging |
+| #125 | 27-plan expiry/payment lifecycle pgTAP suite | Expiry, reservations, no-proof payment closure, paid/rejected outcomes, idempotent worker rerun, cron presence in disposable DB | Live scheduler execution, worker retry/restart, actual order/payment/reservation reconciliation on staging |
+| #127 | 16 proof-upload + 14 supersession pgTAP assertions | Atomic proof row/order/reservation/audit, idempotent retry, proof validation, stale no-proof attempt supersession | Real Storage upload/retry, concurrent proof submit, compensation after partial Storage/DB failure |
+| #126 | 20 invitation pgTAP assertions within 7-file / 139-assertion replay | Invitation issue, replay, expiry, email mismatch, membership activation, audit atomicity; direct RLS contract | Real Tenant A/B runtime login, cross-tenant read/write, Storage/cache/job isolation |
+| #111 | Deno OIDC claim tests + disposable replay | Trust-claim validation and schema replay | Deployed broker, real OIDC exchange, P01–P09 runtime |
+
+All runtime rows above remain NOT RUN until authenticated staging evidence is captured. Source-contract tests are not browser E2E. Disposable replay is not shared-staging migration application.
