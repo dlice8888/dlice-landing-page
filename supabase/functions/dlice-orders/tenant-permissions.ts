@@ -73,13 +73,26 @@ export function resolveTenantScopedPermissions(
 }
 
 /**
- * All admin and ERP API actions are tenant-sensitive by default. Authentication
- * bootstrap and session introspection are the only prefix-based exceptions.
- * Until a route has tenant-context negative tests, callers must be blocked unless
- * they satisfy the separately verified platform-owner bypass.
+ * Admin and ERP actions are tenant-sensitive by default. Only the narrow
+ * acceptance surface below is allowed before the global release flag is enabled:
+ * - membership lookup is self-only (actor user_id is never caller supplied);
+ * - branch listing derives IDs from active memberships and assignments;
+ * - inventory reads require branchAccess for the requested branch;
+ * - stock-transfer creation checks access to BOTH source and destination before
+ *   validation or mutation. These four routes are the P01-P09 isolation probes.
+ *
+ * All other admin/ERP routes remain fail-closed until separately certified.
  */
+const TENANT_SCOPED_ACCEPTANCE_ACTIONS = new Set([
+  "erp-list-tenant-memberships",
+  "erp-list-branches",
+  "erp-list-inventory",
+  "erp-create-stock-transfer",
+]);
+
 export function isTenantSensitiveAction(action: string): boolean {
   if (action === "admin-login" || action === "admin-session-info") return false;
+  if (TENANT_SCOPED_ACCEPTANCE_ACTIONS.has(action)) return false;
   return action.startsWith("admin-") || action.startsWith("erp-");
 }
 
