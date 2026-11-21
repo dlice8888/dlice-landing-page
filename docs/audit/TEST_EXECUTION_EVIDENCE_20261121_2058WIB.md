@@ -153,3 +153,14 @@ This exact head includes:
 
 P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
 
+## Vercel exact-head verification — 21 November 2026, 21:20 WIB
+
+Vercel deployment lookup by exact Git commit SHA returned zero deployments for:
+- PR #120: `223e0ad22e1eac15394ec9b2025ba4aaaa153108`
+- PR #123: `9024f2ce6067fe4252f5110942017e27ac1ed7b5`
+- PR #126: `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9`
+- PR #127: `e52ea75a218eedecc513ec52311adaee25f241ba`
+- Latest audit branch head: `4743fc1b34ea14eabe8eb6be5131d3b558e42ce5`
+
+The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be272661c58ca6308`, which is stale and not the latest audit branch head. It is not a valid browser E2E target for current candidate code. Therefore no exact-head browser E2E or visual QA is claimed.
+
