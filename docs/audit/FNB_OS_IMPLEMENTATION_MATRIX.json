@@ -2579,7 +2579,11 @@
         "stock_transfer_items_transfer_idx"
       ],
       "retained_zero_scan_nonunique_indexes": 47,
-      "applied_to_shared_staging": false
+      "applied_to_shared_staging": false,
+      "fk_leading_zero_scan_nonunique_indexes": 42,
+      "non_fk_query_path_zero_scan_nonunique_indexes": 7,
+      "zero_scan_indexes_on_empty_tables": 37,
+      "empty_tables_with_zero_scan_indexes": 20
     },
     "saas_tenant_isolation": {
       "status": "PARTIAL_WORK_IN_PROGRESS",
@@ -2988,7 +2992,11 @@
           "stock_transfer_items_transfer_idx"
         ],
         "retained_zero_scan_nonunique_indexes": 47,
-        "applied_to_shared_staging": false
+        "applied_to_shared_staging": false,
+        "fk_leading_zero_scan_nonunique_indexes": 42,
+        "non_fk_query_path_zero_scan_nonunique_indexes": 7,
+        "zero_scan_indexes_on_empty_tables": 37,
+        "empty_tables_with_zero_scan_indexes": 20
       }
     },
     "edge_functions": {
@@ -3176,7 +3184,11 @@
           "stock_transfer_items_transfer_idx"
         ],
         "retained_zero_scan_nonunique_indexes": 47,
-        "applied_to_shared_staging": false
+        "applied_to_shared_staging": false,
+        "fk_leading_zero_scan_nonunique_indexes": 42,
+        "non_fk_query_path_zero_scan_nonunique_indexes": 7,
+        "zero_scan_indexes_on_empty_tables": 37,
+        "empty_tables_with_zero_scan_indexes": 20
       },
       "saas_tenant_isolation": {
         "status": "PARTIAL_WORK_IN_PROGRESS",
