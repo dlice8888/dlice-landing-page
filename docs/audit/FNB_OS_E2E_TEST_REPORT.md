@@ -141,7 +141,7 @@ PR #126 disposable run 44903918177 passed all seven pgTAP files, **134 total ass
 
 ### Online checkout and payment lifecycle
 
-PR #123's online-order migration collision was corrected by moving its version to 20261121135000. Its updated quality run 44909182929 passed. Combined replay with #126 is still required. PR #125/#127 disposable tests pass on their individual heads; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
+PR #123 and PR #126 still have an unresolved migration version collision: both source branches use 20261121130000 with different SQL contents. Each branch's own exact-head disposable replay passes, but the combined candidate set cannot be replayed until one migration is re-versioned. PR #123's browser response-drop/concurrency runtime remains NOT RUN. PR #125/#127 disposable tests pass on their individual heads; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
 
 ### Operational staging baseline (read-only)
 
@@ -161,3 +161,20 @@ PR #123's online-order migration collision was corrected by moving its version t
 | Scheduled online-order expiry worker | 0 |
 
 The current staging data proves table/schema presence, not completion of the business workflows. Do not mark Kitchen, Inventory, Procurement, Finance or Order Management DONE from these counts.
+
+
+## Current exact-head execution — 21 November 2026
+
+| PR | Exact head | Automated CI / disposable replay | Focused DB test plan | Runtime E2E |
+|---:|---|---|---:|---|
+| #120 | 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 | 6/6 PASS | 35 profile mutation + 11 permission + 11 invitation assertions | Staging mutation paths NOT RUN |
+| #123 | 31976673a9289add4c1bb10d6f29f3ff6c3c15a5 | 6/6 PASS | 7 online idempotency assertions | Concurrent checkout / response-drop / late webhook NOT RUN |
+| #125 | 1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d | 3/3 PASS | 27 expiry/compensation assertions | Live expiry scheduler/worker NOT RUN |
+| #126 | 07d7c51c2cbea21b9cd49a480614e004fe7bf417 | 6/6 PASS | 35 RLS + 17 onboarding + 15 invitation assertions | P01–P09 NOT RUN |
+| #127 | 5c597c2ec37a130501ed19591cfc9383396ba1b6 | 6/6 PASS | 16 proof + 14 supersession assertions | Proof upload concurrency / Storage orphan sweep NOT RUN |
+
+The pgTAP plans are per disposable test file; they are not shared-staging execution or browser/API runtime evidence. No staging migration or Edge Function deployment was performed. PR #124 is closed as superseded by #120.
+
+### Current P01–P09 fixture facts
+
+Two existing Supabase Auth identities were verified read-only and mapped to different active tenants. Tenant A has active branch assignments QA-DLICE-A and DLC-B001; Tenant B has QA-TENANT-B. Both last signed in on 2026-10-25. This verifies fixture existence and mapping only; no current login, JWT session, own-read/write or cross-tenant negative probe has run. The staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED; the secret value was not read or exposed. The connected GitHub tool does not expose workflow_dispatch.
