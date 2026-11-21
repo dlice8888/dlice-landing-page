@@ -1952,14 +1952,14 @@
           "requirement": "Permission changes themselves audited",
           "source_status": "GATE",
           "audit_status": "BLOCKED",
-          "evidence_or_gap": "PR #120 implements audited service-role RPCs for permission changes, staff creation, role changes, active-state changes and tenant invite issue; exact-head permission contract and disposable replay pass. PR #120/#126 invite paths overlap; password reset remains Auth mutation followed by a separate audit write; independent review and live mutation-path regression remain outstanding.",
+          "evidence_or_gap": "PR #120 implements audited service-role RPCs for permission changes, staff creation, role changes, active-state changes and tenant invite issue; exact-head permission contract and disposable replay pass. PR #120/#126 invite paths overlap; password reset remains Auth mutation followed by a separate audit write; live mutation-path regression remains outstanding.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 239
           },
           "work_status": "IN_PROGRESS",
           "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
-          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance and independent review remain pending."
+          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance remains pending."
         }
       ],
       "status": "PARTIAL",
@@ -3813,7 +3813,7 @@
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "PR #120 exact head 29d6d808c2b56eb9596335805499266de4e1b4ba now passes free quality, disposable Supabase migration replay, KDS, CORS, procurement receiving and requisition contracts. Database test suite: 7 files, 107 pgTAP assertions, including 11 new audited invitation issuance assertions. PR remains Draft; no staging migration or Edge Function was applied/deployed; independent review and real staging runtime acceptance remain.",
+    "pr120": "PR #120 exact head 29d6d808c2b56eb9596335805499266de4e1b4ba now passes free quality, disposable Supabase migration replay, KDS, CORS, procurement receiving and requisition contracts. Database test suite: 7 files, 107 pgTAP assertions, including 11 new audited invitation issuance assertions. PR remains Draft; no staging migration or Edge Function was applied/deployed; real staging runtime acceptance remains.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "Vercel project dlice-landing-page exists. PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. No PR #127 preview found. Preview readiness is not runtime feature acceptance.",
@@ -4233,7 +4233,7 @@
       "remaining": [
         "Supabase native leaked-password protection remains disabled; application guard cannot intercept direct Auth API password mutation.",
         "Password reset still uses Auth Admin updateUserById followed by a separate audit insert; durable intent/result tracking is not atomic across Auth/database.",
-        "Staging runtime mutation-path tests and independent review remain pending."
+        "Staging runtime mutation-path tests remain pending."
       ]
     },
     "order_lifecycle_prs": {
@@ -4534,6 +4534,7 @@
       "exact_current_head_previews_for_prs_120_123_125_126_127": "not verified / none found",
       "pr127_error": "api-deployments-free-per-day (>100 deployments/day)",
       "production_mutated": false
-    }
+    },
+    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection and explicit mutation/release authorization remain separate controls."
   }
 }
