@@ -184,10 +184,18 @@ SELECT is(
  'false',
  'replaying the same successful audit finalization is idempotent'
 );
+SELECT set_config(
+ 'test.password_reset_failure_audit_id',
+ public.dlice_begin_admin_password_reset_audit(
+  'd5000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000003'
+ )::text,
+ true
+);
 SELECT is(
  public.dlice_finish_admin_password_reset_audit(
   'd5000000-0000-4000-8000-000000000001',
-  (SELECT id FROM public.admin_audit_logs WHERE action='admin_password_reset_started' AND entity_id='d5000000-0000-4000-8000-000000000003' ORDER BY created_at DESC LIMIT 1),
+  current_setting('test.password_reset_failure_audit_id')::uuid,
   false,
   'auth_admin_update_failed'
  )->>'status',
