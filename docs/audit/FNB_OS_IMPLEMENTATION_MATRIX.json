@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18T20:05:00+07:00",
+  "snapshot_at": "2026-11-21",
   "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -26,7 +26,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 32
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Live sales monitor (day/week/month)",
@@ -36,7 +37,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 33
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Branch ranking, region/format comparison",
@@ -46,7 +48,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 34
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
@@ -56,7 +59,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 35
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Critical stock, expiry, waste alerts",
@@ -66,7 +70,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 36
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Sales-drop / food-cost anomaly detection",
@@ -76,7 +81,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 37
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Approval center and pending approvals",
@@ -86,7 +92,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 38
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Target vs actual and executive reports",
@@ -96,7 +103,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 39
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Company → region → branch → shift → transaction drill-down",
@@ -106,7 +114,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "Alert → assign task → resolve → audit result",
@@ -116,7 +125,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 41
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -139,7 +149,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 46
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Cart, product selection, quantity updates",
@@ -149,7 +160,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 47
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Dine-in, takeaway, pickup, delivery parity",
@@ -159,7 +171,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 48
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Variants, toppings, special instructions",
@@ -169,7 +182,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 49
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Discounts, coupons, vouchers, special pricing",
@@ -179,7 +193,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 50
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
@@ -189,7 +204,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 51
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
@@ -199,7 +215,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 52
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Hold/resume order",
@@ -209,7 +226,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 53
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Void, refund, return with reason and approval",
@@ -219,7 +237,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 54
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Receipt printing/digital receipt",
@@ -229,7 +248,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 55
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
@@ -239,7 +259,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 56
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Offline sales queue and safe resynchronization",
@@ -249,7 +270,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 57
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Separate order, payment, fulfillment statuses",
@@ -259,7 +281,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 58
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -282,7 +305,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 63
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "WhatsApp, marketplace, additional channels",
@@ -292,7 +316,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 64
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Hours, cutoff, menu availability, branch capacity",
@@ -302,7 +327,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 65
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Branch assignment by area/capacity",
@@ -312,7 +338,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 66
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Unique business order number",
@@ -322,7 +349,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 67
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Consistent status/timeline across channels",
@@ -332,7 +360,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 68
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Duplicate orders, delayed payment, failed order handling",
@@ -342,7 +371,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -352,7 +382,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 70
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cancellation/refund and customer order history",
@@ -362,7 +393,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 71
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Customer notifications on each state",
@@ -372,7 +404,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 72
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -395,7 +428,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 77
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
@@ -405,7 +439,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 78
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Queue priority and prep SLA",
@@ -415,7 +450,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 79
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
@@ -425,7 +461,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 80
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Recipes, portion/yield and waste tolerance",
@@ -435,7 +472,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 81
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Prep lists and batch planning",
@@ -445,7 +483,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 82
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Actual material consumption",
@@ -455,7 +494,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 83
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "QC, temperature, shelf life and spoilage",
@@ -465,7 +505,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 84
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Made-to-order vs batch production separation",
@@ -475,7 +516,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 85
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Theoretical vs actual usage / waste variance",
@@ -485,7 +527,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 86
-          }
+          },
+          "work_status": "BLOCKED"
         }
       ],
       "status": "PARTIAL",
@@ -508,7 +551,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 91
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Per-branch availability",
@@ -518,7 +562,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 92
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Central, regional and branch-specific pricing",
@@ -528,7 +573,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 93
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
@@ -538,7 +584,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 94
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Nested BOM, unit conversions, yield and prep loss",
@@ -548,7 +595,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 95
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recipe versions and effective dates",
@@ -558,7 +606,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 96
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Cost per serving and contribution margin",
@@ -568,7 +617,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 97
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Allergens and regulated product information",
@@ -578,7 +628,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 98
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Availability by schedule and stock",
@@ -588,7 +639,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 99
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Recipe change request → costing → approval → rollout",
@@ -598,7 +650,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 100
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "POS/production uses the same approved recipe version",
@@ -608,7 +661,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 101
-          }
+          },
+          "work_status": "BLOCKED"
         }
       ],
       "status": "PARTIAL",
@@ -631,7 +685,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 106
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Stock movement ledger",
@@ -641,7 +696,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 107
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Warehouse/storage/bin hierarchy",
@@ -651,7 +707,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 108
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Purchase/use units and conversions",
@@ -661,7 +718,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 109
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "FIFO/FEFO, lot/batch and expiry",
@@ -671,7 +729,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 110
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Available/reserved/in-transit/blocked balances",
@@ -681,7 +740,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 111
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Min/max, safety stock and reorder point",
@@ -691,7 +751,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 112
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
@@ -701,7 +762,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 113
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Stock count/cycle count and variance adjustment",
@@ -711,7 +773,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 114
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Stock valuation",
@@ -721,7 +784,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 115
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Adjustments with reasons/approvals/audit",
@@ -731,7 +795,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 116
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "PO receipt → stock ledger → balance reconciliation",
@@ -741,7 +806,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 117
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -764,7 +830,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 122
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Supplier price lists, contracts and price history",
@@ -774,7 +841,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 123
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Purchase requisition from branch/warehouse/central kitchen",
@@ -784,7 +852,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 124
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Consolidated demand across branches",
@@ -794,7 +863,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 125
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Purchase order draft, submit, approval, ordered",
@@ -804,7 +874,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 126
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Approval limits by value/category",
@@ -814,7 +885,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 127
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Goods received note and quantity/quality inspection",
@@ -824,7 +896,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 128
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Three-way match: PO, receipt, supplier invoice",
@@ -834,7 +907,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 129
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "AP handoff and supplier payment",
@@ -844,7 +918,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 130
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Supplier return and supplier performance",
@@ -854,7 +929,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 131
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -877,7 +953,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 136
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Opening and closing checklists",
@@ -887,7 +964,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 137
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Opening readiness changes branch operating status",
@@ -897,7 +975,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 138
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "Daily tasks, due dates and escalation",
@@ -907,7 +986,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 139
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "SOP and work instructions",
@@ -917,7 +997,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 140
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Cleanliness, equipment and safety checks",
@@ -927,7 +1008,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 141
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Photo evidence",
@@ -937,7 +1019,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 142
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Incidents and corrective actions",
@@ -947,7 +1030,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 143
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Equipment maintenance",
@@ -957,7 +1041,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 144
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Branch audit and compliance score",
@@ -967,7 +1052,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 145
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -990,7 +1076,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 150
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Address validation and delivery quote",
@@ -1000,7 +1087,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 151
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Courier booking / Biteship integration",
@@ -1010,7 +1098,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 152
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Dispatch and shipment tracking",
@@ -1020,7 +1109,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 153
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Proof of delivery",
@@ -1030,7 +1120,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 154
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cancel/retry/provider exception handling",
@@ -1040,7 +1131,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 155
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
@@ -1050,7 +1142,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 156
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Delivery completion notification",
@@ -1060,7 +1153,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 157
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1083,7 +1177,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 162
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Consent and communication preferences",
@@ -1093,7 +1188,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 163
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Customer segments",
@@ -1103,7 +1199,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 164
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Loyalty points and tiers",
@@ -1113,7 +1210,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 165
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Rewards and vouchers/coupons",
@@ -1123,7 +1221,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 166
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Referral program",
@@ -1133,7 +1232,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 167
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Campaign management and ROI",
@@ -1143,7 +1243,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 168
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Feedback/reviews/support cases",
@@ -1153,7 +1254,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 169
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Repeat purchase and customer lifetime analysis",
@@ -1163,7 +1265,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 170
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1186,7 +1289,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 175
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Cash/bank, settlement creation and matching",
@@ -1196,7 +1300,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 176
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Payment provider fee and settlement variance",
@@ -1206,7 +1311,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 177
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "AR/AP subledgers and aging",
@@ -1216,7 +1322,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 178
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Chart of accounts and general ledger",
@@ -1226,7 +1333,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 179
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Automated journals from POS/procurement/payroll",
@@ -1236,7 +1344,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 180
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Bank reconciliation",
@@ -1246,7 +1355,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 181
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Tax and invoicing",
@@ -1256,7 +1366,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 182
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Budgets and branch P&L",
@@ -1266,7 +1377,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 183
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Consolidated financial statements",
@@ -1276,7 +1388,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 184
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Period close/reopen and backdated-posting controls",
@@ -1286,7 +1399,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 185
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Revenue vs cash received/settlement distinction",
@@ -1296,7 +1410,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 186
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1319,7 +1434,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 191
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Organization hierarchy and job positions",
@@ -1329,7 +1445,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 192
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Attendance and timesheets",
@@ -1339,7 +1456,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 193
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Shift scheduling and replacement",
@@ -1349,7 +1467,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 194
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Leave and overtime",
@@ -1359,7 +1478,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 195
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Payroll calculation/integration",
@@ -1369,7 +1489,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 196
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Labor cost by branch",
@@ -1379,7 +1500,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 197
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Training/certification and performance reviews",
@@ -1389,7 +1511,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 198
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recruitment/onboarding/offboarding",
@@ -1399,7 +1522,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 199
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1422,7 +1546,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 204
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Franchise directory/application",
@@ -1432,7 +1557,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 205
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Site selection and feasibility",
@@ -1442,7 +1568,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 206
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Opening project and readiness",
@@ -1452,7 +1579,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 207
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Agreements and contract expiry",
@@ -1462,7 +1590,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 208
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Royalty calculation and reconciliation",
@@ -1472,7 +1601,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 209
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Territory and franchise-specific access",
@@ -1482,7 +1612,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 210
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Franchise compliance and performance",
@@ -1492,7 +1623,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 211
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1515,7 +1647,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 216
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Official KPI dictionary and versioning",
@@ -1525,7 +1658,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 217
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Net sales/AOV/gross margin",
@@ -1535,7 +1669,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 218
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Food cost %, labor cost %, waste %",
@@ -1545,7 +1680,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 219
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Stock variance and fulfillment/cancellation rates",
@@ -1555,7 +1691,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 220
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Branch benchmarking by comparable cohorts",
@@ -1565,7 +1702,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 221
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Demand forecasting and accuracy monitoring",
@@ -1575,7 +1713,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 222
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Data quality monitoring and anomaly detection",
@@ -1585,7 +1724,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 223
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Export and scheduled executive reports",
@@ -1595,7 +1735,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 224
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Alert → action → measured outcome",
@@ -1605,7 +1746,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 225
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1628,7 +1770,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 230
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Branch assignments and scope enforcement",
@@ -1638,7 +1781,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 231
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
@@ -1648,7 +1792,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 232
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Audit logs for sensitive actions",
@@ -1658,7 +1803,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 233
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Delegated approval policies and separation of duties",
@@ -1668,7 +1814,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 234
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Sessions/devices and access reviews",
@@ -1678,7 +1825,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 235
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recovery and offboarding",
@@ -1688,7 +1836,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 236
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "API/database deny-by-default and direct-table protection",
@@ -1698,7 +1847,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 237
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Cross-tenant isolation",
@@ -1708,7 +1858,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 238
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Permission changes themselves audited",
@@ -1718,7 +1869,10 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 239
-          }
+          },
+          "work_status": "IN_PROGRESS",
+          "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
+          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP/contract coverage and disposable replay implemented on draft branch; shared staging runtime acceptance and independent review remain pending."
         }
       ],
       "status": "PARTIAL",
@@ -1741,7 +1895,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 244
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Tenant/member isolation in database and APIs",
@@ -1751,7 +1906,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 245
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
@@ -1761,7 +1917,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 246
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Billing, invoices and usage metering",
@@ -1771,7 +1928,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 247
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Tenant settings and suspension",
@@ -1781,7 +1939,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 248
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Support access with approval/audit",
@@ -1791,7 +1950,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 249
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Export/offboarding and data deletion policy",
@@ -1801,7 +1961,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 250
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Multiple companies sharing one platform safely",
@@ -1811,7 +1972,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 251
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1834,7 +1996,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 256
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Payment provider callback signature and status validation",
@@ -1844,7 +2007,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 257
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
@@ -1854,7 +2018,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 258
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Webhooks and event log",
@@ -1864,7 +2029,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 259
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Idempotency and replay protection",
@@ -1874,7 +2040,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 260
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Retry/backoff/dead-letter queue",
@@ -1884,7 +2051,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 261
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Integration health and alerting",
@@ -1894,7 +2062,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 262
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Secret storage/rotation",
@@ -1904,7 +2073,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 263
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Import/export and catalog synchronization",
@@ -1914,7 +2084,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 264
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1932,12 +2103,13 @@
         {
           "requirement": "RLS on exposed public tables",
           "source_status": "PASS (database configuration)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Read-only SQL found 45/45 public tables with RLS enabled; policy correctness still needs per-table tests.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Live read-only SQL on 2026-11-20: 64/64 public tables have RLS enabled and 64 public policies exist. Per-table policy correctness and full role/tenant negative runtime tests remain outstanding, so this is PARTIAL rather than PASS.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 269
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Direct access to internal stock/procurement/audit data",
@@ -1947,7 +2119,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 270
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Exact-origin CORS",
@@ -1957,7 +2130,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 271
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Custom auth/permission checks on shared endpoint",
@@ -1967,7 +2141,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 272
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Leaked-password protection",
@@ -1977,7 +2152,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
-          }
+          },
+          "work_status": "BLOCKED"
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -1987,7 +2163,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 274
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Supplier quality, quarantine, corrective actions",
@@ -1997,7 +2174,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 275
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Backup and restore drill / RPO / RTO",
@@ -2007,7 +2185,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 276
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Monitoring, system health and incident runbooks",
@@ -2017,7 +2196,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 277
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Load/concurrency test for 150 branches",
@@ -2027,7 +2207,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 278
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Pilot, rollout and rollback",
@@ -2037,7 +2218,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 279
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Workflow",
@@ -2047,7 +2229,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 282
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Order-to-Cash",
@@ -2057,7 +2240,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 284
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Procure-to-Pay",
@@ -2067,7 +2251,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 285
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Forecast-to-Production",
@@ -2077,7 +2262,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 286
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Record-to-Report",
@@ -2087,7 +2273,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 287
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Stock transfer and count",
@@ -2097,7 +2284,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 288
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Authentication and permissions",
@@ -2107,7 +2295,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 289
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED"
         },
         {
           "requirement": "Responsive UX and accessibility",
@@ -2117,7 +2306,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 290
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Backup, recovery, scale and rollout",
@@ -2127,7 +2317,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 291
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -2137,144 +2328,127 @@
   "current_platform_evidence": {
     "supabase_project": "higoadrzxnhzbbwhdbmh",
     "supabase_status": "ACTIVE_HEALTHY",
+    "postgres_major": 17,
     "public_tables": 64,
     "public_tables_rls_enabled": 64,
     "public_tables_rls_disabled": 0,
-    "public_policies": 64,
     "public_functions": 29,
-    "security_definer_functions": 5,
-    "staging_migrations": 46,
-    "source_migration_files": 45,
-    "missing_source_migration": "20261022140302",
-    "latest_staging_migration": "20261027140145",
-    "pr64_migration_applied": false,
-    "tenants": 2,
-    "branches": 155,
+    "function_execute_grants": {
+      "anon": 0,
+      "authenticated": 0,
+      "service_role": 29,
+      "public": 0
+    },
+    "applied_migrations": 49,
+    "latest_applied_migration": "20261119182606",
+    "total_tenants": 2,
+    "active_tenants": 1,
+    "total_branches": 155,
+    "active_branches": 5,
     "active_tenant_memberships": 3,
-    "worker_memberships": 2,
-    "worker_role": "branch_manager",
-    "worker_permission_sets_equal": true,
-    "worker_A_active_branch_assignments": 2,
-    "worker_B_active_branch_assignments": 1,
-    "cross_tenant_assignment_rows": 0,
-    "inventory_balance_rows_per_QA_branch": 2,
-    "active_owner_profile": 1,
-    "owner_auth_user_exists": true,
-    "owner_app_metadata_platform_owner_boolean_true": 0,
-    "security_advisor": {
-      "leaked_password_protection": "WARN_DISABLED"
+    "distinct_active_members": 3,
+    "active_owner_profiles": 1,
+    "branch_assignments": 4,
+    "branch_inventory_rows": 4,
+    "pos_sales": 6,
+    "pos_shifts": 7,
+    "orders": 7,
+    "order_items": 21,
+    "payment_records": 6,
+    "kitchen_tickets": 6,
+    "kitchen_ticket_items": 6,
+    "stock_movements": 26,
+    "stock_transfers": 0,
+    "stock_counts": 0,
+    "purchase_requisitions": 0,
+    "purchase_orders": 0,
+    "purchase_receipts": 0,
+    "production_batches": 0,
+    "production_consumptions": 0,
+    "inventory_waste_events": 0,
+    "payment_settlements": 0,
+    "cash_reconciliations": 0,
+    "finance_journal_entries": 0,
+    "fiscal_periods": 0,
+    "branch_expenses": 0,
+    "branch_operation_checklist_runs": 1,
+    "shift_handover_records": 0,
+    "integration_connections": 0,
+    "integration_outbox": 0,
+    "backup_restore_runs": 0,
+    "notification_log": 3,
+    "owner_authorization": {
+      "active_owner_profile_exists": true,
+      "existing_auth_identity_must_be_used": true,
+      "app_metadata_platform_owner_true": "NOT VERIFIED / KNOWN ABSENT IN LAST AUTH AUDIT",
+      "protected_allowlist": "NOT VERIFIED",
+      "completion": "BLOCKED — requires authorized Supabase Auth Admin"
     },
-    "performance_advisor": {
-      "unindexed_foreign_keys": 26,
-      "unused_indexes": 49
+    "release_protection": {
+      "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "required_status_checks": "NOT VERIFIED",
+      "independent_review_policy": "USER WAIVES EXTRA INDEPENDENT REVIEW AS AN AUDIT PREREQUISITE; actual active GitHub rules still apply",
+      "staging_deployment_reviewers": "NOT VERIFIED",
+      "admin_mutation_available_via_current_connector": false
     },
-    "public_table_grants": {
-      "anon_authenticated_select": [
-        "public.products"
-      ]
+    "tenant_acceptance": {
+      "workflow": "manual-dispatch-only on staging after #110 change",
+      "required_probes": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09"
+      ],
+      "runtime_executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "result": "NOT RUN",
+      "latest_candidate_head": "df43b2b4707186ea31d7068f85f7caa8e252c057",
+      "latest_static_quality_for_exact_head": "NOT OBSERVED",
+      "latest_vercel": "SUCCESS",
+      "environment_secret_validity": "NOT VERIFIED — GitHub Environment API unavailable"
     },
-    "owner_auth_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52-55,92-100"
-    },
-    "release_gate_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52,135-144"
-    },
-    "deployed_edge_function": {
-      "name": "dlice-orders",
-      "version": 69,
-      "status": "ACTIVE",
-      "verify_jwt": false,
-      "sha256": "d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40"
-    },
-    "inventory_read_finding": {
-      "deployed_behavior": "erp-list-inventory is in TENANT_SCOPE_UNCERTIFIED_ACTIONS and returns HTTP 423 for non-platform-owner while release flag is false; legacy handler queries global inventory_items.",
-      "source": {
-        "file": "supabase/functions/dlice-orders/index.ts",
-        "lines": "71,454-455,1266-1275"
+    "pending_migrations": [
+      {
+        "pr": 102,
+        "file": "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
       },
-      "remediation_pr": 85,
-      "candidate_commit": "63575c051112b7ec621afc4f96a1beef62238c2b",
-      "candidate_behavior": "requires inventory permission, branch_id, active membership and exact active assignment; queries branch_inventory joined to inventory_items; no global catalog scan",
-      "ci_run": 44304941471,
-      "status": "PARTIAL"
-    },
-    "admin_profile_role_constraint": [
-      "sales_admin",
-      "owner"
-    ],
-    "worker_global_profile_roles": [
-      "sales_admin",
-      "sales_admin"
-    ],
-    "ordinary_worker_profile_type_available": false,
-    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner. PR #86 introduces branch_worker source-only; no staging profiles changed.",
-    "active_cross_tenant_assignment_rows": 0,
-    "branch_worker_role_candidate": {
-      "pr": 86,
-      "head": "eeda0bdd715dc5477969be3196c6800d6a23eac2",
-      "migration": "20261118190000_add_branch_worker_profile_role.sql",
-      "quality_run": 44306779658,
-      "quality_result": "SUCCESS",
-      "disposable_migration_replay_run": 44306779612,
-      "disposable_migration_replay_result": "SUCCESS",
-      "staging_migration_applied": false
-    },
-    "p03_probe_candidate": {
-      "pr": 87,
-      "head": "a44f27117c33f432ef467b5b52716bea028e0471",
-      "quality_run": 44307838730,
-      "quality_result": "SUCCESS",
-      "tenant_runtime_contract_tests": "7/7",
-      "masked_identifiers": true,
-      "multiple_same_tenant_assignments_allowed": true,
-      "staging_runtime_executed": false
-    },
-    "vercel_project": {
-      "name": "dlice-landing-page",
-      "password_protection_enabled": false,
-      "sso_protection_enabled": true,
-      "sso_deployment_type": "all_except_custom_domains",
-      "trusted_ips_enabled": false,
-      "preview_latest_status": "READY",
-      "production_deployment_performed": true,
-      "production_deployment_exception": {
-        "type": "unintended_documentation_only_deployment",
-        "initial_deployment_id": "dpl_FV4dAmvTdERXQupSkcvqvReXqqXP",
-        "initial_commit": "eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1",
-        "restoration_deployment_id": "dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e",
-        "restoration_commit": "ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4",
-        "production_alias": "dlice.vercel.app",
-        "alias_points_to_restoration": true,
-        "restored_main_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "preincident_parent_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "tree_restored_exactly": true,
-        "application_code_changed": false,
-        "production_database_or_auth_changed": false
+      {
+        "pr": 103,
+        "file": "20261120110000_command_center_summary.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 105,
+        "file": "20261120120000_atomic_branch_checklist_audit.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 109,
+        "file": "20261120130000_enforce_same_tenant_stock_transfers.sql",
+        "status": "OPEN DRAFT; NOT APPLIED"
+      },
+      {
+        "pr": 111,
+        "file": "20261120140000_staging_machine_session_issuance_audit.sql",
+        "status": "FEATURE BRANCH ONLY; NOT APPLIED"
       }
+    ],
+    "latest_pr_inventory": {
+      "actual_prs": 109,
+      "merged": 76,
+      "closed_without_merge": 26,
+      "open": 7,
+      "latest_issue_number": 111
     },
-    "source_migration_files_staging": 45,
-    "migration_source_recovery_candidate": {
-      "pr": 88,
-      "branch": "fix/recover-migration-source-20261022140302-20261118",
-      "file": "supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql",
-      "source_of_truth": "staging supabase_migrations.schema_migrations version 20261022140302",
-      "applied_name": "add_missing_fk_supporting_indexes",
-      "index_statements": 9,
-      "normalized_exact_match": true,
-      "staging_applied": false,
-      "quality_and_disposable_replay": "PASS",
-      "staging_indexes_exist": true,
-      "staging_index_count": 9,
-      "index_definition_verified": true,
-      "quality_run_id": 44309825502,
-      "disposable_replay_run_id": 44309825526,
-      "disposable_replay_job_id": 134821567927,
-      "disposable_replay_log": "Recovered migration applied successfully in disposable local database; complete repository migration set finished.",
-      "pr_status": "OPEN_DRAFT",
-      "preview": "READY"
-    }
+    "production_changes": "NONE in this audit"
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -2324,5 +2498,353 @@
     87,
     88
   ],
-  "open_pr_count": 18
+  "open_pr_count": 18,
+  "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
+  "current_reaudit": {
+    "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
+    "domains": [
+      {
+        "number": 1,
+        "name": "Executive Command Center",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "PR #103 Command Center implementation is merged to staging source, but its migration is not applied; owner authorization, KPI reconciliation, and 150-branch drill-down remain unproven."
+      },
+      {
+        "number": 2,
+        "name": "POS & Checkout",
+        "feature_count": 13,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six POS sales, seven shifts and six payment records exist; complete order/payment/fulfillment/settlement reconciliation and offline fault-injection E2E are not proven."
+      },
+      {
+        "number": 3,
+        "name": "Order Management",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Seven orders and 21 order items exist; multi-channel routing, exception handling and consistent end-to-end status reconciliation remain unproven."
+      },
+      {
+        "number": 4,
+        "name": "Kitchen & Production",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six kitchen tickets and six ticket items exist; production batches and production consumptions are zero. KDS-to-POS-to-stock positive reconciliation remains unproven."
+      },
+      {
+        "number": 5,
+        "name": "Menu, Recipe & Product Engineering",
+        "feature_count": 11,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Product/recipe structures and version activation exist; nested BOM, yield/unit conversion, allergens, food cost and POS/production approved-version parity remain unproven."
+      },
+      {
+        "number": 6,
+        "name": "Inventory & Warehouse",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Four branch-inventory rows and 26 stock movements exist; transfers and stock counts are zero. PR #109 is not integrated and no full ledger reconciliation is accepted."
+      },
+      {
+        "number": 7,
+        "name": "Procurement & Supplier",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Purchase requisitions, purchase orders and receipts are zero. PR-to-approval-to-PO-to-GRN-to-AP positive E2E remains unproven."
+      },
+      {
+        "number": 8,
+        "name": "Branch Operations",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One branch checklist run exists. Atomic checklist migration #105 is in staging source but not applied; multi-branch SOP/audit rollback acceptance remains unproven."
+      },
+      {
+        "number": 9,
+        "name": "Delivery & Fulfillment",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Delivery/final-mile provider integration, courier booking, tracking and proof-of-delivery reconciliation are not evidenced."
+      },
+      {
+        "number": 10,
+        "name": "CRM, Loyalty & Marketing",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "No CRM/loyalty customer, consent, points, campaign or redemption lifecycle is accepted."
+      },
+      {
+        "number": 11,
+        "name": "Finance & Accounting",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Settlements, cash reconciliations, journal entries and fiscal periods are zero; Record-to-Report and close/reopen reconciliation remain unproven."
+      },
+      {
+        "number": 12,
+        "name": "HR & Workforce",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Job-position scaffolding exists; employee lifecycle, attendance, scheduling, payroll and labor-cost reconciliation remain unproven."
+      },
+      {
+        "number": 13,
+        "name": "Franchise & Expansion",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Franchise agreement, site approval, royalty, compliance and franchisee reporting lifecycle are not evidenced."
+      },
+      {
+        "number": 14,
+        "name": "BI & Analytics",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Funnel metrics and source operational data exist; KPI dictionary, forecasting, cohort comparison and anomaly-to-action are not accepted."
+      },
+      {
+        "number": 15,
+        "name": "Admin, Identity & Access Control",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One active Owner profile, three active memberships and four branch assignments exist; platform Owner Auth metadata/allowlist remains blocked and role/branch E2E is not run."
+      },
+      {
+        "number": 16,
+        "name": "SaaS Tenant Management",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Two tenant records exist but only one is active; no proven subscription, entitlement, billing, metering, suspension, export or offboarding lifecycle. P01-P09 not run."
+      },
+      {
+        "number": 17,
+        "name": "Integrations & Automation",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Three notification-log records exist; integration connections and outbox are zero. Provider callbacks, durable retry/dead-letter and integration health are not proven."
+      },
+      {
+        "number": 18,
+        "name": "Quality, Compliance & Security",
+        "feature_count": 20,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "64/64 public tables have RLS; 29 functions show anon/authenticated EXECUTE=0 and service_role=29. This is not a substitute for P01-P09, backup/restore, 150-branch load, food-safety controls or verified GitHub release protection."
+      }
+    ],
+    "prior_feature_status_distribution": {
+      "PARTIAL": 81,
+      "NOT VERIFIED": 99,
+      "BLOCKED": 9
+    },
+    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS."
+  },
+  "operational_checkpoint": {
+    "date": "2026-11-20",
+    "staging_baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "feature_statuses_last_full_review": "2026-11-20",
+    "feature_statuses_reaudited": false,
+    "feature_status_note": "The 189 per-feature statuses below remain the 18-Nov baseline. They are not promoted to PASS based on PR merges or static CI. Runtime and end-to-end acceptance must update each feature with current evidence.",
+    "pull_requests": {
+      "actual_total": 110,
+      "merged": 77,
+      "closed_without_merge": 26,
+      "open": 7,
+      "pr106": "MERGED",
+      "pr110": "MERGED",
+      "pr109": {
+        "state": "OPEN_READY_FOR_REVIEW",
+        "head": "9cfe616bd95735dba39b7bf60c8b055f0f53e9cf",
+        "exact_head_ci": "7_RELEVANT_WORKFLOWS_SUCCESS",
+        "independent_review": "PENDING",
+        "staging_migration_applied": false
+      },
+      "pr111": {
+        "state": "OPEN_DRAFT",
+        "base": "staging",
+        "head": "48fe855d5c19b769a05d15597de0f9a9fbd3708a",
+        "rebased_on_pr110": true,
+        "exact_head_quality": "SUCCESS",
+        "kds_contract": "SUCCESS",
+        "disposable_migration_replay": "SUCCESS",
+        "runtime_p01_p09": "NOT_RUN"
+      },
+      "open_pr_numbers": [
+        71,
+        104,
+        107,
+        108,
+        109,
+        111,
+        112
+      ],
+      "pr108": {
+        "state": "OPEN_DRAFT",
+        "purpose": "full PR inventory, closed-PR recovery, current feature matrix and engineering standard"
+      },
+      "pr112": {
+        "state": "OPEN_DRAFT",
+        "base": "staging",
+        "head": "82edeeb848335259aa9076d41de0079f4ae9f6b5",
+        "exact_head_quality": "SUCCESS",
+        "kds_contract": "SUCCESS",
+        "disposable_migration_replay": "SUCCESS",
+        "migration_version": "20261120125000"
+      }
+    },
+    "supabase_live_read_only": {
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "project_status": "ACTIVE_HEALTHY",
+      "migration_history_rows": 49,
+      "latest_migration": "20261119182606",
+      "tenants": 2,
+      "branches_total": 155,
+      "active_tenant_memberships": 3,
+      "distinct_active_members": 3,
+      "branch_assignments": 4,
+      "branch_inventory_rows": 4,
+      "stock_movements": 26,
+      "stock_transfers": 0,
+      "pos_sales": 6,
+      "pos_shifts": 7,
+      "purchase_orders": 0,
+      "purchase_receipts": 0,
+      "production_batches": 0,
+      "payment_settlements": 0,
+      "refund_records": 0,
+      "cash_reconciliations": 0,
+      "finance_journal_entries": 0,
+      "active_owner_profiles": 1,
+      "owner_app_metadata_platform_owner_key_present": false,
+      "owner_app_metadata_platform_owner_boolean_true": false,
+      "public_tables": 64,
+      "public_tables_rls_enabled": 64,
+      "public_tables_rls_disabled": 0,
+      "public_policies": 64,
+      "public_functions": 29,
+      "anon_execute_function_count": 0,
+      "authenticated_execute_function_count": 0,
+      "service_role_execute_function_count": 29
+    },
+    "edge_functions": {
+      "dlice_orders": {
+        "version": 70,
+        "status": "ACTIVE",
+        "verify_jwt": false
+      }
+    },
+    "tenant_acceptance": {
+      "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
+      "on_staging": "manual_dispatch_only",
+      "p01_p09_runtime_status": "NOT_RUN",
+      "executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "note": "No run is recorded; zero executed is not a passing result. Current staging workflow still uses Environment A/B username/password inputs until PR #111 is merged and its OIDC broker is configured/deployed."
+    },
+    "release_protection": {
+      "github_rulesets": "NOT_VERIFIED",
+      "github_branch_protection": "NOT_VERIFIED",
+      "github_environment_secret_values": "NOT_VERIFIED",
+      "workflow_dispatch_capability": "NOT_AVAILABLE_IN_CONNECTED_GITHUB_ACTIONS",
+      "supabase_owner_auth_admin_mutation": "NOT_AVAILABLE_IN_CONNECTED_SUPABASE_ACTIONS",
+      "vercel_sso_protection": "ENABLED_ALL_EXCEPT_CUSTOM_DOMAINS",
+      "vercel_password_protection": "DISABLED",
+      "vercel_trusted_ips": "DISABLED"
+    },
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_updates": [
+      {
+        "domain": 18,
+        "requirement": "RLS on exposed public tables",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "64/64 public tables RLS-enabled; 64 policies; policy correctness not fully tested"
+      }
+    ],
+    "feature_status_counts_current": {
+      "PARTIAL": 82,
+      "NOT VERIFIED": 98,
+      "BLOCKED": 9
+    }
+  },
+  "historical_acceptance_coverage": {
+    "source_pr": 31,
+    "source_result": "21 historical PASS",
+    "source_script": "tests/staging/next-workflow-acceptance.mjs",
+    "source_workflow": ".github/workflows/staging-next-workflow-acceptance.yml",
+    "current_staging_artifacts_present": false,
+    "current_status": "PORT_REQUIRED_NOT_RUNTIME_VERIFIED",
+    "note": "Do not restore the old workflow unchanged: it uses legacy password inputs, a hard-coded Branch B UUID and a QA-account bootstrap step. Port its assertions into a fixture-discovery/OIDC-based harness without creating identities or mutating real business records.",
+    "cases": [
+      "P2P Owner purchase-order list returns a valid purchase_orders collection",
+      "P2P Branch A purchase-order list succeeds",
+      "P2P Branch A cannot read Branch B purchase orders",
+      "P2P no-permission identity is denied purchase-order list",
+      "P2P inactive identity is denied purchase-order list",
+      "O2C Owner fulfillment list returns a valid orders collection",
+      "O2C Branch A fulfillment list succeeds",
+      "O2C Branch A cannot read Branch B fulfillment orders",
+      "O2C no-permission identity is denied fulfillment list",
+      "O2C inactive identity is denied fulfillment list",
+      "Finance Owner settlement list returns a valid settlements collection",
+      "Branch identity cannot create settlement",
+      "Finance no-permission identity is denied settlement list",
+      "Finance inactive identity is denied settlement list",
+      "Branch identity cannot create cash reconciliation for another branch",
+      "No-permission identity cannot create cash reconciliation",
+      "Receiving an unknown purchase order returns 404 and writes nothing",
+      "Updating an unknown fulfillment order returns 404 and writes nothing",
+      "Transitioning an unknown stock transfer returns 404 and writes nothing",
+      "Posting an unknown stock count returns 404 and writes nothing",
+      "Reviewing an unknown cash reconciliation returns 404 and writes nothing"
+    ]
+  },
+  "audit_reconciliation": {
+    "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
+    "target_branch_at_audit": "staging",
+    "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register.",
+    "evidence_snapshot": {
+      "supabase_project": "higoadrzxnhzbbwhdbmh",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "public_tables": 64,
+      "public_tables_rls_enabled": 64,
+      "public_tables_rls_disabled": 0,
+      "tenants": 2,
+      "branches": 155,
+      "tenant_memberships": 3,
+      "purchase_orders": 0,
+      "purchase_receipts": 0,
+      "production_batches": 0,
+      "payment_settlements": 0,
+      "refund_records": 0,
+      "finance_journal_entries": 0,
+      "leaked_password_protection": "DISABLED (Supabase Security Advisor warning)",
+      "owner_platform_owner_claims_true": 0,
+      "dlice_orders_edge_function": {
+        "version": 70,
+        "verify_jwt": false
+      },
+      "vercel": {
+        "plan": "Hobby",
+        "latest_pr120_preview": "READY",
+        "sso_protection": "enabled_except_custom_domains"
+      },
+      "github": {
+        "pr120": "OPEN_DRAFT",
+        "pr120_quality_checks": "PASS",
+        "pr120_disposable_migration_replay": "PASS",
+        "independent_review": "PENDING",
+        "shared_staging_migration": "NOT_APPLIED"
+      }
+    },
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "status_policy": "audit_status remains evidence-based. work_status tracks remediation separately. Do not change NOT VERIFIED to PARTIAL until a concrete implementation work item/PR has begun; do not change PARTIAL to DONE without workflow, codebase, database and runtime acceptance."
+  }
 }
