@@ -15,7 +15,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
 | #127 | staging | Yes | Yes | Atomic customer payment-proof RPC + retry key; disposable migration replay PASS; quality checks pending; KDS/CORS/procurement contracts PASS; Storage orphan sweeper remains a residual hardening item |
-| #126 | staging | Yes | Yes | SaaS tenant direct-client RLS contract: 35 pgTAP assertions PASS; latest head adds default-deny for all admin/ERP routes; exact-head quality PASS; disposable replay rerun IN_PROGRESS after prior Docker Inbucket port collision; API tenant A/B remains unproven |
+| #126 | staging | Yes | Yes | SaaS tenant/member isolation + tenant onboarding: 35 RLS pgTAP assertions, default-deny admin/ERP routes, active-membership branch resolver, 17 new tenant-onboarding pgTAP assertions; latest quality PASS; disposable replay IN_PROGRESS after Inbucket port fix; real tenant A/B runtime remains unproven |
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
 | #124 | staging | Yes | No | Free k-anonymity breached-password guard for official Owner/staff password flows; stacked on #120; quality and disposable replay pass; direct Auth bypass remains a blocker |
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
