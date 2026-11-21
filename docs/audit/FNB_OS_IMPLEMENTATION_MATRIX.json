@@ -3152,10 +3152,10 @@
     "latest_candidate_static_ci_run": 44307838730,
     "runtime_probes_executed": 0,
     "reason": [
-      "GitHub Environment credential and fixture availability cannot be independently verified; workflow dispatch is not exposed through the connected integration",
+      "GitHub Environment credential metadata cannot be queried through the connected integration; workflow dispatch is not exposed by the connected integration",
       "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only and no profiles have been changed",
       "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed",
-      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be independently verified"
+      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be queried through the connected integration"
     ],
     "no_skipped_policy": true,
     "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging",
@@ -4467,7 +4467,6 @@
         127
       ],
       "all_mergeable": true,
-      "independent_reviews_recorded": 0,
       "exact_head_ci": "all listed PR heads have successful quality/contract/disposable-replay runs",
       "runtime_acceptance": "P01-P09 and business E2E flows not run"
     },
