@@ -279,3 +279,9 @@ Current unique candidate sequence across #111/#120/#123/#125/#126/#127 is theref
 - PR #123 exact head 9024f2ce6067fe4252f5110942017e27ac1ed7b5: 74 assertions / 5 files PASS. PR #126 exact head 4a6aa8ccf07e25981579a805477dffc65a13a376: 139 assertions / 7 files PASS. PR #127 exact head e52ea75a218eedecc513ec52311adaee25f241ba: 124 assertions / 7 files PASS.
 - P01–P09 remain NOT RUN. Passwordless Auth Admin magic-link flow is in PR #126; staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are not verifiable through the connected tools, and workflow_dispatch is unavailable.
 - No shared staging migration was applied.
+
+## Invitation mutation-path reconciliation — 21 November 2026, 21:00 WIB
+
+A fresh source comparison of the current PR #120 and PR #126 `supabase/functions/dlice-orders/index.ts` branches confirms the complete `erp-invite-tenant-member` and `erp-accept-tenant-invite` route blocks are byte-identical, including RPC arguments, replay response envelope, expiry handling and error mapping. Both return `replayed: result.replayed===true`. The earlier note that PR #126 omitted the replay field is stale and is superseded.
+
+Both branches also share the exact invitation migration blob `b9dab9b7027e51bd5a4069b854b65a14563df6eb` and pgTAP test blob `9c778834a0eb5e6f0a12769f1e6a214c71130688`. The duplicate invitation path is therefore consolidated at source-contract level; live invitation delivery/acceptance/expiry E2E remains NOT RUN.
