@@ -39,3 +39,13 @@ For each feature, each dimension is split into explicit pass/fail acceptance cri
 ## Non-negotiable reporting rule
 
 Never count a code artifact, schema/table, green build, preview deployment, negative-only authorization test, or an unexecuted/blocked/skipped workflow as feature completion. Every DONE claim must point to the passing evidence for all required dimensions.
+
+
+## Current scoring evidence delta — 21 November 2026, 19:42 WIB
+
+- Feature counts remain 189 total: 89 PARTIAL, 91 NOT VERIFIED, 9 BLOCKED, 0 DONE.
+- Tenant/member isolation remains 38%; Tenant directory/onboarding remains 30%. The exact-head PR #126 disposable replay and invitation suite PASS, but live P01–P09 and invitation browser/API E2E have not run, so no additional E2E or reconciliation weight is earned.
+- PR #120 permission mutation contract and disposable replay PASS, but independent review and live positive/negative mutation-path tests are absent. Password reset's Auth update and audit insert remain separate; do not mark permission/security features DONE.
+- PR #123/#125/#127 exact-head contract and disposable replay PASS. Browser fault-injection, concurrent retry, expiry worker, Storage compensation, payment reconciliation and order/payment/reservation E2E are NOT RUN; no completion weight is earned for those dimensions.
+- PR #124's five password-guard artifacts are identical to PR #120's and the guard is included in #120's Edge Function. Do not double-count #124 as separate implementation progress.
+- No numeric score is added for the other 87 PARTIAL features; their criteria still need evidence decomposition. BLOCKED/SKIPPED/NOT RUN remain zero for the affected acceptance dimension.
