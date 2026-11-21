@@ -142,7 +142,7 @@ test("late webhook for superseded attempt is ignored", async () => {
   record("late_webhook_after_supersession", { method: "POST", path: "/payment-webhook", paymentId: "pay-old", eventId: "evt-old" }, result, before, db.snapshot());
 });
 test("evidence records are unique, sanitized, and explicitly mock-backed", () => {
-  assert.equal(evidence.length, 10);
+  assert.equal(evidence.length, 11);
   assert.equal(new Set(evidence.map(x => x.scenarioId)).size, evidence.length);
   assert.ok(evidence.every(x => x.adapter === "in_memory_mock" && x.secretsPrinted === false));
 });
