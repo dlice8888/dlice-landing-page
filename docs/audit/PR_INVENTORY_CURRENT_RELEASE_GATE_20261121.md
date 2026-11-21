@@ -32,7 +32,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 | #113 | main | Yes | Yes | Remove scheduled staging E2E mutation bypass; exact-head contract passed |
 | #112 | staging | Yes | Yes | Owner metadata boolean and service-role RPC hardening; rollout remains gated |
 | #111 | staging | Yes | Yes | OIDC tenant session broker; broker secrets/deployment/runtime validation pending |
-| #109 | staging | No | Yes | Same-tenant stock transfer enforcement; independent review and rollout gates pending |
+| #109 | staging | No | Yes | Same-tenant stock transfer enforcement; P01–P09 and rollout gates pending |
 | #107 | staging | Yes | Yes | Environment-validated Supabase frontend runtime config; integration and exact-head validation pending |
 | #71 | staging | Yes | No | Staging tenant fixture validation; merge conflict and real fixture/runtime acceptance pending |
 | #104 | main | Yes | Yes | Production Edge Function source parity and fail-closed CORS contract; production runtime proof pending |
@@ -43,7 +43,7 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 2. PRs #115, #116, #117 and #71 currently report `mergeable=false`; these require explicit conflict/ancestry disposition, not a blind merge.
 3. #118 and #119 overlap on staging workflow mutation policy but target different branches. Reconcile file overlap and exact behavior before integrating either.
 4. #108 is still open and Draft. The current feature-level matrix in #121 is 89/91/9. The originally supplied domain rows summed to 82/98/9; 93 was an arithmetic typo. Two SaaS and five additional features moved to PARTIAL based on concrete implementation/schema evidence.
-5. #120 remains Draft; PR reviewer assignment is not an acceptance criterion. Exact-head quality, disposable migration replay and contract jobs now PASS; staging runtime acceptance and independent review remain mandatory.
+5. #120 remains Draft; PR reviewer assignment is not an acceptance criterion. Exact-head quality, disposable migration replay and contract jobs now PASS; staging runtime acceptance remains mandatory.
 6. No reviewer is currently requested on these 22 PRs in the metadata returned by GitHub; #122–#127 also have no requested reviewer in their creation metadata.
 
 ## Safety and next action
@@ -79,7 +79,7 @@ GitHub currently returns one active repository ruleset, **#27559290**, applied t
 - The active connection reports `current_user_can_bypass=always`.
 - Branch-protection reads for `main` and `staging` still return 403; staging environment protection settings are not readable through the current connector.
 
-Therefore independent human review and required CI/deployment checks are not enforced by this ruleset. No ruleset/branch-protection write action is exposed in the connected GitHub tools. Do not merge release PRs or treat this ruleset as a PASS until a repository administrator fixes the policy and an independent reviewer approves.
+The ruleset currently has zero required status checks and zero required deployment environments, so automated CI and deployment gating are incomplete. No ruleset/branch-protection write action is exposed in the connected GitHub tools. Do not treat the ruleset as a complete release gate until the required checks and deployment protections are configured.
 
 
 ## Supabase existing-identity and latest exact-head verification — 21 November 2026
