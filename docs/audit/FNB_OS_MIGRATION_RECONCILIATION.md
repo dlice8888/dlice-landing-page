@@ -22,7 +22,7 @@
 - IDENTICAL DUPLICATE MIGRATION: PR #125 and #127 carried byte-identical 20261121140000_order_expiry_payment_lifecycle.sql, pgTAP test and documentation blobs. PR #125 is now CLOSED as superseded by #127; #127 is the canonical combined PR.
 - INVITATION OVERLAP: PR #120 and #126 both modify invite issue/accept behavior but use different RPC names/signatures. Consolidate to one canonical invitation path before integration; do not leave both Edge routes active with ambiguous contracts.
 - PR #124 is CLOSED as superseded by #120; its password guard helper, unit tests and migration are consolidated into #120. PR #125 is CLOSED as superseded by #127.
-- Project PR acceptance is test-evidence-only; no separate independent PR-review step is required. Protected staging Environment, secret-presence verification, explicit staging authorization and backup/rollback are separate release controls.
+- Project PR acceptance is determined by exact-head test evidence. Protected staging Environment, secret-presence verification, explicit staging authorization and backup/rollback are separate release controls.
 - The active GitHub ruleset still has require_code_owner_review=true and require_last_push_approval=true; the connected integration cannot modify rulesets. It also has zero required status checks and zero required deployment environments, with 11 always-bypass actors.
 - STAGING_SUPABASE_SERVICE_ROLE_KEY presence and staging Environment protection are NOT VERIFIED. The secret value was not read or exposed. No workflow dispatch action is exposed, so P01–P09 remain NOT RUN.
 
@@ -82,7 +82,7 @@ A fresh read-only `pg_indexes` query confirmed all nine recovered indexes curren
 - Exact-head quality run [44309825502](https://github.com/dlice8888/dlice-landing-page/actions/runs/44309825502) succeeded; recovered migration contract 1/1 passed.
 - Disposable full migration replay [44309825526](https://github.com/dlice8888/dlice-landing-page/actions/runs/44309825526), job `134821567927`, succeeded. Logs explicitly show `20261022140302_add_missing_fk_supporting_indexes.sql` applied and the complete repository migration set finished.
 - Initial replay attempt hit Docker registry rate limiting and port 54322 collision; retry succeeded. This was infra flakiness, not a migration SQL failure.
-- PR #88 remains open and Draft; no staging migration was re-applied. Source restoration is validated, but staging migration parity remains a release gate until reviewed/merged through normal controls.
+- PR #88 remains open and Draft; no staging migration was re-applied. Source restoration is validated, but staging migration parity remains a release gate until the source restoration is integrated through the authorized source-control path.
 
 ## Superseding live migration reconciliation — 2026-11-19
 
@@ -98,7 +98,7 @@ This section supersedes the earlier 46/45 migration count and source-mismatch de
 - Read-only RLS verification: 64/64 public base tables have RLS enabled and 64/64 have a policy. Client table grants are constrained by deny/service-role-only policies; products intentionally allows SELECT of active products. This is configuration evidence, not a replacement for runtime adversarial tests.
 - Supabase Security Advisor: leaked-password protection disabled (WARN). Performance Advisor: 26 unindexed foreign keys (INFO). No schema or migration changes were made during these checks.
 
-Required next actions: recover the exact PR #94 migration source into the staging source-of-truth through review without reapplying it; decide separately whether the un-applied branch_worker role migration is still required by the approved identity model; then build a production-specific migration plan only after the inactive production project is safely available for read-only history/schema comparison.
+Required next actions: recover the exact PR #94 migration source into the staging source-of-truth through a verified source-control update without reapplying it; decide separately whether the un-applied branch_worker role migration is still required by the approved identity model; then build a production-specific migration plan only after the inactive production project is safely available for read-only history/schema comparison.
 
 ## Fresh source/history reconciliation — 2026-11-20
 
@@ -172,7 +172,7 @@ Fresh read-only queries against the current `staging` branch and Supabase projec
 - PR #123 disposable replay for exact head 6788c4d7da34144d279da06edea84f6d0763b796 was running at snapshot time; do not mark the combined migration set PASS until that run completes and a combined replay is executed with #126.
 - PR #120 migrations are 20261121100000 and 20261121160000; PR #127 contains 20261121140000, 20261121150000 and 20261121180000; #125 is closed as superseded. Preserve timestamp order and check dependencies before integration.
 - No migration was applied to shared staging or production. The three source-only migrations remain unapplied pending disposable combined replay and explicit staging authorization.
-- PR reviewer identity and approval count are not feature acceptance criteria. Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
+- Migration acceptance is exact-head disposable replay, pgTAP, ACL/RLS checks, application/runtime regression, data invariants, and explicit environment authorization.
 
 
 ## Live source/database and open-PR reconciliation — 21 November 2026, latest snapshot
@@ -231,7 +231,7 @@ PR #111 updated head: `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
 - Once secrets and Environment protection are configured, deploy the OIDC function and apply its migration only through the authorized staging mutation path, then dispatch P01–P09.
 - Required runtime outcome: P01–P09 **9/9 executed and PASS**, supplemental direct-RLS/RPC probes all PASS, **0 BLOCKED, 0 SKIPPED, 0 NOT RUN**, with persisted database evidence and no cross-tenant read/write success.
 
-No separate PR review, shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
+No shared staging mutation, production change, or release-flag change is part of this test-evidence snapshot.
 
 
 ## Authoritative migration and PR reconciliation — 21 November 2026
@@ -241,7 +241,7 @@ No separate PR review, shared staging mutation, production change, or release-fl
 - #120 and #124 shared byte-identical 20261121100000_atomic_admin_permission_audit.sql; #124 is closed as superseded by #120. #125 and #127 shared byte-identical expiry migration, test and documentation blobs; #125 is closed as superseded by #127.
 - PR #120 exact-head replay 44908566908 passed 7 pgTAP files / 124 assertions. PR #126 exact-head replay 44909241076 passed 7 pgTAP files / 134 assertions, including the 15 invitation assertions. PR #123 replay 44909182869 and PR #127 replay 44897171322 passed on their exact candidate heads.
 - The #120/#126 invitation path is now unified: both branches carry identical 20261121130000 migration and tenant_invite_atomic pgTAP blobs and call the same create/accept RPC signatures. The only remaining difference is the response envelope: #120 includes replayed on acceptance while #126 omits it; align this response field before final integration. No migration was applied to shared staging or production.
-- No separate PR-review prerequisite remains in project acceptance. Migration completion requires combined disposable replay, pgTAP, ACL/RLS and application regression, runtime E2E, persisted-data invariants, and explicit staging authorization.
+- Migration completion requires combined disposable replay, pgTAP, ACL/RLS and application regression, runtime E2E, persisted-data invariants, and explicit staging authorization.
 
 
 ### Invitation path reconciliation
