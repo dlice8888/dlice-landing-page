@@ -1,7 +1,7 @@
 name: Disposable local Supabase migration replay
 on:
   pull_request:
-    branches: [staging]
+    branches: [staging, audit/combined-migration-replay-20261121]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
