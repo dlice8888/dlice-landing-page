@@ -621,3 +621,14 @@ PR #127 now implements an atomic `superseded` payment state, `superseded_by_paym
 - Vercel project `dlice-landing-page` exists; PR #126 preview is READY on exact head. No preview was found for current PR #127 head.
 - Supabase Security Advisor: native leaked-password protection disabled. Performance Advisor: 26 unindexed foreign keys and 49 unused indexes. Health Advisor: no findings.
 - `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
+
+
+### Passwordless Tenant A/B acceptance harness — implementation update
+
+The previous staging tenant-isolation workflow was blocked because Owner and Tenant A/B username/password secrets were missing. The existing Supabase Auth identities are now used instead:
+- Tenant A: existing active Owner identity in `dlice-default`, with QA branch `QA-DLICE-A`.
+- Tenant B: existing active QA Branch A identity in `dlice-qa-isolation-b`, with QA branch `QA-TENANT-B`.
+- PR #126 removes the old username/password inputs and uses Supabase Auth Admin `generateLink(type=magiclink)` plus token-hash verification to create short-lived sessions for the existing identities. It revokes the temporary sessions after the probes.
+- The new workflow requires one protected staging Environment secret: `STAGING_SUPABASE_SERVICE_ROLE_KEY`. This key is used only in the manually dispatched workflow on trusted `staging`; it is never printed or exposed to PR builds.
+- No existing user password, Auth metadata, membership or role was changed; no QA user was created.
+- Exact-head quality and source-contract tests PASS on PR #126 head `c853a621`; exact-head disposable migration replay is IN_PROGRESS. The live P01–P09 workflow remains NOT RUN until PR #126 is integrated into staging and the single service-role secret is configured. The PR remains Draft; no merge or staging deployment is authorized by this update.
