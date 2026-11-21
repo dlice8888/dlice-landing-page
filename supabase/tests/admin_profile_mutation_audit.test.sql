@@ -189,8 +189,16 @@ SELECT ok(
  'authenticated cannot execute staff active status RPC'
 );
 SELECT ok(
- NOT has_function_privilege('anon','public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)','EXECUTE'),
- 'anon cannot execute staff profile creation RPC'
+ has_function_privilege('service_role','public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)','EXECUTE')
+ AND has_function_privilege('service_role','public.dlice_update_admin_profile_role_audited(uuid,uuid,text)','EXECUTE')
+ AND has_function_privilege('service_role','public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)','EXECUTE')
+ AND NOT has_function_privilege('anon','public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)','EXECUTE')
+ AND NOT has_function_privilege('authenticated','public.dlice_create_admin_profile_audited(uuid,uuid,text,text,jsonb)','EXECUTE')
+ AND NOT has_function_privilege('anon','public.dlice_update_admin_profile_role_audited(uuid,uuid,text)','EXECUTE')
+ AND NOT has_function_privilege('authenticated','public.dlice_update_admin_profile_role_audited(uuid,uuid,text)','EXECUTE')
+ AND NOT has_function_privilege('anon','public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)','EXECUTE')
+ AND NOT has_function_privilege('authenticated','public.dlice_set_admin_profile_active_audited(uuid,uuid,boolean)','EXECUTE'),
+ 'all staff profile mutation RPCs are executable only by service_role'
 );
 
 
