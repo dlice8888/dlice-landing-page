@@ -372,7 +372,31 @@ if (
     };
   }
 
-  async function verifyIdentityAndMembership() {
+  async function serviceRoleRequest(path) {
+  const response = await fetch(`${base}${path}`, {
+    headers: {
+      apikey: serviceRoleKey,
+      authorization: `Bearer ${serviceRoleKey}`,
+      accept: "application/json",
+    },
+    redirect: "manual",
+  });
+  const text = await response.text();
+  let payload = null;
+  try { payload = JSON.parse(text); } catch { payload = null; }
+  return {
+    response,
+    payload,
+    evidence: {
+      responseBodyBytes: text.length,
+      responseContentType: response.headers.get("content-type") ?? "unknown",
+      responseJson: payload !== null,
+      serviceRoleKeyPrinted: false,
+    },
+  };
+}
+
+async function verifyIdentityAndMembership() {
     const definition = {
       id: "P03",
       expectedResult: "Two distinct Auth identities have active memberships and branch assignments in separate tenants",
@@ -567,11 +591,12 @@ if (
         };
       }
       const idempotencyKey = `tenant-isolation-${tenant.toLowerCase()}-${randomUUID()}`;
+      const transferNumber = `SECURITY-DENY-${tenant}-${randomUUID()}`;
       const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
         body: JSON.stringify({
           action: "erp-create-stock-transfer",
-          transfer_number: `SECURITY-DENY-${tenant}-${randomUUID()}`,
+          transfer_number: transferNumber,
           source_branch_id: ownBranch,
           destination_branch_id: foreignBranch,
           inventory_item_id: "00000000-0000-4000-8000-000000000099",
@@ -580,17 +605,28 @@ if (
           notes: "Automated tenant-isolation negative test; must be rejected before mutation",
         }),
       });
-      const passed = response.status === 403;
+      // Prove the denied request did not leave a stock-transfer row behind.
+      // This narrow postcondition query uses the protected service-role key; no key or row body is logged.
+      const persisted = await serviceRoleRequest(
+        `/rest/v1/stock_transfers?transfer_number=eq.${encodeURIComponent(transferNumber)}&select=id,transfer_number&limit=2`,
+      );
+      const persistedCount = Array.isArray(persisted.payload) ? persisted.payload.length : null;
+      const noPersistedTransfer = persisted.response.status === 200 && persistedCount === 0;
+      const passed = response.status === 403 && noPersistedTransfer;
       return {
         passed,
-        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied" : "not denied"}`,
+        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied" : "not denied"}; persisted_transfers=${persistedCount ?? "unverified"}`,
         httpStatus: response.status,
         evidence: {
           ...evidence,
           sameTenantAuthorizationControlStatus: control.response.status,
           sameTenantControlRejectedBeforeMutation: true,
           idempotencyKeyGenerated: true,
+          postconditionHttpStatus: persisted.response.status,
+          persistedTransferCount: persistedCount,
+          noPersistedTransfer,
           requestIdentifiersPrinted: false,
+          serviceRoleKeyPrinted: false,
         },
       };
     });
