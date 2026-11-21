@@ -157,3 +157,20 @@ Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0
 ## Invitation RPC consolidation — 21 November 2026
 
 PR #120 and #126 share byte-identical migration 20261121130000_atomic_tenant_invite_lifecycle.sql (SHA b9dab9b7027e51bd5a4069b854b65a14563df6eb) and pgTAP test tenant_invite_atomic.test.sql (SHA 9c778834a0eb5e6f0a12769f1e6a214c71130688). Both Edge Function candidates call dlice_create_tenant_invite_atomic and dlice_accept_tenant_invite_atomic with matching argument contracts. The only response difference is that #120 includes replayed in the success payload while #126 omits it. Align that field before final integration; there is no migration-version collision and no competing invite RPC overload to remove.
+
+## Current PR and test status addendum — 21 November 2026, 20:58 WIB
+
+| PR | Current state | Exact-head evidence | Disposition |
+|---:|---|---|---|
+| #120 | OPEN / Draft | Latest head f37b581f: quality, CORS, KDS, procurement requisition and receiving PASS; disposable replay still IN PROGRESS. Previous head 735e4295 had 154 pgTAP assertions and replay PASS. | Canonical permission/profile/password mutation audit; #124 superseded |
+| #123 | OPEN / Draft | Head 9024f2ce: 74 assertions / 5 pgTAP files; all six applicable workflows PASS | Online checkout idempotency; browser retry/concurrency E2E remains |
+| #126 | OPEN / Draft | Head 4a6aa8cc: 139 assertions / 7 pgTAP files; all six applicable workflows PASS | Tenant RLS/onboarding/invitation; passwordless P01–P09 NOT RUN |
+| #127 | OPEN / Draft | Head e52ea75a: 124 assertions / 7 pgTAP files; all six applicable workflows PASS | Canonical payment proof + expiry + supersession; live Storage/payment E2E remains |
+| #124 | CLOSED / unmerged | Same password-guard source consolidated into #120 | Superseded by #120 |
+| #125 | CLOSED / unmerged | Expiry migration/test blob is identical to #127 | Superseded by #127 |
+
+Combined disposable migration candidate 700c2edf: 60 migrations, 14 pgTAP files, 270 assertions PASS. Run: https://github.com/dlice8888/dlice-landing-page/actions/runs/44911080939.
+
+Project feature acceptance is test-evidence-only. PR reviewer identity/approval is not a feature acceptance criterion. Protected staging Environment, secret handling, explicit mutation authorization and backup/rollback remain separate safety controls.
+
+No staging/production mutation was performed. P01–P09 and business E2E remain NOT RUN.
