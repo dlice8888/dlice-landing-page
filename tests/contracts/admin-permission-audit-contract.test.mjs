@@ -32,6 +32,37 @@ const permissionBlock = source.slice(
   source.indexOf('if (action === "admin-set-profile-role")'),
 );
 
+
+const passwordResetBlock = source.slice(
+  source.indexOf('if (action === "admin-reset-staff-password")'),
+  source.indexOf('if (action === "admin-list-orders")', source.indexOf('if (action === "admin-reset-staff-password")')),
+);
+
+test("password reset persists an audit intent before calling Supabase Auth Admin and finalizes the outcome", () => {
+  const begin = passwordResetBlock.indexOf('admin.rpc("dlice_begin_admin_password_reset_audit"');
+  const authMutation = passwordResetBlock.indexOf("admin.auth.admin.updateUserById");
+  const finish = passwordResetBlock.indexOf('admin.rpc("dlice_finish_admin_password_reset_audit"');
+  assert.ok(begin >= 0 && authMutation > begin && finish > authMutation);
+  assert.match(passwordResetBlock, /if\s*\(auditIntentError\s*\|\|\s*typeof auditId !== "string"\)[\s\S]*?return fail/);
+  assert.match(passwordResetBlock, /p_succeeded:\s*resetSucceeded/);
+  assert.match(passwordResetBlock, /if\s*\(auditFinishError\s*\|\|\s*!auditResult\?\.ok\)[\s\S]*?return fail/);
+  assert.doesNotMatch(passwordResetBlock, /from\("admin_audit_logs"\)\.insert/);
+});
+
+test("password reset audit intent and finalization RPCs are service-role-only", () => {
+  for (const name of [
+    "dlice_begin_admin_password_reset_audit",
+    "dlice_finish_admin_password_reset_audit",
+  ]) {
+    assert.match(profileMigration, new RegExp(`create or replace function public\\.${name}`, "i"));
+    assert.match(profileMigration, new RegExp(`revoke all on function public\\.${name}`, "i"));
+    assert.match(profileMigration, new RegExp(`grant execute on function public\\.${name}`, "i"));
+  }
+  assert.match(profileMigration, /admin_password_reset_started/);
+  assert.match(profileMigration, /reset_admin_password_failed/);
+  assert.match(profileMigration, /'status','pending'/);
+});
+
 test("permission mutation uses the atomic audited RPC", () => {
   assert.match(permissionBlock, /admin\.rpc\("dlice_update_admin_permissions_audited"/);
   assert.match(permissionBlock, /p_actor_user_id:\s*actor\.user\.id/);
