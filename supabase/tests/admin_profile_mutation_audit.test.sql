@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(29);
+SELECT plan(35);
 
 INSERT INTO auth.users
 (id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,
@@ -19,6 +19,37 @@ VALUES
 
 SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
+
+-- Force audit inserts to fail and prove the corresponding profile mutation rolls back.
+CREATE OR REPLACE FUNCTION public.test_reject_admin_mutation_audit()
+RETURNS trigger LANGUAGE plpgsql AS $trigger$
+BEGIN
+  IF current_setting('test.reject_admin_audit_action',true)=NEW.action THEN
+    RAISE EXCEPTION 'forced admin audit insert failure';
+  END IF;
+  RETURN NEW;
+END;
+$trigger$;
+CREATE TRIGGER test_reject_admin_mutation_audit
+BEFORE INSERT ON public.admin_audit_logs
+FOR EACH ROW EXECUTE FUNCTION public.test_reject_admin_mutation_audit();
+
+SELECT set_config('test.reject_admin_audit_action','create_admin_account',true);
+SELECT throws_ok(
+ $q$SELECT public.dlice_create_admin_profile_audited(
+  'd5000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000004',
+  'qa.audit.newstaff','QA New Staff','["staff","orders"]'::jsonb
+ )$q$,
+ 'P0001','forced admin audit insert failure',
+ 'staff profile creation fails when its audit insert fails'
+);
+SELECT ok(
+ NOT EXISTS(SELECT 1 FROM public.admin_profiles WHERE user_id='d5000000-0000-4000-8000-000000000004'),
+ 'staff profile creation rolls back when audit insertion fails'
+);
+SELECT set_config('test.reject_admin_audit_action','',true);
+
 
 SELECT is(
  public.dlice_create_admin_profile_audited(
@@ -68,6 +99,24 @@ SELECT throws_ok(
  'unknown permission cannot be assigned during staff creation'
 );
 
+
+SELECT set_config('test.reject_admin_audit_action','set_staff_profile_role',true);
+SELECT throws_ok(
+ $q$SELECT public.dlice_update_admin_profile_role_audited(
+  'd5000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000003',
+  'sales_admin'
+ )$q$,
+ 'P0001','forced admin audit insert failure',
+ 'staff role mutation fails when its audit insert fails'
+);
+SELECT is(
+ (SELECT role FROM public.admin_profiles WHERE user_id='d5000000-0000-4000-8000-000000000003'),
+ 'branch_worker',
+ 'staff role mutation rolls back when audit insertion fails'
+);
+SELECT set_config('test.reject_admin_audit_action','',true);
+
 SELECT is(
  public.dlice_update_admin_profile_role_audited(
   'd5000000-0000-4000-8000-000000000001',
@@ -96,6 +145,26 @@ SELECT throws_ok(
  '22023','invalid_admin_role_change',
  'unknown admin profile role is rejected'
 );
+
+
+SELECT set_config('test.reject_admin_audit_action','set_admin_active_status',true);
+SELECT throws_ok(
+ $q$SELECT public.dlice_set_admin_profile_active_audited(
+  'd5000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000002',
+  false
+ )$q$,
+ 'P0001','forced admin audit insert failure',
+ 'staff active-state mutation fails when its audit insert fails'
+);
+SELECT is(
+ (SELECT is_active FROM public.admin_profiles WHERE user_id='d5000000-0000-4000-8000-000000000002'),
+ true,
+ 'staff active-state mutation rolls back when audit insertion fails'
+);
+SELECT set_config('test.reject_admin_audit_action','',true);
+DROP TRIGGER test_reject_admin_mutation_audit ON public.admin_audit_logs;
+DROP FUNCTION public.test_reject_admin_mutation_audit();
 
 SELECT is(
  public.dlice_set_admin_profile_active_audited(
