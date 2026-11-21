@@ -118,7 +118,7 @@ Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0
 ## Current execution delta — 21 November 2026
 
 - PR #124 is CLOSED as superseded by #120; #125 is CLOSED as superseded by #127. PR #120 remains OPEN/Draft and is the canonical permission/profile/password-guard implementation.
-- PR #123 uses migration version 20261121135000; PR #126 uses 20261121130000. There is no version collision. Their invitation RPC overlap is a separate code-level consolidation item.
+- PR #123 uses migration version 20261121135000; PR #126 uses 20261121130000. There is no version collision. Their invitation migration/test/RPC path is shared; only the replayed response field needs alignment.
 - PR #123 exact-head quality run 44909182929 PASS; CORS, KDS and procurement contract jobs PASS. Disposable replay 44909182869 was still in progress at snapshot time.
 - PR #126 exact-head disposable replay 44903918177 PASS: all 52 migration files applied on disposable DB; 7 pgTAP files / 134 assertions PASS. Invitation suite declares 15 assertions and its file passed.
 - P01–P09 have not been dispatched. The workflow requires the protected staging Environment and `STAGING_SUPABASE_SERVICE_ROLE_KEY`; current GitHub integration exposes neither Environment protection/secret metadata nor a workflow-dispatch action. The secret value was not read or printed.
@@ -149,6 +149,11 @@ Active ruleset #27559290 applies to `~ALL` branches, but requires 0 approvals, 0
 - PR #123 exact head 6788c4d7da34144d279da06edea84f6d0763b796: quality, disposable replay, KDS, CORS and procurement contracts PASS. Browser response-drop, retry, concurrency and late-webhook E2E NOT RUN.
 - PR #126 exact head bb008c55a4d98afe5264b4ccde4f28f129bc162: quality, disposable replay, KDS, CORS and procurement contracts PASS; replay 7 pgTAP files / 134 assertions including 35 RLS, 17 onboarding and 15 invitation assertions. P01–P09 NOT RUN.
 - PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6: quality, disposable replay, KDS, CORS and procurement contracts PASS. Payment proof retry/concurrency, expiry worker, compensation, supersession and global Storage orphan cleanup E2E NOT RUN.
-- No #123/#126 migration version collision: #123=20261121135000 and #126=20261121130000. The #120/#126 invitation RPC overlap remains unresolved before integration.
+- No #123/#126 migration version collision: #123=20261121135000 and #126=20261121130000. The #120/#126 invitation migration/test/RPC path is shared; align the replayed response field before integration.
 - The latest PR #126 Vercel deployment is READY on stale commit 1bd648704172fecb2885b62fb3c51b7720da469c; no deployment matches current head bb008c55. SSO is enabled on Preview deployments; a READY stale Preview is not runtime acceptance.
 - P01–P09 cannot be dispatched with the connected GitHub integration. Staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence remain NOT VERIFIED; the secret value was not read or exposed.
+
+
+## Invitation RPC consolidation — 21 November 2026
+
+PR #120 and #126 share byte-identical migration 20261121130000_atomic_tenant_invite_lifecycle.sql (SHA b9dab9b7027e51bd5a4069b854b65a14563df6eb) and pgTAP test tenant_invite_atomic.test.sql (SHA 9c778834a0eb5e6f0a12769f1e6a214c71130688). Both Edge Function candidates call dlice_create_tenant_invite_atomic and dlice_accept_tenant_invite_atomic with matching argument contracts. The only response difference is that #120 includes replayed in the success payload while #126 omits it. Align that field before final integration; there is no migration-version collision and no competing invite RPC overload to remove.
