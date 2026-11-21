@@ -782,3 +782,69 @@ No production deployment, shared-staging migration, Auth identity mutation, tena
 - PR #127 exact head `5c597c2ec37a130501ed19591cfc9383396ba1b`: quality, KDS/CORS/procurement contracts and disposable migration replay PASS; payment proof upload retry, expiry, stale-attempt supersession and compensation runtime E2E NOT RUN.
 - Vercel has no deployment for the exact current heads of #120, #123, #125, #126 or #127. A preview on an older commit does not qualify as current-head evidence.
 - These results are CI/disposable evidence only. No PR was merged, no shared-staging migration applied, and both release flags remain false.
+
+
+## Superseding live audit delta — 21 November 2026, 19:42 WIB
+
+### Reconfirmed feature inventory
+
+The current feature-level matrix remains **89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189**, with **0 DONE**. The latest user-supplied total row (82/93/9) is not the current source of truth: the original supplied domain rows sum to 82/98/9, and seven evidence-backed features have already moved to PARTIAL (five from schema/function evidence and two SaaS features from PR #126).
+
+| Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
+|---|---:|---:|---:|---:|
+| Executive Command Center | 10 | 4 | 5 | 1 |
+| POS & Checkout | 13 | 7 | 5 | 1 |
+| Order Management | 10 | 7 | 2 | 1 |
+| Kitchen & Production | 10 | 7 | 2 | 1 |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 |
+| Procurement & Supplier | 10 | 5 | 5 | 0 |
+| Branch Operations | 10 | 4 | 5 | 1 |
+| Delivery & Fulfillment | 8 | 2 | 6 | 0 |
+| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 |
+| Finance & Accounting | 12 | 7 | 4 | 1 |
+| HR & Workforce | 9 | 1 | 8 | 0 |
+| Franchise & Expansion | 8 | 2 | 6 | 0 |
+| BI & Analytics | 10 | 3 | 7 | 0 |
+| Admin, Identity & Access Control | 10 | 5 | 4 | 1 |
+| SaaS Tenant Management | 8 | 2 | 6 | 0 |
+| Integrations & Automation | 9 | 5 | 4 | 0 |
+| Quality, Compliance & Security | 20 | 10 | 9 | 1 |
+| **TOTAL** | **189** | **89** | **91** | **9** |
+
+Only two PARTIAL features currently have defensible numeric progress scores: Tenant/member isolation 38% and Tenant directory/onboarding 30%. The remaining 87 PARTIAL features remain explicitly unscored until their six weighted evidence dimensions are decomposed; do not invent percentages.
+
+### Latest exact-head PR verification
+
+| PR | Current head | State | Exact-head CI / disposable replay | Runtime / review disposition |
+|---:|---|---|---|---|
+| #126 | `07d7c51c2cbea21b9cd49a480614e004fe7bf417` | OPEN / DRAFT | Quality, CORS, KDS, procurement contracts and full disposable replay PASS; invitation suite passes (15 pgTAP assertions; full replay reports 134 tests across 7 files) | P01–P09 NOT RUN; no review; protected staging service-role secret and staging dispatch still required |
+| #120 | `d9aa2fbc813da48abcae38769be90de1e981c13d` | OPEN / DRAFT | Quality, permission/password contracts, CORS, KDS, procurement contracts and disposable replay PASS | No review; mutation-path live tests and complete password-path disposition remain |
+| #124 | `a74200d60d6af06df5a5da4ed87a464283f0f9ff` | OPEN / DRAFT | Quality, password guard unit/contract tests, CORS, KDS, procurement contracts and disposable replay PASS | No review; guard files are byte-identical to #120 and its behavior is included in #120; treat as superseded/overlap, do not merge separately |
+| #123 | `31976673a9289add4c1bb10d6f29f3ff6c3c15a5` | OPEN / DRAFT | Quality, idempotency contract, CORS, KDS, procurement contracts and disposable replay PASS | Browser retry/drop-response, concurrent duplicate and payment/webhook E2E NOT RUN |
+| #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
+| #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
+
+All six PRs remain OPEN/DRAFT, unmerged, mergeable and without submitted independent reviews. Green CI and disposable replay do not equal staging runtime acceptance or release approval.
+
+### Supabase identity-only authentication
+
+Read-only staging joins confirm:
+- Tenant A is the existing `qa_dlice_staging_no_permission` Auth user in `dlice-default`, assigned to active branch `QA-DLICE-A`.
+- Tenant B is the existing `qa_dlice_staging_branch_a` Auth user in `dlice-qa-isolation-b`, assigned to active branch `QA-TENANT-B`.
+- Both have active `branch_manager` tenant memberships and identical six-item tenant permission sets. Tenant A's global profile permission array is empty; tenant B's has seven entries. Tenant-scoped authorization resolves from membership permissions, not the global profile array.
+- The existing Owner profile/membership are active, but `app_metadata.platform_owner` is absent and the allowlist cannot be read. Do not use Owner bypass.
+- PR #126 removes the missing Owner/Branch A username/password dependency from the new P01–P09 workflow. It still needs `STAGING_SUPABASE_SERVICE_ROLE_KEY` in protected GitHub Environment `staging` to mint one-time magic links. The workflow is guarded to run only on `refs/heads/staging`; integrate/review it first, then dispatch from staging. Current connector cannot inspect the Environment secret or dispatch the workflow.
+
+### Mutation-path and PR overlap findings
+
+- PR #120's audited RPCs cover staff creation, permission changes, profile role changes, active-state changes and invite issuance; exact-head permission contract and disposable replay pass.
+- PR #124's five password-guard artifacts (module, unit tests, contract test, documentation and quality workflow) are byte-identical to the same files in PR #120. PR #120 also contains the guard calls in the Edge Function. The two branches diverged (PR #120 is 28 commits ahead and 7 behind PR #124); treat #124 as superseded/overlap and do not merge it separately.
+- PR #120 and #126 both modify tenant invite issue/accept. #120 uses `dlice_create_tenant_invite_audited` and a two-argument `dlice_accept_tenant_invite_atomic`; #126 uses `dlice_create_tenant_invite_atomic` and a three-argument overload. Reconcile to one canonical invite implementation before integration.
+- The password guard covers the application's three official flows (initial Owner bootstrap, staff creation and staff reset). It does not prevent a user from calling Supabase Auth password-update endpoints directly. Native leaked-password protection is disabled on the Free plan; no supported Free-plan Auth hook intercepts password changes. Keep feature 9 BLOCKED rather than claiming universal coverage.
+
+### Release gate
+
+GitHub ruleset #27559290 is active on all branches but requires **0 approving reviews**, **0 required status checks**, and **0 deployment environments**; 11 actors have always-bypass and the connected identity can bypass. No policy change was made. Vercel's latest deployment is READY with SSO protection, but PR #127 reports the Free daily deployment limit (>100/day); READY previews do not prove current-head E2E.
+
+No staging migration, Auth mutation, Edge Function deployment, production change, merge, or release-flag change was made. Both release flags remain false.
