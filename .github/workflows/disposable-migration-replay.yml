@@ -37,11 +37,17 @@ jobs:
           trap cleanup EXIT
           cd "$tmp"
           supabase init
-          # Avoid intermittent host-port collisions when the disposable pgTAP
+          # Allocate a unique project ID and port range for every disposable replay.
           # runner starts its temporary Inbucket service alongside the local stack.
-          if grep -q '^port = 54324$' supabase/config.toml; then
-            sed -i 's/^port = 54324$/port = 55324/' supabase/config.toml
-          fi
+          base_port=$((55000 + GITHUB_RUN_ID % 1000 * 5))
+          sed -i \
+            -e "s/^project_id = .*/project_id = \"dlice-migration-${GITHUB_RUN_ID}\"/" \
+            -e "s/^port = 54321$/port = $((base_port + 1))/" \
+            -e "s/^port = 54322$/port = $((base_port + 2))/" \
+            -e "s/^shadow_port = 54320$/shadow_port = ${base_port}/" \
+            -e "s/^port = 54323$/port = $((base_port + 3))/" \
+            -e "s/^port = 54324$/port = $((base_port + 4))/" \
+            supabase/config.toml
           mkdir -p supabase/migrations supabase/tests
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
           cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/
