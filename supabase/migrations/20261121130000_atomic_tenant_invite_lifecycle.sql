@@ -13,6 +13,7 @@ AS $$
 DECLARE
   v_invite public.tenant_invites%ROWTYPE;
   v_tenant_status text;
+  v_actor_role text;
 BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
@@ -49,12 +50,11 @@ BEGIN
     RAISE EXCEPTION 'tenant_not_active_for_invites' USING ERRCODE = '55000';
   END IF;
 
-  IF NOT EXISTS (
-    SELECT 1 FROM public.tenant_memberships
-    WHERE tenant_id = p_tenant_id AND user_id = p_actor_user_id
-      AND status = 'active' AND role IN ('tenant_owner','tenant_admin')
-    FOR UPDATE
-  ) THEN
+  SELECT role INTO v_actor_role
+  FROM public.tenant_memberships
+  WHERE tenant_id = p_tenant_id AND user_id = p_actor_user_id AND status = 'active'
+  FOR UPDATE;
+  IF NOT FOUND OR v_actor_role NOT IN ('tenant_owner','tenant_admin') THEN
     RAISE EXCEPTION 'tenant_invite_permission_denied' USING ERRCODE = '42501';
   END IF;
 
