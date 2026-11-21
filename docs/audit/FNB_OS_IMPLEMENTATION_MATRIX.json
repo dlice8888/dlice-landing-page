@@ -3748,7 +3748,7 @@
     "pr120_124_overlap": "PR #124 closed superseded by #120 after exact-head #120 CI and disposable migration replay passed. Shared leaked-password guard helper, tests and migration have identical blob SHAs; #120 Edge Function is the superset.",
     "pr125_127_overlap": "PR #125 and #127 share 20261121140000_order_expiry_payment_lifecycle.sql with identical blob SHA c1d1de05; migration content is not divergent. Preserve one canonical migration history entry and verify #127's later payment-proof/supersession migrations replay after it.",
     "latest_pr_statuses": "Open Draft PRs: #120, #123, #125, #126, #127 (5). PR #124 closed as superseded by #120. All five open heads have successful applicable CI/disposable replay. No P01-P09 or business runtime E2E executed.",
-    "partial_progress_detail": "Only two PARTIAL feature progress values are currently scored: SaaS tenant directory/onboarding 30%; tenant/member isolation foundation 38%. The other 87 PARTIAL features remain unscored until evidence is decomposed across code/UI, database, authorization, automated tests, workflow E2E and reconciliation/observability."
+    "partial_progress_detail": "Only two PARTIAL feature progress values are currently scored: SaaS tenant directory/onboarding 30%; tenant/member isolation foundation 38%. The other 90 PARTIAL features remain unscored until evidence is decomposed across code/UI, database, authorization, automated tests, workflow E2E and reconciliation/observability."
   },
   "current_open_prs": [
     127,
@@ -4418,7 +4418,7 @@
           "20261121100000_atomic_admin_permission_audit.sql",
           "20261121160000_atomic_admin_profile_mutation_audit.sql"
         ],
-        "123": "20261121135000_atomic_online_order_idempotency.sql",
+        "123": "20261121130000_atomic_online_order_idempotency.sql",
         "126": "20261121130000_atomic_tenant_invite_lifecycle.sql",
         "127": [
           "20261121140000_order_expiry_payment_lifecycle.sql",
@@ -4483,7 +4483,7 @@
         "disposable_migration_replay": "PASS",
         "contracts": "PASS",
         "runtime_retry_concurrency_and_late_webhook_e2e": "NOT RUN",
-        "migration_version": "20261121135000"
+        "migration_version": "20261121130000"
       },
       "pr125": {
         "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
