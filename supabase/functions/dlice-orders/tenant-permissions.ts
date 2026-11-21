@@ -71,3 +71,14 @@ export function resolveTenantScopedPermissions(
     .filter((permission) => rest.every((set) => set.has(permission)))
     .sort();
 }
+
+/**
+ * All admin and ERP API actions are tenant-sensitive by default. Authentication
+ * bootstrap and session introspection are the only prefix-based exceptions.
+ * Until a route has tenant-context negative tests, callers must be blocked unless
+ * they satisfy the separately verified platform-owner bypass.
+ */
+export function isTenantSensitiveAction(action: string): boolean {
+  if (action === "admin-login" || action === "admin-session-info") return false;
+  return action.startsWith("admin-") || action.startsWith("erp-");
+}
