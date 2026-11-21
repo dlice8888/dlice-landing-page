@@ -94,3 +94,35 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 The P01–P09 run logs show that the staging URL and publishable key were available, while both Tenant A/B username/password pairs and all six fixture IDs resolved empty. The probes were emitted as BLOCKED with executed:false; the workflow reports 0 skipped. This is not a tenant authorization test result.
 
 The positive KDS/POS/Stock workflow did not reach order creation, payment, KDS, stock consumption, offline replay, or reconciliation. The procurement receiving contract is not a substitute for PR → approval → PO → GRN → stock movement → AP E2E. These operational flows remain NOT RUN.
+
+
+## Superseding E2E status — 21 November 2026, 19:42 WIB
+
+### Tenant A/B P01–P09
+
+| Probe | Required behavior | Current status | Evidence / blocker |
+|---|---|---|---|
+| P01 | Authenticate existing Tenant A Auth identity | NOT RUN | Existing Auth user and magic-link path implemented in PR #126; protected staging service-role secret and workflow dispatch still required |
+| P02 | Authenticate existing Tenant B Auth identity | NOT RUN | Same as P01 |
+| P03 | Distinct users, active memberships, matching tenant permissions and correct branch assignments | DB FIXTURE VERIFIED; runtime probe NOT RUN | Read-only joins confirm separate tenants/branches, active memberships and identical six-item tenant permission sets |
+| P04 | Tenant A reads own branch inventory | NOT RUN | Membership includes inventory permission; no authenticated Edge Function request executed |
+| P05 | Tenant A cross-tenant inventory read denied | NOT RUN | No authenticated negative request executed |
+| P06 | Tenant B reads own branch inventory | NOT RUN | No authenticated Edge Function request executed |
+| P07 | Tenant B cross-tenant inventory read denied | NOT RUN | No authenticated negative request executed |
+| P08 | Tenant A cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
+| P09 | Tenant B cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
+
+P01–P09 have not been dispatched on the current passwordless workflow. The job is manual-dispatch-only and has `if: github.ref == 'refs/heads/staging'`; merge/reconcile the workflow into staging after review, verify the protected Environment and service-role secret, then dispatch from staging. Do not select a feature branch; the job condition would not run. No credential values were read or logged.
+
+### Transaction E2E work
+
+| Flow | Code/contract evidence | Live E2E status | Required next proof |
+|---|---|---|---|
+| Online checkout retry (PR #123) | Exact-head CI + disposable replay PASS | NOT RUN | Drop committed HTTP response, retry same idempotency key, concurrent duplicate requests, verify one order/reservation |
+| Unpaid reservation expiry (PR #125/#127) | Exact-head CI + disposable replay PASS | NOT RUN | Install only after approval; run worker against disposable/live-approved fixture; prove expiry and no-proof compensation |
+| Payment proof upload (PR #127) | Atomic proof pgTAP/contract + replay PASS | NOT RUN | Storage upload/RPC failure compensation, same-key retry, concurrent upload, orphan object cleanup |
+| Payment attempt supersession (PR #127) | Supersession pgTAP + replay PASS | NOT RUN | Approve/reject race, one-paid-per-order invariant, preserve proof-bearing sibling for manual review |
+| Tenant invitation (PR #126) | 15 pgTAP assertions pass; full replay PASS | NOT RUN | Actual issue, delivery/manual copy, correct-email accept, wrong-email reject, replay reject, expiry/audit E2E |
+| Permission mutation (PR #120) | Atomic RPC contract + migration replay PASS | NOT RUN | Positive/negative role tests; atomic before/after/audit row verification; direct mutation denial |
+
+No browser/API runtime E2E, shared staging mutation, migration application, or production mutation occurred in this continuation.
