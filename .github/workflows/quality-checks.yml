@@ -67,6 +67,8 @@ jobs:
         run: node --test tests/contracts/online-order-idempotency-contract.test.mjs
       - name: Verify atomic customer payment proof contract tests
         run: node --test tests/contracts/atomic-customer-payment-proof-contract.test.mjs
+      - name: Verify disposable HTTP runtime fault injection syntax
+        run: node --check tests/runtime/online-payment-fault-injection.mjs
       - name: Verify runtime tenant-isolation probe evidence
         run: |
           node --check tests/runtime/dlice-tenant-jwt-isolation.mjs
