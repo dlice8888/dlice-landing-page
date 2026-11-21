@@ -432,7 +432,7 @@ This is only the database direct-client boundary. It does not prove tenant A/B i
 ### Order Management — Duplicate orders, delayed payment, failed order handling
 - **PR #123:** checkout idempotency and replay; 74 pgTAP assertions and disposable replay PASS.
 - **PR #125:** unpaid/unproven payment expiry, rejection compensation and stale no-proof cleanup; 27 pgTAP assertions and disposable replay PASS.
-- **PR #127:** atomic payment-proof RPC, upload idempotency key, order/reservation/payment/history/audit transaction; quality checks PASS, exact-head disposable migration replay still running.
+- **PR #127:** atomic payment-proof RPC, upload idempotency key, order/reservation/payment/history/audit transaction; exact-head quality, disposable migration replay, KDS, CORS and procurement contract jobs PASS; browser concurrency and global Storage orphan sweep remain.
 - **Remaining gaps:** browser fault injection, concurrent upload/expiry runtime tests, provider webhook ordering, tenant-scoped runtime tests and a Storage orphan-object sweeper. Supabase Storage upload is outside the Postgres transaction; the Edge Function only compensates by deleting on RPC failure, so process-crash orphan risk remains explicit.
 
 ### Supabase index performance
@@ -463,9 +463,9 @@ PR #120 expands the atomic audit implementation from permission-list changes to 
 - profile role changes (with branch-worker assignment and tenant-membership checks);
 - active/inactive status changes.
 
-The database RPCs commit each profile mutation and before/after audit row in one transaction, use SECURITY INVOKER with empty search_path, and are executable only by service_role. Idempotent retries do not duplicate audit rows. The expanded suite adds 18 pgTAP assertions on top of the existing 11 permission assertions; exact-head CI is pending.
+The database RPCs commit each profile mutation and before/after audit row in one transaction, use SECURITY INVOKER with empty search_path, and are executable only by service_role. Idempotent retries do not duplicate audit rows. The expanded suite adds 18 pgTAP assertions for profile create/role/active mutations, 11 assertions for permission-list auditing, and 11 new assertions for audited tenant-invite issuance.
 
-**Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. Feature remains BLOCKED until exact-head quality + disposable replay pass, independent review, and authorized staging runtime evidence pass.
+**Remaining gap:** password reset attempts/outcomes, tenant membership role changes and branch-assignment create/update/revoke still need a full mutation inventory and audit/transaction treatment. **Validation update (21 November):** exact PR #120 head `29d6d808c2b56eb9596335805499266de4e1b4ba` passes free quality, disposable migration replay, KDS, CORS, procurement receiving and requisition contracts. Disposable replay executed 7 pgTAP files / 107 assertions, including all 11 new audited-invite assertions. PR remains Draft and the feature remains BLOCKED until independent review and authorized staging runtime evidence pass.
 
 
 **Validation update (21 November):** PR #126 exact-head disposable replay PASS. All repository migrations applied successfully and all six pgTAP files passed, 119 assertions total. This does not replace live Tenant A/B staging tests or onboarding browser/API E2E.
