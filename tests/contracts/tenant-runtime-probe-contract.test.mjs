@@ -90,6 +90,25 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
   assert.doesNotMatch(handler, /body\.user_id|body\.tenant_id/, "caller must not select another identity or tenant");
 });
 
+test("P08/P09 require a 403 plus fail-closed service-role database postconditions and retained sanitized evidence", () => {
+  assert.match(probe, /async function serviceRoleRows\(table, filters\)/);
+  assert.match(probe, /serviceRoleHeaders\(serviceRoleKey\)/);
+  assert.match(probe, /stock_transfers/);
+  assert.match(probe, /transfer_number:\s*`eq\.\$\{transferNumber\}`/);
+  assert.match(probe, /idempotency_key:\s*`eq\.\$\{idempotencyKey\}`/);
+  assert.match(probe, /stock_transfer_items/);
+  assert.match(probe, /stock_movements/);
+  assert.match(probe, /response\.status === 403 && postcondition\.verified/);
+  assert.match(probe, /transferRows\.length === 0/);
+  assert.match(probe, /idempotencyRows\.length === 0/);
+  assert.match(probe, /transferItemCount === 0/);
+  assert.match(probe, /stockMovementCount === 0/);
+  assert.match(workflow, /uses:\s*actions\/upload-artifact@[0-9a-f]{40}/);
+  assert.match(workflow, /if:\s*always\(\)/);
+  assert.match(workflow, /retention-days:\s*30/);
+  assert.match(workflow, /staging-tenant-isolation-evidence\.jsonl/);
+});
+
 test("missing staging configuration is reported as blocked, never as a passing probe", () => {
   const result = spawnSync(process.execPath, ["tests/runtime/dlice-tenant-jwt-isolation.mjs"], {
     encoding: "utf8",
