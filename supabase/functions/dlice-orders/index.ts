@@ -82,6 +82,42 @@ const consumeRateLimit = async (scope: string, key: string, limit: number, windo
   return data === true;
 };
 
+const cleanupOrphanPaymentProofs = async (orderId: string): Promise<void> => {
+  try {
+    const storage = admin.storage.from("dlice-payment-proofs");
+    const { data: objects, error: listError } = await storage.list(orderId, {
+      limit: 100,
+      sortBy: { column: "created_at", order: "asc" },
+    });
+    if (listError || !objects?.length) return;
+
+    // Never race an in-flight upload or remove an object that may still be
+    // referenced by a payment record. Only inspect files older than one hour.
+    const cutoff = Date.now() - 60 * 60 * 1000;
+    const candidates = objects
+      .filter((object) => object.id !== null && object.created_at && new Date(object.created_at).getTime() < cutoff)
+      .map((object) => `${orderId}/${object.name}`);
+    if (!candidates.length) return;
+
+    const { data: referenced, error: referenceError } = await admin
+      .from("payment_records")
+      .select("proof_storage_path")
+      .eq("order_id", orderId)
+      .in("proof_storage_path", candidates);
+    if (referenceError || !referenced) return;
+
+    const referencedPaths = new Set(referenced.map((row: { proof_storage_path: string | null }) => row.proof_storage_path));
+    const orphans = candidates.filter((path) => !referencedPaths.has(path));
+    if (orphans.length) {
+      const { error: removeError } = await storage.remove(orphans);
+      if (removeError) console.warn("Payment proof orphan cleanup failed.");
+    }
+  } catch {
+    // Cleanup is best-effort and must never turn a committed proof into a failed response.
+    console.warn("Payment proof orphan cleanup skipped.");
+  }
+};
+
 const formatTransactionCode = (orderNumber: number | string, createdAt: string, timezone = "Asia/Jakarta") => {
   const safeTimezone = SUPPORTED_BRANCH_TIMEZONES.has(timezone) ? timezone : "Asia/Jakarta";
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -373,20 +409,21 @@ Deno.serve(async (req: Request) => {
     const tokenHash = await sha256(token);
     const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot").eq("tracking_token_hash", tokenHash).maybeSingle();
     if (orderError || !order) return fail("Pesanan tidak ditemukan.", 404, origin);
-    const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at").eq("order_id", order.id);
+    const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at,payment_declared_at").eq("order_id", order.id);
     if (reservationError || !reservations?.length) return fail("Reservasi pesanan tidak ditemukan.", 409, origin);
     if (reservations.some((r) => r.status === "expired" || r.status === "released")) return fail("Reservasi sudah berakhir. Hubungi admin untuk memeriksa ketersediaan.", 409, origin);
     const allStillActive = reservations.every((r) => r.status === "active" && new Date(r.expires_at).getTime() > Date.now());
-    if(action==="upload-proof"){const method=safeText(body.method,30),version=Number(body.receipt_version);if(!["bank_transfer","dlice_qris"].includes(method)||!Number.isInteger(version))return fail("Metode/versi struk tidak valid.",422,origin);if(version!==order.receipt_version||order.receipt_confirmed_version!==version||order.receipt_snapshot?.payment_method!==method||!order.receipt_snapshot?.payment_instruction)return fail("Struk dan instruksi pembayaran terbaru wajib dikonfirmasi.",409,origin);}
+    if(action==="upload-proof"){const method=safeText(body.method,30),version=Number(body.receipt_version),uploadKey=safeText(body.upload_request_id,64);if(!["bank_transfer","dlice_qris"].includes(method)||!Number.isInteger(version)||! /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadKey))return fail("Metode, versi struk, atau ID unggahan tidak valid.",422,origin);if(version!==order.receipt_version||order.receipt_confirmed_version!==version||order.receipt_snapshot?.payment_method!==method||!order.receipt_snapshot?.payment_instruction)return fail("Struk dan instruksi pembayaran terbaru wajib dikonfirmasi.",409,origin);}
     if (action === "declare-payment") {
       const { data: proofPayment, error: proofLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").not("proof_storage_path", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (proofLookupError) return fail("Status bukti pembayaran belum dapat diperiksa.", 500, origin);
       if (!proofPayment?.proof_storage_path) return fail("Unggah bukti pembayaran terlebih dahulu. Bukti wajib tersedia sebelum pembayaran dapat diverifikasi.", 422, origin);
-      if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Batas 15 menit telah lewat. Hubungi admin; jangan melakukan pembayaran baru sebelum dikonfirmasi.", 409, origin);
-      const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
-      if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
-      await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
-      await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer confirmed payment after uploading proof" });
+      const proofStateCommitted = order.payment_status === "pending_verification" &&
+        reservations.length > 0 &&
+        reservations.every((reservation) => reservation.status === "held_for_verification" && reservation.payment_declared_at !== null);
+      if (!proofStateCommitted) return fail("Status bukti dan reservasi belum konsisten. Hubungi admin untuk pemeriksaan.", 409, origin);
+      // The atomic upload RPC already commits the declaration, reservation hold,
+      // payment state, history and audit. This legacy action is read-only/idempotent.
       return json({ ok: true, message: "Bukti pembayaran sudah tercatat dan menunggu pemeriksaan admin." }, 200, origin);
     }
     if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Reservasi sudah berakhir; hubungi admin sebelum mengunggah bukti.", 409, origin);
@@ -416,19 +453,37 @@ Deno.serve(async (req: Request) => {
       "application/pdf": asciiAt(0, "%PDF-"),
     };
     if (!signatureMatches[mime]) return fail("Isi file tidak sesuai dengan format bukti yang dipilih.", 422, origin);
-    const { data: existingPending, error: pendingLookupError } = await admin.from("payment_records").select("id,proof_storage_path").eq("order_id", order.id).eq("status", "pending_verification").order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (pendingLookupError) return fail("Data pembayaran belum dapat diperiksa.", 500, origin);
     const path = `${order.id}/${crypto.randomUUID()}.${extByMime[mime]}`;
     const { error: uploadError } = await admin.storage.from("dlice-payment-proofs").upload(path, binary, { contentType: mime, upsert: false });
     if (uploadError) return fail("Unggahan bukti gagal. Coba kembali.", 500, origin);
-    const paymentValues = { method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer", amount_idr: order.product_subtotal_idr, proof_storage_path: path, receipt_version: order.receipt_version, payment_instruction_snapshot: order.receipt_snapshot.payment_instruction };
-    const { error: payError } = existingPending
-      ? await admin.from("payment_records").update(paymentValues).eq("id", existingPending.id)
-      : await admin.from("payment_records").insert({ order_id: order.id, ...paymentValues, status: "pending_verification" });
-    if (payError) return fail("Bukti tersimpan tetapi pencatatan pembayaran gagal; hubungi admin dan jangan unggah ulang dulu.", 500, origin);
-    await admin.from("order_reservations").update({ status: "held_for_verification", proof_received_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
-    await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
-    await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Payment proof uploaded; awaiting admin verification" });
+
+    const { data: proofResult, error: proofError } = await admin.rpc("submit_customer_payment_proof_atomic", {
+      p_order_id: order.id,
+      p_upload_key: safeText(body.upload_request_id, 64),
+      p_method: body.method === "dlice_qris" ? "dlice_qris" : "bank_transfer",
+      p_amount_idr: order.product_subtotal_idr,
+      p_proof_storage_path: path,
+      p_receipt_version: order.receipt_version,
+      p_payment_instruction_snapshot: order.receipt_snapshot.payment_instruction,
+    });
+
+    if (proofError || !proofResult?.ok) {
+      await admin.storage.from("dlice-payment-proofs").remove([path]);
+      const code = proofResult?.code;
+      if (code === "proof_already_pending") return fail("Bukti pembayaran sudah diterima dan sedang menunggu pemeriksaan admin.", 409, origin);
+      if (code === "reservation_expired") return fail("Batas reservasi sudah lewat. Hubungi admin untuk pemeriksaan; unggahan tidak diteruskan.", 409, origin);
+      if (code === "receipt_changed") return fail("Struk atau instruksi pembayaran berubah. Muat ulang pesanan sebelum mengunggah bukti.", 409, origin);
+      if (code === "order_payment_closed") return fail("Status pembayaran pesanan sudah ditutup dan tidak menerima bukti baru.", 409, origin);
+      if (code === "order_not_found") return fail("Pesanan tidak ditemukan.", 404, origin);
+      return fail("Bukti tidak dapat dicatat secara atomik. Silakan coba kembali.", 500, origin);
+    }
+
+    if (proofResult.idempotent_replay === true) {
+      // The original proof object is already committed; discard this retry's
+      // duplicate Storage object and return the committed result.
+      await admin.storage.from("dlice-payment-proofs").remove([path]);
+    }
+    await cleanupOrphanPaymentProofs(order.id);
     return json({ ok: true, message: "Bukti tersimpan secara privat dan menunggu verifikasi admin." }, 200, origin);
   }
 
