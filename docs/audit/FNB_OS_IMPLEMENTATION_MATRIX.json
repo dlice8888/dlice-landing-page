@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21 21:03 WIB",
+  "snapshot_at": "2026-11-21 21:18 WIB",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -4180,7 +4180,7 @@
     }
   },
   "latest_live_audit": {
-    "as_of": "2026-11-21 21:03 WIB",
+    "as_of": "2026-11-21 21:18 WIB",
     "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4569,20 +4569,20 @@
       "kds_contract": "PASS",
       "procurement_requisition": "PASS",
       "procurement_receiving": "PASS",
-      "disposable_migration_replay": "IN_PROGRESS",
-      "previous_tested_head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
-      "previous_head_assertions": 139,
-      "previous_head_pg_tap_files": 7,
+      "disposable_migration_replay": "PASS",
+      "pg_tap_files": 7,
+      "pg_tap_assertions": 139,
+      "replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844",
       "p01_p09": "NOT RUN",
-      "latest_candidate_changes": [
-        "P01/P02 fixture-scope evidence now reports resolved branch codes",
-        "P08/P09 now assert zero persisted stock-transfer rows after denied writes",
-        "Supabase sb_secret_ keys use apikey only; legacy service_role JWTs use apikey plus Authorization Bearer"
+      "test_harness_updates": [
+        "P01/P02 evidence scope correction",
+        "P08/P09 postcondition verifies zero persisted stock_transfers rows after denied write",
+        "new sb_secret_ keys use apikey only; legacy service_role JWTs use apikey plus Authorization Bearer"
       ]
     },
     "open_pr_count": 20,
     "latest_test_execution": {
-      "as_of": "2026-11-21 21:03 WIB",
+      "as_of": "2026-11-21 21:18 WIB",
       "combined_migration": {
         "branch": "audit/combined-migration-replay-20261121",
         "commit": "700c2edf2f5f1bee2e5ac4c3afaece7c60efb3e3",
@@ -4619,10 +4619,10 @@
           "kds_contract": "PASS",
           "procurement_requisition": "PASS",
           "procurement_receiving": "PASS",
-          "disposable_replay": "IN_PROGRESS",
-          "previous_tested_head": "4a6aa8ccf07e25981579a805477dffc65a13a376",
-          "previous_head_pg_tap_files": 7,
-          "previous_head_assertions": 139,
+          "disposable_replay": "PASS",
+          "pg_tap_files": 7,
+          "assertions": 139,
+          "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844",
           "p01_p09": "NOT RUN"
         },
         "127": {
