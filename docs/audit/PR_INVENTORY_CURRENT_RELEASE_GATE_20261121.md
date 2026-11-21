@@ -59,3 +59,16 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 ## Vercel free-tier preview quota checkpoint
 
 The Vercel project is on Hobby. A manual preview deployment request for the latest PR heads returned the Vercel API's free daily deployment limit (>100 deployments in one day; retry after 24 hours). No paid upgrade or CLI workaround was attempted. Existing previews for PR #122 and #126 are READY but correspond to older commits; PR #127 has no preview in the current deployment listing. Latest-head preview validation is therefore pending until the free quota resets.
+
+
+## Fresh GitHub release-protection read — 21 November 2026
+
+GitHub currently returns one active repository ruleset, **#27559290**, applied to `~ALL` branches. It has useful protections (signed commits, linear history, deletion/non-fast-forward prevention, CODEOWNERS review, last-push approval, review-thread resolution, CodeQL/high-severity scanning and code-quality errors), but it is **not a sufficient release gate**:
+- Required approving review count: **0**.
+- Required status checks: **empty**.
+- Required deployment environments/reviewers: **empty**.
+- 11 bypass actors (DeployKey, repository roles and integrations) have `bypass_mode=always`.
+- The active connection reports `current_user_can_bypass=always`.
+- Branch-protection reads for `main` and `staging` still return 403; staging environment protection settings are not readable through the current connector.
+
+Therefore independent human review and required CI/deployment checks are not enforced by this ruleset. No ruleset/branch-protection write action is exposed in the connected GitHub tools. Do not merge release PRs or treat this ruleset as a PASS until a repository administrator fixes the policy and an independent reviewer approves.
