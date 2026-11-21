@@ -8,10 +8,16 @@ const checkout = readFileSync("index.html", "utf8");
 
 test("customer proof handler uses one atomic database RPC instead of split writes", () => {
   const start = edge.indexOf('if(action==="upload-proof")');
-  const end = edge.indexOf('Bukti tersimpan secara privat dan menunggu verifikasi admin.', start);
-  assert.notEqual(start, -1, "upload-proof action exists");
+  const declaration = edge.indexOf('if (action === "declare-payment")', start);
+  const uploadStart = edge.indexOf("const path = `", declaration);
+  const end = edge.indexOf('Bukti tersimpan secara privat dan menunggu verifikasi admin.', uploadStart);
+  assert.notEqual(start, -1, "upload-proof validation guard exists");
+  assert.notEqual(declaration, -1, "payment declaration route boundary exists");
+  assert.notEqual(uploadStart, -1, "proof Storage upload path exists");
   assert.notEqual(end, -1, "upload-proof success response exists");
-  const handler = edge.slice(start, end + 100);
+  const guard = edge.slice(start, declaration);
+  const handler = edge.slice(uploadStart, end + 100);
+  assert.match(guard, /upload_request_id/);
   assert.match(handler, /submit_customer_payment_proof_atomic/);
   assert.match(handler, /p_order_id:\s*order\.id/);
   assert.match(handler, /p_upload_key:/);
