@@ -6,8 +6,9 @@ on:
       - "supabase/migrations/**"
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
+  # Replay candidate migrations on every branch push; this uses only a disposable local database.
   push:
-    branches: [staging]
+    branches: ["**"]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
