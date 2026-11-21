@@ -82,6 +82,42 @@ const consumeRateLimit = async (scope: string, key: string, limit: number, windo
   return data === true;
 };
 
+const cleanupOrphanPaymentProofs = async (orderId: string): Promise<void> => {
+  try {
+    const storage = admin.storage.from("dlice-payment-proofs");
+    const { data: objects, error: listError } = await storage.list(orderId, {
+      limit: 100,
+      sortBy: { column: "created_at", order: "asc" },
+    });
+    if (listError || !objects?.length) return;
+
+    // Never race an in-flight upload or remove an object that may still be
+    // referenced by a payment record. Only inspect files older than one hour.
+    const cutoff = Date.now() - 60 * 60 * 1000;
+    const candidates = objects
+      .filter((object) => object.id !== null && object.created_at && new Date(object.created_at).getTime() < cutoff)
+      .map((object) => `${orderId}/${object.name}`);
+    if (!candidates.length) return;
+
+    const { data: referenced, error: referenceError } = await admin
+      .from("payment_records")
+      .select("proof_storage_path")
+      .eq("order_id", orderId)
+      .in("proof_storage_path", candidates);
+    if (referenceError || !referenced) return;
+
+    const referencedPaths = new Set(referenced.map((row: { proof_storage_path: string | null }) => row.proof_storage_path));
+    const orphans = candidates.filter((path) => !referencedPaths.has(path));
+    if (orphans.length) {
+      const { error: removeError } = await storage.remove(orphans);
+      if (removeError) console.warn("Payment proof orphan cleanup failed.");
+    }
+  } catch {
+    // Cleanup is best-effort and must never turn a committed proof into a failed response.
+    console.warn("Payment proof orphan cleanup skipped.");
+  }
+};
+
 const formatTransactionCode = (orderNumber: number | string, createdAt: string, timezone = "Asia/Jakarta") => {
   const safeTimezone = SUPPORTED_BRANCH_TIMEZONES.has(timezone) ? timezone : "Asia/Jakarta";
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -446,6 +482,7 @@ Deno.serve(async (req: Request) => {
       // duplicate Storage object and return the committed result.
       await admin.storage.from("dlice-payment-proofs").remove([path]);
     }
+    await cleanupOrphanPaymentProofs(order.id);
     return json({ ok: true, message: "Bukti tersimpan secara privat dan menunggu verifikasi admin." }, 200, origin);
   }
 
