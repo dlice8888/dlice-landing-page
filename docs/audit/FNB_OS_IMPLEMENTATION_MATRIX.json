@@ -3167,8 +3167,6 @@
   "open_prs": [
     127,
     126,
-    125,
-    124,
     123,
     122,
     121,
@@ -3188,7 +3186,7 @@
     104,
     71
   ],
-  "open_pr_count": 21,
+  "open_pr_count": 20,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -3327,9 +3325,10 @@
     },
     "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
     "feature_status_counts_current": {
-      "PARTIAL": 89,
+      "PARTIAL": 92,
       "NOT VERIFIED": 91,
-      "BLOCKED": 9
+      "BLOCKED": 6,
+      "DONE": 0
     },
     "feature_updates": [
       {
@@ -3378,13 +3377,11 @@
     "pull_requests": {
       "actual_total": 125,
       "merged": 77,
-      "closed_without_merge": 26,
-      "open": 22,
+      "closed_without_merge": 28,
+      "open": 20,
       "open_pr_numbers": [
         127,
         126,
-        125,
-        124,
         123,
         122,
         121,
@@ -3403,90 +3400,7 @@
         107,
         104,
         71
-      ],
-      "pr120": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "29d6d808c2b56eb9596335805499266de4e1b4ba",
-        "purpose": "atomic permission/profile mutation audit",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "database_contract_tests": "PASS — 7 files, 107 assertions",
-        "audited_invitation_tests": "PASS — 11 assertions",
-        "kds_contract": "PASS",
-        "cors_contract": "PASS",
-        "procurement_receiving_contract": "PASS",
-        "procurement_requisition_contract": "PASS",
-        "vercel_preview": "NOT FOUND for current head",
-        "shared_staging_migration_applied": false
-      },
-      "pr121": {
-        "state": "OPEN_DRAFT",
-        "purpose": "189-feature matrix, progress standard, gap register and current PR inventory"
-      },
-      "pr122": {
-        "state": "OPEN_DRAFT",
-        "purpose": "24 covering indexes for 26 FK warnings plus removal of two redundant zero-scan prefix indexes",
-        "head_sha": "c09bd72a8559e1a5ceecdd0cbe9cf38029d102ed",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "fk_covering_indexes": 24,
-        "zero_scan_nonunique": 49,
-        "proposed_redundant_indexes_removed": 2,
-        "shared_staging_migration_applied": false,
-        "pgtap_assertions": 28,
-        "retained_zero_scan_nonunique_indexes": 47
-      },
-      "pr123": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "browser_fault_injection": "PENDING",
-        "concurrent_runtime_test": "PENDING"
-      },
-      "pr124": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "native_supabase_protection": "DISABLED",
-        "direct_auth_bypass": "UNRESOLVED"
-      },
-      "pr125": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
-        "quality": "PASS",
-        "kds_contract_tests": "PASS",
-        "disposable_migration_replay": "PASS",
-        "shared_staging_migration_applied": false,
-        "cron_activated": false
-      },
-      "pr126": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
-        "purpose": "tenant RLS contract + onboarding + invite lifecycle",
-        "latest_quality": "PASS",
-        "latest_disposable_migration_replay": "PASS",
-        "latest_kds_contract": "PASS",
-        "latest_cors_contract": "PASS",
-        "latest_procurement_contracts": "PASS",
-        "invitation_pgtap_assertions": 15,
-        "real_tenant_ab_runtime": "NOT RUN",
-        "shared_staging_mutation": false
-      },
-      "pr127": {
-        "state": "OPEN_DRAFT",
-        "head_sha": "b3cdd8eb0d0445b04ed9a1f3e75e4401c548f7a7",
-        "purpose": "atomic customer proof upload, order expiry, payment attempt supersession",
-        "previous_quality": "PASS on 195efa349278895516c8d8a869e87ff45eda012a",
-        "current_quality": "IN_PROGRESS",
-        "previous_contract_jobs": "CORS, KDS, procurement receiving and requisition PASS on 195efa34",
-        "current_disposable_replay": "IN_PROGRESS",
-        "new_migration": "20261121180000_supersede_stale_payment_attempts.sql",
-        "new_pgtap_assertions": 14,
-        "proof_bearing_attempts_preserved": true,
-        "shared_staging_migration_applied": false
-      }
+      ]
     },
     "supabase_live_read_only": {
       "project_id": "higoadrzxnhzbbwhdbmh",
@@ -3839,8 +3753,6 @@
   "current_open_prs": [
     127,
     126,
-    125,
-    124,
     123,
     122,
     121,
@@ -4024,8 +3936,8 @@
   "latest_pr_inventory": {
     "actual_prs": 125,
     "merged": 77,
-    "closed_without_merge": 27,
-    "open": 21
+    "closed_without_merge": 28,
+    "open": 20
   },
   "feature_status_counts_current": {
     "PARTIAL": 92,
@@ -4445,35 +4357,38 @@
       "fixture_resolution": "Two distinct existing Supabase Auth identities, two distinct active tenant memberships, active profiles and branch assignments verified read-only. Tenant A has two active assignments within Tenant A; Tenant B has one. Both last signed in 2026-10-25; current real login has not been proven. No password, Auth metadata, membership or assignment was changed."
     },
     "pull_requests": {
-      "all_open_draft_unmerged": [
-        120,
-        123,
-        125,
+      "open_unmerged": [
+        127,
         126,
-        127
+        123,
+        122,
+        121,
+        120,
+        119,
+        118,
+        117,
+        116,
+        115,
+        114,
+        113,
+        112,
+        111,
+        109,
+        108,
+        107,
+        104,
+        71
       ],
       "closed_superseded": [
-        124
+        124,
+        125
       ],
-      "all_mergeable": true,
-      "exact_head_ci": "PR #120, #123, #125, #126 and #127 exact heads pass all applicable recorded CI/disposable-replay workflows; PR #124 is closed as superseded by #120.",
+      "all_mergeable": false,
+      "exact_head_ci": "PR #120, #123, #126 and #127 pass applicable exact-head CI/disposable replay; #124 is closed as superseded by #120; #125 is closed as superseded by #127.",
       "runtime_acceptance": "P01-P09 and business E2E flows not run"
     },
     "migration_candidate_conflicts": {
-      "same_version_different_sql": [
-        {
-          "version": "20261121130000",
-          "pr": 123,
-          "file": "20261121130000_atomic_online_order_idempotency.sql",
-          "blob_sha": "71845d67ccae7617b99bd903468ab27264da77d3"
-        },
-        {
-          "version": "20261121130000",
-          "pr": 126,
-          "file": "20261121130000_atomic_tenant_invite_lifecycle.sql",
-          "blob_sha": "21b7c49cfd5e48215aa9f332b1ddab8470e9e7"
-        }
-      ],
+      "same_version_different_sql": [],
       "identical_duplicate_source": [
         {
           "version": "20261121140000",
@@ -4482,26 +4397,36 @@
             127
           ],
           "file": "20261121140000_order_expiry_payment_lifecycle.sql",
-          "blob_sha": "c1d1de05b61055a0003a889d70b5e41a298caffd"
+          "blob_sha": "c1d1de05b61055a0003a889d70b5e41a298caffd",
+          "status": "same blob; #125 closed superseded by #127"
         }
       ],
-      "other_pr_migrations": [
+      "closed_duplicate_source": [
         {
-          "pr": 120,
-          "files": [
-            "20261121100000_atomic_admin_permission_audit.sql",
-            "20261121160000_atomic_admin_profile_mutation_audit.sql"
-          ]
-        },
-        {
-          "pr": 127,
-          "files": [
-            "20261121150000_atomic_customer_payment_proof.sql",
-            "20261121180000_supersede_stale_payment_attempts.sql"
-          ]
+          "version": "20261121100000",
+          "prs": [
+            120,
+            124
+          ],
+          "file": "20261121100000_atomic_admin_permission_audit.sql",
+          "blob_sha": "947419c220a5f1e2d9160026a9862709c03fcb1b",
+          "status": "same blob; #124 closed superseded by #120"
         }
       ],
-      "invitation_overlap": "PR #120 and #126 both modify tenant invite issue/accept paths; #120 uses dlice_create_tenant_invite_audited and a two-argument dlice_accept_tenant_invite_atomic overload, while #126 uses dlice_create_tenant_invite_atomic and a three-argument dlice_accept_tenant_invite_atomic overload. Reconcile to one canonical path before merge."
+      "pr_migration_versions": {
+        "120": [
+          "20261121100000_atomic_admin_permission_audit.sql",
+          "20261121160000_atomic_admin_profile_mutation_audit.sql"
+        ],
+        "123": "20261121135000_atomic_online_order_idempotency.sql",
+        "126": "20261121130000_atomic_tenant_invite_lifecycle.sql",
+        "127": [
+          "20261121140000_order_expiry_payment_lifecycle.sql",
+          "20261121150000_atomic_customer_payment_proof.sql",
+          "20261121180000_supersede_stale_payment_attempts.sql"
+        ]
+      },
+      "invitation_overlap": "PR #120 and #126 both modify tenant invite issue/accept paths. The current #120 candidate uses dlice_create_tenant_invite_audited and a two-argument dlice_accept_tenant_invite_atomic overload; #126 uses dlice_create_tenant_invite_atomic and a three-argument overload. A single canonical invitation RPC path must be selected and regression-tested before integration."
     },
     "github_release_protection": {
       "active_ruleset_id": 27559290,
@@ -4514,17 +4439,18 @@
       "bypass_actors": 11,
       "current_connection_can_bypass": "always",
       "branch_protection_read": "403; unavailable",
-      "policy_note": "Project acceptance policy no longer requires separate PR review; repository ruleset still has CODEOWNERS and last-push approval controls enabled and cannot be edited through current connector."
+      "policy_note": "Project acceptance is test-evidence-only; no separate independent PR approval is an acceptance metric. Active GitHub ruleset still enforces CODEOWNERS and last-push approval controls and cannot be edited through current connector."
     },
     "vercel": {
       "project": "dlice-landing-page",
       "latest_deployment_state": "READY",
       "sso_protection": true,
-      "exact_current_head_previews_for_prs_120_123_125_126_127": "not verified / none found",
-      "pr127_error": "api-deployments-free-per-day (>100 deployments/day)",
+      "pr126_latest_preview_sha": "1bd648704172fecb2885b62fb3c51b7720da469c",
+      "pr126_current_head_sha": "bb008c55a4d98afe5264b4ccde4f28f129bc162",
+      "pr126_preview_matches_current_head": false,
       "production_mutated": false
     },
-    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection and explicit mutation/release authorization remain separate controls.",
+    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection, secret presence, explicit mutation authorization and backup/rollback remain separate controls.",
     "staging_environment_verification": {
       "environment_protection": "NOT VERIFIED through available GitHub connector",
       "service_role_secret_presence": "NOT VERIFIED; value not read or exposed",
@@ -4534,11 +4460,6 @@
       "target_branch": "feat/permission-change-atomic-audit-20261121",
       "current_head": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
       "pr124_state": "CLOSED_SUPERSEDED_BY_PR120",
-      "changes": [
-        "Atomic audited RPCs for permission changes, staff profile creation, role and active-state mutations.",
-        "PR #124's HIBP k-anonymity guard, unit tests and source contract are consolidated into #120.",
-        "Password reset now persists a service-role-only audit intent before Supabase Auth Admin update, then finalizes success/failure; unresolved finalization leaves a durable pending event for reconciliation."
-      ],
       "ci": {
         "quality": "PASS",
         "kds_contract": "PASS",
@@ -4546,16 +4467,67 @@
         "procurement_requisition_contract": "PASS",
         "procurement_receiving_contract": "PASS",
         "disposable_migration_replay": "PASS",
-        "password_guard_unit_tests": "PASS",
-        "password_guard_contract": "PASS",
-        "admin_permission_audit_contract": "PASS",
-        "profile_mutation_pgtap_plan": 35
+        "database_contract_tests": "PASS — 7 files / 124 assertions"
       },
       "remaining": [
-        "No real staging mutation-path runtime test yet.",
-        "Native Supabase leaked-password protection remains disabled; direct Auth password changes can bypass the application guard.",
-        "Cross-service Auth/Postgres operation is tracked with a durable intent/outcome saga, not a single distributed transaction."
+        "Real staging mutation-path runtime tests not run.",
+        "Supabase native leaked-password protection remains disabled; direct Auth API password mutation can bypass the application guard.",
+        "Auth Admin and Postgres audit are tracked by durable intent/outcome; they are not a single distributed transaction."
       ]
+    },
+    "order_lifecycle_prs": {
+      "pr123": {
+        "head": "6788c4d7da34144d279da06edea84f6d0763b796",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "contracts": "PASS",
+        "runtime_retry_concurrency_and_late_webhook_e2e": "NOT RUN",
+        "migration_version": "20261121135000"
+      },
+      "pr125": {
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "CLOSED_SUPERSEDED_BY_PR127",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "expiry_worker_runtime": "NOT RUN"
+      },
+      "pr127": {
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "cors_kds_procurement_contracts": "PASS",
+        "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
+      }
+    },
+    "pr120": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "quality": "PASS",
+      "disposable_migration_replay": "PASS",
+      "database_contract_tests": "PASS — 7 files / 124 assertions",
+      "staging_runtime": "NOT RUN"
+    },
+    "pr126": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "bb008c55a4d98afe5264b4ccde4f28f129fbde85",
+      "quality": "PASS",
+      "disposable_migration_replay": "PASS — 7 files / 134 assertions",
+      "tenant_rls_assertions": 35,
+      "onboarding_assertions": 17,
+      "invitation_assertions": 15,
+      "p01_p09_runtime": "NOT RUN",
+      "release_flag": false
+    }
+  },
+  "latest_reaudit": {
+    "feature_distribution": {
+      "PARTIAL": 92,
+      "NOT VERIFIED": 91,
+      "BLOCKED": 6,
+      "DONE": 0,
+      "TOTAL": 189
     }
   }
 }
