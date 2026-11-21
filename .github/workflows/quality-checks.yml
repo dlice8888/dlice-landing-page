@@ -69,7 +69,7 @@ jobs:
         run: node --test tests/contracts/public-tenant-routing-gate-contract.test.mjs
       - name: Verify recovered migration source
         run: node --test tests/contracts/migration-source-recovery-contract.test.mjs
-      - name: Validate migration sources and release documentation
+      - name: Validate migration and documentation coverage
         shell: bash
         env:
           BASE_REF: ${{ github.base_ref }}
