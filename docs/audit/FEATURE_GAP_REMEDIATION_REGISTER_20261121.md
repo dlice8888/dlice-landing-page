@@ -355,3 +355,19 @@ Use `docs/audit/FEATURE_PROGRESS_SCORING_STANDARD_20261121.md`: code/UI 20%, dat
 
 ## Final completion gate
 Every feature must have 100% weighted acceptance evidence, code review, database/RLS/authorization proof, positive + negative + failure/retry workflow tests, browser/API evidence where applicable, operational reconciliation, observability, and no BLOCKED/SKIPPED results. Only then may its audit status become DONE. Shared staging migration/deployment, merge and reconciliation remain a separate final release stage.
+
+## Additional 21-November order/payment runtime evidence
+
+A read-only staging aggregate query found:
+- 7 legacy orders created on 2026-10-17: 3 paid, 3 unpaid, 1 pending_verification.
+- All 7 remain operational_status=received and fulfillment_status=unassigned.
+- 9 reservation rows remain active despite expires_at being in the past; these belong to unpaid orders.
+- 3 held_for_verification reservation rows also have past expires_at timestamps; they remain held while proof is pending.
+- 6 payment records: 3 paid with proof; 1 pending-with-proof on the pending order; 2 pending-without-proof on already-paid orders.
+- Only existing pg_cron job is dlice-operational-retention at 03:17 daily. No online-order expiry worker exists.
+
+No live business data was changed.
+
+**Required remediation now tracked in PR #125:** install a one-minute expiry worker; fail unpaid orders only when no proof/held reservation exists; mark reservations expired; set fulfillment failed and operational cancelled; close no-proof pending attempts on expired/paid orders; retain proof-bearing attempts for manual double-payment/refund review; extend payment rejection to release reservations and close the order; add audit/status history and supporting partial indexes.
+
+**Still open after PR #125:** atomic customer proof-upload/declaration RPC (the current Edge Function performs multiple DB writes), race/fault-injection around payment proof upload vs expiry, and manual reconciliation of the seven legacy orders. The 2 proof-bearing or pending records requiring review must not be auto-rejected.
