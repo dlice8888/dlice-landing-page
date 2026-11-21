@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout reviewed commit
+      - name: Checkout exact candidate commit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
@@ -31,6 +31,8 @@ jobs:
         run: node scripts/staging-release-contract-tests.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
+      - name: Verify atomic tenant invite lifecycle contract
+        run: node --test tests/contracts/tenant-invite-atomic-contract.test.mjs
       - name: Run tenant refund authorization contract tests
         run: node --test tests/contracts/tenant-refund-scope-contract.test.mjs
       - name: Run service-role tenant-scope contract tests
@@ -41,10 +43,16 @@ jobs:
           deno-version: v2.9.8
       - name: Run tenant permission unit tests
         run: deno test supabase/functions/dlice-orders/tenant-permissions_test.ts
+      - name: Run breached-password guard unit tests
+        run: deno test supabase/functions/dlice-orders/password-security_test.ts
+      - name: Verify leaked-password guard on Auth flows
+        run: node --test tests/contracts/leaked-password-guard-contract.test.mjs
       - name: Run ERP command-center contract tests
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Run atomic admin permission audit contract tests
+        run: node --test tests/contracts/admin-permission-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
       - name: Verify tenant worker profile role boundary
@@ -63,7 +71,7 @@ jobs:
         run: node --test tests/contracts/public-tenant-routing-gate-contract.test.mjs
       - name: Verify recovered migration source
         run: node --test tests/contracts/migration-source-recovery-contract.test.mjs
-      - name: Require migration and documentation review
+      - name: Validate migration and documentation coverage
         shell: bash
         env:
           BASE_REF: ${{ github.base_ref }}
