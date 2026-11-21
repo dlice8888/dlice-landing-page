@@ -7,7 +7,7 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 - `work_status=IN_PROGRESS` is assigned only when a concrete code/database/workflow change exists and is linked to an active PR.
 - A `NOT VERIFIED` feature moves to `PARTIAL` only after implementation evidence exists; no status is changed merely by opening an issue or writing a plan.
 - `BLOCKED` remains a release gate until its external/platform/authorization dependency is resolved. Partial implementation does not erase the gate.
-- Progress percentages are not guessed. Score each feature only after its acceptance criteria are decomposed and evidence is linked. DONE requires 100%, code + DB + auth + workflow tests, reconciliation, no BLOCKED/SKIPPED, and independent review.
+- Progress percentages are not guessed. Score each feature only after its acceptance criteria are decomposed and evidence is linked. DONE requires 100%, code + DB + auth + workflow tests, reconciliation, and no BLOCKED/SKIPPED.
 
 ## Implementation priority
 1. Security/access: feature 8 (permission-change audit) and feature 9 (leaked-password protection).
@@ -825,7 +825,7 @@ Only two PARTIAL features currently have defensible numeric progress scores: Ten
 | #125 | `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d` | OPEN / DRAFT | Quality, KDS contract and disposable replay PASS | Expiry worker not installed; live expiry/compensation/reconciliation E2E NOT RUN |
 | #127 | `5c597c2ec37a130501ed19591cfc9383396ba1b6` | OPEN / DRAFT | Quality, atomic proof contract, CORS, KDS, procurement contracts and disposable replay PASS | Payment proof retry, expiry and supersession E2E NOT RUN; Vercel preview blocked by daily deployment limit; no review |
 
-All six PRs remain OPEN/DRAFT, unmerged, mergeable and without submitted independent reviews. Green CI and disposable replay do not equal staging runtime acceptance or release approval.
+All six PRs remain OPEN/DRAFT and unmerged. Green CI and disposable replay do not equal staging runtime acceptance or release approval.
 
 ### Supabase identity-only authentication
 
