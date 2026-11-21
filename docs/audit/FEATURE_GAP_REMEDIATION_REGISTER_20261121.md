@@ -20,12 +20,12 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 ## Baseline reconciliation
 | Audit status | Count | Meaning |
 |---|---:|---|
-| PARTIAL | 84 | Code/schema/UI foundation exists; acceptance gaps remain; one SaaS tenant-isolation feature newly moved from NOT VERIFIED after implementation started |
+| PARTIAL | 84 | Code/schema/UI foundation exists; acceptance gaps remain; two SaaS Tenant Management features newly moved from NOT VERIFIED after implementation started |
 | NOT VERIFIED | 96 | Insufficient implementation evidence; highest backlog priority |
 | BLOCKED | 9 | Release or external gate prevents acceptance |
 | **Total** | **189** | **18 domains** |
 
-Latest snapshot after PR #126 began concrete implementation: **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**. Only the feature “Tenant/member isolation in database and APIs” changed from NOT VERIFIED to PARTIAL; all other baseline statuses are unchanged.
+Latest snapshot after PR #126 began concrete implementation: **84 PARTIAL + 96 NOT VERIFIED + 9 BLOCKED = 189**. Two features changed from NOT VERIFIED to PARTIAL: “Tenant/member isolation in database and APIs” and “Tenant directory, tenant onboarding”; all other baseline statuses are unchanged.
 
 Note: domain rows sum to 98 NOT VERIFIED. The supplied total row's 93 is a summation error; the per-domain rows are the baseline source.
 
