@@ -96,16 +96,27 @@ Deno.test("inactive memberships cannot contribute permissions", () => {
   }
 });
 
-Deno.test("admin and ERP routes are tenant-sensitive by default until certified", () => {
+Deno.test("only the narrow tenant-scoped P01-P09 probe surface is available before release", () => {
   const protectedActions = [
     "admin-list-orders",
     "admin-set-permissions",
     "erp-create-pos-sale",
     "erp-list-finance",
     "erp-accept-tenant-invite",
+    "erp-stock-movement",
+    "erp-save-inventory",
   ];
   if (protectedActions.some((action) => !isTenantSensitiveAction(action))) {
-    throw new Error("Every admin/ERP route must be tenant-sensitive by default");
+    throw new Error("Uncertified admin/ERP routes must remain tenant-sensitive");
+  }
+  const scopedAcceptanceActions = [
+    "erp-list-tenant-memberships",
+    "erp-list-branches",
+    "erp-list-inventory",
+    "erp-create-stock-transfer",
+  ];
+  if (scopedAcceptanceActions.some((action) => isTenantSensitiveAction(action))) {
+    throw new Error("Only the four branch/tenant-scoped P01-P09 probes may pass the pre-release gate");
   }
   const exemptActions = ["admin-login", "admin-session-info", "track-order"];
   if (exemptActions.some((action) => isTenantSensitiveAction(action))) {
