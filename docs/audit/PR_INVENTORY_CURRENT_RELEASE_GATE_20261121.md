@@ -14,8 +14,8 @@ The previous 20-November inventory recorded 112 PRs and 9 open. Six additional o
 
 | PR | Base | Draft | Mergeable | Scope / disposition |
 |---:|---|---|---|---|
-| #127 | staging | Yes | Yes | Atomic proof submission + expiry + payment-attempt supersession; 14 new pgTAP assertions; exact-head quality/CORS/KDS/procurement contracts PASS on 195efa34; current b3cdd8eb migration replay IN_PROGRESS; proof-bearing sibling attempts preserved; browser concurrency and global Storage orphan sweeper remain |
-| #126 | staging | Yes | Yes | SaaS tenant/member isolation + onboarding + invitation lifecycle; 35 RLS, 17 onboarding and 15 invitation pgTAP assertions; exact-head quality, disposable replay, KDS, CORS and procurement contracts PASS; real Tenant A/B runtime remains unproven |
+| #127 | staging | Yes | Yes | Atomic proof submission + expiry + payment-attempt supersession; 14 pgTAP assertions; exact-head quality, disposable migration replay, CORS, KDS and procurement contracts PASS on 5c597c2e; proof-bearing sibling attempts preserved; browser concurrency and global Storage orphan sweeper remain |
+| #126 | staging | Yes | Yes | SaaS tenant/member isolation + onboarding + invitation lifecycle; 35 RLS, 17 onboarding and 15 invitation pgTAP assertions; exact-head quality, disposable replay, KDS, CORS and procurement contracts PASS; real Tenant A/B API runtime remains unproven because existing Auth passwords cannot be retrieved |
 | #125 | staging | Yes | Yes | Unpaid + unproven pending-payment expiry, rejected-payment compensation, stale no-proof payment cleanup and one-minute pg_cron worker; 27 pgTAP assertions; exact-head free quality, KDS and disposable migration replay PASS |
 | #124 | staging | Yes | Yes | Free application-layer k-anonymity breached-password guard; quality and disposable replay PASS; Supabase native leaked-password protection remains DISABLED and direct Auth bypass remains unresolved |
 | #123 | staging | Yes | Yes | Online checkout idempotency with stable key, fingerprint and atomic replay ledger; quality and disposable migration replay pass (74 pgTAP assertions); browser fault injection/concurrent runtime pending |
@@ -80,3 +80,15 @@ GitHub currently returns one active repository ruleset, **#27559290**, applied t
 - Branch-protection reads for `main` and `staging` still return 403; staging environment protection settings are not readable through the current connector.
 
 Therefore independent human review and required CI/deployment checks are not enforced by this ruleset. No ruleset/branch-protection write action is exposed in the connected GitHub tools. Do not merge release PRs or treat this ruleset as a PASS until a repository administrator fixes the policy and an independent reviewer approves.
+
+
+## Supabase existing-identity and latest exact-head verification — 21 November 2026
+
+- Four existing Auth identities were found in Supabase staging. The active Owner identity belongs to `dlice-default`; the active QA Branch A identity belongs to `dlice-qa-isolation-b`. The existing identities are retained; no Auth account, password, membership or app metadata was changed.
+- Supabase Auth stores password hashes; the current connected Supabase actions expose no Auth Admin generate-link or session-mint operation. Therefore the existing accounts cannot be used for password login from this connected workflow without a valid credential or an authorized passwordless-session mechanism. No secret values were read.
+- Direct-client RLS is intentionally deny-by-default on `branches`, `tenants` and `tenant_memberships`. Authenticated-role SQL probes confirmed zero direct-client rows for both existing identities, as expected under the explicit `deny_direct_client_access` policies. This is a direct-client boundary test only; it is not evidence of successful Tenant A/B isolation through the service-role Edge Function/API.
+- PR #126 exact head `a36636974a625e4a56e84e6c61fcce3d2b7a95d8`: full disposable migration replay PASS; 15 invitation pgTAP assertions PASS; quality, CORS, KDS and procurement contracts PASS. Actual Tenant A/B API own-read/write and cross-tenant negative probes remain NOT RUN.
+- PR #127 exact head `5c597c2ec37a130501ed19591cfc9383396ba1b6`: full disposable migration replay PASS; quality, CORS, KDS and procurement contracts PASS; 14 payment-attempt supersession assertions included. Browser concurrency and global Storage orphan cleanup remain open.
+- Vercel project `dlice-landing-page` is present. PR #126 preview is READY on its exact head. No preview deployment was found for PR #127's current head.
+- Supabase staging migration drift remains 52 repository migration files versus 49 applied migrations. The three outstanding source migrations remain `20261120100000`, `20261120110000`, and `20261120120000`. No shared staging migration was applied.
+- Security Advisor: native leaked-password protection DISABLED. Performance Advisor: 26 unindexed foreign keys and 49 unused indexes. Health Advisor: no findings.
