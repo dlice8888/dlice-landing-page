@@ -27,7 +27,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 32
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Live sales monitor (day/week/month)",
@@ -38,7 +39,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 33
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch ranking, region/format comparison",
@@ -60,7 +62,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 35
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Critical stock, expiry, waste alerts",
@@ -93,7 +96,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 38
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Target vs actual and executive reports",
@@ -150,7 +154,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 46
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cart, product selection, quantity updates",
@@ -161,7 +166,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 47
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Dine-in, takeaway, pickup, delivery parity",
@@ -172,7 +178,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 48
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Variants, toppings, special instructions",
@@ -205,7 +212,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 51
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
@@ -238,7 +246,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 54
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Receipt printing/digital receipt",
@@ -260,7 +269,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 56
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Offline sales queue and safe resynchronization",
@@ -282,7 +292,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 58
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -306,7 +317,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 63
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "WhatsApp, marketplace, additional channels",
@@ -328,7 +340,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 65
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch assignment by area/capacity",
@@ -339,7 +352,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 66
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Unique business order number",
@@ -350,7 +364,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 67
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consistent status/timeline across channels",
@@ -361,7 +376,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 68
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Duplicate orders, delayed payment, failed order handling",
@@ -399,7 +415,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 71
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Customer notifications on each state",
@@ -410,7 +427,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 72
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -436,7 +454,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
-          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
@@ -460,7 +479,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
-          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
@@ -471,7 +491,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 80
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipes, portion/yield and waste tolerance",
@@ -482,7 +503,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 81
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Prep lists and batch planning",
@@ -493,7 +515,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 82
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Actual material consumption",
@@ -504,7 +527,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 83
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "QC, temperature, shelf life and spoilage",
@@ -526,7 +550,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 85
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Theoretical vs actual usage / waste variance",
@@ -561,7 +586,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 91
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Per-branch availability",
@@ -572,7 +598,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 92
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Central, regional and branch-specific pricing",
@@ -585,7 +612,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
-          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
@@ -596,7 +624,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 94
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Nested BOM, unit conversions, yield and prep loss",
@@ -618,7 +647,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 96
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cost per serving and contribution margin",
@@ -651,7 +681,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 99
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipe change request → costing → approval → rollout",
@@ -662,7 +693,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 100
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "POS/production uses the same approved recipe version",
@@ -697,7 +729,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 106
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock movement ledger",
@@ -708,7 +741,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 107
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Warehouse/storage/bin hierarchy",
@@ -721,7 +755,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
-          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Purchase/use units and conversions",
@@ -732,7 +767,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 109
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "FIFO/FEFO, lot/batch and expiry",
@@ -754,7 +790,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 111
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Min/max, safety stock and reorder point",
@@ -767,7 +804,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
-          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence."
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
@@ -778,7 +816,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 113
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock count/cycle count and variance adjustment",
@@ -789,7 +828,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 114
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock valuation",
@@ -811,7 +851,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 116
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "PO receipt → stock ledger → balance reconciliation",
@@ -822,7 +863,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 117
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -846,7 +888,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 122
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Supplier price lists, contracts and price history",
@@ -868,7 +911,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 124
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consolidated demand across branches",
@@ -890,7 +934,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 126
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Approval limits by value/category",
@@ -901,7 +946,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 127
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Goods received note and quantity/quality inspection",
@@ -912,7 +958,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 128
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Three-way match: PO, receipt, supplier invoice",
@@ -969,7 +1016,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 136
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Opening and closing checklists",
@@ -980,7 +1028,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 137
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Opening readiness changes branch operating status",
@@ -1013,7 +1062,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 140
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cleanliness, equipment and safety checks",
@@ -1024,7 +1074,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 141
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Photo evidence",
@@ -1092,7 +1143,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 150
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Address validation and delivery quote",
@@ -1169,7 +1221,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 157
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1193,7 +1246,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 162
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consent and communication preferences",
@@ -1305,7 +1359,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 175
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cash/bank, settlement creation and matching",
@@ -1316,7 +1371,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 176
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Payment provider fee and settlement variance",
@@ -1349,7 +1405,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 179
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Automated journals from POS/procurement/payroll",
@@ -1371,7 +1428,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 181
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Tax and invoicing",
@@ -1382,7 +1440,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 182
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Budgets and branch P&L",
@@ -1415,7 +1474,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 185
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Revenue vs cash received/settlement distinction",
@@ -1426,7 +1486,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 186
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1461,7 +1522,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 192
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Attendance and timesheets",
@@ -1562,7 +1624,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 204
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Franchise directory/application",
@@ -1595,7 +1658,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 207
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Agreements and contract expiry",
@@ -1663,7 +1727,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 216
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Official KPI dictionary and versioning",
@@ -1685,7 +1750,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 218
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Food cost %, labor cost %, waste %",
@@ -1707,7 +1773,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 220
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch benchmarking by comparable cohorts",
@@ -1786,7 +1853,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 230
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch assignments and scope enforcement",
@@ -1797,7 +1865,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 231
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
@@ -1819,7 +1888,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 233
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Delegated approval policies and separation of duties",
@@ -1830,7 +1900,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 234
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Sessions/devices and access reviews",
@@ -1863,7 +1934,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 237
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cross-tenant isolation",
@@ -1951,7 +2023,8 @@
             "total_weight": 100,
             "earned_total": 30,
             "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
-          }
+          },
+          "progress_status": "SCORED_PROVISIONAL"
         },
         {
           "requirement": "Tenant/member isolation in database and APIs",
@@ -2002,7 +2075,8 @@
             "total_weight": 100,
             "earned_total": 38,
             "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
-          }
+          },
+          "progress_status": "SCORED_PROVISIONAL"
         },
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
@@ -2092,7 +2166,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 256
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Payment provider callback signature and status validation",
@@ -2125,7 +2200,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 259
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Idempotency and replay protection",
@@ -2136,7 +2212,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 260
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Retry/backoff/dead-letter queue",
@@ -2147,7 +2224,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 261
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Integration health and alerting",
@@ -2169,7 +2247,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 263
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Import/export and catalog synchronization",
@@ -2204,7 +2283,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 269
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Direct access to internal stock/procurement/audit data",
@@ -2215,7 +2295,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 270
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Exact-origin CORS",
@@ -2237,7 +2318,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 272
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Leaked-password protection",
@@ -2299,7 +2381,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 277
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Load/concurrency test for 150 branches",
@@ -2343,7 +2426,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 284
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Procure-to-Pay",
@@ -2354,7 +2438,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 285
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Forecast-to-Production",
@@ -2365,7 +2450,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 286
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Record-to-Report",
@@ -2376,7 +2462,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 287
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock transfer and count",
@@ -2387,7 +2474,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 288
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Authentication and permissions",
@@ -2398,7 +2486,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 289
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Responsive UX and accessibility",
@@ -3917,5 +4006,20 @@
       "current_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED"
     }
-  ]
+  ],
+  "progress_scoring": {
+    "meaning": "progress_percent measures implementation completeness of a PARTIAL feature, not release readiness or acceptance PASS",
+    "weights": {
+      "code_and_ui": 25,
+      "database_and_data_integrity": 20,
+      "authorization_and_tenant_scope": 15,
+      "automated_tests": 15,
+      "workflow_e2e": 15,
+      "reconciliation_and_observability": 10
+    },
+    "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
+    "scored_partial_features": 2,
+    "unscored_partial_features": 87,
+    "status": "INCOMPLETE; do not invent percentages for features whose evidence has not been decomposed"
+  }
 }
