@@ -2439,10 +2439,92 @@
     "release_protection": {
       "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
       "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
-      "required_status_checks": "NOT VERIFIED",
+      "required_status_checks": [],
       "independent_review_policy": "USER WAIVES EXTRA INDEPENDENT REVIEW AS AN AUDIT PREREQUISITE; actual active GitHub rules still apply",
       "staging_deployment_reviewers": "NOT VERIFIED",
-      "admin_mutation_available_via_current_connector": false
+      "admin_mutation_available_via_current_connector": false,
+      "github_ruleset_id": 27559290,
+      "github_ruleset_enforcement": "ACTIVE",
+      "github_ruleset_applies_to": "~ALL branches",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_review_thread_resolution": true,
+      "required_deployment_environments": [],
+      "required_signatures": true,
+      "required_linear_history": true,
+      "prevent_deletion": true,
+      "prevent_non_fast_forward": true,
+      "code_scanning_threshold": "high_or_higher; alerts=errors",
+      "code_quality_threshold": "errors",
+      "code_coverage_minimum": null,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "bypass_actors": [
+        {
+          "type": "DeployKey",
+          "id": null,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 2,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 4,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 5,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 8329,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 656270,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 946600,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1143301,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1144995,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4229212,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4518051,
+          "mode": "always"
+        }
+      ],
+      "current_connection_can_bypass": "always",
+      "branch_protection_main": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "branch_protection_staging": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "staging_environment_protection": "NOT_READABLE_WITH_CURRENT_CONNECTOR",
+      "release_gate": "FAIL: no required human approval, no required status checks/deployment reviewers, always-bypass actors"
     },
     "tenant_acceptance": {
       "workflow": "manual-dispatch-only on staging after #110 change",
@@ -3027,7 +3109,90 @@
       "supabase_owner_auth_admin_mutation": "NOT_AVAILABLE_IN_CONNECTED_SUPABASE_ACTIONS",
       "vercel_sso_protection": "ENABLED_ALL_EXCEPT_CUSTOM_DOMAINS",
       "vercel_password_protection": "DISABLED",
-      "vercel_trusted_ips": "DISABLED"
+      "vercel_trusted_ips": "DISABLED",
+      "github_ruleset_id": 27559290,
+      "github_ruleset_enforcement": "ACTIVE",
+      "github_ruleset_applies_to": "~ALL branches",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_review_thread_resolution": true,
+      "required_status_checks": [],
+      "required_deployment_environments": [],
+      "required_signatures": true,
+      "required_linear_history": true,
+      "prevent_deletion": true,
+      "prevent_non_fast_forward": true,
+      "code_scanning_threshold": "high_or_higher; alerts=errors",
+      "code_quality_threshold": "errors",
+      "code_coverage_minimum": null,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "bypass_actors": [
+        {
+          "type": "DeployKey",
+          "id": null,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 2,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 4,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 5,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 8329,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 656270,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 946600,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1143301,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1144995,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4229212,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4518051,
+          "mode": "always"
+        }
+      ],
+      "current_connection_can_bypass": "always",
+      "branch_protection_main": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "branch_protection_staging": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "staging_environment_protection": "NOT_READABLE_WITH_CURRENT_CONNECTOR",
+      "release_gate": "FAIL: no required human approval, no required status checks/deployment reviewers, always-bypass actors"
     },
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -3093,7 +3258,7 @@
     "source_snapshot": "2026-11-20 on docs/pr-history-inventory-20261120 (PR #108)",
     "target_branch_at_audit": "staging",
     "target_branch_sha": "78f929dac2b05f436aaa7f50005310166f8a4779",
-    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 21 open PRs (#126, #125, #124, #123, #122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #125 adds order reservation expiry/payment compensation; its exact-head free quality checks, KDS contract tests and disposable migration replay passed, including 27 pgTAP assertions. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, and disposable replay passed. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending. The 49 Advisor unused-index findings were inspected: catalog query confirms 49 zero-scan non-unique secondary indexes across 30 tables, combined 488 kB; primary/unique indexes are excluded. None were dropped. Full index inventory and safe-removal gate are in docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md. PR #126 begins work on one NOT VERIFIED SaaS Tenant Management feature by contract-testing the existing direct-client RLS boundary; quality checks pass and disposable migration replay is running. No audit status is changed until the database test passes. PR #126 starts the previously NOT VERIFIED SaaS tenant/member isolation feature: it adds 35 RLS contract assertions and a fail-closed default-deny for all admin/ERP API actions while tenant isolation is unreleased. This moves exactly one feature to PARTIAL (18% weighted work progress); tenant A/B runtime remains untested and the release flag stays false. PR #127 adds atomic customer proof-upload submission; quality and KDS pass, disposable migration replay is running. PR #122 now proposes removal of two exact-prefix redundant zero-scan indexes; 47 other zero-scan non-unique indexes remain retained pending representative workload evidence. Open PR inventory is now 22 (125 total PRs). Latest PR #126 exact-head quality workflow passed all steps (including Deno tenant-permission tests); exact-head disposable migration replay is still running. Its weighted work progress is now 20% (0 code/UI + 10 DB + 0 positive authorization + 10 automated tests + 0 E2E + 0 ops). PR #127 adds four source-contract tests and best-effort per-order orphan cleanup; exact-head quality and replay are running. Vercel preview creation hit the Hobby/free API deployment daily limit (>100/day); no plan upgrade or paid fallback is being used. PR #126 exact-head quality and disposable migration replay are now both PASS; this confirms the direct-client RLS contract suite and default-deny API barrier tests on its latest head, but does not replace real Tenant A/B API/Storage/cache/job probes. PR #127 exact-head disposable migration replay now PASS; quality checks including four new source-contract tests remain queued/running. The 15 pgTAP assertions and migration chain replayed successfully in the disposable local database. PR #126 added the active-membership/branch-assignment resolver and tests; latest exact-head quality passes. SaaS tenant isolation weighted progress is now 28% (3 code/UI + 10 database + 5 authorization + 10 automated tests + 0 browser/API E2E + 0 operational reconciliation); exact-head migration replay and real tenant A/B runtime remain pending. PR #127 latest exact-head quality passes all steps, including four source-contract tests; exact-head disposable replay remains in progress. PR #127 latest exact-head quality, disposable migration replay, KDS, CORS and procurement contract workflows all PASS; no skipped steps in its quality workflow. PR #126 quality passes, but its disposable replay previously failed on an Inbucket host-port collision; the workflow now moves that temporary service to port 55324 and the rerun is in progress.",
+    "reconciliation": "The 18 supplied domain rows sum to 189 features: 82 PARTIAL, 98 NOT VERIFIED, 9 BLOCKED. The supplied total row's NOT VERIFIED value of 93 is an arithmetic typo; the domain rows sum to 98. The main/staging matrix file was stale at 81 PARTIAL, 99 NOT VERIFIED, 9 BLOCKED. This update aligns staging's matrix with the latest 20-Nov per-feature register. Current 21-November GitHub query finds 21 open PRs (#126, #125, #124, #123, #122, #121, #120, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104, #71). PR #122 adds FK index remediation; it does not change any feature audit_status. PR #125 adds order reservation expiry/payment compensation; its exact-head free quality checks, KDS contract tests and disposable migration replay passed, including 27 pgTAP assertions. PR #122 now has passing free quality checks and disposable migration replay on tested head 621b1850d20f5571547d7a2b98aae9de05a4ec4c. PR #123 starts Order Management feature 7 implementation; exact-head free quality checks and disposable Supabase replay passed, including 74 pgTAP assertions. PR #124 starts a free application-layer breached-password mitigation; quality tests pass on tested head a74200d60d6af06df5a5da4ed87a464283f0f9ff, and disposable replay passed. These PRs remain Draft and do not alter audit_status or shared staging. 21-November live staging order/payment reconciliation found 7 legacy orders (3 paid, 3 unpaid, 1 pending_verification), all 7 still fulfillment=unassigned and operational=received; 9 active reservation rows have expired timestamps; 3 held-for-verification reservations also have expired timestamps; 2 pending no-proof payment records belong to already-paid orders. Existing cron only runs dlice-operational-retention daily; no order-expiry worker. No business data was mutated. PR #125 now proposes a one-minute expiry/compensation worker and payment rejection state updates; exact-head CI pending. The 49 Advisor unused-index findings were inspected: catalog query confirms 49 zero-scan non-unique secondary indexes across 30 tables, combined 488 kB; primary/unique indexes are excluded. None were dropped. Full index inventory and safe-removal gate are in docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md. PR #126 begins work on one NOT VERIFIED SaaS Tenant Management feature by contract-testing the existing direct-client RLS boundary; quality checks pass and disposable migration replay is running. No audit status is changed until the database test passes. PR #126 starts the previously NOT VERIFIED SaaS tenant/member isolation feature: it adds 35 RLS contract assertions and a fail-closed default-deny for all admin/ERP API actions while tenant isolation is unreleased. This moves exactly one feature to PARTIAL (18% weighted work progress); tenant A/B runtime remains untested and the release flag stays false. PR #127 adds atomic customer proof-upload submission; quality and KDS pass, disposable migration replay is running. PR #122 now proposes removal of two exact-prefix redundant zero-scan indexes; 47 other zero-scan non-unique indexes remain retained pending representative workload evidence. Open PR inventory is now 22 (125 total PRs). Latest PR #126 exact-head quality workflow passed all steps (including Deno tenant-permission tests); exact-head disposable migration replay is still running. Its weighted work progress is now 20% (0 code/UI + 10 DB + 0 positive authorization + 10 automated tests + 0 E2E + 0 ops). PR #127 adds four source-contract tests and best-effort per-order orphan cleanup; exact-head quality and replay are running. Vercel preview creation hit the Hobby/free API deployment daily limit (>100/day); no plan upgrade or paid fallback is being used. PR #126 exact-head quality and disposable migration replay are now both PASS; this confirms the direct-client RLS contract suite and default-deny API barrier tests on its latest head, but does not replace real Tenant A/B API/Storage/cache/job probes. PR #127 exact-head disposable migration replay now PASS; quality checks including four new source-contract tests remain queued/running. The 15 pgTAP assertions and migration chain replayed successfully in the disposable local database. PR #126 added the active-membership/branch-assignment resolver and tests; latest exact-head quality passes. SaaS tenant isolation weighted progress is now 28% (3 code/UI + 10 database + 5 authorization + 10 automated tests + 0 browser/API E2E + 0 operational reconciliation); exact-head migration replay and real tenant A/B runtime remain pending. PR #127 latest exact-head quality passes all steps, including four source-contract tests; exact-head disposable replay remains in progress. PR #127 latest exact-head quality, disposable migration replay, KDS, CORS and procurement contract workflows all PASS; no skipped steps in its quality workflow. PR #126 quality passes, but its disposable replay previously failed on an Inbucket host-port collision; the workflow now moves that temporary service to port 55324 and the rerun is in progress. Fresh GitHub ruleset read found active ruleset #27559290 on ~ALL branches, but it is not an effective release gate: required approving review count=0, required status checks=[], required deployment environments=[], and 11 bypass actors have bypass_mode=always; the active connection itself reports current_user_can_bypass=always. Ruleset does require signed commits, linear history, deletion/non-fast-forward protection, CODEOWNERS review and thread resolution, but branch protection endpoints for main/staging still return 403 and staging environment reviewer settings are not readable. No write action for rulesets/branch protection is exposed through this connector.",
     "evidence_snapshot": {
       "supabase_project": "higoadrzxnhzbbwhdbmh",
       "applied_migrations": 49,
