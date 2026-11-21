@@ -162,3 +162,16 @@ P01–P09 are NOT RUN. PR #126's passwordless workflow requires a protected stag
 - Two existing Auth identities are distinct and have active memberships. Tenant A active assignments: QA-DLICE-A and DLC-B001. Tenant B active assignment: QA-TENANT-B. Both last signed in 2026-10-25; no current passwordless session was minted in this execution.
 - P01–P09 are NOT RUN. Staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED. The secret value was not read or exposed; no workflow dispatch action is available through the connected GitHub integration.
 - No staging migration, Auth metadata, password, Edge Function or production state was changed.
+
+## Current tenant fixture and runtime status — 21 November 2026, 20:58 WIB
+
+Read-only Supabase staging queries confirmed the existing Tenant A and Tenant B Auth identities:
+- Tenant A: active sales_admin profile, active branch_manager membership in dlice-default, six membership permissions, active QA-DLICE-A branch.
+- Tenant B: active sales_admin profile, active branch_manager membership in dlice-qa-isolation-b, six membership permissions, active QA-TENANT-B branch.
+- Both Auth emails are confirmed and the user IDs are distinct. No account/password/metadata/membership mutation occurred.
+
+PR #126 now implements the passwordless Supabase Auth Admin magic-link path for these existing identities. It requires STAGING_SUPABASE_SERVICE_ROLE_KEY in the protected staging Environment. Secret presence and Environment protection are NOT VERIFIED; the connected GitHub integration exposes no workflow-dispatch action. P01–P09 are NOT RUN.
+
+Supplemental read-only SQL impersonation using each Auth subject verified auth.uid() and auth.role() and returned zero direct branch-table rows for own and foreign QA branch reads (4/4). This is not a live Auth session or Edge Function authorization test. The stock-transfer RPC remains inaccessible to anon/authenticated and executable by service_role only.
+
+Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false until all live runtime acceptance passes.
