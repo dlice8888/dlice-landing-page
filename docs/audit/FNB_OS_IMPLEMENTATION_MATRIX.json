@@ -4451,7 +4451,7 @@
           "20261121180000_supersede_stale_payment_attempts.sql"
         ]
       },
-      "invitation_overlap": "Resolved at the RPC/migration layer: PR #120 and #126 now carry identical 20261121130000_atomic_tenant_invite_lifecycle.sql (blob b9dab9b7027e51bd5a4069b854b65a14563df6eb) and tenant_invite_atomic.test.sql (blob 9c778834a0eb5e6f0a12769f1e6a214c71130688). Both Edge Function branches call dlice_create_tenant_invite_atomic and dlice_accept_tenant_invite_atomic with the same arguments. Minor response-envelope difference remains: #120 returns replayed on invite acceptance while #126 omits it; align this field or keep the response contract stable before final merge. No migration version collision or duplicate SQL conflict exists."
+      "invitation_overlap": "Resolved: PR #120 and #126 use identical invitation issue/accept RPC names, argument contracts, and Edge Function response envelope (including replayed flag). Migration and pgTAP test blobs are byte-identical. No response-envelope divergence remains in the inspected current branch heads."
     },
     "github_release_protection": {
       "active_ruleset_id": 27559290,
@@ -4552,11 +4552,16 @@
     },
     "pr120": {
       "state": "OPEN_DRAFT",
-      "head_sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "head_sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
       "quality": "PASS",
-      "disposable_migration_replay": "PASS",
+      "disposable_migration_replay": "IN_PROGRESS",
       "database_contract_tests": "PASS — 7 files / 124 assertions",
-      "staging_runtime": "NOT RUN"
+      "staging_runtime": "NOT RUN",
+      "cors": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition": "PASS",
+      "procurement_receiving": "PASS",
+      "latest_replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
     },
     "pr126": {
       "state": "OPEN_DRAFT",
@@ -4583,16 +4588,16 @@
       },
       "pull_requests": {
         "120": {
-          "head": "f37b581f43dc250a8ee7ff0eb04ae1b0e80a42f0",
+          "head": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
           "quality": "PASS",
           "cors": "PASS",
           "kds_contract": "PASS",
           "procurement_requisition": "PASS",
           "procurement_receiving": "PASS",
           "disposable_replay": "IN_PROGRESS",
-          "prior_head": "735e429517655809899a4e942368b39eb96898a5",
-          "prior_head_replay": "PASS",
-          "prior_head_assertions": 154
+          "prior_tested_head": "735e429517655809899a4e942368b39eb96898a5",
+          "prior_head_assertions": 154,
+          "prior_head_replay": "PASS"
         },
         "123": {
           "head": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
