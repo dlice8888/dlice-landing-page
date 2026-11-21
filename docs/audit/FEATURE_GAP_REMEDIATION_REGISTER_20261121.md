@@ -663,3 +663,60 @@ Exact-head quality, disposable migration replay, CORS, KDS and procurement contr
 5. Do not mark password mutation protection DONE until both official Auth API paths and the application admin path pass.
 
 No billing plan or Auth security setting was changed.
+
+
+## Audit refresh — 2026-11-21 19:07 WIB
+
+### Current feature status
+The machine-readable matrix now contains 189 feature records: **89 PARTIAL, 91 NOT VERIFIED, 9 BLOCKED, 0 DONE**. Of the 89 PARTIAL records, only 2 have a defensible numeric progress score in the current evidence model; 87 remain unscored because their six evidence layers have not been decomposed. Do not fill those percentages with guesses. The progress rubric is code/UI 25, database/data integrity 20, authorization/tenant scope 15, automated tests 15, workflow E2E 15, reconciliation/observability 10. DONE requires all six layers and release acceptance to pass.
+
+The user's source table's domain rows add to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. Its total row stating 93 NOT VERIFIED is arithmetically wrong. Seven features were moved from NOT VERIFIED to PARTIAL after code/DB/test foundations were evidenced; current register totals 89 + 91 + 9 = 189.
+
+### Tenant A/B passwordless path and PR #126
+- Existing Supabase Auth identities are used; no new QA users and no password reset/mutation.
+- Tenant A: `qa_dlice_staging_no_permission` in `dlice-default`, active `sales_admin` profile, active `branch_manager` membership, matching permission set, active `QA-DLICE-A` assignment.
+- Tenant B: `qa_dlice_staging_branch_a` in `dlice-qa-isolation-b`, active `sales_admin` profile, active `branch_manager` membership, matching permission set, active `QA-TENANT-B` assignment.
+- PR #126 exact head `cf9d6781111f01c2da6d798c14fe70fd577d1ffd`: quality PASS, full disposable migration replay PASS, 15 invitation pgTAP assertions PASS, CORS/KDS/procurement requisition/receiving contracts PASS.
+- Passwordless harness uses Supabase Auth Admin one-time magic links and revokes temporary sessions. It requires `STAGING_SUPABASE_SERVICE_ROLE_KEY` in protected GitHub Environment `staging`. Connector cannot inspect/configure the secret or verify Environment protection. Live P01–P09 is NOT RUN; PR #126 remains Draft and is not merged.
+- Latest Vercel preview is READY but points to older commit `a3663697`, not current #126 head.
+
+### PR #120 — atomic permission audit
+- Current head `29d6d808c2b56eb9596335805499266de4e1b4ba`; OPEN/DRAFT.
+- Quality checks PASS; permission unit tests 8/8 PASS; contract tests confirm atomic audited RPC and fail-closed behavior when audit persistence fails; disposable migration replay PASS.
+- Added SQL test files for permission audit, profile mutation audit, and tenant invite audit.
+- Remaining: execute staging runtime tests with real actor identities; verify every official mutation path including role/permission/profile changes and direct API/RPC denial. Resolve shared migration/function overlap with #124 first.
+
+### PR #124 — breached-password guard
+- Current head `a74200d60d6af06df5a5da4ed87a464283f0f9ff`; OPEN/DRAFT.
+- Quality checks PASS; password guard unit tests 3/3 PASS; k-anonymity, padding and fail-closed contract tests PASS; disposable migration replay PASS.
+- Supabase security advisor still reports Auth leaked-password protection DISABLED. PR #124's app-side protection is not equivalent to enabling the Supabase Auth platform setting. Enable/verify the platform setting through authorized Supabase Auth configuration and test signup/password change/reset flows.
+- #120 and #124 both add `20261121100000_atomic_admin_permission_audit.sql` and edit the same Edge Function. Reconcile to one migration and one reviewed Edge Function patch before either is merged.
+
+### PR #123, #125, #127 — checkout/payment lifecycle
+- #123 current head `31976673a9289add4c1bb10d6f29f3ff6c3c15a5`: quality PASS and disposable migration replay PASS; SQL migration adds online-order idempotency. Remaining: actual duplicate retry, timeout/late callback, and order/payment/reservation consistency E2E.
+- #125 current head `1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d`: quality PASS and disposable replay PASS; adds unpaid-order expiry/compensation. Remaining: scheduler execution, late payment callback, compensation and reservation/stock release E2E.
+- #127 current head `5c597c2ec37a130501ed19591cfc9383396ba1b6`: quality PASS and disposable replay PASS; adds atomic payment-proof and stale-attempt supersession migrations. Remaining: upload retry, duplicate submission, storage ACL/metadata, expiry and supersession E2E.
+- #125 and #127 both include `20261121140000_order_expiry_payment_lifecycle.sql`. Consolidate into one canonical migration and verify replay order with #127's 15/18-series migrations. Do not merge both copies independently.
+
+### Migration reconciliation — staging is unchanged
+- Repository branch `staging`: 52 SQL migration files.
+- Supabase project `dlice-staging`: 49 recorded applied migrations.
+- All 49 applied database versions exist in repository; no database-only version was found.
+- Three repository-only migrations remain pending: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, `20261120120000_atomic_branch_checklist_audit.sql`.
+- Status: DRIFT_3_PENDING_NOT_APPLIED. Do not apply these migrations until owner bootstrap preconditions, command-center tenant/branch scope, checklist authorization/audit semantics, dependencies and disposable replay have been independently reviewed and staging approval is granted.
+
+### Supabase advisor findings
+- Security: one warning — Auth leaked-password protection disabled.
+- Performance: 26 unindexed foreign keys and 49 indexes reported unused. These are review candidates, not automatic fixes. Add indexes only after workload and EXPLAIN validation; do not drop unused indexes without production-like workload evidence.
+- Health: zero findings.
+
+### Vercel / release controls
+Latest Vercel preview located for #126 is READY on an older commit, so it is not evidence that current #126 head has been deployed. No production deployment or migration was performed. Maintain `TENANT_ISOLATION_RELEASED=false` and existing deployment protection.
+
+### Immediate execution order
+1. Verify staging Environment protection and configure the single service-role secret without exposing it; then run passwordless P01–P09 against the two existing Supabase identities. No skipped probes.
+2. Consolidate duplicate migrations/functions between #120/#124 and #125/#127; rerun exact-head disposable replay and feature-specific SQL tests.
+3. Run actual retry/payment/expiry/compensation workflows for #123/#125/#127.
+4. Resolve the three migration drift entries only after independent review; still do not apply until approval.
+5. Continue domain 4–5, then 6–7–1; attach code, schema, authorization, automated test, E2E and reconciliation evidence per feature.
+6. Run regression across all 18 domains and only move PARTIAL to DONE at 100% with all six evidence layers passing.
