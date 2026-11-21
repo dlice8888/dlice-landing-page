@@ -974,7 +974,7 @@ if (action === "admin-set-profile-role") {
     if(error)return fail("Undangan tidak dapat diproses; token mungkin sudah digunakan atau tidak valid.",error?.code==="42501"?403:error?.code==="23505"?409:404,origin);
     if(result?.status==="expired")return fail("Undangan sudah kedaluwarsa.",410,origin);
     if(!result?.ok||!result?.invite)return fail("Undangan tidak dapat diaktifkan.",409,origin);
-    return json({ok:true,invite:result.invite},200,origin);
+    return json({ok:true,invite:result.invite,replayed:result.replayed===true},200,origin);
   }
 
   if (action === "erp-list-branch-settings") {
