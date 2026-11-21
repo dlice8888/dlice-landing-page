@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(22);
+SELECT plan(26);
 
 INSERT INTO public.tenants (id,slug,legal_name)
 VALUES ('d1000000-0000-4000-8000-000000000001','qa-expiry-20261121','QA Expiry')
@@ -17,14 +17,16 @@ VALUES
  ('d1000000-0000-4000-8000-000000000011',repeat('1',64),'QA Expired','6280000000001',current_date+3,'12:00','pickup',1000,'unpaid','received','unassigned','d1000000-0000-4000-8000-000000000002'),
  ('d1000000-0000-4000-8000-000000000012',repeat('2',64),'QA Held','6280000000002',current_date+3,'12:00','pickup',1000,'pending_verification','received','unassigned','d1000000-0000-4000-8000-000000000002'),
  ('d1000000-0000-4000-8000-000000000013',repeat('3',64),'QA Reject','6280000000003',current_date+3,'12:00','pickup',1000,'pending_verification','received','unassigned','d1000000-0000-4000-8000-000000000002'),
- ('d1000000-0000-4000-8000-000000000014',repeat('4',64),'QA Paid','6280000000004',current_date+3,'12:00','pickup',1000,'paid','received','unassigned','d1000000-0000-4000-8000-000000000002');
+ ('d1000000-0000-4000-8000-000000000014',repeat('4',64),'QA Paid','6280000000004',current_date+3,'12:00','pickup',1000,'paid','received','unassigned','d1000000-0000-4000-8000-000000000002'),
+ ('d1000000-0000-4000-8000-000000000015',repeat('5',64),'QA Unproven','6280000000005',current_date+3,'12:00','pickup',1000,'pending_verification','received','unassigned','d1000000-0000-4000-8000-000000000002');
 
 INSERT INTO public.order_reservations (order_id,product_id,service_date,quantity,status,expires_at,branch_id)
 VALUES
  ('d1000000-0000-4000-8000-000000000011','d1000000-0000-4000-8000-000000000003',current_date+3,1,'active',now()-interval '2 minutes','d1000000-0000-4000-8000-000000000002'),
  ('d1000000-0000-4000-8000-000000000012','d1000000-0000-4000-8000-000000000003',current_date+3,1,'held_for_verification',now()-interval '2 minutes','d1000000-0000-4000-8000-000000000002'),
  ('d1000000-0000-4000-8000-000000000013','d1000000-0000-4000-8000-000000000003',current_date+3,1,'held_for_verification',now()+interval '10 minutes','d1000000-0000-4000-8000-000000000002'),
- ('d1000000-0000-4000-8000-000000000014','d1000000-0000-4000-8000-000000000003',current_date+3,1,'consumed',now()-interval '2 minutes','d1000000-0000-4000-8000-000000000002');
+ ('d1000000-0000-4000-8000-000000000014','d1000000-0000-4000-8000-000000000003',current_date+3,1,'consumed',now()-interval '2 minutes','d1000000-0000-4000-8000-000000000002'),
+ ('d1000000-0000-4000-8000-000000000015','d1000000-0000-4000-8000-000000000003',current_date+3,1,'held_for_verification',now()-interval '2 minutes','d1000000-0000-4000-8000-000000000002');
 
 CREATE TEMP TABLE test_payment_ids(kind text PRIMARY KEY,id uuid);
 WITH ins AS (
@@ -52,12 +54,17 @@ WITH ins AS (
  VALUES ('d1000000-0000-4000-8000-000000000014','bank_transfer',1000,'pending_verification',NULL,1)
  RETURNING id
 ) INSERT INTO test_payment_ids SELECT 'paid_no_proof',id FROM ins;
+WITH ins AS (
+ INSERT INTO public.payment_records(order_id,method,amount_idr,status,proof_storage_path,receipt_version)
+ VALUES ('d1000000-0000-4000-8000-000000000015','bank_transfer',1000,'pending_verification',NULL,1)
+ RETURNING id
+) INSERT INTO test_payment_ids SELECT 'unproven_no_proof',id FROM ins;
 
 CREATE TEMP TABLE test_expiry_result AS
 SELECT public.expire_stale_order_reservations(50) AS result;
 
-SELECT is((SELECT (result->>'expired_orders')::integer FROM test_expiry_result),1,'expires one unpaid order with an expired reservation');
-SELECT is((SELECT (result->>'expired_reservations')::integer FROM test_expiry_result),1,'expires the expired reservation row');
+SELECT is((SELECT (result->>'expired_orders')::integer FROM test_expiry_result),2,'expires unpaid and unproven pending orders with expired reservations');
+SELECT is((SELECT (result->>'expired_reservations')::integer FROM test_expiry_result),2,'expires active and held expired reservation rows');
 SELECT is((SELECT fulfillment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000011'),'failed','expired unpaid order moves to failed fulfillment');
 SELECT is((SELECT operational_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000011'),'cancelled','expired unpaid order is operationally cancelled');
 SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d1000000-0000-4000-8000-000000000011'),'expired','expired reservation is released from capacity');
@@ -65,7 +72,12 @@ SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM te
 SELECT is((SELECT payment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000012'),'pending_verification','proof-bearing pending order is not auto-expired');
 SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d1000000-0000-4000-8000-000000000012'),'held_for_verification','proof-bearing reservation remains held');
 SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM test_payment_ids WHERE kind='paid_no_proof')),'rejected','stale no-proof attempt on an already-paid order is closed');
-SELECT is((SELECT (result->>'closed_payment_attempts')::integer FROM test_expiry_result),2,'closes the two stale no-proof attempts');
+
+SELECT is((SELECT payment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000015'),'rejected','pending payment without proof is rejected after its deadline');
+SELECT is((SELECT fulfillment_status FROM public.orders WHERE id='d1000000-0000-4000-8000-000000000015'),'failed','unproven pending order moves to failed fulfillment');
+SELECT is((SELECT status FROM public.order_reservations WHERE order_id='d1000000-0000-4000-8000-000000000015'),'expired','unproven pending reservation expires after deadline');
+SELECT is((SELECT status FROM public.payment_records WHERE id=(SELECT id FROM test_payment_ids WHERE kind='unproven_no_proof')),'rejected','unproven pending payment attempt is closed');
+SELECT is((SELECT (result->>'closed_payment_attempts')::integer FROM test_expiry_result),3,'closes no-proof attempts for expired and paid orders');
 
 SELECT ok(public.admin_apply_payment_verification(
   'd1000000-0000-4000-8000-000000000013',
