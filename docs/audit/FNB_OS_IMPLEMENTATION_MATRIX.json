@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21T19:42:00+07:00",
+  "snapshot_at": "2026-11-21",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -382,18 +382,19 @@
         {
           "requirement": "Duplicate orders, delayed payment, failed order handling",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "PR #123 implements stable idempotency key, atomic order/reservation ledger and retry-safe response; PR #125/#127 add unpaid reservation expiry, cancellation/compensation and payment-attempt supersession. Exact-head contracts and disposable replay pass; browser response-drop/concurrency, live worker, late webhook and final reconciliation remain NOT RUN.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #123 adds stable checkout idempotency and atomic order/reservation ledger; PR #125 adds unpaid/unproven reservation expiry and compensation; PR #127 adds atomic proof submission and payment-attempt supersession. Exact-head CI and disposable replay pass. Browser response-drop/concurrent submission, late provider webhook, live expiry worker and full order/payment/reservation reconciliation remain NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "active_prs": [
             123
           ],
           "work_started_at": "2026-11-21",
-          "work_evidence": "PR #123 adds stable 256-bit checkout idempotency, canonical request fingerprint, advisory-lock replay protection, and pgTAP/Node contract tests. Delayed-payment expiry, rejection compensation, browser fault-injection, and concurrent runtime tests remain open."
+          "work_evidence": "PR #123 adds stable 256-bit checkout idempotency, canonical request fingerprint, advisory-lock replay protection, and pgTAP/Node contract tests. Delayed-payment expiry, rejection compensation, browser fault-injection, and concurrent runtime tests remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -1951,15 +1952,16 @@
         {
           "requirement": "Permission changes themselves audited",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "PR #120 implements audited service-role RPCs for permission changes, staff creation, role changes, active-state changes and tenant invite issue; exact-head permission contract and disposable replay pass. PR #120/#126 invite paths overlap; password reset remains Auth mutation followed by a separate audit write; live mutation-path regression remains outstanding.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six CI/migration workflows. Audited RPCs cover permission changes, staff profile creation, role and active-state changes; forced audit-failure tests prove rollback. Password reset now writes a durable audit intent before Auth Admin mutation and finalizes success/failure; pending intent survives finalization failure. Live staging mutation-path regression remains NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 239
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
-          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance remains pending."
+          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance remains pending.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -2324,20 +2326,21 @@
         {
           "requirement": "Leaked-password protection",
           "source_status": "GATE / WARN",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "PR #120 contains the same application-layer HIBP k-anonymity guard and tests as PR #124 for Owner bootstrap, staff creation and staff reset. Supabase native leaked-password protection is disabled on Free plan; direct Supabase Auth password changes can bypass the app Edge Function guard. Password Verification Hook is sign-in-only and plan-limited, not a password-change hook. Keep BLOCKED.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "The application-layer k-anonymity Pwned Password guard is integrated into official Owner bootstrap, staff creation and staff password reset flows; unit and source-contract tests pass in PR #120. Native Supabase Auth leaked-password protection remains disabled on the current plan and direct Auth password changes can bypass the Edge Function guard; the feature is not DONE.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_note": "Supabase Security Advisor confirms disabled; authorized project owner must enable Auth password security on staging and verify with disposable identities.",
           "active_prs": [
             124
           ],
           "work_started_at": "2026-11-21",
           "work_evidence": "PR #124 adds a free k-anonymity breached-password check to the official Owner bootstrap/staff create/staff reset flows. Supabase-native protection remains disabled; direct Auth API bypass and complete password mutation coverage remain external acceptance blockers.",
-          "external_action_required": true
+          "external_action_required": true,
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -3185,7 +3188,7 @@
     104,
     71
   ],
-  "open_pr_count": 22,
+  "open_pr_count": 21,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -3807,12 +3810,12 @@
   },
   "audit_reconciliation": {
     "source_snapshot": "2026-11-21 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
-    "arithmetic": "The supplied 18 domain rows sum to 82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189. The supplied total-row value of 93 NOT VERIFIED is incorrect; it should be 98. Seven features with verified implementation foundations were reclassified from NOT VERIFIED to PARTIAL (2 SaaS + 5 across Kitchen/Menu/Inventory), yielding the current 89 PARTIAL + 91 NOT VERIFIED + 9 BLOCKED = 189.",
+    "arithmetic": "Current feature-level matrix: 92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189. Three previously BLOCKED features moved to PARTIAL after concrete implementation and exact-head tests passed (#120 permission/profile/password audit, #123/#125/#127 order lifecycle, and #120 application password guard). Six technically or externally gated features remain BLOCKED.",
     "current_status_source": "Feature-level records plus read-only Supabase schema/function evidence and current PR/CI results.",
     "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
     "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
     "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "PR #120 exact head 29d6d808c2b56eb9596335805499266de4e1b4ba now passes free quality, disposable Supabase migration replay, KDS, CORS, procurement receiving and requisition contracts. Database test suite: 7 files, 107 pgTAP assertions, including 11 new audited invitation issuance assertions. PR remains Draft; no staging migration or Edge Function was applied/deployed; real staging runtime acceptance remains.",
+    "pr120": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes quality, disposable migration replay, CORS, KDS and procurement contracts. The profile-mutation pgTAP suite now has 35 assertions, including forced audit-insert rollback for staff creation, role and active-state mutations, plus durable password-reset intent/finalization failure handling. No staging migration or Edge Function was applied.",
     "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
     "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
     "vercel": "Vercel project dlice-landing-page exists. PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. No PR #127 preview found. Preview readiness is not runtime feature acceptance.",
@@ -3821,16 +3824,16 @@
     "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
     "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts.",
     "pr127": "Exact-head commit 5c597c2ec37a130501ed19591cfc9383396ba1b6: disposable full migration replay PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS; 14 payment-attempt supersession assertions included. Browser concurrency and global Storage orphan sweep remain pending.",
-    "latest_auth_identity_audit": "Four existing Supabase Auth users found. The two correct P01-P09 fixture identities are qa_dlice_staging_no_permission in dlice-default and qa_dlice_staging_branch_a in dlice-qa-isolation-b. Both have active sales_admin profiles, active branch_manager memberships, matching non-empty permission sets, and active assignments to QA-DLICE-A / QA-TENANT-B respectively. The tenant_owner account is not used for P01-P09 because the probe fixture requires matching branch_manager memberships. No account or password was mutated.",
+    "latest_auth_identity_audit": "Two existing Supabase Auth identities confirmed read-only: distinct user IDs and tenant memberships; Tenant A has active QA-DLICE-A and DLC-B001 assignments; Tenant B has active QA-TENANT-B assignment. Both last signed in 2026-10-25; current authentication has not been proven. No account or password was mutated.",
     "direct_client_rls": "Confirmed explicit deny_direct_client_access policies for branches, tenants and tenant_memberships; direct client queries returning zero rows are expected and do not prove or disprove tenant isolation through the service-role Edge Function API.",
     "migration_reconciliation": "Staging branch contains 52 SQL migration files while dlice-staging database records 49 applied migrations. The 49 DB versions all match repository versions; no DB-only versions. Three repository-only migrations are pending: 20261120100000 atomic owner/tenant bootstrap, 20261120110000 command center summary, 20261120120000 branch checklist audit. Do not apply without dependency/review gate.",
     "pr126": "Exact head cf9d6781111f01c2da6d798c14fe70fd577d1ffd: free quality PASS; full disposable migration replay PASS; all 15 invitation pgTAP assertions PASS; CORS, KDS, procurement requisition and receiving contracts PASS. Existing matching branch-manager identities are selected from Supabase. Passwordless Auth Admin magic-link harness is implemented; live P01-P09 cannot run until PR is integrated to trusted staging and staging Environment protection plus service-role secret are verified. Vercel preview is still on older commit a3663697.",
     "supabase_advisors": "Supabase security advisor reports leaked-password protection disabled (one warning). Performance advisor reports 26 unindexed foreign keys and 49 unused indexes. Health advisor has zero findings. Review each index with workload/EXPLAIN before adding/dropping; do not drop solely from unused-index lint.",
-    "passwordless_tenant_auth": "PR #126 uses the two matching existing branch-manager Auth identities via Auth Admin generateLink(type=magiclink), then verifies the token hash and revokes temporary sessions. Old username/password inputs removed; one protected STAGING_SUPABASE_SERVICE_ROLE_KEY required. Exact-head quality and disposable replay are running on cf9d6781; live P01-P09 remains NOT RUN until PR integration and secret configuration.",
-    "pr124": "Exact head a74200d60d6af06df5a5da4ed87a464283f0f9ff: quality, disposable migration replay, CORS, KDS, procurement requisition and receiving contracts PASS. PR #124 application-layer HIBP k-anonymity checks guard admin create/reset routes, but direct Supabase Auth password updates are not proven blocked. Supabase org is on Free; native leaked-password protection requires Pro or above. Reauthentication/current-password controls must also be verified in Auth settings. No billing or Auth setting changed.",
-    "pr120_124_overlap": "PR #120 and #124 share 20261121100000_atomic_admin_permission_audit.sql with identical blob SHA 947419c2; migration content is not divergent. Both edit dlice-orders Edge Function, so reconcile the combined diff against staging and ensure one migration history entry.",
+    "passwordless_tenant_auth": "PR #126 exact head 07d7c51c2cbea21b9cd49a480614e004fe7bf417 has all six CI/disposable replay workflows PASS. It uses existing Tenant A/B identities through passwordless Admin magic links. P01-P09 has no run; staging Environment protection and service-role secret presence remain unverified.",
+    "pr124": "PR #124 is CLOSED as superseded by PR #120. Shared password guard source, unit tests, migration and SQL tests have identical blob SHAs; PR #120 contains the superset Edge Function implementation and its own exact-head passing tests.",
+    "pr120_124_overlap": "PR #124 closed superseded by #120 after exact-head #120 CI and disposable migration replay passed. Shared leaked-password guard helper, tests and migration have identical blob SHAs; #120 Edge Function is the superset.",
     "pr125_127_overlap": "PR #125 and #127 share 20261121140000_order_expiry_payment_lifecycle.sql with identical blob SHA c1d1de05; migration content is not divergent. Preserve one canonical migration history entry and verify #127's later payment-proof/supersession migrations replay after it.",
-    "latest_pr_statuses": "PR #120/#123/#124/#125/#126/#127 remain OPEN DRAFT, all targeting staging. Latest recorded CI for each branch has quality and disposable migration replay PASS; #120 permission tests 8/8; #124 password guard tests 3/3. Staging runtime identity isolation still NOT RUN.",
+    "latest_pr_statuses": "Open Draft PRs: #120, #123, #125, #126, #127 (5). PR #124 closed as superseded by #120. All five open heads have successful applicable CI/disposable replay. No P01-P09 or business runtime E2E executed.",
     "partial_progress_detail": "Only two PARTIAL feature progress values are currently scored: SaaS tenant directory/onboarding 30%; tenant/member isolation foundation 38%. The other 87 PARTIAL features remain unscored until evidence is decomposed across code/UI, database, authorization, automated tests, workflow E2E and reconciliation/observability."
   },
   "current_open_prs": [
@@ -4021,14 +4024,13 @@
   "latest_pr_inventory": {
     "actual_prs": 125,
     "merged": 77,
-    "closed_without_merge": 26,
-    "open": 22,
-    "latest_issue_number": 127
+    "closed_without_merge": 27,
+    "open": 21
   },
   "feature_status_counts_current": {
-    "PARTIAL": 89,
+    "PARTIAL": 92,
     "NOT VERIFIED": 91,
-    "BLOCKED": 9,
+    "BLOCKED": 6,
     "DONE": 0,
     "TOTAL": 189
   },
@@ -4097,9 +4099,9 @@
     "audit_branch": "audit/189-feature-reconciliation-20261121",
     "audit_method": "Read-only GitHub/Supabase/Vercel inspection plus exact-head CI and workflow evidence; no production or shared-staging mutations.",
     "feature_distribution": {
-      "PARTIAL": 89,
+      "PARTIAL": 92,
       "NOT VERIFIED": 91,
-      "BLOCKED": 9,
+      "BLOCKED": 6,
       "DONE": 0,
       "TOTAL": 189
     },
@@ -4121,28 +4123,18 @@
       "shared_staging_mutation": false
     },
     "p01_p09_readiness": {
-      "existing_supabase_identities": "FOUND",
-      "tenant_a": "qa_dlice_staging_no_permission; active sales_admin profile; active branch_manager membership in dlice-default; active assignments include QA-DLICE-A",
-      "tenant_b": "qa_dlice_staging_branch_a; active sales_admin profile; active branch_manager membership in dlice-qa-isolation-b; active assignment QA-TENANT-B",
-      "owner": "dlice8888@accounts.dlice.internal; active owner profile and tenant_owner membership, but app_metadata.platform_owner is false and no active branch assignment; not an authorized platform-owner bypass",
-      "required_secret": "STAGING_SUPABASE_SERVICE_ROLE_KEY",
-      "environment_protection_and_secret": "NOT VERIFIED/NOT CONFIGURABLE through current connector",
-      "workflow_dispatch": "NOT AVAILABLE through current GitHub connector",
-      "pre_release_probe_allowlist_commit": "1bd648704172fecb2885b62fb3c51b7720da469c",
-      "pre_release_probe_test_commit": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
-      "allowlisted_actions": [
-        "erp-list-tenant-memberships",
-        "erp-list-branches",
-        "erp-list-inventory",
-        "erp-create-stock-transfer"
+      "existing_supabase_identities": "FOUND_AND_MAPPED",
+      "tenant_a_active_assignments": [
+        "QA-DLICE-A",
+        "DLC-B001"
       ],
-      "rationale": "These routes are self-only or explicitly tenant/branch scoped and are the minimum P01-P09 surface. Other admin/ERP actions remain fail-closed before release.",
-      "dispatch_ref_requirement": {
-        "main": "workflow_dispatch file exists but uses legacy STAGING_TENANT_A/B_USERNAME/PASSWORD secrets",
-        "staging": "workflow still uses legacy username/password secrets",
-        "pr126_head": "uses STAGING_SUPABASE_SERVICE_ROLE_KEY plus the two existing Supabase Auth emails; no Tenant A/B username/password secrets",
-        "instruction": "When manually running Actions, select branch feat/tenant-direct-client-rls-contract-20261121. Do not select main or staging. GitHub requires the workflow file on the default branch, but the selected ref determines the workflow contents."
-      }
+      "tenant_b_active_assignments": [
+        "QA-TENANT-B"
+      ],
+      "last_sign_in_at": "2026-10-25",
+      "service_role_secret_presence": "NOT VERIFIED_WITHOUT_READING_VALUE",
+      "staging_environment_protection": "NOT VERIFIED",
+      "workflow_dispatch": "NOT RUN"
     },
     "staging_positive_e2e": {
       "kds_pos_stock": "BLOCKED at preflight on run 44741192566; legacy workflow still requires STAGING_TEST_OWNER_USERNAME/PASSWORD; business-flow step SKIPPED",
@@ -4150,43 +4142,22 @@
       "owner_identity_gate": "Existing Supabase Owner identity does not have platform_owner claim/allowlist; no metadata mutation performed"
     },
     "migration_reconciliation": {
-      "repository_sql_files": 52,
-      "staging_applied": 49,
-      "pending": [
-        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-        "20261120110000_command_center_summary.sql",
-        "20261120120000_atomic_branch_checklist_audit.sql"
-      ],
-      "disposable_replay": "PASS on commit cf15f33379a731c1952ec22b5d12739595a21a93; latest staging commit 78f929dac2b05f436aaa7f50005310166f8a4779 adds only workflow/test files, no migration changes",
-      "pgtap_suites": {
-        "tenant_bootstrap_atomic": 23,
-        "command_center_summary": 7,
-        "branch_checklist_atomic_audit": 27,
-        "total": 57
-      },
-      "review_findings": [
-        "Owner bootstrap RPC requires raw_app_meta_data.platform_owner=true; current existing Owner identity has the claim false, so runtime bootstrap/tenant creation remains blocked until authorized Auth Admin verification.",
-        "Command Center summary is service_role-only and branch/date bounded, but its sales KPI currently derives from paid POS sales; online order revenue, discounts, refunds, food cost/margin and unified financial reconciliation remain outside this summary.",
-        "Branch checklist mutation RPC is service_role-only; Edge Function contract checks active tenant membership and branch assignment before calling it; mutation and audit are transactional."
-      ],
-      "status": "DRIFT_3_PENDING_REVIEW_AND_EXPLICIT_STAGING_APPROVAL_NOT_APPLIED"
+      "applied": 49,
+      "repository_source": 52,
+      "source_only": 3,
+      "conflicting_pr_migration_version": "20261121130000 on #123 and #126",
+      "duplicate_same_blob_migration_version": "20261121140000 on #125 and #127",
+      "shared_staging_mutation": false
     },
     "github_release_protection": {
       "ruleset_id": 27559290,
-      "enforcement": "ACTIVE",
-      "scope": "~ALL branches",
       "required_approving_review_count": 0,
-      "required_status_checks": [],
-      "required_deployment_environments": [],
-      "required_signatures": true,
-      "required_linear_history": true,
-      "prevent_deletion": true,
-      "prevent_non_fast_forward": true,
-      "current_connection_can_bypass": "always",
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_status_checks": 0,
+      "required_deployment_environments": 0,
       "bypass_actor_count": 11,
-      "status": "INSUFFICIENT: no required human approval/checks and always-bypass actors remain",
-      "staging_branch_protected_flag": true,
-      "branch_protection_endpoint_enabled": false
+      "current_user_can_bypass": "always"
     },
     "supabase_advisors": {
       "security": "1 warning: leaked-password protection disabled",
@@ -4262,10 +4233,26 @@
         "cors_kds_procurement_contracts": "PASS",
         "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
       }
+    },
+    "pr120": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "quality": "PASS",
+      "disposable_migration_replay": "PASS",
+      "cors_contract": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition_contract": "PASS",
+      "procurement_receiving_contract": "PASS",
+      "profile_mutation_pgtap_assertions": 35,
+      "password_reset_audit_intent": "IMPLEMENTED_AND_TESTED",
+      "staging_runtime": "NOT RUN"
+    },
+    "pr124": {
+      "state": "CLOSED_SUPERSEDED_BY_PR120"
     }
   },
   "latest_live_audit": {
-    "as_of": "2026-11-21T19:42:00+07:00",
+    "as_of": "2026-11-21",
     "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4273,12 +4260,12 @@
     },
     "feature_counts": {
       "total": 189,
-      "partial": 89,
+      "partial": 92,
       "not_verified": 91,
-      "blocked": 9,
+      "blocked": 6,
       "done": 0,
       "scored_partial": 2,
-      "unscored_partial": 87
+      "unscored_partial": 90
     },
     "domain_counts": [
       {
@@ -4298,9 +4285,9 @@
       {
         "domain": "Order Management",
         "features": 10,
-        "partial": 7,
+        "partial": 8,
         "not_verified": 2,
-        "blocked": 1
+        "blocked": 0
       },
       {
         "domain": "Kitchen & Production",
@@ -4382,9 +4369,9 @@
       {
         "domain": "Admin, Identity & Access Control",
         "features": 10,
-        "partial": 5,
+        "partial": 6,
         "not_verified": 4,
-        "blocked": 1
+        "blocked": 0
       },
       {
         "domain": "SaaS Tenant Management",
@@ -4403,9 +4390,9 @@
       {
         "domain": "Quality, Compliance & Security",
         "features": 20,
-        "partial": 10,
+        "partial": 11,
         "not_verified": 9,
-        "blocked": 1
+        "blocked": 0
       }
     ],
     "supabase_staging": {
@@ -4425,49 +4412,51 @@
     },
     "existing_auth_fixtures": {
       "tenant_a": {
-        "email": "qa_dlice_staging_no_permission@accounts.dlice.internal",
-        "tenant_slug": "dlice-default",
-        "branch_code": "QA-DLICE-A",
+        "user_id": "b930897c-f8fb-443b-9056-e70c08b31446",
+        "confirmed": true,
+        "last_sign_in_at": "2026-10-25T12:17:02.255486+00:00",
+        "tenant_id": "00000000-0000-4000-8000-000000000001",
         "profile_role": "sales_admin",
         "profile_active": true,
         "profile_permission_count": 0,
         "tenant_role": "branch_manager",
         "membership_status": "active",
         "tenant_permission_count": 6,
-        "branch_assignment_status": "active"
+        "active_branch_assignments": [
+          "QA-DLICE-A",
+          "DLC-B001"
+        ]
       },
       "tenant_b": {
-        "email": "qa_dlice_staging_branch_a@accounts.dlice.internal",
-        "tenant_slug": "dlice-qa-isolation-b",
-        "branch_code": "QA-TENANT-B",
+        "user_id": "e1de1ffc-9fae-412f-9dd7-0993b54cb631",
+        "confirmed": true,
+        "last_sign_in_at": "2026-10-25T12:17:01.620238+00:00",
+        "tenant_id": "00000000-0000-4000-8000-000000000002",
         "profile_role": "sales_admin",
         "profile_active": true,
         "profile_permission_count": 7,
         "tenant_role": "branch_manager",
         "membership_status": "active",
         "tenant_permission_count": 6,
-        "branch_assignment_status": "active"
+        "active_branch_assignments": [
+          "QA-TENANT-B"
+        ]
       },
-      "fixture_resolution": "distinct users, tenants and branches; active memberships; tenant permission sets match; no Auth account/password/metadata/membership/assignment was mutated",
-      "owner": {
-        "profile_role": "owner",
-        "tenant_membership_role": "tenant_owner",
-        "membership_status": "active",
-        "app_metadata_platform_owner_claim": null,
-        "platform_owner_allowlist_unverified": true
-      }
+      "fixture_resolution": "Two distinct existing Supabase Auth identities, two distinct active tenant memberships, active profiles and branch assignments verified read-only. Tenant A has two active assignments within Tenant A; Tenant B has one. Both last signed in 2026-10-25; current real login has not been proven. No password, Auth metadata, membership or assignment was changed."
     },
     "pull_requests": {
       "all_open_draft_unmerged": [
         120,
         123,
-        124,
         125,
         126,
         127
       ],
+      "closed_superseded": [
+        124
+      ],
       "all_mergeable": true,
-      "exact_head_ci": "all listed PR heads have successful quality/contract/disposable-replay runs",
+      "exact_head_ci": "PR #120, #123, #125, #126 and #127 exact heads pass all applicable recorded CI/disposable-replay workflows; PR #124 is closed as superseded by #120.",
       "runtime_acceptance": "P01-P09 and business E2E flows not run"
     },
     "migration_candidate_conflicts": {
@@ -4518,12 +4507,14 @@
       "active_ruleset_id": 27559290,
       "branches": "~ALL",
       "required_approving_reviews": 0,
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
       "required_status_checks": 0,
       "required_deployment_environments": 0,
       "bypass_actors": 11,
       "current_connection_can_bypass": "always",
       "branch_protection_read": "403; unavailable",
-      "mutation_performed": false
+      "policy_note": "Project acceptance policy no longer requires separate PR review; repository ruleset still has CODEOWNERS and last-push approval controls enabled and cannot be edited through current connector."
     },
     "vercel": {
       "project": "dlice-landing-page",
@@ -4533,6 +4524,38 @@
       "pr127_error": "api-deployments-free-per-day (>100 deployments/day)",
       "production_mutated": false
     },
-    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection and explicit mutation/release authorization remain separate controls."
+    "acceptance_policy": "No separate PR-review prerequisite. Completion is determined by measurable automated, database, authorization, E2E and reconciliation evidence. Staging Environment protection and explicit mutation/release authorization remain separate controls.",
+    "staging_environment_verification": {
+      "environment_protection": "NOT VERIFIED through available GitHub connector",
+      "service_role_secret_presence": "NOT VERIFIED; value not read or exposed",
+      "workflow_dispatch": "NOT RUN; no workflow-dispatch action exposed"
+    },
+    "pr120_pr124_consolidation": {
+      "target_branch": "feat/permission-change-atomic-audit-20261121",
+      "current_head": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "pr124_state": "CLOSED_SUPERSEDED_BY_PR120",
+      "changes": [
+        "Atomic audited RPCs for permission changes, staff profile creation, role and active-state mutations.",
+        "PR #124's HIBP k-anonymity guard, unit tests and source contract are consolidated into #120.",
+        "Password reset now persists a service-role-only audit intent before Supabase Auth Admin update, then finalizes success/failure; unresolved finalization leaves a durable pending event for reconciliation."
+      ],
+      "ci": {
+        "quality": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "disposable_migration_replay": "PASS",
+        "password_guard_unit_tests": "PASS",
+        "password_guard_contract": "PASS",
+        "admin_permission_audit_contract": "PASS",
+        "profile_mutation_pgtap_plan": 35
+      },
+      "remaining": [
+        "No real staging mutation-path runtime test yet.",
+        "Native Supabase leaked-password protection remains disabled; direct Auth password changes can bypass the application guard.",
+        "Cross-service Auth/Postgres operation is tracked with a durable intent/outcome saga, not a single distributed transaction."
+      ]
+    }
   }
 }
