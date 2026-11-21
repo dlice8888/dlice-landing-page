@@ -1,6 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import {
   hasTenantScopedHeadOfficePermission,
+  isTenantSensitiveAction,
+  resolveTenantScopedBranchIds,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 
@@ -458,7 +460,11 @@ Deno.serve(async (req: Request) => {
   const actor = await getAdmin(req);
   if (!actor) return fail("Silakan masuk terlebih dahulu untuk mengakses operasional.", 401, origin);
   const isPlatformOwner = actor.profile.role === "owner" && PLATFORM_OWNER_USER_IDS.has(actor.user.id) && actor.user.app_metadata?.platform_owner === true;
-  if (!TENANT_ISOLATION_RELEASED && !isPlatformOwner && TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action)) {
+  if (
+    !TENANT_ISOLATION_RELEASED &&
+    !isPlatformOwner &&
+    (isTenantSensitiveAction(action) || TENANT_SCOPE_UNCERTIFIED_ACTIONS.has(action))
+  ) {
     return fail("Akses sementara ditutup sampai cakupan tenant untuk tindakan ini lolos pengujian isolasi.", 423, origin);
   }
 
@@ -480,16 +486,12 @@ Deno.serve(async (req: Request) => {
     const membershipRows = memberships || [];
     const tenantIds = [...new Set(membershipRows.map((x: { tenant_id: string }) => x.tenant_id))];
     if (!tenantIds.length) return [];
-    const ownerTenantIds = [...new Set(membershipRows.filter((x: { role: string }) => ["tenant_owner", "tenant_admin"].includes(String(x.role))).map((x: { tenant_id: string }) => x.tenant_id))];
     const assigned = await admin.from("branch_assignments").select("branch_id").eq("user_id", actor.user.id).eq("employment_status", "active").lte("starts_on", todayDate()).or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
     if (assigned.error) throw new Error("Penugasan cabang gagal dimuat.");
-    const assignedIds = [...new Set((assigned.data || []).map((x: { branch_id: string }) => x.branch_id))];
-    const [ownedBranches, assignedBranches] = await Promise.all([
-      ownerTenantIds.length ? admin.from("branches").select("id").in("tenant_id", ownerTenantIds) : Promise.resolve({ data: [], error: null }),
-      assignedIds.length ? admin.from("branches").select("id,tenant_id").in("id", assignedIds).in("tenant_id", tenantIds) : Promise.resolve({ data: [], error: null }),
-    ]);
-    if (ownedBranches.error || assignedBranches.error) throw new Error("Pemetaan tenant-cabang gagal dimuat.");
-    return [...new Set([...(ownedBranches.data || []).map((x: { id: string }) => x.id), ...(assignedBranches.data || []).map((x: { id: string }) => x.id)])];
+    const assignedRows = (assigned.data || []).map((x: { branch_id: string }) => ({ branch_id: x.branch_id }));
+    const { data: branches, error: branchesError } = await admin.from("branches").select("id,tenant_id").in("tenant_id", tenantIds);
+    if (branchesError) throw new Error("Pemetaan tenant-cabang gagal dimuat.");
+    return resolveTenantScopedBranchIds(membershipRows, assignedRows, branches || []);
   };
   const hasHQPermission = async (permission: string): Promise<boolean> => {
     if (isPlatformOwner) return true;
@@ -944,30 +946,35 @@ if (action === "admin-set-profile-role") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin undangan tenant tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,80),email=safeText(body.email,254).toLowerCase(),role=safeText(body.role,40);
     const allowedRoles=["tenant_admin","branch_manager","cashier","inventory","production","finance","viewer","tenant_member"];
-    if(!tenantId||!/^\S+@\S+\.\S+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
-    const {data:membership}=await admin.from("tenant_memberships").select("role").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
-    if(!membership||!["tenant_owner","tenant_admin"].includes(String(membership.role)))return fail("Hanya Tenant Owner/Admin yang dapat mengundang anggota.",403,origin);
+    if(!tenantId||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!allowedRoles.includes(role))return fail("Data undangan tenant tidak valid.",422,origin);
     const rawToken=randomToken(),tokenHash=await sha256(rawToken),expiresAt=new Date(Date.now()+7*24*60*60*1000).toISOString();
-    const {data:invite,error}=await admin.from("tenant_invites").insert({tenant_id:tenantId,email,role,token_hash:tokenHash,invited_by:actor.user.id,expires_at:expiresAt}).select("id,tenant_id,email,role,status,expires_at").single();
-    if(error||!invite)return fail("Undangan gagal dibuat.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"tenant_member_invited",entity_type:"tenant_invite",entity_id:invite.id,metadata:{tenant_id:tenantId,email,role,expires_at:expiresAt}});
-    return json({ok:true,invite,invite_token:rawToken,delivery:"manual_copy_required"},201,origin);
+    const {data:result,error}=await admin.rpc("dlice_create_tenant_invite_atomic",{
+      p_actor_user_id:actor.user.id,
+      p_tenant_id:tenantId,
+      p_email:email,
+      p_role:role,
+      p_token_hash:tokenHash,
+      p_expires_at:expiresAt,
+    });
+    if(error||!result?.ok||!result?.invite)return fail("Undangan gagal dibuat secara atomik.",error?.code==="23505"?409:500,origin);
+    return json({ok:true,invite:result.invite,invite_token:rawToken,delivery:"manual_copy_required"},201,origin);
   }
 
   if (action === "erp-accept-tenant-invite") {
+    if (!TENANT_ISOLATION_RELEASED) return fail("Tenant onboarding is paused until cross-tenant isolation tests pass.", 423, origin);
     if(!hasPerm("branches")&&!isOwner)return fail("Izin aktivasi keanggotaan tenant tidak diizinkan.",403,origin);
-    const token=safeText(body.invite_token,100),tokenHash=await sha256(token),email=String(actor.user.email||"").toLowerCase();
+    const token=safeText(body.invite_token,100),email=String(actor.user.email||"").toLowerCase();
     if(token.length<32||!email)return fail("Token undangan atau email akun tidak valid.",422,origin);
-    const {data:invite,error}=await admin.from("tenant_invites").select("*").eq("token_hash",tokenHash).eq("status","pending").maybeSingle();
-    if(error)return fail("Undangan tenant belum tersedia.",503,origin);
-    if(!invite||new Date(invite.expires_at).getTime()<Date.now())return fail("Undangan tidak ditemukan atau sudah kedaluwarsa.",404,origin);
-    if(String(invite.email).toLowerCase()!==email)return fail("Email akun harus sama dengan email yang diundang.",403,origin);
-    const {error:membershipError}=await admin.from("tenant_memberships").upsert({tenant_id:invite.tenant_id,user_id:actor.user.id,role:invite.role,permissions:[],status:"active"},{onConflict:"tenant_id,user_id"});
-    if(membershipError)return fail("Keanggotaan tenant gagal diaktifkan.",409,origin);
-    const {data:accepted,error:acceptError}=await admin.from("tenant_invites").update({status:"accepted",accepted_by:actor.user.id,accepted_at:new Date().toISOString()}).eq("id",invite.id).eq("status","pending").select("id,tenant_id,status").maybeSingle();
-    if(acceptError||!accepted)return fail("Undangan sudah diproses atau berubah.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"tenant_invite_accepted",entity_type:"tenant_invite",entity_id:invite.id,metadata:{tenant_id:invite.tenant_id}});
-    return json({ok:true,invite:accepted},200,origin);
+    const tokenHash=await sha256(token);
+    const {data:result,error}=await admin.rpc("dlice_accept_tenant_invite_atomic",{
+      p_actor_user_id:actor.user.id,
+      p_email:email,
+      p_token_hash:tokenHash,
+    });
+    if(error)return fail("Undangan tidak dapat diproses; token mungkin sudah digunakan atau tidak valid.",error?.code==="42501"?403:error?.code==="23505"?409:404,origin);
+    if(result?.status==="expired")return fail("Undangan sudah kedaluwarsa.",410,origin);
+    if(!result?.ok||!result?.invite)return fail("Undangan tidak dapat diaktifkan.",409,origin);
+    return json({ok:true,invite:result.invite,replayed:result.replayed===true},200,origin);
   }
 
   if (action === "erp-list-branch-settings") {
