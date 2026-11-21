@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: disposable-migration-replay-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   migration-replay:
     runs-on: ubuntu-latest
@@ -39,7 +43,28 @@ jobs:
           supabase init
           # Allocate a unique project ID and port range for every disposable replay.
           # runner starts its temporary Inbucket service alongside the local stack.
-          base_port=$((55000 + GITHUB_RUN_ID % 1000 * 5))
+          base_port="$(python3 - <<'PY'
+          import os, socket
+          seed = 30000 + (int(os.environ["GITHUB_RUN_ID"]) % 20000)
+          for offset in range(0, 20000, 5):
+              base = 30000 + ((seed - 30000 + offset) % 20000)
+              sockets = []
+              try:
+                  for port in range(base, base + 5):
+                      sock = socket.socket()
+                      sock.bind(("0.0.0.0", port))
+                      sockets.append(sock)
+                  print(base)
+                  break
+              except OSError:
+                  pass
+              finally:
+                  for sock in sockets:
+                      sock.close()
+          else:
+              raise SystemExit("No available port block for disposable Supabase")
+          PY
+          )"
           sed -i \
             -e "s/^project_id = .*/project_id = \"dlice-migration-${GITHUB_RUN_ID}\"/" \
             -e "s/^port = 54321$/port = $((base_port + 1))/" \
