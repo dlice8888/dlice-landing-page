@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(13);
+SELECT plan(14);
 
 INSERT INTO auth.users
 (id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,
@@ -42,7 +42,8 @@ INSERT INTO public.payment_records(id,order_id,method,amount_idr,status,proof_st
 VALUES
 ('d7000000-0000-4000-8000-000000000021','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/current.png'),
 ('d7000000-0000-4000-8000-000000000022','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/older.png'),
-('d7000000-0000-4000-8000-000000000023','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'unpaid',NULL);
+('d7000000-0000-4000-8000-000000000023','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'unpaid',NULL),
+('d7000000-0000-4000-8000-000000000024','d7000000-0000-4000-8000-000000000011','bank_transfer',1500,'pending_verification','qa/payment/proof-bearing.png');
 
 SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
@@ -83,6 +84,12 @@ SELECT is(
 );
 
 SELECT is(
+ (SELECT status FROM public.payment_records WHERE id='d7000000-0000-4000-8000-000000000024'),
+ 'pending_verification',
+ 'proof-bearing sibling attempt remains pending for manual double-payment review'
+);
+
+SELECT is(
  (SELECT superseded_by_payment_id FROM public.payment_records WHERE id='d7000000-0000-4000-8000-000000000022'),
  'd7000000-0000-4000-8000-000000000021'::uuid,
  'superseded attempt links to the approved payment'
@@ -96,9 +103,9 @@ SELECT ok(
 SELECT is(
  (SELECT count(*)::integer FROM public.payment_records
   WHERE order_id='d7000000-0000-4000-8000-000000000011'
-    AND status IN ('unpaid','pending_verification')),
+    AND (status='unpaid' OR (status='pending_verification' AND proof_storage_path IS NULL))),
  0,
- 'no actionable unpaid or pending attempts remain after payment approval'
+ 'no unpaid or no-proof pending attempts remain after payment approval'
 );
 
 SELECT is(
