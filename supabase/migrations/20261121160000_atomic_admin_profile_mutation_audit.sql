@@ -237,15 +237,28 @@ BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
-  IF p_actor_user_id IS NULL OR p_tenant_id IS NULL
-     OR NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id)
-     OR p_email IS NULL OR length(p_email)<3 OR length(p_email)>254
-     OR NOT (p_email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$')
-     OR p_role IS NULL OR p_role NOT IN ('tenant_admin','branch_manager','cashier','inventory','production','finance','viewer','tenant_member')
-     OR p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$'
-     OR p_expires_at IS NULL OR p_expires_at <= now()
-     OR p_expires_at > now() + interval '7 days'
-  THEN
+  IF p_actor_user_id IS NULL OR p_tenant_id IS NULL THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id=p_actor_user_id) THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF p_email IS NULL OR length(p_email)<3 OR length(p_email)>254 THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF NOT (p_email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$') THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF p_role IS NULL THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF NOT (p_role = ANY (ARRAY['tenant_admin','branch_manager','cashier','inventory','production','finance','viewer','tenant_member']::text[])) THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF p_token_hash IS NULL OR p_token_hash !~ '^[0-9a-f]{64}$' THEN
+    RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
+  END IF;
+  IF p_expires_at IS NULL OR p_expires_at <= now() OR p_expires_at > now() + interval '7 days' THEN
     RAISE EXCEPTION 'invalid_tenant_invite_details' USING ERRCODE = '22023';
   END IF;
 
