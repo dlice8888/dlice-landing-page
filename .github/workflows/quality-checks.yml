@@ -61,6 +61,8 @@ jobs:
         run: node --test tests/contracts/stock-workflow-rpc-acl-contract.test.mjs
       - name: Verify default public RPC execute ACL boundary
         run: node --test tests/contracts/default-function-acl-contract.test.mjs
+      - name: Run free commerce runtime fault-injection simulations
+        run: node --test tests/runtime/commerce-fault-injection.test.mjs
       - name: Verify Supabase API key compatibility helper
         run: node --check tests/runtime/supabase-api-key.mjs
       - name: Verify runtime tenant-isolation probe evidence
