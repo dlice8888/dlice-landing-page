@@ -4180,7 +4180,7 @@
     }
   },
   "latest_live_audit": {
-    "as_of": "2026-11-21 21:18 WIB",
+    "as_of": "2026-11-21 21:20 WIB",
     "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -4470,27 +4470,36 @@
       "exact_head_previews": {
         "120": {
           "sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+          "deployment_count": 0,
           "state": "NOT FOUND"
         },
         "123": {
           "sha": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+          "deployment_count": 0,
           "state": "NOT FOUND"
         },
         "126": {
-          "sha": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+          "sha": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
+          "deployment_count": 0,
           "state": "NOT FOUND"
         },
         "127": {
           "sha": "e52ea75a218eedecc513ec52311adaee25f241ba",
+          "deployment_count": 0,
           "state": "NOT FOUND"
         }
       },
-      "latest_audit_branch_preview": {
+      "current_audit_branch_head": {
+        "sha": "4743fc1b34ea14eabe8eb6be5131d3b558e42ce5",
+        "deployment_count": 0,
+        "state": "NOT FOUND"
+      },
+      "latest_available_stale_audit_preview": {
         "commit": "30beb0824ce22b123e9d782be272661c58ca6308",
         "state": "READY",
         "url": "https://dlice-landing-page-kombm3oru-dlice8888-7332.vercel.app"
       },
-      "note": "No exact-head Preview deployment was found for PR #120/#123/#126/#127. The audit-branch Preview is documentation-only and is not a candidate feature E2E environment."
+      "note": "No exact-head Preview exists for the current PR heads or latest audit branch head. The READY preview is stale and must not be used as evidence for current code. Browser E2E on current candidates remains NOT RUN."
     },
     "acceptance_policy": "No separate independent PR-review prerequisite in D’Lice project instructions or PR descriptions. Repository ruleset still has reviewer-related enforcement; this has not been disabled because the connected GitHub integration exposes no ruleset write action. Feature acceptance itself is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
     "staging_environment_verification": {
