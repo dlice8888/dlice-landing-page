@@ -4084,5 +4084,107 @@
     "scored_partial_features": 2,
     "unscored_partial_features": 87,
     "status": "INCOMPLETE; do not invent percentages for features whose evidence has not been decomposed"
+  },
+  "source_user_distribution_2026_11_21": {
+    "PARTIAL": 82,
+    "NOT VERIFIED": 98,
+    "BLOCKED": 9,
+    "TOTAL": 189,
+    "arithmetic": "verified per-domain row sum; source total row's NOT VERIFIED=93 is incorrect"
+  },
+  "latest_reaudit_2026_11_21": {
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_branch_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "audit_branch": "audit/189-feature-reconciliation-20261121",
+    "audit_method": "Read-only GitHub/Supabase/Vercel inspection plus exact-head CI and workflow evidence; no production or shared-staging mutations.",
+    "feature_distribution": {
+      "PARTIAL": 89,
+      "NOT VERIFIED": 91,
+      "BLOCKED": 9,
+      "DONE": 0,
+      "TOTAL": 189
+    },
+    "reclassification_note": "Seven features from the supplied source distribution are PARTIAL in the current evidence-backed matrix because implementation foundations were verified in Kitchen/KDS (2), Menu/Pricing (1), Inventory/Warehouse and reorder (2), and SaaS Tenant Management (2). This is progress classification, not acceptance or DONE.",
+    "pr126": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+      "base": "staging",
+      "quality": "IN_PROGRESS_AT_LAST_POLL",
+      "kds_contract": "PASS",
+      "cors_contract": "PASS",
+      "procurement_requisition_contract": "PASS",
+      "procurement_receiving_contract": "IN_PROGRESS_AT_LAST_POLL",
+      "disposable_migration_replay": "IN_PROGRESS_AT_LAST_POLL",
+      "invitation_pgtap_assertions": 15,
+      "invitation_assertions": "PASS on prior exact head cf9d6781; must be reconfirmed on new exact head",
+      "p01_p09_runtime": "NOT RUN",
+      "release_flag": false,
+      "shared_staging_mutation": false
+    },
+    "p01_p09_readiness": {
+      "existing_supabase_identities": "FOUND",
+      "tenant_a": "qa_dlice_staging_no_permission; active sales_admin profile; active branch_manager membership in dlice-default; active assignments include QA-DLICE-A",
+      "tenant_b": "qa_dlice_staging_branch_a; active sales_admin profile; active branch_manager membership in dlice-qa-isolation-b; active assignment QA-TENANT-B",
+      "owner": "dlice8888@accounts.dlice.internal; active owner profile and tenant_owner membership, but app_metadata.platform_owner is false and no active branch assignment; not an authorized platform-owner bypass",
+      "required_secret": "STAGING_SUPABASE_SERVICE_ROLE_KEY",
+      "environment_protection_and_secret": "NOT VERIFIED/NOT CONFIGURABLE through current connector",
+      "workflow_dispatch": "NOT AVAILABLE through current GitHub connector",
+      "pre_release_probe_allowlist_commit": "1bd648704172fecb2885b62fb3c51b7720da469c",
+      "pre_release_probe_test_commit": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+      "allowlisted_actions": [
+        "erp-list-tenant-memberships",
+        "erp-list-branches",
+        "erp-list-inventory",
+        "erp-create-stock-transfer"
+      ],
+      "rationale": "These routes are self-only or explicitly tenant/branch scoped and are the minimum P01-P09 surface. Other admin/ERP actions remain fail-closed before release."
+    },
+    "staging_positive_e2e": {
+      "kds_pos_stock": "BLOCKED at preflight on run 44741192566; legacy workflow still requires STAGING_TEST_OWNER_USERNAME/PASSWORD; business-flow step SKIPPED",
+      "procurement": "legacy workflow still requires Owner username/password and Tenant A username/password; must be refactored to passwordless Supabase Auth sessions or await approved Owner Auth setup",
+      "owner_identity_gate": "Existing Supabase Owner identity does not have platform_owner claim/allowlist; no metadata mutation performed"
+    },
+    "migration_reconciliation": {
+      "repository_sql_files": 52,
+      "staging_applied": 49,
+      "pending": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "status": "DRIFT_3_PENDING_NOT_APPLIED"
+    },
+    "github_release_protection": {
+      "ruleset_id": 27559290,
+      "enforcement": "ACTIVE",
+      "scope": "~ALL branches",
+      "required_approving_review_count": 0,
+      "required_status_checks": [],
+      "required_deployment_environments": [],
+      "required_signatures": true,
+      "required_linear_history": true,
+      "prevent_deletion": true,
+      "prevent_non_fast_forward": true,
+      "current_connection_can_bypass": "always",
+      "bypass_actor_count": 11,
+      "status": "INSUFFICIENT: no required human approval/checks and always-bypass actors remain",
+      "staging_branch_protected_flag": true,
+      "branch_protection_endpoint_enabled": false
+    },
+    "supabase_advisors": {
+      "security": "1 warning: leaked-password protection disabled",
+      "performance": "26 unindexed foreign keys; 49 unused-index notices",
+      "health": "0 findings"
+    },
+    "vercel": {
+      "pr126_preview": "READY only on stale older commit; current PR head preview not confirmed",
+      "production_changed": false
+    },
+    "release_controls": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false,
+      "production_mutated": false,
+      "shared_staging_migrations_applied": false
+    }
   }
 }
