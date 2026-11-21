@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(28);
+SELECT plan(29);
 
 INSERT INTO auth.users
 (id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,
@@ -128,7 +128,7 @@ SELECT ok(
 -- Password reset uses a durable audit intent before the external Supabase Auth mutation.
 SELECT set_config('request.jwt.claim.role','authenticated',true);
 SELECT throws_ok(
- $SELECT public.dlice_begin_admin_password_reset_audit('d5000000-0000-4000-8000-000000000001','d5000000-0000-4000-8000-000000000002')$,
+ $q$SELECT public.dlice_begin_admin_password_reset_audit('d5000000-0000-4000-8000-000000000001','d5000000-0000-4000-8000-000000000002')$q$,
  '42501','service_role_required',
  'non-service caller cannot create a password reset audit intent'
 );
@@ -139,7 +139,7 @@ SELECT ok(
 SELECT set_config('request.jwt.claim.role','service_role',true);
 SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
 SELECT throws_ok(
- $SELECT public.dlice_begin_admin_password_reset_audit('d5000000-0000-4000-8000-000000000001','d5000000-0000-4000-8000-000000000001')$,
+ $q$SELECT public.dlice_begin_admin_password_reset_audit('d5000000-0000-4000-8000-000000000001','d5000000-0000-4000-8000-000000000001')$q$,
  '55000','owner_password_is_not_editable',
  'password reset audit intent refuses platform Owner'
 );
@@ -184,26 +184,26 @@ SELECT is(
  'false',
  'replaying the same successful audit finalization is idempotent'
 );
-SELECT set_config(
- 'test.password_reset_failure_audit_id',
- public.dlice_begin_admin_password_reset_audit(
-  'd5000000-0000-4000-8000-000000000001',
-  'd5000000-0000-4000-8000-000000000003'
- )::text,
- true
-);
 SELECT is(
  public.dlice_finish_admin_password_reset_audit(
   'd5000000-0000-4000-8000-000000000001',
-  current_setting('test.password_reset_failure_audit_id')::uuid,
+  (SELECT id FROM public.admin_audit_logs WHERE action='admin_password_reset_started' AND entity_id='d5000000-0000-4000-8000-000000000003' ORDER BY created_at DESC LIMIT 1),
   false,
   'auth_admin_update_failed'
  )->>'status',
  'failed',
  'failed Auth password mutation is explicitly recorded'
 );
+SELECT set_config(
+ 'test.password_reset_pending_id',
+ public.dlice_begin_admin_password_reset_audit(
+  'd5000000-0000-4000-8000-000000000001',
+  'd5000000-0000-4000-8000-000000000002'
+ )::text,
+ true
+);
 CREATE OR REPLACE FUNCTION public.test_reject_password_reset_audit_finalization()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $trigger$
 BEGIN
   IF current_setting('test.fail_password_audit_update',true)='true'
      AND NEW.action='reset_admin_password_failed' THEN
@@ -211,20 +211,25 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$trigger$;
 CREATE TRIGGER test_reject_password_reset_audit_finalization
 BEFORE UPDATE ON public.admin_audit_logs
 FOR EACH ROW EXECUTE FUNCTION public.test_reject_password_reset_audit_finalization();
 SELECT set_config('test.fail_password_audit_update','true',true);
 SELECT throws_ok(
- $SELECT public.dlice_finish_admin_password_reset_audit(
+ $q$SELECT public.dlice_finish_admin_password_reset_audit(
   'd5000000-0000-4000-8000-000000000001',
-  public.gen_random_uuid(),
+  current_setting('test.password_reset_pending_id')::uuid,
   false,
   'auth_admin_update_failed'
- )$,
- 'P0002','password_reset_audit_event_not_found',
- 'rejects an unknown password reset audit event'
+ )$q$,
+ 'P0001','forced password reset audit finalization failure',
+ 'surfaces an audit finalization failure rather than silently reporting success'
+);
+SELECT is(
+ (SELECT metadata->>'status' FROM public.admin_audit_logs WHERE id=current_setting('test.password_reset_pending_id')::uuid),
+ 'pending',
+ 'failed finalization preserves the durable pending audit intent for reconciliation'
 );
 SELECT set_config('test.fail_password_audit_update','false',true);
 DROP TRIGGER test_reject_password_reset_audit_finalization ON public.admin_audit_logs;
