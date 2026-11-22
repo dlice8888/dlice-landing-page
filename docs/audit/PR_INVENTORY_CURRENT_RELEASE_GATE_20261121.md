@@ -270,9 +270,9 @@ The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be27
 ## Superseding CI-only gate update — 22 November 2026
 
 - The repository rulesets API currently returns **zero rulesets**. PR #120 has no requested reviews. Commit signatures and independent review are not acceptance gates; exact-head CI is the engineering gate.
-- PR #120 head `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f`: all applicable GitHub Actions and Vercel checks PASS.
+- PR #120 head `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f` passed all applicable GitHub Actions and Vercel checks, then merged to `staging` at `5f6fa00c7335247684f7d88410a0c506de49a5a9`.
 - PR #121 head `1daeb32af34cd08ac798dd984d47edee5df80f15`: matrix row-count/score/weight contract is in the quality workflow; exact-head quality and Vercel checks PASS.
 - The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names are not readable through the connected integration (HTTP 403); no secret values were read.
-- P01–P09 remains NOT RUN. No staging migration, Edge Function deployment, Auth mutation or production change was performed.
+- Staging run `45017642887`: P01/P02 PASS, P03 FAIL on HTTP 503 from both membership lookups, P04–P09 BLOCKED; six supplemental probes BLOCKED. Temporary sessions were revoked (HTTP 204); no account/password change, migration, Edge Function deployment or production change was performed. Acceptance remains failed pending a fix and full rerun.
 - Historical ruleset observations below describe the 21 November snapshot only and are superseded for current policy state by this update.
 

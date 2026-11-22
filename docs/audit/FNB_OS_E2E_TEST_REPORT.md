@@ -318,5 +318,13 @@ Vercel deployment lookup by exact Git commit SHA returned zero deployments for:
 - PR #127: `e52ea75a218eedecc513ec52311adaee25f241ba`
 - Latest audit branch head: `4743fc1b34ea14eabe8eb6be5131d3b558e42ce5`
 
+## Latest staging tenant-isolation run — 22 November 2026
+
+The trusted-staging workflow ran after PR #120 was merged at `5f6fa00c7335247684f7d88410a0c506de49a5a9`. Run [45017642887](https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887) executed P01–P03: P01 and P02 authenticated the existing Tenant A/B identities (HTTP 200); P03 failed because both `erp-list-tenant-memberships` requests returned HTTP 503 while both branch lookups returned HTTP 200. P04–P09 were BLOCKED because the P03 fixture contract was not satisfied. Six supplemental direct-RLS/RPC probes were also BLOCKED. Counts: **2 PASS / 1 FAIL / 12 BLOCKED / 0 SKIPPED** (12 includes six required and six supplemental blocked probes).
+
+Both temporary Auth sessions were revoked successfully (HTTP 204). No account or password was changed. The run retained sanitized evidence as artifact `staging-tenant-isolation-evidence-45017642887-1` through 22 December 2026; no secret values were printed.
+
+The failure is consistent with the candidate Edge Function embedding `admin_profiles` through `tenant_memberships` even though the migration defines no foreign-key relationship between those tables. This is the leading source-level cause; the exact PostgREST error body was intentionally not logged. The deployed Edge Function remains unchanged, and no migration or function deployment was performed. Do not treat P01–P09 as accepted until the membership lookup is fixed, validated by CI, deployed through the authorized staging path, and the complete 9/9 workflow passes.
+
 The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be272661c58ca6308`, which is stale and not the latest audit branch head. It is not a valid browser E2E target for current candidate code. Therefore no exact-head browser E2E or visual QA is claimed.
 

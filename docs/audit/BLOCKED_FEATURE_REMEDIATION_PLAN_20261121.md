@@ -149,4 +149,4 @@ A feature is DONE only when its weighted acceptance score is 100%, all required 
 - Repository rulesets API returns zero rulesets. PR #120 has no requested reviews; its exact-head checks pass at `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f`.
 - PR #121 matrix correction is on `1daeb32af34cd08ac798dd984d47edee5df80f15`; exact-head quality and Vercel checks pass.
 - The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names are not readable through the connected integration (HTTP 403); no secret values were read.
-- P01–P09 remains NOT RUN. No staging migration, Edge Function deployment, Auth mutation or production change was performed.
+- Staging run `45017642887` executed P01–P03: P01/P02 PASS, P03 FAIL (both membership requests returned HTTP 503), and P04–P09 BLOCKED. The six supplemental probes were also BLOCKED. Temporary sessions were revoked (HTTP 204); no account/password change, migration, Edge Function deployment or production change was performed. The runtime defect is tracked for remediation; acceptance remains failed.

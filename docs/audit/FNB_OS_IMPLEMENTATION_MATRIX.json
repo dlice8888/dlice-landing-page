@@ -4744,5 +4744,75 @@
       }
     },
     "production_changed": false
+  },
+  "latest_staging_acceptance": {
+    "workflow": "Staging Tenant Isolation Acceptance",
+    "run_id": 45017642887,
+    "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
+    "commit": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "executed_at": "2026-11-22T11:30:20Z",
+    "status": "FAIL",
+    "required_probe_counts": {
+      "PASS": 2,
+      "FAIL": 1,
+      "BLOCKED": 6,
+      "SKIPPED": 0
+    },
+    "probes": {
+      "P01": "PASS",
+      "P02": "PASS",
+      "P03": "FAIL",
+      "P04": "BLOCKED",
+      "P05": "BLOCKED",
+      "P06": "BLOCKED",
+      "P07": "BLOCKED",
+      "P08": "BLOCKED",
+      "P09": "BLOCKED"
+    },
+    "p03_http_status": {
+      "tenant_a_membership": 503,
+      "tenant_b_membership": 503,
+      "tenant_a_branches": 200,
+      "tenant_b_branches": 200
+    },
+    "supplemental_blocked": 6,
+    "temporary_auth_sessions_revoked": {
+      "tenant_a_http_status": 204,
+      "tenant_b_http_status": 204
+    },
+    "evidence_artifact": {
+      "name": "staging-tenant-isolation-evidence-45017642887-1",
+      "expires_at": "2026-12-22T11:30:40Z",
+      "secret_values_printed": false
+    },
+    "no_staging_migration_or_function_deployment": true,
+    "no_production_change": true,
+    "acceptance": "NOT ACCEPTED; fix the P03 membership endpoint and rerun all nine probes"
+  },
+  "latest_engineering_gate_update": {
+    "observed_at": "2026-11-22T11:30:20Z",
+    "staging_head": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "pr120": {
+      "state": "MERGED",
+      "checks": "PASS"
+    },
+    "pr121": {
+      "state": "OPEN",
+      "head": "feed093072b6a30402340477acc9beac689c3ba9",
+      "matrix_contract": "PASS",
+      "full_exact_head_ci": "PASS",
+      "quality_run": 45017916261,
+      "migration_replay_run": 45017914029
+    },
+    "repository_ruleset_count": 0,
+    "signature_or_independent_review_gate": false,
+    "classic_branch_protection": "NOT VERIFIED; API returned HTTP 403",
+    "staging_environment": {
+      "exists": true,
+      "protection_rules": [],
+      "deployment_branch_policy": null,
+      "secret_names": "NOT VERIFIABLE; API returned HTTP 403"
+    },
+    "production_changed": false
   }
 }
