@@ -935,7 +935,7 @@ if (action === "admin-set-profile-role") {
 
     const result=(memberships||[]).map((membership:any)=>({
       ...membership,
-      admin_profile:{display_name:profile.display_name,username:profile.username,role:profile.role},
+      admin_profiles:{display_name:profile.display_name,username:profile.username,role:profile.role},
     }));
     return json({memberships:result},200,origin);
   }
