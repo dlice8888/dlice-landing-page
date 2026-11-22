@@ -134,7 +134,16 @@ test("inventory reads authorize the requested branch before any data query and s
 
 
 test("P03 requires supported global sales_admin profiles, branch_manager tenant memberships, equal permissions, and allows multiple same-tenant branches", () => {
-  assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
+  const membershipStart = edgeSource.indexOf('if (action === "erp-list-tenant-memberships")');
+  const membershipEnd = edgeSource.indexOf('if (action === "erp-create-tenant")', membershipStart);
+  const membershipHandler = edgeSource.slice(membershipStart, membershipEnd);
+  assert.ok(membershipStart >= 0 && membershipEnd > membershipStart);
+  assert.doesNotMatch(membershipHandler, /admin_profiles\\s*\\(/,
+    "admin_profiles must not be embedded through tenant_memberships without a foreign key");
+  assert.match(membershipHandler, /admin\\.from\\(["']admin_profiles["']\\)[\\s\\S]*?\\.eq\\(["']user_id["'],\\s*actor\\.user\\.id\\)/,
+    "profile metadata must be fetched separately using the verified actor id");
+  assert.match(membershipHandler, /admin_profiles:\\{display_name:profile\\.display_name,username:profile\\.username,role:profile\\.role\\}/,
+    "membership response must preserve the profile role contract expected by P03");
   // Global console role and tenant-scoped membership role are separate parts of the actual app model.
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.ok(fixtureResolver.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
