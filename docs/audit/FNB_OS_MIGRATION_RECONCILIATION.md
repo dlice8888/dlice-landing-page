@@ -343,3 +343,50 @@ The test harness and workflow changes are on staging commits `e4b6aa4` and `0cac
 ### Superseding CI-only gate update — 22 November 2026
 
 The repository rulesets API currently returns zero rulesets; signature and independent-review requirements are not CI gates. PR #120 exact head `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f` has all applicable checks passing. The staging Environment exists without protection rules or a deployment-branch policy. Classic branch protection and Environment secret names are not readable through the connected integration (HTTP 403); secret values were not accessed. Staging run `45017642887` yielded P01/P02 PASS, P03 FAIL (HTTP 503 membership lookups), P04–P09 BLOCKED, and six supplemental BLOCKED probes. No staging migration, function deployment, account/password change or production change was performed.
+
+
+## Fresh read-only recheck — 23 November 2026
+
+Database: Supabase staging `dlice-staging` (`higoadrzxnhzbbwhdbmh`), PostgreSQL 17.11.0.003.
+
+| Item | Live result |
+|---|---:|
+| Applied migration rows | 49 |
+| Latest applied version | `20261119182606` |
+| Staging source migration files | 52 (last source-tree inventory) |
+| Applied versions missing from source | 0 |
+| Pending source-only versions | 3 |
+| Public base tables | 64 |
+| Tables with RLS enabled | 64 |
+| Tables without RLS | 0 |
+| Public policies | 64 |
+| Public functions | 29 |
+| Public functions executable by anon | 0 |
+| Public functions executable by authenticated | 0 |
+| Public functions executable by service_role | 29 |
+| Public views | 0 |
+
+The three source-only migrations remain:
+- `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+- `20261120110000_command_center_summary.sql`
+- `20261120120000_atomic_branch_checklist_audit.sql`
+
+No migration was applied during this recheck. Do not apply these three migrations until dependency review, exact-head disposable replay, authorization checks, and the protected staging mutation gate pass.
+
+### Current runtime and data observations
+
+- Active `dlice-orders`: version 70, `verify_jwt=false`; custom handler authentication is present and must remain covered by positive/negative authorization probes.
+- The only active cron job observed is `dlice-operational-retention` at `17 3 * * *`. No order-expiry worker is installed.
+- Seven existing orders are in `operational_status=received` and `fulfillment_status=unassigned`; these legacy rows require reviewed reconciliation, not automatic mutation.
+- Profile role distribution: one `owner`, three `sales_admin`; three active tenant memberships were counted. No profile or membership was changed.
+- Security Advisor: leaked-password protection disabled (one WARN).
+- Performance Advisor: 26 unindexed foreign keys and 49 unused-index suggestions. Do not drop indexes based solely on zero scans; validate covering indexes and representative query plans first.
+- Health Advisor: no findings.
+
+### P0 tenant acceptance
+
+Run [45017642887](https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887) on staging commit `5f6fa00c7335247684f7d88410a0c506de49a5a9`: P01/P02 PASS, P03 FAIL (membership endpoint HTTP 503 for both existing QA identities), P04–P09 BLOCKED, zero SKIPPED. Acceptance remains NOT ACCEPTED.
+
+Source comparison identified the P03 defect: staging embeds `admin_profiles(...)` through `tenant_memberships` despite the absence of that foreign-key relationship. PR #126 has the correct separate-query implementation; preserve it during conflict reconciliation. Do not add a speculative foreign key to mask the PostgREST relationship error.
+
+No shared staging migration, Edge Function deployment, Auth mutation, Vercel setting change, production change, merge, or release-flag change occurred during this recheck. Both release flags remain false.
