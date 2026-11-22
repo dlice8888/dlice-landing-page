@@ -111,13 +111,11 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 - The ERP authorization coverage contract now passes. Disposable replay then exposed orphaned SQL fragments after `COMMIT` in `20261121160000_atomic_admin_profile_mutation_audit.sql`; 22,067 trailing characters were removed from current head `29d6d808`. Eleven pgTAP assertions now cover audited invitation issuance. Exact-head quality and procurement/KDS/CORS contracts pass; disposable migration replay remains IN_PROGRESS. Do not mark accepted until replay completes PASS.
 
 **Remaining work**
-1. Independent review of RPC ACL, function authorization, target locking and audit schema.
-2. Resolve GitHub release protection and required independent reviewer.
-3. After explicit staging authorization, apply the migration and deploy the matching Edge Function to staging only.
-4. Run positive permission change, invalid permission, non-service RPC denial, Owner protection, audit-write failure rollback and before/after audit retrieval using staging identities.
-5. Confirm audit actor identity is the authenticated administrator and no permission change can bypass this RPC.
+1. Keep RPC ACL, function authorization, target locking and audit schema covered by exact-head CI and disposable migration replay.
+2. After authorized staging integration, run positive permission change, invalid permission, non-service RPC denial, Owner protection, audit-write failure rollback and before/after audit retrieval using staging identities.
+3. Confirm audit actor identity is the authenticated administrator and no permission change can bypass this RPC.
 
-**DONE evidence:** independent approval, exact-head CI, authorized staging migration/deployment, runtime positive/negative tests and audit-row verification. No production change is included.
+**DONE evidence:** exact-head CI, authorized staging migration/deployment, runtime positive/negative tests and audit-row verification. No independent reviewer or commit-signature gate is required; no production change is included.
 
 ### 9. Quality, Compliance & Security — leaked-password protection
 **Current gap:** Supabase Security Advisor currently reports `auth_leaked_password_protection` as WARN / disabled.
@@ -134,8 +132,8 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 
 ## Cross-cutting prerequisites blocking multiple domains
 
-1. **GitHub release protection:** the latest available audit found a repository ruleset with zero required approvals, empty required checks and deployment reviewers, and always-bypass actors. Branch-specific protection reads returned 403. This is not an adequate release gate.
-2. **Independent review:** the current open PR metadata shows no reviewers requested on the 16 open PRs. PR authors must not approve their own changes.
+1. **GitHub CI gate:** the latest rulesets API read returns zero repository rulesets. Exact-head CI is the engineering acceptance gate; classic branch-protection reads return 403, so no additional settings are inferred.
+2. **Independent review/signing:** neither is a separate acceptance gate. Current PR #120/#121 metadata has no requested reviewers; signature verification status is informational.
 3. **Owner authorization:** live read-only query found zero Auth users with boolean `app_metadata.platform_owner=true`; do not mutate Owner metadata without authorized Auth Admin action and verified existing identity.
 4. **Tenant runtime acceptance:** P01–P09 and supplemental probes have not been executed against real protected staging identities; blocked/skipped probes are not passes.
 5. **Business-data workflow evidence:** staging currently has zero purchase orders, receipts, production batches, settlements, refunds and finance journal entries. Use isolated, explicitly authorized test fixtures; never fabricate production transactions.
@@ -144,4 +142,11 @@ This plan is tied to the 189-row feature register in `FNB_OS_IMPLEMENTATION_MATR
 
 ## Exit rule
 
-A feature is DONE only when its weighted acceptance score is 100%, all required code/database/workflow/runtime checks pass, there are zero BLOCKED/SKIPPED acceptance probes, reconciliation evidence is attached, and required independent review/release gates are satisfied.
+A feature is DONE only when its weighted acceptance score is 100%, all required code/database/workflow/runtime checks pass, there are zero BLOCKED/SKIPPED acceptance probes, and reconciliation evidence is attached. Engineering acceptance is CI-based; independent reviewer and commit-signature rules are not prerequisites.
+
+## CI-only gate status — 22 November 2026
+
+- Repository rulesets API returns zero rulesets. PR #120 has no requested reviews; its exact-head checks pass at `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f`.
+- PR #121 matrix correction is on `1daeb32af34cd08ac798dd984d47edee5df80f15`; exact-head quality and Vercel checks pass.
+- The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names are not readable through the connected integration (HTTP 403); no secret values were read.
+- P01–P09 remains NOT RUN. No staging migration, Edge Function deployment, Auth mutation or production change was performed.

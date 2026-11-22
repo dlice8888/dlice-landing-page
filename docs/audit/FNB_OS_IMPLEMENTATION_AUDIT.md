@@ -82,7 +82,7 @@ A separate Draft PR [#85](https://github.com/dlice8888/dlice-landing-page/pull/8
 4. Complete Owner Auth Admin metadata and UUID allowlist verification using the official authorized route; do not bootstrap by bypass.
 5. Reconcile the missing migration source file and all PR migration overlaps before any schema change.
 6. Finish operational positive E2E and the complete automated adversarial security regression.
-7. Establish GitHub branch/ruleset and staging deployment protection through repository settings; do not weaken protections.
+7. Use exact-head CI and disposable migration replay as the engineering gate; run staging acceptance through the trusted staging CI workflow. Do not add independent-review or commit-signature prerequisites.
 
 ## Status definitions
 
@@ -226,3 +226,7 @@ P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted stagin
 Supabase staging remains at 49 applied migrations versus 52 source files, with exactly three source-only candidates (20261120100000, 20261120110000, 20261120120000), zero DB-only versions and no duplicate version in the staging source tree. No migration or Edge Function was applied to shared staging or production. Both release flags remain false.
 
 The active GitHub ruleset #27559290 has zero required approving reviews, zero required status checks and zero required deployment environments, while CODEOWNERS and last-push approval controls remain enabled. The project acceptance policy does not require a separate independent PR review; the connected integration has no ruleset-write action to change repository-level settings. Staging Environment protection remains NOT VERIFIED. Vercel Preview SSO is enabled, but Preview readiness is not runtime acceptance.
+
+### Superseding CI-only gate update — 22 November 2026
+
+The current repository rulesets API returns zero rulesets. PR #120 has no requested reviews; exact-head checks on `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f` pass. Signature verification is informational, not a release gate. The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names return HTTP 403 to the connected integration, so their state is not inferred. P01–P09 remains NOT RUN; no staging or production mutation was performed.

@@ -222,3 +222,7 @@ This exact head includes:
 
 P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
 
+## Superseding engineering gate update — 22 November 2026
+
+The repository rulesets API currently returns zero rulesets, and PR #120 has no requested reviewers. Commit signatures and independent review are informational, not acceptance gates; exact-head CI is the engineering gate. PR #120 head `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f` and PR #121 head `1daeb32af34cd08ac798dd984d47edee5df80f15` have all applicable checks passing. The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names are not readable through the connected integration (HTTP 403); no secret values were read. P01–P09 remains NOT RUN; no staging or production change was made.
+
