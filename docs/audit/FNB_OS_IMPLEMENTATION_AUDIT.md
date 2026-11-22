@@ -230,3 +230,39 @@ The active GitHub ruleset #27559290 has zero required approving reviews, zero re
 ### Superseding CI-only gate update — 22 November 2026
 
 The current repository rulesets API returns zero rulesets. PR #120 has no requested reviews; exact-head checks on `4c12e4b2371ba11525a4e2c0c8bd5177259a2f6f` pass. Signature verification is informational, not a release gate. The `staging` Environment exists with no protection rules or deployment-branch policy. Classic branch-protection settings and Environment secret names return HTTP 403 to the connected integration, so their state is not inferred. Staging run `45017642887` produced P01/P02 PASS, P03 FAIL (HTTP 503 membership lookups), P04–P09 BLOCKED, and six supplemental BLOCKED probes. No migration, Edge Function deployment, account/password change or production mutation occurred.
+
+
+## Live continuation — 23 November 2026
+
+### P0 tenant-isolation acceptance
+
+The latest shared-staging run is [45017642887](https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887), against staging commit `5f6fa00c7335247684f7d88410a0c506de49a5a9`.
+
+| Probe | Result |
+|---|---|
+| P01 | PASS |
+| P02 | PASS |
+| P03 | FAIL — membership HTTP 503 for Tenant A and Tenant B |
+| P04–P09 | BLOCKED |
+| SKIPPED | 0 |
+
+The root cause was isolated by comparing the deployed staging source with PR #126. Staging's `erp-list-tenant-memberships` query embeds `admin_profiles` from `tenant_memberships`, but no corresponding foreign-key relationship exists. PostgREST therefore returns a relationship/schema-cache error and the handler responds HTTP 503.
+
+PR #126 contains the safer correction: query active `tenant_memberships` independently, query `admin_profiles` by the authenticated actor's `user_id`, and join the response in application code. Membership remains the authorization source. Preserve this implementation when reconciling PR #126; do not invent a foreign key.
+
+### Integration constraints
+
+- PR #120 is already merged to staging. PR #124 is closed and superseded by #120.
+- PR #126 remains draft and based on stale staging SHA `78f929dac2b05f436aaa7f50005310166f8a4779`; it must be reconciled against current staging SHA `5f6fa00c7335247684f7d88410a0c506de49a5a9`.
+- PR #126's invitation migration differs from the staging/#120 candidate. Do not replace the canonical migration with the stale candidate without blob comparison and exact-head replay.
+- The existing staging P01–P09 workflow completed P01/P02 but failed P03; the passwordless PR #126 workflow and protected Environment prerequisite are not yet accepted as a replacement.
+- Active Edge Function is version 70 with `verify_jwt=false` and custom handler authentication. SDK `2.57.4` compatibility with new `sb_secret_` API keys remains a separate release blocker.
+- Supabase staging remains at 49 applied migrations; 52 source files were last inventoried, with three source-only migrations. No migration or Edge Function deployment was performed.
+
+### Current evidence and release posture
+
+The 189-feature matrix remains 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two PARTIAL features have defensible weighted scores (38% and 30%); 90 PARTIAL features remain unscored until their six weighted evidence dimensions are decomposed. Do not invent percentages.
+
+Supabase read-only recheck: 64/64 public tables have RLS, 64 policies, 29 public functions, and no anon/authenticated EXECUTE grants on those public functions. Security Advisor reports one leaked-password warning; Performance Advisor reports 26 unindexed foreign keys and 49 unused-index suggestions; Health Advisor has no findings.
+
+Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. No staging migration, Edge Function deployment, Auth mutation, Vercel setting change, production change, or merge was performed during this audit update.
