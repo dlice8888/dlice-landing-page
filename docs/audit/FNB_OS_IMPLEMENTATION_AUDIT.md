@@ -266,3 +266,30 @@ The 189-feature matrix remains 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE. T
 Supabase read-only recheck: 64/64 public tables have RLS, 64 policies, 29 public functions, and no anon/authenticated EXECUTE grants on those public functions. Security Advisor reports one leaked-password warning; Performance Advisor reports 26 unindexed foreign keys and 49 unused-index suggestions; Health Advisor has no findings.
 
 Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. No staging migration, Edge Function deployment, Auth mutation, Vercel setting change, production change, or merge was performed during this audit update.
+
+
+## Feature-status reclassification — 23 November 2026
+
+A row-by-row review found three NOT VERIFIED requirements with concrete implementation/test evidence already available. They are now correctly classified as PARTIAL, not DONE:
+
+| Domain | Feature | Evidence | Remaining acceptance gap |
+|---|---|---|---|
+| Admin, Identity & Access Control | Owner/manager/no-permission/inactive identity probes | Existing negative/role suite: 21 PASS / 0 FAIL | Positive business E2E and full live role/inactive-user matrix |
+| Admin, Identity & Access Control | Cross-tenant isolation | PR #126: 35 pgTAP RLS assertions across 17 sensitive tables and tenant-scoped Edge Function checks | Live Tenant A/B P03-P09 acceptance; current P03 fails and P04-P09 are blocked |
+| Quality, Compliance & Security | Exact-origin CORS | Run [44307838539](https://github.com/dlice8888/dlice-landing-page/actions/runs/44307838539): registered origin 200/exact ACAO, foreign origin 403/no ACAO, no-Origin 200/no ACAO | POST/authenticated action coverage and full endpoint regression |
+
+Updated feature distribution:
+
+| Status | Count |
+|---|---:|
+| PARTIAL | 95 |
+| NOT VERIFIED | 88 |
+| BLOCKED | 6 |
+| DONE | 0 |
+| **TOTAL** | **189** |
+
+Domain table changes:
+- Admin, Identity & Access Control: 8 PARTIAL / 2 NOT VERIFIED / 0 BLOCKED (80% partial coverage).
+- Quality, Compliance & Security: 12 PARTIAL / 8 NOT VERIFIED / 0 BLOCKED (60% partial coverage).
+
+Only two PARTIAL features currently have weighted numeric scores (38% and 30%). The other 93 PARTIAL features remain unscored until their six evidence dimensions are decomposed. These reclassifications do not imply runtime acceptance or DONE.
