@@ -1,13 +1,16 @@
 name: Disposable local Supabase migration replay
 on:
+  # Manual dispatch is safe: this workflow uses only an isolated local Supabase stack.
+  workflow_dispatch:
   pull_request:
     branches: [staging]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
       - ".github/workflows/disposable-migration-replay.yml"
+  # Replay candidate migrations on every branch push; this uses only a disposable local database.
   push:
-    branches: [staging]
+    branches: ["**"]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/**"
@@ -15,6 +18,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: disposable-migration-replay-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   migration-replay:
@@ -37,6 +44,37 @@ jobs:
           trap cleanup EXIT
           cd "$tmp"
           supabase init
+          # Allocate a unique project ID and port range for every disposable replay.
+          base_port="$(python3 - <<'PY'
+          import os, socket
+          seed = 30000 + (int(os.environ["GITHUB_RUN_ID"]) % 20000)
+          for offset in range(0, 20000, 5):
+              base = 30000 + ((seed - 30000 + offset) % 20000)
+              sockets = []
+              try:
+                  for port in range(base, base + 5):
+                      sock = socket.socket()
+                      sock.bind(("0.0.0.0", port))
+                      sockets.append(sock)
+                  print(base)
+                  break
+              except OSError:
+                  pass
+              finally:
+                  for sock in sockets:
+                      sock.close()
+          else:
+              raise SystemExit("No available port block for disposable Supabase")
+          PY
+          )"
+          sed -i \
+            -e "s/^project_id = .*/project_id = \"dlice-migration-${GITHUB_RUN_ID}\"/" \
+            -e "s/^port = 54321$/port = $((base_port + 1))/" \
+            -e "s/^port = 54322$/port = $((base_port + 2))/" \
+            -e "s/^shadow_port = 54320$/shadow_port = ${base_port}/" \
+            -e "s/^port = 54323$/port = $((base_port + 3))/" \
+            -e "s/^port = 54324$/port = $((base_port + 4))/" \
+            supabase/config.toml
           mkdir -p supabase/migrations supabase/tests
           cp "$GITHUB_WORKSPACE"/supabase/migrations/*.sql supabase/migrations/
           cp "$GITHUB_WORKSPACE"/supabase/tests/*.sql supabase/tests/

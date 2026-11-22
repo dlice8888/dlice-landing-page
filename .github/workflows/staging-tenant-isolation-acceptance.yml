@@ -2,8 +2,14 @@ name: Staging Tenant Isolation Acceptance
 
 # Run only from the trusted staging branch; never expose staging credentials to PR code.
 on:
-  # Explicit manual dispatch only: prevent an unverified Environment from
-  # generating a BLOCKED acceptance run automatically on every staging push.
+  # Run only when the trusted staging test harness itself changes.
+  push:
+    branches:
+      - staging
+    paths:
+      - .github/workflows/staging-tenant-isolation-acceptance.yml
+      - tests/runtime/dlice-tenant-jwt-isolation.mjs
+      - tests/runtime/supabase-api-key.mjs
   workflow_dispatch:
 
 permissions:
@@ -24,11 +30,10 @@ jobs:
     env:
       STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
       STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
-      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
-      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
-      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
-      # Tenant/branch/user UUIDs are derived from the authenticated A/B identities at runtime.
+      STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      # Fixed, pre-existing confirmed Auth identities; no account creation or password reset.
+      STAGING_TENANT_A_USER_ID:  b930897c-f8fb-443b-9056-e70c08b31446
+      STAGING_TENANT_B_USER_ID:  e1de1ffc-9fae-412f-9dd7-0993b54cb631
       STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
       STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
     steps:
@@ -87,6 +92,14 @@ jobs:
             "",
           ].join("\n"));
           NODE
+      - name: Upload sanitized tenant-isolation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-tenant-isolation-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: staging-tenant-isolation-evidence.jsonl
+          if-no-files-found: warn
+          retention-days: 30
       - name: Enforce complete P01-P09 acceptance
         if: always()
         env:
