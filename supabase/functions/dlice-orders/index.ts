@@ -915,15 +915,29 @@ if (action === "admin-set-profile-role") {
   }
 
   if (action === "erp-list-tenant-memberships") {
-    // Self-service only: return active memberships belonging to the authenticated actor.
-    // Do not require a global "branches" permission for a user's own membership lookup.
-    // Never accept a caller-supplied user_id here; actor identity comes from the verified session.
-    const {data,error}=await admin.from("tenant_memberships")
-      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username,role)")
+    // Self-service only: the verified session is the sole source of actor identity.
+    // Avoid embedding admin_profiles: there is intentionally no FK from tenant_memberships
+    // to admin_profiles, so PostgREST relationship embedding returns a schema-cache error.
+    const {data: memberships,error: membershipError}=await admin.from("tenant_memberships")
+      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status)")
       .eq("user_id",actor.user.id)
       .eq("status","active");
-    if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
-    return json({memberships:data||[]},200,origin);
+    if(membershipError)return fail("Keanggotaan tenant belum tersedia.",503,origin);
+
+    // Profile identity is a separate, explicit one-to-one lookup through the actual
+    // admin_profiles.user_id -> auth.users.id relationship. Authorization remains
+    // grounded in active tenant_memberships, never global profile permissions.
+    const {data: profile,error: profileError}=await admin.from("admin_profiles")
+      .select("display_name,username,role,is_active")
+      .eq("user_id",actor.user.id)
+      .maybeSingle();
+    if(profileError||!profile?.is_active)return fail("Profil operasional belum tersedia.",503,origin);
+
+    const result=(memberships||[]).map((membership:any)=>({
+      ...membership,
+      admin_profile:{display_name:profile.display_name,username:profile.username,role:profile.role},
+    }));
+    return json({memberships:result},200,origin);
   }
 
   if (action === "erp-create-tenant") {
