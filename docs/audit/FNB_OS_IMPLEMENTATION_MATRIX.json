@@ -3986,16 +3986,16 @@
   "progress_scoring": {
     "meaning": "progress_percent measures implementation completeness of a PARTIAL feature, not release readiness or acceptance PASS",
     "weights": {
-      "code_and_ui": 25,
+      "code_and_ui": 20,
       "database_and_data_integrity": 20,
       "authorization_and_tenant_scope": 15,
       "automated_tests": 15,
-      "workflow_e2e": 15,
+      "workflow_e2e": 20,
       "reconciliation_and_observability": 10
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 87,
+    "unscored_partial_features": 90,
     "status": "INCOMPLETE; do not invent percentages for features whose evidence has not been decomposed"
   },
   "source_user_distribution_2026_11_21": {
