@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-21 21:18 WIB",
+  "snapshot_at": "2026-11-23 00:05 WIB",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -4814,5 +4814,139 @@
       "secret_names": "NOT VERIFIABLE; API returned HTTP 403"
     },
     "production_changed": false
+  },
+  "latest_live_audit_2026_11_23": {
+    "as_of": "2026-11-23 00:05 WIB",
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_commit": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_counts": {
+      "total": 189,
+      "partial": 92,
+      "not_verified": 91,
+      "blocked": 6,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 90
+    },
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "source_migration_files": 52,
+      "public_tables": 64,
+      "rls_enabled_tables": 64,
+      "rls_disabled_tables": 0,
+      "public_policies": 64,
+      "public_functions": 29,
+      "public_views": 0,
+      "public_function_execute": {
+        "anon": 0,
+        "authenticated": 0,
+        "service_role": 29
+      },
+      "active_tenant_memberships": 3,
+      "admin_profile_roles": {
+        "owner": 1,
+        "sales_admin": 3
+      },
+      "cron_jobs": [
+        {
+          "name": "dlice-operational-retention",
+          "schedule": "17 3 * * *",
+          "active": true
+        }
+      ],
+      "order_status_snapshot": [
+        {
+          "operational_status": "received",
+          "fulfillment_status": "unassigned",
+          "count": 7
+        }
+      ]
+    },
+    "supabase_advisors": {
+      "security": [
+        {
+          "level": "WARN",
+          "name": "auth_leaked_password_protection",
+          "count": 1
+        }
+      ],
+      "performance": [
+        {
+          "name": "unindexed_foreign_keys",
+          "count": 26
+        },
+        {
+          "name": "unused_index",
+          "count": 49
+        }
+      ],
+      "health": {
+        "findings": 0
+      }
+    },
+    "edge_function": {
+      "name": "dlice-orders",
+      "status": "ACTIVE",
+      "version": 70,
+      "verify_jwt": false,
+      "custom_handler_auth": true,
+      "sdk_version": "2.57.4"
+    },
+    "tenant_acceptance": {
+      "run_id": 45017642887,
+      "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
+      "status": "FAIL",
+      "probes": {
+        "P01": "PASS",
+        "P02": "PASS",
+        "P03": "FAIL",
+        "P04": "BLOCKED",
+        "P05": "BLOCKED",
+        "P06": "BLOCKED",
+        "P07": "BLOCKED",
+        "P08": "BLOCKED",
+        "P09": "BLOCKED"
+      },
+      "p03_membership_http_status": {
+        "tenant_a": 503,
+        "tenant_b": 503
+      },
+      "acceptance": "NOT ACCEPTED"
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "project_id": "prj_A7097nEdgzi54NQRJ9NK2h2fxPLw",
+      "live": false,
+      "latest_preview": {
+        "state": "READY",
+        "branch": "feat/tenant-direct-client-rls-contract-20261121",
+        "sha": "8fe807b08fa7a25d53d2dee2f7890f151baff544"
+      },
+      "staging_preview": {
+        "state": "READY",
+        "branch": "staging",
+        "sha": "5f6fa00c7335247684f7d88410a0c506de49a5a9"
+      },
+      "sso_protection": {
+        "enabled": true,
+        "deploymentType": "all_except_custom_domains"
+      },
+      "password_protection": {
+        "enabled": false
+      },
+      "trusted_ip_protection": {
+        "enabled": false
+      }
+    },
+    "scope": "Read-only audit. No shared staging migration, Edge Function deployment, Auth mutation, Vercel configuration change, production change, merge, or release flag change."
   }
 }
