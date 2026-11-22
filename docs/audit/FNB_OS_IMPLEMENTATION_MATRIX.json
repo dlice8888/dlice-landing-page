@@ -1872,13 +1872,15 @@
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
           "source_status": "PASS (negative/role suite)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Existing suite reports 21 PASS / 0 FAIL; this is not full business E2E.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "An existing negative/role suite reports 21 PASS / 0 FAIL. This is concrete test work, but it is not complete positive business E2E or live acceptance for all roles and inactive identities.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 232
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Audit logs for sensitive actions",
@@ -1941,13 +1943,15 @@
         {
           "requirement": "Cross-tenant isolation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Current single-organization model does not prove SaaS tenant isolation.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #126 adds direct-client RLS coverage (35 pgTAP assertions across 17 sensitive tables) and tenant-scoped Edge Function checks. Live Tenant A/B API probes remain incomplete; P03 currently fails and P04-P09 are blocked.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 238
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Permission changes themselves audited",
@@ -2303,13 +2307,15 @@
         {
           "requirement": "Exact-origin CORS",
           "source_status": "PASS (runtime)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "GitHub Actions run 39979764381: registered staging origin HTTP 200 with exact ACAO; foreign origin HTTP 403/no ACAO; no Origin HTTP 200/no ACAO.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Staging CORS runtime run 44307838539 passed registered-origin OPTIONS (200/exact ACAO), foreign-origin OPTIONS (403/no ACAO), and no-Origin OPTIONS (200/no ACAO). POST/authenticated action coverage and full endpoint regression remain outstanding.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 271
           },
-          "work_status": "QUEUED"
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Custom auth/permission checks on shared endpoint",
@@ -3940,8 +3946,8 @@
     "open": 20
   },
   "feature_status_counts_current": {
-    "PARTIAL": 92,
-    "NOT VERIFIED": 91,
+    "PARTIAL": 95,
+    "NOT VERIFIED": 88,
     "BLOCKED": 6,
     "DONE": 0,
     "TOTAL": 189
@@ -3995,8 +4001,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 90,
-    "status": "INCOMPLETE; do not invent percentages for features whose evidence has not been decomposed"
+    "unscored_partial_features": 93,
+    "status": "INCOMPLETE; three additional features were reclassified to PARTIAL based on concrete test/source evidence; score their six weighted dimensions before publishing percentages."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -4710,8 +4716,8 @@
   },
   "latest_reaudit": {
     "feature_distribution": {
-      "PARTIAL": 92,
-      "NOT VERIFIED": 91,
+      "PARTIAL": 95,
+      "NOT VERIFIED": 88,
       "BLOCKED": 6,
       "DONE": 0,
       "TOTAL": 189
@@ -4825,12 +4831,12 @@
     },
     "feature_counts": {
       "total": 189,
-      "partial": 92,
-      "not_verified": 91,
+      "partial": 95,
+      "not_verified": 88,
       "blocked": 6,
       "done": 0,
       "scored_partial": 2,
-      "unscored_partial": 90
+      "unscored_partial": 93
     },
     "supabase_staging": {
       "project": "dlice-staging",
@@ -4947,6 +4953,179 @@
         "enabled": false
       }
     },
-    "scope": "Read-only audit. No shared staging migration, Edge Function deployment, Auth mutation, Vercel configuration change, production change, merge, or release flag change."
+    "scope": "Read-only audit. No shared staging migration, Edge Function deployment, Auth mutation, Vercel configuration change, production change, merge, or release flag change.",
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "POS & Checkout",
+        "features": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Order Management",
+        "features": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Kitchen & Production",
+        "features": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "features": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "features": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "features": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "features": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "HR & Workforce",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "features": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "features": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "features": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "features": 20,
+        "partial": 12,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      }
+    ],
+    "reclassifications": [
+      {
+        "domain": "Admin, Identity & Access Control",
+        "requirement": "Owner/manager/no-permission/inactive identity probes",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "An existing negative/role suite reports 21 PASS / 0 FAIL. This is concrete test work, but it is not complete positive business E2E or live acceptance for all roles and inactive identities."
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "requirement": "Cross-tenant isolation",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "PR #126 adds direct-client RLS coverage (35 pgTAP assertions across 17 sensitive tables) and tenant-scoped Edge Function checks. Live Tenant A/B API probes remain incomplete; P03 currently fails and P04-P09 are blocked."
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "requirement": "Exact-origin CORS",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "Staging CORS runtime run 44307838539 passed registered-origin OPTIONS (200/exact ACAO), foreign-origin OPTIONS (403/no ACAO), and no-Origin OPTIONS (200/no ACAO). POST/authenticated action coverage and full endpoint regression remain outstanding."
+      }
+    ],
+    "snapshot_note": "Three features moved to PARTIAL because implementation/test evidence exists; no DONE status or weighted score was invented."
   }
 }
