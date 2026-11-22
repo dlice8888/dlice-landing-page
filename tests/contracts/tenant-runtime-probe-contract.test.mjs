@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
+import { isServiceRoleKey, serviceRoleHeaders } from "../runtime/supabase-api-key.mjs";
 
 const workflow = readFileSync(".github/workflows/staging-tenant-isolation-acceptance.yml", "utf8");
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
@@ -14,15 +15,24 @@ test("staging tenant gate runs only for trusted staging harness changes and uses
   assert.ok(triggers.includes("push:"));
   assert.ok(triggers.includes("- staging"));
   assert.ok(triggers.includes("- .github/workflows/staging-tenant-isolation-acceptance.yml"));
+  assert.match(workflow, /if:\s*github\.ref\s*==\s*'refs\/heads\/staging'/);
+  assert.ok(triggers.includes("- tests/runtime/dlice-tenant-jwt-isolation.mjs"));
+  assert.ok(triggers.includes("- tests/runtime/supabase-api-key.mjs"));
   assert.doesNotMatch(triggers, /pull_request/);
-  assert.ok(workflow.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY:"));
+  for (const secret of [
+    "STAGING_SUPABASE_URL",
+    "STAGING_SUPABASE_SERVICE_ROLE_KEY",
+  ]) {
+    assert.match(workflow, new RegExp(`${secret}:\\s*\\$\\{\\{\\s*secrets\\.${secret}\\s*\\}\\}`));
+  }
   assert.match(workflow, /STAGING_SUPABASE_ANON_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);
+  assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
+  assert.doesNotMatch(workflow, /vars\.STAGING_TENANT_(?:A|B)_(?:ID|USER_ID|BRANCH_ID)/);
   assert.ok(workflow.includes("STAGING_TENANT_A_USER_ID:  b930897c-f8fb-443b-9056-e70c08b31446"));
   assert.ok(workflow.includes("STAGING_TENANT_B_USER_ID:  e1de1ffc-9fae-412f-9dd7-0993b54cb631"));
   assert.doesNotMatch(workflow, /STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
-  assert.doesNotMatch(workflow, /secrets\.STAGING_TEST_/);
-  assert.ok(workflow.includes("STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A"));
-  assert.ok(workflow.includes("STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B"));
+  assert.match(workflow, /STAGING_TENANT_A_BRANCH_CODE:\s*QA-DLICE-A/);
+  assert.match(workflow, /STAGING_TENANT_B_BRANCH_CODE:\s*QA-TENANT-B/);
   assert.match(workflow, /^name:\s*Staging Tenant Isolation Acceptance$/m);
   assert.match(workflow, /Summarize P01-P09 and configuration preflight/);
   assert.match(workflow, /staging-tenant-isolation-evidence\.jsonl/);
@@ -52,13 +62,20 @@ test("runtime tenant gate records every required probe and validates active tena
   assert.match(probe, /resolveTenantFixtures/);
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.match(fixtureResolver, /membership\?\.status\s*===\s*["']active["']/);
-  assert.match(probe, /executed:\s*true/);
+  assert.match(probe, /executed\s*=\s*true/);
+  assert.match(probe, /^\s*executed,\s*$/m);
   assert.match(probe, /executed:\s*false/);
   assert.match(probe, /BLOCKED/);
   assert.match(probe, /secretValuesPrinted:\s*false/);
   assert.match(probe, /valuePrinted:\s*false/);
   assert.match(probe, /timestamp:\s*new Date\(\)\.toISOString\(\)/);
   assert.doesNotMatch(probe, /console\.(?:log|error)\([^)]*(?:tokenA|tokenB|passwordA|passwordB)/);
+  assert.match(probe, /auth\/v1\/admin\/generate_link/);
+  assert.match(probe, /auth\/v1\/verify/);
+  assert.match(probe, /type:\s*["']magiclink["']/);
+  assert.match(probe, /auth\/v1\/logout/);
+  assert.match(probe, /STAGING_SUPABASE_SERVICE_ROLE_KEY/);
+  assert.doesNotMatch(probe, /STAGING_TENANT_[AB]_(?:USERNAME|PASSWORD)/);
 });
 
 
@@ -73,6 +90,25 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
   assert.doesNotMatch(handler, /body\.user_id|body\.tenant_id/, "caller must not select another identity or tenant");
 });
 
+test("P08/P09 require a 403 plus fail-closed service-role database postconditions and retained sanitized evidence", () => {
+  assert.match(probe, /async function serviceRoleRows\(table, filters\)/);
+  assert.match(probe, /serviceRoleHeaders\(serviceRoleKey\)/);
+  assert.match(probe, /stock_transfers/);
+  assert.match(probe, /transfer_number:\s*`eq\.\$\{transferNumber\}`/);
+  assert.match(probe, /idempotency_key:\s*`eq\.\$\{idempotencyKey\}`/);
+  assert.match(probe, /stock_transfer_items/);
+  assert.match(probe, /stock_movements/);
+  assert.match(probe, /response\.status === 403 && postcondition\.verified/);
+  assert.match(probe, /transferRows\.length === 0/);
+  assert.match(probe, /idempotencyRows\.length === 0/);
+  assert.match(probe, /transferItemCount === 0/);
+  assert.match(probe, /stockMovementCount === 0/);
+  assert.match(workflow, /uses:\s*actions\/upload-artifact@[0-9a-f]{40}/);
+  assert.match(workflow, /if:\s*always\(\)/);
+  assert.match(workflow, /retention-days:\s*30/);
+  assert.match(workflow, /staging-tenant-isolation-evidence\.jsonl/);
+});
+
 test("missing staging configuration is reported as blocked, never as a passing probe", () => {
   const result = spawnSync(process.execPath, ["tests/runtime/dlice-tenant-jwt-isolation.mjs"], {
     encoding: "utf8",
@@ -85,6 +121,8 @@ test("missing staging configuration is reported as blocked, never as a passing p
   const probes = records.filter((record) => /^P\d\d$/.test(record.probeId));
   assert.equal(probes.length, 9);
   assert.ok(probes.every((record) => record.status === "BLOCKED"));
+  assert.ok(probes.every((record) => record.executed === false),
+    "preflight-blocked probes must never be mislabeled as executed");
   const preflight = records.filter((record) => record.probeId === "PREFLIGHT");
   assert.equal(preflight.length, 7);
   assert.ok(preflight.every((record) => record.valuePrinted === false));
@@ -150,4 +188,17 @@ test("runtime probe evidence masks user, tenant, and branch identifiers in every
   assert.ok(!probe.includes("identityAUserId: userA") && !probe.includes("identityBUserId: userB"));
   const definitions = probe.slice(probe.indexOf("const requiredProbes = ["), probe.indexOf("];", probe.indexOf("const requiredProbes = [")));
   assert.doesNotMatch(definitions, /tenantA \?\?|tenantB \?\?|branchA \?\?|branchB \?\?/);
+});
+
+
+test("staging passwordless harness accepts modern Supabase secret keys without Bearer and legacy service_role JWTs with Bearer", () => {
+  const modern = `sb_secret_${"A".repeat(32)}`;
+  assert.equal(isServiceRoleKey(modern), true);
+  assert.deepEqual(serviceRoleHeaders(modern), { apikey: modern });
+
+  const payload = Buffer.from(JSON.stringify({ role: "service_role" })).toString("base64url");
+  const legacy = `eyJhbGciOiJIUzI1NiJ9.${payload}.signature`;
+  assert.equal(isServiceRoleKey(legacy), true);
+  assert.deepEqual(serviceRoleHeaders(legacy), { apikey: legacy, authorization: `Bearer ${legacy}` });
+  assert.equal(isServiceRoleKey(`sb_publishable_${"B".repeat(32)}`), false);
 });

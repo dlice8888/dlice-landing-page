@@ -6,6 +6,7 @@ const edge = await readFile("supabase/functions/dlice-orders/index.ts", "utf8");
 const erp = await readFile("erp.html", "utf8");
 const migration = await readFile("supabase/migrations/20261119155309_add_branch_worker_profile_role.sql", "utf8");
 const workflow = await readFile(".github/workflows/quality-checks.yml", "utf8");
+const assignmentMigration = await readFile("supabase/migrations/20261121170000_atomic_branch_assignment_audit.sql", "utf8");
 
 test("branch_worker is a non-owner identity classification, not a permission grant", () => {
   assert.match(migration, /'sales_admin'::text,\s*'branch_worker'::text,\s*'owner'::text/);
@@ -27,7 +28,9 @@ test("only a verified platform Owner can change a non-owner profile classificati
   assert.match(handler, /branch_assignments/);
   assert.match(handler, /employment_status", "active"/);
   assert.match(handler, /tenantIds\.has\(assignment\.branches\?\.tenant_id\)/);
-  assert.match(handler, /set_staff_profile_role/);
+  assert.match(handler, /dlice_update_admin_profile_role_audited/);
+  assert.doesNotMatch(handler, /from\("admin_profiles"\)\.update/);
+  assert.doesNotMatch(handler, /from\("admin_audit_logs"\)\.insert/);
 });
 
 test("branch_worker UI uses the Owner-only role action and does not grant global permissions", () => {
@@ -39,4 +42,21 @@ test("branch_worker UI uses the Owner-only role action and does not grant global
 
 test("quality workflow executes this contract test", () => {
   assert.match(workflow, /node --test tests\/contracts\/tenant-worker-profile-role-contract\.test\.mjs/);
+});
+
+test("branch assignment uses a service-role-only atomic audited RPC", () => {
+  const start = edge.indexOf('if (action === "erp-save-assignment")');
+  const end = edge.indexOf('if (action === "erp-list-inventory")', start);
+  assert.ok(start >= 0 && end > start, "branch assignment handler must exist");
+  const handler = edge.slice(start, end);
+  assert.match(handler, /if\s*\(!isOwner\)/);
+  assert.match(handler, /admin\.rpc\("dlice_save_branch_assignment_audited"/);
+  assert.match(handler, /p_actor_user_id:\s*actor\.user\.id/);
+  assert.match(handler, /Penugasan dan audit tidak dapat disimpan secara atomik/);
+  assert.doesNotMatch(handler, /from\("branch_assignments"\)\.upsert/);
+  assert.doesNotMatch(handler, /from\("admin_audit_logs"\)\.insert/);
+  assert.match(assignmentMigration, /auth\.role\(\) is distinct from 'service_role'/i);
+  assert.match(assignmentMigration, /revoke all on function public\.dlice_save_branch_assignment_audited/i);
+  assert.match(assignmentMigration, /grant execute on function public\.dlice_save_branch_assignment_audited/i);
+  assert.match(assignmentMigration, /insert into public\.admin_audit_logs/i);
 });

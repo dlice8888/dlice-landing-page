@@ -121,7 +121,7 @@ test("POS reconciliation cross-checks sale lines, KDS, stock ledger, balances an
   assert.match(edge, /branchAccess\(branchId\)/);
 });
 
-test("automatic staging E2E covers the required POS to report vertical slice", () => {
+test("manual staging E2E covers the required POS to report vertical slice", () => {
   for (const action of ["erp-create-pos-sale","erp-sync-offline-operation","erp-list-kitchen-tickets","erp-transition-kitchen-ticket","erp-list-sales","erp-reconcile-pos-sale"]) {
     assert.match(kdsE2E, new RegExp(action));
   }
@@ -132,9 +132,10 @@ test("automatic staging E2E covers the required POS to report vertical slice", (
   for (const unrelatedAction of ["erp-record-waste","erp-create-shift-handover","erp-acknowledge-shift-handover","erp-start-branch-checklist","erp-update-branch-checklist-item","erp-complete-branch-checklist"]) {
     assert.doesNotMatch(kdsE2E, new RegExp(unrelatedAction));
   }
-  assert.match(kdsWorkflow, /push:/);
-  assert.match(kdsWorkflow, /schedule:/);
   assert.match(kdsWorkflow, /workflow_dispatch:/);
+  assert.doesNotMatch(kdsWorkflow.split(/^permissions:\s*$/m, 1)[0], /^\s+(?:push|schedule):/m);
+  assert.match(kdsWorkflow, /github\.ref\s*==\s*'refs\/heads\/staging'/);
+  assert.match(kdsWorkflow, /github\.event_name\s*==\s*'workflow_dispatch'/);
   assert.match(kdsWorkflow, /confirm_staging_mutations:/);
   assert.match(kdsWorkflow, /inputs\.confirm_staging_mutations\s*==\s*true/);
   assert.match(kdsWorkflow, /STAGING_TEST_OWNER_PASSWORD/);

@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { resolveTenantFixtures } from "./tenant-fixture-discovery.mjs";
+import { isServiceRoleKey, serviceRoleHeaders } from "./supabase-api-key.mjs";
 
 const base = process.env.STAGING_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.STAGING_SUPABASE_ANON_KEY;
@@ -46,6 +47,7 @@ function recordProbe({
   evidence = {},
   startedAt,
   status,
+  executed = true,
 }) {
   const result = {
     probeId: id,
@@ -59,7 +61,7 @@ function recordProbe({
     httpStatus,
     evidence,
     durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
-    executed: true,
+    executed,
     status,
   };
   results.push(result);
@@ -121,11 +123,6 @@ function isPublicSupabaseKey(value) {
   return /^sb_publishable_[A-Za-z0-9_-]{20,}$/.test(value);
 }
 
-function isServiceRoleKey(value) {
-  const payload = decodeJwtPayload(value);
-  return payload?.role === "service_role";
-}
-
 function isUuid(value) {
   return typeof value === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -185,7 +182,7 @@ function configurationProblems() {
     configurationErrors.push("STAGING_SUPABASE_PUBLIC_KEY is not a supported public key");
   }
   if (serviceRoleKey && !isServiceRoleKey(serviceRoleKey)) {
-    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a service_role JWT");
+    configurationErrors.push("STAGING_SUPABASE_SERVICE_ROLE_KEY is not a supported Supabase service-role key");
   }
   if (userIdA && userIdB && !distinctUsers) {
     configurationErrors.push("Tenant A and Tenant B user IDs must be distinct");
@@ -270,8 +267,7 @@ if (
 
   async function existingSupabaseUserToken(userId) {
     const adminHeaders = {
-      apikey: serviceRoleKey,
-      authorization: `Bearer ${serviceRoleKey}`,
+      ...serviceRoleHeaders(serviceRoleKey),
       "content-type": "application/json",
     };
     const userResponse = await fetch(`${base}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
@@ -369,6 +365,25 @@ if (
         responseJson: payload !== null,
       },
     };
+  }
+
+  async function serviceRoleRows(table, filters) {
+    const query = new URLSearchParams({ select: "id", ...filters });
+    const response = await fetch(`${base}/rest/v1/${table}?${query}`, {
+      method: "GET",
+      headers: {
+        ...serviceRoleHeaders(serviceRoleKey),
+        accept: "application/json",
+      },
+      redirect: "manual",
+    });
+    const text = await response.text();
+    let payload = null;
+    try { payload = JSON.parse(text); } catch { payload = null; }
+    if (!response.ok || !Array.isArray(payload)) {
+      throw new Error(`postcondition_query_failed:${table}:${response.status}`);
+    }
+    return payload;
   }
 
   async function verifyIdentityAndMembership() {
@@ -566,11 +581,12 @@ if (
         };
       }
       const idempotencyKey = `tenant-isolation-${tenant.toLowerCase()}-${randomUUID()}`;
+      const transferNumber = `SECURITY-DENY-${tenant}-${randomUUID()}`;
       const { response, evidence } = await authorizedRequest(token, "/functions/v1/dlice-orders", {
         method: "POST",
         body: JSON.stringify({
           action: "erp-create-stock-transfer",
-          transfer_number: `SECURITY-DENY-${tenant}-${randomUUID()}`,
+          transfer_number: transferNumber,
           source_branch_id: ownBranch,
           destination_branch_id: foreignBranch,
           inventory_item_id: "00000000-0000-4000-8000-000000000099",
@@ -579,15 +595,47 @@ if (
           notes: "Automated tenant-isolation negative test; must be rejected before mutation",
         }),
       });
-      const passed = response.status === 403;
+
+      // Verify the denial at the database boundary using the trusted service-role
+      // key. A 403 alone is insufficient: no transfer, child item, or linked
+      // stock-movement row may have been committed.
+      const transferRows = await serviceRoleRows("stock_transfers", {
+        transfer_number: `eq.${transferNumber}`,
+      });
+      const idempotencyRows = await serviceRoleRows("stock_transfers", {
+        idempotency_key: `eq.${idempotencyKey}`,
+      });
+      const transferIds = [...new Set([...transferRows, ...idempotencyRows].map((row) => row.id))];
+      let transferItemCount = 0;
+      let stockMovementCount = 0;
+      for (const transferId of transferIds) {
+        const [items, movements] = await Promise.all([
+          serviceRoleRows("stock_transfer_items", { transfer_id: `eq.${transferId}` }),
+          serviceRoleRows("stock_movements", { reference_id: `eq.${transferId}` }),
+        ]);
+        transferItemCount += items.length;
+        stockMovementCount += movements.length;
+      }
+      const postcondition = {
+        transferRowsByNumber: transferRows.length,
+        transferRowsByIdempotencyKey: idempotencyRows.length,
+        transferItemRows: transferItemCount,
+        linkedStockMovementRows: stockMovementCount,
+        verified: transferRows.length === 0 &&
+          idempotencyRows.length === 0 &&
+          transferItemCount === 0 &&
+          stockMovementCount === 0,
+      };
+      const passed = response.status === 403 && postcondition.verified;
       return {
         passed,
-        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied" : "not denied"}`,
+        actualResult: `HTTP ${response.status}; cross-tenant write ${passed ? "denied with zero database side effects" : "not fully denied or database postcondition failed"}`,
         httpStatus: response.status,
         evidence: {
           ...evidence,
           sameTenantAuthorizationControlStatus: control.response.status,
           sameTenantControlRejectedBeforeMutation: true,
+          databasePostcondition: postcondition,
           idempotencyKeyGenerated: true,
           requestIdentifiersPrinted: false,
         },
@@ -697,6 +745,34 @@ if (
   await verifyDirectBranchRlsDenied("B", "foreign");
   await verifyDirectStockTransferRpcDenied("A");
   await verifyDirectStockTransferRpcDenied("B");
+
+  // Revoke both temporary sessions after all probes; never print tokens or response bodies.
+  for (const tenant of ["A", "B"]) {
+    const token = tokenByTenant[tenant];
+    if (!token) continue;
+    try {
+      const response = await fetch(`${base}/auth/v1/logout`, {
+        method: "POST",
+        headers: {
+          apikey: key,
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+      });
+      console.log(JSON.stringify({
+        probeId: `CLEANUP-${tenant}`,
+        status: response.ok ? "PASS" : "FAIL",
+        actualResult: `temporary Auth session revocation HTTP ${response.status}`,
+        tokenPrinted: false,
+      }));
+      if (!response.ok) results.push({
+        probeId: `CLEANUP-${tenant}`,
+        status: "FAIL",
+      });
+    } catch {
+      results.push({ probeId: `CLEANUP-${tenant}`, status: "FAIL" });
+    }
+  }
 
   const requiredResults = results.filter((result) => /^P\d\d$/.test(result.probeId));
   const supplementalResults = results.filter((result) => !/^P\d\d$/.test(result.probeId));
