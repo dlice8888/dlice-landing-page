@@ -293,3 +293,50 @@ Domain table changes:
 - Quality, Compliance & Security: 12 PARTIAL / 8 NOT VERIFIED / 0 BLOCKED (60% partial coverage).
 
 Only two PARTIAL features currently have weighted numeric scores (38% and 30%). The other 93 PARTIAL features remain unscored until their six evidence dimensions are decomposed. These reclassifications do not imply runtime acceptance or DONE.
+
+
+## P0 implementation progress — 23 November 2026, 07:20 WIB
+
+### PR #126 reconciled against current staging
+
+A merge commit was created on the existing PR branch with parents:
+- Previous PR head: `8fe807b08fa7a25d53d2dee2f7890f151baff544`
+- Current staging head: `5f6fa00c7335247684f7d88410a0c506de49a5a9`
+
+Reconciliation commit: `cbe593c5e9f8c19a859551e538e94b4b9f02a383`.
+
+The resulting PR diff is limited to the P03 membership handler. The broken PostgREST embed `admin_profiles(...)` through `tenant_memberships` was replaced with:
+1. Active membership query scoped to `actor.user.id`.
+2. Separate `admin_profiles` lookup scoped to the same authenticated actor.
+3. Fail-closed handling for membership/profile errors and inactive profiles.
+4. Response composition preserving the existing `admin_profiles` response shape.
+
+No tenant authorization decision is derived from global profile permissions.
+
+The stale source-contract assertion that required the invalid embed was corrected in commit `1b0b95211a881a67f9df690073efc15c081453da`. It now asserts separate membership/profile queries, actor self-scope, active membership filter, and absence of the invalid embed.
+
+### Exact-head validation
+
+- Latest quality checks: PASS on `1b0b95211a881a67f9df690073efc15c081453da`.
+- Vercel Preview: READY on the same commit.
+- CORS probes: PASS.
+- Kitchen KDS offline contract: PASS.
+- Procurement requisition and receiving contracts: PASS.
+- Disposable migration replay: still IN_PROGRESS on `cbe593c5e9f8c19a859551e538e94b4b9f02a383`; do not treat as passed yet.
+
+### Existing staging Environment and fixture validation
+
+Run `45017642887` confirms P01 and P02 passwordless authentication for the two existing Supabase Auth identities. Preflight PASS was recorded for staging URL, public key, service-role key, both existing user IDs and both branch codes; secret values were not printed. No user was created or password changed.
+
+Read-only Supabase SQL confirms:
+- Two distinct active tenant memberships in two distinct tenants.
+- Both identities have active `branch_manager` memberships and active `sales_admin` profiles.
+- Both have six permissions and identical permission sets.
+- Tenant A has two active branch assignments; Tenant B has one.
+- `admin_profiles.user_id` has its own FK; no `tenant_memberships` → `admin_profiles` embed relationship is relied upon.
+
+### Runtime gate remains open
+
+The P01/P02 success and P03 failure in run `45017642887` are pre-fix runtime evidence. P03-P09 have NOT been re-run against the updated Edge Function. The staging Edge Function has NOT been deployed by this change. PR #126 remains draft/open pending disposable replay and independent review/integration approval. Do not merge, bypass review, or enable either release flag.
+
+No production change, shared staging schema migration, Auth mutation, or release flag change occurred.
