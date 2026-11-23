@@ -11,7 +11,6 @@ import { findActiveOwnerUserId, revokeLocalSession, tokenForExistingUser } from 
 const required = [
   "STAGING_SUPABASE_URL",
   "STAGING_SUPABASE_PUBLIC_KEY",
-  "STAGING_EDGE_FUNCTION_URL",
   "STAGING_SUPABASE_SERVICE_ROLE_KEY",
 ];
 const missing = required.filter((key) => !process.env[key]);
@@ -21,7 +20,7 @@ if (missing.length) {
 }
 
 const base = process.env.STAGING_SUPABASE_URL.replace(/\/$/, "");
-const edge = new URL(process.env.STAGING_EDGE_FUNCTION_URL);
+const edge = new URL(`${base}/functions/v1/dlice-orders`);
 const expected = "https://higoadrzxnhzbbwhdbmh.supabase.co";
 if (base !== expected || edge.origin !== expected || edge.pathname !== "/functions/v1/dlice-orders") {
   console.error("REFUSED: KDS/POS E2E is restricted to the known D'Lice staging project.");
