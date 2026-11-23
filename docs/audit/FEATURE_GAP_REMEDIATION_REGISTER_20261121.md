@@ -21,7 +21,7 @@ Snapshot: 2026-11-21 | PRD baseline: 189 features / 18 domains | Target: SaaS + 
 
 The supplied 18-domain rows originally summed to **82 PARTIAL + 98 NOT VERIFIED + 9 BLOCKED = 189** before the newest implementation evidence was counted. The supplied total-row value of 93 NOT VERIFIED was an arithmetic error; the domain rows sum to 98.
 
-Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth is **92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189**. Three previously BLOCKED features moved to PARTIAL after exact-head implementation and test evidence: duplicate/delayed order handling (#123/#125/#127), audited permission/profile/password mutations (#120), and application-layer leaked-password mitigation (#120). These are not DONE; runtime and platform gaps remain.
+Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth at the 24-November recount is **95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE = 189**. Older 92/91/6 narratives below are historical and superseded. Three previously BLOCKED features moved to PARTIAL after exact-head implementation and test evidence: duplicate/delayed order handling (#123/#125/#127), audited permission/profile/password mutations (#120), and application-layer leaked-password mitigation (#120). These are not DONE; runtime and platform gaps remain.
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
 |---|---:|---:|---:|---:|
@@ -39,11 +39,11 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 | HR & Workforce | 9 | 1 | 8 | 0 |
 | Franchise & Expansion | 8 | 2 | 6 | 0 |
 | BI & Analytics | 10 | 3 | 7 | 0 |
-| Admin, Identity & Access Control | 10 | 6 | 4 | 0 |
+| Admin, Identity & Access Control | 10 | 8 | 2 | 0 |
 | SaaS Tenant Management | 8 | 2 | 6 | 0 |
 | Integrations & Automation | 9 | 5 | 4 | 0 |
-| Quality, Compliance & Security | 20 | 11 | 9 | 0 |
-| **TOTAL** | **189** | **92** | **91** | **6** |
+| Quality, Compliance & Security | 20 | 12 | 8 | 0 |
+| **TOTAL** | **189** | **95** | **88** | **6** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -878,3 +878,42 @@ The machine-readable feature matrix at this snapshot is the current status sourc
 - Current release flags remain `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
 - The live Supabase staging migration history has 49 entries through `20261119182606`; the repository staging source has 52 migrations. The three source-only migrations are `20261120100000`, `20261120110000`, and `20261120120000`. No shared staging migration was applied in this audit.
 - This is a documentation/test-metadata correction only. It does not assert new runtime acceptance or authorize staging/production mutations.
+
+
+## Superseding current execution checkpoint — 24 November 2026
+
+### Feature counts
+Recounting all 189 feature rows in `FNB_OS_IMPLEMENTATION_MATRIX.json` yields **95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE**. This is the current matrix count and supersedes older 92/91/6 narrative snapshots. The six blocked rows remain blocked for acceptance until their external/platform gate is removed. Work status and audit status remain separate.
+
+### Latest tenant security acceptance
+- Staging SHA: `02c32c31315725c7639f249978efc4b8d486cab5`.
+- PR #129 merged to staging after exact-head CI passed.
+- [Tenant acceptance run 45230589775](https://github.com/dlice8888/dlice-landing-page/actions/runs/45230589775): P01–P09 9/9 PASS; supplemental RLS/RPC 6/6 PASS; 230/230 auth action probes PASS; cleanup PASS.
+- Both existing tenant identities authenticated; own-branch reads succeeded; cross-tenant read/write denials returned expected 403 and denied write postconditions were zero.
+- This closes the tenant-isolation P01–P09 execution blocker for the tested scope. It does **not** close Storage/cache/job isolation, the whole SaaS onboarding lifecycle, or the business E2E issue #45.
+
+### Current staging database and platform
+- Supabase `higoadrzxnhzbbwhdbmh`: ACTIVE_HEALTHY, PostgreSQL 17.11.0.003.
+- 64/64 public tables have RLS enabled.
+- 49 migrations applied; latest `20261119182606`; source staging has 52 SQL migration files, so 3 source-only migrations still need per-file parity/dependency review.
+- Advisor: leaked-password protection WARN/disabled; 26 unindexed foreign keys; 49 unused indexes; health findings 0. Do not disable the security warning by silently substituting the application-side k-anonymity guard for native Supabase Auth protection. Do not drop unused indexes without representative query plans/workload.
+- `dlice-orders` ACTIVE v71; custom `getAdmin(req)` is present; `verify_jwt=false` is not treated as absent authorization. Both release flags remain false.
+- Vercel Preview is READY on the staging SHA; this is deployment/build evidence only.
+
+### Business gaps still requiring implementation and E2E
+1. **KDS/POS/Stock/Offline:** run positive checkout, payment confirmation, KDS dispatch/state transitions, exact-once recipe stock consumption, offline replay/retry, and reconcile POS sale/order/payment/ticket/stock ledger.
+2. **Procurement/Receiving:** run requisition → approval → PO → receipt/GRN → stock movement/on-hand → invoice/AP match; include duplicate/retry and unauthorized branch cases.
+3. **Production/Recipe:** pin immutable approved recipe version at order/batch creation; add station routing, lot/expiry and allergen traceability, expected-vs-actual/waste variance approval; reconcile stock.
+4. **Inventory:** transfer and stock-count lifecycle with source/destination branch isolation, approval, ledger idempotency and variance reconciliation.
+5. **Finance:** provider fee/settlement ingestion, balanced journals, AP/AR, cash/shift reconciliation, fiscal close/reopen and branch/group P&L.
+6. **Executive/BI:** KPI dictionary, source-level totals, 150-branch drill-down, target/actual, anomaly→assign→resolve→audit.
+7. **CRM/Delivery/HR/Franchise/Integrations:** customer consent/loyalty, courier proof/cost, workforce lifecycle, franchise contract/royalty and durable outbox/retry/health workflows.
+8. **Quality/reliability:** native leaked-password control decision, 150-branch load/concurrency, backup/restore, incident runbooks, mobile/accessibility and rollout/rollback evidence.
+
+### Scoring and prioritization
+- Two PARTIAL scores are presently recorded: tenant/member isolation 38%, tenant directory/onboarding 30%. Re-score the isolation row with the new P01–P09 evidence only after updating each weighted criterion; do not assume full domain acceptance.
+- 93 PARTIAL features still need their six evidence dimensions scored. Do not invent percentages.
+- The 88 NOT VERIFIED features remain queued until a real implementation slice is committed and scoped tests pass. Opening a plan/issue is not enough to move a feature into PARTIAL.
+- Prioritize security and data integrity first, then core order-to-cash / procure-to-pay / production-stock workflows, then finance/command center, then CRM/HR/delivery/franchise/BI/integrations, while ensuring every remaining unverified feature receives a concrete implementation start.
+
+**Guardrails:** staging/disposable only; no production DB/Auth/secrets/deployment/data changes; no mass merge; no force push; preserve RLS, authorization, audit and branch isolation; keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
