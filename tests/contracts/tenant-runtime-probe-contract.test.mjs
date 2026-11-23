@@ -90,6 +90,25 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
   assert.doesNotMatch(handler, /body\.user_id|body\.tenant_id/, "caller must not select another identity or tenant");
 });
 
+test("all admin and ERP action handlers are behind explicit actor authentication", () => {
+  const authGate = edgeSource.indexOf("const actor = await getAdmin(req);");
+  assert.ok(authGate > 0, "shared actor authentication gate must exist");
+  const handlers = [...edgeSource.matchAll(/if\\s*\\(\\s*action\\s*===\\s*"([^"]+)"/g)];
+  const privileged = handlers
+    .map((match) => ({ action: match[1], offset: match.index }))
+    .filter(({ action }) => action.startsWith("admin-") || action.startsWith("erp-"));
+  assert.ok(privileged.length >= 50, "expected full admin/ERP action inventory");
+  for (const handler of privileged) {
+    if (handler.action === "admin-login" || handler.action === "admin-funnel-summary") continue;
+    assert.ok(handler.offset > authGate,
+      `${handler.action} must not be dispatched before getAdmin() authenticates the bearer token`);
+  }
+  const funnelStart = edgeSource.indexOf('if (action === "admin-funnel-summary")');
+  const funnelEnd = edgeSource.indexOf("const actor = await getAdmin(req);", funnelStart);
+  assert.ok(funnelStart >= 0 && funnelEnd > funnelStart,
+    "the pre-shared-gate admin funnel action must perform its own actor authentication");
+});
+
 test("P08/P09 require a 403 plus fail-closed service-role database postconditions and retained sanitized evidence", () => {
   assert.match(probe, /async function serviceRoleRows\(table, filters\)/);
   assert.match(probe, /serviceRoleHeaders\(serviceRoleKey\)/);
