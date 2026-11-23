@@ -97,7 +97,10 @@ test("verify_jwt=false custom auth negative probes cover every deployed admin an
   assert.ok(actionAuthProbe.includes("actions.length !== 115"));
   assert.ok(actionAuthProbe.includes('credential: "missing"'));
   assert.ok(actionAuthProbe.includes('credential: "invalid"'));
-  assert.ok(actionAuthProbe.includes("response.status === 401"));
+  assert.ok(actionAuthProbe.includes('current.action === "admin-bootstrap-owner" ? 403 : 401'));
+  assert.ok(actionAuthProbe.includes("response.status === expectedStatus"));
+  assert.ok(actionAuthProbe.includes('expectedHttpStatus: { default: 401, "admin-bootstrap-owner": 403 }'));
+  assert.ok(actionAuthProbe.includes('bootstrapOwnerGuard: "secret-required-before-any-bootstrap-side-effect"'));
   assert.ok(actionAuthProbe.includes("STAGING_SUPABASE_ANON_KEY"));
   assert.ok(!actionAuthProbe.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(actionAuthProbe.includes("responseBodiesLogged: false"));
