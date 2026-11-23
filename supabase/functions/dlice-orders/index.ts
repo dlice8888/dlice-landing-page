@@ -5,6 +5,7 @@ import {
   resolveTenantScopedBranchIds,
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
+import { checkPwnedPassword } from "./password-security.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -39,6 +40,12 @@ const fail = (message: string, status = 400, origin: string | null = null) => js
 const sha256 = async (value: string) => {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return [...new Uint8Array(digest)].map((v) => v.toString(16).padStart(2, "0")).join("");
+};
+const checkNewPassword = async (password: string, origin: string | null): Promise<Response | null> => {
+  const result = await checkPwnedPassword(password);
+  if (result === "compromised") return fail("Kata sandi ini terdeteksi dalam daftar kebocoran. Gunakan kata sandi baru yang unik.", 422, origin);
+  if (result === "unavailable") return fail("Pemeriksaan keamanan kata sandi sementara tidak tersedia. Tidak ada perubahan akun yang dilakukan; coba lagi nanti.", 503, origin);
+  return null;
 };
 const usernameEmail = (username: string) => `${username.toLowerCase()}@accounts.dlice.internal`;
 const validUsername = (username: string) => /^[a-zA-Z0-9._-]{3,32}$/.test(username);
@@ -443,6 +450,8 @@ Deno.serve(async (req: Request) => {
     const username = safeText(body.username, 32);
     const password = typeof body.password === "string" ? body.password : "";
     if (!validUsername(username) || username.toLowerCase() !== "dlice8888" || password.length < 12) return fail("Nama pengguna atau kata sandi penyiapan awal tidak memenuhi ketentuan.", 422, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, app_metadata: { platform_owner: true }, user_metadata: { username } });
     if (createError || !created.user) return fail("Akun Pemilik gagal dibuat.", 500, origin);
     const { data: bootstrapResult, error: bootstrapError } = await admin.rpc("dlice_bootstrap_initial_owner", { p_user_id: created.user.id, p_username: username });
@@ -629,11 +638,23 @@ Deno.serve(async (req: Request) => {
     const permissions = body.permissions;
     const allowed = new Set(["orders", "catalog", "finance", "reports", "settings", "staff", "branches", "inventory", "procurement", "pos", "audit", "hr", "production"]);
     if (!validUsername(username) || !displayName || password.length < 8 || !Array.isArray(permissions) || permissions.some((p) => typeof p !== "string" || !allowed.has(p))) return fail("Nama pengguna, nama staf, kata sandi (minimal 8 karakter), atau izin akses tidak valid.", 422, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
     const { data: created, error: createError } = await admin.auth.admin.createUser({ email: usernameEmail(username), password, email_confirm: true, user_metadata: { username, display_name: displayName } });
     if (createError || !created.user) return fail(createError?.message?.includes("already") ? "Username sudah digunakan." : "Akun admin gagal dibuat.", 409, origin);
-    const { error: profileError } = await admin.from("admin_profiles").insert({ user_id: created.user.id, username, role: "sales_admin", display_name: displayName, is_active: true, permissions: [...new Set(permissions)] });
-    if (profileError) { await admin.auth.admin.deleteUser(created.user.id); return fail(profileError.code === "23505" ? "Username sudah digunakan." : "Profil admin gagal dibuat.", 500, origin); }
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "create_admin_account", entity_type: "admin_profile", entity_id: created.user.id, metadata: { username, permissions: [...new Set(permissions)] } });
+    const normalizedPermissions = [...new Set(permissions)].sort();
+    const { data: profileResult, error: profileError } = await admin.rpc("dlice_create_admin_profile_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: created.user.id,
+      p_username: username,
+      p_display_name: displayName,
+      p_permissions: normalizedPermissions,
+    });
+    if (profileError) return fail("Akun Auth telah dibuat, tetapi hasil penyimpanan profil/audit belum dapat dipastikan. Jangan membuat akun baru; minta pemeriksaan admin.", 500, origin);
+    if (!profileResult?.ok) {
+      await admin.auth.admin.deleteUser(created.user.id);
+      return fail("Profil staf tidak berhasil dibuat; akun Auth sementara dibersihkan.", 409, origin);
+    }
     return json({ ok: true, username }, 201, origin);
   }
 
@@ -646,10 +667,15 @@ Deno.serve(async (req: Request) => {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Izin akun Pemilik tidak dapat dibatasi melalui panel ini.", 409, origin);
-    const { error } = await admin.from("admin_profiles").update({ permissions: [...new Set(permissions)] }).eq("user_id", userId);
-    if (error) return fail("Izin akses staf gagal disimpan.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "update_admin_permissions", entity_type: "admin_profile", entity_id: userId, metadata: { permissions: [...new Set(permissions)] } });
-    return json({ ok: true }, 200, origin);
+    const normalizedPermissions = [...new Set(permissions)].sort();
+    const { data: result, error } = await admin.rpc("dlice_update_admin_permissions_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_permissions: normalizedPermissions,
+    });
+    if (error) return fail("Izin akses staf gagal disimpan dan audit tidak dapat dipastikan.", 500, origin);
+    if (!result?.ok) return fail("Izin akses staf tidak berhasil diperbarui.", 409, origin);
+    return json({ ok: true, permissions: result.permissions }, 200, origin);
   }
 
 
@@ -688,17 +714,13 @@ if (action === "admin-set-profile-role") {
       }
     }
 
-    const { error } = await admin.from("admin_profiles")
-      .update({ role: nextRole, updated_at: new Date().toISOString() }).eq("user_id", userId);
-    if (error) return fail("Klasifikasi profil gagal diperbarui.", 409, origin);
-    await admin.from("admin_audit_logs").insert({
-      actor_user_id: actor.user.id,
-      action: "set_staff_profile_role",
-      entity_type: "admin_profile",
-      entity_id: userId,
-      metadata: { previous_role: target.role, profile_role: nextRole },
+    const { data: roleResult, error: roleError } = await admin.rpc("dlice_update_admin_profile_role_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_next_role: nextRole,
     });
-    return json({ ok: true, user_id: userId, profile_role: nextRole }, 200, origin);
+    if (roleError || !roleResult?.ok) return fail("Klasifikasi profil dan audit tidak dapat dipastikan; perubahan dibatalkan.", 409, origin);
+    return json({ ok: true, user_id: userId, profile_role: roleResult.profile_role }, 200, origin);
   }
 
     if (action === "admin-set-active") {
@@ -709,10 +731,13 @@ if (action === "admin-set-profile-role") {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role,is_active").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Status akun Pemilik tidak dapat diubah melalui aksi ini.", 409, origin);
-    const { data: updated, error } = await admin.from("admin_profiles").update({ is_active: isActive, updated_at: new Date().toISOString() }).eq("user_id", userId).select("user_id,is_active").single();
-    if (error || !updated) return fail("Status akun staf gagal disimpan.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "set_admin_active_status", entity_type: "admin_profile", entity_id: userId, metadata: { is_active: isActive } });
-    return json({ ok: true, user_id: updated.user_id, is_active: updated.is_active }, 200, origin);
+    const { data: activeResult, error: activeError } = await admin.rpc("dlice_set_admin_profile_active_audited", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+      p_is_active: isActive,
+    });
+    if (activeError || !activeResult?.ok) return fail("Status akun staf dan audit tidak dapat dipastikan; perubahan dibatalkan.", 500, origin);
+    return json({ ok: true, user_id: userId, is_active: activeResult.is_active }, 200, origin);
   }
 
 
@@ -724,9 +749,28 @@ if (action === "admin-set-profile-role") {
     const { data: target, error: targetError } = await admin.from("admin_profiles").select("user_id,role").eq("user_id", userId).maybeSingle();
     if (targetError || !target) return fail("Akun staf tidak ditemukan.", 404, origin);
     if (target.role === "owner") return fail("Kata sandi akun Pemilik tidak dapat diubah melalui aksi staf.", 409, origin);
+    const passwordCheck = await checkNewPassword(password, origin);
+    if (passwordCheck) return passwordCheck;
+    const { data: auditId, error: auditIntentError } = await admin.rpc("dlice_begin_admin_password_reset_audit", {
+      p_actor_user_id: actor.user.id,
+      p_target_user_id: userId,
+    });
+    if (auditIntentError || typeof auditId !== "string") {
+      return fail("Audit intent reset kata sandi gagal dicatat; kata sandi tidak diubah.", 503, origin);
+    }
+
     const { data: updated, error } = await admin.auth.admin.updateUserById(userId, { password });
-    if (error || !updated.user) return fail("Kata sandi staf gagal diperbarui.", 500, origin);
-    await admin.from("admin_audit_logs").insert({ actor_user_id: actor.user.id, action: "reset_admin_password", entity_type: "admin_profile", entity_id: userId, metadata: { password_reset: true } });
+    const resetSucceeded = !error && !!updated.user;
+    const { data: auditResult, error: auditFinishError } = await admin.rpc("dlice_finish_admin_password_reset_audit", {
+      p_actor_user_id: actor.user.id,
+      p_audit_log_id: auditId,
+      p_succeeded: resetSucceeded,
+      p_error_code: resetSucceeded ? null : "auth_admin_update_failed",
+    });
+    if (auditFinishError || !auditResult?.ok) {
+      return fail("Hasil reset kata sandi belum dapat direkonsiliasi; audit intent tetap tersimpan untuk pemulihan.", 500, origin);
+    }
+    if (!resetSucceeded) return fail("Kata sandi staf gagal diperbarui; kegagalan telah dicatat.", 500, origin);
     return json({ ok: true, user_id: userId }, 200, origin);
   }
 
@@ -1346,10 +1390,17 @@ if (action === "admin-set-profile-role") {
     if(!isOwner)return fail("Hanya Owner yang dapat mengubah penugasan jabatan.",403,origin);
     const branchId=safeText(body.branch_id,80),userId=safeText(body.user_id,80),positionId=safeText(body.job_position_id,80),status=safeText(body.employment_status,20)||"active";
     if(!branchId||!userId||!positionId||!["active","on_leave","inactive"].includes(status))return fail("Cabang, akun, jabatan, atau status tidak valid.",422,origin);
-    const {data,error}=await admin.from("branch_assignments").upsert({branch_id:branchId,user_id:userId,job_position_id:positionId,employment_status:status,starts_on:safeText(body.starts_on,10)||new Date().toISOString().slice(0,10),ends_on:safeText(body.ends_on,10)||null,assigned_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"branch_id,user_id,job_position_id"}).select("*").single();
-    if(error||!data)return fail("Penugasan gagal disimpan.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"erp_assign_job_position",entity_type:"branch_assignment",entity_id:data.id,metadata:{branch_id:branchId,user_id:userId,job_position_id:positionId}});
-    return json({ok:true,assignment:data},200,origin);
+    const {data,error}=await admin.rpc("dlice_save_branch_assignment_audited",{
+      p_actor_user_id:actor.user.id,
+      p_branch_id:branchId,
+      p_user_id:userId,
+      p_job_position_id:positionId,
+      p_employment_status:status,
+      p_starts_on:safeText(body.starts_on,10)||todayDate(),
+      p_ends_on:safeText(body.ends_on,10)||null,
+    });
+    if(error||!data?.ok)return fail("Penugasan dan audit tidak dapat disimpan secara atomik.",409,origin);
+    return json({ok:true,assignment:data.assignment},200,origin);
   }
 
   if (action === "erp-list-inventory") {

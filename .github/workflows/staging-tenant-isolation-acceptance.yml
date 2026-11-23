@@ -8,6 +8,8 @@ on:
       - staging
     paths:
       - .github/workflows/staging-tenant-isolation-acceptance.yml
+      - tests/runtime/dlice-tenant-jwt-isolation.mjs
+      - tests/runtime/supabase-api-key.mjs
   workflow_dispatch:
 
 permissions:
@@ -90,6 +92,14 @@ jobs:
             "",
           ].join("\n"));
           NODE
+      - name: Upload sanitized tenant-isolation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-tenant-isolation-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: staging-tenant-isolation-evidence.jsonl
+          if-no-files-found: warn
+          retention-days: 30
       - name: Enforce complete P01-P09 acceptance
         if: always()
         env:

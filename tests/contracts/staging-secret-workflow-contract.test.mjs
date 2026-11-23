@@ -70,6 +70,12 @@ test("every missing or invalid required input fails closed before any network re
 
 test("KDS/POS/Stock staging E2E uses only staging Environment Supabase endpoint secrets", () => {
   const kds = readFileSync(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", "utf8");
+  const triggers = kds.split(/^permissions:\s*$/m, 1)[0];
+  assert.match(triggers, /^  workflow_dispatch:\s*$/m);
+  assert.doesNotMatch(triggers, /^\s+(?:push|schedule):/m);
+  assert.match(kds, /github\.ref\s*==\s*'refs\/heads\/staging'/);
+  assert.match(kds, /github\.event_name\s*==\s*'workflow_dispatch'/);
+  assert.match(kds, /inputs\.confirm_staging_mutations\s*==\s*true/);
   assert.match(kds, /^\s+environment:\s*staging\s*$/m);
   assert.match(kds, /STAGING_SUPABASE_URL:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_URL\s*\}\}/);
   assert.match(kds, /STAGING_SUPABASE_PUBLIC_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_PUBLIC_KEY\s*\}\}/);

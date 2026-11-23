@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION public.dlice_create_tenant_invite_atomic(
 ) RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY INVOKER
-SET search_path = public, pg_temp
+SET search_path = ''
 AS $$
 DECLARE
   v_invite public.tenant_invites%ROWTYPE;
@@ -130,7 +130,7 @@ CREATE OR REPLACE FUNCTION public.dlice_accept_tenant_invite_atomic(
 ) RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY INVOKER
-SET search_path = public, pg_temp
+SET search_path = ''
 AS $$
 DECLARE
   v_actor_email text;
