@@ -7,6 +7,7 @@ import { isServiceRoleKey, serviceRoleHeaders } from "../runtime/supabase-api-ke
 const workflow = readFileSync(".github/workflows/staging-tenant-isolation-acceptance.yml", "utf8");
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const edgeSource = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
+const actionAuthProbe = readFileSync("tests/runtime/dlice-orders-auth-action-probes.mjs", "utf8");
 
 test("staging tenant gate runs only for trusted staging harness changes and uses fixed existing Supabase Auth identities", () => {
   const triggers = workflow.slice(0, workflow.indexOf("permissions:"));
@@ -88,6 +89,23 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
   assert.match(handler, /\.eq\(["']user_id["'],\s*actor\.user\.id\)/);
   assert.match(handler, /\.eq\(["']status["'],\s*["']active["']\)/);
   assert.doesNotMatch(handler, /body\.user_id|body\.tenant_id/, "caller must not select another identity or tenant");
+});
+
+test("verify_jwt=false custom auth negative probes cover every deployed admin and ERP action", () => {
+  assert.ok(workflow.includes("tests/runtime/dlice-orders-auth-action-probes.mjs"));
+  assert.ok(workflow.includes("Verify missing and invalid authentication across all admin and ERP actions"));
+  assert.ok(actionAuthProbe.includes("actions.length !== 115"));
+  assert.ok(actionAuthProbe.includes('credential: "missing"'));
+  assert.ok(actionAuthProbe.includes('credential: "invalid"'));
+  assert.ok(actionAuthProbe.includes("response.status === 401"));
+  assert.ok(actionAuthProbe.includes("STAGING_SUPABASE_ANON_KEY"));
+  assert.ok(!actionAuthProbe.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(actionAuthProbe.includes("responseBodiesLogged: false"));
+  assert.ok(actionAuthProbe.includes("secretValuesPrinted: false"));
+  const actionNames = [...new Set([...edgeSource.matchAll(/action\\s*===\\s*"([^"]+)"/g)]
+    .map((match) => match[1])
+    .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")))];
+  assert.equal(actionNames.length, 115, "action probe inventory must match the 115 current staging admin/ERP actions");
 });
 
 test("all admin and ERP action handlers are behind explicit actor authentication", () => {
