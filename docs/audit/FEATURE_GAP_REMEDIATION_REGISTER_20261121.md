@@ -941,3 +941,17 @@ The seven source-only files are:
 - `20261121170000_atomic_branch_assignment_audit.sql`
 
 Do not apply these as a batch. Review migration dependencies/order and RPC grants/RLS per file, run full exact-head disposable replay, then apply only individually authorized staging migrations with backup/rollback evidence. Production remains out of scope.
+
+
+## Latest current-head evidence — 24 November 2026
+
+- Current staging head: `666f2a432e236f15161cef8d2d9905279d0f5144`.
+- [Quality run 45236931620](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620): PASS on exact current staging head.
+- [Tenant acceptance run 45236931758](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758): P01–P09 9/9 PASS; supplemental RLS/RPC 6/6 PASS; 230/230 auth probes PASS; cleanup HTTP 204 for both sessions; no FAIL/BLOCKED/SKIPPED/executed:false.
+- PR #130 merged passwordless existing-identity auth into the manual KDS/POS/Stock/Offline and Procurement/Receiving workflows. They remain unexecuted; the issue #45 business E2E acceptance is still OPEN.
+- PR #132 ensures tenant acceptance reruns on Edge Function, migration, and positive-E2E auth harness changes.
+- Vercel Preview for the exact staging SHA is READY (deployment `dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq`); no Production target.
+- Supabase `dlice-orders` remains ACTIVE v71 with custom `getAdmin(req)`; both release flags remain false.
+- Migration parity remains 56 source / 49 applied / 7 source-only / 0 DB-only / 0 duplicates. No shared staging migration was applied.
+
+The feature status remains 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE. This current-head runtime result strengthens the tenant isolation evidence but does not close unrelated domain features or positive business E2E gaps.
