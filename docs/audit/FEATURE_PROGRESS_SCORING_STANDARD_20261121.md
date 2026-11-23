@@ -88,3 +88,23 @@ The current feature-level matrix was recounted directly from all 189 requirement
 - Vercel staging Preview is READY on the exact staging commit. Preview readiness is not business acceptance or production release.
 
 **Still required:** execute KDS/POS/Stock/Offline and Procurement/Receiving positive E2E with database reconciliation; finish remaining candidate PRs individually with exact-head CI and disposable migration replay; close source/database migration drift; implement and verify all remaining NOT VERIFIED vertical slices; and run full 18-domain regression, 150-branch load/concurrency, backup/restore and release gates.
+
+
+## Latest current-head runtime acceptance — 24 November 2026
+
+The staging acceptance workflow was extended by PR #132 so it reruns when the `dlice-orders` Edge Function, migrations, and positive E2E auth harness change. After PR #132 merged, the workflow ran on the latest staging SHA:
+
+- Staging SHA: `666f2a432e236f15161cef8d2d9905279d0f5144`.
+- Tenant acceptance: [run 45236931758](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758), **P01–P09 9/9 PASS**.
+- Admin/ERP auth probes: **230/230 PASS** across 115 actions; default expected HTTP 401, `admin-bootstrap-owner` expected HTTP 403; no response bodies or secret values logged.
+- Supplemental direct RLS/RPC checks: **6/6 PASS**.
+- Tenant A/B existing-account magic-link login, membership and branch fixtures: PASS.
+- Cross-tenant read/write denial and zero write side effects: PASS.
+- Both temporary Auth sessions revoked with HTTP 204.
+- Same-head Free quality checks: [run 45236931620](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620), PASS.
+- Vercel Preview for the exact staging SHA: READY; no Production target.
+- Supabase `dlice-orders`: ACTIVE v71; custom `getAdmin(req)` present; both release flags remain false.
+
+This is a stronger current-head tenant-isolation/auth boundary result. It does not prove the positive KDS/POS/Stock/Offline or Procurement/Receiving business workflows. PR #130 makes those workflows passwordless with existing Auth identities and explicit manual staging mutation confirmation; they still require manual dispatch and persisted-data reconciliation.
+
+The weighted score for tenant/member isolation is intentionally not changed automatically. Re-score the six dimensions only after mapping this new run to each criterion and accounting for any still-unverified storage/cache/job or broad 150-branch requirements. The matrix remains 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE; 93 PARTIAL features are still unscored. Do not infer a new percentage from a single acceptance workflow.
