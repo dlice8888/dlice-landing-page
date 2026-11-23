@@ -31,11 +31,10 @@ jobs:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
           STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
         run: |
           set +x
           missing=0
-          for key in STAGING_SUPABASE_URL STAGING_SUPABASE_PUBLIC_KEY STAGING_SUPABASE_SERVICE_ROLE_KEY STAGING_EDGE_FUNCTION_URL; do
+          for key in STAGING_SUPABASE_URL STAGING_SUPABASE_PUBLIC_KEY STAGING_SUPABASE_SERVICE_ROLE_KEY; do
             if [ -z "${!key}" ]; then
               echo "::error title=STAGING PREFLIGHT BLOCKED::$key is missing; no business-flow mutations may run."
               missing=1
@@ -46,7 +45,7 @@ jobs:
             printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"passwordless_staging_auth_configuration_missing","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
-          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ] || [ "$STAGING_EDGE_FUNCTION_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders" ]; then
+          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ]; then
             echo "::error title=STAGING PREFLIGHT BLOCKED::Staging URL does not match the fixed staging project."
             mkdir -p artifacts
             printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
@@ -67,7 +66,6 @@ jobs:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
           STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
         run: node tests/staging/kds-pos-stock-positive.mjs
       - name: Validate reconciliation artifact even when the E2E fails
         if: always()
