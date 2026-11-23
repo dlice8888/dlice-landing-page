@@ -962,12 +962,24 @@ if (action === "admin-set-profile-role") {
     // Self-service only: return active memberships belonging to the authenticated actor.
     // Do not require a global "branches" permission for a user's own membership lookup.
     // Never accept a caller-supplied user_id here; actor identity comes from the verified session.
+    // admin_profiles.user_id intentionally has no FK from tenant_memberships.user_id, so
+    // embedding admin_profiles in this PostgREST select raises PGRST200 (HTTP 503).
+    // getAdmin() has already loaded the authenticated actor's own profile; reuse it instead
+    // of relying on a relationship that does not exist in the database schema.
     const {data,error}=await admin.from("tenant_memberships")
-      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status),admin_profiles(display_name,username,role)")
+      .select("tenant_id,user_id,role,permissions,status,created_at,tenants(slug,legal_name,status)")
       .eq("user_id",actor.user.id)
       .eq("status","active");
     if(error)return fail("Keanggotaan tenant belum tersedia. Pastikan migrasi platform sudah diterapkan.",503,origin);
-    return json({memberships:data||[]},200,origin);
+    const memberships=(data||[]).map((membership)=>({
+      ...membership,
+      admin_profiles:{
+        display_name:actor.profile.display_name,
+        username:actor.profile.username,
+        role:actor.profile.role,
+      },
+    }));
+    return json({memberships},200,origin);
   }
 
   if (action === "erp-create-tenant") {
