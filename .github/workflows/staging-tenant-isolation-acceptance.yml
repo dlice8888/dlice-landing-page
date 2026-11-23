@@ -10,6 +10,7 @@ on:
       - .github/workflows/staging-tenant-isolation-acceptance.yml
       - tests/runtime/dlice-tenant-jwt-isolation.mjs
       - tests/runtime/supabase-api-key.mjs
+      - tests/runtime/dlice-orders-auth-action-probes.mjs
   workflow_dispatch:
 
 permissions:
@@ -40,6 +41,8 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Verify missing and invalid authentication across all admin and ERP actions
+        run: node tests/runtime/dlice-orders-auth-action-probes.mjs
       - name: Preflight and execute all tenant-isolation probes
         id: probes
         continue-on-error: true
