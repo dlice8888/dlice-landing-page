@@ -3164,7 +3164,19 @@
     },
     "latest_tenant_acceptance_run": 45230589775,
     "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6",
-    "staging_head": "02c32c31315725c7639f249978efc4b8d486cab5"
+    "staging_head": "b59432f5fadae6eb20811bd411a85431455ee227",
+    "source_migration_files": 56,
+    "source_only_migrations": [
+      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+      "20261120110000_command_center_summary.sql",
+      "20261120120000_atomic_branch_checklist_audit.sql",
+      "20261121100000_atomic_admin_permission_audit.sql",
+      "20261121130000_atomic_tenant_invite_lifecycle.sql",
+      "20261121160000_atomic_admin_profile_mutation_audit.sql",
+      "20261121170000_atomic_branch_assignment_audit.sql"
+    ],
+    "db_only_migrations": [],
+    "duplicate_source_versions": 0
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -3222,8 +3234,6 @@
     126,
     123,
     122,
-    121,
-    120,
     119,
     118,
     117,
@@ -3239,7 +3249,7 @@
     104,
     71
   ],
-  "open_pr_count": 20,
+  "open_pr_count": 18,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -3782,15 +3792,14 @@
     "current_status_source": "Feature-level rows in this matrix; current GitHub staging SHA/workflow runs; read-only Supabase table/RLS/migration/advisor/Edge Function evidence; Vercel deployment metadata.",
     "count_discrepancy": "The supplied table and older narrative rows differ from the current feature-level matrix in Admin/Identity and Quality/Security. Matrix rows are authoritative for this snapshot; do not hand-adjust summary totals.",
     "business_e2e": "P01-P09 tenant isolation passed on staging commit 02c32c31315725c7639f249978efc4b8d486cab5, but KDS/POS/Stock/Offline and Procurement/Receiving business E2E plus ledger reconciliation remain separate and unproven.",
-    "no_shared_staging_or_production_mutation": true
+    "no_shared_staging_or_production_mutation": true,
+    "migration_drift": "Fresh exact source-tree vs Supabase migration-history comparison on 2026-11-24: 56 SQL migration files in staging source, 49 applied DB versions, 7 source-only migrations, 0 DB-only versions, 0 duplicate source versions. This supersedes the older 52/49/3 count. Do not apply the seven source-only migrations as a batch; review dependencies, ordering, exact-head disposable replay, RLS/RPC ACL and rollback per migration."
   },
   "current_open_prs": [
     127,
     126,
     123,
     122,
-    121,
-    120,
     119,
     118,
     117,
@@ -3971,7 +3980,28 @@
     "actual_prs": 125,
     "merged": 77,
     "closed_without_merge": 28,
-    "open": 20
+    "open": 18,
+    "open_pr_numbers": [
+      127,
+      126,
+      123,
+      122,
+      119,
+      118,
+      117,
+      116,
+      115,
+      114,
+      113,
+      112,
+      111,
+      109,
+      108,
+      107,
+      104,
+      71
+    ],
+    "updated_at": "2026-11-24"
   },
   "feature_status_counts_current": {
     "PARTIAL": 95,
@@ -5347,7 +5377,6 @@
         126,
         123,
         122,
-        121,
         119,
         118,
         117,
@@ -5372,7 +5401,7 @@
       "postgres": "17.11.0.003",
       "applied_migrations": 49,
       "latest_applied_migration": "20261119182606",
-      "staging_source_migration_files": 52,
+      "staging_source_migration_files": 56,
       "public_tables": 64,
       "rls_enabled_tables": 64,
       "rls_disabled_tables": 0,
@@ -5425,6 +5454,31 @@
         "custom_handler_auth": "getAdmin(req) present",
         "TENANT_ISOLATION_RELEASED": false,
         "PUBLIC_TENANT_ROUTING_RELEASED": false
+      },
+      "source_only_migrations": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql",
+        "20261121100000_atomic_admin_permission_audit.sql",
+        "20261121130000_atomic_tenant_invite_lifecycle.sql",
+        "20261121160000_atomic_admin_profile_mutation_audit.sql",
+        "20261121170000_atomic_branch_assignment_audit.sql"
+      ],
+      "migration_parity": {
+        "source_files": 56,
+        "applied_versions": 49,
+        "source_only_count": 7,
+        "source_only_files": [
+          "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+          "20261120110000_command_center_summary.sql",
+          "20261120120000_atomic_branch_checklist_audit.sql",
+          "20261121100000_atomic_admin_permission_audit.sql",
+          "20261121130000_atomic_tenant_invite_lifecycle.sql",
+          "20261121160000_atomic_admin_profile_mutation_audit.sql",
+          "20261121170000_atomic_branch_assignment_audit.sql"
+        ],
+        "db_only_versions": [],
+        "duplicate_source_versions": []
       }
     },
     "vercel": {
@@ -5443,7 +5497,7 @@
         "Native Supabase leaked-password protection disabled",
         "26 unindexed foreign keys require workload/EXPLAIN review",
         "49 unused indexes must be retained pending representative workload evidence",
-        "3 source-only staging migrations require per-migration parity/dependency review before application"
+        "7 source-only staging migrations require per-file dependency/order review and exact-head disposable replay before any shared staging application"
       ],
       "product": [
         "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries have zero staging rows; positive workflows are not yet proven"
@@ -5451,5 +5505,27 @@
       "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
     },
     "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change."
+  },
+  "migration_reconciliation_2026_11_24": {
+    "observed_at": "2026-11-24",
+    "repository_branch": "staging",
+    "repository_commit": "b59432f5fadae6eb20811bd411a85431455ee227",
+    "source_migration_files": 56,
+    "applied_migration_versions": 49,
+    "latest_applied_version": "20261119182606",
+    "source_only_migrations": [
+      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+      "20261120110000_command_center_summary.sql",
+      "20261120120000_atomic_branch_checklist_audit.sql",
+      "20261121100000_atomic_admin_permission_audit.sql",
+      "20261121130000_atomic_tenant_invite_lifecycle.sql",
+      "20261121160000_atomic_admin_profile_mutation_audit.sql",
+      "20261121170000_atomic_branch_assignment_audit.sql"
+    ],
+    "source_only_count": 7,
+    "database_only_versions": [],
+    "duplicate_source_versions": [],
+    "status": "SOURCE_AHEAD_OF_DATABASE",
+    "action": "Review each pending migration for dependencies, ordering, idempotency, tenant/RLS/RPC ACL, and rollback; run the full exact-head disposable replay; then apply only explicitly authorized staging migrations one-by-one. Do not batch-apply and do not touch production."
   }
 }
