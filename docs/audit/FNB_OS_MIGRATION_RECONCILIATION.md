@@ -390,3 +390,10 @@ Run [45017642887](https://github.com/dlice8888/dlice-landing-page/actions/runs/4
 Source comparison identified the P03 defect: staging embeds `admin_profiles(...)` through `tenant_memberships` despite the absence of that foreign-key relationship. PR #126 has the correct separate-query implementation; preserve it during conflict reconciliation. Do not add a speculative foreign key to mask the PostgREST relationship error.
 
 No shared staging migration, Edge Function deployment, Auth mutation, Vercel setting change, production change, merge, or release-flag change occurred during this recheck. Both release flags remain false.
+
+
+## Superseding live staging read — 23 November 2026, 18:47 WIB
+
+Fresh read-only Supabase connector inspection confirms staging `higoadrzxnhzbbwhdbmh` is ACTIVE_HEALTHY on PostgreSQL 17. Applied migration history contains **49 versions**, latest `20261119182606_revoke_default_public_function_execute`; current repository staging source contains **52 migration SQL files**, leaving three source-only migrations: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`. This is the current live count and supersedes older historical counts above. Do not apply these three to shared staging until exact-head replay, dependency review, authorization and rollback gates pass.
+
+The deployed `dlice-orders` Edge Function is ACTIVE at version 70 with `verify_jwt=false`; custom authentication and authorization in the handler therefore remain a critical runtime acceptance area. The two release flags remain false. No staging migration, Auth mutation, Edge Function deployment, cron activation, or production change was performed during this read-only inspection.
