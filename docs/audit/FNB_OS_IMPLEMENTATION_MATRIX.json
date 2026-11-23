@@ -1944,14 +1944,22 @@
           "requirement": "Cross-tenant isolation",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "PR #126 adds direct-client RLS coverage (35 pgTAP assertions across 17 sensitive tables) and tenant-scoped Edge Function checks. Live Tenant A/B API probes remain incomplete; P03 currently fails and P04-P09 are blocked.",
+          "evidence_or_gap": "P01-P09 live staging acceptance now passes 9/9 on commit 666f2a4; supplemental RLS/RPC probes 6/6 and 230/230 missing/invalid-auth action probes pass. Cross-tenant writes have verified zero database side effects. Remaining gap: expand tenant-scope certification to Storage, cache, background jobs, every mutation/API route, invitation lifecycle, and multi-branch/150-branch concurrency before release.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 238
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete.",
+          "latest_runtime_evidence": {
+            "commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
+            "run": 45236931758,
+            "status": "PASS",
+            "p01_p09": "9/9",
+            "supplemental": "6/6",
+            "auth": "230/230"
+          }
         },
         {
           "requirement": "Permission changes themselves audited",
@@ -2036,7 +2044,7 @@
           "requirement": "Tenant/member isolation in database and APIs",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "64/64 public tables have RLS; PR #126 adds 35 pgTAP assertions across 17 sensitive tables and narrowly scoped pre-release probe routes. Existing Tenant A/B Auth users, memberships, matching six-item tenant permission sets and QA branch assignments are verified. P01-P09 live Auth/API probes have NOT RUN; protected staging service-role secret and workflow dispatch remain prerequisites.",
+          "evidence_or_gap": "P01-P09 live staging acceptance passes 9/9 on commit 666f2a4; supplemental RLS/RPC 6/6 and 230/230 missing/invalid-auth action probes pass. Cross-tenant write postconditions show zero transfer/item/stock-movement rows. Remaining: Storage/cache/job scope, complete mutation/API route matrix, multi-branch concurrency and broader E2E before release.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 245
@@ -2082,7 +2090,16 @@
             "earned_total": 38,
             "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
           },
-          "progress_status": "SCORED_PROVISIONAL"
+          "progress_status": "RE-SCORING_REQUIRED_AFTER_NEW_RUNTIME_EVIDENCE",
+          "progress_note": "Prior 38% score is stale relative to the new runtime acceptance; do not reuse it. Re-score all six weighted dimensions after decomposing remaining route/storage/cache/job coverage.",
+          "latest_runtime_evidence": {
+            "commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
+            "run": 45236931758,
+            "status": "PASS",
+            "p01_p09": "9/9",
+            "supplemental": "6/6",
+            "auth": "230/230"
+          }
         },
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
@@ -5209,7 +5226,7 @@
   "latest_live_audit_2026_11_24": {
     "as_of": "2026-11-24 00:00 WIB",
     "repository": "dlice8888/dlice-landing-page",
-    "staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "staging_commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
     "feature_counts": {
       "total": 189,
       "partial": 95,
@@ -5504,7 +5521,19 @@
       ],
       "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
     },
-    "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change."
+    "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change.",
+    "latest_staging_acceptance": {
+      "workflow_run": 45236931758,
+      "quality_run": 45236931620,
+      "required_pass": 9,
+      "required_fail": 0,
+      "required_blocked": 0,
+      "required_skipped": 0,
+      "auth_actions": 115,
+      "auth_requests": 230,
+      "auth_passed": 230,
+      "auth_failed": 0
+    }
   },
   "migration_reconciliation_2026_11_24": {
     "observed_at": "2026-11-24",
@@ -5527,5 +5556,43 @@
     "duplicate_source_versions": [],
     "status": "SOURCE_AHEAD_OF_DATABASE",
     "action": "Review each pending migration for dependencies, ordering, idempotency, tenant/RLS/RPC ACL, and rollback; run the full exact-head disposable replay; then apply only explicitly authorized staging migrations one-by-one. Do not batch-apply and do not touch production."
+  },
+  "latest_staging_acceptance_2026_11_24_1819WIB": {
+    "as_of": "2026-11-24 01:19 WIB",
+    "staging_commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
+    "workflow_run": 45236931758,
+    "workflow_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758",
+    "quality_run": 45236931620,
+    "quality_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620",
+    "required_probes": {
+      "pass": 9,
+      "fail": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "executed": false
+    },
+    "supplemental_probes": {
+      "pass": 6,
+      "fail": 0,
+      "blocked": 0,
+      "skipped": 0
+    },
+    "auth_action_probes": {
+      "actions": 115,
+      "requests": 230,
+      "passed": 230,
+      "failed": 0,
+      "expected_http_status": {
+        "default": 401,
+        "admin_bootstrap_owner": 403
+      }
+    },
+    "postconditions": "Cross-tenant stock-transfer writes denied with zero transfer, transfer-item and stock-movement rows; same-tenant control reached business validation HTTP 422.",
+    "session_cleanup": "Tenant A and Tenant B temporary Auth sessions revoked HTTP 204.",
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "scope": "Tenant isolation negative acceptance only; does not certify positive POS/KDS/offline, procurement/receiving, finance or full 18-domain workflows."
   }
 }
