@@ -1,6 +1,9 @@
 // Exercise the custom authentication boundary for every admin/ERP action.
-// dlice-orders has verify_jwt=false, so the handler must reject missing and invalid
-// bearer tokens itself before any privileged action can read or mutate data.
+// dlice-orders has verify_jwt=false, so protected actions must reject missing and
+// invalid bearer tokens before privileged reads or mutations.
+// admin-bootstrap-owner is intentionally different: it is a one-time bootstrap
+// endpoint gated by DLICE_OWNER_BOOTSTRAP_SECRET before any account/database work.
+// These probes omit that secret, so HTTP 403 is the expected fail-closed result.
 // This test uses only the staging URL and publishable/anon key; no service-role key.
 import { readFileSync } from "node:fs";
 
@@ -78,11 +81,13 @@ async function worker() {
         body: JSON.stringify({ action: current.action }),
         redirect: "manual",
       });
+      const expectedStatus = current.action === "admin-bootstrap-owner" ? 403 : 401;
       results.push({
         action: current.action,
         credential: current.credential,
         status: response.status,
-        passed: response.status === 401,
+        expectedStatus,
+        passed: response.status === expectedStatus,
       });
       // Never read or log response bodies; they may contain implementation details.
       await response.body?.cancel();
@@ -106,6 +111,7 @@ for (const result of results) {
     action: result.action,
     credential: result.credential,
     httpStatus: result.status,
+    expectedHttpStatus: result.expectedStatus,
     status: result.passed ? "PASS" : "FAIL",
     ...(result.error ? { error: result.error } : {}),
   }));
@@ -117,7 +123,8 @@ console.log(JSON.stringify({
   requests: results.length,
   passed: results.length - failures.length,
   failed: failures.length,
-  expectedHttpStatus: 401,
+  expectedHttpStatus: { default: 401, "admin-bootstrap-owner": 403 },
+  bootstrapOwnerGuard: "secret-required-before-any-bootstrap-side-effect",
   credentials: ["missing", "invalid"],
   responseBodiesLogged: false,
   secretValuesPrinted: false,
