@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-23 00:05 WIB",
+  "snapshot_at": "2026-11-24 00:00 WIB",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
@@ -3140,7 +3140,31 @@
       ],
       "status": "BUILD_READY_NOT_FUNCTIONAL_ACCEPTANCE",
       "note": "Staging deployments are READY, but this does not prove authenticated browser E2E, tenant isolation, database consistency or 150-branch load readiness."
-    }
+    },
+    "staging_migrations": 49,
+    "latest_staging_migration": "20261119182606",
+    "deployed_edge_function": {
+      "name": "dlice-orders",
+      "version": 71,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "custom_handler_auth": true,
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "security_advisor": {
+      "leaked_password_protection": "WARN_DISABLED"
+    },
+    "performance_advisor": {
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49
+    },
+    "health_advisor": {
+      "findings": 0
+    },
+    "latest_tenant_acceptance_run": 45230589775,
+    "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6",
+    "staging_head": "02c32c31315725c7639f249978efc4b8d486cab5"
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -3156,19 +3180,42 @@
       "P08",
       "P09"
     ],
-    "current_status": "BLOCKED",
-    "last_known_runtime_run": 44208204366,
-    "latest_candidate_static_ci_run": 44307838730,
-    "runtime_probes_executed": 0,
-    "reason": [
-      "GitHub Environment credential metadata cannot be queried through the connected integration; workflow dispatch is not exposed by the connected integration",
-      "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only and no profiles have been changed",
-      "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed",
-      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be queried through the connected integration"
-    ],
+    "current_status": "PASS",
+    "latest_runtime_run": 45230589775,
+    "latest_runtime_run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45230589775",
+    "exact_staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "probes_executed": 9,
+    "probes_passed": 9,
+    "probes_failed": 0,
+    "probes_blocked": 0,
+    "probes_skipped": 0,
+    "supplemental_rls_rpc": {
+      "executed": 6,
+      "passed": 6,
+      "failed": 0,
+      "blocked": 0
+    },
+    "auth_action_probes": {
+      "actions": 115,
+      "requests": 230,
+      "passed": 230,
+      "failed": 0,
+      "expected_default_http": 401,
+      "expected_admin_bootstrap_owner_http": 403,
+      "response_bodies_logged": false,
+      "secret_values_printed": false
+    },
+    "session_cleanup": {
+      "tenant_a_http": 204,
+      "tenant_b_http": 204,
+      "status": "PASS"
+    },
     "no_skipped_policy": true,
-    "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging",
-    "p03_candidate": "PR #87 requires branch_worker profile, branch_manager tenant role, equal non-empty permission sets, active tenant membership, configured QA branch visibility, and masks all identity/tenant/branch IDs; allows multiple same-tenant assignments"
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "note": "This proves the scoped P01-P09 tenant API acceptance and auth-negative action probes only. It does not prove the broader KDS/POS/Stock/Offline or Procurement/Receiving business workflows."
   },
   "open_prs": [
     127,
@@ -3331,10 +3378,11 @@
     },
     "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
     "feature_status_counts_current": {
-      "PARTIAL": 92,
-      "NOT VERIFIED": 91,
+      "PARTIAL": 95,
+      "NOT VERIFIED": 88,
       "BLOCKED": 6,
-      "DONE": 0
+      "DONE": 0,
+      "TOTAL": 189
     },
     "feature_updates": [
       {
@@ -3729,32 +3777,12 @@
     ]
   },
   "audit_reconciliation": {
-    "source_snapshot": "2026-11-21 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
-    "arithmetic": "Current feature-level matrix: 92 PARTIAL + 91 NOT VERIFIED + 6 BLOCKED = 189. Three previously BLOCKED features moved to PARTIAL after concrete implementation and exact-head tests passed (#120 permission/profile/password audit, #123/#125/#127 order lifecycle, and #120 application password guard). Six technically or externally gated features remain BLOCKED.",
-    "current_status_source": "Feature-level records plus read-only Supabase schema/function evidence and current PR/CI results.",
-    "migration_drift": "The staging branch contains 52 SQL migration files while Supabase staging records 49 applied migrations. The three 20261120 migrations are in staging source but not applied. No shared staging migration was applied during this audit.",
-    "e2e_blockers": "The 2026-11-21 staging Procurement and KDS/POS/Stock positive-path runs stopped at preflight due missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD and STAGING_TEST_BRANCH_A_USERNAME. The business workflows did not execute.",
-    "tenant_pr126": "Exact-head PR #126 commit a36636974a625e4a56e84e6c61fcce3d2b7a95d8 passes free quality, disposable migration replay, KDS, CORS, procurement receiving and procurement requisition jobs. Fifteen invitation pgTAP assertions are included. Real Tenant A/B API, Storage, cache and job isolation remains unproven.",
-    "pr120": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes quality, disposable migration replay, CORS, KDS and procurement contracts. The profile-mutation pgTAP suite now has 35 assertions, including forced audit-insert rollback for staff creation, role and active-state mutations, plus durable password-reset intent/finalization failure handling. No staging migration or Edge Function was applied. Disposable replay log confirms 7 SQL test files and 124 total pgTAP assertions PASS.",
-    "auth": "Supabase Security Advisor still reports leaked password protection DISABLED. PR #124 application-level mitigation does not equal native Supabase Auth protection and does not close direct Auth bypass.",
-    "performance": "Supabase advisors report 26 unindexed foreign keys and 49 unused indexes. Retain unused indexes until representative query-plan/workload evidence; do not drop them solely on zero scans.",
-    "vercel": "Vercel project dlice-landing-page exists. PR #126 preview is READY on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8. No PR #127 preview found. Preview readiness is not runtime feature acceptance.",
-    "no_shared_staging_or_production_mutation": true,
-    "domain_4_5": "Read-only Supabase schema audit found no kitchen_stations, station-routing, recipe_versions, allergen or lot/expiry tables. KDS dispatch has no station assignment. Order stock consumption chooses the highest active recipe version at consumption time rather than proving an order-time pinned version. Production batch/consumption/waste tables exist, but production_batches=0 and production_consumptions=0 in staging; no positive batch-to-stock reconciliation exists.",
-    "additional_reclassification": "Five more features moved from NOT VERIFIED to PARTIAL after the live schema/function audit confirmed implementation foundations: KDS tickets (6 staging tickets/items and dispatch/transition RPCs), kitchen queue priority (priority field), branch pricing settings, warehouse master, and inventory min_stock. Their remaining acceptance gaps are still open; none is DONE.",
-    "payment_reconciliation": "Read-only staging reconciliation: 7 orders, 6 payment records, 21 reservations; no orphan payments/reservations and reservation states align with order states. There are 3 pending_verification attempts: 1 proof-bearing (must remain pending for manual double-payment review) and 2 without proof on already-paid orders (eligible to be closed). PR #127 adds a superseded state only for unpaid/no-proof sibling attempts after a paid decision and preserves proof-bearing attempts.",
-    "pr127": "Exact-head commit 5c597c2ec37a130501ed19591cfc9383396ba1b6: disposable full migration replay PASS; quality, CORS, KDS, procurement requisition and receiving jobs PASS; 14 payment-attempt supersession assertions included. Browser concurrency and global Storage orphan sweep remain pending.",
-    "latest_auth_identity_audit": "Two existing Supabase Auth identities confirmed read-only: distinct user IDs and tenant memberships; Tenant A has active QA-DLICE-A and DLC-B001 assignments; Tenant B has active QA-TENANT-B assignment. Both last signed in 2026-10-25; current authentication has not been proven. No account or password was mutated.",
-    "direct_client_rls": "Confirmed explicit deny_direct_client_access policies for branches, tenants and tenant_memberships; direct client queries returning zero rows are expected and do not prove or disprove tenant isolation through the service-role Edge Function API.",
-    "migration_reconciliation": "Staging branch contains 52 SQL migration files while dlice-staging database records 49 applied migrations. The 49 DB versions all match repository versions; no DB-only versions. Three repository-only migrations are pending: 20261120100000 atomic owner/tenant bootstrap, 20261120110000 command center summary, 20261120120000 branch checklist audit. Do not apply without dependency/review gate.",
-    "pr126": "Exact head cf9d6781111f01c2da6d798c14fe70fd577d1ffd: free quality PASS; full disposable migration replay PASS; all 15 invitation pgTAP assertions PASS; CORS, KDS, procurement requisition and receiving contracts PASS. Existing matching branch-manager identities are selected from Supabase. Passwordless Auth Admin magic-link harness is implemented; live P01-P09 cannot run until PR is integrated to trusted staging and staging Environment protection plus service-role secret are verified. Vercel preview is still on older commit a3663697.",
-    "supabase_advisors": "Supabase security advisor reports leaked-password protection disabled (one warning). Performance advisor reports 26 unindexed foreign keys and 49 unused indexes. Health advisor has zero findings. Review each index with workload/EXPLAIN before adding/dropping; do not drop solely from unused-index lint.",
-    "passwordless_tenant_auth": "PR #126 exact head 07d7c51c2cbea21b9cd49a480614e004fe7bf417 has all six CI/disposable replay workflows PASS. It uses existing Tenant A/B identities through passwordless Admin magic links. P01-P09 has no run; staging Environment protection and service-role secret presence remain unverified.",
-    "pr124": "PR #124 is CLOSED as superseded by PR #120. Shared password guard source, unit tests, migration and SQL tests have identical blob SHAs; PR #120 contains the superset Edge Function implementation and its own exact-head passing tests.",
-    "pr120_124_overlap": "PR #124 closed superseded by #120 after exact-head #120 CI and disposable migration replay passed. Shared leaked-password guard helper, tests and migration have identical blob SHAs; #120 Edge Function is the superset.",
-    "pr125_127_overlap": "PR #125 and #127 share 20261121140000_order_expiry_payment_lifecycle.sql with identical blob SHA c1d1de05; migration content is not divergent. Preserve one canonical migration history entry and verify #127's later payment-proof/supersession migrations replay after it.",
-    "latest_pr_statuses": "Open Draft PRs: #120, #123, #125, #126, #127 (5). PR #124 closed as superseded by #120. All five open heads have successful applicable CI/disposable replay. No P01-P09 or business runtime E2E executed.",
-    "partial_progress_detail": "Only two PARTIAL feature progress values are currently scored: SaaS tenant directory/onboarding 30%; tenant/member isolation foundation 38%. The other 90 PARTIAL features remain unscored until evidence is decomposed across code/UI, database, authorization, automated tests, workflow E2E and reconciliation/observability."
+    "source_snapshot": "2026-11-24 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
+    "arithmetic": "Feature rows recount to 95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE = 189. This supersedes older narrative snapshots that said 92/91/6.",
+    "current_status_source": "Feature-level rows in this matrix; current GitHub staging SHA/workflow runs; read-only Supabase table/RLS/migration/advisor/Edge Function evidence; Vercel deployment metadata.",
+    "count_discrepancy": "The supplied table and older narrative rows differ from the current feature-level matrix in Admin/Identity and Quality/Security. Matrix rows are authoritative for this snapshot; do not hand-adjust summary totals.",
+    "business_e2e": "P01-P09 tenant isolation passed on staging commit 02c32c31315725c7639f249978efc4b8d486cab5, but KDS/POS/Stock/Offline and Procurement/Receiving business E2E plus ledger reconciliation remain separate and unproven.",
+    "no_shared_staging_or_production_mutation": true
   },
   "current_open_prs": [
     127,
@@ -4002,7 +4030,7 @@
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
     "unscored_partial_features": 93,
-    "status": "INCOMPLETE; three additional features were reclassified to PARTIAL based on concrete test/source evidence; score their six weighted dimensions before publishing percentages."
+    "status": "INCOMPLETE; current feature rows recount to 95/88/6. Two PARTIAL features have defensible scores (30%, 38%); 93 PARTIAL features remain unscored. Re-score tenant isolation using the 24-Nov P01-P09 run before changing its percentage."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -5147,5 +5175,281 @@
       }
     ],
     "snapshot_note": "Three features moved to PARTIAL because implementation/test evidence exists; no DONE status or weighted score was invented."
+  },
+  "latest_live_audit_2026_11_24": {
+    "as_of": "2026-11-24 00:00 WIB",
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "feature_counts": {
+      "total": 189,
+      "partial": 95,
+      "not_verified": 88,
+      "blocked": 6,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 93
+    },
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "POS & Checkout",
+        "total": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Order Management",
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Kitchen & Production",
+        "total": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "total": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "total": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "total": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "total": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "HR & Workforce",
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "total": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "total": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "total": 20,
+        "partial": 12,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      }
+    ],
+    "github": {
+      "pr129": {
+        "state": "MERGED_TO_STAGING",
+        "quality_run": 45230589845,
+        "acceptance_run": 45230589775,
+        "exact_head": "02c32c31315725c7639f249978efc4b8d486cab5"
+      },
+      "open_pr_inventory_snapshot": [
+        127,
+        126,
+        123,
+        122,
+        121,
+        119,
+        118,
+        117,
+        116,
+        115,
+        114,
+        113,
+        112,
+        111,
+        109,
+        108,
+        107,
+        104,
+        71
+      ],
+      "note": "Open PR inventory is time-sensitive; do not treat the list as the full PRD gap inventory."
+    },
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "staging_source_migration_files": 52,
+      "public_tables": 64,
+      "rls_enabled_tables": 64,
+      "rls_disabled_tables": 0,
+      "table_rows": {
+        "orders": 7,
+        "payment_records": 6,
+        "order_reservations": 21,
+        "pos_sales": 6,
+        "pos_shifts": 7,
+        "kitchen_tickets": 6,
+        "kitchen_ticket_items": 6,
+        "stock_movements": 26,
+        "branch_inventory": 4,
+        "purchase_requisitions": 0,
+        "purchase_orders": 0,
+        "purchase_receipts": 0,
+        "production_batches": 0,
+        "production_consumptions": 0,
+        "payment_settlements": 0,
+        "cash_reconciliations": 0,
+        "finance_journal_entries": 0
+      },
+      "advisors": {
+        "security": [
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "performance": [
+          {
+            "name": "unindexed_foreign_keys",
+            "count": 26
+          },
+          {
+            "name": "unused_index",
+            "count": 49
+          }
+        ],
+        "health": {
+          "findings": 0
+        }
+      },
+      "edge_function": {
+        "name": "dlice-orders",
+        "status": "ACTIVE",
+        "version": 71,
+        "verify_jwt": false,
+        "custom_handler_auth": "getAdmin(req) present",
+        "TENANT_ISOLATION_RELEASED": false,
+        "PUBLIC_TENANT_ROUTING_RELEASED": false
+      }
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "deployment_id": "dpl_Drf4DVFuUGWUGDLUJ24Ydd6w9Wyd",
+      "preview_state": "READY",
+      "preview_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+      "note": "Preview readiness is not business E2E acceptance and does not authorize production release."
+    },
+    "unresolved": {
+      "business_e2e": [
+        "KDS/POS/Stock/Offline positive sale, ticket, recipe consumption, offline replay and reconciliation",
+        "Procurement requisition → approval → PO → GRN → stock ledger and AP reconciliation"
+      ],
+      "platform": [
+        "Native Supabase leaked-password protection disabled",
+        "26 unindexed foreign keys require workload/EXPLAIN review",
+        "49 unused indexes must be retained pending representative workload evidence",
+        "3 source-only staging migrations require per-migration parity/dependency review before application"
+      ],
+      "product": [
+        "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries have zero staging rows; positive workflows are not yet proven"
+      ],
+      "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
+    },
+    "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change."
   }
 }
