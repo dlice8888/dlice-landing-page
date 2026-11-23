@@ -57,16 +57,6 @@ let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
 
-async function userId(token) {
-  const response = await fetch(`${base}/auth/v1/user`, {
-    headers: { apikey: anon, authorization: `Bearer ${token}` },
-  });
-  const body = await response.json().catch(() => ({}));
-  assert.equal(response.status, 200, "Staging Auth user lookup must succeed");
-  assert.equal(typeof body.id, "string", "Authenticated user ID must be present");
-  return body.id;
-}
-
 async function call(action, payload, token = managerToken) {
   const response = await fetch(edge, {
     method: "POST",
