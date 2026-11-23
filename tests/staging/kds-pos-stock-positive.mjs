@@ -6,13 +6,12 @@
  */
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+import { findActiveOwnerUserId, revokeLocalSession, tokenForExistingUser } from "../runtime/staging-passwordless-auth.mjs";
 
 const required = [
   "STAGING_SUPABASE_URL",
   "STAGING_SUPABASE_PUBLIC_KEY",
-  "STAGING_EDGE_FUNCTION_URL",
-  "STAGING_TEST_OWNER_USERNAME",
-  "STAGING_TEST_OWNER_PASSWORD",
+  "STAGING_SUPABASE_SERVICE_ROLE_KEY",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
@@ -21,7 +20,7 @@ if (missing.length) {
 }
 
 const base = process.env.STAGING_SUPABASE_URL.replace(/\/$/, "");
-const edge = new URL(process.env.STAGING_EDGE_FUNCTION_URL);
+const edge = new URL(`${base}/functions/v1/dlice-orders`);
 const expected = "https://higoadrzxnhzbbwhdbmh.supabase.co";
 if (base !== expected || edge.origin !== expected || edge.pathname !== "/functions/v1/dlice-orders") {
   console.error("REFUSED: KDS/POS E2E is restricted to the known D'Lice staging project.");
@@ -56,37 +55,6 @@ let ownerUserId = "";
 let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
-
-function authEmail(identity) {
-  const value = String(identity || "").trim().toLowerCase();
-  // Accept a complete email for any provisioned staging identity; retain legacy username support.
-  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;
-}
-
-async function tokenFor(username, password, label) {
-  const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: { apikey: anon, "content-type": "application/json" },
-    body: JSON.stringify({ email: authEmail(username), password }),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (response.status !== 200 || typeof body.access_token !== "string") {
-    const code = String(body.error_code || body.code || body.error || "auth_error")
-      .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
-    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Check the configured staging identity email/username, password, and required role/branch membership; no business-flow assertions ran.`);
-  }
-  return body.access_token;
-}
-
-async function userId(token) {
-  const response = await fetch(`${base}/auth/v1/user`, {
-    headers: { apikey: anon, authorization: `Bearer ${token}` },
-  });
-  const body = await response.json().catch(() => ({}));
-  assert.equal(response.status, 200, "Staging Auth user lookup must succeed");
-  assert.equal(typeof body.id, "string", "Authenticated user ID must be present");
-  return body.id;
-}
 
 async function call(action, payload, token = managerToken) {
   const response = await fetch(edge, {
@@ -167,8 +135,22 @@ async function closeCreatedShift() {
 }
 
 async function main() {
-  ownerToken = await tokenFor(process.env.STAGING_TEST_OWNER_USERNAME, process.env.STAGING_TEST_OWNER_PASSWORD, "Owner");
-  ownerUserId = await userId(ownerToken);
+  try {
+    ownerUserId = await findActiveOwnerUserId({
+      baseUrl: base,
+      serviceRoleKey: process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY,
+    });
+    const session = await tokenForExistingUser({
+      baseUrl: base,
+      publicKey: anon,
+      serviceRoleKey: process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY,
+      userId: ownerUserId,
+    });
+    ownerToken = session.accessToken;
+    ownerUserId = session.userId;
+  } catch {
+    throw new Error("STAGING_AUTH_BLOCKED: Existing confirmed staging Owner identity could not authenticate through a one-time magic link.");
+  }
 
   // Feature-first E2E: use the already-provisioned staging Owner identity for this vertical slice.
   // This removes a separate Branch A login dependency; branch-scoped behavior remains covered by
@@ -362,6 +344,18 @@ try {
 } finally {
   await closeCreatedShift();
   await restoreQaProduct();
+  if (ownerToken) {
+    try {
+      const revoked = await revokeLocalSession({
+        baseUrl: base,
+        publicKey: anon,
+        accessToken: ownerToken,
+      });
+      if (!revoked) evidence.cleanup_errors.push("Owner temporary session revocation was not confirmed");
+    } catch {
+      evidence.cleanup_errors.push("Owner temporary session revocation failed");
+    }
+  }
   if (evidence.cleanup_errors.length) {
     evidence.status = "FAIL";
     evidence.error = [evidence.error, "QA fixture cleanup failed; inspect cleanup_errors before rerun."]

@@ -6,16 +6,14 @@
  * these variables at production.
  */
 import assert from "node:assert/strict";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { findActiveOwnerUserId, revokeLocalSession, tokenForExistingUser } from "../runtime/staging-passwordless-auth.mjs";
 
 const required = [
   "STAGING_SUPABASE_URL",
   "STAGING_SUPABASE_PUBLIC_KEY",
-  "STAGING_EDGE_FUNCTION_URL",
-  "STAGING_TEST_OWNER_USERNAME",
-  "STAGING_TEST_OWNER_PASSWORD",
-  "STAGING_TEST_BRANCH_A_USERNAME",
-  "STAGING_TEST_BRANCH_A_PASSWORD",
+  "STAGING_SUPABASE_SERVICE_ROLE_KEY",
+  "STAGING_TENANT_A_USER_ID",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) {
@@ -24,7 +22,7 @@ if (missing.length) {
 }
 
 const base = process.env.STAGING_SUPABASE_URL.replace(/\/$/, "");
-const edge = new URL(process.env.STAGING_EDGE_FUNCTION_URL);
+const edge = new URL(`${base}/functions/v1/dlice-orders`);
 const expected = "https://higoadrzxnhzbbwhdbmh.supabase.co";
 if (base !== expected || edge.origin !== expected || edge.pathname !== "/functions/v1/dlice-orders") {
   console.error("REFUSED: positive-path test is restricted to the known D'Lice staging project.");
@@ -38,30 +36,6 @@ const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 const receiptNumber = `QA-RCV-${suffix}`;
 const note = `AUTOMATED QA E2E; procurement receiving; ${suffix}`;
 const anon = process.env.STAGING_SUPABASE_PUBLIC_KEY;
-
-function authEmail(identity) {
-  const value = String(identity || "").trim().toLowerCase();
-  // Accept a complete email for any provisioned staging identity; retain legacy username support.
-  return value.includes("@") ? value : `${value}@accounts.dlice.internal`;
-}
-
-async function tokenFor(username, password, label) {
-  const response = await fetch(`${base}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: { apikey: anon, "content-type": "application/json" },
-    body: JSON.stringify({
-      email: authEmail(username),
-      password,
-    }),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (response.status !== 200 || typeof body.access_token !== "string") {
-    const code = String(body.error_code || body.code || body.error || "auth_error")
-      .replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48) || "auth_error";
-    throw new Error(`STAGING_AUTH_BLOCKED: ${label} sign-in unavailable (HTTP ${response.status}; code=${code}). Check the configured staging identity email/username, password, and required role/branch membership; no business-flow assertions ran.`);
-  }
-  return body.access_token;
-}
 
 async function call(action, payload, token) {
   const response = await fetch(edge, {
@@ -91,18 +65,34 @@ async function expectStatus(action, payload, token, expectedStatus) {
   return body;
 }
 
+let ownerToken = "";
+let managerToken = "";
+
 async function main() {
-  const ownerToken = await tokenFor(
-    process.env.STAGING_TEST_OWNER_USERNAME,
-    process.env.STAGING_TEST_OWNER_PASSWORD,
-    "Owner",
-  );
-  const managerToken = await tokenFor(
-    process.env.STAGING_TEST_BRANCH_A_USERNAME,
-    process.env.STAGING_TEST_BRANCH_A_PASSWORD,
-    "configured staging branch manager",
-  );
-  const before = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
+  try {
+    const ownerUserId = await findActiveOwnerUserId({
+      baseUrl: base,
+      serviceRoleKey: process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY,
+    });
+    const ownerSession = await tokenForExistingUser({
+      baseUrl: base,
+      publicKey: anon,
+      serviceRoleKey: process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY,
+      userId: ownerUserId,
+    });
+    ownerToken = ownerSession.accessToken;
+    const managerSession = await tokenForExistingUser({
+      baseUrl: base,
+      publicKey: anon,
+      serviceRoleKey: process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY,
+      userId: process.env.STAGING_TENANT_A_USER_ID,
+    });
+    managerToken = managerSession.accessToken;
+  } catch {
+    throw new Error("STAGING_AUTH_BLOCKED: Existing confirmed Owner and Tenant A identities could not authenticate through one-time magic links.");
+  }
+  // The Tenant A identity must prove its assigned QA-DLICE-A branch before any write.
+  const before = await call("erp-list-inventory", { branch_id: branchId }, managerToken);
   const previous = Number(before.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
 
   const createdReq = await call("erp-create-purchase-requisition", {
@@ -255,7 +245,7 @@ async function main() {
   }, null, 2) + "
 ", { mode: 0o600 });
 
-  const after = await call("erp-list-inventory", { branch_id: branchId }, ownerToken);
+  const after = await call("erp-list-inventory", { branch_id: branchId }, managerToken);
   const current = Number(after.balances.find((x) => x.inventory_item_id === inventoryItemId)?.on_hand ?? 0);
   assert.ok(Math.abs((current - previous) - quantity) < 0.0001,
     `Stock ledger delta must be ${quantity}; observed ${current - previous}`);
@@ -276,4 +266,23 @@ main().catch(async (error) => {
     stage: blocked ? "authentication" : "business_flow",
     error: blocked ? String(error.message) : String(error?.stack || error),
   }, null, 2), { mode: 0o600 });
+}).finally(async () => {
+  const cleanupErrors = [];
+  for (const token of [...new Set([ownerToken, managerToken].filter(Boolean))]) {
+    try {
+      const revoked = await revokeLocalSession({ baseUrl: base, publicKey: anon, accessToken: token });
+      if (!revoked) cleanupErrors.push("temporary Auth session revocation was not confirmed");
+    } catch {
+      cleanupErrors.push("temporary Auth session revocation failed");
+    }
+  }
+  if (cleanupErrors.length) {
+    process.exitCode = 1;
+    await mkdir("artifacts", { recursive: true });
+    let artifact = {};
+    try { artifact = JSON.parse(await readFile("artifacts/procurement-reconciliation.json", "utf8")); } catch {}
+    artifact.result = "failed";
+    artifact.cleanup_errors = cleanupErrors;
+    await writeFile("artifacts/procurement-reconciliation.json", JSON.stringify(artifact, null, 2) + "\n", { mode: 0o600 });
+  }
 });

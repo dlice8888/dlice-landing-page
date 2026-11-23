@@ -19,23 +19,22 @@ jobs:
     timeout-minutes: 12
     environment: staging
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Preflight staging configuration before any business-flow mutation
+      - name: Preflight fixed staging target and passwordless auth configuration
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
-          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set +x
           missing=0
-          for key in STAGING_TEST_OWNER_USERNAME STAGING_TEST_OWNER_PASSWORD; do
+          for key in STAGING_SUPABASE_URL STAGING_SUPABASE_PUBLIC_KEY STAGING_SUPABASE_SERVICE_ROLE_KEY; do
             if [ -z "${!key}" ]; then
               echo "::error title=STAGING PREFLIGHT BLOCKED::$key is missing; no business-flow mutations may run."
               missing=1
@@ -43,22 +42,30 @@ jobs:
           done
           if [ "$missing" -ne 0 ]; then
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_owner_credentials_missing","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"passwordless_staging_auth_configuration_missing","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
-          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ] || [ "$STAGING_EDGE_FUNCTION_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders" ]; then
+          if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ]; then
             echo "::error title=STAGING PREFLIGHT BLOCKED::Staging URL does not match the fixed staging project."
             mkdir -p artifacts
             printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
+            exit 2
+          fi
+          if ! node --input-type=module <<'NODE'
+          import { isServiceRoleKey } from "./tests/runtime/supabase-api-key.mjs";
+          if (!isServiceRoleKey(process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY)) process.exit(1);
+          NODE
+          then
+            mkdir -p artifacts
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
+            echo "::error title=STAGING PREFLIGHT BLOCKED::Service-role key format is invalid; no business-flow mutations ran."
             exit 2
           fi
       - name: Run POS → payment → KDS → recipe stock → report and offline replay E2E
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
           STAGING_SUPABASE_PUBLIC_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
-          STAGING_EDGE_FUNCTION_URL: ${{ secrets.STAGING_EDGE_FUNCTION_URL }}
-          STAGING_TEST_OWNER_USERNAME: ${{ secrets.STAGING_TEST_OWNER_USERNAME }}
-          STAGING_TEST_OWNER_PASSWORD: ${{ secrets.STAGING_TEST_OWNER_PASSWORD }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
         run: node tests/staging/kds-pos-stock-positive.mjs
       - name: Validate reconciliation artifact even when the E2E fails
         if: always()
@@ -72,7 +79,7 @@ jobs:
           fi
       - name: Upload sanitized KDS/POS/stock reconciliation evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: kds-pos-stock-reconciliation-${{ github.run_id }}
           path: artifacts/kds-pos-stock-reconciliation.json
