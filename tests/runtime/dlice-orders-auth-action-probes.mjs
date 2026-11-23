@@ -43,7 +43,7 @@ if (parsed.protocol !== "https:" || parsed.hostname !== expectedHost || parsed.p
 
 const source = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
 const actions = [...new Set(
-  [...source.matchAll(/action\\s*===\\s*"([^"]+)"/g)]
+  [...source.matchAll(/action\s*===\s*"([^"]+)"/g)]
     .map((match) => match[1])
     .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")),
 )].sort();
