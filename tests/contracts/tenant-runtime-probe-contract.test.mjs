@@ -7,6 +7,7 @@ import { isServiceRoleKey, serviceRoleHeaders } from "../runtime/supabase-api-ke
 const workflow = readFileSync(".github/workflows/staging-tenant-isolation-acceptance.yml", "utf8");
 const probe = readFileSync("tests/runtime/dlice-tenant-jwt-isolation.mjs", "utf8");
 const edgeSource = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
+const actionAuthProbe = readFileSync("tests/runtime/dlice-orders-auth-action-probes.mjs", "utf8");
 
 test("staging tenant gate runs only for trusted staging harness changes and uses fixed existing Supabase Auth identities", () => {
   const triggers = workflow.slice(0, workflow.indexOf("permissions:"));
@@ -90,6 +91,42 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
   assert.doesNotMatch(handler, /body\.user_id|body\.tenant_id/, "caller must not select another identity or tenant");
 });
 
+test("verify_jwt=false custom auth negative probes cover every deployed admin and ERP action", () => {
+  assert.ok(workflow.includes("tests/runtime/dlice-orders-auth-action-probes.mjs"));
+  assert.ok(workflow.includes("Verify missing and invalid authentication across all admin and ERP actions"));
+  assert.ok(actionAuthProbe.includes("actions.length !== 115"));
+  assert.ok(actionAuthProbe.includes('credential: "missing"'));
+  assert.ok(actionAuthProbe.includes('credential: "invalid"'));
+  assert.ok(actionAuthProbe.includes("response.status === 401"));
+  assert.ok(actionAuthProbe.includes("STAGING_SUPABASE_ANON_KEY"));
+  assert.ok(!actionAuthProbe.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY"));
+  assert.ok(actionAuthProbe.includes("responseBodiesLogged: false"));
+  assert.ok(actionAuthProbe.includes("secretValuesPrinted: false"));
+  const actionNames = [...new Set([...edgeSource.matchAll(/action\s*===\s*"([^"]+)"/g)]
+    .map((match) => match[1])
+    .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")))];
+  assert.equal(actionNames.length, 115, "action probe inventory must match the 115 current staging admin/ERP actions");
+});
+
+test("all admin and ERP action handlers are behind explicit actor authentication", () => {
+  const authGate = edgeSource.indexOf("const actor = await getAdmin(req);");
+  assert.ok(authGate > 0, "shared actor authentication gate must exist");
+  const handlers = [...edgeSource.matchAll(/if\s*\(\s*action\s*===\s*"([^"]+)"/g)];
+  const privileged = handlers
+    .map((match) => ({ action: match[1], offset: match.index }))
+    .filter(({ action }) => action.startsWith("admin-") || action.startsWith("erp-"));
+  assert.ok(privileged.length >= 50, "expected full admin/ERP action inventory");
+  for (const handler of privileged) {
+    if (handler.action === "admin-login" || handler.action === "admin-funnel-summary") continue;
+    assert.ok(handler.offset > authGate,
+      `${handler.action} must not be dispatched before getAdmin() authenticates the bearer token`);
+  }
+  const funnelStart = edgeSource.indexOf('if (action === "admin-funnel-summary")');
+  const funnelEnd = edgeSource.indexOf("const actor = await getAdmin(req);", funnelStart);
+  assert.ok(funnelStart >= 0 && funnelEnd > funnelStart,
+    "the pre-shared-gate admin funnel action must perform its own actor authentication");
+});
+
 test("P08/P09 require a 403 plus fail-closed service-role database postconditions and retained sanitized evidence", () => {
   assert.match(probe, /async function serviceRoleRows\(table, filters\)/);
   assert.match(probe, /serviceRoleHeaders\(serviceRoleKey\)/);
@@ -157,7 +194,16 @@ test("inventory reads authorize the requested branch before any data query and s
 
 
 test("P03 requires supported global sales_admin profiles, branch_manager tenant memberships, equal permissions, and allows multiple same-tenant branches", () => {
-  assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
+  const membershipStart = edgeSource.indexOf('if (action === "erp-list-tenant-memberships")');
+  const membershipEnd = edgeSource.indexOf('if (action === "erp-create-tenant")', membershipStart);
+  const membershipHandler = edgeSource.slice(membershipStart, membershipEnd);
+  assert.ok(!membershipHandler.includes("admin_profiles("),
+    "tenant_memberships.user_id has no FK to admin_profiles.user_id; avoid invalid PostgREST embedding");
+  assert.ok(membershipHandler.includes("admin_profiles:{"),
+    "preserve the response shape using the already-authenticated actor profile");
+  assert.ok(membershipHandler.includes("display_name:actor.profile.display_name"));
+  assert.ok(membershipHandler.includes("username:actor.profile.username"));
+  assert.ok(membershipHandler.includes("role:actor.profile.role"));
   // Global console role and tenant-scoped membership role are separate parts of the actual app model.
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.ok(fixtureResolver.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
