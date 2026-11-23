@@ -93,7 +93,7 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
 test("all admin and ERP action handlers are behind explicit actor authentication", () => {
   const authGate = edgeSource.indexOf("const actor = await getAdmin(req);");
   assert.ok(authGate > 0, "shared actor authentication gate must exist");
-  const handlers = [...edgeSource.matchAll(/if\\s*\\(\\s*action\\s*===\\s*"([^"]+)"/g)];
+  const handlers = [...edgeSource.matchAll(/if\s*\(\s*action\s*===\s*"([^"]+)"/g)];
   const privileged = handlers
     .map((match) => ({ action: match[1], offset: match.index }))
     .filter(({ action }) => action.startsWith("admin-") || action.startsWith("erp-"));
