@@ -71,3 +71,20 @@ Feature acceptance is based only on reproducible, machine-verifiable evidence:
 ## Current scoring delta — 21 November 2026
 
 Three previously BLOCKED features are now PARTIAL after concrete code and exact-head test evidence: order idempotency/payment lifecycle, staff permission/profile/password audit, and application-layer leaked-password mitigation. Current distribution is 92 PARTIAL, 91 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two PARTIAL features are scored (30%, 38%); 90 remain unscored. No feature reaches DONE until its applicable runtime, authorization, E2E and reconciliation tests pass on the exact candidate SHA.
+
+
+## Superseding staging evidence delta — 24 November 2026
+
+The current feature-level matrix was recounted directly from all 189 requirement rows: **95 PARTIAL, 88 NOT VERIFIED, 6 BLOCKED, 0 DONE**. This supersedes earlier narrative snapshots in this document that stated 92/91/6. The domain table in the matrix is the authoritative source for the distribution.
+
+- Staging head `02c32c31315725c7639f249978efc4b8d486cab5`; PR #129 integrated after exact-head CI passed.
+- Tenant acceptance [run 45230589775](https://github.com/dlice8888/dlice-landing-page/actions/runs/45230589775): P01–P09 9/9 PASS; supplemental RLS/RPC 6/6 PASS; 230/230 auth action probes PASS; temporary session cleanup PASS. No FAIL/BLOCKED/SKIPPED/executed:false in this run.
+- The 230 auth probes cover missing and invalid credentials for 115 admin/ERP actions; default expected status 401, bootstrap-owner 403. No response bodies or secret values were logged.
+- This runtime evidence is for tenant isolation/authentication boundaries. It does not prove KDS/POS/Stock/Offline or Procurement/Receiving positive business E2E and does not complete the entire SaaS tenant-management domain.
+- Two PARTIAL feature scores remain currently defensible: tenant/member isolation 38% and tenant directory/onboarding 30%. Re-score the isolation feature against the new runtime evidence only after the six weighted dimensions and each criterion are updated; do not award unverified Storage/cache/job or reconciliation weight.
+- **93 PARTIAL features remain unscored** pending feature-level decomposition across the six dimensions. No score is inferred from domain-level percentages.
+- Supabase staging remains ACTIVE_HEALTHY; 64/64 public tables have RLS; 49 migrations are applied (latest `20261119182606`); 3 staging source migrations remain unapplied. Security Advisor still reports leaked-password protection disabled; Performance Advisor reports 26 unindexed FKs and 49 unused indexes; Health Advisor has zero findings.
+- Live `dlice-orders` is ACTIVE v71 with custom `getAdmin(req)` authorization; `verify_jwt=false` remains a separate platform setting. Both release flags remain false.
+- Vercel staging Preview is READY on the exact staging commit. Preview readiness is not business acceptance or production release.
+
+**Still required:** execute KDS/POS/Stock/Offline and Procurement/Receiving positive E2E with database reconciliation; finish remaining candidate PRs individually with exact-head CI and disposable migration replay; close source/database migration drift; implement and verify all remaining NOT VERIFIED vertical slices; and run full 18-domain regression, 150-branch load/concurrency, backup/restore and release gates.
