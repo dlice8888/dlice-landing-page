@@ -917,3 +917,27 @@ Recounting all 189 feature rows in `FNB_OS_IMPLEMENTATION_MATRIX.json` yields **
 - Prioritize security and data integrity first, then core order-to-cash / procure-to-pay / production-stock workflows, then finance/command center, then CRM/HR/delivery/franchise/BI/integrations, while ensuring every remaining unverified feature receives a concrete implementation start.
 
 **Guardrails:** staging/disposable only; no production DB/Auth/secrets/deployment/data changes; no mass merge; no force push; preserve RLS, authorization, audit and branch isolation; keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+
+## Migration parity correction — 24 November 2026
+
+A fresh comparison of the complete GitHub `staging` migration tree against Supabase `schema_migrations` supersedes the older 52/49/3 statements in earlier snapshots:
+
+| Measure | Current result |
+|---|---:|
+| Source SQL migration files | **56** |
+| Applied Supabase migration versions | **49** |
+| Source-only migrations | **7** |
+| Applied versions missing from source | **0** |
+| Duplicate source versions | **0** |
+
+The seven source-only files are:
+- `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+- `20261120110000_command_center_summary.sql`
+- `20261120120000_atomic_branch_checklist_audit.sql`
+- `20261121100000_atomic_admin_permission_audit.sql`
+- `20261121130000_atomic_tenant_invite_lifecycle.sql`
+- `20261121160000_atomic_admin_profile_mutation_audit.sql`
+- `20261121170000_atomic_branch_assignment_audit.sql`
+
+Do not apply these as a batch. Review migration dependencies/order and RPC grants/RLS per file, run full exact-head disposable replay, then apply only individually authorized staging migrations with backup/rollback evidence. Production remains out of scope.

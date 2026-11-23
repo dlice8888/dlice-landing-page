@@ -397,3 +397,38 @@ No shared staging migration, Edge Function deployment, Auth mutation, Vercel set
 Fresh read-only Supabase connector inspection confirms staging `higoadrzxnhzbbwhdbmh` is ACTIVE_HEALTHY on PostgreSQL 17. Applied migration history contains **49 versions**, latest `20261119182606_revoke_default_public_function_execute`; current repository staging source contains **52 migration SQL files**, leaving three source-only migrations: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, and `20261120120000_atomic_branch_checklist_audit.sql`. This is the current live count and supersedes older historical counts above. Do not apply these three to shared staging until exact-head replay, dependency review, authorization and rollback gates pass.
 
 The deployed `dlice-orders` Edge Function is ACTIVE at version 70 with `verify_jwt=false`; custom authentication and authorization in the handler therefore remain a critical runtime acceptance area. The two release flags remain false. No staging migration, Auth mutation, Edge Function deployment, cron activation, or production change was performed during this read-only inspection.
+
+
+## Superseding migration parity — 24 November 2026
+
+A fresh source-tree inventory of GitHub branch `staging` was compared with the live Supabase migration history for project `higoadrzxnhzbbwhdbmh`.
+
+| Measure | Result |
+|---|---:|
+| GitHub staging SQL migration files | **56** |
+| Supabase applied migration versions | **49** |
+| Latest applied version | `20261119182606` |
+| Source-only migrations | **7** |
+| DB-only applied versions | **0** |
+| Duplicate source versions | **0** |
+
+The seven source-only migrations:
+1. `20261120100000_atomic_owner_and_tenant_bootstrap.sql`
+2. `20261120110000_command_center_summary.sql`
+3. `20261120120000_atomic_branch_checklist_audit.sql`
+4. `20261121100000_atomic_admin_permission_audit.sql`
+5. `20261121130000_atomic_tenant_invite_lifecycle.sql`
+6. `20261121160000_atomic_admin_profile_mutation_audit.sql`
+7. `20261121170000_atomic_branch_assignment_audit.sql`
+
+The first three are earlier staging-source-only candidates. The last four were introduced by PR #120, which is now merged into staging. All seven remain unapplied in the shared database. No applied database version is missing from source, and no duplicate source version exists.
+
+### Required reconciliation sequence
+1. Inspect each migration's exact SQL and dependency graph; verify table/function references and migration order.
+2. Check RLS policies, direct-client grants, SECURITY DEFINER search paths, RPC EXECUTE ACLs and tenant/branch composite constraints.
+3. Replay all 56 migrations from an empty disposable Supabase database on the exact current staging SHA; execute all pgTAP files and assert no skipped tests.
+4. Reconcile expected schema with the 49-version live database and record the seven pending versions explicitly.
+5. Apply only the specifically approved migration(s) to shared staging, one controlled step at a time, after explicit staging authorization and backup/rollback readiness. Re-run advisors and runtime tests after each migration.
+6. Never apply these migrations to production as part of this task.
+
+**Status:** `SOURCE_AHEAD_OF_DATABASE`; shared staging migration application is not authorized by this audit. PR #120's disposable replay PASS is CI evidence, not proof that its four migrations are installed in the shared staging database.

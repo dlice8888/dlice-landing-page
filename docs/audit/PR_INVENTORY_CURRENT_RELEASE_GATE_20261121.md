@@ -285,3 +285,14 @@ The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be27
 - PR #123, #126, #127 and #122 currently show successful exact-head quality/disposable replay and relevant contract workflows in the latest inspected run summaries. This does not prove live business E2E or staging acceptance.
 - Live staging still has 49 applied migrations and 52 source migration files; three source-only versions remain as documented in the migration reconciliation.
 - No merge, shared staging mutation, production deployment, or release-flag change was performed.
+
+
+## Superseding staging migration and PR inventory — 24 November 2026
+
+- PR #120 and PR #121 are now merged to staging. PR #129 is also merged; current staging SHA is `b59432f5fadae6eb20811bd411a85431455ee227` after the documentation-only PR #121 merge.
+- Current open PR inventory from GitHub: 18 PRs — #127, #126, #123, #122, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104 and #71.
+- Exact source/database migration parity has been re-counted: 56 source SQL files, 49 applied versions, 7 source-only migrations, 0 DB-only versions, 0 duplicate source versions. This supersedes older 52/49/3 notes.
+- The seven source-only migrations are listed in `FNB_OS_MIGRATION_RECONCILIATION.md`. PR #120 contributes four of them (`20261121100000`, `20261121130000`, `20261121160000`, `20261121170000`); the earlier three are Owner/Tenant bootstrap, Command Center summary and branch checklist audit.
+- PR #120's exact-head quality and disposable migration replay passed before it was merged; its migrations remain unapplied in the shared staging database. Do not conflate PR merge with migration application.
+- Current staging tenant acceptance on SHA `02c32c31315725c7639f249978efc4b8d486cab5`: P01–P09 9/9 PASS, supplemental RLS/RPC 6/6 PASS, auth action probes 230/230 PASS; run `45230589775`. PR #121 docs merge to `b59432f5fadae6eb20811bd411a85431455ee227` passed quality run `45232921718`.
+- Both release flags remain false. No production changes or shared staging migrations were performed by the PR #121 documentation merge.
