@@ -296,3 +296,16 @@ The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be27
 - PR #120's exact-head quality and disposable migration replay passed before it was merged; its migrations remain unapplied in the shared staging database. Do not conflate PR merge with migration application.
 - Current staging tenant acceptance on SHA `02c32c31315725c7639f249978efc4b8d486cab5`: P01–P09 9/9 PASS, supplemental RLS/RPC 6/6 PASS, auth action probes 230/230 PASS; run `45230589775`. PR #121 docs merge to `b59432f5fadae6eb20811bd411a85431455ee227` passed quality run `45232921718`.
 - Both release flags remain false. No production changes or shared staging migrations were performed by the PR #121 documentation merge.
+
+
+## Current staging head and open PR checkpoint — 24 November 2026
+
+- Current staging head: `666f2a432e236f15161cef8d2d9905279d0f5144`.
+- PR #120, #121, #129, #130, #131 and #132 are merged to staging.
+- Current open PRs (18): #127, #126, #123, #122, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104 and #71.
+- Exact-head Free quality: [run 45236931620](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620), PASS.
+- Latest tenant acceptance: [run 45236931758](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758), P01–P09 9/9 PASS, supplemental 6/6 PASS, auth action probes 230/230 PASS, both session cleanups PASS.
+- Supabase staging migration parity: 56 source SQL files, 49 applied, 7 source-only, 0 DB-only, 0 duplicate versions. Seven pending files are listed in `FNB_OS_MIGRATION_RECONCILIATION.md`; none was applied by the above merges.
+- Vercel Preview deployment `dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq` is READY for the exact staging SHA; no Production target.
+- PR #130 removes the missing password-secret dependency for positive business E2E by using one-time magic links for existing identities. Both workflows remain manual and require explicit QA mutation confirmation. Do not mark issue #45 complete until both business workflows are actually run and their database reconciliation artifacts pass.
+- Preserve `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.

@@ -3162,9 +3162,9 @@
     "health_advisor": {
       "findings": 0
     },
-    "latest_tenant_acceptance_run": 45230589775,
-    "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6",
-    "staging_head": "b59432f5fadae6eb20811bd411a85431455ee227",
+    "latest_tenant_acceptance_run": 45236931758,
+    "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6; cleanup PASS",
+    "staging_head": "666f2a432e236f15161cef8d2d9905279d0f5144",
     "source_migration_files": 56,
     "source_only_migrations": [
       "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
@@ -3176,7 +3176,11 @@
       "20261121170000_atomic_branch_assignment_audit.sql"
     ],
     "db_only_migrations": [],
-    "duplicate_source_versions": 0
+    "duplicate_source_versions": 0,
+    "vercel_preview_deployment": "dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq",
+    "vercel_preview_state": "READY",
+    "edge_function_version": 71,
+    "edge_function_status": "ACTIVE"
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -3193,9 +3197,9 @@
       "P09"
     ],
     "current_status": "PASS",
-    "latest_runtime_run": 45230589775,
-    "latest_runtime_run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45230589775",
-    "exact_staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "latest_runtime_run": 45236931758,
+    "latest_runtime_run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758",
+    "exact_staging_commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
     "probes_executed": 9,
     "probes_passed": 9,
     "probes_failed": 0,
@@ -3227,7 +3231,7 @@
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
     },
-    "note": "This proves the scoped P01-P09 tenant API acceptance and auth-negative action probes only. It does not prove the broader KDS/POS/Stock/Offline or Procurement/Receiving business workflows."
+    "note": "P01-P09 and auth-negative probes were rerun on the latest staging SHA after PR #132. This proves the scoped tenant API/auth boundary only; positive KDS/POS/Stock/Offline and Procurement/Receiving business E2E remain manually dispatched and unexecuted."
   },
   "open_prs": [
     127,
@@ -5209,7 +5213,7 @@
   "latest_live_audit_2026_11_24": {
     "as_of": "2026-11-24 00:00 WIB",
     "repository": "dlice8888/dlice-landing-page",
-    "staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "staging_commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
     "feature_counts": {
       "total": 189,
       "partial": 95,
@@ -5392,7 +5396,29 @@
         104,
         71
       ],
-      "note": "Open PR inventory is time-sensitive; do not treat the list as the full PRD gap inventory."
+      "note": "Open PR inventory is time-sensitive; do not treat the list as the full PRD gap inventory.",
+      "latest_workflow_runs": {
+        "quality": {
+          "id": 45236931620,
+          "status": "success",
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620",
+          "commit": "666f2a432e236f15161cef8d2d9905279d0f5144"
+        },
+        "tenant_acceptance": {
+          "id": 45236931758,
+          "status": "success",
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758",
+          "commit": "666f2a432e236f15161cef8d2d9905279d0f5144"
+        }
+      },
+      "pr_updates": {
+        "pr120": "MERGED_TO_STAGING",
+        "pr121": "MERGED_TO_STAGING",
+        "pr129": "MERGED_TO_STAGING",
+        "pr130": "MERGED_TO_STAGING",
+        "pr131": "MERGED_TO_STAGING",
+        "pr132": "MERGED_TO_STAGING"
+      }
     },
     "supabase_staging": {
       "project": "dlice-staging",
@@ -5467,6 +5493,7 @@
       "migration_parity": {
         "source_files": 56,
         "applied_versions": 49,
+        "latest_applied_version": "20261119182606",
         "source_only_count": 7,
         "source_only_files": [
           "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
@@ -5483,15 +5510,18 @@
     },
     "vercel": {
       "project": "dlice-landing-page",
-      "deployment_id": "dpl_Drf4DVFuUGWUGDLUJ24Ydd6w9Wyd",
-      "preview_state": "READY",
-      "preview_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
-      "note": "Preview readiness is not business E2E acceptance and does not authorize production release."
+      "deployment_id": "dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq",
+      "url": "https://dlice-landing-page-18x8bg86g-dlice8888-7332.vercel.app",
+      "state": "READY",
+      "target": "PREVIEW",
+      "commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
+      "inspector_url": "https://vercel.com/dlice8888-7332/dlice-landing-page/WA4PNxDM97qGxzT4Mva9sWG9xkQq",
+      "note": "Preview deployment only; no production target or production release."
     },
     "unresolved": {
       "business_e2e": [
-        "KDS/POS/Stock/Offline positive sale, ticket, recipe consumption, offline replay and reconciliation",
-        "Procurement requisition → approval → PO → GRN → stock ledger and AP reconciliation"
+        "KDS/POS/Stock/Offline positive flow: workflow authentication is now implemented with existing identities, but manual execution and persisted reconciliation are still NOT RUN.",
+        "Procurement/Receiving positive flow: workflow authentication is now implemented with existing Owner and Tenant A identities, but manual execution and persisted reconciliation are still NOT RUN."
       ],
       "platform": [
         "Native Supabase leaked-password protection disabled",
@@ -5504,7 +5534,7 @@
       ],
       "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
     },
-    "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change."
+    "scope": "Latest read-only staging audit plus merged CI/workflow updates. PR #130 changed E2E workflow authentication only; PR #131/132 changed audit/trigger contracts. No shared staging migration, Auth metadata, Edge Function deployment, business data, production, or release flag mutation."
   },
   "migration_reconciliation_2026_11_24": {
     "observed_at": "2026-11-24",
