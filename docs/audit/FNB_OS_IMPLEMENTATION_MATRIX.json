@@ -4912,21 +4912,41 @@
       "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
       "status": "FAIL",
       "probes": {
-        "P01": "PASS",
-        "P02": "PASS",
-        "P03": "FAIL",
-        "P04": "BLOCKED",
-        "P05": "BLOCKED",
-        "P06": "BLOCKED",
-        "P07": "BLOCKED",
-        "P08": "BLOCKED",
-        "P09": "BLOCKED"
+        "P01": "PASS (existing run)",
+        "P02": "PASS (existing run)",
+        "P03": "FAIL (pre-fix; fixed in PR, runtime retest pending)",
+        "P04": "BLOCKED (pre-fix; retest pending)",
+        "P05": "BLOCKED (pre-fix; retest pending)",
+        "P06": "BLOCKED (pre-fix; retest pending)",
+        "P07": "BLOCKED (pre-fix; retest pending)",
+        "P08": "BLOCKED (pre-fix; retest pending)",
+        "P09": "BLOCKED (pre-fix; retest pending)"
       },
       "p03_membership_http_status": {
         "tenant_a": 503,
         "tenant_b": 503
       },
-      "acceptance": "NOT ACCEPTED"
+      "acceptance": "NOT ACCEPTED",
+      "implementation": {
+        "pr": 126,
+        "branch": "feat/tenant-direct-client-rls-contract-20261121",
+        "reconciled_commit": "cbe593c5e9f8c19a859551e538e94b4b9f02a383",
+        "latest_contract_test_commit": "1b0b95211a881a67f9df690073efc15c081453da",
+        "merge_base_staging": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+        "p03_fix": "separate active tenant_memberships query and admin_profiles lookup by authenticated user_id; no invalid PostgREST embed",
+        "outdated_contract_test": "replaced assertion requiring invalid relationship embed with separate-query/fail-closed assertions",
+        "api_key_helper": "existing staging helper tests modern sb_secret_ apikey-only and legacy service_role Bearer compatibility",
+        "environment_preflight": "PASS for staging URL, public key, service-role key, and existing Tenant A/B IDs/branch codes on run 45017642887; no values printed",
+        "quality_checks": "PASS on exact latest commit 1b0b95211a881a67f9df690073efc15c081453da",
+        "vercel_preview": "READY on exact latest commit 1b0b95211a881a67f9df690073efc15c081453da",
+        "disposable_migration_replay": "IN_PROGRESS on commit cbe593c5e9f8c19a859551e538e94b4b9f02a383",
+        "shared_staging_edge_deployment": "NOT DEPLOYED — awaiting disposable replay and integration approval",
+        "runtime_p03_after_fix": "NOT RUN — staging Edge Function has not been deployed with the fix",
+        "release_flags": {
+          "TENANT_ISOLATION_RELEASED": false,
+          "PUBLIC_TENANT_ROUTING_RELEASED": false
+        }
+      }
     },
     "vercel": {
       "project": "dlice-landing-page",
