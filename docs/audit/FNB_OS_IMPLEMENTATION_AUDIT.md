@@ -340,3 +340,8 @@ Read-only Supabase SQL confirms:
 The P01/P02 success and P03 failure in run `45017642887` are pre-fix runtime evidence. P03-P09 have NOT been re-run against the updated Edge Function. The staging Edge Function has NOT been deployed by this change. PR #126 remains draft/open pending disposable replay and independent review/integration approval. Do not merge, bypass review, or enable either release flag.
 
 No production change, shared staging schema migration, Auth mutation, or release flag change occurred.
+
+
+## Superseding feature status — 23 November 2026, 00:05 WIB
+
+Use the machine-readable matrix and the superseding remediation-register section as the current count source: **95 PARTIAL, 88 NOT VERIFIED, 6 BLOCKED, 0 DONE (189 total / 18 domains)**. Earlier 92/91/6 distributions in this document are historical snapshots, not the latest totals. Only two PARTIAL features have evidence-backed progress scores (38% and 30%); 93 remain unscored pending six-dimension evidence decomposition. No feature is DONE until code, database, authorization, automated tests, live workflow E2E, and reconciliation all pass.
