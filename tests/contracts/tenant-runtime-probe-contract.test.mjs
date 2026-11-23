@@ -160,13 +160,13 @@ test("P03 requires supported global sales_admin profiles, branch_manager tenant 
   const membershipStart = edgeSource.indexOf('if (action === "erp-list-tenant-memberships")');
   const membershipEnd = edgeSource.indexOf('if (action === "erp-create-tenant")', membershipStart);
   const membershipHandler = edgeSource.slice(membershipStart, membershipEnd);
-  assert.doesNotMatch(membershipHandler, /admin_profiles\\s*\\(/,
+  assert.ok(!membershipHandler.includes("admin_profiles("),
     "tenant_memberships.user_id has no FK to admin_profiles.user_id; avoid invalid PostgREST embedding");
-  assert.match(membershipHandler, /admin_profiles:\\s*\\{/,
+  assert.ok(membershipHandler.includes("admin_profiles:{"),
     "preserve the response shape using the already-authenticated actor profile");
-  assert.match(membershipHandler, /display_name:\\s*actor\\.profile\\.display_name/);
-  assert.match(membershipHandler, /username:\\s*actor\\.profile\\.username/);
-  assert.match(membershipHandler, /role:\\s*actor\\.profile\\.role/);
+  assert.ok(membershipHandler.includes("display_name:actor.profile.display_name"));
+  assert.ok(membershipHandler.includes("username:actor.profile.username"));
+  assert.ok(membershipHandler.includes("role:actor.profile.role"));
   // Global console role and tenant-scoped membership role are separate parts of the actual app model.
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.ok(fixtureResolver.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
