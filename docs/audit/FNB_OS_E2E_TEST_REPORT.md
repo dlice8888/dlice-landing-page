@@ -47,9 +47,9 @@ Historical workflow #31 reported 21 authorization/role checks PASS; its own desc
 
 ## Additional P03 identity blocker
 
-A fresh staging inventory confirms both candidate users have active Auth accounts, distinct tenant memberships, identical `branch_manager` permission sets and no cross-tenant assignment rows. However, both global profile roles are `sales_admin`, and the database constraint currently allows only `sales_admin` and `owner`. They therefore do not yet satisfy the requirement for ordinary workers who are not Admin. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
+The current P01–P09 fixture contract expects sales_admin as the global profile role and branch_manager as the tenant membership role. Both existing Supabase identities satisfy these database prerequisites; their live login and authorization probes remain NOT RUN. Worker A's second assignment is within its own tenant and is valid; PR #87 removes the old exact-one-branch test constraint.
 
-PR #86 adds a safe, Owner-only `branch_worker` classification path. Its migration passed disposable local replay (run 44306779612) but is not applied to staging and no account was changed. PR #87's exact-head quality workflow 44307838730 passed 7/7 tenant runtime contract tests; this is not P03 runtime acceptance. P03 remains BLOCKED.
+The branch_worker classification was a historical implementation path and is not required by the current P01–P09 fixture contract. No profile role change is needed for the two existing test identities. P03 database prerequisites are read-only verified; the runtime probe remains NOT RUN.
 
 
 ## Latest staging execution evidence — 2026-11-18
@@ -94,3 +94,237 @@ Next diagnostic: execute a fresh `Staging Tenant Isolation Acceptance` workflow_
 The P01–P09 run logs show that the staging URL and publishable key were available, while both Tenant A/B username/password pairs and all six fixture IDs resolved empty. The probes were emitted as BLOCKED with executed:false; the workflow reports 0 skipped. This is not a tenant authorization test result.
 
 The positive KDS/POS/Stock workflow did not reach order creation, payment, KDS, stock consumption, offline replay, or reconciliation. The procurement receiving contract is not a substitute for PR → approval → PO → GRN → stock movement → AP E2E. These operational flows remain NOT RUN.
+
+
+## Superseding E2E status — 21 November 2026, 19:42 WIB
+
+### Tenant A/B P01–P09
+
+| Probe | Required behavior | Current status | Evidence / blocker |
+|---|---|---|---|
+| P01 | Authenticate existing Tenant A Auth identity | NOT RUN | Existing Auth user and magic-link path implemented in PR #126; protected staging service-role secret and workflow dispatch still required |
+| P02 | Authenticate existing Tenant B Auth identity | NOT RUN | Same as P01 |
+| P03 | Distinct users, active memberships, matching tenant permissions and correct branch assignments | DB FIXTURE VERIFIED; runtime probe NOT RUN | Read-only joins confirm separate tenants/branches, active memberships and identical six-item tenant permission sets |
+| P04 | Tenant A reads own branch inventory | NOT RUN | Membership includes inventory permission; no authenticated Edge Function request executed |
+| P05 | Tenant A cross-tenant inventory read denied | NOT RUN | No authenticated negative request executed |
+| P06 | Tenant B reads own branch inventory | NOT RUN | No authenticated Edge Function request executed |
+| P07 | Tenant B cross-tenant inventory read denied | NOT RUN | No authenticated negative request executed |
+| P08 | Tenant A cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
+| P09 | Tenant B cross-tenant stock-transfer write denied | NOT RUN | No authenticated negative request executed |
+
+P01–P09 have not been dispatched on the current passwordless workflow. The job is manual-dispatch-only and has `if: github.ref == 'refs/heads/staging'`; integrate/reconcile the workflow into staging through the authorized staging path after required tests pass, verify the protected Environment and service-role secret, then dispatch from staging. Do not select a feature branch; the job condition would not run. No credential values were read or logged.
+
+### Transaction E2E work
+
+| Flow | Code/contract evidence | Live E2E status | Required next proof |
+|---|---|---|---|
+| Online checkout retry (PR #123) | Exact-head CI + disposable replay PASS | NOT RUN | Drop committed HTTP response, retry same idempotency key, concurrent duplicate requests, verify one order/reservation |
+| Unpaid reservation expiry (PR #125/#127) | Exact-head CI + disposable replay PASS | NOT RUN | Run worker only in disposable or explicitly authorized staging fixtures; prove expiry and no-proof compensation |
+| Payment proof upload (PR #127) | Atomic proof pgTAP/contract + replay PASS | NOT RUN | Storage upload/RPC failure compensation, same-key retry, concurrent upload, orphan object cleanup |
+| Payment attempt supersession (PR #127) | Supersession pgTAP + replay PASS | NOT RUN | Approve/reject race, one-paid-per-order invariant, preserve proof-bearing sibling for manual review |
+| Tenant invitation (PR #126) | 15 pgTAP assertions pass; full replay PASS | NOT RUN | Actual issue, delivery/manual copy, correct-email accept, wrong-email reject, replay reject, expiry/audit E2E |
+| Permission mutation (PR #120) | Atomic RPC contract + migration replay PASS | NOT RUN | Positive/negative role tests; atomic before/after/audit row verification; direct mutation denial |
+
+No browser/API runtime E2E, shared staging mutation, migration application, or production mutation occurred in this continuation.
+
+## Current staging execution status — 21 November 2026
+
+### Tenant isolation P01–P09
+
+The current PR #126 workflow .github/workflows/staging-tenant-isolation-acceptance.yml is manual-dispatch-only and uses the two existing Supabase Auth identities via Auth Admin magic links. It defines nine required probes plus six supplemental direct-RLS/RPC probes. It must finish with P01–P09 = 9/9 PASS, zero FAIL/BLOCKED/SKIPPED, and all supplemental probes PASS. **No P01–P09 run has been dispatched in this continuation**; do not infer PASS from database fixture presence or local pgTAP.
+
+Read-only Supabase evidence confirms two tenants, three active membership rows, four Auth users, two distinct QA branches (QA-DLICE-A, QA-TENANT-B) and distinct existing Auth identities assigned to their own tenant branches. The required service-role Environment secret and staging Environment protection could not be queried through the connected GitHub integration; no secret was read or exposed. The workflow-dispatch action is not available in the connected tools.
+
+### Invitation tests and migration replay
+
+PR #126 disposable run 44903918177 passed all seven pgTAP files, **134 total assertions**, including tenant_invite_atomic.test.sql with plan(15) (15 invitation assertions). This is disposable database evidence, not shared-staging mutation or real invitation delivery.
+
+### Online checkout and payment lifecycle
+
+PR #123 and PR #126 still have an unresolved migration version collision: both source branches use 20261121130000 with different SQL contents. Each branch's own exact-head disposable replay passes, but the combined candidate set cannot be replayed until one migration is re-versioned. PR #123's browser response-drop/concurrency runtime remains NOT RUN. PR #127 disposable tests pass; PR #125 is closed as superseded by #127; browser concurrency, payment webhook timing, Storage orphan recovery and end-to-end order/payment/reservation reconciliation remain NOT RUN.
+
+### Operational staging baseline (read-only)
+
+| Measure | Current staging |
+|---|---:|
+| Orders | 7 |
+| Reservations | 21 (9 active expired, 9 consumed, 3 held expired) |
+| Payment records | 6 (3 paid, 3 pending verification) |
+| Recipes / ingredients | 1 / 2 |
+| Kitchen tickets / items | 6 / 6 |
+| Stock movements | 26 |
+| Inventory items / branch inventory rows | 2 / 4 |
+| Production batches / consumption | 0 / 0 |
+| Stock transfers / counts | 0 / 0 |
+| Procurement requisitions / POs / receipts | 0 / 0 / 0 |
+| Finance journal entries / cash reconciliations | 0 / 0 |
+| Scheduled online-order expiry worker | 0 |
+
+The current staging data proves table/schema presence, not completion of the business workflows. Do not mark Kitchen, Inventory, Procurement, Finance or Order Management DONE from these counts.
+
+
+## Current exact-head execution — 21 November 2026
+
+| PR | Exact head | Automated CI / disposable replay | Focused DB test plan | Runtime E2E |
+|---:|---|---|---:|---|
+| #120 | 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 | 6/6 PASS | 35 profile mutation + 11 permission + 11 invitation assertions | Staging mutation paths NOT RUN |
+| #123 | 31976673a9289add4c1bb10d6f29f3ff6c3c15a5 | 6/6 PASS | 7 online idempotency assertions | Concurrent checkout / response-drop / late webhook NOT RUN |
+| #125 | 1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d | 3/3 PASS | 27 expiry/compensation assertions | Live expiry scheduler/worker NOT RUN |
+| #126 | 07d7c51c2cbea21b9cd49a480614e004fe7bf417 | 6/6 PASS | 35 RLS + 17 onboarding + 15 invitation assertions | P01–P09 NOT RUN |
+| #127 | 5c597c2ec37a130501ed19591cfc9383396ba1b6 | 6/6 PASS | 16 proof + 14 supersession assertions | Proof upload concurrency / Storage orphan sweep NOT RUN |
+
+The pgTAP plans are per disposable test file; they are not shared-staging execution or browser/API runtime evidence. No staging migration or Edge Function deployment was performed. PR #124 is closed as superseded by #120.
+
+### Current P01–P09 fixture facts
+
+Two existing Supabase Auth identities were verified read-only and mapped to different active tenants. Tenant A has active branch assignments QA-DLICE-A and DLC-B001; Tenant B has QA-TENANT-B. Both last signed in on 2026-10-25. This verifies fixture existence and mapping only; no current login, JWT session, own-read/write or cross-tenant negative probe has run. The staging Environment protection and STAGING_SUPABASE_SERVICE_ROLE_KEY presence are NOT VERIFIED; the secret value was not read or exposed. The connected GitHub tool does not expose workflow_dispatch.
+
+- Vercel exact-head Preview: PR #123 READY at https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app; PR #125 READY at https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app. No exact-head deployment record exists for #120, #126 or #127. Preview READY does not establish runtime feature acceptance; production remains unchanged.
+
+
+## Authoritative execution update — 21 November 2026
+
+### Existing Supabase Tenant A/B fixtures
+
+Read-only staging queries confirm two distinct existing Auth identities, two distinct active tenant memberships, active profiles and branch assignments. Both have tenant role branch_manager and global profile role sales_admin. Tenant A's active QA branch is QA-DLICE-A (it also has an assignment to DLC-B001, whose branch status is planned); Tenant B's active QA branch is QA-TENANT-B. No account, password, Auth metadata, membership or assignment was changed.
+
+### PR #126 passwordless test path and exact-head tests
+
+PR #126 now uses Supabase Auth Admin generate_link for the existing email identities and verifies the one-time magic-link hash. It does not require the four old username/password secrets or create/reset any user. The workflow validates the service-role key's presence/shape without printing it, verifies the returned Auth identity matches the requested account, revokes temporary sessions after probes, and derives tenant/branch UUIDs from authenticated membership responses.
+
+A test-evidence defect was found and corrected: blocked preflight records previously inherited executed=true. recordProbe now accepts the explicit execution flag; preflight BLOCKED records are executed=false, and the contract test asserts this. The fix is in PR #126 exact head bb008c55a4d98afe5264b4ccde4f28f129bc162; exact-head quality checks PASS. Disposable replay 44909241076 PASS: 7 pgTAP files / 134 assertions, including 35 tenant RLS, 17 onboarding and 15 invitation assertions. KDS, CORS and procurement contract workflows also PASS.
+
+P01–P09 remain NOT RUN. The workflow is manual-dispatch-only on trusted staging; the connected GitHub integration does not expose workflow dispatch or staging Environment settings. Presence of STAGING_SUPABASE_SERVICE_ROLE_KEY is NOT VERIFIED; its value was not read or exposed. No probe is to be marked PASS based on fixture existence or disposable pgTAP.
+
+### Order/payment lifecycle tests
+
+- PR #123 exact head 6788c4d7da34144d279da06edea84f6d0763b796: quality, disposable replay, KDS, CORS and procurement contracts PASS; checkout response-drop, retry, concurrency and late-webhook E2E NOT RUN.
+- PR #127 exact head 5c597c2ec37a130501ed19591cfc9383396ba1b6: quality, disposable replay, KDS, CORS and procurement contracts PASS; proof upload retry/concurrency, expiry worker, compensation and payment-attempt supersession E2E NOT RUN. PR #125 is CLOSED as superseded by #127.
+- PR #124 is CLOSED as superseded by #120. No shared staging migration or Edge Function deployment was performed.
+
+
+## Runtime versus contract evidence — 21 November 2026
+
+| PR | Automated evidence | What it proves | Still NOT proven |
+|---:|---|---|---|
+| #123 | 7 pgTAP assertions + Node source-contract checks | DB idempotency ledger, advisory lock, mismatch rejection, browser storage key contract | Real browser retry, concurrent double-submit, timeout/retry against running staging |
+| #125 | 27-plan expiry/payment lifecycle pgTAP suite | Expiry, reservations, no-proof payment closure, paid/rejected outcomes, idempotent worker rerun, cron presence in disposable DB | Live scheduler execution, worker retry/restart, actual order/payment/reservation reconciliation on staging |
+| #127 | 16 proof-upload + 14 supersession pgTAP assertions | Atomic proof row/order/reservation/audit, idempotent retry, proof validation, stale no-proof attempt supersession | Real Storage upload/retry, concurrent proof submit, compensation after partial Storage/DB failure |
+| #126 | 20 invitation pgTAP assertions within 7-file / 139-assertion replay | Invitation issue, replay, expiry, email mismatch, membership activation, audit atomicity; direct RLS contract | Real Tenant A/B runtime login, cross-tenant read/write, Storage/cache/job isolation |
+| #111 | Deno OIDC claim tests + disposable replay | Trust-claim validation and schema replay | Deployed broker, real OIDC exchange, P01–P09 runtime |
+
+All runtime rows above remain NOT RUN until authenticated staging evidence is captured. Source-contract tests are not browser E2E. Disposable replay is not shared-staging migration application.
+
+
+## Live staging order/payment/reservation snapshot — read-only, 21 November 2026
+
+Supabase staging `higoadrzxnhzbbwhdbmh` was queried read-only. No row was changed.
+
+| Entity/status | Rows |
+|---|---:|
+| Orders — paid | 3 |
+| Orders — pending_verification | 1 |
+| Orders — unpaid | 3 |
+| Payment records — paid | 3 |
+| Payment records — pending_verification | 3 |
+| Reservations — active | 9 |
+| Reservations — consumed | 9 |
+| Reservations — held_for_verification | 3 |
+
+Current high-level state invariants:
+- Paid orders without a paid payment record: **0**.
+- Pending-verification orders without a pending payment attempt: **0**.
+- Pending-verification orders without a held reservation: **0**.
+- Unpaid orders with reservations but no active reservation: **0**.
+- Paid orders with active or held reservations: **0**.
+- Orders without any reservation row: **0**.
+
+**Outstanding live anomaly:** two `pending_verification` payment attempts with no proof belong to orders already marked `paid` (2 attempts across 2 orders). These are stale sibling attempts. They are the exact target of PR #127's `20261121180000_supersede_stale_payment_attempts.sql`; the migration is not applied to shared staging. Do not mutate those rows manually. Require #127 disposable tests, combined order/payment/reservation regression, and explicit authorized staging workflow before applying the fix.
+
+This snapshot is current-state reconciliation only; it does not prove retry/concurrency behavior, webhook timing, compensation, expiry-worker recovery, browser upload, or future event consistency. The three pending attempts are not all stale: one proof-bearing attempt belongs to the one order still in `pending_verification` and must remain pending for verification.
+
+## Current runtime acceptance addendum — 21 November 2026, 20:58 WIB
+
+The passwordless P01–P09 workflow is implemented in PR #126 and uses the two existing Supabase Auth identities. Their tenant memberships and branch fixtures were confirmed read-only in staging. The runtime workflow has not been dispatched; all nine P01–P09 probes remain NOT RUN. Do not interpret SQL fixture mapping or disposable pgTAP tests as live authentication.
+
+Current exact-head candidate evidence:
+- PR #123: 74 pgTAP assertions / 5 files PASS; checkout browser/network response-drop, retry and concurrency E2E NOT RUN.
+- PR #126: 139 pgTAP assertions / 7 files PASS; P01–P09 live Auth/Edge Function tests NOT RUN.
+- PR #127: 124 pgTAP assertions / 7 files PASS; live Storage lifecycle, proof retry, proof-vs-expiry concurrency, payment webhook and browser fault injection NOT RUN.
+- Combined migration: 60 migration files; 14 pgTAP files; 270 assertions PASS on disposable local Supabase.
+
+A read-only SQL impersonation test with the two Auth subject IDs returned zero direct branch-table rows for both own and foreign branches (4/4). This is supplemental RLS evidence only, not HTTP Data API or Edge Function acceptance.
+
+The Kitchen/KDS and Procurement workflow checks are CI contract tests. They do not prove the full live sequence POS→KDS→recipe consumption→stock ledger→shift closing, or PR→PO→GRN→stock/AP reconciliation. Those workflows remain NOT RUN.
+
+
+## Verified exact-head disposable test results — 21 November 2026, 14:00 UTC
+
+- **#120 prior candidate:** 8 files / 154 pgTAP tests PASS, including permission audit, staff profile mutation ACL, branch assignment and invitation atomic suites. Its current head has changed since that PASS and is being revalidated; the latest migration job was cancelled during subsequent pushes. Keep status PARTIAL until the newest exact head finishes without cancellation.
+- **#123:** 5 files / 74 pgTAP tests PASS on exact head `9024f2ce6067fe4252f5110942017e27ac1ed7b5`.
+- **#126:** 7 files / 139 pgTAP tests PASS on exact head `4a6aa8ccf07e25981579a805477dffc65a13a376`; invitation atomic suite **20/20 PASS**.
+- **#127:** 7 files / 124 pgTAP tests PASS on exact head `e52ea75a218eedecc513ec52311adaee25f241ba`; atomic proof and payment-attempt supersession suites pass.
+- **#111:** OIDC claim tests and full disposable migration replay PASS on exact head `016715bfa00d6c400d8320cbd0d2001ff3335ee8`.
+
+These are disposable database and CI results. They do not constitute live staging E2E. Browser checkout retries, actual Storage proof upload/retry, OIDC exchange with existing Supabase accounts, P01–P09, and the combined order/payment/reservation runtime matrix remain NOT RUN.
+
+## PR #120 exact-head test completion — 21 November 2026, 21:03 WIB
+
+PR #120 head `223e0ad22e1eac15394ec9b2025ba4aaaa153108` now has all six applicable workflows PASS. Its exact-head disposable replay executed 10 pgTAP files / 206 assertions, all PASS. This proves migration and database contracts on a disposable database; live staff permission mutation, forced audit-failure rollback and password mutation runtime tests remain NOT RUN on shared staging.
+
+## Deployed runtime contract inspection — 21 November 2026, 21:06 WIB
+
+Supabase reports `dlice-orders` ACTIVE at version 70 (source SHA-256 `597a371d2c05cbfa7b0e04a749e422bf826667b4539ce2b44ffe0a2efb0ff9f6`). The deployed source still hard-codes both `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+Runtime source inspection (not an HTTP execution) confirms:
+- `erp-list-inventory` requires `branchAccess(branch_id)` before reading `branch_inventory`; item metadata is limited to inventory item IDs already present in the authorized branch's balances.
+- `erp-create-stock-transfer` requires active access to both source and destination branches, validates an idempotency key, and calls the server-only stock-transfer RPC.
+- `erp-transition-stock-transfer` checks same-tenant source/destination for approval unless the actor is the platform owner; other transitions require branch access.
+- `admin-set-permissions`, `admin-create-staff` and `admin-reset-staff-password` remain in the uncertified-action denylist and return 423 to non-platform-owner users while tenant isolation remains unreleased.
+- Deployed v70 still has the legacy multi-step invitation handler. The atomic invitation route in PR #120/#126 is candidate code and has not been deployed.
+
+Both existing QA branch assignments satisfy the deployed helper's active/date predicates. These source and fixture checks do not replace actual HTTP probes; P01–P09 remain NOT RUN.
+
+## Passwordless workflow staging integration boundary — 21 November 2026, 21:10 WIB
+
+The workflow versions are not yet aligned:
+- `main` workflow file: workflow_dispatch exists, but it still reads the legacy Tenant A/B username/password secrets.
+- `staging` workflow file: manual dispatch only, but it still reads the legacy Tenant A/B username/password secrets.
+- PR #126 candidate workflow: uses the two existing Auth email identities and `STAGING_SUPABASE_SERVICE_ROLE_KEY` to issue one-time magic links. Its job guard requires `github.ref == refs/heads/staging`, so it cannot execute from the PR branch.
+
+Therefore the passwordless implementation is not yet runnable on trusted staging. Do not merge PR #126 wholesale solely to install this workflow: PR #126 also contains tenant/RLS and invitation implementation plus a migration. After the protected Environment and secret presence are verified, the safe integration is a test-only staging change containing only the workflow, runtime probe script and fixture-discovery helper.
+
+The GitHub Environment endpoint and GitHub Secrets endpoints are not exposed by the connected integration. No secret values were read. No staging workflow was dispatched.
+
+PR #126 latest candidate head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` adds: (1) P01/P02 scope labels that no longer report `unconfigured`, (2) postcondition reads proving P08/P09 denied writes left zero `stock_transfers` rows, and (3) header handling for both legacy `service_role` JWT and new `sb_secret_` API key formats. CI migration replay is still in progress; these latest changes are not yet PASS.
+
+## PR #126 exact-head test completion — 21 November 2026, 21:18 WIB
+
+PR #126 exact head `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9` has completed all six applicable workflows successfully. Disposable migration replay: 7 pgTAP files / 139 assertions PASS. [Run](https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844).
+
+This exact head includes:
+- Correct P01/P02 fixture-scope labels.
+- P08/P09 postcondition query requiring zero persisted `stock_transfers` rows after a cross-tenant 403.
+- Supabase API key header compatibility: new `sb_secret_` keys are sent on `apikey` only; legacy service-role JWTs also use `Authorization: Bearer`.
+
+P01–P09 remain NOT RUN. The passwordless workflow is still only on the PR branch; the current staging branch workflow still uses legacy username/password secrets. Staging Environment protection and secret presence remain NOT VERIFIED.
+
+## Vercel exact-head verification — 21 November 2026, 21:20 WIB
+
+Vercel deployment lookup by exact Git commit SHA returned zero deployments for:
+- PR #120: `223e0ad22e1eac15394ec9b2025ba4aaaa153108`
+- PR #123: `9024f2ce6067fe4252f5110942017e27ac1ed7b5`
+- PR #126: `8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9`
+- PR #127: `e52ea75a218eedecc513ec52311adaee25f241ba`
+- Latest audit branch head: `4743fc1b34ea14eabe8eb6be5131d3b558e42ce5`
+
+## Latest staging tenant-isolation run — 22 November 2026
+
+The trusted-staging workflow ran after PR #120 was merged at `5f6fa00c7335247684f7d88410a0c506de49a5a9`. Run [45017642887](https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887) executed P01–P03: P01 and P02 authenticated the existing Tenant A/B identities (HTTP 200); P03 failed because both `erp-list-tenant-memberships` requests returned HTTP 503 while both branch lookups returned HTTP 200. P04–P09 were BLOCKED because the P03 fixture contract was not satisfied. Six supplemental direct-RLS/RPC probes were also BLOCKED. Counts: **2 PASS / 1 FAIL / 12 BLOCKED / 0 SKIPPED** (12 includes six required and six supplemental blocked probes).
+
+Both temporary Auth sessions were revoked successfully (HTTP 204). No account or password was changed. The run retained sanitized evidence as artifact `staging-tenant-isolation-evidence-45017642887-1` through 22 December 2026; no secret values were printed.
+
+The failure is consistent with the candidate Edge Function embedding `admin_profiles` through `tenant_memberships` even though the migration defines no foreign-key relationship between those tables. This is the leading source-level cause; the exact PostgREST error body was intentionally not logged. The deployed Edge Function remains unchanged, and no migration or function deployment was performed. Do not treat P01–P09 as accepted until the membership lookup is fixed, validated by CI, deployed through the authorized staging path, and the complete 9/9 workflow passes.
+
+The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be272661c58ca6308`, which is stale and not the latest audit branch head. It is not a valid browser E2E target for current candidate code. Therefore no exact-head browser E2E or visual QA is claimed.
+

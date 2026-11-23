@@ -1,8 +1,8 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-18T20:05:00+07:00",
-  "baseline_commit": "c1498fd42d97e067eff4bd822fa3a9541c2636d9",
+  "snapshot_at": "2026-11-24 00:00 WIB",
+  "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
@@ -26,7 +26,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 32
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Live sales monitor (day/week/month)",
@@ -36,7 +38,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 33
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch ranking, region/format comparison",
@@ -46,7 +50,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 34
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
@@ -56,7 +61,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 35
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Critical stock, expiry, waste alerts",
@@ -66,7 +73,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 36
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Sales-drop / food-cost anomaly detection",
@@ -76,7 +84,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 37
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Approval center and pending approvals",
@@ -86,7 +95,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 38
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Target vs actual and executive reports",
@@ -96,7 +107,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 39
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Company → region → branch → shift → transaction drill-down",
@@ -106,7 +118,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Alert → assign task → resolve → audit result",
@@ -116,7 +129,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 41
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -139,7 +153,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 46
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cart, product selection, quantity updates",
@@ -149,7 +165,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 47
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Dine-in, takeaway, pickup, delivery parity",
@@ -159,7 +177,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 48
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Variants, toppings, special instructions",
@@ -169,7 +189,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 49
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Discounts, coupons, vouchers, special pricing",
@@ -179,7 +200,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 50
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
@@ -189,7 +211,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 51
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
@@ -199,7 +223,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 52
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Hold/resume order",
@@ -209,7 +234,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 53
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Void, refund, return with reason and approval",
@@ -219,7 +245,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 54
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Receipt printing/digital receipt",
@@ -229,7 +257,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 55
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
@@ -239,7 +268,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 56
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Offline sales queue and safe resynchronization",
@@ -249,7 +280,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 57
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Separate order, payment, fulfillment statuses",
@@ -259,7 +291,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 58
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -282,7 +316,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 63
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "WhatsApp, marketplace, additional channels",
@@ -292,7 +328,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 64
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Hours, cutoff, menu availability, branch capacity",
@@ -302,7 +339,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 65
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch assignment by area/capacity",
@@ -312,7 +351,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 66
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Unique business order number",
@@ -322,7 +363,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 67
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consistent status/timeline across channels",
@@ -332,17 +375,26 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 68
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Duplicate orders, delayed payment, failed order handling",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "Idempotency, replay, timeout and compensation tests missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #123 adds stable checkout idempotency and atomic order/reservation ledger; PR #125 adds unpaid/unproven reservation expiry and compensation; PR #127 adds atomic proof submission and payment-attempt supersession. Exact-head CI and disposable replay pass. Browser response-drop/concurrent submission, late provider webhook, live expiry worker and full order/payment/reservation reconciliation remain NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 69
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "active_prs": [
+            123
+          ],
+          "work_started_at": "2026-11-21",
+          "work_evidence": "PR #123 adds stable 256-bit checkout idempotency, canonical request fingerprint, advisory-lock replay protection, and pgTAP/Node contract tests. Delayed-payment expiry, rejection compensation, browser fault-injection, and concurrent runtime tests remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -352,7 +404,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 70
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cancellation/refund and customer order history",
@@ -362,7 +415,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 71
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Customer notifications on each state",
@@ -372,7 +427,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 72
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -390,12 +447,16 @@
         {
           "requirement": "KDS and kitchen order tickets",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Station-level dispatch and live KDS behavior not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "KDS tables and dispatch/transition RPCs exist; staging has 6 tickets and 6 items. Station routing and positive live workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 77
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
@@ -405,17 +466,22 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 78
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Queue priority and prep SLA",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Priority and overdue escalation missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "kitchen_tickets.priority exists and is persisted; SLA targets, overdue escalation and station-level queue behavior are not implemented/proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 79
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
@@ -425,7 +491,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 80
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipes, portion/yield and waste tolerance",
@@ -435,7 +503,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 81
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Prep lists and batch planning",
@@ -445,7 +515,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 82
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Actual material consumption",
@@ -455,7 +527,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 83
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "QC, temperature, shelf life and spoilage",
@@ -465,7 +539,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 84
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Made-to-order vs batch production separation",
@@ -475,7 +550,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 85
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Theoretical vs actual usage / waste variance",
@@ -485,7 +562,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 86
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -508,7 +586,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 91
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Per-branch availability",
@@ -518,17 +598,23 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 92
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Central, regional and branch-specific pricing",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Pricing policy and effective date approval missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "branch_settings has a pricing category and branch settings read/write handlers exist; central/regional hierarchy, effective-date approvals and branch parity remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 93
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
@@ -538,7 +624,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 94
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Nested BOM, unit conversions, yield and prep loss",
@@ -548,7 +636,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 95
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recipe versions and effective dates",
@@ -558,7 +647,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 96
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cost per serving and contribution margin",
@@ -568,7 +659,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 97
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Allergens and regulated product information",
@@ -578,7 +670,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 98
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Availability by schedule and stock",
@@ -588,7 +681,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 99
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Recipe change request → costing → approval → rollout",
@@ -598,7 +693,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 100
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "POS/production uses the same approved recipe version",
@@ -608,7 +705,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 101
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -631,7 +729,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 106
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock movement ledger",
@@ -641,17 +741,23 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 107
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Warehouse/storage/bin hierarchy",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Multi-warehouse and storage-location hierarchy not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "warehouses table and ERP list/create handlers exist; storage zones/bins, location hierarchy and transfer integration remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 108
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Purchase/use units and conversions",
@@ -661,7 +767,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 109
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "FIFO/FEFO, lot/batch and expiry",
@@ -671,7 +779,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 110
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Available/reserved/in-transit/blocked balances",
@@ -681,17 +790,23 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 111
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Min/max, safety stock and reorder point",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Reorder rules and purchase recommendations missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "inventory_items.min_stock exists; safety stock, reorder policy, supplier lead-time calculations and replenishment workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 112
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_percent": null,
+          "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
@@ -701,7 +816,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 113
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock count/cycle count and variance adjustment",
@@ -711,7 +828,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 114
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock valuation",
@@ -721,7 +840,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 115
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Adjustments with reasons/approvals/audit",
@@ -731,7 +851,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 116
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "PO receipt → stock ledger → balance reconciliation",
@@ -741,7 +863,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 117
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -764,7 +888,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 122
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Supplier price lists, contracts and price history",
@@ -774,7 +900,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 123
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Purchase requisition from branch/warehouse/central kitchen",
@@ -784,7 +911,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 124
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consolidated demand across branches",
@@ -794,7 +923,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 125
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Purchase order draft, submit, approval, ordered",
@@ -804,7 +934,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 126
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Approval limits by value/category",
@@ -814,7 +946,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 127
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Goods received note and quantity/quality inspection",
@@ -824,7 +958,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 128
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Three-way match: PO, receipt, supplier invoice",
@@ -834,7 +970,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 129
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "AP handoff and supplier payment",
@@ -844,7 +981,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 130
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Supplier return and supplier performance",
@@ -854,7 +992,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 131
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -877,7 +1016,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 136
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Opening and closing checklists",
@@ -887,7 +1028,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 137
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Opening readiness changes branch operating status",
@@ -897,7 +1040,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 138
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Daily tasks, due dates and escalation",
@@ -907,7 +1051,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 139
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "SOP and work instructions",
@@ -917,7 +1062,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 140
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cleanliness, equipment and safety checks",
@@ -927,7 +1074,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 141
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Photo evidence",
@@ -937,7 +1086,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 142
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Incidents and corrective actions",
@@ -947,7 +1097,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 143
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Equipment maintenance",
@@ -957,7 +1108,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 144
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Branch audit and compliance score",
@@ -967,7 +1119,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 145
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -990,7 +1143,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 150
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Address validation and delivery quote",
@@ -1000,7 +1155,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 151
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Courier booking / Biteship integration",
@@ -1010,7 +1166,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 152
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Dispatch and shipment tracking",
@@ -1020,7 +1177,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 153
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Proof of delivery",
@@ -1030,7 +1188,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 154
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Cancel/retry/provider exception handling",
@@ -1040,7 +1199,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 155
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
@@ -1050,7 +1210,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 156
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Delivery completion notification",
@@ -1060,7 +1221,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 157
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1083,7 +1246,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 162
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Consent and communication preferences",
@@ -1093,7 +1258,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 163
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Customer segments",
@@ -1103,7 +1269,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 164
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Loyalty points and tiers",
@@ -1113,7 +1280,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 165
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Rewards and vouchers/coupons",
@@ -1123,7 +1291,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 166
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Referral program",
@@ -1133,7 +1302,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 167
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Campaign management and ROI",
@@ -1143,7 +1313,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 168
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Feedback/reviews/support cases",
@@ -1153,7 +1324,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 169
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Repeat purchase and customer lifetime analysis",
@@ -1163,7 +1335,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 170
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1186,7 +1359,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 175
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cash/bank, settlement creation and matching",
@@ -1196,7 +1371,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 176
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Payment provider fee and settlement variance",
@@ -1206,7 +1383,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 177
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "AR/AP subledgers and aging",
@@ -1216,7 +1394,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 178
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Chart of accounts and general ledger",
@@ -1226,7 +1405,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 179
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Automated journals from POS/procurement/payroll",
@@ -1236,7 +1417,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 180
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Bank reconciliation",
@@ -1246,7 +1428,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 181
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Tax and invoicing",
@@ -1256,7 +1440,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 182
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Budgets and branch P&L",
@@ -1266,7 +1452,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 183
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Consolidated financial statements",
@@ -1276,7 +1463,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 184
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Period close/reopen and backdated-posting controls",
@@ -1286,7 +1474,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 185
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Revenue vs cash received/settlement distinction",
@@ -1296,7 +1486,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 186
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1319,7 +1511,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 191
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Organization hierarchy and job positions",
@@ -1329,7 +1522,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 192
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Attendance and timesheets",
@@ -1339,7 +1534,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 193
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Shift scheduling and replacement",
@@ -1349,7 +1545,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 194
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Leave and overtime",
@@ -1359,7 +1556,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 195
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Payroll calculation/integration",
@@ -1369,7 +1567,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 196
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Labor cost by branch",
@@ -1379,7 +1578,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 197
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Training/certification and performance reviews",
@@ -1389,7 +1589,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 198
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recruitment/onboarding/offboarding",
@@ -1399,7 +1600,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 199
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1422,7 +1624,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 204
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Franchise directory/application",
@@ -1432,7 +1636,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 205
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Site selection and feasibility",
@@ -1442,7 +1647,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 206
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Opening project and readiness",
@@ -1452,7 +1658,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 207
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Agreements and contract expiry",
@@ -1462,7 +1670,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 208
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Royalty calculation and reconciliation",
@@ -1472,7 +1681,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 209
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Territory and franchise-specific access",
@@ -1482,7 +1692,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 210
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Franchise compliance and performance",
@@ -1492,7 +1703,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 211
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1515,7 +1727,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 216
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Official KPI dictionary and versioning",
@@ -1525,7 +1739,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 217
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Net sales/AOV/gross margin",
@@ -1535,7 +1750,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 218
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Food cost %, labor cost %, waste %",
@@ -1545,7 +1762,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 219
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Stock variance and fulfillment/cancellation rates",
@@ -1555,7 +1773,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 220
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch benchmarking by comparable cohorts",
@@ -1565,7 +1785,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 221
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Demand forecasting and accuracy monitoring",
@@ -1575,7 +1796,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 222
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Data quality monitoring and anomaly detection",
@@ -1585,7 +1807,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 223
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Export and scheduled executive reports",
@@ -1595,7 +1818,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 224
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Alert → action → measured outcome",
@@ -1605,7 +1829,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 225
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1628,7 +1853,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 230
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Branch assignments and scope enforcement",
@@ -1638,17 +1865,22 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 231
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
           "source_status": "PASS (negative/role suite)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Existing suite reports 21 PASS / 0 FAIL; this is not full business E2E.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "An existing negative/role suite reports 21 PASS / 0 FAIL. This is concrete test work, but it is not complete positive business E2E or live acceptance for all roles and inactive identities.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 232
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Audit logs for sensitive actions",
@@ -1658,7 +1890,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 233
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Delegated approval policies and separation of duties",
@@ -1668,7 +1902,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 234
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Sessions/devices and access reviews",
@@ -1678,7 +1914,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 235
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Recovery and offboarding",
@@ -1688,7 +1925,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 236
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "API/database deny-by-default and direct-table protection",
@@ -1698,27 +1936,36 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 237
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cross-tenant isolation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Current single-organization model does not prove SaaS tenant isolation.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #126 adds direct-client RLS coverage (35 pgTAP assertions across 17 sensitive tables) and tenant-scoped Edge Function checks. Live Tenant A/B API probes remain incomplete; P03 currently fails and P04-P09 are blocked.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 238
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Permission changes themselves audited",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "Full audit and access review acceptance missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six CI/migration workflows. Audited RPCs cover permission changes, staff profile creation, role and active-state changes; forced audit-failure tests prove rollback. Password reset now writes a durable audit intent before Auth Admin mutation and finalizes success/failure; pending intent survives finalization failure. Live staging mutation-path regression remains NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 239
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
+          "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance remains pending.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -1736,22 +1983,106 @@
         {
           "requirement": "Tenant directory, tenant onboarding",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "No demonstrated multi-tenant onboarding lifecycle.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #126 adds atomic invite issue/accept RPCs, replay/expiry/audit handling and 15 invitation pgTAP assertions; exact-head full disposable replay passes. Existing Tenant A/B Auth identities and branch assignments are verified read-only. Runtime invitation delivery/acceptance/expiry, default branch provisioning, entitlements, suspension/offboarding/export and browser E2E remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 244
-          }
+          },
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            126
+          ],
+          "work_started_at": "2026-11-21",
+          "progress_percent": 30,
+          "progress_breakdown": {
+            "code_ui": {
+              "weight": 20,
+              "earned": 5,
+              "evidence": "Server-side atomic tenant creation/owner bootstrap RPCs and Edge Function calls exist; tenant onboarding UI is not implemented/proven."
+            },
+            "database": {
+              "weight": 20,
+              "earned": 10,
+              "evidence": "Atomic tenant+owner membership+audit migration applied successfully in exact-head disposable replay."
+            },
+            "authorization": {
+              "weight": 15,
+              "earned": 5,
+              "evidence": "RPCs require service_role; tenant creation verifies active owner profile and Auth platform_owner metadata; real Auth runtime acceptance remains."
+            },
+            "automated_tests": {
+              "weight": 15,
+              "earned": 10,
+              "evidence": "17 new tenant onboarding pgTAP assertions passed in the latest exact-head disposable replay; source contract checks passed."
+            },
+            "browser_api_e2e": {
+              "weight": 20,
+              "earned": 0,
+              "evidence": "No tenant onboarding browser/API E2E."
+            },
+            "operational_reconciliation": {
+              "weight": 10,
+              "earned": 0,
+              "evidence": "No tenant setup, default branch, billing or offboarding reconciliation."
+            },
+            "total_weight": 100,
+            "earned_total": 30,
+            "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
+          },
+          "progress_status": "SCORED_PROVISIONAL"
         },
         {
           "requirement": "Tenant/member isolation in database and APIs",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "No proven tenant entity/scope across tables, functions, storage, caches and jobs.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "64/64 public tables have RLS; PR #126 adds 35 pgTAP assertions across 17 sensitive tables and narrowly scoped pre-release probe routes. Existing Tenant A/B Auth users, memberships, matching six-item tenant permission sets and QA branch assignments are verified. P01-P09 live Auth/API probes have NOT RUN; protected staging service-role secret and workflow dispatch remain prerequisites.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 245
-          }
+          },
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            126
+          ],
+          "work_started_at": "2026-11-21",
+          "progress_percent": 38,
+          "progress_breakdown": {
+            "code_ui": {
+              "weight": 20,
+              "earned": 3,
+              "evidence": "PR #126 extracts resolveTenantScopedBranchIds and wires actorBranchIds to active membership + branch assignment resolution; tenant-aware UI and full route coverage are not yet certified."
+            },
+            "database": {
+              "weight": 20,
+              "earned": 15,
+              "evidence": "35 pgTAP RLS policy assertions passed in latest exact-head disposable replay; all repository migrations applied cleanly."
+            },
+            "authorization": {
+              "weight": 15,
+              "earned": 5,
+              "evidence": "Owner/admin tenant-wide scope and ordinary member assigned-branch scope now resolve only within active tenant memberships; cross-tenant/inactive membership cases are covered by Deno unit tests. Real API A/B runtime remains untested."
+            },
+            "automated_tests": {
+              "weight": 15,
+              "earned": 15,
+              "evidence": "Latest exact-head disposable replay passed 119 pgTAP assertions across six files; latest quality checks and branch-scope unit/contract tests passed."
+            },
+            "browser_api_e2e": {
+              "weight": 20,
+              "earned": 0,
+              "evidence": "No real Tenant A/B own-read/write and cross-tenant negative API E2E."
+            },
+            "operational_reconciliation": {
+              "weight": 10,
+              "earned": 0,
+              "evidence": "No tenant A/B operational reconciliation, Storage/cache/job evidence."
+            },
+            "total_weight": 100,
+            "earned_total": 38,
+            "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
+          },
+          "progress_status": "SCORED_PROVISIONAL"
         },
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
@@ -1761,7 +2092,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 246
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Billing, invoices and usage metering",
@@ -1771,7 +2103,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 247
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Tenant settings and suspension",
@@ -1781,7 +2114,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 248
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Support access with approval/audit",
@@ -1791,7 +2125,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 249
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Export/offboarding and data deletion policy",
@@ -1801,7 +2136,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 250
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Multiple companies sharing one platform safely",
@@ -1811,7 +2147,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 251
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1834,7 +2171,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 256
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Payment provider callback signature and status validation",
@@ -1844,7 +2183,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 257
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
@@ -1854,7 +2194,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 258
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Webhooks and event log",
@@ -1864,17 +2205,21 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 259
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Idempotency and replay protection",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Some atomic/idempotent operations exist; complete per-action coverage not proven.",
+          "evidence_or_gap": "PR #123 adds online checkout idempotency and atomic order/reservation ledger; PR #127 adds idempotent proof upload and payment-attempt supersession. Exact-head contracts and disposable replays pass; browser concurrency, Storage orphan recovery and live transaction reconciliation remain NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 260
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Retry/backoff/dead-letter queue",
@@ -1884,7 +2229,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 261
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Integration health and alerting",
@@ -1894,7 +2241,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 262
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Secret storage/rotation",
@@ -1904,7 +2252,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 263
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Import/export and catalog synchronization",
@@ -1914,7 +2264,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 264
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -1932,12 +2283,14 @@
         {
           "requirement": "RLS on exposed public tables",
           "source_status": "PASS (database configuration)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Read-only SQL found 45/45 public tables with RLS enabled; policy correctness still needs per-table tests.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Live read-only SQL on 2026-11-20: 64/64 public tables have RLS enabled and 64 public policies exist. Per-table policy correctness and full role/tenant negative runtime tests remain outstanding, so this is PARTIAL rather than PASS.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 269
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Direct access to internal stock/procurement/audit data",
@@ -1947,17 +2300,22 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 270
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Exact-origin CORS",
           "source_status": "PASS (runtime)",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "GitHub Actions run 39979764381: registered staging origin HTTP 200 with exact ACAO; foreign origin HTTP 403/no ACAO; no Origin HTTP 200/no ACAO.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Staging CORS runtime run 44307838539 passed registered-origin OPTIONS (200/exact ACAO), foreign-origin OPTIONS (403/no ACAO), and no-Origin OPTIONS (200/no ACAO). POST/authenticated action coverage and full endpoint regression remain outstanding.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 271
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
         },
         {
           "requirement": "Custom auth/permission checks on shared endpoint",
@@ -1967,17 +2325,28 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 272
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Leaked-password protection",
           "source_status": "GATE / WARN",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "Supabase Security Advisor reports it disabled; enabling requires an explicit platform configuration decision.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "The application-layer k-anonymity Pwned Password guard is integrated into official Owner bootstrap, staff creation and staff password reset flows; unit and source-contract tests pass in PR #120. Native Supabase Auth leaked-password protection remains disabled on the current plan and direct Auth password changes can bypass the Edge Function guard; the feature is not DONE.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 273
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "work_note": "Supabase Security Advisor confirms disabled; authorized project owner must enable Auth password security on staging and verify with disposable identities.",
+          "active_prs": [
+            124
+          ],
+          "work_started_at": "2026-11-21",
+          "work_evidence": "PR #124 adds a free k-anonymity breached-password check to the official Owner bootstrap/staff create/staff reset flows. Supabase-native protection remains disabled; direct Auth API bypass and complete password mutation coverage remain external acceptance blockers.",
+          "external_action_required": true,
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -1987,7 +2356,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 274
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Supplier quality, quarantine, corrective actions",
@@ -1997,7 +2367,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 275
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Backup and restore drill / RPO / RTO",
@@ -2007,7 +2378,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 276
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Monitoring, system health and incident runbooks",
@@ -2017,7 +2389,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 277
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Load/concurrency test for 150 branches",
@@ -2027,7 +2401,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 278
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Pilot, rollout and rollback",
@@ -2037,7 +2412,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 279
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Workflow",
@@ -2047,7 +2423,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 282
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Order-to-Cash",
@@ -2057,7 +2434,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 284
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Procure-to-Pay",
@@ -2067,7 +2446,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 285
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Forecast-to-Production",
@@ -2077,7 +2458,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 286
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Record-to-Report",
@@ -2087,7 +2470,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 287
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock transfer and count",
@@ -2097,7 +2482,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 288
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Authentication and permissions",
@@ -2107,7 +2494,9 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 289
-          }
+          },
+          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Responsive UX and accessibility",
@@ -2117,7 +2506,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 290
-          }
+          },
+          "work_status": "QUEUED"
         },
         {
           "requirement": "Backup, recovery, scale and rollout",
@@ -2127,7 +2517,8 @@
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 291
-          }
+          },
+          "work_status": "QUEUED"
         }
       ],
       "status": "PARTIAL",
@@ -2137,30 +2528,630 @@
   "current_platform_evidence": {
     "supabase_project": "higoadrzxnhzbbwhdbmh",
     "supabase_status": "ACTIVE_HEALTHY",
+    "postgres_major": 17,
     "public_tables": 64,
     "public_tables_rls_enabled": 64,
     "public_tables_rls_disabled": 0,
-    "public_policies": 64,
     "public_functions": 29,
-    "security_definer_functions": 5,
-    "staging_migrations": 46,
-    "source_migration_files": 45,
-    "missing_source_migration": "20261022140302",
-    "latest_staging_migration": "20261027140145",
-    "pr64_migration_applied": false,
-    "tenants": 2,
-    "branches": 155,
+    "function_execute_grants": {
+      "anon": 0,
+      "authenticated": 0,
+      "service_role": 29,
+      "public": 0
+    },
+    "applied_migrations": 49,
+    "latest_applied_migration": "20261119182606",
+    "total_tenants": 2,
+    "active_tenants": 1,
+    "total_branches": 155,
+    "active_branches": 5,
     "active_tenant_memberships": 3,
-    "worker_memberships": 2,
-    "worker_role": "branch_manager",
-    "worker_permission_sets_equal": true,
-    "worker_A_active_branch_assignments": 2,
-    "worker_B_active_branch_assignments": 1,
-    "cross_tenant_assignment_rows": 0,
-    "inventory_balance_rows_per_QA_branch": 2,
-    "active_owner_profile": 1,
-    "owner_auth_user_exists": true,
-    "owner_app_metadata_platform_owner_boolean_true": 0,
+    "distinct_active_members": 3,
+    "active_owner_profiles": 1,
+    "branch_assignments": 4,
+    "branch_inventory_rows": 4,
+    "pos_sales": 6,
+    "pos_shifts": 7,
+    "orders": 7,
+    "order_items": 21,
+    "payment_records": 6,
+    "kitchen_tickets": 6,
+    "kitchen_ticket_items": 6,
+    "stock_movements": 26,
+    "stock_transfers": 0,
+    "stock_counts": 0,
+    "purchase_requisitions": 0,
+    "purchase_orders": 0,
+    "purchase_receipts": 0,
+    "production_batches": 0,
+    "production_consumptions": 0,
+    "inventory_waste_events": 0,
+    "payment_settlements": 0,
+    "cash_reconciliations": 0,
+    "finance_journal_entries": 0,
+    "fiscal_periods": 0,
+    "branch_expenses": 0,
+    "branch_operation_checklist_runs": 1,
+    "shift_handover_records": 0,
+    "integration_connections": 0,
+    "integration_outbox": 0,
+    "backup_restore_runs": 0,
+    "notification_log": 3,
+    "owner_authorization": {
+      "active_owner_profile_exists": true,
+      "existing_auth_identity_must_be_used": true,
+      "app_metadata_platform_owner_true": "NOT VERIFIED / KNOWN ABSENT IN LAST AUTH AUDIT",
+      "protected_allowlist": "NOT VERIFIED",
+      "completion": "BLOCKED — requires authorized Supabase Auth Admin"
+    },
+    "release_protection": {
+      "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "required_status_checks": [],
+      "staging_deployment_reviewers": "NOT VERIFIED",
+      "admin_mutation_available_via_current_connector": false,
+      "github_ruleset_id": 27559290,
+      "github_ruleset_enforcement": "ACTIVE",
+      "github_ruleset_applies_to": "~ALL branches",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_review_thread_resolution": true,
+      "required_deployment_environments": [],
+      "required_signatures": true,
+      "required_linear_history": true,
+      "prevent_deletion": true,
+      "prevent_non_fast_forward": true,
+      "code_scanning_threshold": "high_or_higher; alerts=errors",
+      "code_quality_threshold": "errors",
+      "code_coverage_minimum": null,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "bypass_actors": [
+        {
+          "type": "DeployKey",
+          "id": null,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 2,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 4,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 5,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 8329,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 656270,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 946600,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1143301,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1144995,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4229212,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4518051,
+          "mode": "always"
+        }
+      ],
+      "current_connection_can_bypass": "always",
+      "branch_protection_main": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "branch_protection_staging": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "staging_environment_protection": "NOT_READABLE_WITH_CURRENT_CONNECTOR",
+      "release_gate": "FAIL: no required human approval, no required status checks/deployment reviewers, always-bypass actors"
+    },
+    "tenant_acceptance": {
+      "workflow": "manual-dispatch-only on staging after #110 change",
+      "required_probes": [
+        "P01",
+        "P02",
+        "P03",
+        "P04",
+        "P05",
+        "P06",
+        "P07",
+        "P08",
+        "P09"
+      ],
+      "runtime_executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "result": "NOT RUN",
+      "latest_candidate_head": "df43b2b4707186ea31d7068f85f7caa8e252c057",
+      "latest_static_quality_for_exact_head": "NOT OBSERVED",
+      "latest_vercel": "SUCCESS",
+      "environment_secret_validity": "NOT VERIFIED — GitHub Environment API unavailable"
+    },
+    "pending_migrations": [
+      {
+        "pr": 102,
+        "file": "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 103,
+        "file": "20261120110000_command_center_summary.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 105,
+        "file": "20261120120000_atomic_branch_checklist_audit.sql",
+        "status": "IN STAGING GIT; NOT APPLIED"
+      },
+      {
+        "pr": 109,
+        "file": "20261120130000_enforce_same_tenant_stock_transfers.sql",
+        "status": "OPEN DRAFT; NOT APPLIED"
+      },
+      {
+        "pr": 111,
+        "file": "20261120140000_staging_machine_session_issuance_audit.sql",
+        "status": "FEATURE BRANCH ONLY; NOT APPLIED"
+      }
+    ],
+    "latest_pr_inventory": {
+      "actual_prs": 125,
+      "merged": 77,
+      "closed_without_merge": 26,
+      "open": 22,
+      "latest_issue_number": 127
+    },
+    "production_changes": "NONE in this audit",
+    "database_performance": {
+      "advisor_observed_at": "2026-11-21",
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49,
+      "statistics_reset_at": "2026-10-02T18:01:15Z",
+      "remediation_pr": 122,
+      "proposed_nonredundant_indexes": 24,
+      "migration": "supabase/migrations/20261121120000_add_fk_covering_indexes.sql",
+      "pgTap_assertions": 24,
+      "ci": {
+        "free_quality_checks": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract_tests": "PASS",
+        "tested_head_sha": "621b1850d20f5571547d7a2b98aae9de05a4ec4c"
+      },
+      "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay and quality checks passed; shared staging unchanged",
+      "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX",
+      "unused_index_review": {
+        "advisor_unused_indexes": 49,
+        "catalog_zero_scan_nonunique_secondary": 49,
+        "affected_tables": 30,
+        "combined_size": "488 kB",
+        "stats_reset_at": "2026-10-02T18:01:15Z",
+        "primary_and_unique_indexes_excluded": true,
+        "drop_index_proposed": false,
+        "review_document": "docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md",
+        "decision": "RETAIN_UNTIL_REPRESENTATIVE_QUERY_PLANS_AND_150_BRANCH_LOAD_TEST"
+      }
+    },
+    "order_lifecycle_findings": {
+      "orders_by_state": {
+        "paid": 3,
+        "unpaid": 3,
+        "pending_verification": 1,
+        "all_fulfillment_unassigned": 7,
+        "all_operational_received": 7
+      },
+      "reservation_rows": {
+        "active_expired": 9,
+        "consumed": 9,
+        "held_for_verification_expired": 3
+      },
+      "payment_records": {
+        "paid_with_proof": 3,
+        "pending_without_proof_on_paid_orders": 2,
+        "pending_with_proof_on_pending_order": 1
+      },
+      "cron_jobs": [
+        {
+          "name": "dlice-operational-retention",
+          "schedule": "17 3 * * *",
+          "active": true
+        }
+      ],
+      "expiry_worker": "NOT INSTALLED",
+      "source": "read-only aggregate SQL on staging 2026-11-21",
+      "data_mutation": "NONE"
+    },
+    "free_tier_policy": {
+      "supabase_organization_plan": "FREE",
+      "vercel_project_plan": "HOBBY",
+      "spend_policy": "NO PAID UPGRADE / NO PAID SERVICE",
+      "feature_limits": "If a required native feature is unavailable on free tier, document blocker and use only safe free mitigations; do not claim equivalence."
+    },
+    "index_performance": {
+      "performance_advisor_unindexed_foreign_keys": 26,
+      "performance_advisor_unused_indexes": 49,
+      "zero_scan_indexes_total": 126,
+      "zero_scan_constraint_or_unique_indexes": 77,
+      "zero_scan_nonunique_indexes": 49,
+      "nonunique_zero_scan_size": "488 kB",
+      "stats_reset": "2026-10-02",
+      "exact_prefix_redundancies": 2,
+      "proposed_drop_indexes": [
+        "stock_count_items_count_idx",
+        "stock_transfer_items_transfer_idx"
+      ],
+      "retained_zero_scan_nonunique_indexes": 47,
+      "applied_to_shared_staging": false,
+      "fk_leading_zero_scan_nonunique_indexes": 42,
+      "non_fk_query_path_zero_scan_nonunique_indexes": 7,
+      "zero_scan_indexes_on_empty_tables": 37,
+      "empty_tables_with_zero_scan_indexes": 20
+    },
+    "saas_tenant_isolation": {
+      "status": "PARTIAL_WORK_IN_PROGRESS",
+      "public_tables_rls_enabled": 64,
+      "public_tables_total": 64,
+      "direct_client_rls_contract_assertions": 35,
+      "direct_client_rls_contract_previous_head": "PASS",
+      "latest_admin_erp_default_deny_guard": "IN_PROGRESS",
+      "tenant_a_b_runtime": "NOT_RUN",
+      "tenant_isolation_released": false,
+      "progress_percent": 38,
+      "latest_quality": "PASS",
+      "latest_disposable_migration_replay": "PASS",
+      "tenant_onboarding_progress_percent": 30,
+      "invitation_lifecycle_pgtap_assertions": 15,
+      "invitation_lifecycle_replay": "PASS on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
+    },
+    "vercel_preview_status": {
+      "plan": "HOBBY",
+      "api_deployment_creation": "BLOCKED_BY_FREE_DAILY_API_LIMIT",
+      "api_limit_message": "More than 100 deployments in one day; retry after 24 hours",
+      "latest_preview_pr122": "READY on older commit 621b1850d20f5571547d7a2b98aae9de05a4ec4c; latest PR head not previewed",
+      "latest_preview_pr126": "READY on older commit c86f93a360c7579596f11f61529a5217fb8ec73f; latest PR head not previewed",
+      "latest_preview_pr127": "No preview deployment found",
+      "no_plan_upgrade": true
+    },
+    "order_lifecycle_atomicity": {
+      "pr123_idempotency_pgtap": 74,
+      "pr125_expiry_compensation_pgtap": 27,
+      "pr127_payment_proof_pgtap": 16,
+      "pr127_source_contract_tests": 5,
+      "legacy_declare_payment": "READ_ONLY_IDEMPOTENT",
+      "storage_postgres_atomicity": "NOT_POSSIBLE; COMPENSATING_DELETE + PER_ORDER BEST_EFFORT ORPHAN CLEANUP",
+      "browser_concurrency_runtime": "PENDING",
+      "global_storage_orphan_sweeper": "PENDING"
+    },
+    "repo_staging_migration_files": 52,
+    "unapplied_staging_migrations": [
+      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+      "20261120110000_command_center_summary.sql",
+      "20261120120000_atomic_branch_checklist_audit.sql"
+    ],
+    "staging_positive_path_e2e": {
+      "procurement": {
+        "run_id": 44892019085,
+        "status": "BLOCKED",
+        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
+      },
+      "kds_pos_stock_offline": {
+        "run_id": 44891634215,
+        "status": "BLOCKED",
+        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
+      },
+      "secret_values_exposed": false
+    },
+    "security_advisors": {
+      "leaked_password_protection": "DISABLED",
+      "finding": "auth_leaked_password_protection",
+      "level": "WARN"
+    },
+    "performance_advisors": {
+      "unindexed_foreign_keys": 26,
+      "unused_indexes": 49,
+      "observed_at": "2026-11-21T10:32:23Z"
+    },
+    "vercel_latest_preview_pr126": {
+      "state": "READY",
+      "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
+    },
+    "pr_statuses": {
+      "pr120": {
+        "state": "OPEN_DRAFT",
+        "head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
+        "quality": "PASS",
+        "tenant_permission_unit_tests": "8 PASS",
+        "contract_tests": "atomic permission RPC + fail-closed audit persistence PASS",
+        "disposable_migration_replay": "PASS",
+        "database_test_files": [
+          "admin_permission_audit.test.sql",
+          "admin_profile_mutation_audit.test.sql",
+          "tenant_invite_audited.test.sql"
+        ],
+        "gap": "No staging runtime/real identity E2E; overlaps migration 20261121100000 with PR #124 and shares dlice-orders Edge Function edits. PR #120 also introduces 20261121160000; reconcile order and duplicate changes before integration."
+      },
+      "pr123": {
+        "state": "OPEN_DRAFT",
+        "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "migration": "20261121130000_atomic_online_order_idempotency.sql",
+        "gap": "Need real checkout retries, duplicate request replay, timeout/late webhook and reservation/payment/order consistency E2E."
+      },
+      "pr124": {
+        "state": "OPEN_DRAFT",
+        "head": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
+        "quality": "PASS",
+        "password_guard_unit_tests": "3 PASS",
+        "contract_tests": "k-anonymity, response padding and fail-closed behavior PASS",
+        "disposable_migration_replay": "PASS",
+        "supabase_auth_platform_setting": "STILL_DISABLED per Supabase security advisor",
+        "gap": "PR implements application-side official password-flow protection but does not switch on the Supabase Auth leaked-password setting. Must reconcile shared 20261121100000 migration with PR #120."
+      },
+      "pr125": {
+        "state": "OPEN_DRAFT",
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "migration": "20261121140000_order_expiry_payment_lifecycle.sql",
+        "gap": "Need scheduler/expiry execution in staging, late payment callback, compensation and stock/reservation release E2E. Migration overlaps PR #127."
+      },
+      "pr126": {
+        "head": "cf9d6781111f01c2da6d798c14fe70fd577d1ffd",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS on exact head cf9d6781",
+        "invitation_pgtap_assertions": 15,
+        "invitation_tests": "PASS on exact head cf9d6781",
+        "passwordless_existing_auth_workflow": "IMPLEMENTED; source-contract tests PASS; live manual dispatch pending integration and protected service-role secret",
+        "identity_a": "qa_dlice_staging_no_permission@accounts.dlice.internal",
+        "identity_b": "qa_dlice_staging_branch_a@accounts.dlice.internal",
+        "old_username_password_secrets": "REMOVED from workflow",
+        "required_secret": "STAGING_SUPABASE_SERVICE_ROLE_KEY in protected staging GitHub Environment",
+        "session_cleanup": "temporary magic-link sessions revoked after probes",
+        "live_workflow_dispatch": "NOT RUN; workflow_dispatch only available after integration to staging and service-role secret configuration",
+        "actual_tenant_a_b_api_runtime": "NOT RUN",
+        "status": "OPEN_DRAFT",
+        "staging_deploy": false
+      },
+      "pr127": {
+        "state": "OPEN_DRAFT",
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "migrations": [
+          "20261121140000_order_expiry_payment_lifecycle.sql",
+          "20261121150000_atomic_customer_payment_proof.sql",
+          "20261121180000_supersede_stale_payment_attempts.sql"
+        ],
+        "gap": "Need real upload retry, duplicate submission, storage metadata/ACL, expiry and supersession E2E; migration 20261121140000 overlaps PR #125."
+      }
+    },
+    "domain_4_5_schema_gaps": {
+      "kitchen_station_table": "ABSENT",
+      "product_station_routing": "ABSENT",
+      "recipe_versions_table": "ABSENT; version/effective dates currently stored on recipes rows",
+      "allergen_compliance_tables": "ABSENT",
+      "lot_batch_expiry_tables": "ABSENT",
+      "recipe_consumption_behavior": "dlice_consume_order_recipe_stock selects the highest active recipe version at consumption time; no order-time recipe-version snapshot is evidenced",
+      "production_batch_recipe_reference": "production_batches.recipe_id references a recipe row, but no explicit immutable version snapshot contract is evidenced",
+      "kitchen_dispatch_behavior": "dlice_dispatch_kitchen_ticket creates tickets on paid orders/POS sales; station assignment and station queue routing are absent",
+      "production_batch_behavior": "erp_complete_production_batch records planned/actual consumption and waste, but theoretical-vs-actual variance approval workflow is not evidenced",
+      "staging_records": {
+        "kitchen_tickets": 6,
+        "kitchen_ticket_items": 6,
+        "production_batches": 0,
+        "production_consumptions": 0,
+        "inventory_waste_events": 0
+      }
+    },
+    "vercel_preview_status_pr120": {
+      "current_branch_head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
+      "latest_preview_commit": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
+      "latest_preview_state": "READY",
+      "current_head_preview": "NOT FOUND"
+    },
+    "order_payment_reconciliation": {
+      "orders": {
+        "total": 7,
+        "paid": 3,
+        "pending_verification": 1,
+        "unpaid": 3
+      },
+      "payment_records": {
+        "total": 6,
+        "paid": 3,
+        "pending_verification": 3,
+        "pending_with_proof": 1,
+        "pending_without_proof": 2
+      },
+      "reservations": {
+        "total": 21,
+        "consumed": 9,
+        "held_for_verification": 3,
+        "active": 9
+      },
+      "orphan_payment_records": 0,
+      "orphan_reservations": 0,
+      "reservation_state_alignment": {
+        "paid_orders_consumed": true,
+        "pending_order_held": true,
+        "unpaid_orders_active": true
+      },
+      "anomalies": [
+        {
+          "count": 2,
+          "issue": "Two paid orders each retain a sibling pending_verification attempt with proof_storage_path NULL. These are safe to close/supersede after payment approval; proof-bearing attempts must remain pending for manual double-payment review."
+        }
+      ],
+      "root_cause": "public.admin_apply_payment_verification updates only the selected payment row and order status; it does not supersede other pending/unpaid payment attempts for the same order.",
+      "remediation": "PR #127 adds an atomic superseded state and link for unpaid or no-proof pending sibling attempts when a payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. A 14-assertion pgTAP test verifies both paths. Existing staging rows remain unchanged until authorized reconciliation.",
+      "no_staging_mutation": true
+    },
+    "supabase_auth_identity_audit": {
+      "project": "dlice-staging",
+      "auth_users_found": 4,
+      "tenant_records": 2,
+      "active_memberships_by_tenant": {
+        "dlice_default": 2,
+        "dlice_qa_isolation_b": 1
+      },
+      "existing_owner_identity": "present; active tenant_owner in dlice-default",
+      "existing_branch_a_qa_identity": "present; active branch_manager in dlice-qa-isolation-b",
+      "other_qa_identities": [
+        "no_permission_active_profile",
+        "inactive_profile_without_active_membership"
+      ],
+      "password_retrieval": "not possible; Supabase Auth stores password hashes",
+      "auth_admin_generate_link_or_passwordless_session_tool": "not available through current connected Supabase actions",
+      "account_mutation_performed": false,
+      "secrets_read_or_changed": false,
+      "tenant_a_identity": "existing active qa_dlice_staging_no_permission user; sales_admin profile, branch_manager membership in dlice-default, non-empty permissions, active QA-DLICE-A assignment",
+      "tenant_b_identity": "existing active qa_dlice_staging_branch_a user; sales_admin profile, branch_manager membership in dlice-qa-isolation-b, same non-empty permission set, active QA-TENANT-B assignment",
+      "last_reverified": "2026-11-21T19:07:00+07:00",
+      "tenant_a_permissions": [
+        "orders",
+        "branches",
+        "inventory",
+        "pos",
+        "procurement",
+        "reports"
+      ],
+      "tenant_b_permissions": [
+        "orders",
+        "branches",
+        "inventory",
+        "pos",
+        "procurement",
+        "reports"
+      ],
+      "tenant_a_active_branches": [
+        "DLC-B001",
+        "QA-DLICE-A"
+      ],
+      "tenant_b_active_branches": [
+        "QA-TENANT-B"
+      ]
+    },
+    "tenant_isolation_runtime": {
+      "direct_client_rls_boundary": "PASS: branches, tenants and tenant_memberships are explicitly deny_direct_client_access for anon/authenticated; expected zero rows",
+      "simulated_authenticated_role_checks": "Owner and QA Branch A identities resolve auth.uid(), but direct table SELECT is intentionally denied by restrictive/permissive deny policies",
+      "actual_edge_function_api_tenant_a_b": "NOT RUN: existing Auth identities found but workflow expects username/password; passwords cannot be recovered and current connector has no Auth Admin generate-link/session action",
+      "tenant_a_identity": "existing qa_dlice_staging_no_permission branch-manager account in dlice-default",
+      "tenant_b_identity": "existing qa_dlice_staging_branch_a branch-manager account in dlice-qa-isolation-b",
+      "cross_tenant_api_read_write": "NOT PROVEN",
+      "storage_cache_background_jobs": "NOT PROVEN",
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "migration_reconciliation": {
+      "repository_branch": "staging",
+      "repository_migration_files": 52,
+      "staging_applied_migrations": 49,
+      "pending_repository_only": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "staging_only": [],
+      "status": "DRIFT_3_PENDING_NOT_APPLIED",
+      "action": "Do not apply yet. Validate migration dependencies, security-definer/invoker behavior, owner bootstrap preconditions, branch scope, SQL tests and rollback/replay on disposable DB; obtain explicit staging gate approval."
+    },
+    "supabase_advisors": {
+      "security": {
+        "warning": "auth_leaked_password_protection",
+        "count": 1,
+        "status": "OPEN",
+        "detail": "Supabase Auth platform leaked-password protection is disabled; PR #124's app-side check does not prove platform setting enabled."
+      },
+      "performance": {
+        "unindexed_foreign_keys": 26,
+        "unused_indexes": 49,
+        "status": "REVIEW_REQUIRED",
+        "detail": "26 foreign keys lack covering indexes; 49 indexes are unused according to current advisor snapshot. Do not drop unused indexes without workload/EXPLAIN validation."
+      },
+      "health": {
+        "findings": 0,
+        "status": "PASS"
+      }
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "project_found": true,
+      "pr126_preview": {
+        "state": "READY",
+        "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
+        "note": "Preview is not on current PR #126 head cf9d6781; current-head preview not found."
+      },
+      "pr127_preview": {
+        "state": "NOT FOUND"
+      },
+      "production_mutated": false
+    },
+    "password_mutation_bypass": {
+      "application_layer_guard": "PR #124 checks passwords before the app's admin create/reset actions",
+      "direct_auth_api": "not proven blocked; direct Supabase Auth updateUser path can bypass application Edge Function checks unless platform password-change protections are enabled",
+      "required_platform_controls": [
+        "require reauthentication when changing password",
+        "require current password when changing password",
+        "native leaked-password protection (requires Pro or above)"
+      ],
+      "organization_plan": "free",
+      "platform_settings_mutated": false,
+      "release_status": "BLOCKED"
+    },
+    "last_audit_at": "2026-11-21T19:07:00+07:00",
+    "vercel_staging": {
+      "latest_ready_deployments": [
+        {
+          "commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+          "state": "READY"
+        },
+        {
+          "commit": "cf15f33379a731c1952ec22b5d12739595a21a93",
+          "state": "READY"
+        }
+      ],
+      "status": "BUILD_READY_NOT_FUNCTIONAL_ACCEPTANCE",
+      "note": "Staging deployments are READY, but this does not prove authenticated browser E2E, tenant isolation, database consistency or 150-branch load readiness."
+    },
+    "staging_migrations": 49,
+    "latest_staging_migration": "20261119182606",
+    "deployed_edge_function": {
+      "name": "dlice-orders",
+      "version": 71,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "custom_handler_auth": true,
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
     "security_advisor": {
       "leaked_password_protection": "WARN_DISABLED"
     },
@@ -2168,113 +3159,12 @@
       "unindexed_foreign_keys": 26,
       "unused_indexes": 49
     },
-    "public_table_grants": {
-      "anon_authenticated_select": [
-        "public.products"
-      ]
+    "health_advisor": {
+      "findings": 0
     },
-    "owner_auth_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52-55,92-100"
-    },
-    "release_gate_source": {
-      "file": "supabase/functions/dlice-orders/index.ts",
-      "lines": "52,135-144"
-    },
-    "deployed_edge_function": {
-      "name": "dlice-orders",
-      "version": 69,
-      "status": "ACTIVE",
-      "verify_jwt": false,
-      "sha256": "d4acc79adc13048a993fe03987df9dbd245a5336336e87a567b0157320ed5d40"
-    },
-    "inventory_read_finding": {
-      "deployed_behavior": "erp-list-inventory is in TENANT_SCOPE_UNCERTIFIED_ACTIONS and returns HTTP 423 for non-platform-owner while release flag is false; legacy handler queries global inventory_items.",
-      "source": {
-        "file": "supabase/functions/dlice-orders/index.ts",
-        "lines": "71,454-455,1266-1275"
-      },
-      "remediation_pr": 85,
-      "candidate_commit": "63575c051112b7ec621afc4f96a1beef62238c2b",
-      "candidate_behavior": "requires inventory permission, branch_id, active membership and exact active assignment; queries branch_inventory joined to inventory_items; no global catalog scan",
-      "ci_run": 44304941471,
-      "status": "PARTIAL"
-    },
-    "admin_profile_role_constraint": [
-      "sales_admin",
-      "owner"
-    ],
-    "worker_global_profile_roles": [
-      "sales_admin",
-      "sales_admin"
-    ],
-    "ordinary_worker_profile_type_available": false,
-    "worker_identity_qualification": "BLOCKED: both active branch_manager memberships map to admin_profiles.role=sales_admin; current check constraint permits only sales_admin and owner. PR #86 introduces branch_worker source-only; no staging profiles changed.",
-    "active_cross_tenant_assignment_rows": 0,
-    "branch_worker_role_candidate": {
-      "pr": 86,
-      "head": "eeda0bdd715dc5477969be3196c6800d6a23eac2",
-      "migration": "20261118190000_add_branch_worker_profile_role.sql",
-      "quality_run": 44306779658,
-      "quality_result": "SUCCESS",
-      "disposable_migration_replay_run": 44306779612,
-      "disposable_migration_replay_result": "SUCCESS",
-      "staging_migration_applied": false
-    },
-    "p03_probe_candidate": {
-      "pr": 87,
-      "head": "a44f27117c33f432ef467b5b52716bea028e0471",
-      "quality_run": 44307838730,
-      "quality_result": "SUCCESS",
-      "tenant_runtime_contract_tests": "7/7",
-      "masked_identifiers": true,
-      "multiple_same_tenant_assignments_allowed": true,
-      "staging_runtime_executed": false
-    },
-    "vercel_project": {
-      "name": "dlice-landing-page",
-      "password_protection_enabled": false,
-      "sso_protection_enabled": true,
-      "sso_deployment_type": "all_except_custom_domains",
-      "trusted_ips_enabled": false,
-      "preview_latest_status": "READY",
-      "production_deployment_performed": true,
-      "production_deployment_exception": {
-        "type": "unintended_documentation_only_deployment",
-        "initial_deployment_id": "dpl_FV4dAmvTdERXQupSkcvqvReXqqXP",
-        "initial_commit": "eddc1cf31f8e64e7afa23011a31cea4f2c45c9f1",
-        "restoration_deployment_id": "dpl_4Fvtp6RvMwukCWFndERhgNh4Zv3e",
-        "restoration_commit": "ab47e1ba5c5201e8ad2553c8552fcfd3dcac33a4",
-        "production_alias": "dlice.vercel.app",
-        "alias_points_to_restoration": true,
-        "restored_main_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "preincident_parent_tree_sha": "427d9413b4e6fe070ba76a93baab533ccb528570",
-        "tree_restored_exactly": true,
-        "application_code_changed": false,
-        "production_database_or_auth_changed": false
-      }
-    },
-    "source_migration_files_staging": 45,
-    "migration_source_recovery_candidate": {
-      "pr": 88,
-      "branch": "fix/recover-migration-source-20261022140302-20261118",
-      "file": "supabase/migrations/20261022140302_add_missing_fk_supporting_indexes.sql",
-      "source_of_truth": "staging supabase_migrations.schema_migrations version 20261022140302",
-      "applied_name": "add_missing_fk_supporting_indexes",
-      "index_statements": 9,
-      "normalized_exact_match": true,
-      "staging_applied": false,
-      "quality_and_disposable_replay": "PASS",
-      "staging_indexes_exist": true,
-      "staging_index_count": 9,
-      "index_definition_verified": true,
-      "quality_run_id": 44309825502,
-      "disposable_replay_run_id": 44309825526,
-      "disposable_replay_job_id": 134821567927,
-      "disposable_replay_log": "Recovered migration applied successfully in disposable local database; complete repository migration set finished.",
-      "pr_status": "OPEN_DRAFT",
-      "preview": "READY"
-    }
+    "latest_tenant_acceptance_run": 45230589775,
+    "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6",
+    "staging_head": "02c32c31315725c7639f249978efc4b8d486cab5"
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -2290,39 +3180,2276 @@
       "P08",
       "P09"
     ],
-    "current_status": "BLOCKED",
-    "last_known_runtime_run": 44208204366,
-    "latest_candidate_static_ci_run": 44307838730,
-    "runtime_probes_executed": 0,
-    "reason": [
-      "GitHub Environment credential and fixture availability cannot be independently verified; workflow dispatch is not exposed through the connected integration",
-      "Both candidate worker profiles are sales_admin; staging role constraint has no ordinary branch_worker classification; PR #86 is source-only and no profiles have been changed",
-      "Deployed dlice-orders v69 globally denies erp-list-inventory; PR #85 candidate is not deployed",
-      "Owner app_metadata.platform_owner boolean true is absent and UUID allowlist cannot be independently verified"
-    ],
+    "current_status": "PASS",
+    "latest_runtime_run": 45230589775,
+    "latest_runtime_run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45230589775",
+    "exact_staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "probes_executed": 9,
+    "probes_passed": 9,
+    "probes_failed": 0,
+    "probes_blocked": 0,
+    "probes_skipped": 0,
+    "supplemental_rls_rpc": {
+      "executed": 6,
+      "passed": 6,
+      "failed": 0,
+      "blocked": 0
+    },
+    "auth_action_probes": {
+      "actions": 115,
+      "requests": 230,
+      "passed": 230,
+      "failed": 0,
+      "expected_default_http": 401,
+      "expected_admin_bootstrap_owner_http": 403,
+      "response_bodies_logged": false,
+      "secret_values_printed": false
+    },
+    "session_cleanup": {
+      "tenant_a_http": 204,
+      "tenant_b_http": 204,
+      "status": "PASS"
+    },
     "no_skipped_policy": true,
-    "inventory_positive_read_gate": "P04/P06 remain blocked against deployed v69; PR #85 is not merged/deployed to staging",
-    "p03_candidate": "PR #87 requires branch_worker profile, branch_manager tenant role, equal non-empty permission sets, active tenant membership, configured QA branch visibility, and masks all identity/tenant/branch IDs; allows multiple same-tenant assignments"
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "note": "This proves the scoped P01-P09 tenant API acceptance and auth-negative action probes only. It does not prove the broader KDS/POS/Stock/Offline or Procurement/Receiving business workflows."
   },
   "open_prs": [
-    83,
-    82,
-    74,
-    71,
-    78,
-    77,
-    76,
-    80,
-    62,
-    63,
-    64,
-    31,
-    22,
-    84,
-    85,
-    86,
-    87,
-    88
+    127,
+    126,
+    123,
+    122,
+    121,
+    120,
+    119,
+    118,
+    117,
+    116,
+    115,
+    114,
+    113,
+    112,
+    111,
+    109,
+    108,
+    107,
+    104,
+    71
   ],
-  "open_pr_count": 18
+  "open_pr_count": 20,
+  "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
+  "current_reaudit": {
+    "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
+    "domains": [
+      {
+        "number": 1,
+        "name": "Executive Command Center",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "PR #103 Command Center implementation is merged to staging source, but its migration is not applied; owner authorization, KPI reconciliation, and 150-branch drill-down remain unproven."
+      },
+      {
+        "number": 2,
+        "name": "POS & Checkout",
+        "feature_count": 13,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six POS sales, seven shifts and six payment records exist; complete order/payment/fulfillment/settlement reconciliation and offline fault-injection E2E are not proven."
+      },
+      {
+        "number": 3,
+        "name": "Order Management",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Seven orders and 21 order items exist; multi-channel routing, exception handling and consistent end-to-end status reconciliation remain unproven."
+      },
+      {
+        "number": 4,
+        "name": "Kitchen & Production",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Six kitchen tickets and six ticket items exist; production batches and production consumptions are zero. KDS-to-POS-to-stock positive reconciliation remains unproven."
+      },
+      {
+        "number": 5,
+        "name": "Menu, Recipe & Product Engineering",
+        "feature_count": 11,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Product/recipe structures and version activation exist; nested BOM, yield/unit conversion, allergens, food cost and POS/production approved-version parity remain unproven."
+      },
+      {
+        "number": 6,
+        "name": "Inventory & Warehouse",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Four branch-inventory rows and 26 stock movements exist; transfers and stock counts are zero. PR #109 is not integrated and no full ledger reconciliation is accepted."
+      },
+      {
+        "number": 7,
+        "name": "Procurement & Supplier",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Purchase requisitions, purchase orders and receipts are zero. PR-to-approval-to-PO-to-GRN-to-AP positive E2E remains unproven."
+      },
+      {
+        "number": 8,
+        "name": "Branch Operations",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One branch checklist run exists. Atomic checklist migration #105 is in staging source but not applied; multi-branch SOP/audit rollback acceptance remains unproven."
+      },
+      {
+        "number": 9,
+        "name": "Delivery & Fulfillment",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Delivery/final-mile provider integration, courier booking, tracking and proof-of-delivery reconciliation are not evidenced."
+      },
+      {
+        "number": 10,
+        "name": "CRM, Loyalty & Marketing",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "No CRM/loyalty customer, consent, points, campaign or redemption lifecycle is accepted."
+      },
+      {
+        "number": 11,
+        "name": "Finance & Accounting",
+        "feature_count": 12,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Settlements, cash reconciliations, journal entries and fiscal periods are zero; Record-to-Report and close/reopen reconciliation remain unproven."
+      },
+      {
+        "number": 12,
+        "name": "HR & Workforce",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Job-position scaffolding exists; employee lifecycle, attendance, scheduling, payroll and labor-cost reconciliation remain unproven."
+      },
+      {
+        "number": 13,
+        "name": "Franchise & Expansion",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Franchise agreement, site approval, royalty, compliance and franchisee reporting lifecycle are not evidenced."
+      },
+      {
+        "number": 14,
+        "name": "BI & Analytics",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Funnel metrics and source operational data exist; KPI dictionary, forecasting, cohort comparison and anomaly-to-action are not accepted."
+      },
+      {
+        "number": 15,
+        "name": "Admin, Identity & Access Control",
+        "feature_count": 10,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "One active Owner profile, three active memberships and four branch assignments exist; platform Owner Auth metadata/allowlist remains blocked and role/branch E2E is not run."
+      },
+      {
+        "number": 16,
+        "name": "SaaS Tenant Management",
+        "feature_count": 8,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Two tenant records exist but only one is active; no proven subscription, entitlement, billing, metering, suspension, export or offboarding lifecycle. P01-P09 not run."
+      },
+      {
+        "number": 17,
+        "name": "Integrations & Automation",
+        "feature_count": 9,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "Three notification-log records exist; integration connections and outbox are zero. Provider callbacks, durable retry/dead-letter and integration health are not proven."
+      },
+      {
+        "number": 18,
+        "name": "Quality, Compliance & Security",
+        "feature_count": 20,
+        "current_domain_status": "PARTIAL — NOT ACCEPTED",
+        "current_evidence_or_gap": "64/64 public tables have RLS; 29 functions show anon/authenticated EXECUTE=0 and service_role=29. This is not a substitute for P01-P09, backup/restore, 150-branch load, food-safety controls or verified GitHub release protection."
+      }
+    ],
+    "prior_feature_status_distribution": {
+      "PARTIAL": 81,
+      "NOT VERIFIED": 99,
+      "BLOCKED": 9
+    },
+    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
+    "feature_status_counts_current": {
+      "PARTIAL": 95,
+      "NOT VERIFIED": 88,
+      "BLOCKED": 6,
+      "DONE": 0,
+      "TOTAL": 189
+    },
+    "feature_updates": [
+      {
+        "domain": 4,
+        "requirement": "KDS and kitchen order tickets",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 4,
+        "requirement": "Queue priority and prep SLA",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 5,
+        "requirement": "Central, regional and branch-specific pricing",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 6,
+        "requirement": "Warehouse/storage/bin hierarchy",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      },
+      {
+        "domain": 6,
+        "requirement": "Min/max, safety stock and reorder point",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "Read-only schema and Edge Function evidence confirms an implementation foundation; acceptance gaps remain."
+      }
+    ]
+  },
+  "operational_checkpoint": {
+    "date": "2026-11-21",
+    "staging_baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "feature_statuses_last_full_review": "2026-11-20",
+    "feature_statuses_reaudited": false,
+    "feature_status_note": "The 189 per-feature statuses remain the 18-Nov baseline except the SaaS Tenant Management feature 'Tenant/member isolation in database and APIs', now PARTIAL because concrete implementation work began in PR #126. All other statuses remain unchanged pending evidence. No PR merge or static CI promotes a feature to DONE.",
+    "pull_requests": {
+      "actual_total": 125,
+      "merged": 77,
+      "closed_without_merge": 28,
+      "open": 20,
+      "open_pr_numbers": [
+        127,
+        126,
+        123,
+        122,
+        121,
+        120,
+        119,
+        118,
+        117,
+        116,
+        115,
+        114,
+        113,
+        112,
+        111,
+        109,
+        108,
+        107,
+        104,
+        71
+      ]
+    },
+    "supabase_live_read_only": {
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "project_status": "ACTIVE_HEALTHY",
+      "migration_history_rows": 49,
+      "latest_migration": "20261119182606",
+      "tenants": 2,
+      "branches_total": 155,
+      "active_tenant_memberships": 3,
+      "distinct_active_members": 3,
+      "branch_assignments": 4,
+      "branch_inventory_rows": 4,
+      "stock_movements": 26,
+      "stock_transfers": 0,
+      "pos_sales": 6,
+      "pos_shifts": 7,
+      "orders": 7,
+      "order_items": 21,
+      "payment_records": 6,
+      "kitchen_tickets": 6,
+      "kitchen_ticket_items": 6,
+      "purchase_orders": 0,
+      "purchase_receipts": 0,
+      "production_batches": 0,
+      "payment_settlements": 0,
+      "refund_records": 0,
+      "cash_reconciliations": 0,
+      "finance_journal_entries": 0,
+      "active_owner_profiles": 1,
+      "owner_app_metadata_platform_owner_key_present": false,
+      "owner_app_metadata_platform_owner_boolean_true": false,
+      "public_tables": 64,
+      "public_tables_rls_enabled": 64,
+      "public_tables_rls_disabled": 0,
+      "public_policies": 64,
+      "public_functions": 29,
+      "anon_execute_function_count": 0,
+      "authenticated_execute_function_count": 0,
+      "service_role_execute_function_count": 29,
+      "order_lifecycle": {
+        "orders_by_state": {
+          "paid": 3,
+          "unpaid": 3,
+          "pending_verification": 1,
+          "all_fulfillment_unassigned": 7,
+          "all_operational_received": 7
+        },
+        "reservation_rows": {
+          "active_expired": 9,
+          "consumed": 9,
+          "held_for_verification_expired": 3
+        },
+        "payment_records": {
+          "paid_with_proof": 3,
+          "pending_without_proof_on_paid_orders": 2,
+          "pending_with_proof_on_pending_order": 1
+        },
+        "cron_jobs": [
+          {
+            "name": "dlice-operational-retention",
+            "schedule": "17 3 * * *",
+            "active": true
+          }
+        ],
+        "expiry_worker": "NOT INSTALLED",
+        "reconciliation": "READ ONLY; no order/payment/reservation records modified"
+      },
+      "index_performance": {
+        "performance_advisor_unindexed_foreign_keys": 26,
+        "performance_advisor_unused_indexes": 49,
+        "zero_scan_indexes_total": 126,
+        "zero_scan_constraint_or_unique_indexes": 77,
+        "zero_scan_nonunique_indexes": 49,
+        "nonunique_zero_scan_size": "488 kB",
+        "stats_reset": "2026-10-02",
+        "exact_prefix_redundancies": 2,
+        "proposed_drop_indexes": [
+          "stock_count_items_count_idx",
+          "stock_transfer_items_transfer_idx"
+        ],
+        "retained_zero_scan_nonunique_indexes": 47,
+        "applied_to_shared_staging": false,
+        "fk_leading_zero_scan_nonunique_indexes": 42,
+        "non_fk_query_path_zero_scan_nonunique_indexes": 7,
+        "zero_scan_indexes_on_empty_tables": 37,
+        "empty_tables_with_zero_scan_indexes": 20
+      }
+    },
+    "edge_functions": {
+      "dlice_orders": {
+        "version": 70,
+        "status": "ACTIVE",
+        "verify_jwt": false
+      }
+    },
+    "tenant_acceptance": {
+      "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
+      "on_staging": "manual_dispatch_only",
+      "p01_p09_runtime_status": "NOT_RUN",
+      "executed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "note": "No run is recorded; zero executed is not a passing result. Current staging workflow still uses Environment A/B username/password inputs until PR #111 is merged and its OIDC broker is configured/deployed."
+    },
+    "release_protection": {
+      "github_rulesets": "NOT_VERIFIED; prior ruleset query empty and branch-protection read 403",
+      "github_branch_protection": "NOT_VERIFIED",
+      "github_environment_secret_values": "NOT_VERIFIED",
+      "workflow_dispatch_capability": "NOT_AVAILABLE_IN_CONNECTED_GITHUB_ACTIONS",
+      "supabase_owner_auth_admin_mutation": "NOT_AVAILABLE_IN_CONNECTED_SUPABASE_ACTIONS",
+      "vercel_sso_protection": "ENABLED_ALL_EXCEPT_CUSTOM_DOMAINS",
+      "vercel_password_protection": "DISABLED",
+      "vercel_trusted_ips": "DISABLED",
+      "github_ruleset_id": 27559290,
+      "github_ruleset_enforcement": "ACTIVE",
+      "github_ruleset_applies_to": "~ALL branches",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_review_thread_resolution": true,
+      "required_status_checks": [],
+      "required_deployment_environments": [],
+      "required_signatures": true,
+      "required_linear_history": true,
+      "prevent_deletion": true,
+      "prevent_non_fast_forward": true,
+      "code_scanning_threshold": "high_or_higher; alerts=errors",
+      "code_quality_threshold": "errors",
+      "code_coverage_minimum": null,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "bypass_actors": [
+        {
+          "type": "DeployKey",
+          "id": null,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 2,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 4,
+          "mode": "always"
+        },
+        {
+          "type": "RepositoryRole",
+          "id": 5,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 8329,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 656270,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 946600,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1143301,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 1144995,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4229212,
+          "mode": "always"
+        },
+        {
+          "type": "Integration",
+          "id": 4518051,
+          "mode": "always"
+        }
+      ],
+      "current_connection_can_bypass": "always",
+      "branch_protection_main": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "branch_protection_staging": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
+      "staging_environment_protection": "NOT_READABLE_WITH_CURRENT_CONNECTOR",
+      "release_gate": "FAIL: no required human approval, no required status checks/deployment reviewers, always-bypass actors"
+    },
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_updates": [
+      {
+        "domain": 18,
+        "requirement": "RLS on exposed public tables",
+        "previous_status": "NOT VERIFIED",
+        "current_status": "PARTIAL",
+        "evidence": "64/64 public tables RLS-enabled; 64 policies; policy correctness not fully tested"
+      }
+    ],
+    "feature_status_counts_current": {
+      "PARTIAL": 84,
+      "NOT VERIFIED": 96,
+      "BLOCKED": 9
+    },
+    "vercel_preview_status": {
+      "plan": "HOBBY",
+      "api_deployment_creation": "BLOCKED_BY_FREE_DAILY_API_LIMIT",
+      "api_limit_message": "More than 100 deployments in one day; retry after 24 hours",
+      "latest_preview_pr122": "READY on older commit 621b1850d20f5571547d7a2b98aae9de05a4ec4c; latest PR head not previewed",
+      "latest_preview_pr126": "READY on older commit c86f93a360c7579596f11f61529a5217fb8ec73f; latest PR head not previewed",
+      "latest_preview_pr127": "No preview deployment found",
+      "no_plan_upgrade": true
+    },
+    "staging_e2e": {
+      "procurement": {
+        "run_id": 44892019085,
+        "status": "BLOCKED",
+        "missing_secrets": [
+          "STAGING_TEST_OWNER_USERNAME",
+          "STAGING_TEST_OWNER_PASSWORD",
+          "STAGING_TEST_BRANCH_A_USERNAME"
+        ],
+        "business_flow_executed": false
+      },
+      "kds_pos_stock_offline": {
+        "run_id": 44891634215,
+        "status": "BLOCKED",
+        "missing_secrets": [
+          "STAGING_TEST_OWNER_USERNAME",
+          "STAGING_TEST_OWNER_PASSWORD",
+          "STAGING_TEST_BRANCH_A_USERNAME"
+        ],
+        "business_flow_executed": false
+      }
+    },
+    "migration_reconciliation": {
+      "repository_staging_sql_files": 52,
+      "supabase_applied_migrations": 49,
+      "unapplied_staging_migrations": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "shared_staging_migration_applied": false
+    },
+    "partial_reclassification_this_pass": [
+      {
+        "domain": "Kitchen & Production",
+        "requirement": "KDS and kitchen order tickets",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Kitchen & Production",
+        "requirement": "Queue priority and prep SLA",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "requirement": "Central, regional and branch-specific pricing",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "requirement": "Warehouse/storage/bin hierarchy",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "requirement": "Min/max, safety stock and reorder point",
+        "previous": "NOT VERIFIED",
+        "current": "PARTIAL"
+      }
+    ]
+  },
+  "historical_acceptance_coverage": {
+    "source_pr": 31,
+    "source_result": "21 historical PASS",
+    "source_script": "tests/staging/next-workflow-acceptance.mjs",
+    "source_workflow": ".github/workflows/staging-next-workflow-acceptance.yml",
+    "current_staging_artifacts_present": false,
+    "current_status": "PORT_REQUIRED_NOT_RUNTIME_VERIFIED",
+    "note": "Do not restore the old workflow unchanged: it uses legacy password inputs, a hard-coded Branch B UUID and a QA-account bootstrap step. Port its assertions into a fixture-discovery/OIDC-based harness without creating identities or mutating real business records.",
+    "cases": [
+      "P2P Owner purchase-order list returns a valid purchase_orders collection",
+      "P2P Branch A purchase-order list succeeds",
+      "P2P Branch A cannot read Branch B purchase orders",
+      "P2P no-permission identity is denied purchase-order list",
+      "P2P inactive identity is denied purchase-order list",
+      "O2C Owner fulfillment list returns a valid orders collection",
+      "O2C Branch A fulfillment list succeeds",
+      "O2C Branch A cannot read Branch B fulfillment orders",
+      "O2C no-permission identity is denied fulfillment list",
+      "O2C inactive identity is denied fulfillment list",
+      "Finance Owner settlement list returns a valid settlements collection",
+      "Branch identity cannot create settlement",
+      "Finance no-permission identity is denied settlement list",
+      "Finance inactive identity is denied settlement list",
+      "Branch identity cannot create cash reconciliation for another branch",
+      "No-permission identity cannot create cash reconciliation",
+      "Receiving an unknown purchase order returns 404 and writes nothing",
+      "Updating an unknown fulfillment order returns 404 and writes nothing",
+      "Transitioning an unknown stock transfer returns 404 and writes nothing",
+      "Posting an unknown stock count returns 404 and writes nothing",
+      "Reviewing an unknown cash reconciliation returns 404 and writes nothing"
+    ]
+  },
+  "audit_reconciliation": {
+    "source_snapshot": "2026-11-24 live audit; 189 individual feature records in FNB_OS_IMPLEMENTATION_MATRIX.json",
+    "arithmetic": "Feature rows recount to 95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE = 189. This supersedes older narrative snapshots that said 92/91/6.",
+    "current_status_source": "Feature-level rows in this matrix; current GitHub staging SHA/workflow runs; read-only Supabase table/RLS/migration/advisor/Edge Function evidence; Vercel deployment metadata.",
+    "count_discrepancy": "The supplied table and older narrative rows differ from the current feature-level matrix in Admin/Identity and Quality/Security. Matrix rows are authoritative for this snapshot; do not hand-adjust summary totals.",
+    "business_e2e": "P01-P09 tenant isolation passed on staging commit 02c32c31315725c7639f249978efc4b8d486cab5, but KDS/POS/Stock/Offline and Procurement/Receiving business E2E plus ledger reconciliation remain separate and unproven.",
+    "no_shared_staging_or_production_mutation": true
+  },
+  "current_open_prs": [
+    127,
+    126,
+    123,
+    122,
+    121,
+    120,
+    119,
+    118,
+    117,
+    116,
+    115,
+    114,
+    113,
+    112,
+    111,
+    109,
+    108,
+    107,
+    104,
+    71
+  ],
+  "feature_work_updates": [
+    {
+      "domain": "SaaS Tenant Management",
+      "requirement": "Tenant/member isolation in database and APIs",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        126
+      ],
+      "progress_percent": 38,
+      "progress_breakdown": {
+        "code_ui": {
+          "weight": 20,
+          "earned": 3,
+          "evidence": "PR #126 extracts resolveTenantScopedBranchIds and wires actorBranchIds to active membership + branch assignment resolution; tenant-aware UI and full route coverage are not yet certified."
+        },
+        "database": {
+          "weight": 20,
+          "earned": 15,
+          "evidence": "35 pgTAP RLS policy assertions passed in latest exact-head disposable replay; all repository migrations applied cleanly."
+        },
+        "authorization": {
+          "weight": 15,
+          "earned": 5,
+          "evidence": "Owner/admin tenant-wide scope and ordinary member assigned-branch scope now resolve only within active tenant memberships; cross-tenant/inactive membership cases are covered by Deno unit tests. Real API A/B runtime remains untested."
+        },
+        "automated_tests": {
+          "weight": 15,
+          "earned": 15,
+          "evidence": "Latest exact-head disposable replay passed 119 pgTAP assertions across six files; latest quality checks and branch-scope unit/contract tests passed."
+        },
+        "browser_api_e2e": {
+          "weight": 20,
+          "earned": 0,
+          "evidence": "No real Tenant A/B own-read/write and cross-tenant negative API E2E."
+        },
+        "operational_reconciliation": {
+          "weight": 10,
+          "earned": 0,
+          "evidence": "No tenant A/B operational reconciliation, Storage/cache/job evidence."
+        },
+        "total_weight": 100,
+        "earned_total": 38,
+        "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
+      },
+      "note": "Exact-head disposable replay now passes; 35 RLS pgTAP assertions and Deno scope tests pass. Real tenant A/B runtime still pending."
+    },
+    {
+      "domain": "SaaS Tenant Management",
+      "requirement": "Tenant directory, tenant onboarding",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        126
+      ],
+      "progress_percent": 30,
+      "progress_breakdown": {
+        "code_ui": {
+          "weight": 20,
+          "earned": 5,
+          "evidence": "Server-side atomic tenant creation/owner bootstrap RPCs and Edge Function calls exist; tenant onboarding UI is not implemented/proven."
+        },
+        "database": {
+          "weight": 20,
+          "earned": 10,
+          "evidence": "Atomic tenant+owner membership+audit migration applied successfully in exact-head disposable replay."
+        },
+        "authorization": {
+          "weight": 15,
+          "earned": 5,
+          "evidence": "RPCs require service_role; tenant creation verifies active owner profile and Auth platform_owner metadata; real Auth runtime acceptance remains."
+        },
+        "automated_tests": {
+          "weight": 15,
+          "earned": 10,
+          "evidence": "17 new tenant onboarding pgTAP assertions passed in the latest exact-head disposable replay; source contract checks passed."
+        },
+        "browser_api_e2e": {
+          "weight": 20,
+          "earned": 0,
+          "evidence": "No tenant onboarding browser/API E2E."
+        },
+        "operational_reconciliation": {
+          "weight": 10,
+          "earned": 0,
+          "evidence": "No tenant setup, default branch, billing or offboarding reconciliation."
+        },
+        "total_weight": 100,
+        "earned_total": 30,
+        "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
+      },
+      "note": "17 new tenant onboarding pgTAP assertions and all migrations pass exact-head disposable replay. Invite acceptance/default branch/plan/offboarding/browser E2E gaps remain."
+    },
+    {
+      "domain": "Order Management",
+      "requirement": "Duplicate orders, delayed payment, failed order handling",
+      "audit_status": "BLOCKED",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        123,
+        125,
+        127
+      ],
+      "note": "PR #123 idempotent checkout/replay passed 74 pgTAP; PR #125 unpaid/unproven payment expiry and compensation passed 27 pgTAP; PR #127 atomic proof upload passed 15 pgTAP + 4 source-contract tests and full disposable replay. Browser fault-injection, concurrency and provider webhook ordering remain."
+    },
+    {
+      "domain": "Quality, Compliance & Security",
+      "requirement": "Leaked-password protection",
+      "audit_status": "BLOCKED",
+      "work_status": "IN_PROGRESS",
+      "active_prs": [
+        124
+      ],
+      "note": "Free k-anonymity breach check covers official Owner/staff password mutation flows. Native Supabase control and direct Auth bypass remain unresolved."
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "KDS and kitchen order tickets",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "Queue priority and prep SLA",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Menu, Recipe & Product Engineering",
+      "requirement": "Central, regional and branch-specific pricing",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Warehouse/storage/bin hierarchy",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Min/max, safety stock and reorder point",
+      "audit_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED",
+      "active_prs": [],
+      "progress_percent": null,
+      "note": "Implementation foundation is present in staging source/schema; remaining acceptance gaps are recorded in the live technical gap audit. No percentage is assigned until criteria are decomposed and evidence linked."
+    }
+  ],
+  "latest_pr_inventory": {
+    "actual_prs": 125,
+    "merged": 77,
+    "closed_without_merge": 28,
+    "open": 20
+  },
+  "feature_status_counts_current": {
+    "PARTIAL": 95,
+    "NOT VERIFIED": 88,
+    "BLOCKED": 6,
+    "DONE": 0,
+    "TOTAL": 189
+  },
+  "feature_updates": [
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "KDS and kitchen order tickets",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Kitchen & Production",
+      "requirement": "Queue priority and prep SLA",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Menu, Recipe & Product Engineering",
+      "requirement": "Central, regional and branch-specific pricing",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Warehouse/storage/bin hierarchy",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    },
+    {
+      "domain": "Inventory & Warehouse",
+      "requirement": "Min/max, safety stock and reorder point",
+      "previous_status": "NOT VERIFIED",
+      "current_status": "PARTIAL",
+      "work_status": "GAP_REMEDIATION_REQUIRED"
+    }
+  ],
+  "progress_scoring": {
+    "meaning": "progress_percent measures implementation completeness of a PARTIAL feature, not release readiness or acceptance PASS",
+    "weights": {
+      "code_and_ui": 20,
+      "database_and_data_integrity": 20,
+      "authorization_and_tenant_scope": 15,
+      "automated_tests": 15,
+      "workflow_e2e": 20,
+      "reconciliation_and_observability": 10
+    },
+    "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
+    "scored_partial_features": 2,
+    "unscored_partial_features": 93,
+    "status": "INCOMPLETE; current feature rows recount to 95/88/6. Two PARTIAL features have defensible scores (30%, 38%); 93 PARTIAL features remain unscored. Re-score tenant isolation using the 24-Nov P01-P09 run before changing its percentage."
+  },
+  "source_user_distribution_2026_11_21": {
+    "PARTIAL": 82,
+    "NOT VERIFIED": 98,
+    "BLOCKED": 9,
+    "TOTAL": 189,
+    "arithmetic": "verified per-domain row sum; source total row's NOT VERIFIED=93 is incorrect"
+  },
+  "latest_reaudit_2026_11_21": {
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_branch_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "audit_branch": "audit/189-feature-reconciliation-20261121",
+    "audit_method": "Read-only GitHub/Supabase/Vercel inspection plus exact-head CI and workflow evidence; no production or shared-staging mutations.",
+    "feature_distribution": {
+      "PARTIAL": 92,
+      "NOT VERIFIED": 91,
+      "BLOCKED": 6,
+      "DONE": 0,
+      "TOTAL": 189
+    },
+    "reclassification_note": "Seven features from the supplied source distribution are PARTIAL in the current evidence-backed matrix because implementation foundations were verified in Kitchen/KDS (2), Menu/Pricing (1), Inventory/Warehouse and reorder (2), and SaaS Tenant Management (2). This is progress classification, not acceptance or DONE.",
+    "pr126": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+      "base": "staging",
+      "quality": "PASS",
+      "kds_contract": "PASS",
+      "cors_contract": "PASS",
+      "procurement_requisition_contract": "PASS",
+      "procurement_receiving_contract": "PASS",
+      "disposable_migration_replay": "PASS",
+      "invitation_pgtap_assertions": 15,
+      "invitation_assertions": "PASS: supabase/tests/tenant_invite_atomic.test.sql declares plan(15) and returned ok in exact-head disposable replay",
+      "p01_p09_runtime": "NOT RUN — requires manual workflow_dispatch on PR126 branch and verified staging service-role secret",
+      "release_flag": false,
+      "shared_staging_mutation": false
+    },
+    "p01_p09_readiness": {
+      "existing_supabase_identities": "FOUND_AND_MAPPED",
+      "tenant_a_active_assignments": [
+        "QA-DLICE-A",
+        "DLC-B001"
+      ],
+      "tenant_b_active_assignments": [
+        "QA-TENANT-B"
+      ],
+      "last_sign_in_at": "2026-10-25",
+      "service_role_secret_presence": "NOT VERIFIED_WITHOUT_READING_VALUE",
+      "staging_environment_protection": "NOT VERIFIED",
+      "workflow_dispatch": "NOT RUN"
+    },
+    "staging_positive_e2e": {
+      "kds_pos_stock": "BLOCKED at preflight on run 44741192566; legacy workflow still requires STAGING_TEST_OWNER_USERNAME/PASSWORD; business-flow step SKIPPED",
+      "procurement": "legacy workflow still requires Owner username/password and Tenant A username/password; must be refactored to passwordless Supabase Auth sessions or await approved Owner Auth setup",
+      "owner_identity_gate": "Existing Supabase Owner identity does not have platform_owner claim/allowlist; no metadata mutation performed"
+    },
+    "migration_reconciliation": {
+      "applied": 49,
+      "repository_source": 52,
+      "source_only": 3,
+      "conflicting_pr_migration_version": "20261121130000 on #123 and #126",
+      "duplicate_same_blob_migration_version": "20261121140000 on #125 and #127",
+      "shared_staging_mutation": false
+    },
+    "github_release_protection": {
+      "ruleset_id": 27559290,
+      "required_approving_review_count": 0,
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_status_checks": 0,
+      "required_deployment_environments": 0,
+      "bypass_actor_count": 11,
+      "current_user_can_bypass": "always"
+    },
+    "supabase_advisors": {
+      "security": "1 warning: leaked-password protection disabled",
+      "performance": "26 unindexed foreign keys; 49 unused-index notices",
+      "health": "0 findings"
+    },
+    "vercel": {
+      "exact_head_previews": {
+        "pr120": {
+          "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+          "state": "NOT FOUND"
+        },
+        "pr123": {
+          "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+          "state": "READY",
+          "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
+        },
+        "pr125": {
+          "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+          "state": "READY",
+          "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
+        },
+        "pr126": {
+          "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+          "state": "NOT FOUND"
+        },
+        "pr127": {
+          "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+          "state": "NOT FOUND"
+        }
+      },
+      "production_changed": false
+    },
+    "release_controls": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false,
+      "production_mutated": false,
+      "shared_staging_migrations_applied": false
+    },
+    "pr120_pr124_consolidation": {
+      "target_branch": "feat/permission-change-atomic-audit-20261121",
+      "current_head": "d9aa2fbc813da48abcae38769be90de1e981c13d",
+      "changes": [
+        "PR #120 atomic audited RPCs for permission, profile creation, role and active-state mutations retained.",
+        "PR #124 k-anonymous breached-password checker, Deno unit tests, Node source contract test and free-plan limitation documentation copied into PR #120 branch.",
+        "Duplicate 20261121100000_atomic_admin_permission_audit.sql and its pgTAP suite remain single canonical copies from PR #120; no duplicate migration was added."
+      ],
+      "ci": {
+        "quality": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "disposable_migration_replay": "PASS",
+        "password_guard_unit_tests": "PASS",
+        "password_guard_contract": "PASS",
+        "admin_permission_audit_contract": "PASS"
+      },
+      "remaining": [
+        "Supabase native leaked-password protection remains disabled; application guard cannot intercept direct Auth API password mutation.",
+        "Password reset still uses Auth Admin updateUserById followed by a separate audit insert; durable intent/result tracking is not atomic across Auth/database.",
+        "Staging runtime mutation-path tests remain pending."
+      ]
+    },
+    "order_lifecycle_prs": {
+      "pr123": {
+        "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "contracts": "PASS",
+        "runtime_retry_and_late_webhook_e2e": "NOT RUN",
+        "public_checkout_gate": "PUBLIC_TENANT_ROUTING_RELEASED=false"
+      },
+      "pr125": {
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "kds_contract": "PASS",
+        "expiry_scheduler_runtime": "NOT RUN",
+        "expiry_worker_installed": "NO"
+      },
+      "pr127": {
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "cors_kds_procurement_contracts": "PASS",
+        "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
+      }
+    },
+    "pr120": {
+      "state": "OPEN_DRAFT",
+      "head_sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "quality": "PASS",
+      "disposable_migration_replay": "PASS",
+      "cors_contract": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition_contract": "PASS",
+      "procurement_receiving_contract": "PASS",
+      "profile_mutation_pgtap_assertions": 35,
+      "password_reset_audit_intent": "IMPLEMENTED_AND_TESTED",
+      "staging_runtime": "NOT RUN"
+    },
+    "pr124": {
+      "state": "CLOSED_SUPERSEDED_BY_PR120"
+    }
+  },
+  "latest_live_audit": {
+    "as_of": "2026-11-21 21:20 WIB",
+    "staging_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_counts": {
+      "total": 189,
+      "partial": 92,
+      "not_verified": 91,
+      "blocked": 6,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 90
+    },
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "POS & Checkout",
+        "features": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "Order Management",
+        "features": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0
+      },
+      {
+        "domain": "Kitchen & Production",
+        "features": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "features": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "features": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "features": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "features": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1
+      },
+      {
+        "domain": "HR & Workforce",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "features": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "features": 10,
+        "partial": 6,
+        "not_verified": 4,
+        "blocked": 0
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "features": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "features": 20,
+        "partial": 11,
+        "not_verified": 9,
+        "blocked": 0
+      }
+    ],
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "staging_source_migration_files": 52,
+      "source_only_migrations": [
+        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+        "20261120110000_command_center_summary.sql",
+        "20261120120000_atomic_branch_checklist_audit.sql"
+      ],
+      "applied_versions_missing_from_source": []
+    },
+    "existing_auth_fixtures": {
+      "tenant_a": {
+        "user_id": "b930897c-f8fb-443b-9056-e70c08b31446",
+        "confirmed": true,
+        "last_sign_in_at": "2026-10-25T12:17:02.255486+00:00",
+        "tenant_id": "00000000-0000-4000-8000-000000000001",
+        "profile_role": "sales_admin",
+        "profile_active": true,
+        "profile_permission_count": 0,
+        "tenant_role": "branch_manager",
+        "membership_status": "active",
+        "tenant_permission_count": 6,
+        "active_branch_assignments": [
+          "QA-DLICE-A"
+        ]
+      },
+      "tenant_b": {
+        "user_id": "e1de1ffc-9fae-412f-9dd7-0993b54cb631",
+        "confirmed": true,
+        "last_sign_in_at": "2026-10-25T12:17:01.620238+00:00",
+        "tenant_id": "00000000-0000-4000-8000-000000000002",
+        "profile_role": "sales_admin",
+        "profile_active": true,
+        "profile_permission_count": 7,
+        "tenant_role": "branch_manager",
+        "membership_status": "active",
+        "tenant_permission_count": 6,
+        "active_branch_assignments": [
+          "QA-TENANT-B"
+        ]
+      },
+      "fixture_resolution": "Two distinct existing Supabase Auth identities, two distinct active tenant memberships, active profiles and branch assignments verified read-only. Tenant A has two active assignments within Tenant A; Tenant B has one. Both last signed in 2026-10-25; current real login has not been proven. No password, Auth metadata, membership or assignment was changed.",
+      "branch_assignment_status": "Both configured QA branch assignments are active today (read-only SQL confirmed)."
+    },
+    "pull_requests": {
+      "open_unmerged": [
+        120,
+        123,
+        126,
+        127
+      ],
+      "closed_superseded": {
+        "124": 120,
+        "125": 127
+      },
+      "current_heads": {
+        "120": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+        "123": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+        "126": "4a6aa8ccf07e25981579a805477dffc65a13a376",
+        "127": "e52ea75a218eedecc513ec52311adaee25f241ba"
+      },
+      "note": "No separate independent PR-review step is part of feature acceptance. PR #120 latest-head migration replay is still in progress; #123/#126/#127 exact-head required CI and disposable replay passed."
+    },
+    "migration_candidate_conflicts": {
+      "same_version_different_sql": [],
+      "identical_duplicate_source": [
+        {
+          "version": "20261121100000",
+          "prs": [
+            120,
+            124
+          ],
+          "file": "20261121100000_atomic_admin_permission_audit.sql",
+          "blob_sha": "947419c220a5f1e2d9160026a9862709c03fcb1b",
+          "status": "same blob; #124 closed superseded by #120"
+        },
+        {
+          "version": "20261121130000",
+          "prs": [
+            120,
+            126
+          ],
+          "file": "20261121130000_atomic_tenant_invite_lifecycle.sql",
+          "blob_sha": "b9dab9b7027e51bd5a4069b854b65a14563df6eb",
+          "test_blob_sha": "9c778834a0eb5e6f0a12769f1e6a214c71130688",
+          "status": "same migration and pgTAP test blobs; canonical invitation RPC path shared by both PR branches"
+        },
+        {
+          "version": "20261121140000",
+          "prs": [
+            125,
+            127
+          ],
+          "file": "20261121140000_order_expiry_payment_lifecycle.sql",
+          "blob_sha": "c1d1de05b61055a0003a889d70b5e41a298caffd",
+          "status": "same blob; #125 closed superseded by #127"
+        }
+      ],
+      "closed_duplicate_source": [
+        {
+          "version": "20261121100000",
+          "prs": [
+            120,
+            124
+          ],
+          "file": "20261121100000_atomic_admin_permission_audit.sql",
+          "blob_sha": "947419c220a5f1e2d9160026a9862709c03fcb1b",
+          "status": "same blob; #124 closed superseded by #120"
+        }
+      ],
+      "pr_migration_versions": {
+        "120": [
+          "20261121100000_atomic_admin_permission_audit.sql",
+          "20261121160000_atomic_admin_profile_mutation_audit.sql"
+        ],
+        "123": "20261121130000_atomic_online_order_idempotency.sql",
+        "126": "20261121130000_atomic_tenant_invite_lifecycle.sql",
+        "127": [
+          "20261121140000_order_expiry_payment_lifecycle.sql",
+          "20261121150000_atomic_customer_payment_proof.sql",
+          "20261121180000_supersede_stale_payment_attempts.sql"
+        ]
+      },
+      "invitation_overlap": "Resolved: PR #120 and #126 use identical invitation issue/accept RPC names, argument contracts, and Edge Function response envelope (including replayed flag). Migration and pgTAP test blobs are byte-identical. No response-envelope divergence remains in the inspected current branch heads."
+    },
+    "github_release_protection": {
+      "active_ruleset_id": 27559290,
+      "branches": "~ALL",
+      "required_approving_reviews": 0,
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "required_status_checks": 0,
+      "required_deployment_environments": 0,
+      "bypass_actors": 11,
+      "current_connection_can_bypass": "always",
+      "branch_protection_read": "403; unavailable",
+      "policy_note": "Project acceptance is test-evidence-only; no separate independent PR approval is an acceptance metric. Active GitHub ruleset still enforces CODEOWNERS and last-push approval controls and cannot be edited through current connector."
+    },
+    "vercel": {
+      "exact_head_previews": {
+        "120": {
+          "sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+          "deployment_count": 0,
+          "state": "NOT FOUND"
+        },
+        "123": {
+          "sha": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+          "deployment_count": 0,
+          "state": "NOT FOUND"
+        },
+        "126": {
+          "sha": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
+          "deployment_count": 0,
+          "state": "NOT FOUND"
+        },
+        "127": {
+          "sha": "e52ea75a218eedecc513ec52311adaee25f241ba",
+          "deployment_count": 0,
+          "state": "NOT FOUND"
+        }
+      },
+      "current_audit_branch_head": {
+        "sha": "4743fc1b34ea14eabe8eb6be5131d3b558e42ce5",
+        "deployment_count": 0,
+        "state": "NOT FOUND"
+      },
+      "latest_available_stale_audit_preview": {
+        "commit": "30beb0824ce22b123e9d782be272661c58ca6308",
+        "state": "READY",
+        "url": "https://dlice-landing-page-kombm3oru-dlice8888-7332.vercel.app"
+      },
+      "note": "No exact-head Preview exists for the current PR heads or latest audit branch head. The READY preview is stale and must not be used as evidence for current code. Browser E2E on current candidates remains NOT RUN."
+    },
+    "acceptance_policy": "No separate independent PR-review prerequisite in D’Lice project instructions or PR descriptions. Repository ruleset still has reviewer-related enforcement; this has not been disabled because the connected GitHub integration exposes no ruleset write action. Feature acceptance itself is based on measurable exact-head automated tests, database replay, runtime authorization, business E2E, fault injection and persisted-data reconciliation. Staging Environment protection, secret handling, explicit mutation authorization and backup/rollback remain separate release controls.",
+    "staging_environment_verification": {
+      "environment_protection": "NOT VERIFIED; GitHub Environment endpoint is not exposed by the connected GitHub integration",
+      "service_role_secret_presence": "NOT VERIFIED; GitHub secrets endpoints are not exposed; secret value was not read",
+      "main_workflow": "workflow_dispatch exists on main but still references legacy Tenant A/B username/password secrets",
+      "staging_workflow": "staging branch workflow_dispatch still references legacy Tenant A/B username/password secrets",
+      "passwordless_candidate_workflow": "PR #126 branch uses existing Auth emails and STAGING_SUPABASE_SERVICE_ROLE_KEY; job guard requires refs/heads/staging, so the PR branch cannot execute it",
+      "workflow_dispatch": "NOT RUN; connected GitHub tool exposes no dispatch action",
+      "next_safe_step": "After Environment protection and secret presence are verified, port only the passwordless workflow plus its test script/helper into a test-only staging change. Do not merge PR #126 wholesale just to make the workflow available; it also contains tenant/invitation code and a migration."
+    },
+    "pr120_pr124_consolidation": {
+      "target_branch": "feat/permission-change-atomic-audit-20261121",
+      "current_head": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+      "pr124_state": "CLOSED_SUPERSEDED_BY_PR120",
+      "ci": {
+        "quality": "PASS",
+        "kds_contract": "PASS",
+        "cors_contract": "PASS",
+        "procurement_requisition_contract": "PASS",
+        "procurement_receiving_contract": "PASS",
+        "disposable_migration_replay": "PASS",
+        "database_contract_tests": "PASS — 7 files / 124 assertions",
+        "total_pg_tap_assertions": 124
+      },
+      "remaining": [
+        "Real staging mutation-path runtime tests not run.",
+        "Supabase native leaked-password protection remains disabled; direct Auth API password mutation can bypass the application guard.",
+        "Auth Admin and Postgres audit are tracked by durable intent/outcome; they are not a single distributed transaction."
+      ]
+    },
+    "order_lifecycle_prs": {
+      "pr123": {
+        "head": "6788c4d7da34144d279da06edea84f6d0763b796",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "contracts": "PASS",
+        "runtime_retry_concurrency_and_late_webhook_e2e": "NOT RUN",
+        "migration_version": "20261121130000"
+      },
+      "pr125": {
+        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "CLOSED_SUPERSEDED_BY_PR127",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "expiry_worker_runtime": "NOT RUN"
+      },
+      "pr127": {
+        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "OPEN_DRAFT",
+        "quality": "PASS",
+        "disposable_migration_replay": "PASS",
+        "cors_kds_procurement_contracts": "PASS",
+        "payment_proof_and_supersession_runtime_e2e": "NOT RUN"
+      }
+    },
+    "pr120": {
+      "head_sha": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+      "state": "OPEN_DRAFT",
+      "quality": "PASS",
+      "cors": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition": "PASS",
+      "procurement_receiving": "PASS",
+      "disposable_migration_replay": "PASS",
+      "pg_tap_files": 10,
+      "pg_tap_assertions": 206,
+      "replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
+    },
+    "pr126": {
+      "head_sha": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
+      "state": "OPEN_DRAFT",
+      "quality": "PASS",
+      "cors": "PASS",
+      "kds_contract": "PASS",
+      "procurement_requisition": "PASS",
+      "procurement_receiving": "PASS",
+      "disposable_migration_replay": "PASS",
+      "pg_tap_files": 7,
+      "pg_tap_assertions": 139,
+      "replay_run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844",
+      "p01_p09": "NOT RUN",
+      "test_harness_updates": [
+        "P01/P02 evidence scope correction",
+        "P08/P09 postcondition verifies zero persisted stock_transfers rows after denied write",
+        "new sb_secret_ keys use apikey only; legacy service_role JWTs use apikey plus Authorization Bearer"
+      ]
+    },
+    "open_pr_count": 20,
+    "latest_test_execution": {
+      "as_of": "2026-11-21 21:18 WIB",
+      "combined_migration": {
+        "branch": "audit/combined-migration-replay-20261121",
+        "commit": "700c2edf2f5f1bee2e5ac4c3afaece7c60efb3e3",
+        "source_migrations": 60,
+        "pg_tap_files": 14,
+        "assertions": 270,
+        "status": "PASS",
+        "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911080939"
+      },
+      "pull_requests": {
+        "120": {
+          "head": "223e0ad22e1eac15394ec9b2025ba4aaaa153108",
+          "quality": "PASS",
+          "cors": "PASS",
+          "kds_contract": "PASS",
+          "procurement_requisition": "PASS",
+          "procurement_receiving": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 10,
+          "assertions": 206,
+          "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44911690345"
+        },
+        "123": {
+          "head": "9024f2ce6067fe4252f5110942017e27ac1ed7b5",
+          "required_workflows": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 5,
+          "assertions": 74
+        },
+        "126": {
+          "head": "8d811f6e5856ddc2034abcc2f0cc5f49b36e09a9",
+          "quality": "PASS",
+          "cors": "PASS",
+          "kds_contract": "PASS",
+          "procurement_requisition": "PASS",
+          "procurement_receiving": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 7,
+          "assertions": 139,
+          "run": "https://github.com/dlice8888/dlice-landing-page/actions/runs/44912882844",
+          "p01_p09": "NOT RUN"
+        },
+        "127": {
+          "head": "e52ea75a218eedecc513ec52311adaee25f241ba",
+          "required_workflows": "PASS",
+          "disposable_replay": "PASS",
+          "pg_tap_files": 7,
+          "assertions": 124
+        }
+      },
+      "migration_parity": {
+        "applied_staging": 49,
+        "staging_source_files": 52,
+        "source_only": [
+          "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
+          "20261120110000_command_center_summary.sql",
+          "20261120120000_atomic_branch_checklist_audit.sql"
+        ],
+        "candidate_combined_source_files": 60,
+        "divergent_same_version_collisions": 0
+      },
+      "supersession": {
+        "pr124": "CLOSED_UNMERGED_SUPERSEDED_BY_PR120",
+        "pr125": "CLOSED_UNMERGED_SUPERSEDED_BY_PR127",
+        "identical_invitation_migration_blob": "b9dab9b7027e51bd5a4069b854b65a14563df6eb",
+        "identical_expiry_migration_blob": "c1d1de05b61055a0003a889d70b5e41a298caffd"
+      },
+      "staging_runtime": {
+        "p01_p09": "NOT RUN",
+        "reason": [
+          "staging Environment protection not verified",
+          "STAGING_SUPABASE_SERVICE_ROLE_KEY presence not verifiable through connected GitHub tools",
+          "workflow_dispatch action not exposed"
+        ],
+        "release_flags": {
+          "TENANT_ISOLATION_RELEASED": false,
+          "PUBLIC_TENANT_ROUTING_RELEASED": false
+        }
+      }
+    },
+    "deployed_edge_function": {
+      "slug": "dlice-orders",
+      "status": "ACTIVE",
+      "version": 70,
+      "sha256": "597a371d2c05cbfa7b0e04a749e422bf826667b4539ce2b44ffe0a2efb0ff9f6",
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false,
+      "inventory_read": "erp-list-inventory checks branchAccess (active tenant membership + active branch assignment) before querying branch_inventory and returns only referenced item metadata",
+      "stock_transfer_create": "erp-create-stock-transfer checks branchAccess for both source and destination branch and calls erp_create_stock_transfer with an idempotency key",
+      "stock_transfer_transition": "approval enforces same-tenant source/destination unless platform owner; other transitions require branch access",
+      "admin_mutations": "admin-set-permissions, admin-create-staff and admin-reset-staff-password remain behind the uncertified-action 423 gate for non-platform owners",
+      "invitation": "deployed v70 still contains the legacy multi-step invitation route; atomic invitation route is candidate-only in PR #120/#126 and is not deployed"
+    },
+    "github_ruleset": {
+      "id": 27559290,
+      "name": "Ruleset",
+      "enforcement": "active",
+      "target": "branch",
+      "current_user_can_bypass": "always",
+      "required_approving_review_count": 0,
+      "required_reviewers": [],
+      "require_code_owner_review": true,
+      "require_last_push_approval": true,
+      "require_review_thread_resolution": true,
+      "require_extra_approval_for_unattributed_changes": true,
+      "copilot_code_review": {
+        "review_on_push": true,
+        "review_draft_pull_requests": true
+      },
+      "required_status_checks": [],
+      "required_deployment_environments": [],
+      "branch_protection_api": "403 Resource not accessible by integration",
+      "mutation_capability": "No GitHub ruleset update/write action is exposed by the connected integration; settings were not changed",
+      "status": "MISALIGNED_WITH_TEST_ONLY_POLICY"
+    }
+  },
+  "latest_reaudit": {
+    "feature_distribution": {
+      "PARTIAL": 95,
+      "NOT VERIFIED": 88,
+      "BLOCKED": 6,
+      "DONE": 0,
+      "TOTAL": 189
+    }
+  },
+  "vercel": {
+    "project": "dlice-landing-page",
+    "exact_head_previews": {
+      "pr120": {
+        "sha": "471f4a330a4da0cb13afe60ddeeb520e28dc0e88",
+        "state": "NOT FOUND"
+      },
+      "pr123": {
+        "sha": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
+        "state": "READY",
+        "url": "https://dlice-landing-page-loho5y7oz-dlice8888-7332.vercel.app"
+      },
+      "pr125": {
+        "sha": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
+        "state": "READY",
+        "url": "https://dlice-landing-page-96j5eiu7k-dlice8888-7332.vercel.app"
+      },
+      "pr126": {
+        "sha": "07d7c51c2cbea21b9cd49a480614e004fe7bf417",
+        "state": "NOT FOUND"
+      },
+      "pr127": {
+        "sha": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
+        "state": "NOT FOUND"
+      }
+    },
+    "production_changed": false
+  },
+  "latest_staging_acceptance": {
+    "workflow": "Staging Tenant Isolation Acceptance",
+    "run_id": 45017642887,
+    "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
+    "commit": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "executed_at": "2026-11-22T11:30:20Z",
+    "status": "FAIL",
+    "required_probe_counts": {
+      "PASS": 2,
+      "FAIL": 1,
+      "BLOCKED": 6,
+      "SKIPPED": 0
+    },
+    "probes": {
+      "P01": "PASS",
+      "P02": "PASS",
+      "P03": "FAIL",
+      "P04": "BLOCKED",
+      "P05": "BLOCKED",
+      "P06": "BLOCKED",
+      "P07": "BLOCKED",
+      "P08": "BLOCKED",
+      "P09": "BLOCKED"
+    },
+    "p03_http_status": {
+      "tenant_a_membership": 503,
+      "tenant_b_membership": 503,
+      "tenant_a_branches": 200,
+      "tenant_b_branches": 200
+    },
+    "supplemental_blocked": 6,
+    "temporary_auth_sessions_revoked": {
+      "tenant_a_http_status": 204,
+      "tenant_b_http_status": 204
+    },
+    "evidence_artifact": {
+      "name": "staging-tenant-isolation-evidence-45017642887-1",
+      "expires_at": "2026-12-22T11:30:40Z",
+      "secret_values_printed": false
+    },
+    "no_staging_migration_or_function_deployment": true,
+    "no_production_change": true,
+    "acceptance": "NOT ACCEPTED; fix the P03 membership endpoint and rerun all nine probes"
+  },
+  "latest_engineering_gate_update": {
+    "observed_at": "2026-11-22T11:30:20Z",
+    "staging_head": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "pr120": {
+      "state": "MERGED",
+      "checks": "PASS"
+    },
+    "pr121": {
+      "state": "OPEN",
+      "head": "feed093072b6a30402340477acc9beac689c3ba9",
+      "matrix_contract": "PASS",
+      "full_exact_head_ci": "PASS",
+      "quality_run": 45017916261,
+      "migration_replay_run": 45017914029
+    },
+    "repository_ruleset_count": 0,
+    "signature_or_independent_review_gate": false,
+    "classic_branch_protection": "NOT VERIFIED; API returned HTTP 403",
+    "staging_environment": {
+      "exists": true,
+      "protection_rules": [],
+      "deployment_branch_policy": null,
+      "secret_names": "NOT VERIFIABLE; API returned HTTP 403"
+    },
+    "production_changed": false
+  },
+  "latest_live_audit_2026_11_23": {
+    "as_of": "2026-11-23 00:05 WIB",
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_commit": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "feature_counts": {
+      "total": 189,
+      "partial": 95,
+      "not_verified": 88,
+      "blocked": 6,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 93
+    },
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "source_migration_files": 52,
+      "public_tables": 64,
+      "rls_enabled_tables": 64,
+      "rls_disabled_tables": 0,
+      "public_policies": 64,
+      "public_functions": 29,
+      "public_views": 0,
+      "public_function_execute": {
+        "anon": 0,
+        "authenticated": 0,
+        "service_role": 29
+      },
+      "active_tenant_memberships": 3,
+      "admin_profile_roles": {
+        "owner": 1,
+        "sales_admin": 3
+      },
+      "cron_jobs": [
+        {
+          "name": "dlice-operational-retention",
+          "schedule": "17 3 * * *",
+          "active": true
+        }
+      ],
+      "order_status_snapshot": [
+        {
+          "operational_status": "received",
+          "fulfillment_status": "unassigned",
+          "count": 7
+        }
+      ]
+    },
+    "supabase_advisors": {
+      "security": [
+        {
+          "level": "WARN",
+          "name": "auth_leaked_password_protection",
+          "count": 1
+        }
+      ],
+      "performance": [
+        {
+          "name": "unindexed_foreign_keys",
+          "count": 26
+        },
+        {
+          "name": "unused_index",
+          "count": 49
+        }
+      ],
+      "health": {
+        "findings": 0
+      }
+    },
+    "edge_function": {
+      "name": "dlice-orders",
+      "status": "ACTIVE",
+      "version": 70,
+      "verify_jwt": false,
+      "custom_handler_auth": true,
+      "sdk_version": "2.57.4"
+    },
+    "tenant_acceptance": {
+      "run_id": 45017642887,
+      "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
+      "status": "FAIL",
+      "probes": {
+        "P01": "PASS (existing run)",
+        "P02": "PASS (existing run)",
+        "P03": "FAIL (pre-fix; fixed in PR, runtime retest pending)",
+        "P04": "BLOCKED (pre-fix; retest pending)",
+        "P05": "BLOCKED (pre-fix; retest pending)",
+        "P06": "BLOCKED (pre-fix; retest pending)",
+        "P07": "BLOCKED (pre-fix; retest pending)",
+        "P08": "BLOCKED (pre-fix; retest pending)",
+        "P09": "BLOCKED (pre-fix; retest pending)"
+      },
+      "p03_membership_http_status": {
+        "tenant_a": 503,
+        "tenant_b": 503
+      },
+      "acceptance": "NOT ACCEPTED",
+      "implementation": {
+        "pr": 126,
+        "branch": "feat/tenant-direct-client-rls-contract-20261121",
+        "reconciled_commit": "cbe593c5e9f8c19a859551e538e94b4b9f02a383",
+        "latest_contract_test_commit": "1b0b95211a881a67f9df690073efc15c081453da",
+        "merge_base_staging": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
+        "p03_fix": "separate active tenant_memberships query and admin_profiles lookup by authenticated user_id; no invalid PostgREST embed",
+        "outdated_contract_test": "replaced assertion requiring invalid relationship embed with separate-query/fail-closed assertions",
+        "api_key_helper": "existing staging helper tests modern sb_secret_ apikey-only and legacy service_role Bearer compatibility",
+        "environment_preflight": "PASS for staging URL, public key, service-role key, and existing Tenant A/B IDs/branch codes on run 45017642887; no values printed",
+        "quality_checks": "PASS on exact latest commit 1b0b95211a881a67f9df690073efc15c081453da",
+        "vercel_preview": "READY on exact latest commit 1b0b95211a881a67f9df690073efc15c081453da",
+        "disposable_migration_replay": "IN_PROGRESS on commit cbe593c5e9f8c19a859551e538e94b4b9f02a383",
+        "shared_staging_edge_deployment": "NOT DEPLOYED — awaiting disposable replay and integration approval",
+        "runtime_p03_after_fix": "NOT RUN — staging Edge Function has not been deployed with the fix",
+        "release_flags": {
+          "TENANT_ISOLATION_RELEASED": false,
+          "PUBLIC_TENANT_ROUTING_RELEASED": false
+        }
+      }
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "project_id": "prj_A7097nEdgzi54NQRJ9NK2h2fxPLw",
+      "live": false,
+      "latest_preview": {
+        "state": "READY",
+        "branch": "feat/tenant-direct-client-rls-contract-20261121",
+        "sha": "8fe807b08fa7a25d53d2dee2f7890f151baff544"
+      },
+      "staging_preview": {
+        "state": "READY",
+        "branch": "staging",
+        "sha": "5f6fa00c7335247684f7d88410a0c506de49a5a9"
+      },
+      "sso_protection": {
+        "enabled": true,
+        "deploymentType": "all_except_custom_domains"
+      },
+      "password_protection": {
+        "enabled": false
+      },
+      "trusted_ip_protection": {
+        "enabled": false
+      }
+    },
+    "scope": "Read-only audit. No shared staging migration, Edge Function deployment, Auth mutation, Vercel configuration change, production change, merge, or release flag change.",
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "POS & Checkout",
+        "features": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Order Management",
+        "features": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Kitchen & Production",
+        "features": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "features": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "features": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "features": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "features": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "features": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "HR & Workforce",
+        "features": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "features": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "features": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "features": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "features": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "features": 20,
+        "partial": 12,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      }
+    ],
+    "reclassifications": [
+      {
+        "domain": "Admin, Identity & Access Control",
+        "requirement": "Owner/manager/no-permission/inactive identity probes",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "An existing negative/role suite reports 21 PASS / 0 FAIL. This is concrete test work, but it is not complete positive business E2E or live acceptance for all roles and inactive identities."
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "requirement": "Cross-tenant isolation",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "PR #126 adds direct-client RLS coverage (35 pgTAP assertions across 17 sensitive tables) and tenant-scoped Edge Function checks. Live Tenant A/B API probes remain incomplete; P03 currently fails and P04-P09 are blocked."
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "requirement": "Exact-origin CORS",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL",
+        "progress_percent": null,
+        "evidence": "Staging CORS runtime run 44307838539 passed registered-origin OPTIONS (200/exact ACAO), foreign-origin OPTIONS (403/no ACAO), and no-Origin OPTIONS (200/no ACAO). POST/authenticated action coverage and full endpoint regression remain outstanding."
+      }
+    ],
+    "snapshot_note": "Three features moved to PARTIAL because implementation/test evidence exists; no DONE status or weighted score was invented."
+  },
+  "latest_live_audit_2026_11_24": {
+    "as_of": "2026-11-24 00:00 WIB",
+    "repository": "dlice8888/dlice-landing-page",
+    "staging_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+    "feature_counts": {
+      "total": 189,
+      "partial": 95,
+      "not_verified": 88,
+      "blocked": 6,
+      "done": 0,
+      "scored_partial": 2,
+      "unscored_partial": 93
+    },
+    "domain_counts": [
+      {
+        "domain": "Executive Command Center",
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "POS & Checkout",
+        "total": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Order Management",
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Kitchen & Production",
+        "total": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Menu, Recipe & Product Engineering",
+        "total": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Inventory & Warehouse",
+        "total": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "total": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Branch Operations",
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Finance & Accounting",
+        "total": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1,
+        "done": 0
+      },
+      {
+        "domain": "HR & Workforce",
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "BI & Analytics",
+        "total": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Admin, Identity & Access Control",
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Integrations & Automation",
+        "total": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0,
+        "done": 0
+      },
+      {
+        "domain": "Quality, Compliance & Security",
+        "total": 20,
+        "partial": 12,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      }
+    ],
+    "github": {
+      "pr129": {
+        "state": "MERGED_TO_STAGING",
+        "quality_run": 45230589845,
+        "acceptance_run": 45230589775,
+        "exact_head": "02c32c31315725c7639f249978efc4b8d486cab5"
+      },
+      "open_pr_inventory_snapshot": [
+        127,
+        126,
+        123,
+        122,
+        121,
+        119,
+        118,
+        117,
+        116,
+        115,
+        114,
+        113,
+        112,
+        111,
+        109,
+        108,
+        107,
+        104,
+        71
+      ],
+      "note": "Open PR inventory is time-sensitive; do not treat the list as the full PRD gap inventory."
+    },
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 49,
+      "latest_applied_migration": "20261119182606",
+      "staging_source_migration_files": 52,
+      "public_tables": 64,
+      "rls_enabled_tables": 64,
+      "rls_disabled_tables": 0,
+      "table_rows": {
+        "orders": 7,
+        "payment_records": 6,
+        "order_reservations": 21,
+        "pos_sales": 6,
+        "pos_shifts": 7,
+        "kitchen_tickets": 6,
+        "kitchen_ticket_items": 6,
+        "stock_movements": 26,
+        "branch_inventory": 4,
+        "purchase_requisitions": 0,
+        "purchase_orders": 0,
+        "purchase_receipts": 0,
+        "production_batches": 0,
+        "production_consumptions": 0,
+        "payment_settlements": 0,
+        "cash_reconciliations": 0,
+        "finance_journal_entries": 0
+      },
+      "advisors": {
+        "security": [
+          {
+            "name": "auth_leaked_password_protection",
+            "level": "WARN",
+            "count": 1
+          }
+        ],
+        "performance": [
+          {
+            "name": "unindexed_foreign_keys",
+            "count": 26
+          },
+          {
+            "name": "unused_index",
+            "count": 49
+          }
+        ],
+        "health": {
+          "findings": 0
+        }
+      },
+      "edge_function": {
+        "name": "dlice-orders",
+        "status": "ACTIVE",
+        "version": 71,
+        "verify_jwt": false,
+        "custom_handler_auth": "getAdmin(req) present",
+        "TENANT_ISOLATION_RELEASED": false,
+        "PUBLIC_TENANT_ROUTING_RELEASED": false
+      }
+    },
+    "vercel": {
+      "project": "dlice-landing-page",
+      "deployment_id": "dpl_Drf4DVFuUGWUGDLUJ24Ydd6w9Wyd",
+      "preview_state": "READY",
+      "preview_commit": "02c32c31315725c7639f249978efc4b8d486cab5",
+      "note": "Preview readiness is not business E2E acceptance and does not authorize production release."
+    },
+    "unresolved": {
+      "business_e2e": [
+        "KDS/POS/Stock/Offline positive sale, ticket, recipe consumption, offline replay and reconciliation",
+        "Procurement requisition → approval → PO → GRN → stock ledger and AP reconciliation"
+      ],
+      "platform": [
+        "Native Supabase leaked-password protection disabled",
+        "26 unindexed foreign keys require workload/EXPLAIN review",
+        "49 unused indexes must be retained pending representative workload evidence",
+        "3 source-only staging migrations require per-migration parity/dependency review before application"
+      ],
+      "product": [
+        "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries have zero staging rows; positive workflows are not yet proven"
+      ],
+      "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
+    },
+    "scope": "Read-only current audit plus already-authorized PR #129 staging integration and its automated acceptance run. No production mutation, no additional shared staging mutation, no migration application, no Edge Function deployment, no Auth mutation, and no release-flag change."
+  }
 }
