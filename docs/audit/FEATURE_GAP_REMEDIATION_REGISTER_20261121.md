@@ -955,3 +955,20 @@ Do not apply these as a batch. Review migration dependencies/order and RPC grant
 - Migration parity remains 56 source / 49 applied / 7 source-only / 0 DB-only / 0 duplicates. No shared staging migration was applied.
 
 The feature status remains 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE. This current-head runtime result strengthens the tenant isolation evidence but does not close unrelated domain features or positive business E2E gaps.
+
+
+## Tenant isolation re-score — 24 November 2026
+
+The prior 38% score is superseded by the latest live staging acceptance on commit `666f2a432e236f15161cef8d2d9905279d0f5144` (run [45236931758](https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758)). The updated weighted score is **58% provisional**:
+
+| Dimension | Weight | Earned | Evidence / remaining gap |
+|---|---:|---:|---|
+| Code/UI | 20 | 3 | Server-side branch-scope foundation exists; full tenant-aware UI and all route coverage remain unverified |
+| Database/integrity | 20 | 15 | 64/64 public tables have RLS; 35 pgTAP assertions across 17 sensitive tables; cross-tenant denied-write postconditions prove zero transfer/item/stock-movement rows; Storage/cache/job coverage remains |
+| Authorization/scope | 15 | 10 | P01-P09 own-scope and cross-tenant read/write probes pass; supplemental RLS/RPC 6/6 and missing/invalid auth 230/230 pass; not all mutation routes/storage/jobs are covered |
+| Automated tests | 15 | 15 | Exact-head quality, tenant policy tests and 230 auth action probes pass |
+| Workflow E2E | 20 | 10 | P01-P09 live staging API acceptance 9/9 passes; this is not full browser workflow or positive commerce E2E |
+| Reconciliation/observability | 10 | 5 | Denied-write DB postconditions and session cleanup pass; Storage/cache/job and 150-branch operational reconciliation remain |
+| **Total** | **100** | **58** | **Provisional implementation progress, not release readiness** |
+
+Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Remaining acceptance: complete API mutation-route matrix, Storage/cache/background-job isolation, tenant invitation lifecycle, multi-branch/150-branch concurrency, browser E2E and full reconciliation.
