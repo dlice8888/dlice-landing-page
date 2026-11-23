@@ -156,8 +156,17 @@ test("inventory reads authorize the requested branch before any data query and s
 });
 
 
-test("P03 requires supported global sales_admin profiles, branch_manager tenant memberships, equal permissions, and allows multiple same-tenant branches", () => {
-  assert.ok(edgeSource.includes("admin_profiles(display_name,username,role)"));
+test("P03 resolves active tenant memberships and the authenticated actor profile without an invalid PostgREST embed", () => {
+  assert.ok(edgeSource.includes('admin.from("tenant_memberships")'));
+  assert.ok(edgeSource.includes('.eq("user_id",actor.user.id)'));
+  assert.ok(edgeSource.includes('.eq("status","active")'));
+  assert.ok(edgeSource.includes('admin.from("admin_profiles")'));
+  assert.ok(edgeSource.includes('.maybeSingle()'));
+  assert.ok(edgeSource.includes('admin_profiles:{display_name:profile.display_name,username:profile.username,role:profile.role}'));
+  assert.ok(!edgeSource.includes("admin_profiles(display_name,username,role)"),
+    "membership query must not embed admin_profiles without a declared relationship");
+  assert.ok(edgeSource.includes("membershipError"),
+    "membership lookup failures must fail closed");
   // Global console role and tenant-scoped membership role are separate parts of the actual app model.
   const fixtureResolver = readFileSync("tests/runtime/tenant-fixture-discovery.mjs", "utf8");
   assert.ok(fixtureResolver.includes('membershipA?.admin_profiles?.role === "sales_admin"'));
