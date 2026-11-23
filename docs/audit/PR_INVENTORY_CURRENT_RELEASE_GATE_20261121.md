@@ -276,3 +276,12 @@ The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be27
 - Staging run `45017642887`: P01/P02 PASS, P03 FAIL on HTTP 503 from both membership lookups, P04–P09 BLOCKED; six supplemental probes BLOCKED. Temporary sessions were revoked (HTTP 204); no account/password change, migration, Edge Function deployment or production change was performed. Acceptance remains failed pending a fix and full rerun.
 - Historical ruleset observations below describe the 21 November snapshot only and are superseded for current policy state by this update.
 
+
+
+## Superseding live audit delta — 23 November 2026, 18:47 WIB
+
+- PR #121 matrix snapshot counts **95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE = 189**. Its exact-head commit `726a680b956496d8492c852577d573f4995b7ef9` has a READY Vercel Preview, but its Free quality checks failed because `tests/contracts/feature-matrix-contract.test.mjs` still expected 92/91/6 while the matrix contains 95/88/6. This is a metadata contract failure, not an application code failure.
+- On the existing audit branch, the contract assertion was updated to 95/88/6 and the remediation register was appended with the superseding snapshot. These are documentation/test-metadata changes only; no PR was merged.
+- PR #123, #126, #127 and #122 currently show successful exact-head quality/disposable replay and relevant contract workflows in the latest inspected run summaries. This does not prove live business E2E or staging acceptance.
+- Live staging still has 49 applied migrations and 52 source migration files; three source-only versions remain as documented in the migration reconciliation.
+- No merge, shared staging mutation, production deployment, or release-flag change was performed.
