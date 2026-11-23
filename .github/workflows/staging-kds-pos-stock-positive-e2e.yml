@@ -58,7 +58,7 @@ jobs:
           NODE
           then
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             echo "::error title=STAGING PREFLIGHT BLOCKED::Service-role key format is invalid; no business-flow mutations ran."
             exit 2
           fi
