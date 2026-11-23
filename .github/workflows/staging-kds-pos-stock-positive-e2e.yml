@@ -52,12 +52,16 @@ jobs:
             printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
-          node --input-type=module <<'NODE'
+          if ! node --input-type=module <<'NODE'
           import { isServiceRoleKey } from "./tests/runtime/supabase-api-key.mjs";
-          if (!isServiceRoleKey(process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY)) {
-            process.exitCode = 1;
-          }
+          if (!isServiceRoleKey(process.env.STAGING_SUPABASE_SERVICE_ROLE_KEY)) process.exit(1);
           NODE
+          then
+            mkdir -p artifacts
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\\n' > artifacts/kds-pos-stock-reconciliation.json
+            echo "::error title=STAGING PREFLIGHT BLOCKED::Service-role key format is invalid; no business-flow mutations ran."
+            exit 2
+          fi
       - name: Run POS → payment → KDS → recipe stock → report and offline replay E2E
         env:
           STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
