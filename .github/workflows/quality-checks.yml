@@ -59,6 +59,8 @@ jobs:
         run: node --test tests/contracts/admin-permission-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
         run: node --test tests/contracts/staging-secret-workflow-contract.test.mjs
+      - name: Verify passwordless positive-path staging E2E auth
+        run: node --test tests/contracts/staging-passwordless-e2e-contract.test.mjs
       - name: Verify tenant worker profile role boundary
         run: node --test tests/contracts/tenant-worker-profile-role-contract.test.mjs
       - name: Verify stock workflow RPC execute ACL boundary
