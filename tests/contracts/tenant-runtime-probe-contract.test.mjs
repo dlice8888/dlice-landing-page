@@ -102,7 +102,7 @@ test("verify_jwt=false custom auth negative probes cover every deployed admin an
   assert.ok(!actionAuthProbe.includes("STAGING_SUPABASE_SERVICE_ROLE_KEY"));
   assert.ok(actionAuthProbe.includes("responseBodiesLogged: false"));
   assert.ok(actionAuthProbe.includes("secretValuesPrinted: false"));
-  const actionNames = [...new Set([...edgeSource.matchAll(/action\\s*===\\s*"([^"]+)"/g)]
+  const actionNames = [...new Set([...edgeSource.matchAll(/action\s*===\s*"([^"]+)"/g)]
     .map((match) => match[1])
     .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")))];
   assert.equal(actionNames.length, 115, "action probe inventory must match the 115 current staging admin/ERP actions");
