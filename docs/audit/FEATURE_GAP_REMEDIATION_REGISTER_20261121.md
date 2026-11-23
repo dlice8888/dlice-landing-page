@@ -866,3 +866,15 @@ The authoritative feature-level matrix now counts **92 PARTIAL, 91 NOT VERIFIED,
 PR consolidation: #124 is CLOSED as superseded by #120; #125 is CLOSED as superseded by #127. The canonical execution PRs remain #120, #123, #126 and #127. PR #120 exact-head disposable replay passed 7 SQL test files / 124 assertions. PR #126 exact-head disposable replay passed 7 SQL test files / 134 assertions, including the 15 invitation assertions. PR #123 and #127 exact-head quality/replay/contract workflows passed. No shared-staging migration or production mutation was performed.
 
 Tenant A/B identities and active tenant/branch mappings have been confirmed read-only in Supabase. P01–P09 authentication and authorization probes remain NOT RUN because staging Environment protection and service-role secret presence are not verifiable through the current connector and no workflow-dispatch action is exposed. Do not count fixture discovery or disposable pgTAP as runtime acceptance.
+
+
+## Superseding live matrix snapshot — 23 November 2026, 00:05 WIB
+
+The machine-readable feature matrix at this snapshot is the current status source of truth and supersedes earlier distribution totals recorded above:
+
+- **189 features across 18 domains: 95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE.**
+- The three net reclassifications from the prior 92/91/6 snapshot are retained as PARTIAL because concrete implementation/source/schema evidence exists; none is accepted as DONE.
+- **2 of 95 PARTIAL features have evidence-backed numeric progress** (tenant/member isolation 38%; tenant directory/onboarding 30%). **93 PARTIAL features remain unscored** until all six weighted evidence dimensions are decomposed. Do not invent percentages.
+- Current release flags remain `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+- The live Supabase staging migration history has 49 entries through `20261119182606`; the repository staging source has 52 migrations. The three source-only migrations are `20261120100000`, `20261120110000`, and `20261120120000`. No shared staging migration was applied in this audit.
+- This is a documentation/test-metadata correction only. It does not assert new runtime acceptance or authorize staging/production mutations.
