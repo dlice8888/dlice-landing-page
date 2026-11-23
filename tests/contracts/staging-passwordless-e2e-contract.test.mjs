@@ -3,12 +3,13 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../../", import.meta.url);
-const [kdsWorkflow, procurementWorkflow, kdsScript, procurementScript, authHelper] = await Promise.all([
+const [kdsWorkflow, procurementWorkflow, kdsScript, procurementScript, authHelper, tenantWorkflow] = await Promise.all([
   readFile(new URL(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", root), "utf8"),
   readFile(new URL(".github/workflows/staging-procurement-positive-e2e.yml", root), "utf8"),
   readFile(new URL("tests/staging/kds-pos-stock-positive.mjs", root), "utf8"),
   readFile(new URL("tests/staging/procurement-receiving-positive.mjs", root), "utf8"),
   readFile(new URL("tests/runtime/staging-passwordless-auth.mjs", root), "utf8"),
+  readFile(new URL(".github/workflows/staging-tenant-isolation-acceptance.yml", root), "utf8"),
 ]);
 
 test("positive-path staging workflows require explicit staging-only manual mutation confirmation", () => {
@@ -45,4 +46,21 @@ test("passwordless helper uses Admin lookup + generate_link + verify without cre
   assert.doesNotMatch(authHelper, /admin\/users["']?\s*,\s*\{/);
   assert.doesNotMatch(authHelper, /updateUserById|createUser|password:/);
   assert.doesNotMatch(authHelper, /console\.(?:log|info|warn|error).*?(?:token|email|secret|key)/i);
+});
+
+
+test("P01-P09 acceptance reruns when Edge Function, migrations or positive E2E auth harness changes", () => {
+  assert.match(tenantWorkflow, /push:/);
+  assert.match(tenantWorkflow, /branches:\s*\n\s+- staging/);
+  assert.match(tenantWorkflow, /workflow_dispatch:/);
+  for (const path of [
+    "supabase/functions/dlice-orders/**",
+    "supabase/migrations/**",
+    "tests/runtime/staging-passwordless-auth.mjs",
+    "tests/staging/kds-pos-stock-positive.mjs",
+    "tests/staging/procurement-receiving-positive.mjs",
+    ".github/workflows/staging-kds-pos-stock-positive-e2e.yml",
+    ".github/workflows/staging-procurement-positive-e2e.yml",
+  ]) assert.ok(tenantWorkflow.includes(path), `tenant acceptance trigger must cover ${path}`);
+  assert.match(tenantWorkflow, /github\.ref\s*==\s*'refs\/heads\/staging'/);
 });
