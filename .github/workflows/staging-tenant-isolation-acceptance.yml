@@ -11,6 +11,13 @@ on:
       - tests/runtime/dlice-tenant-jwt-isolation.mjs
       - tests/runtime/supabase-api-key.mjs
       - tests/runtime/dlice-orders-auth-action-probes.mjs
+      - tests/runtime/staging-passwordless-auth.mjs
+      - tests/staging/kds-pos-stock-positive.mjs
+      - tests/staging/procurement-receiving-positive.mjs
+      - .github/workflows/staging-kds-pos-stock-positive-e2e.yml
+      - .github/workflows/staging-procurement-positive-e2e.yml
+      - supabase/functions/dlice-orders/**
+      - supabase/migrations/**
   workflow_dispatch:
 
 permissions:
