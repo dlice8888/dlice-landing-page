@@ -39,7 +39,9 @@ jobs:
       - name: Run POS checkout API contracts
         run: node --test tests/contracts/pos-checkout-lifecycle-contract.test.mjs
       - uses: supabase/setup-cli@v1
+        id: setup-supabase-cli
       - name: Start isolated local Supabase stack
+        id: start-local-stack
         run: supabase start -x studio,mailpit,storage-api,edge-runtime,logflare,vector
       - name: Replay every migration and run all pgTAP database contracts
         run: |
@@ -47,5 +49,5 @@ jobs:
           supabase db reset --local
           supabase test db --local
       - name: Stop isolated local Supabase stack
-        if: always()
+        if: always() && steps.start-local-stack.outcome == 'success'
         run: supabase stop --no-backup
