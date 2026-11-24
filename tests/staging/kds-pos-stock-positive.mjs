@@ -56,6 +56,7 @@ let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
 let modifierId = null;
+let modifierCode = "";
 let modifierTouched = false;
 let splitSaleId = null;
 
@@ -235,7 +236,7 @@ async function main() {
   const beforeSecond = balanceOf(inventory, secondIngredientId);
   assert.ok(beforeFlour >= 100 && beforeSecond >= 20, "QA recipe stock must be available");
 
-  const modifierCode = `qa-${suffix.replace(/[^a-z0-9]/gi, "").slice(-20).toLowerCase()}`;
+  modifierCode = `qa-${suffix.replace(/[^a-z0-9]/gi, "").slice(-20).toLowerCase()}`;
   const modifierResult = await call("erp-save-product-modifier", {
     product_id: productId, modifier_group: "qa-e2e", modifier_code: modifierCode,
     name: "QA E2E modifier", price_delta_idr: 25, is_required: false, is_active: true,
@@ -331,8 +332,7 @@ async function main() {
     second_ingredient_before: beforeSecond, second_ingredient_after: afterSecond,
   });
 
-  // Close only the shift created by this run; waste and checklist workflows have separate tests.
-  await closeCreatedShift();
+  // Keep the shift open through split-tender and held-order acceptance; finally closes only a shift created by this run.
 
   const sales = await call("erp-list-sales", { branch_id: branchId }, managerToken);
   assert.equal((sales.sales || []).filter((row) => row.id === saleId).length, 1, "Sales report must show exactly one sale");
