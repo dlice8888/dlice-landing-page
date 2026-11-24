@@ -6,7 +6,7 @@ const edge = await readFile("supabase/functions/dlice-orders/index.ts", "utf8");
 const erp = await readFile("erp.html", "utf8");
 const migration = await readFile("supabase/migrations/20261119155309_add_branch_worker_profile_role.sql", "utf8");
 const workflow = await readFile(".github/workflows/quality-checks.yml", "utf8");
-const assignmentMigration = await readFile("supabase/migrations/20261121170000_atomic_branch_assignment_audit.sql", "utf8");
+const assignmentMigration = await readFile("supabase/migrations/20261124121124_atomic_branch_assignment_audit.sql", "utf8");
 
 test("branch_worker is a non-owner identity classification, not a permission grant", () => {
   assert.match(migration, /'sales_admin'::text,\s*'branch_worker'::text,\s*'owner'::text/);
