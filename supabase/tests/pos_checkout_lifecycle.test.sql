@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(40);
+SELECT plan(45);
 
 SELECT ok(to_regclass('public.pos_sale_tenders') IS NOT NULL, 'split tender ledger table exists');
 SELECT ok(to_regclass('public.pos_checkout_idempotency_requests') IS NOT NULL, 'split checkout idempotency table exists');
@@ -76,6 +76,26 @@ SELECT ok(EXISTS (
   WHERE conrelid='public.pos_sale_tenders'::regclass
     AND conname='pos_sale_tenders_sale_branch_fkey'
 ), 'tender sale/branch composite FK prevents cross-branch attachment');
+SELECT ok(EXISTS (
+  SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_sale_tenders'::regclass
+    AND conname='pos_sale_tenders_payment_method_check'
+), 'tender ledger restricts methods to supported POS tenders');
+SELECT ok(EXISTS (
+  SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_sale_tenders'::regclass
+    AND conname='pos_sale_tenders_amount_idr_check'
+), 'tender ledger rejects zero or negative amounts');
+SELECT ok(EXISTS (
+  SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_checkout_idempotency_requests'::regclass
+    AND conname='pos_checkout_idempotency_actor_key'
+), 'split checkout idempotency key is unique per branch and actor');
+SELECT ok(EXISTS (
+  SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_held_orders'::regclass
+    AND conname='pos_held_orders_branch_actor_key'
+), 'hold key is unique per branch and cashier');
+SELECT ok(EXISTS (
+  SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_sale_receipts'::regclass
+    AND conname='pos_sale_receipts_sale_key'
+), 'receipt snapshot is unique per committed sale');
 
 SELECT * FROM finish();
 ROLLBACK;
