@@ -79,3 +79,20 @@ test("new POS tables and RPCs remain service-role-only with RLS", () => {
     assert.match(fn, /SET search_path = public/);
   }
 });
+
+test("cashier UI exposes modifier, split tender, hold/resume and receipt actions", async () => {
+  const ui = await readFile(new URL("../../erp.html", import.meta.url), "utf8");
+  for (const marker of [
+    "erp-list-pos-modifiers", "erp-list-held-pos-orders", "erp-create-pos-sale-split",
+    "erp-hold-pos-order", "erp-resume-pos-order", "erp-get-pos-receipt",
+    "posSplitTender", "holdPosOrder", "printPosReceipt",
+  ]) assert.ok(ui.includes(marker), `ERP POS UI missing ${marker}`);
+});
+
+test("offline replay supports split tender with the same operation idempotency key", () => {
+  const block = actionBlock("erp-sync-offline-operation", "erp-reconcile-pos-sale");
+  assert.match(block, /operation\.tenders/);
+  assert.match(block, /erp_create_pos_sale_split_tender_idempotent/);
+  assert.match(block, /p_idempotency_key:key/);
+  assert.match(block, /offline_sync_receipts/);
+});
