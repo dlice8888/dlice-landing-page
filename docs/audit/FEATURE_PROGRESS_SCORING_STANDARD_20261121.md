@@ -125,3 +125,13 @@ The prior 38% score is superseded by the latest live staging acceptance on commi
 | **Total** | **100** | **58** | **Provisional implementation progress, not release readiness** |
 
 Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Remaining acceptance: complete API mutation-route matrix, Storage/cache/background-job isolation, tenant invitation lifecycle, multi-branch/150-branch concurrency, browser E2E and full reconciliation.
+
+
+## Latest staging evidence — 24 November 2026, 07:25 WIB
+
+- Current staging head: `abea9ffd4d7b198e88d0a19d906d912fa45bc35a`.
+- Tenant isolation acceptance: [run 45296840751](https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840751), P01–P09 9/9 PASS, 0 FAIL/BLOCKED/SKIPPED; supplemental RLS/RPC 6/6 PASS; 115 actions × missing/invalid credentials = 230/230 PASS; Tenant A/B temporary sessions revoked HTTP 204.
+- Quality [run 45296840721](https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840721) and KDS contract [run 45296840724](https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840724) PASS. Vercel exact-head Preview READY (deployment `dpl_D9NVHeXQ9tBx1f37h6t6kMf6wcHV`).
+- PR #136 merged 24 FK covering indexes for 26 constraints; exact-head disposable replay applied all 58 source migrations and passed 11 pgTAP files / 234 tests. Shared Supabase staging still has 49 applied versions and 9 source-only migrations; no shared DB migration was applied.
+- Feature counts: 189 total, 95 PARTIAL, 88 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two PARTIAL scores remain 58% and 30%; 93 PARTIAL features remain unscored. Domain partial-coverage ratios are published in the remediation register but are not weighted completion scores.
+- Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.

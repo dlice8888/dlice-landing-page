@@ -322,9 +322,10 @@ This section supersedes the 21-November open-PR table where it conflicts with li
 | PR | Target | Head SHA (short) | Live base SHA (short) | Disposition |
 |---:|---|---|---|---|
 | #127 payment-proof atomicity | staging | `e52ea75` | `78f929d` | Highest transaction integrity priority after #123/#126 reconciliation; overlaps `dlice-orders/index.ts`, `quality-checks.yml`, `disposable-migration-replay.yml`, `index.html`; 3-way migration/test review required |
-| #126 direct-client tenant RLS | staging | `1b0b952` | `5f6fa00` | Security P0; overlaps #123/#127/#109/#71 on `dlice-orders/index.ts`; must revalidate against P01-P09 baseline |
+| #126 direct-client tenant RLS | CLOSED | `1b0b952` | `5f6fa00` | Superseded by PR #128 current P03 implementation; closed 24-Nov to avoid reverting actor.profile reuse and current no-embed contract |
 | #123 online-order idempotency | staging | `9024f2c` | `78f929d` | Order integrity P0; overlaps #127 on workflow/index files and #126/#109/#71 on Edge Function |
 | #122 FK covering indexes | staging | `5aff3ee` | `78f929d` | Performance P1; inspect EXPLAIN/workload and disposable replay; do not drop unused indexes without evidence |
+| #136 FK covering-index remediation rebased | staging | `248d10a` | `ac6002b` | Current-head replacement for stale #122; 24 indexes cover 26 FK constraints; exact-head quality/KDS PASS; disposable replay pending after port-collision mitigation |
 | #119 scheduled policy audit | main | `c58f122` | `2964ae7` | Main-only security change; review against #118/#113; do not merge into staging as a substitute |
 | #118 manual staging mutation confirmation | staging | `5929426` | `78f929d` | Policy overlap with #130; compare exact workflow semantics, preserve explicit confirmation and no scheduled mutation |
 | #114 cross-module tenant acceptance | staging | `0cb3bee` | `78f929d` | Overlaps #111/#71 on tenant probe scripts and #112/#123/#127 on quality workflow; rebase and prove coverage not duplicate |
@@ -361,3 +362,53 @@ This section supersedes the 21-November open-PR table where it conflicts with li
 8. For each selected PR: rebase/merge conflict resolution → exact-head quality → disposable migration replay → targeted runtime tests → DB reconciliation → only then staging integration. No mass merge.
 
 No PR is merged by this inventory refresh. No migrations, Auth metadata, Edge Function, shared staging data, Vercel production target or release flags are changed.
+
+
+### 24-November disposition delta
+- PR #126 is closed as superseded by #128; it must not be merged because its branch uses a stale separate profile lookup implementation.
+- PR #136 is the current rebased replacement for #122. It adds the two migrations and 28-assertion FK index test on current staging. Quality and KDS contract pass; exact-head disposable replay remains pending after a runner port collision was mitigated by moving the port block below the ephemeral range.
+- Current open PR count remains 18 (one stale PR closed, one replacement PR opened).
+
+
+---
+
+## Final live PR checkpoint — after PR #136 merge, 24 November 2026
+
+This section supersedes every earlier open-PR count and disposition above.
+
+- Staging head before this documentation PR: `abea9ffd4d7b198e88d0a19d906d912fa45bc35a`.
+- PR #136 is **MERGED** to staging. Exact-head quality, KDS contract and disposable replay all passed. Disposable replay applied **58 migration files** and passed **11 pgTAP files / 234 tests**, including the FK covering-index suite.
+- PR #122 is **CLOSED** as superseded by #136.
+- PR #126 is **CLOSED** as superseded by #128's newer P03 actor-profile reuse implementation.
+- Active non-documentation PRs remaining: **16** — #127, #123, #119, #118, #117, #116, #115, #114, #113, #112, #111, #109, #108, #107, #104 and #71. PR #137 is the current documentation-only inventory refresh and will close when this section merges.
+
+| PR | Target | Current disposition |
+|---:|---|---|
+| #127 | staging | Open; payment proof/expiry, shared Edge Function and migration dependencies; exact-head rebase/replay still required |
+| #123 | staging | Open; online-order idempotency; reconcile with #127 before integration |
+| #119 | main | Open; scheduled policy audit; compare with #113/#118 |
+| #118 | staging | Open; manual staging mutation confirmation; compare with merged #130 |
+| #117 | main | Open, merge conflict; OIDC rebase dependency |
+| #116 | main | Open, merge conflict; backup/reference branch |
+| #115 | main | Open; staging → main bulk promotion proposal; do not merge as a shortcut |
+| #114 | staging | Open; overlaps tenant probe scripts with #111/#71 |
+| #113 | main | Open; scheduled mutation bypass prevention; compare with #119 |
+| #112 | staging | Open; boolean platform_owner metadata hardening; exact-head SQL/ACL replay required |
+| #111 | staging | Open; OIDC tenant session broker; secret-free OIDC and runtime acceptance required |
+| #109 | staging | Open; same-tenant stock transfer enforcement; reconcile Edge Function against P01–P09 |
+| #108 | staging | Open; historical PR/file inventory; likely superseded by this refreshed inventory after review |
+| #107 | staging | Open; environment-validated frontend config; verify staging values without printing secrets |
+| #104 | main | Open; production CORS source parity; no production deployment |
+| #71 | staging | Open; historical tenant fixture workflow; compare against current passwordless acceptance harness before deciding supersession |
+
+### Updated integration order
+
+1. Reconcile #123 and #127 as a controlled dependency pair, reviewing all Edge Function handlers and migration ordering; exact-head disposable replay and positive workflow evidence required.
+2. Reconcile #109 against current tenant-boundary acceptance; do not weaken same-tenant source/destination authorization.
+3. Reconcile #112 Owner metadata hardening against current bootstrap-owner 403 contract.
+4. Resolve #111/#114/#71 overlap in tenant session issuance and runtime probes; carry forward only non-duplicated, current coverage.
+5. Compare #118 with merged #130 and #119/#113 to ensure no scheduled or unconfirmed mutation route exists.
+6. Review #122's index work through merged #136; shared staging DB application remains a separate approval gate. Retain remaining unused-index suggestions until workload/EXPLAIN evidence supports changes.
+7. Keep #115 out of production promotion; resolve #116/#117 conflicts only after OIDC dependency review.
+
+No mass merge. Every selected PR still requires current-base review, exact-head quality, disposable migration replay, targeted runtime tests, database reconciliation and explicit staging integration.

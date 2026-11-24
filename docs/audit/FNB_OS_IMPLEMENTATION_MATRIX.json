@@ -134,7 +134,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 40,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 2,
@@ -297,7 +306,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 13,
+        "partial": 7,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 53.8,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 3,
@@ -433,7 +451,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 80,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 4,
@@ -567,7 +594,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 70,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 5,
@@ -710,7 +746,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 11,
+        "partial": 7,
+        "not_verified": 3,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 63.6,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 6,
@@ -869,7 +914,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 12,
+        "partial": 10,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 83.3,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 7,
@@ -997,7 +1051,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 5,
+        "not_verified": 5,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 50,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 8,
@@ -1124,7 +1187,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 4,
+        "not_verified": 5,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 40,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 9,
@@ -1227,7 +1299,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 25,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 10,
@@ -1340,7 +1421,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 11.1,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 11,
@@ -1492,7 +1582,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 12,
+        "partial": 7,
+        "not_verified": 4,
+        "blocked": 1,
+        "done": 0
+      },
+      "partial_coverage_percent": 58.3,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 12,
@@ -1605,7 +1704,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 9,
+        "partial": 1,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 11.1,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 13,
@@ -1708,7 +1816,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 25,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 14,
@@ -1834,7 +1951,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 3,
+        "not_verified": 7,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 30,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 15,
@@ -1978,7 +2104,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 10,
+        "partial": 8,
+        "not_verified": 2,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 80,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 16,
@@ -2170,7 +2305,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 8,
+        "partial": 2,
+        "not_verified": 6,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 25,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 17,
@@ -2287,7 +2431,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 9,
+        "partial": 5,
+        "not_verified": 4,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 55.6,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
       "number": 18,
@@ -2540,7 +2693,16 @@
         }
       ],
       "status": "PARTIAL",
-      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation."
+      "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
+      "current_feature_counts": {
+        "total": 20,
+        "partial": 12,
+        "not_verified": 8,
+        "blocked": 0,
+        "done": 0
+      },
+      "partial_coverage_percent": 60,
+      "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     }
   ],
   "current_platform_evidence": {
@@ -3253,9 +3415,7 @@
   },
   "open_prs": [
     127,
-    126,
     123,
-    122,
     119,
     118,
     117,
@@ -3271,7 +3431,7 @@
     104,
     71
   ],
-  "open_pr_count": 18,
+  "open_pr_count": 16,
   "historical_snapshot_at": "2026-11-18T20:05:00+07:00",
   "current_reaudit": {
     "method": "Current read-only Supabase counts, current GitHub PR inventory/diffs, exact-head CI/status checks where available, and conservative PRD feature evidence. No feature is upgraded to PASS solely from schema presence, row counts, or static CI.",
@@ -3819,9 +3979,7 @@
   },
   "current_open_prs": [
     127,
-    126,
     123,
-    122,
     119,
     118,
     117,
@@ -4002,12 +4160,10 @@
     "actual_prs": 125,
     "merged": 77,
     "closed_without_merge": 28,
-    "open": 18,
+    "open": 16,
     "open_pr_numbers": [
       127,
-      126,
       123,
-      122,
       119,
       118,
       117,
@@ -4023,7 +4179,7 @@
       104,
       71
     ],
-    "updated_at": "2026-11-24"
+    "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
     "PARTIAL": 95,
@@ -4833,47 +4989,39 @@
   },
   "latest_staging_acceptance": {
     "workflow": "Staging Tenant Isolation Acceptance",
-    "run_id": 45017642887,
-    "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45017642887",
-    "commit": "5f6fa00c7335247684f7d88410a0c506de49a5a9",
-    "executed_at": "2026-11-22T11:30:20Z",
-    "status": "FAIL",
+    "run_id": 45296840751,
+    "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840751",
+    "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a",
+    "executed_at": "2026-11-24T00:24:46Z",
+    "status": "PASS",
     "required_probe_counts": {
-      "PASS": 2,
-      "FAIL": 1,
-      "BLOCKED": 6,
+      "PASS": 9,
+      "FAIL": 0,
+      "BLOCKED": 0,
+      "SKIPPED": 0,
+      "executed": 9
+    },
+    "supplemental_probe_counts": {
+      "PASS": 6,
+      "FAIL": 0,
+      "BLOCKED": 0,
       "SKIPPED": 0
     },
-    "probes": {
-      "P01": "PASS",
-      "P02": "PASS",
-      "P03": "FAIL",
-      "P04": "BLOCKED",
-      "P05": "BLOCKED",
-      "P06": "BLOCKED",
-      "P07": "BLOCKED",
-      "P08": "BLOCKED",
-      "P09": "BLOCKED"
+    "auth_action_probes": {
+      "actions": 115,
+      "requests": 230,
+      "passed": 230,
+      "failed": 0,
+      "expected_http_status": {
+        "default": 401,
+        "admin_bootstrap_owner": 403
+      }
     },
-    "p03_http_status": {
-      "tenant_a_membership": 503,
-      "tenant_b_membership": 503,
-      "tenant_a_branches": 200,
-      "tenant_b_branches": 200
+    "cleanup": {
+      "tenant_a_http": 204,
+      "tenant_b_http": 204
     },
-    "supplemental_blocked": 6,
-    "temporary_auth_sessions_revoked": {
-      "tenant_a_http_status": 204,
-      "tenant_b_http_status": 204
-    },
-    "evidence_artifact": {
-      "name": "staging-tenant-isolation-evidence-45017642887-1",
-      "expires_at": "2026-12-22T11:30:40Z",
-      "secret_values_printed": false
-    },
-    "no_staging_migration_or_function_deployment": true,
-    "no_production_change": true,
-    "acceptance": "NOT ACCEPTED; fix the P03 membership endpoint and rerun all nine probes"
+    "no_secret_values_printed": true
   },
   "latest_engineering_gate_update": {
     "observed_at": "2026-11-22T11:30:20Z",
@@ -5229,9 +5377,9 @@
     "snapshot_note": "Three features moved to PARTIAL because implementation/test evidence exists; no DONE status or weighted score was invented."
   },
   "latest_live_audit_2026_11_24": {
-    "as_of": "2026-11-24 00:00 WIB",
+    "as_of": "2026-11-24 07:25 WIB",
     "repository": "dlice8888/dlice-landing-page",
-    "staging_commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
+    "staging_commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a",
     "feature_counts": {
       "total": 189,
       "partial": 95,
@@ -5396,9 +5544,7 @@
       },
       "open_pr_inventory_snapshot": [
         127,
-        126,
         123,
-        122,
         119,
         118,
         117,
@@ -5417,16 +5563,28 @@
       "note": "Open PR inventory is time-sensitive; do not treat the list as the full PRD gap inventory.",
       "latest_workflow_runs": {
         "quality": {
-          "id": 45236931620,
+          "id": 45296840721,
           "status": "success",
-          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931620",
-          "commit": "666f2a432e236f15161cef8d2d9905279d0f5144"
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840721",
+          "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a"
         },
         "tenant_acceptance": {
-          "id": 45236931758,
+          "id": 45296840751,
           "status": "success",
-          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45236931758",
-          "commit": "666f2a432e236f15161cef8d2d9905279d0f5144"
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840751",
+          "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a"
+        },
+        "kds_contract": {
+          "id": 45296840724,
+          "status": "success",
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840724",
+          "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a"
+        },
+        "disposable_replay": {
+          "id": 45296840762,
+          "status": "success",
+          "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840762",
+          "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a"
         }
       },
       "pr_updates": {
@@ -5435,7 +5593,11 @@
         "pr129": "MERGED_TO_STAGING",
         "pr130": "MERGED_TO_STAGING",
         "pr131": "MERGED_TO_STAGING",
-        "pr132": "MERGED_TO_STAGING"
+        "pr132": "MERGED_TO_STAGING",
+        "pr126": "CLOSED_SUPERSEDED_BY_PR128",
+        "pr122": "CLOSED_SUPERSEDED_BY_PR136",
+        "pr136": "MERGED_TO_STAGING",
+        "pr137": "OPEN_DOC_REFRESH"
       }
     },
     "supabase_staging": {
@@ -5445,7 +5607,7 @@
       "postgres": "17.11.0.003",
       "applied_migrations": 49,
       "latest_applied_migration": "20261119182606",
-      "staging_source_migration_files": 56,
+      "staging_source_migration_files": 58,
       "public_tables": 64,
       "rls_enabled_tables": 64,
       "rls_disabled_tables": 0,
@@ -5479,11 +5641,13 @@
         "performance": [
           {
             "name": "unindexed_foreign_keys",
-            "count": 26
+            "count": 26,
+            "detail": "Shared staging DB remains unchanged; 24 covering indexes are merged in source and disposable replay passes, pending separately approved shared staging application."
           },
           {
             "name": "unused_index",
-            "count": 49
+            "count": 49,
+            "detail": "Retain until representative workload and EXPLAIN review."
           }
         ],
         "health": {
@@ -5504,21 +5668,25 @@
         "20261120110000_command_center_summary.sql",
         "20261120120000_atomic_branch_checklist_audit.sql",
         "20261121100000_atomic_admin_permission_audit.sql",
+        "20261121120000_add_fk_covering_indexes.sql",
         "20261121130000_atomic_tenant_invite_lifecycle.sql",
+        "20261121153000_remove_redundant_zero_scan_indexes.sql",
         "20261121160000_atomic_admin_profile_mutation_audit.sql",
         "20261121170000_atomic_branch_assignment_audit.sql"
       ],
       "migration_parity": {
-        "source_files": 56,
+        "source_files": 58,
         "applied_versions": 49,
         "latest_applied_version": "20261119182606",
-        "source_only_count": 7,
+        "source_only_count": 9,
         "source_only_files": [
           "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
           "20261120110000_command_center_summary.sql",
           "20261120120000_atomic_branch_checklist_audit.sql",
           "20261121100000_atomic_admin_permission_audit.sql",
+          "20261121120000_add_fk_covering_indexes.sql",
           "20261121130000_atomic_tenant_invite_lifecycle.sql",
+          "20261121153000_remove_redundant_zero_scan_indexes.sql",
           "20261121160000_atomic_admin_profile_mutation_audit.sql",
           "20261121170000_atomic_branch_assignment_audit.sql"
         ],
@@ -5528,13 +5696,13 @@
     },
     "vercel": {
       "project": "dlice-landing-page",
-      "deployment_id": "dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq",
-      "url": "https://dlice-landing-page-18x8bg86g-dlice8888-7332.vercel.app",
+      "deployment_id": "dpl_D9NVHeXQ9tBx1f37h6t6kMf6wcHV",
+      "url": "https://dlice-landing-page-6nn0a5g1b-dlice8888-7332.vercel.app",
       "state": "READY",
       "target": "PREVIEW",
-      "commit": "666f2a432e236f15161cef8d2d9905279d0f5144",
-      "inspector_url": "https://vercel.com/dlice8888-7332/dlice-landing-page/WA4PNxDM97qGxzT4Mva9sWG9xkQq",
-      "note": "Preview deployment only; no production target or production release."
+      "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a",
+      "inspector_url": "https://vercel.com/dlice8888-7332/dlice-landing-page/D9NVHeXQ9tBx1f37h6t6kMf6wcHV",
+      "note": "Preview only; no production release."
     },
     "unresolved": {
       "business_e2e": [
@@ -5542,23 +5710,23 @@
         "Procurement/Receiving positive flow: workflow authentication is now implemented with existing Owner and Tenant A identities, but manual execution and persisted reconciliation are still NOT RUN."
       ],
       "platform": [
-        "Native Supabase leaked-password protection disabled",
-        "26 unindexed foreign keys require workload/EXPLAIN review",
-        "49 unused indexes must be retained pending representative workload evidence",
-        "7 source-only staging migrations require per-file dependency/order review and exact-head disposable replay before any shared staging application"
+        "Native Supabase leaked-password protection disabled (1 security WARN); free-tier native setting unavailable/needs authorized platform decision.",
+        "26 FK constraints remain unindexed in shared staging DB; PR #136 adds 24 covering indexes for 26 constraints and exact-head disposable replay passes, but shared staging application remains separately gated.",
+        "49 unused-index suggestions remain; retain until representative workload and EXPLAIN evidence supports changes.",
+        "9 source-only migrations remain unapplied in shared staging; all 58 source migrations pass disposable replay."
       ],
       "product": [
         "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries have zero staging rows; positive workflows are not yet proven"
       ],
       "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
     },
-    "scope": "Latest read-only staging audit plus merged CI/workflow updates. PR #130 changed E2E workflow authentication only; PR #131/132 changed audit/trigger contracts. No shared staging migration, Auth metadata, Edge Function deployment, business data, production, or release flag mutation."
+    "scope": "Read-only Supabase audit, PR #136 source integration and exact-head disposable replay; P01-P09 rerun on current staging head. No shared staging migration, Auth metadata, Edge Function deployment, business data or production mutation."
   },
   "migration_reconciliation_2026_11_24": {
-    "observed_at": "2026-11-24",
+    "observed_at": "2026-11-24T00:24:46Z",
     "repository_branch": "staging",
-    "repository_commit": "b59432f5fadae6eb20811bd411a85431455ee227",
-    "source_migration_files": 56,
+    "repository_commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a",
+    "source_migration_files": 58,
     "applied_migration_versions": 49,
     "latest_applied_version": "20261119182606",
     "source_only_migrations": [
@@ -5566,14 +5734,24 @@
       "20261120110000_command_center_summary.sql",
       "20261120120000_atomic_branch_checklist_audit.sql",
       "20261121100000_atomic_admin_permission_audit.sql",
+      "20261121120000_add_fk_covering_indexes.sql",
       "20261121130000_atomic_tenant_invite_lifecycle.sql",
+      "20261121153000_remove_redundant_zero_scan_indexes.sql",
       "20261121160000_atomic_admin_profile_mutation_audit.sql",
       "20261121170000_atomic_branch_assignment_audit.sql"
     ],
-    "source_only_count": 7,
+    "source_only_count": 9,
     "database_only_versions": [],
     "duplicate_source_versions": [],
+    "disposable_replay": {
+      "run_id": 45296840762,
+      "status": "PASS",
+      "migrations_applied": 58,
+      "pgtap_files": 11,
+      "pgtap_tests": 234,
+      "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840762"
+    },
     "status": "SOURCE_AHEAD_OF_DATABASE",
-    "action": "Review each pending migration for dependencies, ordering, idempotency, tenant/RLS/RPC ACL, and rollback; run the full exact-head disposable replay; then apply only explicitly authorized staging migrations one-by-one. Do not batch-apply and do not touch production."
+    "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
   }
 }

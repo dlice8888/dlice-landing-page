@@ -23,27 +23,27 @@ The supplied 18-domain rows originally summed to **82 PARTIAL + 98 NOT VERIFIED 
 
 Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after concrete implementation began in PR #126. Five additional features moved to PARTIAL after the live schema/function audit confirmed implementation foundations. The current feature-level source of truth at the 24-November recount is **95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE = 189**. Older 92/91/6 narratives below are historical and superseded. Three previously BLOCKED features moved to PARTIAL after exact-head implementation and test evidence: duplicate/delayed order handling (#123/#125/#127), audited permission/profile/password mutations (#120), and application-layer leaked-password mitigation (#120). These are not DONE; runtime and platform gaps remain.
 
-| Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED |
-|---|---:|---:|---:|---:|
-| Executive Command Center | 10 | 4 | 5 | 1 |
-| POS & Checkout | 13 | 7 | 5 | 1 |
-| Order Management | 10 | 8 | 2 | 0 |
-| Kitchen & Production | 10 | 7 | 2 | 1 |
-| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 |
-| Inventory & Warehouse | 12 | 10 | 2 | 0 |
-| Procurement & Supplier | 10 | 5 | 5 | 0 |
-| Branch Operations | 10 | 4 | 5 | 1 |
-| Delivery & Fulfillment | 8 | 2 | 6 | 0 |
-| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 |
-| Finance & Accounting | 12 | 7 | 4 | 1 |
-| HR & Workforce | 9 | 1 | 8 | 0 |
-| Franchise & Expansion | 8 | 2 | 6 | 0 |
-| BI & Analytics | 10 | 3 | 7 | 0 |
-| Admin, Identity & Access Control | 10 | 8 | 2 | 0 |
-| SaaS Tenant Management | 8 | 2 | 6 | 0 |
-| Integrations & Automation | 9 | 5 | 4 | 0 |
-| Quality, Compliance & Security | 20 | 12 | 8 | 0 |
-| **TOTAL** | **189** | **95** | **88** | **6** |
+| Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED | DONE | Partial coverage* |
+|---|---:|---:|---:|---:|---:|---:|
+| Executive Command Center | 10 | 4 | 5 | 1 | 0 | 40.0% |
+| POS & Checkout | 13 | 7 | 5 | 1 | 0 | 53.8% |
+| Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% |
+| Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% |
+| Procurement & Supplier | 10 | 5 | 5 | 0 | 0 | 50.0% |
+| Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% |
+| Delivery & Fulfillment | 8 | 2 | 6 | 0 | 0 | 25.0% |
+| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 | 0 | 11.1% |
+| Finance & Accounting | 12 | 7 | 4 | 1 | 0 | 58.3% |
+| HR & Workforce | 9 | 1 | 8 | 0 | 0 | 11.1% |
+| Franchise & Expansion | 8 | 2 | 6 | 0 | 0 | 25.0% |
+| BI & Analytics | 10 | 3 | 7 | 0 | 0 | 30.0% |
+| Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% |
+| SaaS Tenant Management | 8 | 2 | 6 | 0 | 0 | 25.0% |
+| Integrations & Automation | 9 | 5 | 4 | 0 | 0 | 55.6% |
+| Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60.0% |
+| **TOTAL** | 189 | 95 | 88 | 6 | 0 | 50.3% |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -972,3 +972,13 @@ The prior 38% score is superseded by the latest live staging acceptance on commi
 | **Total** | **100** | **58** | **Provisional implementation progress, not release readiness** |
 
 Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Remaining acceptance: complete API mutation-route matrix, Storage/cache/background-job isolation, tenant invitation lifecycle, multi-branch/150-branch concurrency, browser E2E and full reconciliation.
+
+
+## Live refresh — 24 November 2026, 07:25 WIB
+
+- Current staging head: `abea9ffd4d7b198e88d0a19d906d912fa45bc35a`; quality PASS, KDS contract PASS, P01–P09 PASS 9/9, supplemental RLS/RPC 6/6, auth 230/230, temporary sessions revoked HTTP 204.
+- PR #136 merged: 24 covering indexes for 26 FK constraints. Exact-head disposable replay: 58 migrations applied, 11 pgTAP files / 234 tests PASS. Shared Supabase staging remains at 49 applied migrations; no shared migration was applied.
+- Migration parity is now 58 source / 49 applied / 9 source-only / 0 DB-only / 0 duplicate. The nine source-only files are: `20261120100000_atomic_owner_and_tenant_bootstrap.sql`, `20261120110000_command_center_summary.sql`, `20261120120000_atomic_branch_checklist_audit.sql`, `20261121100000_atomic_admin_permission_audit.sql`, `20261121120000_add_fk_covering_indexes.sql`, `20261121130000_atomic_tenant_invite_lifecycle.sql`, `20261121153000_remove_redundant_zero_scan_indexes.sql`, `20261121160000_atomic_admin_profile_mutation_audit.sql`, `20261121170000_atomic_branch_assignment_audit.sql`.
+- 18-domain counts remain 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE. Partial coverage is 95/189 = 50.3%; this is the share of features with implementation started, not weighted completion.
+- Only two PARTIAL features have evidence-based weighted scores: tenant/member isolation 58% provisional and tenant directory/onboarding 30% provisional. The other 93 PARTIAL features remain unscored until six-dimension criteria are decomposed; do not invent percentages.
+- Vercel Preview for exact staging head is READY: [deployment](https://vercel.com/dlice8888-7332/dlice-landing-page/D9NVHeXQ9tBx1f37h6t6kMf6wcHV). Preview is not production release or business workflow acceptance.
