@@ -2,7 +2,8 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 
-SELECT plan(23);
+SELECT plan(25);
+SELECT set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 SELECT set_config('request.jwt.claim.role', 'authenticated', true);
 
 SELECT throws_ok(
@@ -40,9 +41,12 @@ INSERT INTO auth.users (
 ) VALUES
   ('b0000000-0000-4000-8000-000000000011', 'authenticated', 'authenticated', 'bootstrap-test@accounts.dlice.internal', '', now(), '{"platform_owner":true}'::jsonb, '{}'::jsonb, now(), now()),
   ('b0000000-0000-4000-8000-000000000012', 'authenticated', 'authenticated', 'second-owner@accounts.dlice.internal', '', now(), '{"platform_owner":true}'::jsonb, '{}'::jsonb, now(), now()),
-  ('b0000000-0000-4000-8000-000000000013', 'authenticated', 'authenticated', 'legacy-owner@accounts.dlice.internal', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now())
+  ('b0000000-0000-4000-8000-000000000013', 'authenticated', 'authenticated', 'legacy-owner@accounts.dlice.internal', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('b0000000-0000-4000-8000-000000000014', 'authenticated', 'authenticated', 'string-owner@accounts.dlice.internal', '', now(), '{"platform_owner":"true"}'::jsonb, '{}'::jsonb, now(), now()),
+  ('b0000000-0000-4000-8000-000000000015', 'authenticated', 'authenticated', 'string-tenant-owner@accounts.dlice.internal', '', now(), '{"platform_owner":"true"}'::jsonb, '{}'::jsonb, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT set_config('request.jwt.claim.role', 'service_role', true);
 
 CREATE OR REPLACE FUNCTION public.test_reject_bootstrap_audit()
@@ -111,6 +115,13 @@ SELECT is(
   'records the owner bootstrap audit event'
 );
 SELECT throws_ok(
+  $$SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000014', 'string-owner')$$,
+  '22023',
+  'valid_owner_required',
+  'rejects the string "true" platform_owner metadata during initial bootstrap'
+);
+
+SELECT throws_ok(
   $$SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000012', 'second-owner')$$,
   '23505',
   'owner_already_bootstrapped',
@@ -168,6 +179,13 @@ INSERT INTO public.admin_profiles (
   'b0000000-0000-4000-8000-000000000013', 'legacy-owner', 'owner',
   'Legacy owner without platform metadata', true, '["*"]'::jsonb
 );
+
+INSERT INTO public.admin_profiles (
+  user_id, username, role, display_name, is_active, permissions
+) VALUES (
+  'b0000000-0000-4000-8000-000000000015', 'string-tenant-owner', 'owner',
+  'String platform owner metadata', true, '["*"]'::jsonb
+);
 SELECT throws_ok(
   $$SELECT public.dlice_create_tenant_with_owner(
     'b0000000-0000-4000-8000-000000000013', 'unauthorized-bootstrap-test', 'Unauthorized Bootstrap Test'
@@ -175,6 +193,15 @@ SELECT throws_ok(
   '42501',
   'active_platform_owner_required',
   'rejects tenant bootstrap without platform-owner Auth metadata'
+);
+
+SELECT throws_ok(
+  $$SELECT public.dlice_create_tenant_with_owner(
+    'b0000000-0000-4000-8000-000000000015', 'string-owner-bootstrap-test', 'String Owner Bootstrap Test'
+  )$$,
+  '42501',
+  'active_platform_owner_required',
+  'rejects the string "true" platform_owner metadata for tenant creation'
 );
 SELECT is(
   (SELECT count(*)::integer FROM public.tenants WHERE slug = 'unauthorized-bootstrap-test'),
