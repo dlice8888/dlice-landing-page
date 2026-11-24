@@ -88,6 +88,21 @@ CREATE TABLE public.pos_sale_receipts (
 CREATE INDEX pos_sale_receipts_branch_created_idx
   ON public.pos_sale_receipts (branch_id, created_at DESC);
 
+CREATE OR REPLACE FUNCTION public.prevent_pos_sale_receipt_mutation()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $function$
+BEGIN
+  RAISE EXCEPTION 'pos_sale_receipts_are_immutable';
+END;
+$function$;
+CREATE TRIGGER pos_sale_receipts_immutable
+  BEFORE UPDATE OR DELETE ON public.pos_sale_receipts
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_pos_sale_receipt_mutation();
+REVOKE ALL ON FUNCTION public.prevent_pos_sale_receipt_mutation() FROM PUBLIC, anon, authenticated;
+
 ALTER TABLE public.pos_sale_tenders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pos_checkout_idempotency_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pos_held_orders ENABLE ROW LEVEL SECURITY;
@@ -108,9 +123,10 @@ CREATE POLICY pos_sale_receipts_deny_direct_client_access
 
 REVOKE ALL ON public.pos_sale_tenders, public.pos_checkout_idempotency_requests,
   public.pos_held_orders, public.pos_sale_receipts FROM PUBLIC, anon, authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.pos_sale_tenders,
-  public.pos_checkout_idempotency_requests, public.pos_held_orders,
-  public.pos_sale_receipts TO service_role;
+GRANT SELECT, INSERT ON public.pos_sale_tenders,
+  public.pos_checkout_idempotency_requests TO service_role;
+GRANT SELECT, INSERT, UPDATE ON public.pos_held_orders TO service_role;
+GRANT SELECT, INSERT ON public.pos_sale_receipts TO service_role;
 
 CREATE OR REPLACE FUNCTION public.erp_create_pos_sale_split_tender_idempotent(
   p_branch_id uuid,
@@ -150,7 +166,7 @@ BEGIN
      OR length(p_idempotency_key) > 120 THEN
     RAISE EXCEPTION 'invalid_idempotency_key';
   END IF;
-  IF jsonb_typeof(p_tenders) <> 'array'
+  IF jsonb_typeof(p_tenders) IS DISTINCT FROM 'array'
      OR jsonb_array_length(p_tenders) < 2
      OR jsonb_array_length(p_tenders) > 5 THEN
     RAISE EXCEPTION 'invalid_split_tenders';
@@ -269,8 +285,8 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'service_role_required';
   END IF;
   IF p_hold_key IS NULL OR length(trim(p_hold_key)) < 8 OR length(p_hold_key) > 120
-     OR jsonb_typeof(p_payload) <> 'object'
-     OR jsonb_typeof(p_payload -> 'items') <> 'array'
+     OR jsonb_typeof(p_payload) IS DISTINCT FROM 'object'
+     OR jsonb_typeof(p_payload -> 'items') IS DISTINCT FROM 'array'
      OR jsonb_array_length(p_payload -> 'items') < 1
      OR jsonb_array_length(p_payload -> 'items') > 50 THEN
     RAISE EXCEPTION 'invalid_held_order';
@@ -423,9 +439,17 @@ BEGIN
   ) INTO v_snapshot;
   INSERT INTO public.pos_sale_receipts (sale_id, branch_id, snapshot, created_by)
   VALUES (v_sale.id, v_sale.branch_id, v_snapshot, p_actor_user_id)
-  ON CONFLICT (sale_id) DO NOTHING;
+  ON CONFLICT (sale_id) DO NOTHING
+  RETURNING * INTO v_receipt;
+  IF FOUND THEN
+    RETURN jsonb_build_object(
+      'ok', true, 'receipt_id', v_receipt.id, 'receipt_version', v_receipt.receipt_version,
+      'snapshot', v_receipt.snapshot, 'created_at', v_receipt.created_at, 'replayed', false
+    );
+  END IF;
   SELECT * INTO v_receipt FROM public.pos_sale_receipts
   WHERE sale_id = p_sale_id AND branch_id = p_branch_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'pos_receipt_persist_failed'; END IF;
   RETURN jsonb_build_object(
     'ok', true, 'receipt_id', v_receipt.id, 'receipt_version', v_receipt.receipt_version,
     'snapshot', v_receipt.snapshot, 'created_at', v_receipt.created_at, 'replayed', true
