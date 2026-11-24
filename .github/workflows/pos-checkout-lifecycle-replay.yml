@@ -40,6 +40,8 @@ jobs:
         run: node --test tests/contracts/pos-checkout-lifecycle-contract.test.mjs
       - uses: supabase/setup-cli@v1
         id: setup-supabase-cli
+        with:
+          version: 2.122.0
       - name: Start isolated local Supabase stack
         id: start-local-stack
         run: supabase start -x studio,mailpit,storage-api,edge-runtime,logflare,vector
