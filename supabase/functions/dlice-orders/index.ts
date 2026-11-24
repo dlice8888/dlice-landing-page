@@ -1465,6 +1465,18 @@ if (action === "admin-set-profile-role") {
     const itemId = safeText(body.inventory_item_id, 80), quantity = Number(body.quantity);
     if (!await branchAccess(sourceBranchId) || !await branchAccess(destinationBranchId)) return fail("Akses ke cabang asal dan tujuan wajib diberikan.", 403, origin);
     if (!itemId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 100000000 || sourceBranchId === destinationBranchId) return fail("Cabang tujuan, item, dan jumlah transfer harus valid.", 422, origin);
+    // Enforce tenant equality before the RPC; branch access alone does not
+    // prove that both endpoints belong to the same tenant.
+    const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
+      .select("id,tenant_id")
+      .in("id", [sourceBranchId, destinationBranchId]);
+    if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
+    if (transferBranches?.length !== 2) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+    const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === sourceBranchId)?.tenant_id;
+    const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === destinationBranchId)?.tenant_id;
+    if (!sourceTenantId || !destinationTenantId || sourceTenantId !== destinationTenantId) {
+      return fail("Transfer stok hanya diizinkan antar cabang dalam tenant yang sama.", 403, origin);
+    }
     const idempotencyKey = safeText(body.idempotency_key, 160);
     if (idempotencyKey.length < 8) return fail("Kunci idempotensi transfer tidak valid.", 422, origin);
     const transferNumber = safeText(body.transfer_number, 60) || "TRF-" + new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14) + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
@@ -1483,20 +1495,19 @@ if (action === "admin-set-profile-role") {
     if (!transferId || !["approve", "pick", "ship", "receive", "reconcile", "cancel"].includes(transition)) return fail("Transisi transfer tidak valid.", 422, origin);
     const { data: transfer, error: transferError } = await admin.from("stock_transfers").select("id,transfer_number,source_branch_id,destination_branch_id,status").eq("id", transferId).maybeSingle();
     if (transferError || !transfer) return fail("Transfer stok tidak ditemukan.", 404, origin);
+    // Stock transfers are strictly intra-tenant for every actor and every
+    // transition. Platform Owner does not bypass this inventory boundary.
+    const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
+      .select("id,tenant_id")
+      .in("id", [transfer.source_branch_id, transfer.destination_branch_id]);
+    if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
+    if (transferBranches?.length !== 2) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+    const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.source_branch_id)?.tenant_id;
+    const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.destination_branch_id)?.tenant_id;
+    if (!sourceTenantId || !destinationTenantId || sourceTenantId !== destinationTenantId) {
+      return fail("Transfer stok hanya diizinkan antar cabang dalam tenant yang sama.", 403, origin);
+    }
     if (transition === "approve") {
-      const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
-        .select("id,tenant_id")
-        .in("id", [transfer.source_branch_id, transfer.destination_branch_id]);
-      if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
-      if (transferBranches?.length !== 2) {
-        return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
-      }
-      const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.source_branch_id)?.tenant_id;
-      const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === transfer.destination_branch_id)?.tenant_id;
-      if (!sourceTenantId || !destinationTenantId) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
-      if (sourceTenantId !== destinationTenantId && !isPlatformOwner) {
-        return fail("Persetujuan transfer lintas tenant hanya tersedia untuk platform owner.", 403, origin);
-      }
       const approvalAuthorized = await hasHQPermissionForTenant("inventory", sourceTenantId);
       if (approvalAuthorized === null) return fail("Otorisasi Inventory Head Office gagal diperiksa.", 500, origin);
       if (!approvalAuthorized) {

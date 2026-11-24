@@ -15,7 +15,7 @@ DECLARE
   v_tenant_status text;
   v_actor_role text;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_tenant_id IS NULL OR p_email IS NULL
@@ -139,7 +139,7 @@ DECLARE
   v_existing_status text;
   v_tenant_status text;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_email IS NULL

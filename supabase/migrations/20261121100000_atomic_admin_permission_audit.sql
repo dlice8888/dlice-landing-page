@@ -14,7 +14,7 @@ declare
   v_next_permissions jsonb;
   v_target_role text;
 begin
-  if auth.role() is distinct from 'service_role' then
+  if (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' then
     raise exception 'service_role_required' using errcode = '42501';
   end if;
 

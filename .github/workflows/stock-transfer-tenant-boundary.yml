@@ -1,0 +1,87 @@
+name: Stock transfer same-tenant boundary
+
+on:
+  pull_request:
+    branches: [staging]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary-20261120.sql"
+      - "tests/contracts/stock-transfer-tenant-boundary.test.mjs"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+  push:
+    branches: [staging]
+    paths:
+      - "supabase/functions/dlice-orders/index.ts"
+      - "supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql"
+      - "tests/sql/stock-transfer-tenant-boundary-20261120.sql"
+      - "tests/contracts/stock-transfer-tenant-boundary.test.mjs"
+      - ".github/workflows/stock-transfer-tenant-boundary.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stock-transfer-same-tenant-boundary
+  cancel-in-progress: false
+
+jobs:
+  boundary-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run API authorization contract
+        run: node --test tests/contracts/stock-transfer-tenant-boundary.test.mjs
+      - name: Run disposable PostgreSQL trigger regression
+        env:
+          PGPASSWORD: postgres
+        run: psql --host 127.0.0.1 --username postgres --dbname postgres --set ON_ERROR_STOP=1 --file tests/sql/stock-transfer-tenant-boundary-20261120.sql
+      - name: Run concurrent tenant reassignment race regression
+        env:
+          PGPASSWORD: postgres
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql --host 127.0.0.1 --username postgres --dbname postgres --set ON_ERROR_STOP=1 \
+            --command "BEGIN; UPDATE public.branches SET tenant_id = '00000000-0000-4000-8000-000000000002' WHERE id = '90000000-0000-4000-8000-000000000005'; SELECT pg_sleep(2); COMMIT" &
+          reassign_pid=$!
+          sleep 0.3
+          set +e
+          race_output=$(psql --host 127.0.0.1 --username postgres --dbname postgres --set ON_ERROR_STOP=1 \
+            --command "INSERT INTO public.stock_transfers (id, source_branch_id, destination_branch_id) VALUES ('a0000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000005', '90000000-0000-4000-8000-000000000006')" 2>&1)
+          race_status=$?
+          set -e
+          wait "$reassign_pid"
+          if [ "$race_status" -eq 0 ]; then
+            echo "FAIL: concurrent cross-tenant transfer was accepted"
+            exit 1
+          fi
+          if ! grep -q "stock_transfer_cross_tenant_forbidden" <<<"$race_output"; then
+            echo "$race_output"
+            echo "FAIL: race was rejected for an unexpected reason"
+            exit 1
+          fi
+          remaining=$(psql --host 127.0.0.1 --username postgres --dbname postgres --tuples-only --no-align \
+            --command "SELECT count(*) FROM public.stock_transfers WHERE id = 'a0000000-0000-4000-8000-000000000005'")
+          test "$remaining" = "0"
+          echo "PASS: row-lock serialization rejects transfer racing with tenant reassignment."
