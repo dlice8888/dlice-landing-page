@@ -194,7 +194,7 @@
           "requirement": "Variants, toppings, special instructions",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "The existing modifier option API is now exercised through the audited Owner mutation path and POS sale. Exact price delta is persisted in the sale line snapshot and propagated to the KDS ticket; browser cashier UI and required/min/max modifier-group UX remain open.",
+          "evidence_or_gap": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 49
@@ -204,7 +204,7 @@
             143
           ],
           "work_started_at": "2026-11-24",
-          "work_evidence": "The existing modifier option API is now exercised through the audited Owner mutation path and POS sale. Exact price delta is persisted in the sale line snapshot and propagated to the KDS ticket; browser cashier UI and required/min/max modifier-group UX remain open.",
+          "work_evidence": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
@@ -234,7 +234,7 @@
           "requirement": "Split bill, partial payment, final settlement",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "PR #143 adds an atomic 2–5 tender allocation RPC for cash/bank-transfer/QRIS, requiring two distinct methods and exact allocation sum equal to the committed sale total. Partial/unpaid balance collection remains out of scope.",
+          "evidence_or_gap": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 52
@@ -244,14 +244,14 @@
             143
           ],
           "work_started_at": "2026-11-24",
-          "work_evidence": "PR #143 adds an atomic 2–5 tender allocation RPC for cash/bank-transfer/QRIS, requiring two distinct methods and exact allocation sum equal to the committed sale total. Partial/unpaid balance collection remains out of scope.",
+          "work_evidence": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Hold/resume order",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "PR #143 adds actor/branch/shift-scoped held-order persistence, payload fingerprint/idempotency, one-way resume, expiry handling and a stable sale idempotency key. Cashier UI and browser lifecycle tests remain open.",
+          "evidence_or_gap": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 53
@@ -261,7 +261,7 @@
             143
           ],
           "work_started_at": "2026-11-24",
-          "work_evidence": "PR #143 adds actor/branch/shift-scoped held-order persistence, payload fingerprint/idempotency, one-way resume, expiry handling and a stable sale idempotency key. Cashier UI and browser lifecycle tests remain open.",
+          "work_evidence": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
@@ -280,7 +280,7 @@
           "requirement": "Receipt printing/digital receipt",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "PR #143 adds immutable digital receipt snapshots with line/modifier/substitution/tender details and repeat retrieval. Physical printer/browser-device acceptance remains open.",
+          "evidence_or_gap": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 55
@@ -290,7 +290,7 @@
             143
           ],
           "work_started_at": "2026-11-24",
-          "work_evidence": "PR #143 adds immutable digital receipt snapshots with line/modifier/substitution/tender details and repeat retrieval. Physical printer/browser-device acceptance remains open.",
+          "work_evidence": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
@@ -309,7 +309,7 @@
           "requirement": "Offline sales queue and safe resynchronization",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "PR #143 extends the staging E2E to exercise the existing offline replay API with modifier payloads and idempotent replay. Browser-local durable queue, network loss fault injection and recovery UX remain unproven.",
+          "evidence_or_gap": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 57
@@ -319,7 +319,7 @@
             143
           ],
           "work_started_at": "2026-11-24",
-          "work_evidence": "PR #143 extends the staging E2E to exercise the existing offline replay API with modifier payloads and idempotent replay. Browser-local durable queue, network loss fault injection and recovery UX remain unproven.",
+          "work_evidence": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
@@ -4194,7 +4194,7 @@
         143
       ],
       "work_started_at": "2026-11-24",
-      "note": "The existing modifier option API is now exercised through the audited Owner mutation path and POS sale. Exact price delta is persisted in the sale line snapshot and propagated to the KDS ticket; browser cashier UI and required/min/max modifier-group UX remain open."
+      "note": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open."
     },
     {
       "domain": "POS & Checkout",
@@ -4205,7 +4205,7 @@
         143
       ],
       "work_started_at": "2026-11-24",
-      "note": "PR #143 adds an atomic 2–5 tender allocation RPC for cash/bank-transfer/QRIS, requiring two distinct methods and exact allocation sum equal to the committed sale total. Partial/unpaid balance collection remains out of scope."
+      "note": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope."
     },
     {
       "domain": "POS & Checkout",
@@ -4216,7 +4216,7 @@
         143
       ],
       "work_started_at": "2026-11-24",
-      "note": "PR #143 adds actor/branch/shift-scoped held-order persistence, payload fingerprint/idempotency, one-way resume, expiry handling and a stable sale idempotency key. Cashier UI and browser lifecycle tests remain open."
+      "note": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run."
     },
     {
       "domain": "POS & Checkout",
@@ -4227,7 +4227,7 @@
         143
       ],
       "work_started_at": "2026-11-24",
-      "note": "PR #143 adds immutable digital receipt snapshots with line/modifier/substitution/tender details and repeat retrieval. Physical printer/browser-device acceptance remains open."
+      "note": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open."
     },
     {
       "domain": "POS & Checkout",
@@ -4238,7 +4238,7 @@
         143
       ],
       "work_started_at": "2026-11-24",
-      "note": "PR #143 extends the staging E2E to exercise the existing offline replay API with modifier payloads and idempotent replay. Browser-local durable queue, network loss fault injection and recovery UX remain unproven."
+      "note": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open."
     }
   ],
   "latest_pr_inventory": {
@@ -4314,7 +4314,7 @@
       "requirement": "Variants, toppings, special instructions",
       "previous_status": "NOT VERIFIED",
       "current_status": "PARTIAL",
-      "evidence": "The existing modifier option API is now exercised through the audited Owner mutation path and POS sale. Exact price delta is persisted in the sale line snapshot and propagated to the KDS ticket; browser cashier UI and required/min/max modifier-group UX remain open.",
+      "evidence": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
       "active_prs": [
         143
       ]
@@ -4324,7 +4324,7 @@
       "requirement": "Split bill, partial payment, final settlement",
       "previous_status": "NOT VERIFIED",
       "current_status": "PARTIAL",
-      "evidence": "PR #143 adds an atomic 2–5 tender allocation RPC for cash/bank-transfer/QRIS, requiring two distinct methods and exact allocation sum equal to the committed sale total. Partial/unpaid balance collection remains out of scope.",
+      "evidence": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
       "active_prs": [
         143
       ]
@@ -4334,7 +4334,7 @@
       "requirement": "Hold/resume order",
       "previous_status": "NOT VERIFIED",
       "current_status": "PARTIAL",
-      "evidence": "PR #143 adds actor/branch/shift-scoped held-order persistence, payload fingerprint/idempotency, one-way resume, expiry handling and a stable sale idempotency key. Cashier UI and browser lifecycle tests remain open.",
+      "evidence": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
       "active_prs": [
         143
       ]
@@ -4344,7 +4344,7 @@
       "requirement": "Receipt printing/digital receipt",
       "previous_status": "BLOCKED",
       "current_status": "PARTIAL",
-      "evidence": "PR #143 adds immutable digital receipt snapshots with line/modifier/substitution/tender details and repeat retrieval. Physical printer/browser-device acceptance remains open.",
+      "evidence": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
       "active_prs": [
         143
       ]
@@ -4354,7 +4354,7 @@
       "requirement": "Offline sales queue and safe resynchronization",
       "previous_status": "NOT VERIFIED",
       "current_status": "PARTIAL",
-      "evidence": "PR #143 extends the staging E2E to exercise the existing offline replay API with modifier payloads and idempotent replay. Browser-local durable queue, network loss fault injection and recovery UX remain unproven.",
+      "evidence": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
       "active_prs": [
         143
       ]
