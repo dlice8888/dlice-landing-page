@@ -1705,8 +1705,10 @@ if (action === "admin-set-profile-role") {
     const holdKey = safeText(body.hold_key, 120);
     const payload = body.payload as Record<string, unknown>;
     if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
-    if (!holdKey || holdKey.length < 8 || !payload || typeof payload !== "object" || Array.isArray(payload)) {
-      return fail("Data transaksi hold tidak valid.", 422, origin);
+    const holdDiscount = Number(payload?.discount_idr || 0);
+    if (!holdKey || holdKey.length < 8 || !payload || typeof payload !== "object" || Array.isArray(payload) ||
+      !Number.isSafeInteger(holdDiscount) || holdDiscount < 0 || (!isOwner && holdDiscount > 0)) {
+      return fail("Data transaksi hold tidak valid atau diskon memerlukan Owner.", 422, origin);
     }
     const { data, error } = await admin.rpc("erp_hold_pos_order", {
       p_branch_id: branchId, p_shift_id: shiftId, p_actor_user_id: actor.user.id,
