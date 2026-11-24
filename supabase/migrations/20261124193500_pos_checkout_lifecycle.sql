@@ -96,7 +96,7 @@ ALTER TABLE public.pos_sale_receipts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY pos_sale_tenders_deny_direct_client_access
   ON public.pos_sale_tenders FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
-CREATE POLICY pos_checkout_idempotency_deny_direct_client_access
+CREATE POLICY pos_checkout_idempotency_requests_deny_direct_client_access
   ON public.pos_checkout_idempotency_requests FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
 CREATE POLICY pos_held_orders_deny_direct_client_access
