@@ -582,6 +582,10 @@ Deno.serve(async (req: Request) => {
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
     "erp-create-pos-sale": "pos",
+    "erp-create-pos-sale-split": "pos",
+    "erp-hold-pos-order": "pos",
+    "erp-resume-pos-order": "pos",
+    "erp-get-pos-receipt": "pos",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
@@ -1609,6 +1613,117 @@ if (action === "admin-set-profile-role") {
     if(error||!data)return fail("Shift berubah saat proses berlangsung; muat ulang.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_closed",entity_type:"pos_shift",entity_id:shiftId,metadata:{expected_cash_idr:old.expected_cash_idr,counted_cash_idr:counted,cash_variance_idr:variance}});
     return json({ok:true,shift:data},200,origin);
+  }
+
+  if (action === "erp-create-pos-sale-split") {
+    if (!hasPerm("pos")) return fail("Izin POS diperlukan untuk split tender.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    const shiftId = safeText(body.shift_id, 80);
+    const items = body.items;
+    const discount = Number(body.discount_idr || 0);
+    const idempotencyKey = safeText(body.idempotency_key, 120);
+    const tenders = Array.isArray(body.tenders) ? body.tenders.map((t: any) => ({
+      payment_method: safeText(t?.payment_method, 20),
+      amount_idr: t?.amount_idr,
+      reference: safeText(t?.reference, 120),
+    })) : [];
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!Array.isArray(items) || !items.length || items.length > 50) return fail("Pilih minimal satu menu.", 422, origin);
+    if (!Number.isSafeInteger(discount) || discount < 0 || (!isOwner && discount > 0)) {
+      return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.", 403, origin);
+    }
+    if (!idempotencyKey || idempotencyKey.length < 8 || tenders.length < 2 || tenders.length > 5) {
+      return fail("Kunci idempotensi dan minimal dua metode pembayaran wajib diisi.", 422, origin);
+    }
+    const cleanItems = items.map((x: any) => ({
+      slug: safeText(x?.slug, 80),
+      quantity: Number(x?.quantity),
+      modifiers: Array.isArray(x?.modifiers) ? x.modifiers.map((m: any) => ({ code: safeText(m?.code, 40) })) : [],
+      substitutions: Array.isArray(x?.substitutions) ? x.substitutions.map((sub: any) => ({
+        recipe_ingredient_id: safeText(sub?.recipe_ingredient_id, 80),
+        substitute_inventory_item_id: safeText(sub?.substitute_inventory_item_id, 80),
+      })) : [],
+    }));
+    if (cleanItems.some((x: any) => !/^[a-z0-9-]+$/.test(x.slug) || !Number.isInteger(x.quantity) || x.quantity < 1 || x.quantity > 1000 || x.modifiers.length > 20 || x.substitutions.length > 100)) {
+      return fail("Item, modifier, substitusi, atau jumlah tidak valid.", 422, origin);
+    }
+    if (tenders.some((t: any) => !["cash", "bank_transfer", "qris"].includes(t.payment_method) ||
+      !Number.isSafeInteger(Number(t.amount_idr)) || Number(t.amount_idr) <= 0 || Number(t.amount_idr) > 1000000000)) {
+      return fail("Rincian split tender tidak valid.", 422, origin);
+    }
+    const { data, error } = await admin.rpc("erp_create_pos_sale_split_tender_idempotent", {
+      p_branch_id: branchId, p_shift_id: shiftId, p_items: cleanItems,
+      p_discount_idr: Math.round(discount),
+      p_customer_reference: safeText(body.customer_reference, 120),
+      p_notes: safeText(body.notes, 500),
+      p_actor_user_id: actor.user.id,
+      p_idempotency_key: idempotencyKey,
+      p_tenders: tenders,
+    });
+    if (error) return fail(
+      error.message.includes("idempotency_key_payload_mismatch") ? "Kunci transaksi sudah digunakan untuk isi transaksi berbeda." :
+      error.message.includes("split_tender_total_mismatch") ? "Jumlah metode pembayaran harus sama persis dengan total transaksi." :
+      error.message.includes("split_requires_distinct_methods") ? "Split tender memerlukan minimal dua metode pembayaran berbeda." :
+      error.message.includes("insufficient_stock") ? "Stok bahan tidak mencukupi; transaksi dibatalkan." :
+      error.message.includes("open_shift_required") ? "Shift kasir tidak terbuka atau bukan milik kasir ini." :
+      "Split tender gagal divalidasi; transaksi tidak disimpan.",
+      error.message.includes("service_role_required") ? 403 : 409, origin
+    );
+    return json({ ...data, idempotency_key: idempotencyKey }, data?.idempotent_replay ? 200 : 201, origin);
+  }
+
+  if (action === "erp-hold-pos-order") {
+    if (!hasPerm("pos")) return fail("Izin POS diperlukan untuk menahan transaksi.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    const shiftId = safeText(body.shift_id, 80);
+    const holdKey = safeText(body.hold_key, 120);
+    const payload = body.payload as Record<string, unknown>;
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    if (!holdKey || holdKey.length < 8 || !payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return fail("Data transaksi hold tidak valid.", 422, origin);
+    }
+    const { data, error } = await admin.rpc("erp_hold_pos_order", {
+      p_branch_id: branchId, p_shift_id: shiftId, p_actor_user_id: actor.user.id,
+      p_hold_key: holdKey, p_payload: payload,
+    });
+    if (error) return fail(
+      error.message.includes("open_shift_required") ? "Shift kasir tidak terbuka." : "Transaksi gagal disimpan sebagai hold.",
+      error.message.includes("service_role_required") ? 403 : 409, origin
+    );
+    return json(data, data?.idempotent_replay ? 200 : 201, origin);
+  }
+
+  if (action === "erp-resume-pos-order") {
+    if (!hasPerm("pos")) return fail("Izin POS diperlukan untuk melanjutkan transaksi.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    const holdId = safeText(body.hold_id, 80);
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const { data, error } = await admin.rpc("erp_resume_pos_order", {
+      p_branch_id: branchId, p_hold_id: holdId, p_actor_user_id: actor.user.id,
+    });
+    if (error) return fail(
+      error.message.includes("held_order_not_found") ? "Transaksi hold tidak ditemukan." :
+      error.message.includes("open_shift_required") ? "Shift kasir tidak terbuka; buka shift sebelum melanjutkan." :
+      "Transaksi hold tidak dapat dilanjutkan.",
+      error.message.includes("held_order_not_found") ? 404 : error.message.includes("service_role_required") ? 403 : 409, origin
+    );
+    if (data?.status === "expired") return fail("Transaksi hold sudah kedaluwarsa.", 409, origin);
+    return json(data, 200, origin);
+  }
+
+  if (action === "erp-get-pos-receipt") {
+    if (!hasPerm("pos") && !hasPerm("reports") && !isOwner) return fail("Izin POS/laporan diperlukan untuk melihat struk.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    const saleId = safeText(body.sale_id, 80);
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const { data, error } = await admin.rpc("erp_get_pos_receipt", {
+      p_branch_id: branchId, p_sale_id: saleId, p_actor_user_id: actor.user.id,
+    });
+    if (error) return fail(
+      error.message.includes("paid_pos_sale_required") ? "Struk hanya tersedia untuk transaksi yang sudah lunas." : "Struk belum dapat dibuat.",
+      error.message.includes("service_role_required") ? 403 : 404, origin
+    );
+    return json(data, 200, origin);
   }
 
   if (action === "erp-create-pos-sale") {
