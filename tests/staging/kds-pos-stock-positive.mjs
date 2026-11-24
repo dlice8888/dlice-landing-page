@@ -409,10 +409,34 @@ async function main() {
       { payment_method: "qris", amount_idr: 50, reference: `QRIS-${suffix}` },
     ],
   }, ownerToken, 409);
+  const splitOfflineOperation = {
+    type: "pos-sale", branch_id: branchId, shift_id: shift.id,
+    items: [{ slug: productSlug, quantity: 1 }], payment_method: "split",
+    discount_idr: 0, customer_reference: `QA-SPLIT-${suffix}`, notes: note,
+    tenders: [
+      { payment_method: "cash", amount_idr: 40, reference: `CASH-${suffix}` },
+      { payment_method: "qris", amount_idr: 60, reference: `QRIS-${suffix}` },
+    ],
+  };
+  const splitSynced = await call("erp-sync-offline-operation", {
+    device_id: deviceId, client_operation_id: splitKey, operation: splitOfflineOperation,
+  }, ownerToken);
+  assert.equal(splitSynced.result?.sale_id, splitSaleId, "Offline split replay must return the original sale");
+  const splitSyncedReplay = await call("erp-sync-offline-operation", {
+    device_id: deviceId, client_operation_id: splitKey, operation: splitOfflineOperation,
+  }, ownerToken);
+  assert.equal(splitSyncedReplay.replayed, true, "Repeated split offline replay must use its receipt");
+  await expectStatus("erp-sync-offline-operation", {
+    device_id: deviceId, client_operation_id: splitKey,
+    operation: { ...splitOfflineOperation, tenders: [
+      { payment_method: "cash", amount_idr: 50, reference: `CASH-${suffix}` },
+      { payment_method: "qris", amount_idr: 50, reference: `QRIS-${suffix}` },
+    ] },
+  }, ownerToken, 409);
   const splitReceipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
   assert.equal(splitReceipt.snapshot.payment_method, "split");
   assert.equal(splitReceipt.snapshot.tenders.length, 2);
-  pass("Split tender reconciles exact cash/QRIS allocations and rejects changed idempotency payload", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
+  pass("Split tender exact-sum, direct/offline idempotency, changed-payload rejection and receipt reconciliation pass", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
 
   evidence.status = "PASS";
   evidence.sale_id = saleId;
