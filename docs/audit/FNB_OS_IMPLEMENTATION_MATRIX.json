@@ -5512,7 +5512,7 @@
     "snapshot_note": "Three features moved to PARTIAL because implementation/test evidence exists; no DONE status or weighted score was invented."
   },
   "latest_live_audit_2026_11_24": {
-    "as_of": "2026-11-24 07:25 WIB",
+    "as_of": "2026-11-24 19:30 WIB",
     "repository": "dlice8888/dlice-landing-page",
     "staging_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
     "feature_counts": {
@@ -5821,21 +5821,22 @@
     },
     "unresolved": {
       "business_e2e": [
-        "KDS/POS/Stock/Offline positive flow: workflow authentication is now implemented with existing identities, but manual execution and persisted reconciliation are still NOT RUN.",
-        "Procurement/Receiving positive flow: workflow authentication is now implemented with existing Owner and Tenant A identities, but manual execution and persisted reconciliation are still NOT RUN."
+        "P01-P09 tenant-isolation acceptance passed after P0 migration/function application; this does not replace POS business-flow E2E.",
+        "POS/KDS/stock/offline positive business E2E is extended in PR #143 but has not yet been run against staging.",
+        "Procurement/receiving positive E2E has not yet been run against staging."
       ],
       "platform": [
-        "Native Supabase leaked-password protection disabled (1 security WARN); free-tier native setting unavailable/needs authorized platform decision.",
-        "26 FK constraints remain unindexed in shared staging DB; PR #136 adds 24 covering indexes for 26 constraints and exact-head disposable replay passes, but shared staging application remains separately gated.",
-        "49 unused-index suggestions remain; retain until representative workload and EXPLAIN evidence supports changes.",
-        "9 source-only migrations remain unapplied in shared staging; all 58 source migrations pass disposable replay."
+        "Supabase native leaked-password protection remains WARN/OPEN; no Auth configuration change was made.",
+        "72 unused-index suggestions remain informational; retain until representative workload and EXPLAIN review.",
+        "TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false remain unchanged."
       ],
       "product": [
-        "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries have zero staging rows; positive workflows are not yet proven"
+        "POS split tender, held-order resume and immutable digital receipt are candidate code in PR #143; no staging business rows were created by this PR.",
+        "Production batches/consumptions, purchase orders/receipts, payment settlements, cash reconciliations and finance journal entries still require positive workflow and reconciliation evidence."
       ],
-      "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
+      "progress": "98 PARTIAL features remain unscored. Two existing PARTIAL features retain provisional weighted scores (tenant/member isolation 58%, tenant directory/onboarding 30%); no percentage is invented for new POS work."
     },
-    "scope": "Read-only Supabase audit, PR #136 source integration and exact-head disposable replay; P01-P09 rerun on current staging head. No shared staging migration, Auth metadata, Edge Function deployment, business data or production mutation.",
+    "scope": "P0 migration reconciliation, staging application, dlice-orders v72 deployment and post-apply P01-P09/CORS runtime verification completed on staging. No production database, secrets, deployment or release flag changed. PR #143 is isolated candidate code and has not been applied to shared staging.",
     "p0_closeout": {
       "pr138": "MERGED",
       "pr139": "CLOSED_SUPERSEDED_BY_PR138",
