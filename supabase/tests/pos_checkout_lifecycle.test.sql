@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(51);
+SELECT plan(58);
 
 SELECT ok(to_regclass('public.pos_sale_tenders') IS NOT NULL, 'split tender ledger table exists');
 SELECT ok(to_regclass('public.pos_checkout_idempotency_requests') IS NOT NULL, 'split checkout idempotency table exists');
@@ -103,6 +103,14 @@ SELECT ok(EXISTS (
   SELECT 1 FROM pg_constraint WHERE conrelid='public.pos_sale_receipts'::regclass
     AND conname='pos_sale_receipts_sale_key'
 ), 'receipt snapshot is unique per committed sale');
+
+SELECT ok(to_regclass('public.pos_checkout_idempotency_actor_user_idx') IS NOT NULL, 'checkout idempotency actor FK is indexed');
+SELECT ok(to_regclass('public.pos_held_orders_actor_user_idx') IS NOT NULL, 'held order actor FK is indexed');
+SELECT ok(to_regclass('public.pos_held_orders_shift_branch_idx') IS NOT NULL, 'held order shift/branch FK is indexed');
+SELECT ok(to_regclass('public.pos_sale_receipts_created_by_idx') IS NOT NULL, 'receipt created_by FK is indexed');
+SELECT ok(to_regclass('public.pos_sale_receipts_sale_branch_idx') IS NOT NULL, 'receipt sale/branch FK is indexed');
+SELECT ok(to_regclass('public.pos_sale_tenders_created_by_idx') IS NOT NULL, 'tender created_by FK is indexed');
+SELECT ok(to_regclass('public.pos_sale_tenders_sale_branch_idx') IS NOT NULL, 'tender sale/branch FK is indexed');
 
 SELECT * FROM finish();
 ROLLBACK;
