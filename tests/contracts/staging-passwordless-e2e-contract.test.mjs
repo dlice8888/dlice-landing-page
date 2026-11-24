@@ -43,6 +43,7 @@ test("passwordless helper uses Admin lookup + generate_link + verify without cre
   assert.match(authHelper, /auth\/v1\/verify/);
   assert.match(authHelper, /serviceRoleHeaders/);
   assert.match(authHelper, /email_confirmed_at/);
+  assert.match(authHelper, /app_metadata\?\.platform_owner !== true/, "staging Owner must already have the official boolean platform_owner metadata");
   assert.doesNotMatch(authHelper, /admin\/users["']?\s*,\s*\{/);
   assert.doesNotMatch(authHelper, /updateUserById|createUser|password:/);
   assert.doesNotMatch(authHelper, /console\.(?:log|info|warn|error).*?(?:token|email|secret|key)/i);

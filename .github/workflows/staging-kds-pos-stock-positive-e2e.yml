@@ -1,5 +1,8 @@
 name: Staging KDS POS Stock and Offline Recovery E2E
 on:
+  push:
+    branches:
+      - feat/pos-checkout-lifecycle-20261124
   workflow_dispatch:
     inputs:
       confirm_staging_mutations:
@@ -14,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   kds-pos-stock:
-    if: ${{ github.ref == 'refs/heads/staging' && github.event_name == 'workflow_dispatch' && inputs.confirm_staging_mutations == true }}
+    if: ${{ (github.ref == 'refs/heads/feat/pos-checkout-lifecycle-20261124' && github.event_name == 'push' && contains(github.event.head_commit.message, '[staging-e2e]')) || (github.ref == 'refs/heads/staging' && github.event_name == 'workflow_dispatch' && inputs.confirm_staging_mutations == true) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: staging

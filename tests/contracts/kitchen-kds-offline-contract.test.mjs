@@ -133,7 +133,12 @@ test("manual staging E2E covers the required POS to report vertical slice", () =
     assert.doesNotMatch(kdsE2E, new RegExp(unrelatedAction));
   }
   assert.match(kdsWorkflow, /workflow_dispatch:/);
-  assert.doesNotMatch(kdsWorkflow.split(/^permissions:\s*$/m, 1)[0], /^\s+(?:push|schedule):/m);
+  const triggerHeader = kdsWorkflow.split(/^permissions:\s*$/m, 1)[0];
+  assert.match(triggerHeader, /push:\s*\n\s+branches:\s*\n\s+- feat\/pos-checkout-lifecycle-20261124/);
+  assert.doesNotMatch(triggerHeader, /^\s+schedule:/m, "POS staging E2E must not run on an unattended schedule");
+  assert.match(kdsWorkflow, /github\.ref\s*==\s*'refs\/heads\/feat\/pos-checkout-lifecycle-20261124'/);
+  assert.match(kdsWorkflow, /github\.event_name\s*==\s*'push'/);
+  assert.match(kdsWorkflow, /github\.event\.head_commit\.message, '\[staging-e2e\]'/);
   assert.match(kdsWorkflow, /github\.ref\s*==\s*'refs\/heads\/staging'/);
   assert.match(kdsWorkflow, /github\.event_name\s*==\s*'workflow_dispatch'/);
   assert.match(kdsWorkflow, /confirm_staging_mutations:/);

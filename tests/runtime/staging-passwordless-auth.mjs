@@ -64,6 +64,9 @@ export async function tokenForExistingUser({ baseUrl, publicKey, serviceRoleKey,
       typeof user.email !== "string" || !user.email_confirmed_at) {
     throw new Error("existing_auth_user_not_found_or_unconfirmed");
   }
+  if (user.app_metadata?.platform_owner !== true) {
+    throw new Error("STAGING_AUTH_BLOCKED: existing Owner app_metadata.platform_owner must be JSON boolean true");
+  }
 
   const linkResponse = await fetch(`${base}/auth/v1/admin/generate_link`, {
     method: "POST",
