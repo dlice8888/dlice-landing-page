@@ -20,7 +20,7 @@
 - Partial tender / unpaid balance collection is not enabled; split tender requires full settlement in one atomic checkout.
 - Physical printer/browser-device acceptance and customer-facing receipt delivery are not proven; this slice persists a digital receipt snapshot only.
 - A real browser offline queue and network fault-injection run remain separate acceptance work; existing offline replay API contract is not treated as proof of a fully offline POS client.
-- UI wiring for the POS cashier workspace remains to be connected and browser-tested before any feature is marked DONE.
+- Cashier workspace now exposes modifier selection, Owner-only discount entry, split tender, hold/resume, offline queue replay and receipt printing controls. Browser/device acceptance is still required before any feature is marked DONE.
 
 ## Acceptance gates
 
