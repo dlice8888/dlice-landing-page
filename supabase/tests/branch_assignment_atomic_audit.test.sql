@@ -51,6 +51,7 @@ SELECT ok(
  'grants assignment RPC only to service_role'
 );
 SELECT set_config('request.jwt.claim.role','service_role',true);
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT throws_ok(
  $$SELECT public.dlice_save_branch_assignment_audited(
   'e7000000-0000-4000-8000-000000000099','e7000000-0000-4000-8000-000000000020',
