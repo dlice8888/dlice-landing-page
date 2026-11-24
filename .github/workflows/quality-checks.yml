@@ -144,13 +144,13 @@ jobs:
           done
           if [ "$missing" -ne 0 ]; then
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"passwordless_staging_auth_configuration_missing","workflow":"kds-pos-stock"}\\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"passwordless_staging_auth_configuration_missing","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
           if [ "$STAGING_SUPABASE_URL" != "https://higoadrzxnhzbbwhdbmh.supabase.co" ]; then
             echo "::error title=STAGING PREFLIGHT BLOCKED::Staging URL does not match the fixed staging project."
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"kds-pos-stock"}\\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"staging_target_mismatch","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             exit 2
           fi
           if ! node --input-type=module <<'NODE'
@@ -159,7 +159,7 @@ jobs:
           NODE
           then
             mkdir -p artifacts
-            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\\n' > artifacts/kds-pos-stock-reconciliation.json
+            printf '{"schema_version":1,"status":"BLOCKED","stage":"preflight","reason":"service_role_key_format_invalid","workflow":"kds-pos-stock"}\n' > artifacts/kds-pos-stock-reconciliation.json
             echo "::error title=STAGING PREFLIGHT BLOCKED::Service-role key format is invalid; no business-flow mutations ran."
             exit 2
           fi
@@ -175,7 +175,7 @@ jobs:
           mkdir -p artifacts
           file=artifacts/kds-pos-stock-reconciliation.json
           if [ ! -s "$file" ] || ! node -e 'const fs=require("node:fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if (!x || typeof x !== "object" || typeof x.status !== "string") process.exit(1)' "$file" 2>/dev/null; then
-            printf '{"schema_version":1,"status":"FAIL","stage":"artifact_validation","reason":"missing_or_invalid_reconciliation_artifact","workflow":"kds-pos-stock"}\\n' > "$file"
+            printf '{"schema_version":1,"status":"FAIL","stage":"artifact_validation","reason":"missing_or_invalid_reconciliation_artifact","workflow":"kds-pos-stock"}\n' > "$file"
             echo "::error title=Reconciliation artifact invalid::A missing or invalid POS reconciliation artifact was replaced with explicit FAIL evidence."
             exit 1
           fi
