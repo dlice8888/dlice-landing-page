@@ -432,3 +432,50 @@ The first three are earlier staging-source-only candidates. The last four were i
 6. Never apply these migrations to production as part of this task.
 
 **Status:** `SOURCE_AHEAD_OF_DATABASE`; shared staging migration application is not authorized by this audit. PR #120's disposable replay PASS is CI evidence, not proof that its four migrations are installed in the shared staging database.
+
+
+## Superseding staging application and version reconciliation — 24 November 2026
+
+This section supersedes the older migration counts above. The live Supabase staging project is `higoadrzxnhzbbwhdbmh`.
+
+### Integrated PR and role-check result
+- PR #138 was merged to `staging` as `2235c3cd9ecd4fca0d1067627468a1ad96980328`.
+- PR #139 was closed as superseded after all seven changed file blobs were verified identical in the merged staging tree.
+- The nine source-only migrations from the previous live audit plus PR #139 and PR #138 migrations were applied one at a time (11 migrations total).
+- All 12 legacy `auth.role()` checks across six migration files were replaced with `(auth.jwt() ->> 'role')` checks before replay and staging application.
+- A 72-assertion pgTAP contract verifies all 12 affected RPCs: JWT role guard present, deprecated helper absent, anon/authenticated EXECUTE denied, service_role EXECUTE allowed, SECURITY INVOKER and pinned search_path.
+- Live catalog verification: 12/12 functions exist; 12/12 use the JWT role claim; 12/12 have no `auth.role()`; all are SECURITY INVOKER with pinned search_path; anon/authenticated EXECUTE=false and service_role EXECUTE=true.
+
+### Actual Supabase migration versions
+The Supabase MCP Management API assigns its own timestamp to each `apply_migration` call. To avoid remote-only migration versions, the repository candidate branch `audit/reconcile-generated-migration-versions-20261124` renames each source migration to the exact version recorded by Supabase. The SQL contents are unchanged by this filename reconciliation.
+
+| Previous source filename | Applied version | Canonical source filename |
+|---|---:|---|
+| `20261120100000_atomic_owner_and_tenant_bootstrap.sql` | `20261124121018` | `20261124121018_atomic_owner_and_tenant_bootstrap.sql` |
+| `20261120110000_command_center_summary.sql` | `20261124121026` | `20261124121026_command_center_summary.sql` |
+| `20261120120000_atomic_branch_checklist_audit.sql` | `20261124121032` | `20261124121032_atomic_branch_checklist_audit.sql` |
+| `20261120125000_harden_owner_metadata_boolean.sql` | `20261124121039` | `20261124121039_harden_owner_metadata_boolean.sql` |
+| `20261120130000_enforce_same_tenant_stock_transfers.sql` | `20261124121046` | `20261124121046_enforce_same_tenant_stock_transfers.sql` |
+| `20261121100000_atomic_admin_permission_audit.sql` | `20261124121053` | `20261124121053_atomic_admin_permission_audit.sql` |
+| `20261121120000_add_fk_covering_indexes.sql` | `20261124121059` | `20261124121059_add_fk_covering_indexes.sql` |
+| `20261121130000_atomic_tenant_invite_lifecycle.sql` | `20261124121105` | `20261124121105_atomic_tenant_invite_lifecycle.sql` |
+| `20261121153000_remove_redundant_zero_scan_indexes.sql` | `20261124121111` | `20261124121111_remove_redundant_zero_scan_indexes.sql` |
+| `20261121160000_atomic_admin_profile_mutation_audit.sql` | `20261124121118` | `20261124121118_atomic_admin_profile_mutation_audit.sql` |
+| `20261121170000_atomic_branch_assignment_audit.sql` | `20261124121124` | `20261124121124_atomic_branch_assignment_audit.sql` |
+| Follow-up index for the new checklist `updated_by` FK | `20261124121515` | `20261124121515_index_branch_operation_checklist_updated_by.sql` |
+
+### Live staging verification after application
+- Applied migration count: **61**; latest: `20261124121515`.
+- `branch_operation_checklist_runs.updated_by` exists as nullable UUID.
+- Stock-transfer same-tenant trigger is present for INSERT and UPDATE; branch tenant reassignment guard is present for UPDATE.
+- Two redundant single-column indexes were removed only after verifying their leading-key coverage by existing unique composite indexes.
+- The first post-apply Performance Advisor pass found one new unindexed FK introduced by `updated_by`; the follow-up index migration above closed it. Latest Performance Advisor now reports **0 unindexed foreign keys**.
+- Unused-index suggestions are informational and are not a reason to mass-delete indexes.
+- Security Advisor still reports leaked-password protection disabled; this is a separate Auth configuration task and remains OPEN.
+
+### Exact-head and runtime status
+- Combined PR candidate before staging application: all 60 repository migrations replayed on a disposable local Supabase stack; 13 pgTAP files / 316 assertions PASS; quality, stock-transfer boundary, CORS, KDS offline and procurement contracts PASS.
+- The follow-up checklist FK index adds one migration and one pgTAP assertion. The filename-reconciliation PR must rerun disposable replay against all 61 migrations / 317 assertions before merge.
+- P01–P09 baseline on the pre-deployment staging head passed 9/9 with no failed, blocked or skipped cases. It must be rerun against the applied schema and deployed Edge Function before this release gate can close.
+- The `dlice-orders` Edge Function has not yet been deployed from the merged PR to staging in this audit step.
+- `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged. No production database, secrets, deployment or release was changed.

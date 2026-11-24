@@ -4,7 +4,7 @@
 The tenant invitation routes in `supabase/functions/dlice-orders/index.ts` previously wrote the invite, membership state and audit trail through separate PostgREST requests. A failure between requests could leave an invitation without its audit record or a membership active while the invite remained pending.
 
 ## Change
-Migration `20261121130000_atomic_tenant_invite_lifecycle.sql` introduces two service-role-only RPCs:
+Migration `20261124121105_atomic_tenant_invite_lifecycle.sql` introduces two service-role-only RPCs:
 
 - `dlice_create_tenant_invite_atomic`: validates the actor's active `tenant_owner`/`tenant_admin` membership, validates email/role/token/expiry, rejects an existing pending invite, and inserts the invite plus audit row in one transaction.
 - `dlice_accept_tenant_invite_atomic`: locks the invite row, checks pending status, expiry and exact invited email, creates the active membership, consumes the invite and writes the audit row in one transaction. Concurrent or replayed acceptance cannot consume the same invite twice. Expired invites are marked expired and audited without granting membership.

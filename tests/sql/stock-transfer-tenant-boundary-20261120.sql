@@ -23,7 +23,7 @@ insert into public.branches (id, tenant_id) values
   ('90000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000001'),
   ('90000000-0000-4000-8000-000000000006', '00000000-0000-4000-8000-000000000001');
 
-\i supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql
+\i supabase/migrations/20261124121046_enforce_same_tenant_stock_transfers.sql
 
 
 -- The trigger must lock both branch rows before reading tenant IDs so a

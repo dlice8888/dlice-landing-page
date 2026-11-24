@@ -7,7 +7,7 @@ const edge = await readFile(
   "utf8",
 );
 const migration = await readFile(
-  new URL("../../supabase/migrations/20261121130000_atomic_tenant_invite_lifecycle.sql", import.meta.url),
+  new URL("../../supabase/migrations/20261124121105_atomic_tenant_invite_lifecycle.sql", import.meta.url),
   "utf8",
 );
 

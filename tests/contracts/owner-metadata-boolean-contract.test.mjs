@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
-const migration = readFileSync("supabase/migrations/20261120125000_harden_owner_metadata_boolean.sql", "utf8");
+const migration = readFileSync("supabase/migrations/20261124121039_harden_owner_metadata_boolean.sql", "utf8");
 
 test("platform_owner metadata is checked as JSON boolean true, not text", () => {
   assert.equal((migration.match(/raw_app_meta_data->'platform_owner' = 'true'::jsonb/g) || []).length, 2);
