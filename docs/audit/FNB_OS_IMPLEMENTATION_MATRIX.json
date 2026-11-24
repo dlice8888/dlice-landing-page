@@ -5582,7 +5582,7 @@
         },
         "disposable_replay": {
           "id": 45296840762,
-          "status": "IN_PROGRESS",
+          "status": "success",
           "url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840762",
           "commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a"
         }
@@ -5744,11 +5744,12 @@
     "database_only_versions": [],
     "duplicate_source_versions": [],
     "disposable_replay": {
-      "run_id": 45296498080,
+      "run_id": 45296840762,
       "status": "PASS",
       "migrations_applied": 58,
       "pgtap_files": 11,
-      "pgtap_tests": 234
+      "pgtap_tests": 234,
+      "run_url": "https://github.com/dlice8888/dlice-landing-page/actions/runs/45296840762"
     },
     "status": "SOURCE_AHEAD_OF_DATABASE",
     "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
