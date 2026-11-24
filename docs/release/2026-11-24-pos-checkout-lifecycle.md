@@ -43,7 +43,7 @@
 ## Staging E2E authorization — 2026-11-24
 
 - Owner explicitly authorized QA-only staging mutations for POS acceptance.
-- The staging E2E job is gated to a push on `feat/pos-checkout-lifecycle-20261124` with the explicit `[staging-e2e]` commit marker.
+- The staging E2E job is scoped exclusively to pushes/PR updates for `feat/pos-checkout-lifecycle-20261124`; it cannot run against production or unrelated branches.
 - The job requires the staging Environment's fixed project URL, publishable key and service-role key; missing/invalid configuration fails closed before business-flow writes.
 - E2E uses the existing Supabase Owner identity through passwordless Auth Admin token issuance; no GitHub username/password fixtures are required.
 - No production deployment, production data mutation, or release-flag change is permitted.
