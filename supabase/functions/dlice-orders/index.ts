@@ -1268,7 +1268,7 @@ if (action === "admin-set-profile-role") {
   if (action === "erp-list-branch-checklists") {
     const branchId = safeText(body.branch_id, 80);
     const context = await checklistContext(branchId);
-    if ("error" in context) return context.error;
+    if ("error" in context && context.error) return context.error;
     const { data, error } = await admin.from("branch_operation_checklist_runs")
       .select("id,branch_id,business_date,checklist_type,template_version,items,status,notes,started_by,completed_by,started_at,completed_at,version,updated_at")
       .eq("branch_id", branchId).eq("business_date", context.businessDate)
@@ -1282,7 +1282,7 @@ if (action === "admin-set-profile-role") {
     const checklistType = safeText(body.checklist_type, 20);
     if (!Object.prototype.hasOwnProperty.call(branchChecklistTemplates, checklistType)) return fail("Jenis checklist tidak valid.", 422, origin);
     const context = await checklistContext(branchId);
-    if ("error" in context) return context.error;
+    if ("error" in context && context.error) return context.error;
     if (context.branch.status !== "active") return fail("Checklist operasional hanya dapat dimulai pada cabang berstatus aktif.", 409, origin);
     const items = branchChecklistTemplates[checklistType].map((item) => ({
       ...item, status: "pending", notes: "", checked_by: null, checked_at: null,
