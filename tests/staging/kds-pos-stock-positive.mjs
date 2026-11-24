@@ -352,10 +352,12 @@ async function main() {
   });
 
   const receipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: saleId }, ownerToken);
+  assert.equal(receipt.replayed, false, "first receipt retrieval must create a new immutable snapshot");
   assert.equal(receipt.snapshot.transaction_code, sale.transaction_code);
   assert.equal(receipt.snapshot.items[0].modifiers[0].code, modifierCode);
   const receiptReplay = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: saleId }, ownerToken);
   assert.equal(receiptReplay.receipt_id, receipt.receipt_id, "reprinting must reuse the immutable receipt snapshot");
+  assert.equal(receiptReplay.replayed, true, "subsequent receipt retrieval must be marked as replay");
   pass("Digital receipt snapshot is immutable and repeat retrieval reuses the same receipt", { receipt_id: receipt.receipt_id });
 
   const held = await call("erp-hold-pos-order", {
@@ -371,6 +373,9 @@ async function main() {
   assert.equal(resumedReplay.idempotent_replay, true);
   pass("Held order resumes once and returns a stable sale idempotency key on retry", { hold_id: held.hold_id });
 
+  const shiftBeforeSplit = (await call("erp-list-shifts", { branch_id: branchId }, ownerToken)).shifts.find((row) => row.id === shift.id);
+  assert.ok(shiftBeforeSplit, "active shift must be visible before split tender");
+  const cashBeforeSplit = Number(shiftBeforeSplit.expected_cash_idr);
   const splitKey = `split-${suffix}`;
   const split = await call("erp-create-pos-sale-split", {
     branch_id: branchId, shift_id: shift.id,
@@ -399,6 +404,8 @@ async function main() {
   }, ownerToken);
   assert.equal(splitReplay.sale_id, splitSaleId);
   assert.equal(splitReplay.idempotent_replay, true);
+  const shiftAfterSplit = (await call("erp-list-shifts", { branch_id: branchId }, ownerToken)).shifts.find((row) => row.id === shift.id);
+  assert.equal(Number(shiftAfterSplit.expected_cash_idr) - cashBeforeSplit, 40, "cash drawer expectation must increase only by the cash tender allocation");
   await expectStatus("erp-create-pos-sale-split", {
     branch_id: branchId, shift_id: shift.id,
     items: [{ slug: productSlug, quantity: 1 }], discount_idr: 0,
@@ -434,12 +441,30 @@ async function main() {
     ] },
   }, ownerToken, 409);
   const splitReconciliation = await call("erp-reconcile-pos-sale", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
+  assert.equal(splitReconciliation.sale?.payment_status, "paid");
+  assert.equal(splitReconciliation.sale?.payment_method, "split");
   assert.equal(splitReconciliation.payment_reconciliation.status, "RECONCILED");
+  assert.equal(splitReconciliation.payment_reconciliation.expected_total_idr, 100);
   assert.equal(splitReconciliation.payment_reconciliation.allocated_total_idr, 100);
   assert.equal(splitReconciliation.payment_reconciliation.cash_tender_idr, 40);
+  assert.equal(splitReconciliation.payment_reconciliation.noncash_tender_idr, 60);
+  assert.deepEqual([...splitReconciliation.payment_reconciliation.distinct_methods].sort(), ["cash", "qris"]);
+  assert.equal((splitReconciliation.tender_allocations || []).length, 2);
+  assert.equal((splitReconciliation.items || []).length, 1);
+  assert.ok(splitReconciliation.kitchen_ticket?.id, "split POS sale must create a KDS ticket");
+  assert.equal((splitReconciliation.kitchen_ticket?.kitchen_ticket_items || []).length, 1);
+  assert.equal((splitReconciliation.stock_movements || []).length, 2, "split sale must create recipe stock movements");
+  assert.ok((splitReconciliation.audit_events || []).some((event) => event.action === "pos_sale_created"), "split sale must have an audit event");
+  const splitStock = { balances: splitReconciliation.stock_balances || [] };
+  assert.equal(Number((afterFlour - balanceOf(splitStock, flourId)).toFixed(3)), 50, "split sale must consume 50g flour");
+  assert.equal(Number((afterSecond - balanceOf(splitStock, secondIngredientId)).toFixed(3)), 10, "split sale must consume 10g second ingredient");
   const splitReceipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
+  assert.equal(splitReceipt.replayed, false, "first split receipt retrieval must persist the immutable snapshot");
   assert.equal(splitReceipt.snapshot.payment_method, "split");
   assert.equal(splitReceipt.snapshot.tenders.length, 2);
+  const splitReceiptReplay = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
+  assert.equal(splitReceiptReplay.receipt_id, splitReceipt.receipt_id);
+  assert.equal(splitReceiptReplay.replayed, true);
   pass("Split tender exact-sum, cash/noncash reconciliation, direct/offline idempotency and receipt pass", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
 
   evidence.status = "PASS";
