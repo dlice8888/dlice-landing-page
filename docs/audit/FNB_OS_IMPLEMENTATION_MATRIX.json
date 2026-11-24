@@ -4372,8 +4372,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 93,
-    "status": "INCOMPLETE; two PARTIAL features have provisional weighted scores: tenant/member isolation 58% and tenant directory/onboarding 30%. 93 PARTIAL features remain unscored pending six-dimension decomposition."
+    "unscored_partial_features": 98,
+    "status": "INCOMPLETE; two PARTIAL features have provisional weighted scores: tenant/member isolation 58% and tenant directory/onboarding 30%. 98 PARTIAL features remain unscored pending six-dimension decomposition."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -5514,15 +5514,15 @@
   "latest_live_audit_2026_11_24": {
     "as_of": "2026-11-24 07:25 WIB",
     "repository": "dlice8888/dlice-landing-page",
-    "staging_commit": "abea9ffd4d7b198e88d0a19d906d912fa45bc35a",
+    "staging_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
     "feature_counts": {
       "total": 189,
-      "partial": 95,
-      "not_verified": 88,
-      "blocked": 6,
+      "partial": 100,
+      "not_verified": 84,
+      "blocked": 5,
       "done": 0,
       "scored_partial": 2,
-      "unscored_partial": 93
+      "unscored_partial": 98
     },
     "domain_counts": [
       {
@@ -5536,9 +5536,9 @@
       {
         "domain": "POS & Checkout",
         "total": 13,
-        "partial": 7,
-        "not_verified": 5,
-        "blocked": 1,
+        "partial": 12,
+        "not_verified": 1,
+        "blocked": 0,
         "done": 0
       },
       {
@@ -5740,8 +5740,8 @@
       "project_id": "higoadrzxnhzbbwhdbmh",
       "status": "ACTIVE_HEALTHY",
       "postgres": "17.11.0.003",
-      "applied_migrations": 49,
-      "latest_applied_migration": "20261119182606",
+      "applied_migrations": 61,
+      "latest_applied_migration": "20261124121515",
       "staging_source_migration_files": 58,
       "public_tables": 64,
       "rls_enabled_tables": 64,
@@ -5776,12 +5776,12 @@
         "performance": [
           {
             "name": "unindexed_foreign_keys",
-            "count": 26,
-            "detail": "Shared staging DB remains unchanged; 24 covering indexes are merged in source and disposable replay passes, pending separately approved shared staging application."
+            "count": 0,
+            "detail": "All foreign-key constraints are covered after the checklist updated_by follow-up index migration."
           },
           {
             "name": "unused_index",
-            "count": 49,
+            "count": 72,
             "detail": "Retain until representative workload and EXPLAIN review."
           }
         ],
@@ -5792,39 +5792,19 @@
       "edge_function": {
         "name": "dlice-orders",
         "status": "ACTIVE",
-        "version": 71,
+        "version": 72,
         "verify_jwt": false,
         "custom_handler_auth": "getAdmin(req) present",
         "TENANT_ISOLATION_RELEASED": false,
         "PUBLIC_TENANT_ROUTING_RELEASED": false
       },
-      "source_only_migrations": [
-        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-        "20261120110000_command_center_summary.sql",
-        "20261120120000_atomic_branch_checklist_audit.sql",
-        "20261121100000_atomic_admin_permission_audit.sql",
-        "20261121120000_add_fk_covering_indexes.sql",
-        "20261121130000_atomic_tenant_invite_lifecycle.sql",
-        "20261121153000_remove_redundant_zero_scan_indexes.sql",
-        "20261121160000_atomic_admin_profile_mutation_audit.sql",
-        "20261121170000_atomic_branch_assignment_audit.sql"
-      ],
+      "source_only_migrations": [],
       "migration_parity": {
-        "source_files": 58,
-        "applied_versions": 49,
-        "latest_applied_version": "20261119182606",
-        "source_only_count": 9,
-        "source_only_files": [
-          "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-          "20261120110000_command_center_summary.sql",
-          "20261120120000_atomic_branch_checklist_audit.sql",
-          "20261121100000_atomic_admin_permission_audit.sql",
-          "20261121120000_add_fk_covering_indexes.sql",
-          "20261121130000_atomic_tenant_invite_lifecycle.sql",
-          "20261121153000_remove_redundant_zero_scan_indexes.sql",
-          "20261121160000_atomic_admin_profile_mutation_audit.sql",
-          "20261121170000_atomic_branch_assignment_audit.sql"
-        ],
+        "source_files": 61,
+        "applied_versions": 61,
+        "latest_applied_version": "20261124121515",
+        "source_only_count": 0,
+        "source_only_files": [],
         "db_only_versions": [],
         "duplicate_source_versions": []
       }
@@ -5855,7 +5835,30 @@
       ],
       "progress": "93 PARTIAL features remain unscored. Keep percentages unassigned until their six weighted evidence dimensions are decomposed; do not invent scores."
     },
-    "scope": "Read-only Supabase audit, PR #136 source integration and exact-head disposable replay; P01-P09 rerun on current staging head. No shared staging migration, Auth metadata, Edge Function deployment, business data or production mutation."
+    "scope": "Read-only Supabase audit, PR #136 source integration and exact-head disposable replay; P01-P09 rerun on current staging head. No shared staging migration, Auth metadata, Edge Function deployment, business data or production mutation.",
+    "p0_closeout": {
+      "pr138": "MERGED",
+      "pr139": "CLOSED_SUPERSEDED_BY_PR138",
+      "pr141": "MERGED",
+      "pr142": "CLOSED_AUDIT_REFRESH",
+      "p01_p09": {
+        "passed": 9,
+        "failed": 0,
+        "blocked": 0,
+        "skipped": 0
+      },
+      "edge_function": {
+        "name": "dlice-orders",
+        "version": 72,
+        "status": "ACTIVE",
+        "verify_jwt": false
+      },
+      "release_flags": {
+        "TENANT_ISOLATION_RELEASED": false,
+        "PUBLIC_TENANT_ROUTING_RELEASED": false
+      },
+      "security_warning": "Supabase leaked-password protection remains WARN/OPEN."
+    }
   },
   "migration_reconciliation_2026_11_24": {
     "observed_at": "2026-11-24T00:24:46Z",
