@@ -8,6 +8,9 @@
 
 - Split tender RPC records two to five positive cash/bank-transfer/QRIS allocations, requires at least two distinct methods, and refuses settlement unless the allocations equal the final sale total exactly.
 - Split checkout uses a separate actor/branch/idempotency fingerprint and advisory lock, then delegates item pricing, modifiers, recipe consumption, KDS creation and stock deduction to the existing atomic POS sale routine. The full transaction rolls back if tender validation fails.
+- The cashier UI supports split tender and persists the operation in the IndexedDB offline queue. The sync endpoint routes split operations through the same atomic RPC and records an offline receipt, allowing safe retry after a lost response.
+- Sales reconciliation now returns tender allocations, allocated total, cash portion and non-cash portion; the POS report aggregates cash/non-cash from tender rows rather than treating the entire split sale as one method.
+- The ERP POS workspace now renders active modifier selectors, a hold/resume list, Owner-only discount entry, split tender fields and a print-receipt action.
 - Cash tender allocation alone increases the shift's expected cash drawer amount. Non-cash allocations do not inflate cash.
 - Held orders are persisted by branch, cashier, shift and client hold key; a changed payload with the same key is rejected. Resume is actor-scoped, one-way, returns a stable sale idempotency key and rejects expired holds.
 - Digital receipts are generated from the committed sale and line snapshots, including modifier/substitution snapshots and tender allocations. A unique sale constraint makes repeat retrieval reuse the original immutable receipt.
