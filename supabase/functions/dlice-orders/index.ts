@@ -1465,6 +1465,18 @@ if (action === "admin-set-profile-role") {
     const itemId = safeText(body.inventory_item_id, 80), quantity = Number(body.quantity);
     if (!await branchAccess(sourceBranchId) || !await branchAccess(destinationBranchId)) return fail("Akses ke cabang asal dan tujuan wajib diberikan.", 403, origin);
     if (!itemId || !Number.isFinite(quantity) || quantity <= 0 || quantity > 100000000 || sourceBranchId === destinationBranchId) return fail("Cabang tujuan, item, dan jumlah transfer harus valid.", 422, origin);
+    // Enforce tenant equality before the RPC; branch access alone does not
+    // prove that both endpoints belong to the same tenant.
+    const { data: transferBranches, error: branchScopeError } = await admin.from("branches")
+      .select("id,tenant_id")
+      .in("id", [sourceBranchId, destinationBranchId]);
+    if (branchScopeError) return fail("Cakupan cabang transfer gagal diperiksa.", 500, origin);
+    if (transferBranches?.length !== 2) return fail("Cakupan cabang transfer tidak dapat diverifikasi.", 403, origin);
+    const sourceTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === sourceBranchId)?.tenant_id;
+    const destinationTenantId = transferBranches.find((branch: { id: string; tenant_id: string | null }) => branch.id === destinationBranchId)?.tenant_id;
+    if (!sourceTenantId || !destinationTenantId || sourceTenantId !== destinationTenantId) {
+      return fail("Transfer stok hanya diizinkan antar cabang dalam tenant yang sama.", 403, origin);
+    }
     const idempotencyKey = safeText(body.idempotency_key, 160);
     if (idempotencyKey.length < 8) return fail("Kunci idempotensi transfer tidak valid.", 422, origin);
     const transferNumber = safeText(body.transfer_number, 60) || "TRF-" + new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14) + "-" + crypto.randomUUID().slice(0, 8).toUpperCase();
