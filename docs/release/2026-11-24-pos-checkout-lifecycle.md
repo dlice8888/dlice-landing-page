@@ -32,3 +32,10 @@
 3. Runtime staging E2E runs only after PR review/merge and explicit staging mutation authorization.
 4. Reconcile sale total, tender sum, cash drawer delta, stock movements, KDS ticket, receipt snapshot and audit events.
 5. Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. No production deployment or data changes.
+
+## Staging migration record — 2026-11-24
+
+- POS lifecycle migration applied to staging as database version `20261124134101`.
+- POS lifecycle FK supporting-index migration applied as database version `20261124134222`.
+- The source migration filenames are aligned to those recorded database versions to preserve source/staging parity.
+- Supabase Performance Advisor reports zero unindexed foreign keys after the follow-up indexes. Unused-index notices are reviewed separately; no indexes were mass-deleted.
