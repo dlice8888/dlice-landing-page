@@ -55,6 +55,9 @@ let ownerUserId = "";
 let createdShiftId = null;
 let trackingTouched = false;
 let productTouched = false;
+let modifierId = null;
+let modifierTouched = false;
+let splitSaleId = null;
 
 async function call(action, payload, token = managerToken) {
   const response = await fetch(edge, {
@@ -90,6 +93,17 @@ function pass(name, details = {}) {
 
 async function restoreQaProduct() {
   if (!ownerToken) return;
+  if (modifierTouched && modifierId) {
+    try {
+      await call("erp-save-product-modifier", {
+        modifier_id: modifierId, product_id: productId, modifier_group: "qa-e2e",
+        modifier_code: modifierCode, name: "QA E2E modifier", price_delta_idr: 25,
+        is_required: false, is_active: false,
+      }, ownerToken);
+    } catch (error) {
+      evidence.cleanup_errors.push(`QA modifier deactivate: ${error.message}`);
+    }
+  }
   if (trackingTouched) {
     try {
       await call("erp-set-product-stock-tracking", { product_id: productId, enabled: false }, ownerToken);
@@ -221,6 +235,16 @@ async function main() {
   const beforeSecond = balanceOf(inventory, secondIngredientId);
   assert.ok(beforeFlour >= 100 && beforeSecond >= 20, "QA recipe stock must be available");
 
+  const modifierCode = `qa-${suffix.replace(/[^a-z0-9]/gi, "").slice(-20).toLowerCase()}`;
+  const modifierResult = await call("erp-save-product-modifier", {
+    product_id: productId, modifier_group: "qa-e2e", modifier_code: modifierCode,
+    name: "QA E2E modifier", price_delta_idr: 25, is_required: false, is_active: true,
+  }, ownerToken);
+  modifierId = modifierResult.modifier?.id;
+  assert.ok(modifierId, "Owner must create an isolated QA modifier");
+  modifierTouched = true;
+  pass("Modifier option is created through the audited catalog mutation path");
+
   const shifts = await call("erp-list-shifts", { branch_id: branchId }, managerToken);
   let shift = (shifts.shifts || []).find((row) => row.status === "open" && row.opened_by === managerUserId);
   if (!shift) {
@@ -234,7 +258,7 @@ async function main() {
     type: "pos-sale",
     branch_id: branchId,
     shift_id: shift.id,
-    items: [{ slug: productSlug, quantity: 1 }],
+    items: [{ slug: productSlug, quantity: 1, modifiers: [{ code: modifierCode }] }],
     payment_method: "cash",
     customer_reference: `QA-${suffix}`,
     notes: note,
@@ -247,7 +271,8 @@ async function main() {
   const saleId = sale.sale_id || sale.result?.sale_id;
   assert.ok(saleId, "POS sale must return a sale ID");
   assert.equal(sale.payment_status || "paid", "paid");
-  pass("POS sale commits with paid status", { sale_id: saleId, transaction_code: sale.transaction_code });
+  assert.equal(Number(sale.total_idr), 125, "modifier price delta must be included in the committed sale total");
+  pass("POS sale commits with selected modifier and adjusted price", { sale_id: saleId, transaction_code: sale.transaction_code, total_idr: sale.total_idr });
 
   const directReplay = await call("erp-create-pos-sale", { ...operation, idempotency_key: operationId }, managerToken);
   assert.equal(directReplay.sale_id, saleId, "Same idempotency key must return the original sale");
@@ -284,6 +309,7 @@ async function main() {
   assert.ok(ticket, "A paid POS sale must create exactly one KDS ticket");
   assert.equal((ticket.kitchen_ticket_items || []).length, 1, "KDS ticket must contain the committed sale line");
   assert.equal(ticket.kitchen_ticket_items[0].product_name_snapshot, "[TEST ONLY] Staging QA Fixture Product");
+  assert.equal(ticket.kitchen_ticket_items[0].modifier_snapshot?.[0]?.code, modifierCode, "KDS ticket must preserve the selected modifier snapshot");
   const ticketCount = (ticketResponse.tickets || []).filter((row) => row.pos_sale_id === saleId).length;
   assert.equal(ticketCount, 1, "POS sale must create exactly one ticket");
   for (const status of ["accepted", "preparing", "ready", "served"]) {
@@ -325,10 +351,76 @@ async function main() {
     audit_actions: [...new Set((reconciliation.audit_events || []).map((event) => event.action))],
   });
 
+  const receipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: saleId }, ownerToken);
+  assert.equal(receipt.snapshot.transaction_code, sale.transaction_code);
+  assert.equal(receipt.snapshot.items[0].modifiers[0].code, modifierCode);
+  const receiptReplay = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: saleId }, ownerToken);
+  assert.equal(receiptReplay.receipt_id, receipt.receipt_id, "reprinting must reuse the immutable receipt snapshot");
+  pass("Digital receipt snapshot is immutable and repeat retrieval reuses the same receipt", { receipt_id: receipt.receipt_id });
+
+  const held = await call("erp-hold-pos-order", {
+    branch_id: branchId, shift_id: shift.id, hold_key: `hold-${suffix}`,
+    payload: { items: [{ slug: productSlug, quantity: 1 }], payment_method: "cash", notes: note },
+  }, ownerToken);
+  assert.equal(held.status, "held");
+  const resumed = await call("erp-resume-pos-order", { branch_id: branchId, hold_id: held.hold_id }, ownerToken);
+  assert.equal(resumed.status, "resumed");
+  assert.equal(resumed.payload.items[0].slug, productSlug);
+  const resumedReplay = await call("erp-resume-pos-order", { branch_id: branchId, hold_id: held.hold_id }, ownerToken);
+  assert.equal(resumedReplay.sale_idempotency_key, resumed.sale_idempotency_key);
+  assert.equal(resumedReplay.idempotent_replay, true);
+  pass("Held order resumes once and returns a stable sale idempotency key on retry", { hold_id: held.hold_id });
+
+  const splitKey = `split-${suffix}`;
+  const split = await call("erp-create-pos-sale-split", {
+    branch_id: branchId, shift_id: shift.id,
+    items: [{ slug: productSlug, quantity: 1 }], discount_idr: 0,
+    customer_reference: `QA-SPLIT-${suffix}`, notes: note,
+    idempotency_key: splitKey,
+    tenders: [
+      { payment_method: "cash", amount_idr: 40, reference: `CASH-${suffix}` },
+      { payment_method: "qris", amount_idr: 60, reference: `QRIS-${suffix}` },
+    ],
+  }, ownerToken);
+  splitSaleId = split.sale_id;
+  assert.ok(splitSaleId);
+  assert.equal(split.payment_method, "split");
+  assert.equal(Number(split.total_idr), 100);
+  assert.equal(split.tenders.reduce((sum, tender) => sum + Number(tender.amount_idr), 0), 100);
+  const splitReplay = await call("erp-create-pos-sale-split", {
+    branch_id: branchId, shift_id: shift.id,
+    items: [{ slug: productSlug, quantity: 1 }], discount_idr: 0,
+    customer_reference: `QA-SPLIT-${suffix}`, notes: note,
+    idempotency_key: splitKey,
+    tenders: [
+      { payment_method: "cash", amount_idr: 40, reference: `CASH-${suffix}` },
+      { payment_method: "qris", amount_idr: 60, reference: `QRIS-${suffix}` },
+    ],
+  }, ownerToken);
+  assert.equal(splitReplay.sale_id, splitSaleId);
+  assert.equal(splitReplay.idempotent_replay, true);
+  await expectStatus("erp-create-pos-sale-split", {
+    branch_id: branchId, shift_id: shift.id,
+    items: [{ slug: productSlug, quantity: 1 }], discount_idr: 0,
+    customer_reference: `QA-SPLIT-${suffix}`, notes: note,
+    idempotency_key: splitKey,
+    tenders: [
+      { payment_method: "cash", amount_idr: 50, reference: `CASH-${suffix}` },
+      { payment_method: "qris", amount_idr: 50, reference: `QRIS-${suffix}` },
+    ],
+  }, ownerToken, 409);
+  const splitReceipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
+  assert.equal(splitReceipt.snapshot.payment_method, "split");
+  assert.equal(splitReceipt.snapshot.tenders.length, 2);
+  pass("Split tender reconciles exact cash/QRIS allocations and rejects changed idempotency payload", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
+
   evidence.status = "PASS";
   evidence.sale_id = saleId;
   evidence.transaction_code = sale.transaction_code;
   evidence.ticket_id = ticket.id;
+  evidence.split_sale_id = splitSaleId;
+  evidence.receipt_id = receipt.receipt_id;
+  evidence.hold_id = held.hold_id;
   evidence.stock_before = { flour_g: beforeFlour, second_ingredient_g: beforeSecond };
   evidence.stock_after_sale = { flour_g: afterFlour, second_ingredient_g: afterSecond };
 }
