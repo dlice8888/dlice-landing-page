@@ -122,7 +122,7 @@ CREATE POLICY pos_sale_receipts_deny_direct_client_access
   USING (false) WITH CHECK (false);
 
 REVOKE ALL ON public.pos_sale_tenders, public.pos_checkout_idempotency_requests,
-  public.pos_held_orders, public.pos_sale_receipts FROM PUBLIC, anon, authenticated;
+  public.pos_held_orders, public.pos_sale_receipts FROM PUBLIC, anon, authenticated, service_role;
 GRANT SELECT, INSERT ON public.pos_sale_tenders,
   public.pos_checkout_idempotency_requests TO service_role;
 GRANT SELECT, INSERT, UPDATE ON public.pos_held_orders TO service_role;
