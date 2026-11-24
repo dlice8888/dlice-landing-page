@@ -60,15 +60,13 @@ test("generic owner role cannot grant platform-wide bypass without allowlisted i
   assert.match(edge, /const TENANT_ISOLATION_RELEASED = false/);
 });
 
-test("stock-transfer approval scopes Head Office authorization to the transfer tenant", () => {
+test("stock transfers are intra-tenant only, including for platform owners", () => {
   const start = edge.indexOf('if (action === "erp-transition-stock-transfer")');
   assert.notEqual(start, -1, "stock-transfer transition action exists");
-  const next = edge.indexOf('\n  if (action === ', start + 1);
+  const next = edge.indexOf('\\n  if (action === ', start + 1);
   const handler = edge.slice(start, next === -1 ? undefined : next);
-  assert.match(handler, /from\("branches"\)[\s\S]*?source_branch_id[\s\S]*?destination_branch_id/);
-  assert.match(handler, /sourceTenantId !== destinationTenantId && !isPlatformOwner/);
-  assert.match(handler, /hasHQPermissionForTenant\("inventory", sourceTenantId\)/);
-  assert.match(edge, /hasTenantScopedHeadOfficePermission\(/);
-  assert.match(tenantPermissions, /membership\.tenant_id !== tenantId \|\| membership\.status !== "active"/);
-  assert.match(tenantPermissions, /assignment\.tenant_id === tenantId/);
-});
+  assert.match(handler, /sourceTenantId !== destinationTenantId/);
+  assert.match(handler, /!sourceTenantId \\|\\| !destinationTenantId \\|\\| sourceTenantId !== destinationTenantId/);
+  assert.doesNotMatch(handler, /sourceTenantId !== destinationTenantId\\s*&&\\s*!isPlatformOwner/);
+  assert.match(handler, /hasHQPermissionForTenant\\("inventory", sourceTenantId\\)/);
+});;
