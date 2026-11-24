@@ -479,3 +479,15 @@ The Supabase MCP Management API assigns its own timestamp to each `apply_migrati
 - P01–P09 baseline on the pre-deployment staging head passed 9/9 with no failed, blocked or skipped cases. It must be rerun against the applied schema and deployed Edge Function before this release gate can close.
 - The `dlice-orders` Edge Function has not yet been deployed from the merged PR to staging in this audit step.
 - `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged. No production database, secrets, deployment or release was changed.
+
+
+## Post-deployment acceptance — 24 November 2026
+
+The previous line stating that P01-P09 and the Edge Function deployment were still pending is superseded by this closeout:
+- PR #141 merged as `0a2193c7d775fb92cb39e6042d8bac51ad2b7fcb`; source migration filenames now match the 61-entry Supabase staging ledger.
+- `dlice-orders` staging Edge Function version 72 is ACTIVE with `verify_jwt=false` preserved.
+- P01-P09 rerun after migration and Edge Function deployment: PASS 9, FAILED 0, BLOCKED 0, SKIPPED 0 (run `45383998161`, latest attempt).
+- Runtime CORS probes after deployment: PASS for allowed, foreign and absent origins (run `45389940609`).
+- Exact-head disposable replay: 61 migrations, 13 pgTAP files, 317 assertions PASS (run `45392506491`).
+- Performance Advisor: zero unindexed foreign keys. Security Advisor leaked-password protection warning remains open.
+- Release flags remain false; no production resources were changed.
