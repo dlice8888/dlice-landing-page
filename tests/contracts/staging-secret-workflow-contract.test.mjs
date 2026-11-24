@@ -72,7 +72,12 @@ test("KDS/POS/Stock staging E2E uses only staging Environment Supabase endpoint 
   const kds = readFileSync(".github/workflows/staging-kds-pos-stock-positive-e2e.yml", "utf8");
   const triggers = kds.split(/^permissions:\s*$/m, 1)[0];
   assert.match(triggers, /^  workflow_dispatch:\s*$/m);
-  assert.doesNotMatch(triggers, /^\s+(?:push|schedule):/m);
+  assert.match(triggers, /^  push:\s*$/m);
+  assert.match(triggers, /branches:\s*\n\s+- feat\/pos-checkout-lifecycle-20261124/);
+  assert.doesNotMatch(triggers, /^\s+schedule:/m, "staging E2E must not run unattended");
+  assert.match(kds, /github\.ref\s*==\s*'refs\/heads\/feat\/pos-checkout-lifecycle-20261124'/);
+  assert.match(kds, /github\.event_name\s*==\s*'push'/);
+  assert.match(kds, /github\.event\.head_commit\.message, '\[staging-e2e\]'/);
   assert.match(kds, /github\.ref\s*==\s*'refs\/heads\/staging'/);
   assert.match(kds, /github\.event_name\s*==\s*'workflow_dispatch'/);
   assert.match(kds, /inputs\.confirm_staging_mutations\s*==\s*true/);
