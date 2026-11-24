@@ -1809,11 +1809,45 @@ if (action === "admin-set-profile-role") {
       if(prior.actor_user_id!==actor.user.id||prior.branch_id!==branchId||prior.payload_fingerprint!==fingerprint)return fail("ID operasi offline sudah dipakai untuk payload berbeda.",409,origin);
       return json({ok:true,replayed:true,result:prior.result},200,origin);
     }
-    const items=Array.isArray(operation.items)?(operation.items as any[]).map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers:[],substitutions:Array.isArray(x?.substitutions)?x.substitutions:[]})): [];
+    const items=Array.isArray(operation.items)?(operation.items as any[]).map((x:any)=>({
+      slug:safeText(x?.slug,80),quantity:Number(x?.quantity),
+      modifiers:Array.isArray(x?.modifiers)?x.modifiers.map((m:any)=>({code:safeText(m?.code,40)})):[],
+      substitutions:Array.isArray(x?.substitutions)?x.substitutions.map((sub:any)=>({
+        recipe_ingredient_id:safeText(sub?.recipe_ingredient_id,80),
+        substitute_inventory_item_id:safeText(sub?.substitute_inventory_item_id,80),
+      })):[],
+    })): [];
     if(!items.length||items.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000))return fail("Item transaksi offline tidak valid.",422,origin);
-    const key=operationId;
-    const {data:result,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:safeText(operation.payment_method,20),p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key});
-    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
+    const key=operationId, discount=Number(operation.discount_idr||0);
+    if(!Number.isSafeInteger(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon offline hanya dapat digunakan Owner.",403,origin);
+    let result:any, error:any;
+    if(operation.tenders!==undefined){
+      if(!Array.isArray(operation.tenders)||operation.tenders.length<2||operation.tenders.length>5)return fail("Rincian split tender offline tidak valid.",422,origin);
+      const tenders=operation.tenders.map((t:any)=>({
+        payment_method:safeText(t?.payment_method,20),amount_idr:t?.amount_idr,reference:safeText(t?.reference,120),
+      }));
+      if(tenders.some((t:any)=>!["cash","bank_transfer","qris"].includes(t.payment_method)||!Number.isSafeInteger(Number(t.amount_idr))||Number(t.amount_idr)<=0||Number(t.amount_idr)>1000000000))return fail("Rincian split tender offline tidak valid.",422,origin);
+      const split=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{
+        p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_discount_idr:discount,
+        p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),
+        p_actor_user_id:actor.user.id,p_idempotency_key:key,p_tenders:tenders,
+      });
+      result=split.data;error=split.error;
+    }else{
+      const sale=await admin.rpc("erp_create_pos_sale_idempotent",{
+        p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:safeText(operation.payment_method,20),
+        p_discount_idr:discount,p_customer_reference:safeText(operation.customer_reference,120),
+        p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key,
+      });
+      result=sale.data;error=sale.error;
+    }
+    if(error)return fail(
+      error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":
+      error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":
+      error.message.includes("split_tender_total_mismatch")?"Jumlah split tender harus sama dengan total transaksi.":
+      "Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",
+      error.message.includes("service_role_required")?403:409,origin
+    );
     const {data:receipt,error:receiptError}=await admin.from("offline_sync_receipts").insert({branch_id:branchId,actor_user_id:actor.user.id,device_id:deviceId,client_operation_id:operationId,operation_type:"pos-sale",payload_fingerprint:fingerprint,result}).select("id,client_operation_id,synced_at").single();
     if(receiptError){
       const {data:retry}=await admin.from("offline_sync_receipts").select("actor_user_id,branch_id,payload_fingerprint,result").eq("device_id",deviceId).eq("client_operation_id",operationId).maybeSingle();
