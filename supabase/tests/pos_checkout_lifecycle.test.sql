@@ -1,6 +1,6 @@
 BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
-SELECT plan(48);
+SELECT plan(51);
 
 SELECT ok(to_regclass('public.pos_sale_tenders') IS NOT NULL, 'split tender ledger table exists');
 SELECT ok(to_regclass('public.pos_checkout_idempotency_requests') IS NOT NULL, 'split checkout idempotency table exists');
@@ -21,12 +21,16 @@ SELECT ok(NOT has_table_privilege('authenticated','public.pos_held_orders','SELE
 SELECT ok(NOT has_table_privilege('anon','public.pos_sale_receipts','SELECT'), 'anon cannot read POS receipts');
 SELECT ok(NOT has_table_privilege('authenticated','public.pos_sale_receipts','SELECT'), 'authenticated cannot read POS receipts');
 
-SELECT ok(has_table_privilege('service_role','public.pos_sale_tenders','SELECT,INSERT,UPDATE,DELETE'), 'service_role can manage tender ledger');
-SELECT ok(has_table_privilege('service_role','public.pos_checkout_idempotency_requests','SELECT,INSERT,UPDATE,DELETE'), 'service_role can manage checkout idempotency');
-SELECT ok(has_table_privilege('service_role','public.pos_held_orders','SELECT,INSERT,UPDATE,DELETE'), 'service_role can manage held orders');
+SELECT ok(has_table_privilege('service_role','public.pos_sale_tenders','SELECT,INSERT'), 'service_role can create and read tender ledger');
+SELECT ok(has_table_privilege('service_role','public.pos_checkout_idempotency_requests','SELECT,INSERT'), 'service_role can create and read checkout idempotency');
+SELECT ok(has_table_privilege('service_role','public.pos_held_orders','SELECT,INSERT,UPDATE'), 'service_role can create, read and resume held orders');
 SELECT ok(has_table_privilege('service_role','public.pos_sale_receipts','SELECT,INSERT'), 'service_role can create and read receipts');
 SELECT ok(NOT has_table_privilege('service_role','public.pos_sale_receipts','UPDATE'), 'service_role cannot update immutable receipts');
 SELECT ok(NOT has_table_privilege('service_role','public.pos_sale_receipts','DELETE'), 'service_role cannot delete immutable receipts');
+SELECT ok(NOT has_table_privilege('service_role','public.pos_sale_tenders','UPDATE') AND NOT has_table_privilege('service_role','public.pos_sale_tenders','DELETE'), 'tender ledger is append-only');
+SELECT ok(NOT has_table_privilege('service_role','public.pos_checkout_idempotency_requests','UPDATE') AND NOT has_table_privilege('service_role','public.pos_checkout_idempotency_requests','DELETE'), 'checkout idempotency records are append-only');
+SELECT ok(NOT has_table_privilege('service_role','public.pos_held_orders','DELETE'), 'held order records cannot be deleted');
+
 SELECT ok(EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid='public.pos_sale_receipts'::regclass AND tgname='pos_sale_receipts_immutable' AND NOT tgisinternal), 'receipt mutation trigger enforces immutability');
 
 SELECT ok(to_regprocedure('public.erp_create_pos_sale_split_tender_idempotent(uuid,uuid,jsonb,bigint,text,text,uuid,text,jsonb)') IS NOT NULL, 'split tender RPC exists');
