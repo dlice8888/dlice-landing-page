@@ -1,0 +1,85 @@
+name: Staging runtime configuration smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "Exact Vercel Preview URL for the staging branch (never production)"
+        required: true
+        type: string
+  push:
+    branches: [staging]
+    paths:
+      - "api/runtime-config.js"
+      - "index.html"
+      - "erp.html"
+      - "tests/staging/runtime-config-smoke.mjs"
+      - ".github/workflows/staging-runtime-config-smoke.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-runtime-config-smoke
+  cancel-in-progress: true
+
+jobs:
+  runtime-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify preview runtime config and public read APIs
+        env:
+          PREVIEW_URL: ${{ inputs.preview_url || 'https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app' }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: node tests/staging/runtime-config-smoke.mjs
+
+  tenant-isolation:
+    name: Authenticated tenant isolation P01-P09
+    needs: runtime-smoke
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: staging
+    env:
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_PUBLIC_KEY }}
+      STAGING_TENANT_A_USERNAME: ${{ secrets.STAGING_TENANT_A_USERNAME }}
+      STAGING_TENANT_A_PASSWORD: ${{ secrets.STAGING_TENANT_A_PASSWORD }}
+      STAGING_TENANT_B_USERNAME: ${{ secrets.STAGING_TENANT_B_USERNAME }}
+      STAGING_TENANT_B_PASSWORD: ${{ secrets.STAGING_TENANT_B_PASSWORD }}
+      STAGING_TENANT_A_ID: ${{ vars.STAGING_TENANT_A_ID }}
+      STAGING_TENANT_B_ID: ${{ vars.STAGING_TENANT_B_ID }}
+      STAGING_TENANT_A_BRANCH_ID: ${{ vars.STAGING_TENANT_A_BRANCH_ID }}
+      STAGING_TENANT_B_BRANCH_ID: ${{ vars.STAGING_TENANT_B_BRANCH_ID }}
+      STAGING_TENANT_A_BRANCH_CODE: QA-DLICE-A
+      STAGING_TENANT_B_BRANCH_CODE: QA-TENANT-B
+      STAGING_TENANT_A_USER_ID: ${{ vars.STAGING_TENANT_A_USER_ID }}
+      STAGING_TENANT_B_USER_ID: ${{ vars.STAGING_TENANT_B_USER_ID }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: staging
+          persist-credentials: false
+      - uses: actions/setup-node@1a4442cacd436585916779262731d5b1621c8ec2
+        with:
+          node-version: "22"
+      - name: Execute all P01-P09 probes (no skipped tests)
+        run: |
+          node tests/runtime/dlice-tenant-jwt-isolation.mjs > staging-tenant-isolation-evidence.jsonl 2>&1
+          cat staging-tenant-isolation-evidence.jsonl
+      - name: Retain tenant-isolation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-tenant-isolation-p01-p09
+          path: staging-tenant-isolation-evidence.jsonl
+          if-no-files-found: error
+          retention-days: 14

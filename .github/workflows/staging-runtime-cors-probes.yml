@@ -8,6 +8,10 @@ on:
       - "supabase/functions/dlice-orders/index.ts"
       - "tests/staging/procurement-requisition-contract.mjs"
       - "tests/staging/procurement-receiving-positive.mjs"
+      - "tests/staging/runtime-config-smoke.mjs"
+      - "api/runtime-config.js"
+      - "index.html"
+      - "erp.html"
   pull_request:
     branches: [staging]
     paths:
@@ -15,7 +19,16 @@ on:
       - "supabase/functions/dlice-orders/index.ts"
       - "tests/staging/procurement-requisition-contract.mjs"
       - "tests/staging/procurement-receiving-positive.mjs"
+      - "api/runtime-config.js"
+      - "index.html"
+      - "erp.html"
   workflow_dispatch:
+    inputs:
+      preview_origin:
+        description: "Exact HTTPS origin of the Vercel staging Preview (origin only, no path)"
+        required: false
+        type: string
+        default: "https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app"
 
 permissions:
   contents: read
@@ -28,7 +41,7 @@ jobs:
       - name: Probe exact allowed, denied, and absent origins
         env:
           FUNCTION_URL: https://higoadrzxnhzbbwhdbmh.supabase.co/functions/v1/dlice-orders
-          ALLOWED_ORIGIN: https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app
+          ALLOWED_ORIGIN: ${{ inputs.preview_origin || 'https://dlice-landing-page-git-staging-dlice8888-7332.vercel.app' }}
           FOREIGN_ORIGIN: https://cors-probe-foreign.invalid
         shell: bash
         run: |
