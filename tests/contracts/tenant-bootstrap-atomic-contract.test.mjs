@@ -38,7 +38,8 @@ test("tenant creation and owner membership use one database transaction", () => 
 
 test("bootstrap RPCs are service-role-only and write audit inside their transaction", () => {
   for (const fn of ["dlice_bootstrap_initial_owner", "dlice_create_tenant_with_owner"]) {
-    assert.match(migration, new RegExp(`FUNCTION public\\.${fn}[\\s\\S]*?SECURITY INVOKER[\\s\\S]*?auth\\.role\\(\\) IS DISTINCT FROM 'service_role'[\\s\\S]*?INSERT INTO public\\.admin_audit_logs`));
+    assert.match(migration, new RegExp(`FUNCTION public\\.${fn}[\\s\\S]*?SECURITY INVOKER[\\s\\S]*?\\(auth\\.jwt\\(\\)\\s*->>\\s*'role'\\) IS DISTINCT FROM 'service_role'[\\s\\S]*?INSERT INTO public\\.admin_audit_logs`));
+    assert.doesNotMatch(migration, new RegExp(`FUNCTION public\\.${fn}[\\s\\S]*?auth\\.role\\(\\)`));
     assert.match(migration, new RegExp(`REVOKE ALL ON FUNCTION public\\.${fn}`));
     assert.match(migration, new RegExp(`GRANT EXECUTE ON FUNCTION public\\.${fn}[\\s\\S]*?TO service_role`));
   }
