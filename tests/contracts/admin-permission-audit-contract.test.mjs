@@ -7,11 +7,11 @@ const source = await readFile(
   "utf8",
 );
 const migration = await readFile(
-  new URL("../../supabase/migrations/20261121100000_atomic_admin_permission_audit.sql", import.meta.url),
+  new URL("../../supabase/migrations/20261124121053_atomic_admin_permission_audit.sql", import.meta.url),
   "utf8",
 );
 const profileMigration = await readFile(
-  new URL("../../supabase/migrations/20261121160000_atomic_admin_profile_mutation_audit.sql", import.meta.url),
+  new URL("../../supabase/migrations/20261124121118_atomic_admin_profile_mutation_audit.sql", import.meta.url),
   "utf8",
 );
 const createStaffBlock = source.slice(
