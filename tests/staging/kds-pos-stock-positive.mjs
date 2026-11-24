@@ -358,13 +358,24 @@ async function main() {
   const receiptReplay = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: saleId }, ownerToken);
   assert.equal(receiptReplay.receipt_id, receipt.receipt_id, "reprinting must reuse the immutable receipt snapshot");
   assert.equal(receiptReplay.replayed, true, "subsequent receipt retrieval must be marked as replay");
+  assert.deepEqual(receiptReplay.snapshot, receipt.snapshot, "receipt snapshot must remain byte-for-byte stable on repeat retrieval");
   pass("Digital receipt snapshot is immutable and repeat retrieval reuses the same receipt", { receipt_id: receipt.receipt_id });
 
+  const holdKey = `hold-${suffix}`;
+  const holdPayload = { items: [{ slug: productSlug, quantity: 1 }], payment_method: "cash", notes: note };
   const held = await call("erp-hold-pos-order", {
-    branch_id: branchId, shift_id: shift.id, hold_key: `hold-${suffix}`,
-    payload: { items: [{ slug: productSlug, quantity: 1 }], payment_method: "cash", notes: note },
+    branch_id: branchId, shift_id: shift.id, hold_key: holdKey, payload: holdPayload,
   }, ownerToken);
   assert.equal(held.status, "held");
+  const heldReplay = await call("erp-hold-pos-order", {
+    branch_id: branchId, shift_id: shift.id, hold_key: holdKey, payload: holdPayload,
+  }, ownerToken);
+  assert.equal(heldReplay.hold_id, held.hold_id);
+  assert.equal(heldReplay.idempotent_replay, true);
+  await expectStatus("erp-hold-pos-order", {
+    branch_id: branchId, shift_id: shift.id, hold_key: holdKey,
+    payload: { ...holdPayload, items: [{ slug: productSlug, quantity: 2 }] },
+  }, ownerToken, 409);
   const resumed = await call("erp-resume-pos-order", { branch_id: branchId, hold_id: held.hold_id }, ownerToken);
   assert.equal(resumed.status, "resumed");
   assert.equal(resumed.payload.items[0].slug, productSlug);
