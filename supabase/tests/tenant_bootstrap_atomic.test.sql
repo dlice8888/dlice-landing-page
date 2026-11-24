@@ -115,14 +115,14 @@ SELECT is(
   'records the owner bootstrap audit event'
 );
 SELECT throws_ok(
-  $SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000014', 'string-owner')$,
+  $$SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000014', 'string-owner')$$,
   '22023',
   'valid_owner_required',
   'rejects the string "true" platform_owner metadata during initial bootstrap'
 );
 
 SELECT throws_ok(
-  $SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000012', 'second-owner')$,
+  $$SELECT public.dlice_bootstrap_initial_owner('b0000000-0000-4000-8000-000000000012', 'second-owner')$$,
   '23505',
   'owner_already_bootstrapped',
   'rejects a second initial owner bootstrap'
@@ -187,18 +187,18 @@ INSERT INTO public.admin_profiles (
   'String platform owner metadata', true, '["*"]'::jsonb
 );
 SELECT throws_ok(
-  $SELECT public.dlice_create_tenant_with_owner(
+  $$SELECT public.dlice_create_tenant_with_owner(
     'b0000000-0000-4000-8000-000000000013', 'unauthorized-bootstrap-test', 'Unauthorized Bootstrap Test'
-  )$,
+  )$$,
   '42501',
   'active_platform_owner_required',
   'rejects tenant bootstrap without platform-owner Auth metadata'
 );
 
 SELECT throws_ok(
-  $SELECT public.dlice_create_tenant_with_owner(
+  $$SELECT public.dlice_create_tenant_with_owner(
     'b0000000-0000-4000-8000-000000000015', 'string-owner-bootstrap-test', 'String Owner Bootstrap Test'
-  )$,
+  )$$,
   '42501',
   'active_platform_owner_required',
   'rejects the string "true" platform_owner metadata for tenant creation'
