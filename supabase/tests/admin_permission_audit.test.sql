@@ -19,6 +19,7 @@ values
 on conflict (user_id) do update set role = excluded.role, permissions = excluded.permissions;
 
 select set_config('request.jwt.claim.role', 'authenticated', true);
+select set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 select throws_ok(
   $$select public.dlice_update_admin_permissions_audited(
     'b1000000-0000-4000-8000-000000000001',
@@ -42,6 +43,7 @@ select ok(not has_function_privilege(
 ), 'does not grant RPC execution to authenticated');
 
 select set_config('request.jwt.claim.role', 'service_role', true);
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
 create or replace function public.test_reject_permission_audit()
 returns trigger language plpgsql as $$
