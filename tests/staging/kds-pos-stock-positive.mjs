@@ -164,7 +164,7 @@ async function main() {
     ownerToken = session.accessToken;
     ownerUserId = session.userId;
   } catch {
-    throw new Error("STAGING_AUTH_BLOCKED: Existing confirmed staging Owner identity could not authenticate through a one-time magic link.");
+    throw new Error("STAGING_AUTH_BLOCKED: Existing staging Owner must be active, confirmed, have app_metadata.platform_owner=true, and be present in DLICE_PLATFORM_OWNER_USER_IDS.");
   }
 
   // Feature-first E2E: use the already-provisioned staging Owner identity for this vertical slice.
