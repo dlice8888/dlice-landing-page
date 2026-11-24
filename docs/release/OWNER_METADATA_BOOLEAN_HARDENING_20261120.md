@@ -2,7 +2,7 @@
 
 Date: 2026-11-20
 Target: staging source only
-Migration: `20261120125000_harden_owner_metadata_boolean.sql`
+Migration: `20261124121039_harden_owner_metadata_boolean.sql`
 
 ## Why
 The original #102 bootstrap RPCs extracted `platform_owner` as text. That makes JSON boolean `true` and JSON string `"true"` indistinguishable. D’Lice authorization requires the boolean value. The Edge Function already compares `app_metadata.platform_owner === true`; the database RPCs must enforce the same type boundary independently.
@@ -17,7 +17,7 @@ The #102 and #105 functions also use Supabase's deprecated `auth.role()` helper.
 - Add a database contract proving JSON boolean `true` differs from JSON string `"true"`.
 
 ## Migration order
-`20261120125000` follows #105 (`20261120120000`) and precedes #109 (`20261120130000`). Do not reorder or edit already merged migrations. Apply one migration at a time only after P0 runtime and release-protection gates pass.
+`20261124121039` follows #105 (`20261124121032`) and precedes #109 (`20261124121046`). Do not reorder or edit already merged migrations. Apply one migration at a time only after P0 runtime and release-protection gates pass.
 
 ## Validation
 - Free quality checks include `tests/contracts/owner-metadata-boolean-contract.test.mjs`.
