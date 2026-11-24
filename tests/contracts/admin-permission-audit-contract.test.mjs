@@ -77,7 +77,8 @@ test("permission changes fail closed when audit persistence fails", () => {
 });
 
 test("audited RPC is service-role-only and records before/after values transactionally", () => {
-  assert.match(migration, /auth\.role\(\) is distinct from 'service_role'/i);
+  assert.match(migration, /\(auth\.jwt\(\)\s*->>\s*'role'\)\s+is distinct from 'service_role'/i);
+  assert.doesNotMatch(migration, /auth\.role\(\)/i);
   assert.match(migration, /revoke all on function[\s\S]*from public, anon, authenticated/i);
   assert.match(migration, /grant execute on function[\s\S]*to service_role/i);
   assert.match(migration, /previous_permissions/);
