@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const migration = readFileSync(
-  "supabase/migrations/20261120110000_command_center_summary.sql",
+  "supabase/migrations/20261124121026_command_center_summary.sql",
   "utf8",
 );
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
