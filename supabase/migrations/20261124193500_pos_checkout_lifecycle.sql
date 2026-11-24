@@ -183,6 +183,7 @@ BEGIN
     IF v_tender ->> 'amount_idr' IS NULL
        OR length(v_tender ->> 'amount_idr') = 0
        OR (v_tender ->> 'amount_idr') ~ '[^0-9]' THEN
+      RAISE EXCEPTION 'invalid_tender_amount';
     END IF;
     v_amount := (v_tender ->> 'amount_idr')::bigint;
     IF v_amount <= 0 OR v_amount > 1000000000 THEN
