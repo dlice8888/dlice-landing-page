@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const edge = readFileSync("supabase/functions/dlice-orders/index.ts", "utf8");
-const migration = readFileSync("supabase/migrations/20261120130000_enforce_same_tenant_stock_transfers.sql", "utf8");
+const migration = readFileSync("supabase/migrations/20261124121046_enforce_same_tenant_stock_transfers.sql", "utf8");
 
 test("stock-transfer creation rejects cross-tenant branches before calling the RPC", () => {
   const start = edge.indexOf('if (action === "erp-create-stock-transfer")');
