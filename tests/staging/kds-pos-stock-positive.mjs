@@ -433,10 +433,14 @@ async function main() {
       { payment_method: "qris", amount_idr: 50, reference: `QRIS-${suffix}` },
     ] },
   }, ownerToken, 409);
+  const splitReconciliation = await call("erp-reconcile-pos-sale", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
+  assert.equal(splitReconciliation.payment_reconciliation.status, "RECONCILED");
+  assert.equal(splitReconciliation.payment_reconciliation.allocated_total_idr, 100);
+  assert.equal(splitReconciliation.payment_reconciliation.cash_tender_idr, 40);
   const splitReceipt = await call("erp-get-pos-receipt", { branch_id: branchId, sale_id: splitSaleId }, ownerToken);
   assert.equal(splitReceipt.snapshot.payment_method, "split");
   assert.equal(splitReceipt.snapshot.tenders.length, 2);
-  pass("Split tender exact-sum, direct/offline idempotency, changed-payload rejection and receipt reconciliation pass", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
+  pass("Split tender exact-sum, cash/noncash reconciliation, direct/offline idempotency and receipt pass", { sale_id: splitSaleId, receipt_id: splitReceipt.receipt_id });
 
   evidence.status = "PASS";
   evidence.sale_id = saleId;
