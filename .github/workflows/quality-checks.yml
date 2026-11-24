@@ -35,6 +35,8 @@ jobs:
         run: node --test tests/contracts/kitchen-kds-offline-contract.test.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
+      - name: Verify Owner metadata JSON boolean and current JWT role claim contract
+        run: node --test tests/contracts/owner-metadata-boolean-contract.test.mjs
       - name: Verify atomic tenant invite lifecycle contract
         run: node --test tests/contracts/tenant-invite-atomic-contract.test.mjs
       - name: Run tenant refund authorization contract tests
