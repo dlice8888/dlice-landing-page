@@ -204,6 +204,7 @@ SELECT ok(
 
 -- Password reset uses a durable audit intent before the external Supabase Auth mutation.
 SELECT set_config('request.jwt.claim.role','authenticated',true);
+SELECT set_config('request.jwt.claims', '{"role":"authenticated"}', true);
 SELECT throws_ok(
  $q$SELECT public.dlice_begin_admin_password_reset_audit('d5000000-0000-4000-8000-000000000001','d5000000-0000-4000-8000-000000000002')$q$,
  '42501','service_role_required',
