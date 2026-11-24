@@ -33,6 +33,8 @@ jobs:
         run: node scripts/staging-release-contract-tests.mjs
       - name: Run KDS POS stock and offline recovery contract
         run: node --test tests/contracts/kitchen-kds-offline-contract.test.mjs
+      - name: Run POS checkout lifecycle contract
+        run: node --test tests/contracts/pos-checkout-lifecycle-contract.test.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
       - name: Verify Owner metadata JSON boolean and current JWT role claim contract
