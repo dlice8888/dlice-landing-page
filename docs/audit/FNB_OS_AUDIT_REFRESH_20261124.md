@@ -48,7 +48,7 @@ Feature matrix source snapshot: `2026-11-24 00:00 WIB`
 - Staging head: `cc880ef648ee89248462c75b4fde50842689a131`.
 - [P01–P09 acceptance run](https://github.com/dlice8888/dlice-landing-page/actions/runs/45383998161): PASS 9, FAILED 0, BLOCKED 0, SKIPPED 0 pada staging head tersebut.
 - [PR #138](https://github.com/dlice8888/dlice-landing-page/pull/138): migration replay sebelumnya PASS, tetapi boundary regression dan static checks gagal pada head sebelumnya. Perbaikan pada branch `audit/stock-transfer-tenant-boundary-20261124` menambahkan tenant equality check pada jalur create dan release note; static checks, contract, boundary regression, CORS dan KDS contract telah PASS pada head `529545b1805c0149e6b087a79a7e3e431c35a374`; disposable migration replay kemudian selesai PASS pada run `45385436068`; 234 database contract tests lulus. PR #138 masih open dan belum diterapkan ke shared staging.
-- [PR #139](https://github.com/dlice8888/dlice-landing-page/pull/139): static checks dan disposable migration replay PASS pada head `b367c785c3041c4742bc36e439251fa47c8149c5`; belum merge dan belum diterapkan ke Supabase staging.
+- [PR #139](https://github.com/dlice8888/dlice-landing-page/pull/139): static checks, KDS offline contract, dan disposable migration replay PASS pada head `b367c785c3041c4742bc36e439251fa47c8149c5`; belum merge dan belum diterapkan ke Supabase staging.
 - PR #138 dan #139 tetap source-only; tidak boleh diperlakukan sebagai perubahan staging sebelum integrasi resmi.
 
 ### Supabase staging
