@@ -1,0 +1,36 @@
+BEGIN;
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
+SELECT plan(28);;
+SELECT has_index('public', 'backup_restore_runs', 'idx_backup_restore_runs_started_by', 'covers FK columns started_by on backup_restore_runs');
+SELECT has_index('public', 'backup_restore_runs', 'idx_backup_restore_runs_tenant_id', 'covers FK columns tenant_id on backup_restore_runs');
+SELECT has_index('public', 'branch_inventory', 'idx_branch_inventory_branch_warehouse_fk', 'covers FK columns branch_id, warehouse_id on branch_inventory');
+SELECT has_index('public', 'branch_settings', 'idx_branch_settings_updated_by', 'covers FK columns updated_by on branch_settings');
+SELECT has_index('public', 'integration_connections', 'idx_integration_connections_created_by', 'covers FK columns created_by on integration_connections');
+SELECT has_index('public', 'integration_outbox', 'idx_integration_outbox_branch_id', 'covers FK columns branch_id on integration_outbox');
+SELECT has_index('public', 'integration_outbox', 'idx_integration_outbox_connection_id', 'covers FK columns connection_id on integration_outbox');
+SELECT has_index('public', 'integration_outbox', 'idx_integration_outbox_tenant_branch', 'covers FK columns tenant_id, branch_id on integration_outbox');
+SELECT has_index('public', 'inventory_waste_events', 'idx_inventory_waste_events_created_by', 'covers FK columns created_by on inventory_waste_events');
+SELECT has_index('public', 'inventory_waste_events', 'idx_inventory_waste_events_inventory_item_id', 'covers FK columns inventory_item_id on inventory_waste_events');
+SELECT has_index('public', 'inventory_waste_events', 'idx_inventory_waste_events_tenant_branch', 'covers FK columns tenant_id, branch_id on inventory_waste_events');
+SELECT has_index('public', 'kitchen_ticket_items', 'idx_kitchen_ticket_items_order_item_id', 'covers FK columns order_item_id on kitchen_ticket_items');
+SELECT has_index('public', 'kitchen_ticket_items', 'idx_kitchen_ticket_items_pos_sale_item_id', 'covers FK columns pos_sale_item_id on kitchen_ticket_items');
+SELECT has_index('public', 'kitchen_ticket_items', 'idx_kitchen_ticket_items_product_id', 'covers FK columns product_id on kitchen_ticket_items');
+SELECT has_index('public', 'offline_sync_receipts', 'idx_offline_sync_receipts_actor_user_id', 'covers FK columns actor_user_id on offline_sync_receipts');
+SELECT has_index('public', 'pos_idempotency_requests', 'idx_pos_idempotency_requests_actor_user_id', 'covers FK columns actor_user_id on pos_idempotency_requests');
+SELECT has_index('public', 'recipe_substitutions', 'idx_recipe_substitutions_approved_by', 'covers FK columns approved_by on recipe_substitutions');
+SELECT has_index('public', 'recipe_substitutions', 'idx_recipe_substitutions_substitute_inventory_item_id', 'covers FK columns substitute_inventory_item_id on recipe_substitutions');
+SELECT has_index('public', 'shift_handover_records', 'idx_shift_handover_records_incoming_user_id', 'covers FK columns incoming_user_id on shift_handover_records');
+SELECT has_index('public', 'shift_handover_records', 'idx_shift_handover_records_outgoing_user_id', 'covers FK columns outgoing_user_id on shift_handover_records');
+SELECT has_index('public', 'shift_handover_records', 'idx_shift_handover_records_tenant_branch', 'covers FK columns tenant_id, branch_id on shift_handover_records');
+SELECT has_index('public', 'tenant_invites', 'idx_tenant_invites_accepted_by', 'covers FK columns accepted_by on tenant_invites');
+SELECT has_index('public', 'tenant_invites', 'idx_tenant_invites_invited_by', 'covers FK columns invited_by on tenant_invites');
+SELECT has_index('public', 'warehouses', 'idx_warehouses_tenant_branch', 'covers FK columns tenant_id, branch_id on warehouses');
+
+SELECT ok(to_regclass('public.stock_count_items_count_idx') IS NULL,'redundant stock count single-column index is removed');
+SELECT has_index('public','stock_count_items','stock_count_items_stock_count_id_inventory_item_id_key','composite unique index still covers stock_count_id prefix');
+SELECT ok(to_regclass('public.stock_transfer_items_transfer_idx') IS NULL,'redundant stock transfer single-column index is removed');
+SELECT has_index('public','stock_transfer_items','stock_transfer_items_transfer_id_inventory_item_id_key','composite unique index still covers transfer_id prefix');
+
+SELECT * FROM finish();
+ROLLBACK;
+
