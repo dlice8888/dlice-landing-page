@@ -190,3 +190,32 @@ Feature matrix source snapshot: `2026-11-24 00:00 WIB`
 
 ## DONE acceptance gate
 A feature becomes DONE only when all acceptance dimensions score 100%, its UI/API/database authorization paths pass positive and negative tests, exact-head CI and disposable migration replay pass, staging E2E is executed (no skipped/blocked), source transactions reconcile to downstream ledgers and audit trails, and release flags are changed only through an explicitly authorized release decision.
+
+
+## Post-application P0 closeout — 24 November 2026
+
+This update supersedes the earlier migration and PR status in the snapshot above. The 189-feature matrix itself is unchanged: **95 PARTIAL + 88 NOT VERIFIED + 6 BLOCKED + 0 DONE**. The P0 database and runtime work does not by itself satisfy the full feature acceptance criteria or transaction reconciliation needed to mark features DONE.
+
+### GitHub integration
+- PR #138 merged to `staging`: `2235c3cd9ecd4fca0d1067627468a1ad96980328`.
+- PR #139 closed as superseded after its seven changed files were verified identical in the merged tree.
+- PR #141 merged to `staging`: `0a2193c7d775fb92cb39e6042d8bac51ad2b7fcb`; this reconciles the source migration filenames to the actual Supabase applied versions and adds the missing checklist `updated_by` FK index.
+
+### Supabase staging after application
+- Applied migration ledger: **61**; latest version `20261124121515`; source filenames are reconciled to the applied versions.
+- The nine source-only migrations plus PR #139 and #138 migrations were applied one by one. One additional forward-only index migration closes the FK introduced by the checklist migration.
+- All 12 legacy `auth.role()` checks were replaced by JWT role-claim checks. Live catalog verification confirms all 12 affected RPCs use `auth.jwt() ->> 'role'`, have no deprecated helper, are SECURITY INVOKER with pinned search_path, deny EXECUTE to anon/authenticated, and allow EXECUTE to service_role.
+- Stock-transfer same-tenant INSERT/UPDATE triggers and branch tenant reassignment protection are installed.
+- Performance Advisor: **0 unindexed foreign keys**. Unused-index suggestions remain informational; no mass deletion.
+- Security Advisor still reports leaked-password protection disabled; this separate Auth setting remains OPEN.
+
+### Post-deployment runtime evidence
+- Edge Function `dlice-orders`: staging version **72**, ACTIVE; `verify_jwt=false` preserved because the handler performs its own authentication.
+- P01-P09 rerun after database application and Edge Function deployment: **PASS 9 / FAILED 0 / BLOCKED 0 / SKIPPED 0**, run `45383998161` (latest attempt).
+- CORS probes rerun after Edge Function deployment: PASS; registered origin returns 200 with exact ACAO, foreign origin returns 403 without ACAO, and absent Origin receives no fallback ACAO (run `45389940609`).
+- Filename-reconciliation exact-head replay: **61 migrations**, 13 pgTAP files, **317 assertions PASS** (run `45392506491`). Free quality checks, stock-transfer boundary regression, and KDS offline contract also PASS.
+
+### Release posture
+- `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
+- No production database, production secrets, production deployment, or production data was changed.
+- The 18-domain feature matrix remains unchanged until the remaining feature-level UI/API/E2E and operational reconciliation criteria are met.
