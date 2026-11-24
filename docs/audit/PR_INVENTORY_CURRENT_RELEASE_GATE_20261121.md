@@ -322,9 +322,10 @@ This section supersedes the 21-November open-PR table where it conflicts with li
 | PR | Target | Head SHA (short) | Live base SHA (short) | Disposition |
 |---:|---|---|---|---|
 | #127 payment-proof atomicity | staging | `e52ea75` | `78f929d` | Highest transaction integrity priority after #123/#126 reconciliation; overlaps `dlice-orders/index.ts`, `quality-checks.yml`, `disposable-migration-replay.yml`, `index.html`; 3-way migration/test review required |
-| #126 direct-client tenant RLS | staging | `1b0b952` | `5f6fa00` | Security P0; overlaps #123/#127/#109/#71 on `dlice-orders/index.ts`; must revalidate against P01-P09 baseline |
+| #126 direct-client tenant RLS | CLOSED | `1b0b952` | `5f6fa00` | Superseded by PR #128 current P03 implementation; closed 24-Nov to avoid reverting actor.profile reuse and current no-embed contract |
 | #123 online-order idempotency | staging | `9024f2c` | `78f929d` | Order integrity P0; overlaps #127 on workflow/index files and #126/#109/#71 on Edge Function |
 | #122 FK covering indexes | staging | `5aff3ee` | `78f929d` | Performance P1; inspect EXPLAIN/workload and disposable replay; do not drop unused indexes without evidence |
+| #136 FK covering-index remediation rebased | staging | `248d10a` | `ac6002b` | Current-head replacement for stale #122; 24 indexes cover 26 FK constraints; exact-head quality/KDS PASS; disposable replay pending after port-collision mitigation |
 | #119 scheduled policy audit | main | `c58f122` | `2964ae7` | Main-only security change; review against #118/#113; do not merge into staging as a substitute |
 | #118 manual staging mutation confirmation | staging | `5929426` | `78f929d` | Policy overlap with #130; compare exact workflow semantics, preserve explicit confirmation and no scheduled mutation |
 | #114 cross-module tenant acceptance | staging | `0cb3bee` | `78f929d` | Overlaps #111/#71 on tenant probe scripts and #112/#123/#127 on quality workflow; rebase and prove coverage not duplicate |
@@ -361,3 +362,9 @@ This section supersedes the 21-November open-PR table where it conflicts with li
 8. For each selected PR: rebase/merge conflict resolution → exact-head quality → disposable migration replay → targeted runtime tests → DB reconciliation → only then staging integration. No mass merge.
 
 No PR is merged by this inventory refresh. No migrations, Auth metadata, Edge Function, shared staging data, Vercel production target or release flags are changed.
+
+
+### 24-November disposition delta
+- PR #126 is closed as superseded by #128; it must not be merged because its branch uses a stale separate profile lookup implementation.
+- PR #136 is the current rebased replacement for #122. It adds the two migrations and 28-assertion FK index test on current staging. Quality and KDS contract pass; exact-head disposable replay remains pending after a runner port collision was mitigated by moving the port block below the ephemeral range.
+- Current open PR count remains 18 (one stale PR closed, one replacement PR opened).
