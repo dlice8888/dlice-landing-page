@@ -114,7 +114,7 @@ jobs:
           fi
           echo "Migration files and release notes exist; migration changes must update release documentation."
   staging-pos-e2e:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/feat/pos-checkout-lifecycle-20261124' && contains(github.event.head_commit.message, '[staging-e2e]') }}
+    if: ${{ (github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.head.ref == 'feat/pos-checkout-lifecycle-20261124') || (github.event_name == 'push' && github.ref == 'refs/heads/feat/pos-checkout-lifecycle-20261124' && contains(github.event.head_commit.message, '[staging-e2e]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment: staging
