@@ -309,3 +309,55 @@ The most recent READY audit preview found is commit `30beb0824ce22b123e9d782be27
 - Vercel Preview deployment `dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq` is READY for the exact staging SHA; no Production target.
 - PR #130 removes the missing password-secret dependency for positive business E2E by using one-time magic links for existing identities. Both workflows remain manual and require explicit QA mutation confirmation. Do not mark issue #45 complete until both business workflows are actually run and their database reconciliation artifacts pass.
 - Preserve `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+
+---
+
+## Live PR reconciliation refresh — 24 November 2026, 07:12 WIB
+
+This section supersedes the 21-November open-PR table where it conflicts with live GitHub metadata. Current staging head: `6b26298fab0341166413de08a01c850fd1636d29`. There are **18 open PRs**. Every PR targeting `staging` below has a base SHA older than the current staging head; all require exact-head ancestry/rebase/mergeability review and fresh quality + disposable replay before integration. The historical PR-head CI result is not transferable to the new base.
+
+### Current open PRs and disposition
+
+| PR | Target | Head SHA (short) | Live base SHA (short) | Disposition |
+|---:|---|---|---|---|
+| #127 payment-proof atomicity | staging | `e52ea75` | `78f929d` | Highest transaction integrity priority after #123/#126 reconciliation; overlaps `dlice-orders/index.ts`, `quality-checks.yml`, `disposable-migration-replay.yml`, `index.html`; 3-way migration/test review required |
+| #126 direct-client tenant RLS | staging | `1b0b952` | `5f6fa00` | Security P0; overlaps #123/#127/#109/#71 on `dlice-orders/index.ts`; must revalidate against P01-P09 baseline |
+| #123 online-order idempotency | staging | `9024f2c` | `78f929d` | Order integrity P0; overlaps #127 on workflow/index files and #126/#109/#71 on Edge Function |
+| #122 FK covering indexes | staging | `5aff3ee` | `78f929d` | Performance P1; inspect EXPLAIN/workload and disposable replay; do not drop unused indexes without evidence |
+| #119 scheduled policy audit | main | `c58f122` | `2964ae7` | Main-only security change; review against #118/#113; do not merge into staging as a substitute |
+| #118 manual staging mutation confirmation | staging | `5929426` | `78f929d` | Policy overlap with #130; compare exact workflow semantics, preserve explicit confirmation and no scheduled mutation |
+| #114 cross-module tenant acceptance | staging | `0cb3bee` | `78f929d` | Overlaps #111/#71 on tenant probe scripts and #112/#123/#127 on quality workflow; rebase and prove coverage not duplicate |
+| #113 scheduled mutation bypass prevention | main | `259eb59` | `de9c0fb` | Main-only security; compare with #119 and verify no scheduled mutation remains |
+| #112 boolean platform_owner hardening | staging | `82edeeb` | `78f929d` | Security P0; exact-head SQL/ACL replay and runtime admin-bootstrap probe required |
+| #111 OIDC tenant session broker | staging | `016715b` | `78f929d` | Stacked security change; overlaps #114/#71 on runtime tenant probe, #112/#123/#127 on quality workflow; needs secret-free OIDC and live session proof |
+| #109 same-tenant stock transfers | staging | `9cfe616` | `39a9c96` | Security P0; overlaps #123/#126/#127/#71 on Edge Function; preserve current P01-P09 denial semantics |
+| #108 historical PR/file overlap inventory | staging | `cd6649d` | `39a9c96` | Documentation; reconcile with this current inventory and close/supersede only after complete history verified |
+| #107 frontend runtime config | staging | `db6c5fe` | `39a9c96` | Runtime config; verify only staging environment variable names/presence without printing values; no production changes |
+| #104 production CORS contract | main | `a510f34` | `2bb254b` | Main-only source parity; no production deploy; compare against staging CORS proof separately |
+| #71 tenant fixture validation | staging | `d8bc78d` | `010fd39` | Historical tenant test PR; overlaps #109/#123/#126/#127 on Edge Function and #111/#114 on probe scripts; likely carry-forward/supersession candidate after full diff audit |
+| #117 OIDC session broker rebase | main | `748445e` | `2964ae7` | Merge conflict reported; resolve only after #111/#114 dependency decision |
+| #116 OIDC backup branch | main | `67af978` | `2964ae7` | Merge conflict reported; backup/reference only unless dependency audit proves otherwise |
+| #115 staging branch PR into main | main | `6b26298` | `2964ae7` | Do not merge as-is: it proposes promoting the entire staging head into main, bypassing per-PR production release gates |
+
+### Verified changed-file overlap
+
+- #126 ↔ #123/#127/#109/#71: `supabase/functions/dlice-orders/index.ts`.
+- #127 ↔ #123: `quality-checks.yml`, `disposable-migration-replay.yml`, `index.html`, Edge Function.
+- #114 ↔ #111: tenant probe contract and runtime probe scripts.
+- #111 ↔ #112/#123/#127: shared `quality-checks.yml`.
+- #118 is a workflow-policy predecessor/overlap to the explicit-confirmation behavior now integrated in #130; compare behavior before disposition.
+- #109/#71 and #123/#127 share the Edge Function file; no mass merge or blind cherry-pick.
+
+### Integration order and safety gates
+
+1. Reconcile #126 and #109 security/tenant changes against current P01-P09 acceptance; do not weaken fail-closed routes or release flags.
+2. Reconcile #123 order idempotency with #127 payment-proof/expiry; review the shared Edge Function and migrations as one dependency graph, but integrate/test in controlled PR-sized steps.
+3. Reconcile #112 owner metadata boolean hardening with current admin-bootstrap 403 probe contract.
+4. Resolve #111/#114/#71 tenant-session/probe overlap; avoid duplicate or stale workflow coverage.
+5. Review #118 against #130 and #119/#113 for scheduled mutation policy.
+6. Review #122 with EXPLAIN and representative workload; preserve 49 unused-index suggestions unless measured evidence justifies a change.
+7. Keep #115 out of production promotion; #116/#117 remain conflicted until the OIDC stack is reconciled.
+8. For each selected PR: rebase/merge conflict resolution → exact-head quality → disposable migration replay → targeted runtime tests → DB reconciliation → only then staging integration. No mass merge.
+
+No PR is merged by this inventory refresh. No migrations, Auth metadata, Edge Function, shared staging data, Vercel production target or release flags are changed.
