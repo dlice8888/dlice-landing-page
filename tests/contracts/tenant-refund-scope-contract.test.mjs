@@ -62,11 +62,10 @@ test("generic owner role cannot grant platform-wide bypass without allowlisted i
 
 test("stock transfers are intra-tenant only, including for platform owners", () => {
   const start = edge.indexOf('if (action === "erp-transition-stock-transfer")');
-  assert.notEqual(start, -1, "stock-transfer transition action exists");
-  const next = edge.indexOf('\\n  if (action === ', start + 1);
-  const handler = edge.slice(start, next === -1 ? undefined : next);
-  assert.match(handler, /sourceTenantId !== destinationTenantId/);
-  assert.match(handler, /!sourceTenantId \\|\\| !destinationTenantId \\|\\| sourceTenantId !== destinationTenantId/);
-  assert.doesNotMatch(handler, /sourceTenantId !== destinationTenantId\\s*&&\\s*!isPlatformOwner/);
-  assert.match(handler, /hasHQPermissionForTenant\\("inventory", sourceTenantId\\)/);
-});;
+  const end = edge.indexOf('if (action === "erp-list-stock-counts")', start);
+  assert.ok(start >= 0 && end > start, "stock-transfer transition action exists");
+  const handler = edge.slice(start, end);
+  assert.match(handler, /!sourceTenantId \|\| !destinationTenantId \|\| sourceTenantId !== destinationTenantId/);
+  assert.doesNotMatch(handler, /sourceTenantId !== destinationTenantId\s*&&\s*!isPlatformOwner/);
+  assert.match(handler, /hasHQPermissionForTenant\("inventory", sourceTenantId\)/);
+});;;
