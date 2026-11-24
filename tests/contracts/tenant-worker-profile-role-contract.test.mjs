@@ -55,7 +55,8 @@ test("branch assignment uses a service-role-only atomic audited RPC", () => {
   assert.match(handler, /Penugasan dan audit tidak dapat disimpan secara atomik/);
   assert.doesNotMatch(handler, /from\("branch_assignments"\)\.upsert/);
   assert.doesNotMatch(handler, /from\("admin_audit_logs"\)\.insert/);
-  assert.match(assignmentMigration, /auth\.role\(\) is distinct from 'service_role'/i);
+  assert.match(assignmentMigration, /\(auth\.jwt\(\)\s*->>\s*'role'\)\s+is distinct from 'service_role'/i);
+  assert.doesNotMatch(assignmentMigration, /auth\.role\(\)/i);
   assert.match(assignmentMigration, /revoke all on function public\.dlice_save_branch_assignment_audited/i);
   assert.match(assignmentMigration, /grant execute on function public\.dlice_save_branch_assignment_audited/i);
   assert.match(assignmentMigration, /insert into public\.admin_audit_logs/i);
