@@ -177,7 +177,7 @@ BEGIN
 
   FOR v_tender IN SELECT value FROM jsonb_array_elements(p_tenders) LOOP
     v_method := v_tender ->> 'payment_method';
-    IF v_method NOT IN ('cash', 'bank_transfer', 'qris') THEN
+    IF v_method IS NULL OR v_method NOT IN ('cash', 'bank_transfer', 'qris') THEN
       RAISE EXCEPTION 'invalid_tender_method';
     END IF;
     IF (v_tender ->> 'amount_idr') !~ '^[0-9]+$' THEN
@@ -333,11 +333,13 @@ BEGIN
       'sale_idempotency_key', 'hold:' || v_hold.id::text
     );
   END IF;
-  IF v_hold.status <> 'held' OR v_hold.expires_at <= now() THEN
-    IF v_hold.status = 'held' AND v_hold.expires_at <= now() THEN
-      UPDATE public.pos_held_orders SET status = 'expired', resumed_at = now() WHERE id = v_hold.id;
-    END IF;
-    RAISE EXCEPTION 'held_order_not_resumable';
+  IF v_hold.status <> 'held' THEN RAISE EXCEPTION 'held_order_not_resumable'; END IF;
+  IF v_hold.expires_at <= now() THEN
+    UPDATE public.pos_held_orders SET status = 'expired', resumed_at = now() WHERE id = v_hold.id;
+    RETURN jsonb_build_object(
+      'ok', false, 'hold_id', v_hold.id, 'status', 'expired',
+      'payload', v_hold.payload, 'idempotent_replay', false
+    );
   END IF;
   PERFORM 1 FROM public.pos_shifts
   WHERE id = v_hold.shift_id AND branch_id = v_hold.branch_id
