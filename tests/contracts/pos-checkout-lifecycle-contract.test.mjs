@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const edge = await readFile(new URL("../../supabase/functions/dlice-orders/index.ts", import.meta.url), "utf8");
-const migration = await readFile(new URL("../../supabase/migrations/20261124193500_pos_checkout_lifecycle.sql", import.meta.url), "utf8");
+const migration = await readFile(new URL("../../supabase/migrations/20261124134101_pos_checkout_lifecycle.sql", import.meta.url), "utf8");
 
 function actionBlock(name, nextAction) {
   const start = edge.indexOf(`if (action === "${name}")`);
