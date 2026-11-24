@@ -15,7 +15,7 @@ DECLARE
   v_next_permissions jsonb;
   v_existing public.admin_profiles%ROWTYPE;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_target_user_id IS NULL
@@ -96,7 +96,7 @@ DECLARE
   v_valid_assignment_count integer := 0;
   v_has_owner_membership boolean := false;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_target_user_id IS NULL
@@ -180,7 +180,7 @@ DECLARE
   v_previous_active boolean;
   v_target_role text;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_target_user_id IS NULL OR p_is_active IS NULL
@@ -229,7 +229,7 @@ DECLARE
   v_target_role text;
   v_audit_id uuid;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_target_user_id IS NULL
@@ -274,7 +274,7 @@ DECLARE
   v_event public.admin_audit_logs%ROWTYPE;
   v_next_status text;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_audit_log_id IS NULL OR p_succeeded IS NULL
