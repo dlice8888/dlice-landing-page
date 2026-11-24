@@ -25,7 +25,7 @@ DECLARE
   v_assignment public.branch_assignments%ROWTYPE;
   v_changed boolean := false;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
+  IF (auth.jwt() ->> 'role') IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
   END IF;
   IF p_actor_user_id IS NULL OR p_branch_id IS NULL OR p_user_id IS NULL
