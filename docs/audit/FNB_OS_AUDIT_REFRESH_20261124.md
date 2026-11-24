@@ -56,6 +56,8 @@ Feature matrix source snapshot: `2026-11-24 00:00 WIB`
 - 64 public base tables; 64/64 RLS-enabled; 64 public policies.
 - Applied migrations: 49; latest `20261119182606`.
 - Staging source tree: 58 migration files; 9 source-only versions belum tercatat di DB: `20261120100000`, `20261120110000`, `20261120120000`, `20261121100000`, `20261121120000`, `20261121130000`, `20261121153000`, `20261121160000`, `20261121170000`. Applied versions missing from source: 0; duplicate source versions: 0.
+- Static scan of the 9 source-only migrations found **12 legacy `auth.role()` references across 6 files**: `20261120100000` (2), `20261120120000` (1), `20261121100000` (1), `20261121130000` (2), `20261121160000` (5), and `20261121170000` (1). PR #139 hardens initial Owner bootstrap and branch checklist functions, but does not by itself replace all legacy role checks in tenant-invite/admin-permission/admin-profile/branch-assignment RPCs. Include a function-by-function ACL and JWT-role review in migration reconciliation; do not blanket-rewrite historical migration files.
+- Reconcile migration order by timestamp. PR #139 migration `20261120125000` must precede PR #138 migration `20261120130000`; neither should be applied to shared staging before the nine earlier source-only migrations and their dependencies are reconciled.
 - Trigger `trg_stock_transfer_same_tenant` belum ada pada shared staging. PR #138 migration belum diaplikasikan. Jangan apply langsung sebelum exact-head replay, review, P01–P09, backup/rollback dan persetujuan staging.
 - Security Advisor: leaked-password protection WARN.
 - Performance Advisor: 26 unindexed foreign keys dan 49 unused-index suggestions. Unused-index suggestions perlu workload/query-plan review; jangan hapus massal.
