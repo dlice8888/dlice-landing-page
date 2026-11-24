@@ -582,6 +582,8 @@ Deno.serve(async (req: Request) => {
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
     "erp-create-pos-sale": "pos",
+    "erp-list-pos-modifiers": "pos",
+    "erp-list-held-pos-orders": "pos",
     "erp-create-pos-sale-split": "pos",
     "erp-hold-pos-order": "pos",
     "erp-resume-pos-order": "pos",
@@ -1613,6 +1615,30 @@ if (action === "admin-set-profile-role") {
     if(error||!data)return fail("Shift berubah saat proses berlangsung; muat ulang.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_closed",entity_type:"pos_shift",entity_id:shiftId,metadata:{expected_cash_idr:old.expected_cash_idr,counted_cash_idr:counted,cash_variance_idr:variance}});
     return json({ok:true,shift:data},200,origin);
+  }
+
+  if (action === "erp-list-pos-modifiers") {
+    if (!hasPerm("pos")) return fail("Izin POS diperlukan untuk melihat modifier.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const { data, error } = await admin.from("product_modifiers")
+      .select("id,product_id,modifier_code,modifier_group,name,price_delta_idr,is_required")
+      .eq("is_active", true).order("modifier_group").order("name").limit(500);
+    if (error) return fail("Modifier menu belum dapat dimuat.", 500, origin);
+    return json({ modifiers: data || [] }, 200, origin);
+  }
+
+  if (action === "erp-list-held-pos-orders") {
+    if (!hasPerm("pos")) return fail("Izin POS diperlukan untuk melihat transaksi tertahan.", 403, origin);
+    const branchId = safeText(body.branch_id, 80);
+    if (!await branchAccess(branchId)) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const { data, error } = await admin.from("pos_held_orders")
+      .select("id,hold_key,status,held_at,expires_at,payload")
+      .eq("branch_id", branchId).eq("actor_user_id", actor.user.id)
+      .eq("status", "held").gt("expires_at", new Date().toISOString())
+      .order("held_at", { ascending: false }).limit(20);
+    if (error) return fail("Daftar transaksi tertahan belum dapat dimuat.", 500, origin);
+    return json({ held_orders: data || [] }, 200, origin);
   }
 
   if (action === "erp-create-pos-sale-split") {
