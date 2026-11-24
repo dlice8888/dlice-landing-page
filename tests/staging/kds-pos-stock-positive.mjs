@@ -484,9 +484,20 @@ async function main() {
   evidence.ticket_id = ticket.id;
   evidence.split_sale_id = splitSaleId;
   evidence.receipt_id = receipt.receipt_id;
+  evidence.split_receipt_id = splitReceipt.receipt_id;
   evidence.hold_id = held.hold_id;
+  evidence.cash_drawer_delta_idr = Number(shiftAfterSplit.expected_cash_idr) - cashBeforeSplit;
+  evidence.split_tender_allocations = splitReconciliation.tender_allocations;
+  evidence.split_payment_reconciliation = splitReconciliation.payment_reconciliation;
+  evidence.split_kitchen_ticket_id = splitReconciliation.kitchen_ticket.id;
+  evidence.split_stock_movement_count = splitReconciliation.stock_movements.length;
+  evidence.split_audit_actions = [...new Set((splitReconciliation.audit_events || []).map((event) => event.action))];
   evidence.stock_before = { flour_g: beforeFlour, second_ingredient_g: beforeSecond };
-  evidence.stock_after_sale = { flour_g: afterFlour, second_ingredient_g: afterSecond };
+  evidence.stock_after_first_sale = { flour_g: afterFlour, second_ingredient_g: afterSecond };
+  evidence.stock_after_split_sale = {
+    flour_g: balanceOf(splitStock, flourId),
+    second_ingredient_g: balanceOf(splitStock, secondIngredientId),
+  };
 }
 
 try {
