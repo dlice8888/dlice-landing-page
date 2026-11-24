@@ -96,3 +96,23 @@ test("offline replay supports split tender with the same operation idempotency k
   assert.match(block, /p_idempotency_key:key/);
   assert.match(block, /offline_sync_receipts/);
 });
+
+test("modifier and held-order discovery are branch-authorized", () => {
+  const modifiers = actionBlock("erp-list-pos-modifiers", "erp-list-held-pos-orders");
+  const held = actionBlock("erp-list-held-pos-orders", "erp-create-pos-sale-split");
+  assert.match(modifiers, /hasPerm\("pos"\)/);
+  assert.match(modifiers, /branchAccess\(branchId\)/);
+  assert.match(modifiers, /product_modifiers/);
+  assert.match(held, /branchAccess\(branchId\)/);
+  assert.match(held, /actor_user_id.*actor\.user\.id/);
+  assert.match(held, /status.*held/);
+});
+
+test("POS reconciliation computes tender allocation and cash drawer components", () => {
+  const block = actionBlock("erp-reconcile-pos-sale", "erp-list-sales");
+  assert.match(block, /pos_sale_tenders/);
+  assert.match(block, /allocated_total_idr/);
+  assert.match(block, /cash_tender_idr/);
+  assert.match(block, /payment_reconciliation/);
+  assert.match(block, /status:allocatedTotal===Number\(sale\.total_idr\)/);
+});
