@@ -7,7 +7,7 @@ export async function dispatchConsentedCampaignMessage({campaign,customer,consen
  if(!campaign?.id||campaign.status!=="approved"||!campaign.version)fail("CAMPAIGN_NOT_APPROVED","Campaign must be approved and versioned");
  if(!customer?.id||!customer.tenantId||!customer.destination)fail("CAMPAIGN_CUSTOMER_DESTINATION_REQUIRED","Tenant-scoped customer and destination are required");
  if(campaign.tenantId!==customer.tenantId)fail("CAMPAIGN_TENANT_MISMATCH","Campaign and customer must belong to the same tenant");
- if(!consent||consent.status!=="granted"||consent.channel!==campaign.channel||consent.purpose!==campaign.purpose||!consent.recordedAt||consent.withdrawnAt) return Object.freeze({status:"suppressed",reason:"CONSENT_NOT_GRANTED"});
+ if(!consent||consent.status!=="granted"||consent.channel!==campaign.channel||consent.purpose!==campaign.purpose||!consent.recordedAt||consent.withdrawnAt||(consent.expiresAt&&Date.parse(consent.expiresAt)<=Date.parse(now))) return Object.freeze({status:"suppressed",reason:"CONSENT_NOT_GRANTED_OR_EXPIRED"});
  if(consent.customerId!==customer.id||consent.tenantId!==customer.tenantId)fail("CONSENT_SCOPE_MISMATCH","Consent must belong to this customer and tenant");
  if(customer.unsubscribedAt&&Date.parse(customer.unsubscribedAt)<=Date.parse(now))return Object.freeze({status:"suppressed",reason:"UNSUBSCRIBED"});
  if(!provider?.approved||!provider.id||!provider.contractVersion||typeof sendProvider!=="function")fail("APPROVED_CAMPAIGN_PROVIDER_REQUIRED","A real approved provider adapter and versioned contract are required");
@@ -38,4 +38,25 @@ export function calculateCampaignRoi({campaignCostIdr,attributedOrders,attributi
  }
  if(!Number.isSafeInteger(netSales))fail("CAMPAIGN_ROI_OVERFLOW","Attributed sales exceed safe integer range");
  return Object.freeze({attributedOrderCount:count,attributedNetSalesIdr:netSales,campaignCostIdr,netSalesToCostRatio:campaignCostIdr===0?null:netSales/campaignCostIdr,roiEligible:count>0&&campaignCostIdr>0});
+}
+
+
+/** Apply a provider delivery receipt only after provider-specific signature verification. */
+export function applyCampaignProviderReceipt({outbox,receipt,signatureVerified,existingEvent,maxAttempts=5}) {
+ if(signatureVerified!==true)fail("CAMPAIGN_WEBHOOK_SIGNATURE_INVALID","Provider receipt signature must be verified over the raw request body");
+ if(!outbox?.id||!receipt?.eventId||!receipt?.providerMessageId||!receipt?.payloadHash)fail("CAMPAIGN_RECEIPT_IDENTITY_REQUIRED","Outbox, event, provider message and payload hash required");
+ if(existingEvent){if(existingEvent.payloadHash!==receipt.payloadHash)fail("CAMPAIGN_EVENT_ID_COLLISION","Same provider event id has a different payload");return Object.freeze({action:"duplicate",status:existingEvent.status});}
+ const terminal=new Set(["delivered","bounced","failed","unsubscribed"]);const transient=new Set(["queued","sent","accepted","deferred","temporary_failure"]);
+ if(!terminal.has(receipt.status)&&!transient.has(receipt.status))fail("CAMPAIGN_RECEIPT_STATUS_INVALID","Unsupported provider receipt state");
+ const attempt=Number.isSafeInteger(outbox.attemptCount)?outbox.attemptCount:0;
+ const retry=receipt.status==="temporary_failure"||receipt.status==="deferred";
+ return Object.freeze({action:"apply",outboxId:outbox.id,eventId:receipt.eventId,status:receipt.status,retryScheduled:retry&&attempt<maxAttempts,nextAttempt:retry&&attempt<maxAttempts?attempt+1:null,deadLetter:retry&&attempt>=maxAttempts});
+}
+
+/** Unsubscribe callback must be signature-verified and persisted as a consent withdrawal event. */
+export function applyCampaignUnsubscribe({customer,consent,providerEvent,signatureVerified}) {
+ if(signatureVerified!==true)fail("UNSUBSCRIBE_SIGNATURE_INVALID","Unsubscribe callback signature must be verified");
+ if(!customer?.id||!consent?.id||consent.customerId!==customer.id||consent.tenantId!==customer.tenantId)fail("UNSUBSCRIBE_SCOPE_INVALID","Customer and consent scope do not match");
+ if(!providerEvent?.eventId||!providerEvent.occurredAt)fail("UNSUBSCRIBE_EVENT_REQUIRED","Provider unsubscribe event identity and timestamp required");
+ return Object.freeze({tenantId:customer.tenantId,customerId:customer.id,consentId:consent.id,eventId:providerEvent.eventId,withdrawnAt:providerEvent.occurredAt,nextConsentStatus:"withdrawn",requiresAppendOnlyConsentEvent:true});
 }
