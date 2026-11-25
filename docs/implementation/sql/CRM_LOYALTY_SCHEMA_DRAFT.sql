@@ -132,26 +132,7 @@ create table if not exists public.crm_transaction_links (
 
 -- No direct browser access. Edge Function dlice-orders uses its service role
 -- only after verifying the caller and tenant/branch membership.
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'crm_customers',
-    'crm_customer_consent_events',
-    'crm_loyalty_ledger',
-    'crm_rewards',
-    'crm_reward_vouchers',
-    'crm_transaction_links',
-    'crm_marketing_campaigns',
-    'crm_campaign_recipients'
-  ] loop
-    execute format('alter table public.%I enable row level security',t);
-    execute format('drop policy if exists service_role_only on public.%I',t);
-    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
-    execute format('revoke all on public.%I from anon, authenticated',t);
-    execute format('grant select,insert,update,delete on public.%I to service_role',t);
-  end loop;
-end $$;
+
 
 create table if not exists public.crm_marketing_campaigns (
  id uuid primary key default gen_random_uuid(),
@@ -520,3 +501,142 @@ begin
 end $$;
 revoke all on function public.crm_void_voucher(uuid,uuid,text,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.crm_void_voucher(uuid,uuid,text,uuid,text,uuid) to service_role;
+
+-- Atomic source-to-customer identity resolution and transaction linking.
+-- The Edge Function must first verify the source row and tenant/branch scope.
+-- This RPC makes customer creation/promotion, link idempotency and audit one
+-- database transaction. It does not award loyalty points or assert financial
+-- close; earning remains gated by the reconciled-close workflow.
+create or replace function public.crm_link_transaction_customer(
+  p_tenant_id uuid,
+  p_branch_id uuid,
+  p_source_type text,
+  p_source_id uuid,
+  p_customer_id uuid,
+  p_display_name text,
+  p_phone_e164 text,
+  p_actor_user_id uuid
+) returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  v_customer public.crm_customers%rowtype;
+  v_link public.crm_transaction_links%rowtype;
+  v_created boolean := false;
+begin
+  if p_tenant_id is null or p_branch_id is null or p_source_id is null
+     or p_actor_user_id is null
+     or p_source_type not in ('online_order','pos_sale') then
+    raise exception using errcode='22023', message='INVALID_CRM_TRANSACTION_LINK_COMMAND';
+  end if;
+  if p_phone_e164 is not null and p_phone_e164 !~ '^\\+[1-9][0-9]{7,14}$' then
+    raise exception using errcode='22023', message='INVALID_CUSTOMER_PHONE';
+  end if;
+  perform 1 from public.branches
+   where id=p_branch_id and tenant_id=p_tenant_id;
+  if not found then
+    raise exception using errcode='23503', message='CRM_BRANCH_TENANT_MISMATCH';
+  end if;
+
+  if p_customer_id is not null then
+    select * into v_customer from public.crm_customers
+     where id=p_customer_id and tenant_id=p_tenant_id
+     for update;
+    if not found then
+      raise exception using errcode='P0002', message='CUSTOMER_NOT_FOUND';
+    end if;
+    if v_customer.status in ('merged','blocked','inactive') then
+      raise exception using errcode='22023', message='CUSTOMER_NOT_ACTIVE';
+    end if;
+    if p_phone_e164 is not null and v_customer.phone_e164 is not null
+       and v_customer.phone_e164 <> p_phone_e164 then
+      raise exception using errcode='22023', message='CUSTOMER_IDENTITY_MISMATCH';
+    end if;
+  else
+    if p_phone_e164 is null then
+      raise exception using errcode='22023', message='CUSTOMER_PHONE_REQUIRED';
+    end if;
+    insert into public.crm_customers
+      (tenant_id,branch_id,display_name,phone_e164,status,marketing_status,created_by)
+    values
+      (p_tenant_id,p_branch_id,nullif(btrim(p_display_name),''),p_phone_e164,'active','unknown',p_actor_user_id)
+    on conflict do nothing
+    returning * into v_customer;
+    if found then
+      v_created := true;
+    else
+      select * into v_customer from public.crm_customers
+       where tenant_id=p_tenant_id and phone_e164=p_phone_e164 and status<>'merged'
+       for update;
+      if not found then
+        raise exception using errcode='23505', message='CUSTOMER_IDENTITY_CONFLICT';
+      end if;
+      if v_customer.status in ('blocked','inactive') then
+        raise exception using errcode='22023', message='CUSTOMER_NOT_ACTIVE';
+      end if;
+    end if;
+  end if;
+
+  insert into public.crm_transaction_links
+    (tenant_id,customer_id,source_type,source_id,branch_id,linked_by)
+  values
+    (p_tenant_id,v_customer.id,p_source_type,p_source_id,p_branch_id,p_actor_user_id)
+  on conflict (tenant_id,source_type,source_id) do nothing
+  returning * into v_link;
+
+  if not found then
+    select * into v_link from public.crm_transaction_links
+     where tenant_id=p_tenant_id and source_type=p_source_type and source_id=p_source_id
+     for update;
+    if not found then
+      raise exception using errcode='40001', message='CRM_TRANSACTION_LINK_RETRY_REQUIRED';
+    end if;
+    if v_link.customer_id <> v_customer.id then
+      raise exception using errcode='23505', message='TRANSACTION_ALREADY_LINKED_TO_OTHER_CUSTOMER';
+    end if;
+    return jsonb_build_object('customer_id',v_customer.id,'link_id',v_link.id,'already_linked',true,'customer_created',false);
+  end if;
+
+  if v_customer.status='prospect' then
+    update public.crm_customers
+       set status='active', branch_id=coalesce(branch_id,p_branch_id), updated_at=now()
+     where id=v_customer.id and tenant_id=p_tenant_id
+     returning * into v_customer;
+  end if;
+
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values (p_actor_user_id,'crm.transaction.linked','crm_transaction_links',v_link.id::text,
+    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,
+      'source_type',p_source_type,'source_id',p_source_id,
+      'customer_id',v_customer.id,'customer_created',v_created));
+
+  return jsonb_build_object('customer_id',v_customer.id,'link_id',v_link.id,
+    'already_linked',false,'customer_created',v_created);
+end;
+$$;
+revoke all on function public.crm_link_transaction_customer(uuid,uuid,text,uuid,uuid,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.crm_link_transaction_customer(uuid,uuid,text,uuid,uuid,text,text,uuid) to service_role;
+
+
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'crm_customers',
+    'crm_customer_consent_events',
+    'crm_loyalty_ledger',
+    'crm_rewards',
+    'crm_reward_vouchers',
+    'crm_transaction_links',
+    'crm_marketing_campaigns',
+    'crm_campaign_recipients'
+  ] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('drop policy if exists service_role_only on public.%I',t);
+    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
+    execute format('revoke all on public.%I from anon, authenticated',t);
+    execute format('grant select,insert,update,delete on public.%I to service_role',t);
+  end loop;
+end $$;
