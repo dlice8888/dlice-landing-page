@@ -973,16 +973,11 @@ if (action === "admin-set-profile-role") {
       const name=safeText(body.applicant_name,160),email=safeText(body.applicant_email,254).toLowerCase(),phone=safeText(body.applicant_phone,40),
         region=safeText(body.proposed_region,100),city=safeText(body.proposed_city,100),capacity=Number(body.investment_capacity_idr),
         experience=safeText(body.experience_summary,2000)||null;
-      if(name.length<2||!/^\S+@\S+\.\S+$/.test(email)||phone.length<8||region.length<2||city.length<2||!Number.isSafeInteger(capacity)||capacity<0)
+      if(name.length<2||!/^\\S+@\\S+\\.\\S+$/.test(email)||phone.length<8||region.length<2||city.length<2||!Number.isSafeInteger(capacity)||capacity<0)
         return fail("Data aplikasi franchise tidak valid.",422,origin);
-      const {data,error}=await admin.from("franchise_applications").insert({applicant_name:name,applicant_email:email,applicant_phone:phone,proposed_region:region,proposed_city:city,investment_capacity_idr:capacity,experience_summary:experience,created_by:actor.user.id})
-        .select("id,applicant_name,applicant_email,proposed_region,proposed_city,status,submitted_at").single();
-      if(error)return fail("Aplikasi franchise gagal disimpan.",503,origin);
-      const keys=["identity","financial","legal","operational_experience","territory_conflict","reputation"];
-      const checks=await admin.from("franchise_due_diligence_checks").insert(keys.map(check_key=>({application_id:data.id,check_key})));
-      if(checks.error)return fail("Aplikasi tersimpan tetapi checklist due diligence belum lengkap. Perlu rekonsiliasi sebelum review.",503,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"franchise.application.created",entity_type:"franchise_application",entity_id:data.id,metadata:{proposed_region:region,proposed_city:city}});
-      return json({application:data,checklist:keys},201,origin);
+      const {data,error}=await admin.rpc("franchise_create_application",{p_applicant_name:name,p_applicant_email:email,p_applicant_phone:phone,p_proposed_region:region,p_proposed_city:city,p_investment_capacity_idr:capacity,p_experience_summary:experience,p_created_by:actor.user.id});
+      if(error)return fail("Aplikasi franchise dan checklist due diligence gagal disimpan.",503,origin);
+      return json({application:data,checklist:["identity","financial","legal","operational_experience","territory_conflict","reputation"]},201,origin);
     }
     if(action==="erp-franchise-add-site"){
       const applicationId=safeText(body.application_id,64),address=safeText(body.proposed_address,500),city=safeText(body.city,100),province=safeText(body.province,100);
@@ -996,6 +991,14 @@ if (action === "admin-set-profile-role") {
         .select("id,application_id,proposed_address,city,province,feasibility_status").single();
       if(error)return fail("Lokasi franchise gagal disimpan.",503,origin);
       return json({site:data},201,origin);
+    }
+    if(action==="erp-franchise-review-site"){
+      const siteId=safeText(body.site_id,64),decision=safeText(body.decision,30),evidence=safeText(body.evidence_reference,500),notes=safeText(body.notes,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(siteId)||!["approved","rejected","assessing"].includes(decision)||(decision==="approved"&&evidence.length<8))
+        return fail("Review kelayakan lokasi memerlukan keputusan dan referensi bukti yang valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_site",{p_site_id:siteId,p_status:decision,p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes});
+      if(error)return fail("Review kelayakan lokasi gagal disimpan.",409,origin);
+      return json({site_review:data},200,origin);
     }
     if(action==="erp-franchise-review-application"){
       const applicationId=safeText(body.application_id,64),decision=safeText(body.decision,30),notes=safeText(body.notes,500)||null;
