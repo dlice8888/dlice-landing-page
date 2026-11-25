@@ -223,6 +223,10 @@ begin
      where tenant_id=p_tenant_id and payment_batch_id=v_batch.id)<>v_batch.amount_idr then
   raise exception using errcode='23514',message='PAYROLL_FINANCE_CLEARING_TOTAL_MISMATCH';
  end if;
+ if v_count=0 then
+  return jsonb_build_object('status','duplicate','payment_batch_id',v_batch.id,
+   'amount_idr',v_batch.amount_idr,'item_count',v_batch.item_count,'new_clearing_rows',0);
+ end if;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'hr.payroll.payment_finance_clearing_posted',
   'hr_payroll_payment_batches',v_batch.id::text,
@@ -516,6 +520,27 @@ begin
  into v_count,v_provider_total,v_bank_total,v_lines
  from public.hr_payroll_payment_finance_clearings
  where tenant_id=p_tenant_id and payment_batch_id=b.id;
+ if exists(
+  select 1
+  from public.hr_payroll_payment_finance_clearings c
+  join public.hr_payroll_payment_finance_mappings m
+   on m.tenant_id=c.tenant_id and m.id=c.mapping_id
+  left join public.finance_journal_entries p
+   on p.id=c.payout_journal_entry_id
+  left join public.finance_journal_entries bank
+   on bank.id=c.bank_journal_entry_id
+  where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+   and (p.id is null or p.status<>'posted'
+    or p.source_type<>'hr_payroll_payment_clearing' or p.source_id<>c.payment_item_id
+    or p.amount_idr<>c.amount_idr or p.debit_account<>m.payroll_payable_account
+    or p.credit_account<>m.payout_clearing_account
+    or bank.id is null or bank.status<>'posted'
+    or bank.source_type<>'hr_payroll_bank_statement' or bank.source_id<>c.bank_statement_line_id
+    or bank.amount_idr<>c.amount_idr or bank.debit_account<>m.payout_clearing_account
+    or bank.credit_account<>m.bank_cash_account)
+ ) then
+  raise exception using errcode='23514',message='PAYROLL_CLEARING_JOURNAL_EVIDENCE_MISMATCH';
+ end if;
  if p_actor_user_id in (
    select c.bank_matched_by from public.hr_payroll_payment_finance_clearings c
     where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
