@@ -2716,6 +2716,51 @@ if (action === "admin-set-profile-role") {
   }
 
 
+  const deliveryProviderConfigActions=new Set(["erp-delivery-list-provider-configs","erp-delivery-request-provider-config","erp-delivery-approve-provider-config"]);
+  if(deliveryProviderConfigActions.has(action)){
+    if(!isPlatformOwner)return fail("Konfigurasi provider delivery hanya dapat dikelola Platform Owner.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-delivery-list-provider-configs"){
+      const {data,error}=await admin.from("delivery_provider_configs")
+        .select("id,tenant_id,branch_id,provider_key,display_name,credential_secret_reference,integration_mode,status,created_by,approved_by,approved_at,created_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Konfigurasi provider belum tersedia. Terapkan schema Delivery pada batch final.",503,origin);
+      return json({provider_configs:data||[]},200,origin);
+    }
+    if(action==="erp-delivery-request-provider-config"){
+      const branchId=safeText(body.branch_id,64),providerKey=safeText(body.provider_key,60).toLowerCase(),
+        displayName=safeText(body.display_name,100),mode=safeText(body.integration_mode,20),
+        secretRef=safeText(body.credential_secret_reference,120);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[a-z0-9][a-z0-9_-]{1,59}$/.test(providerKey)||
+        displayName.length<2||!["manual","api"].includes(mode)||
+        (mode==="api"&&!/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))||
+        (mode==="manual"&&secretRef!=="MANUAL_NO_SECRET"))
+        return fail("Data provider/credential reference tidak valid. Simpan nama secret, bukan nilai secret.",422,origin);
+      const {data:branch,error:branchError}=await admin.from("branches").select("id").eq("id",branchId).eq("tenant_id",tenantId).maybeSingle();
+      if(branchError)return fail("Cabang provider belum dapat diverifikasi.",503,origin);
+      if(!branch)return fail("Cabang bukan milik tenant ini.",403,origin);
+      if(mode==="api"&&!Deno.env.get(secretRef))return fail("Secret provider belum tersedia pada environment Function. Tidak ada nilai secret yang dibaca atau ditampilkan.",409,origin);
+      const {data,error}=await admin.from("delivery_provider_configs").insert({
+        tenant_id:tenantId,branch_id:branchId,provider_key:providerKey,display_name:displayName,
+        credential_secret_reference:secretRef,integration_mode:mode,status:"pending",created_by:actor.user.id,
+      }).select("id,tenant_id,branch_id,provider_key,display_name,credential_secret_reference,integration_mode,status,created_at").single();
+      if(error)return fail(error.code==="23505"?"Konfigurasi provider sudah ada untuk cabang ini.":"Permintaan konfigurasi provider gagal disimpan.",409,origin);
+      return json({provider_config:data,approval_required:true},201,origin);
+    }
+    const configId=safeText(body.provider_config_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(configId))return fail("Provider config ID tidak valid.",422,origin);
+    const {data:config,error:configError}=await admin.from("delivery_provider_configs").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",configId).maybeSingle();
+    if(configError)return fail("Konfigurasi provider belum dapat diverifikasi.",503,origin);
+    if(!config)return fail("Konfigurasi provider tidak ditemukan pada tenant ini.",404,origin);
+    const {data,error}=await admin.rpc("delivery_approve_provider_config",{p_config_id:configId,p_actor_user_id:actor.user.id});
+    if(error)return fail("Approval provider ditolak. Approver harus berbeda dari pembuat permintaan.",409,origin);
+    return json({provider_config:data},200,origin);
+  }
+
   if (action === "erp-upload-delivery-proof") {
     if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin unggah proof of delivery tidak diizinkan.",403,origin);
     const dispatchId=safeText(body.dispatch_id,64),mime=safeText(body.content_type,80),fileName=safeText(body.file_name,160);
