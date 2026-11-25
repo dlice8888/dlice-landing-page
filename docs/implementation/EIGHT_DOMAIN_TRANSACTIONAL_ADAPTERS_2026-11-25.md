@@ -26,8 +26,8 @@ store, a client-side authorization check, or a best-effort write.
 
 | Domain | Service | Transaction boundary |
 |---|---|---|
-| CRM | `awardLoyaltyForFinancialClose` | Reconciled source close, customer resolution, idempotent ledger + balance, audit |
-| HR / Finance | `persistApprovedPayrollRun` | Approved run, open fiscal period, immutable lines, balanced draft journal, audit |
+| CRM | `awardLoyaltyForFinancialClose`, `dispatchApprovedCampaignMessage`, `ingestSignedCampaignReceipt`, `calculateReconciledCampaignRoi` | Reconciled source close, idempotent ledger + balance, consent-gated provider outbox, signed receipt persistence and reconciled ROI |
+| HR / Finance | `persistApprovedPayrollRun`, `executeApprovedPayrollPayment`, `reconcileApprovedPayrollPayment` | Approved run, open fiscal period, immutable lines, balanced draft journal, payment intent and settlement reconciliation |
 | Delivery | `ingestSignedDeliveryWebhook` | HMAC verification, event dedupe, dispatch update, audit |
 | Franchise | `provisionApprovedFranchise` | Signed effective contract, 10 independently verified gates, territory check, atomic tenant/branch provisioning |
 | BI | `ingestReconciledKpiSnapshot` | Published formula, Finance facts, source reconciliation, lineage, immutable snapshot |
