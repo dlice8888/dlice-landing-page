@@ -995,6 +995,23 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
       return Object.freeze({ status: "duplicate", eventId: saved.eventId, paymentId: payment.id,
         matched: decision.matched, reconciliationRequired: false, mismatches: [] });
     }
+    let reversalException = null;
+    if (decision.reversalRequired === true) {
+      reversalException = await adapter(deps, "quarantineReversedPayrollPaymentClearing")(tx, {
+        paymentItemId: payment.id, providerEventId: saved.eventId,
+        actorId: scope.actorId, idempotencyKey: evidence.eventId,
+      });
+      if (reversalException?.status !== "reversal_exception") {
+        fail("PAYROLL_PROVIDER_REVERSAL_QUARANTINE_FAILED",
+          "Authenticated payout reversal must be retained as a Finance exception");
+      }
+      await audit(deps, tx, {
+        tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+        action: "hr.payroll.payment_finance_clearing.reversal_quarantined",
+        entityType: "hr_payroll_payment_item", entityId: payment.id,
+        idempotencyKey: evidence.eventId,
+      });
+    }
     await audit(deps, tx, {
       tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
       action: "hr.payroll.payment.webhook_received",
@@ -1005,6 +1022,7 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
       status: decision.status, eventId: saved.eventId, paymentId: payment.id,
       matched: true, eventKind,
       reconciliationRequired: decision.settled === true || decision.reversalRequired === true,
+      reversalException: reversalException?.status ?? null,
       mismatches: [],
     });
   });
