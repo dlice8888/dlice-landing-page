@@ -4,7 +4,8 @@ import {
   validateAttendanceEvent, validateTimesheetApproval, validatePayrollRun,
   validateDeliveryQuote, validateDeliveryWebhook, calculateFranchiseRoyalty,
   validateKpiDefinition, authorizeEntitlement, validateThreeWayMatch,
-  validateExecutiveAlertResolution,
+  validateExecutiveAlertResolution, validateDeliveryTransition, validateSupplierTenantLink,
+  validateBiSnapshotPublication, validateSaasSubscriptionChange, validateFranchiseApproval,
 } from '../../src/fnb-cross-domain-rules.mjs';
 
 test('HR attendance is tenant-scoped and server event metadata is required', () => {
@@ -65,4 +66,37 @@ test('executive alert requires independent verification and measured outcome', (
   assert.equal(validateExecutiveAlertResolution(input).status, 'verified');
   assert.equal(validateExecutiveAlertResolution({ ...input, verified_by: 'manager-1' }).code, 'RESOLUTION_SELF_VERIFICATION_FORBIDDEN');
   assert.equal(validateExecutiveAlertResolution({ ...input, measured_outcome: null }).code, 'MEASURED_OUTCOME_REQUIRED');
+});
+
+
+test('Delivery transitions require unique events, settled payment and verified POD',()=>{
+ assert.equal(validateDeliveryTransition({current_status:'booked',next_status:'picked_up',event_id:'event-0001'}).ok,true);
+ assert.equal(validateDeliveryTransition({current_status:'booked',next_status:'delivered',event_id:'event-0002',has_verified_pod:true,payment_status:'paid'}).code,'INVALID_DELIVERY_TRANSITION');
+ assert.equal(validateDeliveryTransition({current_status:'in_transit',next_status:'delivered',event_id:'event-0003',payment_status:'paid'}).code,'DELIVERY_PROOF_REQUIRED');
+ assert.equal(validateDeliveryTransition({current_status:'in_transit',next_status:'delivered',event_id:'event-0004',has_verified_pod:true,payment_status:'pending'}).code,'DELIVERY_PAYMENT_NOT_SETTLED');
+ assert.equal(validateDeliveryTransition({current_status:'in_transit',next_status:'delivered',event_id:'event-0005',has_verified_pod:true,payment_status:'paid'}).ok,true);
+});
+test('Supplier tenant ownership requires independent approval',()=>{
+ assert.equal(validateSupplierTenantLink({tenant_id:'t1',supplier_id:'s1',relationship_type:'shared',status:'pending',created_by:'u1'}).ok,true);
+ assert.equal(validateSupplierTenantLink({tenant_id:'t1',supplier_id:'s1',relationship_type:'exclusive',status:'active',created_by:'u1',approved_by:'u1'}).code,'INDEPENDENT_SUPPLIER_APPROVAL_REQUIRED');
+ assert.equal(validateSupplierTenantLink({tenant_id:'t1',supplier_id:'s1',relationship_type:'exclusive',status:'active',created_by:'u1',approved_by:'u2'}).ok,true);
+});
+test('BI snapshot cannot publish without fresh complete lineage and reconciliation',()=>{
+ const now=Date.parse('2026-11-25T12:00:00Z');
+ const input={tenant_id:'t1',snapshot_tenant_id:'t1',metric_version:2,active_metric_version:2,now,freshness_sla_ms:3600000,watermarks:[{status:'complete',max_source_updated_at:'2026-11-25T11:30:00Z'}],reconciliations:[{status:'passed'}]};
+ assert.equal(validateBiSnapshotPublication(input).ok,true);
+ assert.equal(validateBiSnapshotPublication({...input,watermarks:[{status:'partial',max_source_updated_at:'2026-11-25T11:30:00Z'}]}).code,'BI_SOURCE_STALE_OR_INCOMPLETE');
+ assert.equal(validateBiSnapshotPublication({...input,reconciliations:[{status:'failed'}]}).code,'BI_RECONCILIATION_NOT_PASSED');
+});
+test('SaaS activation requires billing verification outside a trial',()=>{
+ assert.equal(validateSaasSubscriptionChange({tenant_id:'t1',subscription_tenant_id:'t1',current_status:'trialing',next_status:'active'}).ok,true);
+ assert.equal(validateSaasSubscriptionChange({tenant_id:'t1',subscription_tenant_id:'t1',current_status:'past_due',next_status:'active'}).code,'BILLING_VERIFICATION_REQUIRED');
+ assert.equal(validateSaasSubscriptionChange({tenant_id:'t1',subscription_tenant_id:'t1',current_status:'past_due',next_status:'active',billing_verified:true}).ok,true);
+});
+test('Franchise approval requires six completed due diligence checks and an approved site',()=>{
+ const checks=['identity','financial','legal','operational','territory','reputation'].map(()=>({status:'passed',reviewer_id:'reviewer'}));
+ const input={status:'due_diligence',due_diligence_checks:checks,approved_site_count:1,reviewer_id:'owner',applicant_id:'applicant'};
+ assert.equal(validateFranchiseApproval(input).ok,true);
+ assert.equal(validateFranchiseApproval({...input,due_diligence_checks:checks.slice(0,5)}).code,'FRANCHISE_DUE_DILIGENCE_INCOMPLETE');
+ assert.equal(validateFranchiseApproval({...input,approved_site_count:0}).code,'FRANCHISE_SITE_NOT_APPROVED');
 });
