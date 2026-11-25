@@ -998,49 +998,30 @@ if (action === "admin-set-profile-role") {
       const normalized=digits.startsWith("0")?"62"+digits.slice(1):digits.startsWith("8")?"62"+digits:digits;
       const phone=normalized?"+"+normalized:null;
       if(phone&&!/^\+[1-9][0-9]{7,14}$/.test(phone))return fail("Nomor identitas transaksi tidak valid; tautkan pelanggan secara manual.",422,origin);
-      let customer:any=null;
-      if(requestedCustomerId){
-        const {data,error}=await admin.from("crm_customers").select("id,tenant_id,branch_id,display_name,phone_e164,status").eq("id",requestedCustomerId).eq("tenant_id",tenantId).maybeSingle();
-        if(error)return fail("Pelanggan CRM belum dapat diverifikasi.",503,origin);
-        if(!data||["merged","blocked","inactive"].includes(data.status))return fail("Pelanggan CRM tidak aktif atau bukan milik tenant ini.",409,origin);
-        customer=data;
-        if(phone&&customer.phone_e164&&customer.phone_e164!==phone)return fail("Nomor transaksi berbeda dari identitas pelanggan; verifikasi manual diperlukan.",409,origin);
-      }else{
-        if(!phone)return fail("Transaksi tidak memiliki nomor pelanggan yang dapat dicocokkan. Pilih customer_id setelah verifikasi manual.",409,origin);
-        const {data,error}=await admin.from("crm_customers").select("id,tenant_id,branch_id,display_name,phone_e164,status").eq("tenant_id",tenantId).eq("phone_e164",phone).neq("status","merged").maybeSingle();
-        if(error)return fail("Pencarian identitas pelanggan gagal.",503,origin);
-        customer=data;
-        if(!customer){
-          const displayName=safeText(source.customer_name,120)||null;
-          const {data:created,error:createError}=await admin.from("crm_customers").insert({tenant_id:tenantId,branch_id:branchId,display_name:displayName,phone_e164:phone,status:"active",marketing_status:"unknown",created_by:actor.user.id}).select("id,tenant_id,branch_id,display_name,phone_e164,status").single();
-          if(createError){
-            if(createError.code==="23505"){
-              const retry=await admin.from("crm_customers").select("id,tenant_id,branch_id,display_name,phone_e164,status").eq("tenant_id",tenantId).eq("phone_e164",phone).neq("status","merged").maybeSingle();
-              customer=retry.data;
-            }else return fail("Identitas pelanggan tidak dapat dibuat.",503,origin);
-          }else customer=created;
-        }
-      }
-      if(!customer)return fail("Pelanggan belum dapat dipastikan.",409,origin);
-      const {data:existing,error:existingError}=await admin.from("crm_transaction_links").select("id,customer_id,branch_id").eq("tenant_id",tenantId).eq("source_type",sourceType).eq("source_id",sourceId).maybeSingle();
-      if(existingError)return fail("Status tautan transaksi belum dapat dibaca.",503,origin);
-      if(existing){
-        if(existing.customer_id!==customer.id)return fail("Transaksi sudah ditautkan ke pelanggan lain; perlu proses koreksi terotorisasi.",409,origin);
-        return json({linked:true,already_linked:true,customer,source_type:sourceType,source_id:sourceId,branch_id:branchId},200,origin);
-      }
-      const {error:linkError}=await admin.from("crm_transaction_links").insert({tenant_id:tenantId,customer_id:customer.id,source_type:sourceType,source_id:sourceId,branch_id:branchId,linked_by:actor.user.id});
+      const {data:linked,error:linkError}=await admin.rpc("crm_link_transaction_customer",{
+        p_tenant_id:tenantId,
+        p_branch_id:branchId,
+        p_source_type:sourceType,
+        p_source_id:sourceId,
+        p_customer_id:requestedCustomerId,
+        p_display_name:safeText(source.customer_name,120)||null,
+        p_phone_e164:phone,
+        p_actor_user_id:actor.user.id,
+      });
       if(linkError){
-        if(linkError.code==="23505"){
-          const retry=await admin.from("crm_transaction_links").select("customer_id").eq("tenant_id",tenantId).eq("source_type",sourceType).eq("source_id",sourceId).maybeSingle();
-          if(retry.data?.customer_id===customer.id)return json({linked:true,already_linked:true,customer,source_type:sourceType,source_id:sourceId,branch_id:branchId},200,origin);
-        }
-        return fail("Tautan transaksi CRM gagal disimpan.",409,origin);
+        const message=String(linkError.message||"");
+        if(message.includes("TRANSACTION_ALREADY_LINKED_TO_OTHER_CUSTOMER"))return fail("Transaksi sudah ditautkan ke pelanggan lain; perlu proses koreksi terotorisasi.",409,origin);
+        if(message.includes("CUSTOMER_IDENTITY_MISMATCH"))return fail("Nomor transaksi berbeda dari identitas pelanggan; verifikasi manual diperlukan.",409,origin);
+        if(message.includes("CUSTOMER_NOT_ACTIVE"))return fail("Pelanggan CRM tidak aktif atau tidak dapat ditautkan.",409,origin);
+        if(message.includes("CUSTOMER_PHONE_REQUIRED"))return fail("Transaksi tidak memiliki nomor pelanggan yang dapat dicocokkan. Pilih customer_id setelah verifikasi manual.",409,origin);
+        return fail("Tautan identitas CRM gagal disimpan secara atomik.",503,origin);
       }
-      if(customer.status==="prospect"){
-        await admin.from("crm_customers").update({status:"active",branch_id:customer.branch_id||branchId,updated_at:new Date().toISOString()}).eq("id",customer.id).eq("tenant_id",tenantId);
-      }
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"crm.transaction.link_paid",entity_type:"crm_transaction_links",entity_id:sourceId,metadata:{tenant_id:tenantId,branch_id:branchId,source_type:sourceType,customer_id:customer.id}});
-      return json({linked:true,already_linked:false,customer,source_type:sourceType,source_id:sourceId,branch_id:branchId},201,origin);
+      if(!linked?.customer_id)return fail("Tautan identitas CRM tidak memberikan referensi pelanggan.",503,origin);
+      const {data:customer,error:customerError}=await admin.from("crm_customers")
+        .select("id,tenant_id,branch_id,display_name,phone_e164,status")
+        .eq("id",linked.customer_id).eq("tenant_id",tenantId).single();
+      if(customerError||!customer)return fail("Tautan tersimpan, tetapi identitas pelanggan belum dapat dimuat.",503,origin);
+      return json({linked:true,already_linked:linked.already_linked===true,customer,source_type:sourceType,source_id:sourceId,branch_id:branchId},linked.already_linked?200:201,origin);
     }
 
   if (action === "erp-crm-list-customers") {
