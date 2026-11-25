@@ -13,6 +13,8 @@ import {
   reconcileApprovedPayrollPayment,
   enforceSaasTenantEntitlement,
   issueSaasSubscriptionInvoice,
+  requestDeliveryQuotes,
+  bookDeliveryDispatch,
 } from "../../src/fnb-transactional-workflows.mjs";
 
 const base = { tenantId: "tenant-a", branchId: "branch-a", actorId: "actor-a", idempotencyKey: "workflow-key-0001" };
@@ -125,6 +127,25 @@ test("SaaS invoice issuance fails closed without a tenant transaction", async ()
     issueSaasSubscriptionInvoice({
       tenantId: "tenant-a", actorId: "actor-a", idempotencyKey: "saas-invoice-0001",
       subscriptionId: "subscription-a", periodStart: "2026-11-01", periodEnd: "2026-11-30",
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+
+test("delivery quote requests fail closed without tenant-scoped repository adapters", async () => {
+  await assert.rejects(
+    requestDeliveryQuotes({
+      ...base, sourceType: "online_order", sourceId: "order-a",
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("delivery booking fails closed without a durable booking-intent adapter", async () => {
+  await assert.rejects(
+    bookDeliveryDispatch({
+      ...base, quoteId: "quote-a", customerAcceptedQuote: true,
     }, {}),
     { code: "WORKFLOW_ADAPTER_REQUIRED" },
   );
