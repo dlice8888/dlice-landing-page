@@ -210,14 +210,20 @@
         },
         {
           "requirement": "Variants, toppings, special instructions",
-          "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Complete modifier-group flow not proven.",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 49
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            143
+          ],
+          "work_started_at": "2026-11-24",
+          "work_evidence": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Discounts, coupons, vouchers, special pricing",
@@ -244,25 +250,37 @@
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
-          "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Partial/split tender lifecycle not proven.",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 52
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            143
+          ],
+          "work_started_at": "2026-11-24",
+          "work_evidence": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Hold/resume order",
-          "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "No verified workflow found.",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 53
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            143
+          ],
+          "work_started_at": "2026-11-24",
+          "work_evidence": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Void, refund, return with reason and approval",
@@ -278,14 +296,20 @@
         },
         {
           "requirement": "Receipt printing/digital receipt",
-          "source_status": "GATE",
-          "audit_status": "BLOCKED",
-          "evidence_or_gap": "Receipt behavior needs device/browser/provider acceptance.",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 55
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            143
+          ],
+          "work_started_at": "2026-11-24",
+          "work_evidence": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
@@ -301,14 +325,20 @@
         },
         {
           "requirement": "Offline sales queue and safe resynchronization",
-          "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Offline persistence, deduplication and replay recovery not proven.",
+          "source_status": "PARTIAL",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 57
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            143
+          ],
+          "work_started_at": "2026-11-24",
+          "work_evidence": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Separate order, payment, fulfillment statuses",
@@ -327,12 +357,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 13,
-        "partial": 7,
-        "not_verified": 5,
-        "blocked": 1,
+        "partial": 12,
+        "not_verified": 1,
+        "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 53.8,
+      "partial_coverage_percent": 92.3,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2953,6 +2983,12 @@
         "draft": true,
         "head_sha": "23e4b6c2a057b9b8bdeed68f71088c6e4c88d105",
         "quality": "Free quality checks PASS at exact head; DB replay and provider/bank E2E not yet passed"
+      },
+      "pr143": {
+        "state": "OPEN",
+        "draft": false,
+        "head_sha": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
+        "quality": "Static/contract checks pass; overall quality workflow blocked by staging E2E Owner authorization preflight; disposable replay passes 14 pgTAP files / 375 assertions; staging POS business E2E blocked before mutation"
       }
     },
     "supabase": {
@@ -2987,6 +3023,11 @@
         "branch": "main",
         "commit": "cca72d336426688d8d7f6e01b819613ddc82fa6c",
         "note": "read-only inspection only; no production changes"
+      },
+      "pr143_preview": {
+        "state": "READY",
+        "commit": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
+        "url": "https://dlice-landing-page-10txkj9ag-dlice8888-7332.vercel.app"
       }
     },
     "release_flags": {
@@ -5389,9 +5430,9 @@
   "audit_method": "189 PRD rows reviewed against staging source matrix, live Supabase staging catalog/advisors, Vercel Preview/Production deployment metadata, and open PR evidence. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open Draft PRs are not staging/runtime acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 134,
-    "not_verified": 49,
-    "blocked": 6,
+    "partial": 139,
+    "not_verified": 45,
+    "blocked": 5,
     "done": 0
   }
 }
