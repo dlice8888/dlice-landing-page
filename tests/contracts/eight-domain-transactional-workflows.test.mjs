@@ -6,7 +6,11 @@ import {
   ingestSignedDeliveryWebhook,
   provisionApprovedFranchise,
   meterCommittedTenantOperation,
-  readAuthorizedExecutiveDrilldown,\n  dispatchApprovedCampaignMessage,\n  ingestSignedCampaignReceipt,\n  executeApprovedPayrollPayment,\n  reconcileApprovedPayrollPayment,
+  readAuthorizedExecutiveDrilldown,
+  dispatchApprovedCampaignMessage,
+  ingestSignedCampaignReceipt,
+  executeApprovedPayrollPayment,
+  reconcileApprovedPayrollPayment,
 } from "../../src/fnb-transactional-workflows.mjs";
 
 const base = { tenantId: "tenant-a", branchId: "branch-a", actorId: "actor-a", idempotencyKey: "workflow-key-0001" };
