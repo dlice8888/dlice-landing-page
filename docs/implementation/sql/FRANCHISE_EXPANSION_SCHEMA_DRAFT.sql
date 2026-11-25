@@ -164,5 +164,36 @@ end $$;
 revoke all on function public.franchise_assert_opening_ready(uuid,date) from public,anon,authenticated;
 grant execute on function public.franchise_assert_opening_ready(uuid,date) to service_role;
 
+create or replace function public.franchise_review_application(
+ p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_app public.franchise_applications%rowtype; v_checks integer; v_passed integer; v_site integer;
+begin
+ if p_decision not in ('screening','due_diligence','approved','rejected') then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_DECISION';
+ end if;
+ select * into v_app from public.franchise_applications where id=p_application_id for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_APPLICATION_NOT_FOUND'; end if;
+ if v_app.status in ('approved','rejected','withdrawn') then raise exception using errcode='23514',message='FRANCHISE_APPLICATION_TERMINAL'; end if;
+ if p_decision='approved' then
+  if v_app.status<>'due_diligence' then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_REQUIRED'; end if;
+  select count(*),count(*) filter(where status in ('passed','waived')) into v_checks,v_passed
+   from public.franchise_due_diligence_checks where application_id=p_application_id;
+  if v_checks<>6 or v_passed<>6 then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_INCOMPLETE'; end if;
+  select count(*) into v_site from public.franchise_sites where application_id=p_application_id and feasibility_status='approved';
+  if v_site=0 then raise exception using errcode='23514',message='FRANCHISE_SITE_NOT_APPROVED'; end if;
+ end if;
+ update public.franchise_applications set status=p_decision,assigned_reviewer=coalesce(assigned_reviewer,p_actor_user_id),
+  reviewed_at=case when p_decision in ('approved','rejected') then now() else reviewed_at end,updated_at=now()
+ where id=p_application_id returning * into v_app;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.application.'||p_decision,'franchise_application',v_app.id::text,
+  jsonb_build_object('previous_status',v_app.status,'notes',left(coalesce(p_notes,''),500)));
+ return jsonb_build_object('application_id',v_app.id,'status',v_app.status);
+end $;
+revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
+
 -- Royalty statement generation must consume reconciled net sales, never raw order totals.
 -- The caller supplies a signed-off reconciliation reference and the exact effective agreement version.
