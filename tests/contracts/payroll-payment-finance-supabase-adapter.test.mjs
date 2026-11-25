@@ -21,7 +21,7 @@ test("Supabase payroll Finance RPC adapter rejects missing tenant or actor scope
   const adapter = createPayrollPaymentFinanceRpcAdapter({
     supabase: { rpc: async () => ({ data: {}, error: null }) },
   });
-  await assert.rejects(adapter.reconcilePayrollPaymentBankBatch({
+  assert.throws(() => adapter.reconcilePayrollPaymentBankBatch({
     tenantId: "tenant-a", paymentBatchId: "batch-a",
   }), { code: "PAYROLL_FINANCE_RPC_INPUT_INVALID" });
 });
