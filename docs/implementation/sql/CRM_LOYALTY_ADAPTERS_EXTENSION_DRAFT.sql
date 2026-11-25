@@ -27,7 +27,7 @@ create table if not exists public.crm_financial_close_projections (
   source_type text not null check(source_type in ('pos_sale','online_order')),
   source_id uuid not null,
   shift_reconciliation_id uuid null,
-  settlement_reconciliation_id uuid not null,
+  settlement_reconciliation_id uuid null,
   settlement_ids uuid[] not null default '{}',
   finance_journal_entry_ids uuid[] not null default '{}',
   currency text not null check(currency='IDR'),
@@ -36,7 +36,7 @@ create table if not exists public.crm_financial_close_projections (
   processed_refunds_idr bigint not null check(processed_refunds_idr>=0),
   refund_evidence jsonb not null check(jsonb_typeof(refund_evidence)='array'),
   shift_reconciliation_status text not null check(shift_reconciliation_status in ('approved','not_required')),
-  settlement_reconciliation_status text not null check(settlement_reconciliation_status='matched'),
+  settlement_reconciliation_status text not null check(settlement_reconciliation_status in ('matched','cash_reconciled')),
   finance_journal_status text not null check(finance_journal_status in ('posted','reconciled')),
   finance_source_reconciliation_status text not null check(finance_source_reconciliation_status='reconciled'),
   status text not null check(status in ('reconciled','superseded')),
@@ -161,7 +161,7 @@ begin
   if not found then raise exception using errcode='P0002',message='FINANCIAL_CLOSE_NOT_RECONCILED'; end if;
   if (p_source_type='pos_sale' and v_close.shift_reconciliation_status<>'approved')
      or (p_source_type='online_order' and v_close.shift_reconciliation_status<>'not_required')
-     or v_close.settlement_reconciliation_status<>'matched'
+     or v_close.settlement_reconciliation_status not in ('matched','cash_reconciled')
      or v_close.finance_journal_status not in ('posted','reconciled')
      or v_close.finance_source_reconciliation_status<>'reconciled' then
     raise exception using errcode='23514',message='FINANCIAL_CLOSE_EVIDENCE_INCOMPLETE';
@@ -539,6 +539,7 @@ declare
  v_subtotal bigint; v_discount bigint:=0; v_gross bigint;
  v_refunds bigint:=0; v_paid bigint:=0; v_settled bigint:=0;
  v_payment_ids uuid[]:='{}'; v_settlement_ids uuid[]:='{}';
+ v_payment_method text; v_settlement_status text:='matched';
  v_journal_ids uuid[]:='{}'; v_refund_ids uuid[]:='{}';
  v_refund_evidence jsonb:='[]'::jsonb; v_snapshot jsonb;
  v_hash text; v_cash_id uuid; v_cash_status text:='not_required';
@@ -556,7 +557,7 @@ begin
  end if;
 
  if p_source_type='pos_sale' then
-  select subtotal_idr,discount_idr,total_idr into v_subtotal,v_discount,v_gross
+  select subtotal_idr,discount_idr,total_idr,payment_method into v_subtotal,v_discount,v_gross,v_payment_method
    from public.pos_sales where id=p_source_id and branch_id=p_branch_id and payment_status='paid';
   if not found then raise exception using errcode='P0002',message='PAID_POS_SALE_NOT_FOUND'; end if;
   select id,status into v_cash_id,v_cash_status from public.cash_reconciliations
@@ -579,9 +580,15 @@ begin
   v_gross:=v_paid;
  end if;
 
- -- A source is eligible only when its full payment amount is represented by
- -- matched settlement items and each batch has bank/provider receipt parity.
- if p_source_type='pos_sale' then
+ -- Cash POS is reconciled by the approved shift cash count. Bank/QRIS POS
+ -- must match provider settlement items; split tender remains blocked until
+ -- its cash/provider allocation is represented explicitly.
+ if p_source_type='pos_sale' and v_payment_method='cash' then
+  v_settled:=v_paid;
+  v_settlement_status:='cash_reconciled';
+ elsif p_source_type='pos_sale' and v_payment_method='split' then
+  raise exception using errcode='23514',message='POS_SPLIT_TENDER_ALLOCATION_EVIDENCE_REQUIRED';
+ elsif p_source_type='pos_sale' then
   select coalesce(array_agg(distinct ps.id order by ps.id),'{}'::uuid[]),
          coalesce(sum(psi.amount_idr),0)
    into v_settlement_ids,v_settled
@@ -689,7 +696,8 @@ begin
   'refund_ids',v_refund_ids,'subtotal_idr',v_subtotal,'discount_idr',v_discount,
   'processed_refunds_idr',v_refunds,'paid_amount_idr',v_paid,'settled_amount_idr',v_settled,
   'cash_reconciliation_id',v_cash_id,'cash_reconciliation_status',v_cash_status,
-  'refund_evidence',v_refund_evidence,'captured_at',now());
+  'payment_method',v_payment_method,'settlement_reconciliation_status',v_settlement_status,
+  'refund_evidence',v_refund_evidence);
  v_hash:=encode(pg_catalog.sha256(convert_to(v_snapshot::text,'UTF8')),'hex');
 
  select * into v_existing from public.crm_financial_close_projections
@@ -711,7 +719,7 @@ begin
   p_tenant_id,p_branch_id,p_source_type,p_source_id,v_cash_id,
   (v_settlement_ids)[1],v_settlement_ids,v_journal_ids,'IDR',
   v_subtotal,v_discount,v_refunds,v_refund_evidence,
-  v_cash_status,'matched','posted','reconciled','reconciled',v_hash,now()
+  v_cash_status,v_settlement_status,'posted','reconciled','reconciled',v_hash,now()
  ) returning * into v_existing;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'crm.financial_close.projected','crm_financial_close_projections',v_existing.id::text,
