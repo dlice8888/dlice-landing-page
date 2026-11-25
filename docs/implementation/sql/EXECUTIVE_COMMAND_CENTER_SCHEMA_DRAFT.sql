@@ -70,7 +70,7 @@ begin foreach t in array array['executive_kpi_targets','executive_operational_al
 end loop; end $$;
 create or replace function public.executive_transition_alert(p_alert_id uuid,p_next_status text,p_actor_user_id uuid,p_note text,p_evidence_reference text)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.executive_operational_alerts%rowtype;
 begin
  if p_next_status not in ('acknowledged','investigating','resolved','dismissed','open') then raise exception using errcode='22023',message='INVALID_EXECUTIVE_ALERT_STATUS'; end if;
@@ -94,7 +94,7 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.alert.'||p_next_status,'executive_operational_alert',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'evidence_reference',p_evidence_reference));
  return jsonb_build_object('alert_id',v.id,'status',v.status,'resolved_by',v.resolved_by);
-end $;
+end $$;
 revoke all on function public.executive_transition_alert(uuid,text,uuid,text,text) from public,anon,authenticated;
 grant execute on function public.executive_transition_alert(uuid,text,uuid,text,text) to service_role;
 
