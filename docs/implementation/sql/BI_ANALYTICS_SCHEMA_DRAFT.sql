@@ -134,7 +134,7 @@ create or replace function public.bi_record_source_watermark(
  p_max_source_updated_at timestamptz,p_expected_count bigint,p_observed_count bigint,
  p_ingestion_run_id text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_source_watermarks%rowtype; v_status text;
 begin
  if length(btrim(coalesce(p_source_key,''))) not between 2 and 120
@@ -159,7 +159,7 @@ begin
  values(p_tenant_id,p_source_key,p_window_start,p_window_end,p_max_source_updated_at,
   p_expected_count,p_observed_count,p_ingestion_run_id,v_status) returning * into v;
  return jsonb_build_object('status','recorded','watermark_id',v.id,'watermark_status',v.status);
-end $;
+end $$;
 revoke all on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) from public,anon,authenticated;
 grant execute on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) to service_role;
 
@@ -167,7 +167,7 @@ create or replace function public.bi_create_reconciliation_run(
  p_tenant_id uuid,p_period_start date,p_period_end date,p_source_domain text,p_source_reference text,
  p_expected_total numeric,p_observed_total numeric,p_tolerance numeric,p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_reconciliation_runs%rowtype;
 begin
  if p_period_end<p_period_start or length(btrim(coalesce(p_source_domain,''))) not between 2 and 80
@@ -189,14 +189,14 @@ begin
  values(p_tenant_id,p_period_start,p_period_end,p_source_domain,p_source_reference,p_expected_total,
   p_observed_total,p_tolerance,'pending',p_actor_user_id,p_idempotency_key) returning * into v;
  return jsonb_build_object('status','created','reconciliation_id',v.id,'reconciliation_status',v.status,'variance',v.variance);
-end $;
+end $$;
 revoke all on function public.bi_create_reconciliation_run(uuid,date,date,text,text,numeric,numeric,numeric,text,uuid) from public,anon,authenticated;
 grant execute on function public.bi_create_reconciliation_run(uuid,date,date,text,text,numeric,numeric,numeric,text,uuid) to service_role;
 
 create or replace function public.bi_review_reconciliation_run(
  p_reconciliation_id uuid,p_decision text,p_waiver_reason text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_reconciliation_runs%rowtype;
 begin
  if p_decision not in ('passed','failed','waived') then
@@ -221,7 +221,7 @@ begin
  values(p_actor_user_id,'bi.reconciliation.'||p_decision,'bi_reconciliation_run',v.id::text,
   jsonb_build_object('tenant_id',v.tenant_id,'variance',v.variance,'tolerance',v.tolerance,'source_domain',v.source_domain));
  return jsonb_build_object('reconciliation_id',v.id,'status',v.status,'variance',v.variance,'reviewed_by',v.reviewed_by);
-end $;
+end $$;
 revoke all on function public.bi_review_reconciliation_run(uuid,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.bi_review_reconciliation_run(uuid,text,text,uuid) to service_role;
 
@@ -229,7 +229,7 @@ create or replace function public.bi_register_metric_source_lineage(
  p_metric_id uuid,p_formula_version integer,p_source_entity text,p_source_field text,p_source_key text,
  p_join_rule text,p_aggregation_rule text,p_transformation_reference text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_metric_definitions%rowtype; l public.bi_metric_source_lineage%rowtype;
 begin
  select * into v from public.bi_metric_definitions where id=p_metric_id for share;
@@ -255,7 +255,7 @@ begin
  values(p_metric_id,p_formula_version,p_source_entity,p_source_field,p_source_key,p_join_rule,
   p_aggregation_rule,p_transformation_reference,p_actor_user_id,now()) returning * into l;
  return jsonb_build_object('status','approved','lineage_id',l.id);
-end $;
+end $$;
 revoke all on function public.bi_register_metric_source_lineage(uuid,integer,text,text,text,text,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.bi_register_metric_source_lineage(uuid,integer,text,text,text,text,text,text,uuid) to service_role;
 
@@ -264,7 +264,7 @@ create or replace function public.bi_create_metric_snapshot(
  p_dimension_key text,p_dimension_value text,p_metric_value numeric,p_source_watermark_ids uuid[],
  p_reconciliation_run_ids uuid[],p_formula_version integer,p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_metric_snapshots%rowtype; m public.bi_metric_definitions%rowtype;
 begin
  if p_period_end<=p_period_start or p_metric_value is null or
@@ -292,7 +292,7 @@ begin
   p_source_watermark_ids,p_reconciliation_run_ids,p_formula_version,'draft',p_idempotency_key,p_actor_user_id)
  returning * into v;
  return jsonb_build_object('status','created','snapshot_id',v.id,'snapshot_status',v.status);
-end $;
+end $$;
 revoke all on function public.bi_create_metric_snapshot(uuid,uuid,timestamptz,timestamptz,text,text,numeric,uuid[],uuid[],integer,text,uuid) from public,anon,authenticated;
 grant execute on function public.bi_create_metric_snapshot(uuid,uuid,timestamptz,timestamptz,text,text,numeric,uuid[],uuid[],integer,text,uuid) to service_role;
 
