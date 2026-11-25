@@ -31,7 +31,7 @@ BEGIN
     ALTER ROLE authenticated LOGIN PASSWORD 'local-only';
   END IF;
 END
-$;
+$$;
 SQL
 
 dropdb --if-exists "$DB"
