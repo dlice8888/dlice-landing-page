@@ -12,7 +12,7 @@ const isInteger = (value) => Number.isSafeInteger(value);
 const validDate = (value) => typeof value === "string" && !Number.isNaN(Date.parse(value));
 
 export function normalizeCustomerIdentity({ phone, email } = {}) {
-  const normalizedPhone = nonBlank(phone) ? phone.replace(/[^0-9]/g, "").replace(/^0/, "62") : null;
+  const normalizedPhone = nonBlank(phone) ? phone.replace(/[^0-9]/g, "").replace(/^0/, "62").replace(/^8/, "628") : null;
   const normalizedEmail = nonBlank(email) ? email.trim().toLowerCase() : null;
   if (!normalizedPhone && !normalizedEmail) return fail("CUSTOMER_CONTACT_REQUIRED");
   if (normalizedPhone && (normalizedPhone.length < 9 || normalizedPhone.length > 15)) return fail("INVALID_PHONE");
@@ -80,10 +80,11 @@ export function appendLoyaltyEntry({ tenant_id, customer_tenant_id, customer_id,
   }), balance_after: balance + points });
 }
 
-export function validateRewardRedemption({ tenant_id, customer_tenant_id, customer_id, reward_id, voucher_id, idempotency_key, points_cost, balance, starts_at, expires_at, now } = {}) {
+export function validateRewardRedemption({ tenant_id, customer_tenant_id, customer_id, reward_id, voucher_id, idempotency_key, points_cost, balance, starts_at, expires_at, now, existingRedemptions = [] } = {}) {
   if (!nonBlank(tenant_id) || tenant_id !== customer_tenant_id) return fail("TENANT_SCOPE_MISMATCH");
   if (![customer_id, reward_id, voucher_id, idempotency_key].every(nonBlank)) return fail("REDEMPTION_REFERENCE_REQUIRED");
   if (!isInteger(points_cost) || points_cost <= 0 || !isInteger(balance) || balance < 0) return fail("INVALID_REDEMPTION_AMOUNT");
+  if (existingRedemptions.some((item) => item.tenant_id === tenant_id && (item.idempotency_key === idempotency_key || item.voucher_id === voucher_id))) return fail("DUPLICATE_REDEMPTION");
   if (balance < points_cost) return fail("INSUFFICIENT_POINTS", { balance, points_cost });
   if (!validDate(starts_at) || !validDate(expires_at) || !validDate(now) || Date.parse(expires_at) <= Date.parse(starts_at)) return fail("INVALID_REWARD_WINDOW");
   if (Date.parse(now) < Date.parse(starts_at) || Date.parse(now) >= Date.parse(expires_at)) return fail("REWARD_NOT_ACTIVE");
