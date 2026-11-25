@@ -4072,8 +4072,8 @@
       "requirement": "Goods received note and quantity/quality inspection",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Atomic receiving RPC and GRN structures exist; live positive E2E pending.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #150 adds supplier quality policy request/independent approval, receipt-item inspection, nonconforming quantity quarantine, CAPA creation, independent verification and quarantine release. SQL/adapter are draft only; no migration, UI, procurement receiving E2E or inventory reconciliation yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 128
@@ -4126,7 +4126,8 @@
             "kind": "food_safety_recall_supplier_capa_workflows",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
       }
     },
     {
@@ -10258,8 +10259,8 @@
       "requirement": "Food safety, temperature, allergens, recall",
       "source_status": "NOT EVIDENCED",
       "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Operational compliance records and recall traceability missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #150 adds tenant-configurable food-safety policy request/approval, lot registration from posted receipt/completed production/completed branch check, allergen/temperature inspection, quarantine, independent release/destruction and recall impact recording. No auto-link from stock/Order consumption or runtime proof yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 274
@@ -10312,7 +10313,8 @@
             "kind": "food_safety_recall_supplier_capa_workflows",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
       }
     },
     {
@@ -10321,8 +10323,8 @@
       "requirement": "Supplier quality, quarantine, corrective actions",
       "source_status": "NOT EVIDENCED",
       "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Inspection, quarantine and CAPA lifecycle missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #150 adds supplier quality policy, receipt inspection, quarantine, CAPA submission and independent verification/release. Source SQL and single-RPC adapter are draft; no disposable replay/pgTAP/staging E2E yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 275
@@ -10375,7 +10377,8 @@
             "kind": "food_safety_recall_supplier_capa_workflows",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
       }
     },
     {
@@ -11284,6 +11287,26 @@
       "staging_migration": "NOT_APPLIED",
       "staging_e2e": "NOT_RUN",
       "done_features": 0
+    },
+    "quality_increment": {
+      "pr": 150,
+      "latest_head": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276",
+      "files": [
+        "docs/implementation/sql/QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql",
+        "docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql",
+        "src/supabase-quality-compliance-adapter.mjs",
+        "supabase/functions/dlice-orders/index.ts",
+        "tests/contracts/quality-compliance-sql-contract.test.mjs",
+        "tests/contracts/supabase-quality-compliance-adapter.test.mjs"
+      ],
+      "new_quality_edge_actions": 13,
+      "edge_action_inventory": 215,
+      "pgTap_assertions_draft": 46,
+      "sql_replay": "NOT_RUN",
+      "pgTap_execution": "NOT_RUN",
+      "staging_migration": "NOT_APPLIED",
+      "staging_e2e": "NOT_RUN",
+      "known_gap": "Lot distribution links are explicit, not yet automatically sourced from procurement, stock transfer, production consumption, POS/Order fulfillment."
     }
   }
 }
