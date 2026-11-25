@@ -18,14 +18,15 @@ export async function runSaasUsageMeteringBatch({events,adapter}){
  return Object.freeze({status:results.every(x=>x.status!=="failed")?"complete":"partial",eventCount:events.length,results:Object.freeze(results.map(Object.freeze))});
 }
 
-export async function runSaasInvoiceIssuanceBatch({subscriptions,adapter,actorId,dueAt,taxIdr=0,runKey}){
+export async function runSaasInvoiceIssuanceBatch({subscriptions,adapter,actorId,dueAt,taxIdr=0,runKey,now=Date.now()}){
  if(!Array.isArray(subscriptions))throw Object.assign(new Error("Subscription batch is required"),{code:"SAAS_SUBSCRIPTIONS_REQUIRED"});
  if(typeof adapter?.issueInvoice!=="function")throw Object.assign(new Error("SaaS invoice adapter required"),{code:"SAAS_ADAPTER_REQUIRED"});
  if(typeof actorId!=="string"||!actorId||typeof runKey!=="string"||!runKey)throw Object.assign(new Error("Actor and run key are required"),{code:"SAAS_INPUT_REQUIRED"});
  const results=[];
  for(const sub of subscriptions){
   try{
-   if(!["active","past_due"].includes(sub?.status))throw Object.assign(new Error("Only billable subscriptions can be invoiced"),{code:"SAAS_SUBSCRIPTION_NOT_BILLABLE"});
+   const billable=["active","past_due"].includes(sub?.status)||(sub?.status==="trialing"&&sub.trial_ends_at&&Date.parse(sub.trial_ends_at)<=now);
+   if(!billable)throw Object.assign(new Error("Only active, past-due or expired-trial subscriptions can be invoiced"),{code:"SAAS_SUBSCRIPTION_NOT_BILLABLE"});
    const key=(runKey+":"+sub.id+":"+String(sub.current_period_start)).slice(0,120);
    const invoice=await adapter.issueInvoice({tenantId:sub.tenant_id,subscriptionId:sub.id,
     periodStart:String(sub.current_period_start).slice(0,10),periodEnd:String(sub.current_period_end).slice(0,10),
