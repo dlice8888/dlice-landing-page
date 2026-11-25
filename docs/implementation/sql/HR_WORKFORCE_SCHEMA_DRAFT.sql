@@ -277,6 +277,105 @@ $;
 revoke all on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) to service_role;
 
+create or replace function public.hr_create_leave_request(
+ p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_leave_type text,
+ p_starts_on date,p_ends_on date,p_coverage_employee_user_id uuid,p_reason text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_leave_requests%rowtype;
+begin
+ if p_leave_type not in ('annual','sick','unpaid','maternity','paternity','other')
+  or p_ends_on<p_starts_on or length(btrim(coalesce(p_reason,''))) not between 3 and 500 then
+  raise exception using errcode='22023',message='INVALID_LEAVE_REQUEST';
+ end if;
+ if p_employee_user_id<>p_actor_user_id then raise exception using errcode='42501',message='EMPLOYEE_SELF_REQUEST_REQUIRED'; end if;
+ if not exists(select 1 from public.branches b join public.tenant_memberships tm on tm.tenant_id=b.tenant_id and tm.user_id=p_employee_user_id and tm.status='active'
+  join public.branch_assignments ba on ba.branch_id=b.id and ba.user_id=p_employee_user_id and ba.employment_status='active'
+  join public.admin_profiles ap on ap.user_id=p_employee_user_id and ap.is_active=true
+  where b.id=p_branch_id and b.tenant_id=p_tenant_id and ba.starts_on<=p_starts_on and (ba.ends_on is null or ba.ends_on>=p_ends_on)) then
+  raise exception using errcode='42501',message='EMPLOYEE_NOT_ASSIGNED_FOR_LEAVE_PERIOD';
+ end if;
+ if p_leave_type<>'sick' and (p_coverage_employee_user_id is null or p_coverage_employee_user_id=p_employee_user_id) then
+  raise exception using errcode='22023',message='SHIFT_COVERAGE_REQUIRED';
+ end if;
+ if exists(select 1 from public.hr_leave_requests where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+  and status in ('submitted','approved') and daterange(starts_on,ends_on,'[]') && daterange(p_starts_on,p_ends_on,'[]')) then
+  raise exception using errcode='23505',message='LEAVE_PERIOD_OVERLAP';
+ end if;
+ insert into public.hr_leave_requests(tenant_id,branch_id,employee_user_id,leave_type,starts_on,ends_on,requested_days,
+  coverage_employee_user_id,reason,requested_by)
+ values(p_tenant_id,p_branch_id,p_employee_user_id,p_leave_type,p_starts_on,p_ends_on,(p_ends_on-p_starts_on+1),
+  p_coverage_employee_user_id,btrim(p_reason),p_actor_user_id) returning * into v;
+ return jsonb_build_object('leave_request_id',v.id,'status',v.status,'requested_days',v.requested_days);
+end $;
+revoke all on function public.hr_create_leave_request(uuid,uuid,uuid,text,date,date,uuid,text,uuid) from public,anon,authenticated;
+grant execute on function public.hr_create_leave_request(uuid,uuid,uuid,text,date,date,uuid,text,uuid) to service_role;
+
+create or replace function public.hr_confirm_leave_coverage(p_leave_request_id uuid,p_actor_user_id uuid,p_approved boolean,p_note text)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_leave_requests%rowtype;
+begin
+ select * into v from public.hr_leave_requests where id=p_leave_request_id for update;
+ if not found then raise exception using errcode='P0002',message='LEAVE_REQUEST_NOT_FOUND'; end if;
+ if v.status<>'submitted' or v.coverage_employee_user_id is null then raise exception using errcode='23514',message='LEAVE_COVERAGE_NOT_REQUIRED_OR_CLOSED'; end if;
+ if v.coverage_employee_user_id<>p_actor_user_id then raise exception using errcode='42501',message='ONLY_COVERAGE_EMPLOYEE_CAN_CONFIRM'; end if;
+ update public.hr_leave_requests set coverage_approved=p_approved,review_note=left(coalesce(p_note,''),500),updated_at=now() where id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,case when p_approved then 'hr.leave.coverage_accepted' else 'hr.leave.coverage_rejected' end,
+ 'hr_leave_request',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'employee_user_id',v.employee_user_id));
+ return jsonb_build_object('leave_request_id',v.id,'coverage_approved',p_approved);
+end $;
+revoke all on function public.hr_confirm_leave_coverage(uuid,uuid,boolean,text) from public,anon,authenticated;
+grant execute on function public.hr_confirm_leave_coverage(uuid,uuid,boolean,text) to service_role;
+
+create or replace function public.hr_review_leave_request(p_leave_request_id uuid,p_actor_user_id uuid,p_approve boolean,p_note text)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_leave_requests%rowtype;
+begin
+ select * into v from public.hr_leave_requests where id=p_leave_request_id for update;
+ if not found then raise exception using errcode='P0002',message='LEAVE_REQUEST_NOT_FOUND'; end if;
+ if v.status<>'submitted' then raise exception using errcode='23514',message='LEAVE_REQUEST_NOT_SUBMITTED'; end if;
+ if p_actor_user_id=v.employee_user_id or p_actor_user_id=v.requested_by then raise exception using errcode='42501',message='INDEPENDENT_LEAVE_REVIEW_REQUIRED'; end if;
+ if p_approve and v.leave_type<>'sick' and (v.coverage_employee_user_id is null or v.coverage_approved is not true) then
+  raise exception using errcode='23514',message='LEAVE_COVERAGE_NOT_CONFIRMED';
+ end if;
+ update public.hr_leave_requests set status=case when p_approve then 'approved' else 'rejected' end,
+  reviewed_by=p_actor_user_id,reviewed_at=now(),review_note=left(coalesce(p_note,''),500),updated_at=now()
+ where id=v.id returning * into v;
+ return jsonb_build_object('leave_request_id',v.id,'status',v.status,'reviewed_by',v.reviewed_by);
+end $;
+revoke all on function public.hr_review_leave_request(uuid,uuid,boolean,text) from public,anon,authenticated;
+grant execute on function public.hr_review_leave_request(uuid,uuid,boolean,text) to service_role;
+
+create or replace function public.hr_create_shift_schedule(
+ p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_job_position_id uuid,
+ p_starts_at timestamptz,p_ends_at timestamptz,p_created_by uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_shift_schedules%rowtype;
+begin
+ if p_ends_at<=p_starts_at then raise exception using errcode='22023',message='INVALID_SHIFT_WINDOW'; end if;
+ if not exists(select 1 from public.branches b join public.tenant_memberships tm on tm.tenant_id=b.tenant_id and tm.user_id=p_employee_user_id and tm.status='active'
+  join public.branch_assignments ba on ba.branch_id=b.id and ba.user_id=p_employee_user_id and ba.employment_status='active'
+  where b.id=p_branch_id and b.tenant_id=p_tenant_id and ba.job_position_id=p_job_position_id
+   and ba.starts_on<=p_starts_at::date and (ba.ends_on is null or ba.ends_on>=p_ends_at::date)) then
+  raise exception using errcode='42501',message='EMPLOYEE_NOT_ASSIGNED_TO_BRANCH';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_employee_user_id::text,0));
+ if exists(select 1 from public.hr_shift_schedules where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+  and status in ('scheduled','confirmed') and tstzrange(starts_at,ends_at,'[)') && tstzrange(p_starts_at,p_ends_at,'[)')) then
+  raise exception using errcode='23505',message='SHIFT_SCHEDULE_OVERLAP';
+ end if;
+ insert into public.hr_shift_schedules(tenant_id,branch_id,employee_user_id,job_position_id,starts_at,ends_at,created_by,notes)
+ values(p_tenant_id,p_branch_id,p_employee_user_id,p_job_position_id,p_starts_at,p_ends_at,p_created_by,p_notes)
+ returning * into v;
+ return jsonb_build_object('shift_schedule_id',v.id,'status',v.status);
+end $;
+revoke all on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) from public,anon,authenticated;
+grant execute on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) to service_role;
+
 -- Important: attendance and leave endpoints must verify an active tenant membership
 -- AND an active branch_assignment for the employee before accepting a record.
 -- Payroll posting must later write a balanced finance_journal_entries source reference
