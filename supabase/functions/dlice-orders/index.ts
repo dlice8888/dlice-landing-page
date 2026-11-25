@@ -1692,7 +1692,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement","erp-franchise-list-agreements","erp-franchise-submit-agreement-signature","erp-franchise-record-agreement-signature"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     // Franchise applications are platform-owned before provisioning. Royalty
@@ -1705,6 +1705,33 @@ if (action === "admin-set-profile-role") {
       const {data:franchiseTenant,error:franchiseTenantError}=await admin.from("tenants").select("id").eq("id",franchiseTenantId).maybeSingle();
       if(franchiseTenantError)return fail("Tenant franchise belum dapat diverifikasi.",503,origin);
       if(!franchiseTenant)return fail("Tenant franchise tidak ditemukan.",404,origin);
+    }
+    if(action==="erp-franchise-list-agreements"){
+      const applicationId=safeText(body.application_id,64);
+      if(applicationId&&!/^[0-9a-f-]{36}$/i.test(applicationId))return fail("Application ID tidak valid.",422,origin);
+      let q=admin.from("franchise_agreements").select("id,application_id,tenant_id,branch_id,agreement_status,current_version,signed_at,effective_from,effective_to,created_by,franchise_agreement_versions(id,version,royalty_rate_bps,marketing_fee_rate_bps,fixed_monthly_fee_idr,effective_from,effective_to,signed_document_reference,approved_by,approved_at)").order("created_at",{ascending:false}).limit(100);
+      if(applicationId)q=q.eq("application_id",applicationId);
+      const {data,error}=await q;
+      if(error)return fail("Agreement franchise belum tersedia. Terapkan schema pada batch final.",503,origin);
+      return json({agreements:data||[]},200,origin);
+    }
+    if(action==="erp-franchise-submit-agreement-signature"){
+      const agreementId=safeText(body.agreement_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(agreementId))return fail("Agreement ID tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_submit_agreement_for_signature",{p_agreement_id:agreementId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Agreement belum memenuhi syarat untuk dikirim ke proses tanda tangan; perlu versi efektif yang disetujui oleh pihak independen.",409,origin);
+      return json({agreement:data},200,origin);
+    }
+    if(action==="erp-franchise-record-agreement-signature"){
+      const agreementId=safeText(body.agreement_id,64),signedAt=safeText(body.signed_at,40),documentRef=safeText(body.signed_document_reference,500);
+      if(!/^[0-9a-f-]{36}$/i.test(agreementId)||!signedAt||!Number.isFinite(Date.parse(signedAt))||documentRef.length<8)
+        return fail("Referensi dokumen tanda tangan dan waktu penandatanganan wajib valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_record_agreement_signature",{
+        p_agreement_id:agreementId,p_actor_user_id:actor.user.id,
+        p_signed_at:signedAt,p_signed_document_reference:documentRef,
+      });
+      if(error)return fail("Aktivasi agreement ditolak. Periksa status signature, versi efektif, provisioning tenant/cabang, dan independensi reviewer.",409,origin);
+      return json({agreement:data},200,origin);
     }
     if(action==="erp-franchise-list-applications"){
       const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(id,check_key,status,evidence_reference,reviewer_user_id)").order("submitted_at",{ascending:false}).limit(100);
