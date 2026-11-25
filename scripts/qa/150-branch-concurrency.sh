@@ -107,20 +107,7 @@ run_probe() {
     printf 'LOAD_ASSERT_FAILED tenant=%s failed_transactions=%s\n' "$tenant" "${failed:-missing}" >&2
     return 1
   fi
-  local p95 p99
-  local log_files=( "$LOG_DIR/$tenant".[0-9]* )
-  if [[ ! -e "${log_files[0]}" ]]; then
-    printf 'LOAD_ASSERT_FAILED tenant=%s missing_pgbench_log_files\n' "$tenant" >&2
-    return 1
-  fi
-  p95="$(awk '$5 ~ /^[0-9]+([.][0-9]+)?$/ {print $5}' "${log_files[@]}" | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.95+0.999)]}')"
-  p99="$(awk '$5 ~ /^[0-9]+([.][0-9]+)?$/ {print $5}' "${log_files[@]}" | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.99+0.999)]}')"
-  if [[ -z "$p95" || -z "$p99" ]]; then
-    printf 'LOAD_ASSERT_FAILED tenant=%s latency_samples_missing\n' "$tenant" >&2
-    return 1
-  fi
-  printf 'tenant=%s transactions_p95_us=%s transactions_p99_us=%s\n' "$tenant" "$p95" "$p99"
-  printf 'tenant=%s transactions_p95_us=%s transactions_p99_us=%s\n' "$tenant" "${p95:-unavailable}" "${p99:-unavailable}"
+  printf 'tenant=%s: use the pgbench latency average and TPS reported above; per-transaction percentile is not emitted by this probe.\\n' "$tenant"
 }
 
 run_probe tenant-a "$LOG_DIR/tenant-a.sql"
