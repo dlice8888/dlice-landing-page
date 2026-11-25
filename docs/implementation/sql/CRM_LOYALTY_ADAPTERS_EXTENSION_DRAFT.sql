@@ -36,7 +36,7 @@ create table if not exists public.crm_financial_close_projections (
   processed_refunds_idr bigint not null check(processed_refunds_idr>=0),
   refund_evidence jsonb not null check(jsonb_typeof(refund_evidence)='array'),
   shift_reconciliation_status text not null check(shift_reconciliation_status in ('approved','not_required')),
-  settlement_reconciliation_status text not null check(settlement_reconciliation_status='reconciled'),
+  settlement_reconciliation_status text not null check(settlement_reconciliation_status='matched'),
   finance_journal_status text not null check(finance_journal_status in ('posted','reconciled')),
   finance_source_reconciliation_status text not null check(finance_source_reconciliation_status='reconciled'),
   status text not null check(status in ('reconciled','superseded')),
@@ -161,7 +161,7 @@ begin
   if not found then raise exception using errcode='P0002',message='FINANCIAL_CLOSE_NOT_RECONCILED'; end if;
   if (p_source_type='pos_sale' and v_close.shift_reconciliation_status<>'approved')
      or (p_source_type='online_order' and v_close.shift_reconciliation_status<>'not_required')
-     or v_close.settlement_reconciliation_status<>'reconciled'
+     or v_close.settlement_reconciliation_status<>'matched'
      or v_close.finance_journal_status not in ('posted','reconciled')
      or v_close.finance_source_reconciliation_status<>'reconciled' then
     raise exception using errcode='23514',message='FINANCIAL_CLOSE_EVIDENCE_INCOMPLETE';
@@ -524,3 +524,204 @@ begin
 end $$;
 revoke all on function public.crm_apply_campaign_provider_receipt(uuid,text,text,text,text,text,timestamptz,jsonb) from public,anon,authenticated;
 grant execute on function public.crm_apply_campaign_provider_receipt(uuid,text,text,text,text,text,timestamptz,jsonb) to service_role;
+
+
+-- Build a financial-close projection from the real POS/Order, settlement,
+-- refund, shift-cash and Finance journal records. No caller-supplied totals or
+-- evidence JSON are trusted. All reads and the immutable snapshot insert are
+-- in one transaction; missing/ambiguous source evidence fails closed.
+create or replace function public.crm_build_financial_close_projection(
+ p_tenant_id uuid,p_branch_id uuid,p_source_type text,p_source_id uuid,p_actor_user_id uuid
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $$
+declare
+ v_subtotal bigint; v_discount bigint:=0; v_gross bigint;
+ v_refunds bigint:=0; v_paid bigint:=0; v_settled bigint:=0;
+ v_payment_ids uuid[]:='{}'; v_settlement_ids uuid[]:='{}';
+ v_journal_ids uuid[]:='{}'; v_refund_ids uuid[]:='{}';
+ v_refund_evidence jsonb:='[]'::jsonb; v_snapshot jsonb;
+ v_hash text; v_cash_id uuid; v_cash_status text:='not_required';
+ v_branch_tenant uuid; v_existing public.crm_financial_close_projections%rowtype;
+ v_ref record; v_count integer; v_finance_total bigint; v_refund_finance bigint;
+ v_order_payment_count integer;
+begin
+ if p_tenant_id is null or p_branch_id is null or p_source_id is null
+   or p_source_type not in ('pos_sale','online_order') or p_actor_user_id is null then
+  raise exception using errcode='22023',message='INVALID_CRM_FINANCIAL_CLOSE_COMMAND';
+ end if;
+ select tenant_id into v_branch_tenant from public.branches where id=p_branch_id;
+ if v_branch_tenant is distinct from p_tenant_id then
+  raise exception using errcode='42501',message='CRM_FINANCIAL_CLOSE_TENANT_BRANCH_MISMATCH';
+ end if;
+
+ if p_source_type='pos_sale' then
+  select subtotal_idr,discount_idr,total_idr into v_subtotal,v_discount,v_gross
+   from public.pos_sales where id=p_source_id and branch_id=p_branch_id and payment_status='paid';
+  if not found then raise exception using errcode='P0002',message='PAID_POS_SALE_NOT_FOUND'; end if;
+  select id,status into v_cash_id,v_cash_status from public.cash_reconciliations
+   where branch_id=p_branch_id and shift_id=(select shift_id from public.pos_sales where id=p_source_id)
+   order by created_at desc limit 1 for share;
+  if v_cash_id is null or v_cash_status<>'approved' then
+   raise exception using errcode='23514',message='APPROVED_SHIFT_CASH_RECONCILIATION_REQUIRED';
+  end if;
+  v_paid:=v_gross;
+ else
+  select product_subtotal_idr into v_subtotal from public.orders
+   where id=p_source_id and branch_id=p_branch_id and payment_status='paid' and currency='IDR';
+  if not found then raise exception using errcode='P0002',message='PAID_ONLINE_ORDER_NOT_FOUND'; end if;
+  select coalesce(array_agg(id order by id),'{}'::uuid[]),count(*),coalesce(sum(amount_idr),0)
+   into v_payment_ids,v_order_payment_count,v_paid
+   from public.payment_records where order_id=p_source_id and status='paid';
+  if v_order_payment_count=0 or v_paid<>v_subtotal then
+   raise exception using errcode='23514',message='PAID_ORDER_PAYMENT_RECORDS_DO_NOT_RECONCILE';
+  end if;
+  v_gross:=v_paid;
+ end if;
+
+ -- A source is eligible only when its full payment amount is represented by
+ -- matched settlement items and each batch has bank/provider receipt parity.
+ if p_source_type='pos_sale' then
+  select coalesce(array_agg(distinct ps.id order by ps.id),'{}'::uuid[]),
+         coalesce(sum(psi.amount_idr),0)
+   into v_settlement_ids,v_settled
+   from public.payment_settlement_items psi
+   join public.payment_settlements ps on ps.id=psi.settlement_id
+   where psi.pos_sale_id=p_source_id and ps.status='matched'
+     and ps.received_amount_idr=ps.net_amount_idr;
+  if exists(select 1 from public.payment_settlement_items psi
+    join public.payment_settlements ps on ps.id=psi.settlement_id
+    where psi.pos_sale_id=p_source_id and
+      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr)) then
+   raise exception using errcode='23514',message='POS_SETTLEMENT_BATCH_NOT_RECONCILED';
+  end if;
+ else
+  select coalesce(array_agg(distinct ps.id order by ps.id),'{}'::uuid[]),
+         coalesce(sum(psi.amount_idr),0)
+   into v_settlement_ids,v_settled
+   from public.payment_settlement_items psi
+   join public.payment_settlements ps on ps.id=psi.settlement_id
+   where psi.payment_record_id=any(v_payment_ids) and ps.status='matched'
+     and ps.received_amount_idr=ps.net_amount_idr;
+  if exists(select 1 from public.payment_settlement_items psi
+    join public.payment_settlements ps on ps.id=psi.settlement_id
+    where psi.payment_record_id=any(v_payment_ids) and
+      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr)) then
+   raise exception using errcode='23514',message='ORDER_SETTLEMENT_BATCH_NOT_RECONCILED';
+  end if;
+ end if;
+ if cardinality(v_settlement_ids)=0 or v_settled<>v_paid then
+  raise exception using errcode='23514',message='SETTLEMENT_ITEMS_DO_NOT_RECONCILE_TO_SOURCE_PAYMENT';
+ end if;
+
+ -- Processed refunds only reduce eligible sales. An unresolved refund blocks
+ -- the close rather than allowing points to be awarded prematurely.
+ if p_source_type='pos_sale' then
+  if exists(select 1 from public.refund_records where pos_sale_id=p_source_id
+    and status in ('requested','approved')) then
+   raise exception using errcode='23514',message='POS_REFUND_REVIEW_STILL_OPEN';
+  end if;
+  select coalesce(sum(amount_idr),0),coalesce(array_agg(id order by id),'{}'::uuid[])
+   into v_refunds,v_refund_ids from public.refund_records
+   where pos_sale_id=p_source_id and branch_id=p_branch_id and status='processed';
+ else
+  if exists(select 1 from public.refund_records r
+    where (r.order_id=p_source_id or r.payment_record_id=any(v_payment_ids))
+      and r.status in ('requested','approved')) then
+   raise exception using errcode='23514',message='ORDER_REFUND_REVIEW_STILL_OPEN';
+  end if;
+  select coalesce(sum(amount_idr),0),coalesce(array_agg(id order by id),'{}'::uuid[])
+   into v_refunds,v_refund_ids from public.refund_records
+   where (order_id=p_source_id or payment_record_id=any(v_payment_ids))
+     and branch_id=p_branch_id and status='processed';
+ end if;
+ if v_refunds>v_gross-v_discount then
+  raise exception using errcode='23514',message='PROCESSED_REFUNDS_EXCEED_PAID_SOURCE';
+ end if;
+ select coalesce(jsonb_agg(jsonb_build_object('id',id,'amountIdr',amount_idr,'status',status,
+   'processedAt',processed_at) order by id),'[]'::jsonb)
+  into v_refund_evidence from public.refund_records where id=any(v_refund_ids);
+
+ -- Finance entries must be posted against the actual source IDs. Refunds must
+ -- each have their own posted journal source; no arbitrary caller hash can
+ -- stand in for journal evidence.
+ if p_source_type='pos_sale' then
+  select coalesce(array_agg(id order by id),'{}'::uuid[]),coalesce(sum(amount_idr),0),count(*)
+   into v_journal_ids,v_finance_total,v_count
+   from public.finance_journal_entries
+   where branch_id=p_branch_id and source_id=p_source_id and status='posted';
+ else
+  select coalesce(array_agg(id order by id),'{}'::uuid[]),coalesce(sum(amount_idr),0),count(*)
+   into v_journal_ids,v_finance_total,v_count
+   from public.finance_journal_entries
+   where branch_id=p_branch_id and source_id=any(v_payment_ids) and status='posted';
+ end if;
+ if v_count=0 or v_finance_total<>v_gross then
+  raise exception using errcode='23514',message='POSTED_FINANCE_SOURCE_JOURNAL_DOES_NOT_RECONCILE';
+ end if;
+ for v_ref in select id,amount_idr from public.refund_records where id=any(v_refund_ids) order by id loop
+  select coalesce(array_agg(id order by id),'{}'::uuid[]),coalesce(sum(amount_idr),0),count(*)
+   into v_journal_ids,v_refund_finance,v_count
+   from public.finance_journal_entries
+   where branch_id=p_branch_id and source_id=v_ref.id and status='posted';
+  if v_count=0 or v_refund_finance<>v_ref.amount_idr then
+   raise exception using errcode='23514',message='PROCESSED_REFUND_FINANCE_JOURNAL_DOES_NOT_RECONCILE';
+  end if;
+  -- v_journal_ids is expanded below from all source/refund ids in snapshot.
+ end loop;
+
+ -- Rebuild complete immutable journal ID set, including each refund posting.
+ if p_source_type='pos_sale' then
+  select coalesce(array_agg(id order by id),'{}'::uuid[]) into v_journal_ids
+   from public.finance_journal_entries
+   where branch_id=p_branch_id and status='posted'
+     and (source_id=p_source_id or source_id=any(v_refund_ids));
+ else
+  select coalesce(array_agg(id order by id),'{}'::uuid[]) into v_journal_ids
+   from public.finance_journal_entries
+   where branch_id=p_branch_id and status='posted'
+     and (source_id=any(v_payment_ids) or source_id=any(v_refund_ids));
+ end if;
+
+ v_snapshot:=jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,
+  'source_type',p_source_type,'source_id',p_source_id,'payment_record_ids',v_payment_ids,
+  'settlement_ids',v_settlement_ids,'finance_journal_entry_ids',v_journal_ids,
+  'refund_ids',v_refund_ids,'subtotal_idr',v_subtotal,'discount_idr',v_discount,
+  'processed_refunds_idr',v_refunds,'paid_amount_idr',v_paid,'settled_amount_idr',v_settled,
+  'cash_reconciliation_id',v_cash_id,'cash_reconciliation_status',v_cash_status,
+  'refund_evidence',v_refund_evidence,'captured_at',now());
+ v_hash:=encode(public.digest(convert_to(v_snapshot::text,'UTF8'),'sha256'),'hex');
+
+ select * into v_existing from public.crm_financial_close_projections
+  where tenant_id=p_tenant_id and source_type=p_source_type and source_id=p_source_id
+    and source_snapshot_sha256=v_hash for update;
+ if found then
+  return jsonb_build_object('status','duplicate','projection_id',v_existing.id,
+    'source_snapshot_sha256',v_hash,'eligible_net_sales_idr',v_subtotal-v_discount-v_refunds);
+ end if;
+
+ insert into public.crm_financial_close_projections(
+  tenant_id,branch_id,source_type,source_id,shift_reconciliation_id,
+  settlement_reconciliation_id,settlement_ids,finance_journal_entry_ids,currency,
+  subtotal_idr,discount_idr,processed_refunds_idr,refund_evidence,
+  shift_reconciliation_status,settlement_reconciliation_status,
+  finance_journal_status,finance_source_reconciliation_status,status,
+  source_snapshot_sha256,reconciled_at
+ ) values(
+  p_tenant_id,p_branch_id,p_source_type,p_source_id,v_cash_id,
+  (v_settlement_ids)[1],v_settlement_ids,v_journal_ids,'IDR',
+  v_subtotal,v_discount,v_refunds,v_refund_evidence,
+  v_cash_status,'matched','posted','reconciled','reconciled',v_hash,now()
+ ) returning * into v_existing;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'crm.financial_close.projected','crm_financial_close_projections',v_existing.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'source_type',p_source_type,
+   'source_id',p_source_id,'source_snapshot_sha256',v_hash,'settlement_ids',v_settlement_ids,
+   'finance_journal_entry_ids',v_journal_ids,'processed_refunds_idr',v_refunds));
+ return jsonb_build_object('status','reconciled','projection_id',v_existing.id,
+  'source_snapshot_sha256',v_hash,'eligible_net_sales_idr',v_subtotal-v_discount-v_refunds,
+  'settlement_ids',v_settlement_ids,'finance_journal_entry_ids',v_journal_ids);
+end;
+$$;
+revoke all on function public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid) to service_role;
