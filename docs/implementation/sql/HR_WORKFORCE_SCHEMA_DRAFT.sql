@@ -376,6 +376,77 @@ end $;
 revoke all on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) from public,anon,authenticated;
 grant execute on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) to service_role;
 
+create or replace function public.hr_generate_timesheet(
+ p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_period_start date,p_period_end date,p_created_by uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_event record; v_state text:='off'; v_clock_in timestamptz; v_break_start timestamptz;
+ v_minutes integer:=0; v_ids uuid[]:='{}'; v_count integer:=0; v_id uuid;
+begin
+ if p_period_end<p_period_start then raise exception using errcode='22023',message='INVALID_TIMESHEET_PERIOD'; end if;
+ if not exists(select 1 from public.branches b join public.tenant_memberships tm on tm.tenant_id=b.tenant_id and tm.user_id=p_employee_user_id and tm.status='active'
+  join public.branch_assignments ba on ba.branch_id=b.id and ba.user_id=p_employee_user_id and ba.employment_status='active'
+  where b.id=p_branch_id and b.tenant_id=p_tenant_id) then raise exception using errcode='42501',message='EMPLOYEE_NOT_ASSIGNED_TO_BRANCH'; end if;
+ for v_event in
+  select id,event_type,occurred_at from public.hr_attendance_events
+   where tenant_id=p_tenant_id and branch_id=p_branch_id and employee_user_id=p_employee_user_id
+    and occurred_at>=p_period_start::timestamptz and occurred_at<(p_period_end+1)::timestamptz
+   order by occurred_at,id
+ loop
+  v_ids:=array_append(v_ids,v_event.id);v_count:=v_count+1;
+  if v_event.event_type='clock_in' and v_state='off' then v_clock_in:=v_event.occurred_at;v_state:='working';
+  elsif v_event.event_type='break_start' and v_state='working' then v_break_start:=v_event.occurred_at;v_state:='break';
+  elsif v_event.event_type='break_end' and v_state='break' then v_minutes:=v_minutes+greatest(0,floor(extract(epoch from (v_break_start-v_clock_in))/60)::integer);v_clock_in:=v_event.occurred_at;v_state:='working';
+  elsif v_event.event_type='clock_out' and v_state='working' then v_minutes:=v_minutes+greatest(0,floor(extract(epoch from (v_event.occurred_at-v_clock_in))/60)::integer);v_state:='off';
+  else raise exception using errcode='23514',message='INVALID_ATTENDANCE_SEQUENCE_IN_TIMESHEET';
+  end if;
+ end loop;
+ if v_count=0 or v_state<>'off' then raise exception using errcode='23514',message='ATTENDANCE_EVIDENCE_INCOMPLETE'; end if;
+ insert into public.hr_timesheets(tenant_id,branch_id,employee_user_id,period_start,period_end,total_minutes,attendance_event_ids,status,created_by)
+ values(p_tenant_id,p_branch_id,p_employee_user_id,p_period_start,p_period_end,v_minutes,v_ids,'draft',p_created_by)
+ returning id into v_id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_created_by,'hr.timesheet.generated','hr_timesheet',v_id::text,jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'employee_user_id',p_employee_user_id,'total_minutes',v_minutes,'attendance_event_count',v_count));
+ return jsonb_build_object('timesheet_id',v_id,'total_minutes',v_minutes,'attendance_event_count',v_count,'status','draft');
+end $;
+revoke all on function public.hr_generate_timesheet(uuid,uuid,uuid,date,date,uuid) from public,anon,authenticated;
+grant execute on function public.hr_generate_timesheet(uuid,uuid,uuid,date,date,uuid) to service_role;
+
+create or replace function public.hr_submit_timesheet(p_timesheet_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_timesheets%rowtype;
+begin
+ select * into v from public.hr_timesheets where id=p_timesheet_id for update;
+ if not found then raise exception using errcode='P0002',message='TIMESHEET_NOT_FOUND'; end if;
+ if v.employee_user_id<>p_actor_user_id then raise exception using errcode='42501',message='ONLY_EMPLOYEE_CAN_SUBMIT_TIMESHEET'; end if;
+ if v.status<>'draft' or cardinality(v.attendance_event_ids)=0 then raise exception using errcode='23514',message='TIMESHEET_NOT_SUBMITTABLE'; end if;
+ update public.hr_timesheets set status='submitted',submitted_at=now(),updated_at=now() where id=v.id;
+ return jsonb_build_object('timesheet_id',v.id,'status','submitted');
+end $;
+revoke all on function public.hr_submit_timesheet(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_submit_timesheet(uuid,uuid) to service_role;
+
+create or replace function public.hr_approve_timesheet(p_timesheet_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_timesheets%rowtype;
+begin
+ select * into v from public.hr_timesheets where id=p_timesheet_id for update;
+ if not found then raise exception using errcode='P0002',message='TIMESHEET_NOT_FOUND'; end if;
+ if v.status<>'submitted' then raise exception using errcode='23514',message='TIMESHEET_NOT_SUBMITTED'; end if;
+ if v.employee_user_id=p_actor_user_id then raise exception using errcode='42501',message='TIMESHEET_SELF_APPROVAL_FORBIDDEN'; end if;
+ if exists(select 1 from unnest(v.attendance_event_ids) x(id) left join public.hr_attendance_events e on e.id=x.id and e.tenant_id=v.tenant_id and e.employee_user_id=v.employee_user_id and e.branch_id=v.branch_id where e.id is null) then
+  raise exception using errcode='23514',message='TIMESHEET_ATTENDANCE_LINK_INVALID';
+ end if;
+ update public.hr_timesheets set status='approved',approved_by=p_actor_user_id,approved_at=now(),updated_at=now() where id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'hr.timesheet.approved','hr_timesheet',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'employee_user_id',v.employee_user_id,'total_minutes',v.total_minutes));
+ return jsonb_build_object('timesheet_id',v.id,'status','approved','total_minutes',v.total_minutes);
+end $;
+revoke all on function public.hr_approve_timesheet(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_approve_timesheet(uuid,uuid) to service_role;
+
 -- Important: attendance and leave endpoints must verify an active tenant membership
 -- AND an active branch_assignment for the employee before accepting a record.
 -- Payroll posting must later write a balanced finance_journal_entries source reference
