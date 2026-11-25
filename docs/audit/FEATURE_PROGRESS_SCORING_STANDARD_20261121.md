@@ -138,9 +138,9 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 
 ## Superseding audit — 25 November 2026
 
-Current row-level distribution: **189 total / 140 PARTIAL / 44 NOT VERIFIED / 5 BLOCKED / 0 DONE**. The 45 new PARTIAL classifications are implementation-start evidence linked to Draft PRs #145/#146; they do not mean deployed, database-replayed, E2E accepted, or complete. PR #145 and #146 remain OPEN Draft.
+Current row-level distribution: **189 total / 141 PARTIAL / 43 NOT VERIFIED / 5 BLOCKED / 0 DONE**. The 46 new PARTIAL classifications are implementation-start evidence linked to Draft PRs #145/#146; they do not mean deployed, database-replayed, E2E accepted, or complete. PR #145 and #146 remain OPEN Draft.
 
-Current partial coverage = 140/189 = **74.1%**. This is a count of features with implementation started, not the weighted progress of PARTIAL features. Feature weighted percentages are awarded only when the six acceptance dimensions have evidence-backed criteria. Keep unscored partials explicitly unscored; do not substitute a generic percent. Existing defensible scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% pending criterion-level rescore.
+Current partial coverage = 141/189 = **74.6%**. This is a count of features with implementation started, not the weighted progress of PARTIAL features. Feature weighted percentages are awarded only when the six acceptance dimensions have evidence-backed criteria. Keep unscored partials explicitly unscored; do not substitute a generic percent. Existing defensible scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% pending criterion-level rescore.
 
 Live evidence snapshot 25-Nov: Supabase staging 63 applied migrations, 67/67 public tables with RLS, dlice-orders ACTIVE v73 with verify_jwt=false (custom auth guard required), Security Advisor 1 WARN (leaked-password protection disabled), Performance Advisor 83 INFO unused-index suggestions, Health Advisor 0. Vercel Hobby staging Preview READY at commit aed9353; PR #146 Preview READY at stale commit 4406c31, behind current PR head 23e4b6c; Production READY at cca72d3 and was only inspected read-only. PR #146 exact-head quality passed; disposable replay and provider/bank E2E remain open.
 
@@ -157,3 +157,6 @@ Current total 139 PARTIAL / 45 NOT VERIFIED / 5 BLOCKED / 0 DONE. Of the 44 newl
 ### Backup/restore rehearsal progress — PR #148
 
 PR #148 starts one Quality/Compliance/Security feature with a local PostgreSQL 17 dump/restore rehearsal. It verifies committed pre-snapshot data parity, checksum, restored RLS, Tenant A/B isolation and an intentional post-snapshot record boundary using a free GitHub runner. Its workflow is pending; no numeric weighted score is awarded until exact-head CI completes and the criteria are mapped. This does not certify Supabase managed backup/PITR, Auth/Storage recovery or platform RPO/RTO.
+### 150-branch concurrency progress — PR #149
+
+PR #149 starts the load/concurrency feature with a free PostgreSQL 17 fixture of 150 Tenant A branches and Tenant B, 50 concurrent clients, tenant-scoped RLS reads, cross-tenant zero-row checks, and p95/p99 measurements. No completed run is visible yet; no pass or SLO is claimed. This is a database read workload only and must be expanded to API/POS/ERP writes, stock locks, kitchen, Finance and realistic network/data volume before release acceptance.
