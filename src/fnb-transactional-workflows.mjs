@@ -574,6 +574,155 @@ export async function reconcileApprovedPayrollPayment(input, deps) {
 }
 
 
+
+/**
+ * Delivery: request quotes from explicitly approved providers. Provider calls
+ * happen outside database transactions; only validated quote snapshots are
+ * persisted, scoped to the source tenant and branch.
+ */
+export async function requestDeliveryQuotes(input, deps) {
+  const scope = { ...scopeOf(input), action: "delivery.quote.request" };
+  const source = await inTenantTransaction(deps, scope, async (tx) => {
+    const record = await adapter(deps, "loadDeliverySourceForUpdate")(tx, {
+      sourceType: input.sourceType, sourceId: required(input.sourceId, "sourceId"),
+    });
+    assertScope(record, scope, "deliverySource");
+    if (record.paymentStatus !== "paid" || record.fulfillmentStatus === "delivered" ||
+        record.fulfillmentStatus === "cancelled") {
+      fail("DELIVERY_SOURCE_NOT_ELIGIBLE", "Delivery quote requires a paid, active fulfillment source");
+    }
+    const address = await adapter(deps, "loadValidatedDeliveryAddress")(tx, record.id);
+    if (!address?.validated || !address.addressHash) {
+      fail("VALIDATED_DELIVERY_ADDRESS_REQUIRED", "A server-validated destination address is required");
+    }
+    const providers = await adapter(deps, "loadApprovedDeliveryProviders")(tx, scope.tenantId, scope.branchId);
+    if (!Array.isArray(providers) || providers.length === 0) {
+      fail("APPROVED_DELIVERY_PROVIDER_UNAVAILABLE", "No approved delivery provider is configured for this tenant and branch");
+    }
+    return { record, address, providers };
+  });
+  const quotes = [];
+  for (const provider of source.providers) {
+    const result = await adapter(deps, "requestDeliveryProviderQuote")({
+      provider, source: source.record, address: source.address,
+      idempotencyKey: scope.idempotencyKey,
+    });
+    if (!result?.accepted || !result.providerQuoteId || result.currency !== "IDR" ||
+        !Number.isSafeInteger(result.quotedCostIdr) || result.quotedCostIdr < 0 ||
+        !result.expiresAt || Date.parse(result.expiresAt) <= Date.now() ||
+        !/^[0-9a-f]{64}$/i.test(result.payloadSha256 || "")) {
+      continue;
+    }
+    const saved = await inTenantTransaction(deps, scope, async (tx) => {
+      const quote = await adapter(deps, "persistDeliveryProviderQuote")(tx, {
+        tenantId: scope.tenantId, branchId: scope.branchId,
+        sourceType: input.sourceType, sourceId: source.record.id,
+        providerId: provider.id, providerQuoteId: result.providerQuoteId,
+        serviceLevel: result.serviceLevel, currency: "IDR",
+        quotedCostIdr: result.quotedCostIdr, codSupported: result.codSupported === true,
+        expiresAt: result.expiresAt, payloadSha256: result.payloadSha256,
+        idempotencyKey: scope.idempotencyKey,
+      });
+      if (!saved?.quoteId) fail("DELIVERY_QUOTE_PERSIST_FAILED", "Provider quote snapshot must persist before checkout can select it");
+      await audit(deps, tx, {
+        tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+        action: "delivery.provider_quote.persisted", entityType: "delivery_provider_quote",
+        entityId: saved.quoteId, idempotencyKey: scope.idempotencyKey,
+      });
+      return saved;
+    });
+    quotes.push(Object.freeze({
+      quoteId: saved.quoteId, providerId: provider.id,
+      serviceLevel: result.serviceLevel, quotedCostIdr: result.quotedCostIdr,
+      codSupported: result.codSupported === true, expiresAt: result.expiresAt,
+    }));
+  }
+  if (quotes.length === 0) fail("DELIVERY_NO_VALID_PROVIDER_QUOTES", "No provider returned a valid, unexpired IDR quote");
+  return Object.freeze({ status: "quoted", sourceId: source.record.id, quotes: Object.freeze(quotes) });
+}
+
+/**
+ * Delivery: persist a booking intent before calling the provider. An ambiguous
+ * timeout remains pending and must be reconciled using the same provider
+ * idempotency key; it is never reported as booked without a stable reference.
+ */
+export async function bookDeliveryDispatch(input, deps) {
+  const scope = { ...scopeOf(input), action: "delivery.booking.create" };
+  const intent = await inTenantTransaction(deps, scope, async (tx) => {
+    const quote = await adapter(deps, "loadDeliveryQuoteForUpdate")(tx, input.quoteId);
+    assertScope(quote, scope, "deliveryQuote");
+    if (quote.status !== "selected" || Date.parse(quote.expiresAt) <= Date.now()) {
+      fail("DELIVERY_QUOTE_NOT_SELECTED_OR_EXPIRED", "A selected, unexpired quote is required");
+    }
+    const source = await adapter(deps, "loadDeliverySourceForUpdate")(tx, {
+      sourceType: quote.sourceType, sourceId: quote.sourceId,
+    });
+    assertScope(source, scope, "deliverySource");
+    if (source.paymentStatus !== "paid" || input.customerAcceptedQuote !== true) {
+      fail("DELIVERY_CUSTOMER_ACCEPTANCE_REQUIRED", "Paid source and explicit customer acceptance are required");
+    }
+    const prior = await adapter(deps, "findDeliveryDispatchByIdempotencyKey")(tx, scope.tenantId, scope.idempotencyKey);
+    if (prior) return { duplicate: true, dispatch: prior, quote };
+    const dispatch = await adapter(deps, "createDeliveryBookingIntent")(tx, {
+      quote, source, tenantId: scope.tenantId, branchId: scope.branchId,
+      idempotencyKey: scope.idempotencyKey, actorId: scope.actorId,
+      codExpectedIdr: input.codExpectedIdr ?? 0,
+    });
+    if (!dispatch?.dispatchId || dispatch.status !== "booking_pending") {
+      fail("DELIVERY_BOOKING_INTENT_FAILED", "Durable booking intent must persist before provider submission");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "delivery.booking_intent.created", entityType: "delivery_dispatch",
+      entityId: dispatch.dispatchId, idempotencyKey: scope.idempotencyKey,
+    });
+    return { duplicate: false, dispatch, quote };
+  });
+  if (intent.duplicate && intent.dispatch.status === "booked") {
+    return Object.freeze({ status: "duplicate", dispatchId: intent.dispatch.dispatchId,
+      providerBookingReference: intent.dispatch.providerBookingReference });
+  }
+  if (intent.duplicate && intent.dispatch.status !== "booking_pending") {
+    return Object.freeze({ status: intent.dispatch.status, dispatchId: intent.dispatch.dispatchId });
+  }
+  const providerResult = await adapter(deps, "bookDeliveryProvider")({
+    providerId: intent.quote.providerId, providerQuoteId: intent.quote.providerQuoteId,
+    dispatchId: intent.dispatch.dispatchId, idempotencyKey: scope.idempotencyKey,
+    codExpectedIdr: input.codExpectedIdr ?? 0,
+  });
+  if (!providerResult?.accepted || !providerResult.providerBookingReference) {
+    await inTenantTransaction(deps, scope, async (tx) => {
+      await adapter(deps, "recordDeliveryBookingUncertain")(tx, {
+        dispatchId: intent.dispatch.dispatchId, providerResult,
+        idempotencyKey: scope.idempotencyKey,
+      });
+      await audit(deps, tx, {
+        tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+        action: "delivery.booking.acceptance_unverified", entityType: "delivery_dispatch",
+        entityId: intent.dispatch.dispatchId, idempotencyKey: scope.idempotencyKey,
+      });
+    });
+    return Object.freeze({ status: "booking_pending_reconciliation", dispatchId: intent.dispatch.dispatchId });
+  }
+  const saved = await inTenantTransaction(deps, scope, async (tx) => {
+    const result = await adapter(deps, "finalizeDeliveryBooking")(tx, {
+      dispatchId: intent.dispatch.dispatchId, providerResult,
+      idempotencyKey: scope.idempotencyKey,
+    });
+    if (!result?.dispatchId || result.status !== "booked" || !result.providerBookingReference) {
+      fail("DELIVERY_BOOKING_FINALIZATION_FAILED", "Provider acceptance must be persisted before dispatch is booked");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "delivery.booking.confirmed", entityType: "delivery_dispatch",
+      entityId: result.dispatchId, idempotencyKey: scope.idempotencyKey,
+    });
+    return result;
+  });
+  return Object.freeze({ status: "booked", dispatchId: saved.dispatchId,
+    providerBookingReference: saved.providerBookingReference, trackingUrl: saved.trackingUrl ?? null });
+}
+
 /**
  * SaaS: enforce plan entitlements before an authoritative tenant operation.
  * The subscription and usage rows must be locked/read in the same transaction
