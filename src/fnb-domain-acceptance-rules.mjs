@@ -96,7 +96,7 @@ export function validateTenantLifecycle({tenant_id,from,to,owner_approval,open_f
  const transitions={trial:["active","suspended","offboarding"],active:["suspended","offboarding"],suspended:["active","offboarding"],offboarding:["closed"],closed:[]};
  if(!transitions[from]||!transitions[from].includes(to))return fail("INVALID_TENANT_TRANSITION");
  if(to==="active"&&owner_approval!==true)return fail("TENANT_ACTIVATION_APPROVAL_REQUIRED");
- if(to==="offboarding"&&(open_financial_obligations>0||active_branches>0))return fail("TENANT_OBLIGATIONS_REMAIN");
+ if(to==="offboarding"&&(!int(open_financial_obligations)||!int(active_branches)||open_financial_obligations>0||active_branches>0))return fail("TENANT_OBLIGATIONS_REMAIN");
  if(to==="closed"&&(retention_policy_confirmed!==true||offboarding_export_verified!==true))return fail("OFFBOARDING_EVIDENCE_REQUIRED");
  return ok({status:to});
 }
@@ -115,12 +115,12 @@ export function validateProcurementReceipt({tenant_id,po_tenant_id,ordered_quant
  if(receipt_accepted!==true||!str(received_by)||!str(approved_by)||received_by===approved_by)return fail("RECEIPT_APPROVAL_REQUIRED");
  return ok({status:"accepted",accepted_quantity,damaged_quantity});
 }
-export function validateExecutiveDrilldown({actor_tenant_ids=[],resource_tenant_id,actor_branch_ids=[],resource_branch_id,requested_level,resource_level,platform_owner_verified=false}={}){
- if(!str(resource_tenant_id)||!["company","region","branch","shift","transaction"].includes(requested_level)||!["company","region","branch","shift","transaction"].includes(resource_level))return fail("INVALID_DRILLDOWN_SCOPE");
+export function validateExecutiveDrilldown({actor_tenant_ids=[],resource_tenant_id,actor_branch_ids=[],resource_branch_id,max_level,resource_level,platform_owner_verified=false}={}){
+ if(!str(resource_tenant_id)||!["company","region","branch","shift","transaction"].includes(max_level)||!["company","region","branch","shift","transaction"].includes(resource_level))return fail("INVALID_DRILLDOWN_SCOPE");
  if(!platform_owner_verified&&!actor_tenant_ids.includes(resource_tenant_id))return fail("TENANT_SCOPE_MISMATCH");
  if(!platform_owner_verified&&resource_branch_id&&!actor_branch_ids.includes(resource_branch_id))return fail("BRANCH_SCOPE_MISMATCH");
  const order=["company","region","branch","shift","transaction"];
- if(order.indexOf(resource_level)>order.indexOf(requested_level))return fail("DRILLDOWN_LEVEL_ESCALATION");
+ if(order.indexOf(resource_level)>order.indexOf(max_level))return fail("DRILLDOWN_LEVEL_ESCALATION");
  return ok({allowed:true});
 }
 export function validateExecutiveTarget({tenant_id,target_tenant_id,metric_key,period_start,period_end,target_value,actual_value,unit,source_reconciled}={}){
