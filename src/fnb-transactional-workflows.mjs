@@ -374,10 +374,20 @@ export async function dispatchApprovedCampaignMessage(input, deps) {
   });
   return dispatchConsentedCampaignMessage({
     ...records, outbox: null,
-    claimOutbox: (args) => adapter(deps, "claimCampaignOutbox")(scope, args),
+    claimOutbox: (args) => inTenantTransaction(deps, scope, async (tx) =>
+      adapter(deps, "claimCampaignOutbox")(tx, args)),
     sendProvider: (args) => adapter(deps, "sendCampaignProviderMessage")(records.provider, args),
-    recordProviderAcceptance: (args) => adapter(deps, "persistCampaignProviderAcceptance")(scope, args),
-    scheduleRetry: (args) => adapter(deps, "scheduleCampaignRetry")(scope, args),
+    recordProviderAcceptance: (args) => inTenantTransaction(deps, scope, async (tx) => {
+      const saved = await adapter(deps, "persistCampaignProviderAcceptance")(tx, args);
+      if (!saved?.outboxId) fail("CAMPAIGN_ACCEPTANCE_PERSIST_FAILED", "Provider acceptance must persist to the outbox");
+      await audit(deps, tx, { tenantId: scope.tenantId, branchId: scope.branchId,
+        actorId: scope.actorId, action: "crm.campaign.provider_accepted",
+        entityType: "campaign_outbox", entityId: saved.outboxId,
+        idempotencyKey: scope.idempotencyKey });
+      return saved;
+    }),
+    scheduleRetry: (args) => inTenantTransaction(deps, scope, async (tx) =>
+      adapter(deps, "scheduleCampaignRetry")(tx, args)),
     now: input.now,
   });
 }
