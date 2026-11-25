@@ -11426,7 +11426,7 @@
     "note": "All 24 open PRs visible in the repository listing were reviewed. Additional direct feature matches were added for Procurement, Executive, Finance, SaaS multi-company isolation and combined backup/scale. Remaining unmatched IDs still require historical PR/commit/source review; unmatched means no direct feature-level mapping in the reviewed open-PR set, not that the feature has no code.",
     "crm_increment": {
       "pr": 145,
-      "head": "e8858252242ed0e2f7525fee63f403ee8485d1f5",
+      "head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "files": [
         "docs/implementation/sql/CRM_LOYALTY_EXPIRY_EXTENSION_DRAFT.sql",
         "supabase/functions/dlice-orders/index.ts",
@@ -11444,7 +11444,7 @@
     },
     "hr_increment": {
       "pr": 145,
-      "latest_head": "1f6a4a7f4a865b58d1ffe593c8044e8e74e289da",
+      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "files": [
         "docs/implementation/sql/HR_EMPLOYEE_LIFECYCLE_EXTENSION_DRAFT.sql",
         "supabase/functions/dlice-orders/index.ts",
@@ -11496,7 +11496,7 @@
     },
     "delivery_increment": {
       "pr": 145,
-      "latest_head": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "feature_ids": [
         "D09-F01",
         "D09-F02",
@@ -11527,7 +11527,7 @@
     },
     "franchise_increment": {
       "pr": 145,
-      "latest_head": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "feature_ids": [
         "D13-F01",
         "D13-F02",
@@ -11554,7 +11554,7 @@
     },
     "bi_increment": {
       "pr": 145,
-      "latest_head": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "feature_ids": [
         "D14-F01",
         "D14-F02",
@@ -11588,7 +11588,7 @@
     },
     "saas_increment": {
       "pr": 145,
-      "latest_head": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
       "feature_ids": [
         "D16-F03",
         "D16-F04",
@@ -11631,6 +11631,40 @@
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
       "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
       "150": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
+    },
+    "pr143_increment": {
+      "pr": 143,
+      "head": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
+      "feature_ids": [
+        "D02-F04",
+        "D02-F07",
+        "D02-F08",
+        "D02-F10",
+        "D02-F12",
+        "D11-F12",
+        "D18-F13"
+      ],
+      "ci_status": "NOT_OBSERVED",
+      "staging_migration_status": "PR_DOCUMENTS_STAGING_APPLIED_2026_11_24_BUT_CURRENT_PR_REVIEW_AND_E2E_GATE_REQUIRED",
+      "limitations": "Feature-level checkout lifecycle only; no discount engine, unpaid balance collection, printer/device acceptance or full shift close proof."
+    },
+    "recovery_scale_increment": {
+      "prs": [
+        148,
+        149
+      ],
+      "feature_ids": [
+        "D16-F08",
+        "D18-F08",
+        "D18-F10",
+        "D18-F20"
+      ],
+      "heads": {
+        "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
+        "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702"
+      },
+      "ci_status": "PR148_AND_PR149_EVIDENCE_REVIEWED_SEPARATELY",
+      "limitations": "Disposable restore and synthetic 150-branch concurrency do not prove managed Supabase PITR, production RPO/RTO or full browser/API scale."
     }
   },
   "current_audit_status_counts": {
