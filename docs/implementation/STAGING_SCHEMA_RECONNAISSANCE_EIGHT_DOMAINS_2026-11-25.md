@@ -144,3 +144,18 @@ This kernel is not yet connected to a persisted Finance batch header/lines, open
 Added `src/crm-eligible-net-sales.mjs`. The pure gate rejects raw POS/order/payment rows and requires a canonical reconciled close with tenant/branch/source identity, approved shift reconciliation, settlement reconciliation (not merely `matched`), posted Finance journal batch plus source reconciliation, and complete processed-refund evidence. It validates discounts/refunds against subtotal, reconciles refund evidence totals, requires an approved versioned earning rule, and emits an idempotent award candidate. It does not write a loyalty ledger entry or award points by itself.
 
 The required canonical financial-close projection is not yet present in the inspected staging schema. The module therefore documents and enforces the required contract at the domain boundary but is not wired to a source-of-truth DB/RPC. Do not connect it to `payment_status=paid` or settlement `matched`. Campaign provider delivery remains blocked until an actual approved provider and signed callback contract are selected. No tests/migrations/staging writes were run.
+
+
+## Eight-domain workflow kernel progress (source-only, 2026-11-25)
+
+Added the following provider-neutral/domain-boundary modules on the active feature branch:
+
+- `src/delivery-webhook-verification.mjs`: HMAC-SHA256 verification over timestamp + raw body, timestamp replay window, constant-time signature comparison, stable event/dispatch identity, payload-hash collision detection and private proof-upload intent with MIME/size/path checks. No provider is selected and no Storage upload is performed.
+- `src/franchise-opening-governance.mjs`: active/reserved territory city/postal conflict detection and opening eligibility requiring a signed versioned contract, approved site evidence, ten named checks, independent verifier and verified tenant/branch provisioning.
+- `src/bi-lineage-freshness.mjs`: metric/formula version, declared source lineage, tenant-scoped source IDs/hashes, complete period-covering freshness watermarks and reviewed source reconciliation gate.
+- `src/saas-post-commit-metering.mjs`: refuses metering before an authoritative commit ID; calls a server-side usage RPC adapter after commit and surfaces failures with retry context.
+- `src/procurement-ap-journal.mjs`: balanced AP journal draft from approved, fully matched invoice lines with explicit expense/AP accounts; explicitly not paid or reconciled.
+- `src/executive-drilldown-authorization.mjs`: fail-closed tenant and company→region→branch→shift→transaction ancestry/scope authorization helper.
+- Payroll batch correction: employer contribution components now debit the explicit expense account and credit the explicit payable liability account; component subtotals must reconcile to payroll line totals.
+
+These are source-level workflow kernels, not end-to-end feature completion. The matrix now moves four features from NOT VERIFIED/BLOCKED to PARTIAL because concrete work has started: Delivery cancel/retry, Franchise territory controls, Procurement AP handoff, and Executive drill-down authorization. Their remaining persistence, adapters, runtime and reconciliation gaps are explicit. No feature was marked DONE. No tests, merge, migration, Supabase mutation, deployment or release change was performed, per the agreed sequencing.
