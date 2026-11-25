@@ -320,6 +320,13 @@ begin
  if not found then raise exception using errcode='P0002',message='LEAVE_REQUEST_NOT_FOUND'; end if;
  if v.status<>'submitted' or v.coverage_employee_user_id is null then raise exception using errcode='23514',message='LEAVE_COVERAGE_NOT_REQUIRED_OR_CLOSED'; end if;
  if v.coverage_employee_user_id<>p_actor_user_id then raise exception using errcode='42501',message='ONLY_COVERAGE_EMPLOYEE_CAN_CONFIRM'; end if;
+ if p_approved and not exists(select 1 from public.branches b
+  join public.tenant_memberships tm on tm.tenant_id=b.tenant_id and tm.user_id=p_actor_user_id and tm.status='active'
+  join public.branch_assignments ba on ba.branch_id=b.id and ba.user_id=p_actor_user_id and ba.employment_status='active'
+  join public.admin_profiles ap on ap.user_id=p_actor_user_id and ap.is_active=true
+  where b.id=v.branch_id and b.tenant_id=v.tenant_id and ba.starts_on<=v.starts_on and (ba.ends_on is null or ba.ends_on>=v.ends_on)) then
+  raise exception using errcode='42501',message='COVERAGE_EMPLOYEE_NOT_ASSIGNED_FOR_PERIOD';
+ end if;
  update public.hr_leave_requests set coverage_approved=p_approved,review_note=left(coalesce(p_note,''),500),updated_at=now() where id=v.id;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,case when p_approved then 'hr.leave.coverage_accepted' else 'hr.leave.coverage_rejected' end,
