@@ -982,10 +982,11 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-saas-start-trial"){
       const planId=safeText(body.plan_version_id,64),days=Number(body.trial_days??14);
       if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(days)||days<1||days>60)return fail("Paket atau durasi trial tidak valid.",422,origin);
-      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now.getTime()+30*86400000);
-      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active").eq("id",planId).maybeSingle();
+      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now);
+      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active,billing_interval").eq("id",planId).maybeSingle();
       if(planError)return fail("Paket belum dapat diverifikasi.",503,origin);
       if(!plan||!plan.active||new Date(plan.effective_from)>now||(plan.effective_to&&new Date(plan.effective_to)<now))return fail("Versi paket tidak aktif pada tanggal mulai.",409,origin);
+      if(plan.billing_interval==="annual")periodEnd.setFullYear(periodEnd.getFullYear()+1);else periodEnd.setMonth(periodEnd.getMonth()+1);
       const {data,error}=await admin.from("saas_tenant_subscriptions").insert({tenant_id:tenantId,plan_version_id:planId,status:"trialing",starts_at:now.toISOString(),current_period_start:now.toISOString(),current_period_end:periodEnd.toISOString(),trial_ends_at:end.toISOString(),created_by:actor.user.id})
         .select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at").single();
       if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
