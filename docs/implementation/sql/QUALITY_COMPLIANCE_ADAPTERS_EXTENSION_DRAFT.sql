@@ -3,6 +3,9 @@
 -- decompose it into multiple Supabase REST requests: inspection/quarantine/audit,
 -- recall/impact/quarantine, and CAPA/verification/release must commit atomically.
 
+alter table public.quality_compliance_events drop constraint if exists quality_compliance_events_entity_type_check;
+alter table public.quality_compliance_events add constraint quality_compliance_events_entity_type_check check(entity_type in ('food_safety_inspection','food_recall','food_lot_quarantine','supplier_quality_inspection','supplier_quarantine','supplier_capa','food_lot_registry','food_lot_distribution','food_safety_policy','supplier_quality_policy'));
+
 create table if not exists public.food_lot_registry (
  id uuid primary key default gen_random_uuid(),
  tenant_id uuid not null references public.tenants(id) on delete restrict,
@@ -43,6 +46,8 @@ create table if not exists public.food_lot_distributions (
  foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict
 );
 create index if not exists food_lot_distributions_impact_idx on public.food_lot_distributions(tenant_id,impact_type,impact_entity_id);
+create unique index if not exists supplier_quality_one_active_quarantine_uq
+ on public.supplier_quality_quarantines(tenant_id,branch_id,receipt_item_id) where status in ('held','release_pending');
 
 alter table public.food_lot_quarantines
   add constraint food_lot_quarantines_recall_fk
@@ -198,12 +203,19 @@ create or replace function public.quality_link_food_lot_distribution(
  p_quantity numeric,p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v_lot public.food_lot_registry%rowtype; v_id uuid; v_target_branch uuid;
+declare v_lot public.food_lot_registry%rowtype; v_id uuid; v_target_branch uuid; v_existing public.food_lot_distributions%rowtype;
 begin
  if p_impact_type not in ('branch','order','receipt','production_batch') or length(coalesce(p_idempotency_key,'')) not between 8 and 120
   or (p_quantity is not null and p_quantity<0) then raise exception using errcode='22023',message='INVALID_FOOD_LOT_DISTRIBUTION'; end if;
  select * into v_lot from public.food_lot_registry where tenant_id=p_tenant_id and id=p_lot_id for update;
- if not found or v_lot.status not in ('available','quarantined') then raise exception using errcode='23514',message='FOOD_LOT_NOT_DISTRIBUTABLE'; end if;
+ if not found or v_lot.status not in ('available','quarantined') or v_lot.branch_id<>p_branch_id then raise exception using errcode='23514',message='FOOD_LOT_NOT_DISTRIBUTABLE_OR_SCOPE_MISMATCH'; end if;
+ select * into v_existing from public.food_lot_distributions where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if found then
+  if v_existing.lot_id<>p_lot_id or v_existing.impact_type<>p_impact_type or v_existing.impact_entity_id<>p_impact_entity_id then
+   raise exception using errcode='23505',message='FOOD_LOT_DISTRIBUTION_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','distribution_id',v_existing.id);
+ end if;
  if p_impact_type='branch' then
   select id into v_target_branch from public.branches where id=p_impact_entity_id and tenant_id=p_tenant_id;
  elsif p_impact_type='order' then
@@ -225,7 +237,7 @@ begin
   if v_id is null then raise exception using errcode='23505',message='FOOD_LOT_DISTRIBUTION_CONFLICT'; end if;
  end if;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
- values(p_tenant_id,p_branch_id,'food_safety_inspection',p_lot_id,'food_lot.distribution_linked',p_actor_user_id,p_idempotency_key,
+ values(p_tenant_id,p_branch_id,'food_lot_distribution',v_id,'food_lot.distribution_linked',p_actor_user_id,p_idempotency_key,
   jsonb_build_object('impact_type',p_impact_type,'impact_entity_id',p_impact_entity_id,'impact_branch_id',v_target_branch));
  return jsonb_build_object('status','linked','distribution_id',v_id,'impact_branch_id',v_target_branch);
 end; $$;
@@ -238,11 +250,13 @@ create or replace function public.quality_record_food_safety_inspection(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v_policy public.food_safety_policies%rowtype; v_lot public.food_lot_registry%rowtype;
- v_missing text[]; v_in_range boolean; v_disposition text; v_id uuid; v_quarantine_id uuid;
+ v_missing text[]; v_declared text[]; v_in_range boolean; v_disposition text; v_id uuid; v_quarantine_id uuid;
  v_status text; v_source_ok boolean:=false; v_existing public.food_safety_inspections%rowtype;
 begin
- if p_source_type not in ('receipt_item','production_batch','branch_check') or p_measured_temp_c is null
-  or p_declared_allergens is null or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+ if p_source_type not in ('receipt_item','production_batch','branch_check') or p_source_id is null or p_policy_id is null
+  or length(btrim(coalesce(p_lot_code,'')))=0 or p_measured_temp_c is null
+  or p_declared_allergens is null or exists(select 1 from unnest(p_declared_allergens) a where length(btrim(coalesce(a,'')))=0)
+  or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_FOOD_SAFETY_INSPECTION';
  end if;
  select * into v_existing from public.food_safety_inspections where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
@@ -268,15 +282,17 @@ begin
   v_source_ok:=found and v_status='completed';
  end if;
  if not v_source_ok then raise exception using errcode='23514',message='FOOD_SAFETY_SOURCE_NOT_VERIFIED'; end if;
- select coalesce(array_agg(a order by a),'{}'::text[]) into v_missing
-  from unnest(v_policy.required_allergens) a where not (a=any(p_declared_allergens));
+ select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_declared
+  from unnest(p_declared_allergens) a;
+ select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_missing
+  from unnest(v_policy.required_allergens) a where not (lower(btrim(a))=any(v_declared));
  v_in_range:=p_measured_temp_c between v_policy.min_temp_c and v_policy.max_temp_c;
  v_disposition:=case when v_in_range and cardinality(v_missing)=0 then 'accepted' else 'quarantined' end;
  insert into public.food_safety_inspections(tenant_id,branch_id,policy_id,source_type,source_id,lot_code,
   measured_temp_c,min_temp_c_snapshot,max_temp_c_snapshot,declared_allergens,missing_allergens,
   temperature_in_range,disposition,idempotency_key,inspected_by)
  values(p_tenant_id,p_branch_id,p_policy_id,p_source_type,p_source_id,p_lot_code,p_measured_temp_c,
-  v_policy.min_temp_c,v_policy.max_temp_c,p_declared_allergens,v_missing,v_in_range,v_disposition,p_idempotency_key,p_actor_user_id)
+  v_policy.min_temp_c,v_policy.max_temp_c,v_declared,v_missing,v_in_range,v_disposition,p_idempotency_key,p_actor_user_id)
  returning id into v_id;
  if v_disposition='quarantined' then
   insert into public.food_lot_quarantines(tenant_id,branch_id,lot_code,inspection_id,reason_codes,idempotency_key,created_by)
@@ -349,7 +365,7 @@ as $$
 declare v_supplier uuid; v_quantity numeric; v_policy public.supplier_quality_policies%rowtype;
  v_id uuid; v_quarantine uuid; v_capa uuid; v_nonconforming boolean; v_existing public.supplier_quality_inspections%rowtype;
 begin
- if jsonb_typeof(p_findings)<>'array' or jsonb_array_length(p_findings)=0
+ if coalesce(jsonb_typeof(p_findings),'')<>'array' or jsonb_array_length(coalesce(p_findings,'[]'::jsonb))=0
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_SUPPLIER_QUALITY_INSPECTION';
  end if;
