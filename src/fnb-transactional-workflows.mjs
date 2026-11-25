@@ -666,6 +666,79 @@ export async function executeApprovedPayrollPaymentBatch(input, deps) {
   });
 }
 
+/**
+ * Reconcile a provider payout batch against every payroll item and the already
+ * reconciled payroll/Finance source. This does not post a new expense journal.
+ */
+export async function reconcileApprovedPayrollPaymentBatch(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.payment_batch.reconcile" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const evidence = await adapter(deps, "loadPayrollPaymentBatchSettlementEvidence")(tx, input.paymentBatchId);
+    assertScope(evidence?.batch, scope, "payrollPaymentBatch");
+    assertScope(evidence?.payrollRun, scope, "payrollRun");
+    if (evidence.batch.status !== "processing" || evidence.payrollRun.status !== "reconciled" ||
+        evidence.payrollRun.id !== evidence.batch.payrollRunId) {
+      fail("PAYROLL_BATCH_OR_SOURCE_NOT_RECONCILABLE", "Processing payment batch and reconciled payroll source are required");
+    }
+    if (!evidence.financePosting || evidence.financePosting.status !== "reconciled" ||
+        evidence.financePosting.id !== evidence.batch.financePostingId) {
+      fail("PAYROLL_FINANCE_SOURCE_NOT_RECONCILED", "The exact payroll Finance posting must already be reconciled");
+    }
+    if (!Array.isArray(evidence.items) || evidence.items.length !== evidence.batch.itemCount) {
+      fail("PAYROLL_PAYMENT_BATCH_ITEMS_INCOMPLETE", "Every payroll payment item must be present for reconciliation");
+    }
+    const references = new Set();
+    let settledAmountIdr = 0;
+    for (const item of evidence.items) {
+      assertScope(item, scope, "payrollPaymentItem");
+      if (item.paymentBatchId !== evidence.batch.id || item.status !== "settled" ||
+          !item.settledAt || !item.settlementEvidence) {
+        fail("PAYROLL_PAYMENT_ITEM_NOT_SETTLED", "Every item must have a persisted final provider settlement event");
+      }
+      const decision = reconcileXenditPayrollPayoutEvidence({
+        payment: {
+          providerId: item.providerId, providerReference: item.providerReference,
+          providerReferenceId: item.providerReferenceId ?? item.id,
+          amountIdr: item.amountIdr, currency: "IDR",
+        },
+        evidence: item.settlementEvidence,
+      });
+      if (!decision.matched || !decision.settled) {
+        fail("PAYROLL_PAYMENT_ITEM_SETTLEMENT_MISMATCH", "Provider settlement evidence must match each item exactly");
+      }
+      if (references.has(decision.providerReference)) {
+        fail("PAYROLL_PROVIDER_REFERENCE_DUPLICATE", "Provider payout references must be unique per payroll batch");
+      }
+      references.add(decision.providerReference);
+      settledAmountIdr += decision.amountIdr;
+    }
+    if (!Number.isSafeInteger(settledAmountIdr) || settledAmountIdr !== evidence.batch.amountIdr ||
+        settledAmountIdr !== evidence.payrollRun.netAmountIdr) {
+      fail("PAYROLL_PAYMENT_BATCH_TOTAL_MISMATCH", "Settled item total must equal both the approved batch and payroll net amount");
+    }
+    const saved = await adapter(deps, "persistPayrollPaymentBatchReconciliation")(tx, {
+      batch: evidence.batch, payrollRun: evidence.payrollRun,
+      financePosting: evidence.financePosting, items: evidence.items,
+      settledAmountIdr, itemCount: evidence.items.length,
+      actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.reconciliationId || saved.status !== "reconciled") {
+      fail("PAYROLL_PAYMENT_BATCH_RECONCILIATION_PERSIST_FAILED", "Immutable batch reconciliation must persist");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "hr.payroll.payment_batch.reconciled",
+      entityType: "hr_payroll_payment_reconciliation", entityId: saved.reconciliationId,
+      idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({
+      status: "reconciled", reconciliationId: saved.reconciliationId,
+      paymentBatchId: evidence.batch.id, itemCount: evidence.items.length,
+      settledAmountIdr,
+    });
+  });
+}
+
 export async function reconcileApprovedPayrollPayment(input, deps) {
   const scope = { ...scopeOf(input), action: "hr.payroll.payment.reconcile" };
   return inTenantTransaction(deps, scope, async (tx) => {
