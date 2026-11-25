@@ -152,6 +152,7 @@ declare
   v_membership_role text;
   v_owner_count integer;
   v_pending_count integer;
+  v_offboarding_actor uuid;
   v_branch uuid;
   v_position uuid;
 begin
@@ -160,6 +161,13 @@ begin
     or p_effective_on is null or length(coalesce(p_idempotency_key,'')) not between 8 and 120
     or length(btrim(coalesce(p_reason,''))) not between 3 and 500 then
     raise exception using errcode='22023',message='INVALID_HR_LIFECYCLE_COMMAND';
+  end if;
+  if p_effective_on>current_date then raise exception using errcode='22023',message='FUTURE_DATED_LIFECYCLE_EVENT_REQUIRES_SCHEDULED_WORKER'; end if;
+  if not exists(select 1 from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true) then
+    raise exception using errcode='42501',message='HR_LIFECYCLE_ACTOR_NOT_ACTIVE';
+  end if;
+  if p_actor_user_id=p_employee_user_id and p_event_type in ('transfer','position_change','offboarding_requested','terminated','reactivated') then
+    raise exception using errcode='42501',message='INDEPENDENT_HR_LIFECYCLE_ACTOR_REQUIRED';
   end if;
   perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_employee_user_id::text,0));
   select * into v_event from public.hr_employee_lifecycle_events
@@ -188,7 +196,7 @@ begin
   end if;
 
   if p_event_type in ('transfer','position_change') then
-    if v_record.employment_status not in ('active','on_leave') then
+    if v_record.employment_status<>'active' then
       raise exception using errcode='23514',message='HR_EMPLOYEE_NOT_TRANSFER_ELIGIBLE';
     end if;
     if exists(select 1 from public.branch_assignments ba join public.branches b on b.id=ba.branch_id
@@ -246,9 +254,19 @@ begin
     if v_record.employment_status<>'offboarding_pending' then
       raise exception using errcode='23514',message='HR_OFFBOARDING_APPROVAL_REQUIRED';
     end if;
+    select actor_user_id into v_offboarding_actor from public.hr_employee_lifecycle_events
+     where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id and event_type='offboarding_requested'
+     order by created_at desc limit 1;
+    if v_offboarding_actor is null or v_offboarding_actor=p_actor_user_id then
+      raise exception using errcode='42501',message='INDEPENDENT_OFFBOARDING_APPROVER_REQUIRED';
+    end if;
     select count(*) into v_pending_count from public.hr_timesheets
      where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id and status in ('draft','submitted');
     if v_pending_count>0 then raise exception using errcode='23514',message='HR_PENDING_TIMESHEETS_BLOCK_TERMINATION'; end if;
+    if exists(select 1 from public.hr_leave_requests where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+      and status in ('submitted','approved') and ends_on>=current_date) then
+      raise exception using errcode='23514',message='HR_OPEN_LEAVE_BLOCKS_TERMINATION';
+    end if;
     select role into v_membership_role from public.tenant_memberships
      where tenant_id=p_tenant_id and user_id=p_employee_user_id and status='active' for update;
     if v_membership_role='tenant_owner' then
