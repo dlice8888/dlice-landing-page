@@ -280,8 +280,22 @@ begin
   raise exception using errcode='23514',message='CRM_REFUND_STATE_CHANGED_AFTER_PROJECTION';
  end if;
  if v.source_type='pos_sale' then
+  if exists(select 1 from public.refund_records r where r.pos_sale_id=v.source_id and r.status in ('requested','approved'))
+    or exists(select 1 from public.refund_records r where r.pos_sale_id=v.source_id and r.status='processed'
+      and not exists(select 1 from jsonb_array_elements(v.refund_evidence) e where e->>'id'=r.id::text)) then
+   raise exception using errcode='23514',message='CRM_NEW_OR_OPEN_REFUND_AFTER_PROJECTION';
+  end if;
   v_ids:=array[v.source_id];
  else
+  if exists(select 1 from public.refund_records r
+    where (r.order_id=v.source_id or r.payment_record_id=any(v.payment_record_ids))
+      and r.status in ('requested','approved'))
+    or exists(select 1 from public.refund_records r
+      where (r.order_id=v.source_id or r.payment_record_id=any(v.payment_record_ids))
+       and r.status='processed'
+       and not exists(select 1 from jsonb_array_elements(v.refund_evidence) e where e->>'id'=r.id::text)) then
+   raise exception using errcode='23514',message='CRM_NEW_OR_OPEN_REFUND_AFTER_PROJECTION';
+  end if;
   v_ids:=array_append(v.payment_record_ids,v.source_id);
  end if;
  select count(*),coalesce(sum(amount_idr),0) into v_count,v_total
