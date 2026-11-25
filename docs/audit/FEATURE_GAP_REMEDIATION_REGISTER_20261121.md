@@ -26,7 +26,7 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED | DONE | Partial coverage* |
 |---|---:|---:|---:|---:|---:|---:|
 | Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% |
-| POS & Checkout | 13 | 7 | 5 | 1 | 0 | 53.8% |
+| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% |
@@ -43,7 +43,7 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 | SaaS Tenant Management | 8 | 6 | 2 | 0 | 0 | 75.0% |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% |
 | Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60.0% |
-| **TOTAL** | **189** | **134** | **49** | **6** | **0** | **70.9%** |
+| **TOTAL** | **189** | **139** | **45** | **5** | **0** | **73.5%** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -985,9 +985,9 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 
 ## Superseding current audit — 25 November 2026
 
-The latest row-level PRD reconciliation is **189 total / 134 PARTIAL / 49 NOT VERIFIED / 6 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 39 NOT VERIFIED → PARTIAL transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 39 transitions are: Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4).
+The latest row-level PRD reconciliation is **189 total / 139 PARTIAL / 45 NOT VERIFIED / 5 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 44 implementation-start transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 44 transitions are: POS (5: four NOT VERIFIED and one BLOCKED), Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4).
 
-**Important scoring distinction:** partial coverage (134/189 = 70.9%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 132 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
+**Important scoring distinction:** partial coverage (139/189 = 73.5%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 137 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
 
 ### Live platform evidence checked 25 November
 - GitHub: PR #145 and #146 are OPEN Draft. PR #146 exact-head quality checks passed on 23e4b6c2a057b9b8bdeed68f71088c6e4c88d105; its database replay and provider/bank E2E remain unverified.
@@ -997,4 +997,8 @@ The latest row-level PRD reconciliation is **189 total / 134 PARTIAL / 49 NOT VE
 - Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
 
 ### Highest priority remaining NOT VERIFIED counts
-Quality & Security 8; POS 5; Branch Ops 5; CRM 3; BI 3; Procurement 3; Integrations 3; Menu 3; HR 2; Executive 2; Finance 2; SaaS 2; Order 2; Kitchen 2; Delivery 0; Franchise 0. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
+Quality & Security 8; Branch Ops 5; CRM 3; BI 3; Procurement 3; Integrations 3; Menu 3; POS 1; HR 2; Executive 2; Finance 2; SaaS 2; Order 2; Kitchen 2; Delivery 0; Franchise 0. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
+
+### POS lifecycle evidence incorporated from PR #143
+
+PR #143 is OPEN and not merged. Four previously NOT VERIFIED POS rows moved to PARTIAL and the digital receipt row moved from BLOCKED to PARTIAL because a digital receipt snapshot now exists. The current POS count is 12 PARTIAL / 1 NOT VERIFIED / 0 BLOCKED. Remaining gaps: discount/coupon engine, partial/unpaid balance collection, physical printer/browser-device acceptance, cashier browser acceptance and true network-loss/offline-client fault injection. PR #143 exact-head static/contract checks pass and disposable replay passed 14 pgTAP files / 375 assertions, but the staging POS E2E is BLOCKED before business mutation because Owner app_metadata.platform_owner is missing/null; no QA sale was created. Vercel Preview is READY on exact PR #143 head 0e3539b, which does not replace staging E2E.
