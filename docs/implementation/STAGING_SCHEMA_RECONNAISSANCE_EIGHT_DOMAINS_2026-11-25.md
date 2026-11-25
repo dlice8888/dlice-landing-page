@@ -41,7 +41,7 @@
 ## CRM source implementation added after reconnaissance
 
 - Added `erp.html` CRM workspace and server action source for Platform Owner customer list/create, consent event append, loyalty ledger read/post, and reward draft create/list.
-- Added a non-executable schema design draft at `docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql`, including tenant-composite customer/branch references, append-only consent and loyalty records, service-role-only RLS, a transactional loyalty posting RPC, and same-transaction audit triggers.
+- Added a non-executable schema design draft at `docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql`, including tenant-composite customer/branch references, append-only consent and loyalty records, service-role-only RLS, transactional loyalty posting and reward redemption RPCs, and same-transaction audit triggers.
 - CRM Edge actions intentionally return a fail-closed response for non-Platform-Owner callers while `TENANT_ISOLATION_RELEASED=false`. This is a temporary implementation boundary, not final role coverage.
 - The CRM workspace will not function against staging until the draft is reconciled, generated as a proper Supabase migration, reviewed, replayed and applied during the final batch.
 
