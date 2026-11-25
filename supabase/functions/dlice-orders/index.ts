@@ -2719,9 +2719,12 @@ if (action === "admin-set-profile-role") {
   if (action === "erp-upload-delivery-proof") {
     if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin unggah proof of delivery tidak diizinkan.",403,origin);
     const dispatchId=safeText(body.dispatch_id,64),mime=safeText(body.content_type,80),fileName=safeText(body.file_name,160);
+    const evidenceType=safeText(body.evidence_type,40)||"delivery_photo";
     const encoded=typeof body.file_base64==="string"?body.file_base64:"";
-    if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["image/jpeg","image/png","image/webp"].includes(mime)||encoded.length<16||encoded.length>7_000_000)
-      return fail("File bukti harus JPEG/PNG/WebP dan berukuran maksimal 5 MB.",422,origin);
+    if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["image/jpeg","image/png","image/webp"].includes(mime)||
+      !["pickup_photo","delivery_photo","recipient_signature","exception_photo"].includes(evidenceType)||
+      encoded.length<16||encoded.length>7_000_000)
+      return fail("File bukti harus JPEG/PNG/WebP, jenis bukti valid, dan berukuran maksimal 5 MB.",422,origin);
     const {data:dispatch,error:dispatchError}=await admin.from("delivery_dispatches").select("id,tenant_id,branch_id").eq("id",dispatchId).maybeSingle();
     if(dispatchError)return fail("Pengiriman belum dapat diverifikasi.",503,origin);
     if(!dispatch)return fail("Pengiriman tidak ditemukan.",404,origin);
@@ -2737,8 +2740,24 @@ if (action === "admin-set-profile-role") {
     const path=dispatch.tenant_id+"/"+dispatch.branch_id+"/"+dispatch.id+"/"+crypto.randomUUID()+"."+ext;
     const {data:uploaded,error:uploadError}=await admin.storage.from("delivery-proof").upload(path,bytes,{contentType:mime,upsert:false});
     if(uploadError||!uploaded)return fail("Bucket privat delivery-proof belum tersedia atau unggahan gagal. Tidak ada bukti yang dicatat.",503,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"delivery.proof.storage_uploaded",entity_type:"delivery_dispatch",entity_id:dispatch.id,metadata:{tenant_id:dispatch.tenant_id,branch_id:dispatch.branch_id,storage_path:path,content_type:mime,bytes:binary.length,file_name:fileName}});
-    return json({storage_object_path:path,content_type:mime,bytes:binary.length},201,origin);
+    const digest=await crypto.subtle.digest("SHA-256",bytes);
+    const fileSha256=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    const {data:evidence,error:evidenceError}=await admin.from("delivery_storage_evidence").insert({
+      tenant_id:dispatch.tenant_id,branch_id:dispatch.branch_id,dispatch_id:dispatch.id,
+      evidence_type:evidenceType,bucket_id:"delivery-proof",object_path:path,content_type:mime,
+      size_bytes:bytes.length,sha256:fileSha256,uploaded_by:actor.user.id,
+    }).select("id,dispatch_id,evidence_type,object_path,content_type,size_bytes,sha256,uploaded_at").single();
+    if(evidenceError||!evidence){
+      await admin.storage.from("delivery-proof").remove([path]);
+      return fail("Metadata bukti delivery gagal dicatat; objek unggahan dibersihkan dan tidak dianggap sebagai proof.",503,origin);
+    }
+    const {error:auditError}=await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"delivery.proof.storage_uploaded",entity_type:"delivery_dispatch",entity_id:dispatch.id,metadata:{tenant_id:dispatch.tenant_id,branch_id:dispatch.branch_id,evidence_id:evidence.id,storage_path:path,content_type:mime,bytes:binary.length,sha256:fileSha256,file_name:fileName}});
+    if(auditError){
+      await admin.from("delivery_storage_evidence").delete().eq("tenant_id",dispatch.tenant_id).eq("id",evidence.id);
+      await admin.storage.from("delivery-proof").remove([path]);
+      return fail("Audit bukti delivery gagal dicatat; unggahan dibersihkan.",503,origin);
+    }
+    return json({storage_object_path:path,evidence,content_type:mime,bytes:binary.length},201,origin);
   }
 
   if (action === "erp-record-delivery-proof") {
