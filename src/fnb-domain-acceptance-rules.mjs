@@ -32,6 +32,11 @@ export function validateCampaignSend({tenant_id,campaign_tenant_id,channel,eligi
  return ok({status:"queued",recipient_count:recipients.length,scheduled_at});
 }
 
+export function validateAttendanceSequence({last_event=null,event_type}={}){
+ const allowed={clock_out:["clock_in"],clock_in:["break_start","clock_out"],break_start:["break_end"],break_end:["break_start","clock_out"]};
+ const next=last_event===null?["clock_in"]:allowed[last_event]||[];
+ return next.includes(event_type)?ok({allowed:true}):fail("INVALID_ATTENDANCE_SEQUENCE",{last_event,event_type});
+}
 export function validateShiftAssignment({tenant_id,employee_tenant_id,employee_id,branch_id,starts_at,ends_at,existingAssignments=[],required_position_id,position_id,employee_status="active"}={}){
  if(!str(tenant_id)||tenant_id!==employee_tenant_id)return fail("TENANT_SCOPE_MISMATCH");
  if(![employee_id,branch_id,position_id].every(str)||!date(starts_at)||!date(ends_at)||Date.parse(ends_at)<=Date.parse(starts_at))return fail("INVALID_SHIFT_ASSIGNMENT");
@@ -47,7 +52,7 @@ export function validateLeaveRequest({tenant_id,employee_tenant_id,employee_id,s
  if(!["annual","sick","unpaid","maternity","paternity","other"].includes(leave_type))return fail("INVALID_LEAVE_TYPE");
  if(!int(available_days)||!int(requested_days)||requested_days<1)return fail("INVALID_LEAVE_BALANCE");
  if(leave_type==="annual"&&requested_days>available_days)return fail("INSUFFICIENT_LEAVE_BALANCE");
- if(!str(coverage_employee_id)||coverage_approved!==true)return fail("SHIFT_COVERAGE_REQUIRED");
+ if(leave_type!=="sick"&&(!str(coverage_employee_id)||coverage_approved!==true))return fail("SHIFT_COVERAGE_REQUIRED");
  return ok({status:"submitted",employee_id,starts_on,ends_on,leave_type,requested_days});
 }
 export function validateOvertime({tenant_id,employee_tenant_id,employee_id,branch_id,shift_id,minutes,reason,approved_by,employee_approver_id,period_minutes,period_cap_minutes}={}){
