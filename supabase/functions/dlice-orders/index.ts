@@ -2605,6 +2605,27 @@ if (action === "admin-set-profile-role") {
   }
 
 
+  if (action === "erp-upload-delivery-proof") {
+    if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin unggah proof of delivery tidak diizinkan.",403,origin);
+    const dispatchId=safeText(body.dispatch_id,64),mime=safeText(body.content_type,80),fileName=safeText(body.file_name,160);
+    const encoded=typeof body.file_base64==="string"?body.file_base64:"";
+    if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["image/jpeg","image/png","image/webp"].includes(mime)||encoded.length<16||encoded.length>7_000_000)
+      return fail("File bukti harus JPEG/PNG/WebP dan berukuran maksimal 5 MB.",422,origin);
+    const {data:dispatch,error:dispatchError}=await admin.from("delivery_dispatches").select("id,tenant_id,branch_id").eq("id",dispatchId).maybeSingle();
+    if(dispatchError)return fail("Pengiriman belum dapat diverifikasi.",503,origin);
+    if(!dispatch)return fail("Pengiriman tidak ditemukan.",404,origin);
+    if(!await branchAccess(dispatch.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let binary:string;try{binary=atob(encoded);}catch{return fail("Payload file tidak valid.",422,origin);}
+    if(binary.length>5*1024*1024)return fail("Ukuran file melebihi 5 MB.",422,origin);
+    const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const ext=mime==="image/jpeg"?"jpg":mime==="image/png"?"png":"webp";
+    const path=dispatch.tenant_id+"/"+dispatch.branch_id+"/"+dispatch.id+"/"+crypto.randomUUID()+"."+ext;
+    const {data:uploaded,error:uploadError}=await admin.storage.from("delivery-proof").upload(path,bytes,{contentType:mime,upsert:false});
+    if(uploadError||!uploaded)return fail("Bucket privat delivery-proof belum tersedia atau unggahan gagal. Tidak ada bukti yang dicatat.",503,origin);
+    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"delivery.proof.storage_uploaded",entity_type:"delivery_dispatch",entity_id:dispatch.id,metadata:{tenant_id:dispatch.tenant_id,branch_id:dispatch.branch_id,storage_path:path,content_type:mime,bytes:binary.length,file_name:fileName}});
+    return json({storage_object_path:path,content_type:mime,bytes:binary.length},201,origin);
+  }
+
   if (action === "erp-record-delivery-proof") {
     if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin pencatatan proof of delivery tidak diizinkan.",403,origin);
     const dispatchId=safeText(body.dispatch_id,64),proofType=safeText(body.proof_type,30);
