@@ -993,7 +993,7 @@ if (action === "admin-set-profile-role") {
       if(branchError)return fail("Tenant/cabang transaksi belum dapat diverifikasi.",503,origin);
       if(!branch)return fail("Transaksi bukan milik tenant yang dipilih.",403,origin);
       const rawIdentity=sourceType==="online_order"?String(source.customer_whatsapp||""):String(source.customer_reference||"");
-      const phoneCandidate=/^[+0-9\\s()-]+$/.test(rawIdentity.trim())?rawIdentity:"";
+      const phoneCandidate=/^[+0-9\s()-]+$/.test(rawIdentity.trim())?rawIdentity:"";
       const digits=phoneCandidate.replace(/[^0-9]/g,"");
       const normalized=digits.startsWith("0")?"62"+digits.slice(1):digits.startsWith("8")?"62"+digits:digits;
       const phone=normalized?"+"+normalized:null;
