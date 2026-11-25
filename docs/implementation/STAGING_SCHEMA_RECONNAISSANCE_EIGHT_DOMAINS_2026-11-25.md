@@ -117,3 +117,16 @@ Required account mapping must be explicitly approved: wage expense by branch, em
 ### Staging evidence and restrictions
 
 The live table catalogue showed zero rows in `finance_journal_entries`, `fiscal_periods`, `payment_settlements`, `payment_settlement_items`, `refund_records`, `cash_reconciliations`, and `branch_expenses` at the time of inspection. This is absence of positive workflow fixtures, not proof that the schemas are unusable. No data was read or written for this mapping. No migration, Auth change, Edge deployment, test, merge, or release-flag change was performed.
+
+
+## Payroll calculation kernel implementation (source-only, 2026-11-25)
+
+Added `src/hr-payroll-calculation.mjs` as a deterministic, side-effect-free payroll line calculation kernel. It supports:
+
+- hourly regular wages from approved minute inputs;
+- overtime only when an explicit approved multiplier is supplied;
+- monthly salary only with an explicit proration ratio (no implicit calendar/workday assumption);
+- effective-dated, approved fixed-IDR or basis-point components for earnings/allowances, deductions/tax, and employer contributions/benefits;
+- non-negative net pay, safe-integer IDR amounts, duplicate component rejection, and a versioned calculation result.
+
+The module intentionally does not invent statutory tax tables, contribution rates, overtime rules, or payment providers. It is not yet wired into the persisted payroll run/line schema or Finance journal batch. Edge authorization, approval provenance for every input, database constraints, payment execution, journal posting, reversal and reconciliation remain outstanding. No tests were run, as requested; this source change is queued for the final test batch. No migration or staging/production mutation was performed.
