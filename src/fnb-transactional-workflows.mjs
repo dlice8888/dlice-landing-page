@@ -1058,3 +1058,11 @@ export async function issueSaasSubscriptionInvoice(input, deps) {
     });
   });
 }
+
+
+export {
+  recordFoodSafetyInspection,
+  initiateFoodRecall,
+  recordSupplierQualityInspection,
+  verifySupplierCorrectiveAction,
+} from "./quality-compliance-workflows.mjs";
