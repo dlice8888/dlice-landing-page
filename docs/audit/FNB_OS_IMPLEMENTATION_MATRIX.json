@@ -1393,14 +1393,14 @@
           "requirement": "Loyalty points and tiers",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "src/crm-eligible-net-sales.mjs enforces reconciled close, processed refund evidence, approved shift close, settlement reconciliation, Finance journal/source reconciliation and approved earning rule; candidate only, no persisted award yet.",
+          "evidence_or_gap": "Pure close contract now exists; canonical database snapshot/RPC, source adapters, award ledger idempotency and runtime/E2E reconciliation remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 165
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/crm-eligible-net-sales.mjs enforces reconciled close, processed refund evidence, approved shift close, settlement reconciliation, Finance journal/source reconciliation and approved earning rule; candidate only, no persisted award yet.",
+          "implementation_evidence": "src/crm-eligible-net-sales.mjs enforces reconciled close, processed refund evidence, approved shift close, settlement reconciliation, Finance journal/source reconciliation and approved earning rule; candidate only, no persisted award yet. src/crm-financial-close.mjs validates canonical source/refund/settlement/shift/Finance close evidence with tenant/branch/source joins, processed refund completeness, settlement arithmetic, exact shift inclusion and balanced Finance source amount before eligible net sales can be projected.",
           "progress_pct": null
         },
         {
@@ -1719,14 +1719,14 @@
           "requirement": "Payroll calculation/integration",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "src/hr-payroll-calculation.mjs supports hourly/monthly pay, explicit approved overtime multiplier/proration, effective-dated earnings/deductions/employer contributions and net pay. src/hr-payroll-finance-batch.mjs constructs balanced multi-line journal draft snapshots with explicit expense/liability accounts; not yet persisted/posted/paid/reconciled.",
+          "evidence_or_gap": "Calculation and balanced batch-construction kernels exist; persistence, fiscal-period enforcement, independent approval, posting/reversal, payment and reconciliation remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 196
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/hr-payroll-calculation.mjs supports hourly/monthly pay, explicit approved overtime multiplier/proration, effective-dated earnings/deductions/employer contributions and net pay. src/hr-payroll-finance-batch.mjs constructs balanced multi-line journal draft snapshots with explicit expense/liability accounts; not yet persisted/posted/paid/reconciled.",
+          "implementation_evidence": "src/hr-payroll-calculation.mjs supports hourly/monthly pay, explicit approved overtime multiplier/proration, effective-dated earnings/deductions/employer contributions and net pay. src/hr-payroll-finance-batch.mjs constructs balanced multi-line journal draft snapshots with explicit expense/liability accounts; not yet persisted/posted/paid/reconciled. Payroll Finance batch now explicitly debits employer contribution expense and credits corresponding payable liability, validates component totals against deductions/earnings/employer contributions, and requires explicit account mapping for both sides.",
           "progress_pct": null
         },
         {
