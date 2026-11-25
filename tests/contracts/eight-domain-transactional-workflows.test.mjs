@@ -11,6 +11,8 @@ import {
   ingestSignedCampaignReceipt,
   executeApprovedPayrollPayment,
   reconcileApprovedPayrollPayment,
+  enforceSaasTenantEntitlement,
+  issueSaasSubscriptionInvoice,
 } from "../../src/fnb-transactional-workflows.mjs";
 
 const base = { tenantId: "tenant-a", branchId: "branch-a", actorId: "actor-a", idempotencyKey: "workflow-key-0001" };
@@ -103,6 +105,27 @@ test("payroll payment requires a tenant transaction and authorization", async ()
 test("payroll settlement cannot be reconciled without persisted evidence adapters", async () => {
   await assert.rejects(
     reconcileApprovedPayrollPayment({ ...base, payrollRunId: "run-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+
+test("SaaS entitlement enforcement fails closed without a tenant transaction", async () => {
+  await assert.rejects(
+    enforceSaasTenantEntitlement({
+      tenantId: "tenant-a", actorId: "actor-a", idempotencyKey: "saas-entitlement-0001",
+      entitlementKey: "orders", quantity: 1,
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("SaaS invoice issuance fails closed without a tenant transaction", async () => {
+  await assert.rejects(
+    issueSaasSubscriptionInvoice({
+      tenantId: "tenant-a", actorId: "actor-a", idempotencyKey: "saas-invoice-0001",
+      subscriptionId: "subscription-a", periodStart: "2026-11-01", periodEnd: "2026-11-30",
+    }, {}),
     { code: "WORKFLOW_ADAPTER_REQUIRED" },
   );
 });
