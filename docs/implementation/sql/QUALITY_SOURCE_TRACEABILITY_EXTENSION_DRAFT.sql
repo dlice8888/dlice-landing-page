@@ -44,7 +44,7 @@ begin
  if not found or v.receipt_status<>'posted' then return; end if;
  if v.supplier_lot_code is null or length(btrim(v.supplier_lot_code))=0 then
   if exists(select 1 from public.food_lot_registry where tenant_id=v.tenant_id and branch_id=v.branch_id
-    and inventory_item_id=v.inventory_item_id and status in ('available','quarantined','recalled')) then
+    and inventory_item_id=v.inventory_item_id and status in ('available','quarantined','recalled','depleted')) then
    raise exception using errcode='23514',message='QUALITY_RECEIPT_LOT_CODE_REQUIRED_FOR_TRACKED_ITEM';
   end if;
   return;
@@ -71,7 +71,7 @@ as $$ begin
  perform public.quality_process_receipt_item_lot(new.id);
  return new;
 end $$;
-revoke all on function public.quality_after_receipt_item_lot_lot_write() from public,anon,authenticated;
+revoke all on function public.quality_after_receipt_item_lot_write() from public,anon,authenticated;
 drop trigger if exists quality_receipt_item_lot_after_write on public.purchase_receipt_items;
 create trigger quality_receipt_item_lot_after_write after insert or update of supplier_lot_code,lot_expiry_at
  on public.purchase_receipt_items for each row execute function public.quality_after_receipt_item_lot_write();
