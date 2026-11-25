@@ -7,7 +7,8 @@ const sql = readFileSync(new URL("../../docs/implementation/sql/CRM_LOYALTY_EXPI
 test("loyalty expiry requires an approved, bounded validity policy", () => {
   assert.match(sql, /points_validity_days integer null/);
   assert.match(sql, /APPROVED_EARNING_RULE_WITH_VALIDITY_REQUIRED/);
-  assert.match(sql, /make_interval\(days=>v_rule\.points_validity_days\)/);
+  assert.match(sql, /v_close\.reconciled_at\+make_interval\(days=>v_rule\.points_validity_days\)/);
+  assert.match(sql, /FINANCIAL_CLOSE_RECONCILIATION_TIMESTAMP_REQUIRED/);
 });
 
 test("earn awards are source-backed by reconciled POS/order and Finance close", () => {
@@ -36,6 +37,7 @@ test("generic ledger RPC cannot bypass source-backed earn/redeem and reversal re
   assert.match(sql, /redemption_reversal/);
   assert.match(sql, /EARN_ENTRY_ALREADY_CONSUMED_OR_EXPIRED/);
   assert.match(sql, /ADJUSTMENT_REVERSAL_REQUIRES_NEW_ADJUSTMENT/);
+  assert.match(sql, /REDEMPTION_REVERSAL_AFTER_EXPIRY_BLOCKED/);
   assert.match(sql, /entry_kind='adjustment' and points>0/);
 });
 
