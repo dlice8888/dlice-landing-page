@@ -254,6 +254,29 @@ begin
  if p_actor_user_id is null or p_actor_user_id=v.created_by then
   raise exception using errcode='42501',message='INDEPENDENT_FINANCE_CLOSE_REVIEWER_REQUIRED';
  end if;
+ if v.settlement_reconciliation_status='matched' and exists(
+   select 1 from public.payment_settlements
+    where id=any(v.settlement_ids)
+      and (status<>'matched' or received_amount_idr is distinct from net_amount_idr)
+ ) then
+  raise exception using errcode='23514',message='CRM_SETTLEMENT_STATE_CHANGED_AFTER_PROJECTION';
+ end if;
+ if v.settlement_reconciliation_status='cash_reconciled' and not exists(
+   select 1 from public.cash_reconciliations
+    where id=v.shift_reconciliation_id and status='approved'
+      and cash_counted_idr=cash_expected_idr
+      and bank_received_idr=bank_expected_idr
+      and qris_received_idr=qris_expected_idr
+ ) then
+  raise exception using errcode='23514',message='CRM_CASH_RECONCILIATION_STATE_CHANGED';
+ end if;
+ if exists(
+   select 1 from jsonb_array_elements(v.refund_evidence) e
+   left join public.refund_records r on r.id=(e->>'id')::uuid
+   where r.id is null or r.status<>'processed' or r.amount_idr<>(e->>'amountIdr')::bigint
+ ) then
+  raise exception using errcode='23514',message='CRM_REFUND_STATE_CHANGED_AFTER_PROJECTION';
+ end if;
  if v.source_type='pos_sale' then
   v_ids:=array[v.source_id];
  else
