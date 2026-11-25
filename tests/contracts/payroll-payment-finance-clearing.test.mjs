@@ -160,7 +160,7 @@ test("Finance clearing SQL draft keeps payout, bank and reversal evidence servic
     "hr_reconcile_payroll_payment_bank_batch",
     "hr_mark_payroll_payment_reversal_exception",
     "bank_account_fingerprint_sha256",
-    "signature_verified is distinct from true",
+    "signature_verified=true",
     "revoke all on function",
     "to service_role",
     "enable row level security",
