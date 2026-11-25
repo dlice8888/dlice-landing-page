@@ -36,6 +36,8 @@ test("termination is two-step, blocks pending timesheets and revokes only the se
  assert.match(sql,/HR_OPEN_LEAVE_BLOCKS_TERMINATION/);
  assert.match(sql,/FUTURE_DATED_LIFECYCLE_EVENT_REQUIRES_SCHEDULED_WORKER/);
  assert.match(sql,/HR_CANNOT_REVOKE_LAST_TENANT_OWNER/);
+ assert.match(sql,/HR_ACTIVE_TENANT_MEMBERSHIP_REQUIRED/);
+ assert.match(sql,/HR_LIFECYCLE_IDEMPOTENCY_COLLISION/);
  assert.match(sql,/update public\.tenant_memberships set status='revoked'/);
  assert.doesNotMatch(sql,/update public\.admin_profiles set is_active=false/);
 });
