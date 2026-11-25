@@ -236,19 +236,25 @@ revoke all on function public.hr_post_payroll_finance_posting(uuid,uuid,uuid) fr
 grant execute on function public.hr_post_payroll_finance_posting(uuid,uuid,uuid) to service_role;
 
 create or replace function public.hr_reconcile_payroll_finance_posting(
-  p_tenant_id uuid,p_posting_id uuid,p_actor_user_id uuid,p_evidence_sha256 text
+  p_tenant_id uuid,p_posting_id uuid,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.hr_payroll_finance_postings%rowtype; r public.hr_payroll_runs%rowtype;
-  v_count integer; v_amount bigint;
+declare
+  v public.hr_payroll_finance_postings%rowtype;
+  r public.hr_payroll_runs%rowtype;
+  v_count integer;
+  v_amount bigint;
+  v_evidence jsonb;
+  v_hash text;
 begin
-  if coalesce(p_evidence_sha256,'') !~ '^[0-9a-f]{64}$' then
-    raise exception using errcode='22023',message='PAYROLL_RECONCILIATION_SHA256_REQUIRED';
-  end if;
   select * into v from public.hr_payroll_finance_postings
    where tenant_id=p_tenant_id and id=p_posting_id for update;
-  if not found or v.status<>'posted' then raise exception using errcode='23514',message='POSTED_PAYROLL_FINANCE_REQUIRED'; end if;
-  select * into r from public.hr_payroll_runs where tenant_id=p_tenant_id and id=v.payroll_run_id for update;
+  if not found or v.status<>'posted' then
+    raise exception using errcode='23514',message='POSTED_PAYROLL_FINANCE_REQUIRED';
+  end if;
+  select * into r from public.hr_payroll_runs
+   where tenant_id=p_tenant_id and id=v.payroll_run_id for update;
+  if not found then raise exception using errcode='23503',message='PAYROLL_RUN_SOURCE_MISSING'; end if;
   if p_actor_user_id in (v.created_by,v.posted_by,r.created_by,r.generated_by,r.submitted_by,r.approved_by) then
     raise exception using errcode='42501',message='INDEPENDENT_PAYROLL_RECONCILER_REQUIRED';
   end if;
@@ -259,22 +265,35 @@ begin
   if v_count<>cardinality(v.finance_entry_ids) or v_amount<>v.gross_amount_idr then
     raise exception using errcode='23514',message='PAYROLL_FINANCE_POSTING_TOTAL_MISMATCH';
   end if;
+  select jsonb_build_object(
+    'tenant_id',p_tenant_id,'branch_id',v.branch_id,'payroll_run_id',r.id,
+    'posting_id',v.id,'gross_amount_idr',v.gross_amount_idr,
+    'deductions_amount_idr',v.deductions_amount_idr,'net_amount_idr',v.net_amount_idr,
+    'finance_entries',coalesce(jsonb_agg(jsonb_build_object(
+      'id',e.id,'entry_code',e.entry_code,'source_type',e.source_type,
+      'source_id',e.source_id,'debit_account',e.debit_account,
+      'credit_account',e.credit_account,'amount_idr',e.amount_idr,'status',e.status
+    ) order by e.id),'[]'::jsonb)
+  ) into v_evidence
+  from public.finance_journal_entries e where e.id=any(v.finance_entry_ids);
+  v_hash:=encode(pg_catalog.sha256(convert_to(v_evidence::text,'UTF8')),'hex');
   update public.hr_payroll_finance_postings
    set status='reconciled',reconciled_by=p_actor_user_id,reconciled_at=now(),
-       reconciliation_sha256=p_evidence_sha256,updated_at=now()
+       reconciliation_sha256=v_hash,updated_at=now()
    where id=v.id returning * into v;
   update public.hr_payroll_runs set status='reconciled',
-    reconciliation_reference=p_evidence_sha256,updated_at=now() where id=r.id;
+    reconciliation_reference=v_hash,updated_at=now() where id=r.id;
   insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
   values(p_actor_user_id,'hr.payroll.finance_reconciled','hr_payroll_finance_postings',v.id::text,
     jsonb_build_object('tenant_id',p_tenant_id,'payroll_run_id',r.id,'gross_amount_idr',v.gross_amount_idr,
-      'journal_entry_count',v_count,'evidence_sha256',p_evidence_sha256));
+      'journal_entry_count',v_count,'evidence_sha256',v_hash));
   return jsonb_build_object('status','reconciled','posting_id',v.id,'payroll_run_id',r.id,
-    'gross_amount_idr',v.gross_amount_idr,'finance_entry_count',v_count);
+    'gross_amount_idr',v.gross_amount_idr,'finance_entry_count',v_count,
+    'reconciliation_sha256',v_hash);
 end;
 $$;
-revoke all on function public.hr_reconcile_payroll_finance_posting(uuid,uuid,uuid,text) from public,anon,authenticated;
-grant execute on function public.hr_reconcile_payroll_finance_posting(uuid,uuid,uuid,text) to service_role;
+revoke all on function public.hr_reconcile_payroll_finance_posting(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_reconcile_payroll_finance_posting(uuid,uuid,uuid) to service_role;
 
 do $$
 declare t text;
