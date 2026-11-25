@@ -94,7 +94,7 @@ begin foreach t in array array['bi_metric_definitions','bi_source_watermarks','b
 end loop; end $$;
 create or replace function public.bi_publish_metric_snapshot(p_snapshot_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.bi_metric_snapshots%rowtype; v_sla integer;
 begin
  select * into v from public.bi_metric_snapshots where id=p_snapshot_id for update;
@@ -113,7 +113,7 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'bi.metric_snapshot.published','bi_metric_snapshot',p_snapshot_id::text,jsonb_build_object('tenant_id',v.tenant_id,'metric_id',v.metric_id,'formula_version',v.formula_version));
  return jsonb_build_object('snapshot_id',p_snapshot_id,'status','published');
-end $;
+end $$;
 revoke all on function public.bi_publish_metric_snapshot(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.bi_publish_metric_snapshot(uuid,uuid) to service_role;
 
