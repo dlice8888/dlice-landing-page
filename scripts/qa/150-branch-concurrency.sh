@@ -75,10 +75,16 @@ SQL
 run_probe() {
   local tenant="$1" file="$2"
   local output="$LOG_DIR/$tenant.out"
+  local tenant_id
+  if [[ "$tenant" == "tenant-a" ]]; then tenant_id="$TENANT_A"; else tenant_id="$TENANT_B"; fi
+  printf 'probe=%s expected_tenant=%s\\n' "$tenant" "$tenant_id"
+  PGOPTIONS="-c app.tenant_id=$tenant_id" PGPASSWORD=local-only \
+    psql -v ON_ERROR_STOP=1 -h "$PGHOST" -p "$PGPORT" -U authenticated -d "$DB" -At \
+    -c "SELECT current_user || '|' || session_user || '|' || current_setting('app.tenant_id') || '|' || count(*) FROM public.branches;"
   (
     cd "$LOG_DIR"
-    PGOPTIONS="-c app.tenant_id=$([[ "$tenant" == "tenant-a" ]] && printf '%s' "$TENANT_A" || printf '%s' "$TENANT_B")" \
-      PGPASSWORD=local-only pgbench -h "$PGHOST" -p "$PGPORT" -U authenticated -d "$DB" \
+    PGOPTIONS="-c app.tenant_id=$tenant_id" PGPASSWORD=local-only \
+      pgbench -h "$PGHOST" -p "$PGPORT" -U authenticated -d "$DB" \
       -n -c 50 -j 4 -T 10 -r -l --log-prefix="$tenant" -f "$file"
   ) | tee "$output"
   local failed
