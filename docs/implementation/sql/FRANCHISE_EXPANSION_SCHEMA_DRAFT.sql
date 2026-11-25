@@ -487,6 +487,10 @@ begin
  ) values(v_agreement.id,1,p_royalty_rate_bps,p_marketing_fee_rate_bps,
   p_fixed_monthly_fee_idr,p_effective_from,p_effective_to)
  returning * into v_version;
+ insert into public.franchise_opening_gates(agreement_id,gate_key)
+ select v_agreement.id,k from unnest(array[
+  'legal_signed','site_approved','permits','fitout','equipment','staffing','training','inventory','pos_ready','brand_audit'
+ ]) k;
  insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,metadata)
  values(v_agreement.id,'amended',p_actor_user_id,jsonb_build_object('version',1,'initial_draft',true));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
@@ -536,6 +540,51 @@ end $$;
 revoke all on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) from public,anon,authenticated;
 grant execute on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) to service_role;
 
+
+create or replace function public.franchise_review_opening_gate(
+ p_agreement_id uuid,p_gate_key text,p_status text,p_evidence_reference text,
+ p_actor_user_id uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.franchise_agreements%rowtype; g public.franchise_opening_gates%rowtype;
+ v_approver uuid;
+begin
+ if p_status not in ('in_progress','passed','blocked') then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_OPENING_GATE_STATUS';
+ end if;
+ if p_status='passed' and length(btrim(coalesce(p_evidence_reference,'')))<8 then
+  raise exception using errcode='22023',message='FRANCHISE_OPENING_GATE_EVIDENCE_REQUIRED';
+ end if;
+ select * into v from public.franchise_agreements where id=p_agreement_id for update;
+ if not found or v.signed_at is null or v.agreement_status not in ('pending_signature','active') then
+  raise exception using errcode='23514',message='SIGNED_FRANCHISE_AGREEMENT_REQUIRED_FOR_OPENING_GATE';
+ end if;
+ select approved_by into v_approver from public.franchise_agreement_versions
+  where agreement_id=v.id and version=v.current_version;
+ if p_status='passed' and p_actor_user_id in (v.created_by,v_approver) then
+  raise exception using errcode='42501',message='INDEPENDENT_FRANCHISE_GATE_VERIFIER_REQUIRED';
+ end if;
+ select * into g from public.franchise_opening_gates
+  where agreement_id=v.id and gate_key=p_gate_key for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_OPENING_GATE_NOT_FOUND'; end if;
+ if g.status='passed' and p_status<>'passed' then
+  raise exception using errcode='23514',message='PASSED_FRANCHISE_OPENING_GATE_IS_FINAL';
+ end if;
+ update public.franchise_opening_gates set status=p_status,
+  evidence_reference=case when p_status='passed' then p_evidence_reference else evidence_reference end,
+  verified_by=case when p_status='passed' then p_actor_user_id else null end,
+  verified_at=case when p_status='passed' then now() else null end,
+  notes=left(coalesce(p_notes,''),1000)
+ where id=g.id returning * into g;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.opening_gate.'||p_status,'franchise_opening_gate',g.id::text,
+  jsonb_build_object('agreement_id',v.id,'gate_key',g.gate_key,'evidence_reference',g.evidence_reference));
+ return jsonb_build_object('agreement_id',v.id,'gate_key',g.gate_key,'status',g.status,
+  'verified_by',g.verified_by,'verified_at',g.verified_at);
+end $;
+revoke all on function public.franchise_review_opening_gate(uuid,text,text,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.franchise_review_opening_gate(uuid,text,text,text,uuid,text) to service_role;
+
 create or replace function public.franchise_activate_signed_agreement(
  p_agreement_id uuid,p_tenant_id uuid,p_branch_id uuid,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
@@ -565,6 +614,7 @@ begin
  end if;
  update public.franchise_agreements set tenant_id=p_tenant_id,branch_id=p_branch_id,
   agreement_status='active' where id=v.id;
+ perform public.franchise_assert_opening_ready(v.id,current_date);
  insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
  values(v.id,'activated',p_actor_user_id,v_version.signed_document_reference,
   jsonb_build_object('version',v.current_version,'tenant_id',p_tenant_id,'branch_id',p_branch_id));
