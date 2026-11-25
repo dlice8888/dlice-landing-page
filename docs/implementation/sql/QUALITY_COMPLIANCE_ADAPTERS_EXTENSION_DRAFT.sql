@@ -211,7 +211,7 @@ begin
  if p_impact_type not in ('branch','order','receipt','production_batch') or length(coalesce(p_idempotency_key,'')) not between 8 and 120
   or (p_quantity is not null and p_quantity<0) then raise exception using errcode='22023',message='INVALID_FOOD_LOT_DISTRIBUTION'; end if;
  select * into v_lot from public.food_lot_registry where tenant_id=p_tenant_id and id=p_lot_id for update;
- if not found or v_lot.status not in ('available','quarantined') or v_lot.branch_id<>p_branch_id then raise exception using errcode='23514',message='FOOD_LOT_NOT_DISTRIBUTABLE_OR_SCOPE_MISMATCH'; end if;
+ if not found or v_lot.status<>'available' or v_lot.branch_id<>p_branch_id then raise exception using errcode='23514',message='FOOD_LOT_NOT_DISTRIBUTABLE_OR_SCOPE_MISMATCH'; end if;
  select * into v_existing from public.food_lot_distributions where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then
   if v_existing.lot_id<>p_lot_id or v_existing.impact_type<>p_impact_type or v_existing.impact_entity_id<>p_impact_entity_id or v_existing.quantity is distinct from p_quantity then
@@ -262,10 +262,12 @@ begin
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_FOOD_SAFETY_INSPECTION';
  end if;
+ select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_declared from unnest(p_declared_allergens) a;
  select * into v_existing from public.food_safety_inspections where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then
   if v_existing.branch_id<>p_branch_id or v_existing.source_type<>p_source_type or v_existing.source_id<>p_source_id
-   or v_existing.lot_code<>p_lot_code or v_existing.policy_id<>p_policy_id or v_existing.measured_temp_c<>p_measured_temp_c then
+   or v_existing.lot_code<>p_lot_code or v_existing.policy_id<>p_policy_id or v_existing.measured_temp_c<>p_measured_temp_c
+   or not (v_existing.declared_allergens @> v_declared and v_declared @> v_existing.declared_allergens) then
    raise exception using errcode='23505',message='FOOD_SAFETY_INSPECTION_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','inspection_id',v_existing.id,'disposition',v_existing.disposition);
@@ -291,8 +293,6 @@ begin
   v_source_ok:=found and v_status='completed';
  end if;
  if not v_source_ok then raise exception using errcode='23514',message='FOOD_SAFETY_SOURCE_NOT_VERIFIED'; end if;
- select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_declared
-  from unnest(p_declared_allergens) a;
  select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_missing
   from unnest(v_policy.required_allergens) a where not (lower(btrim(a))=any(v_declared));
  v_in_range:=p_measured_temp_c between v_policy.min_temp_c and v_policy.max_temp_c;
@@ -626,3 +626,87 @@ begin
 end; $$;
 revoke all on function public.quality_request_supplier_quality_policy(uuid,uuid,uuid,text[],timestamptz,timestamptz,text,uuid) from public,anon,authenticated;
 grant execute on function public.quality_request_supplier_quality_policy(uuid,uuid,uuid,text[],timestamptz,timestamptz,text,uuid) to service_role;
+
+
+alter table public.food_lot_quarantines add column if not exists release_requested_by uuid null references auth.users(id) on delete restrict;
+alter table public.food_lot_quarantines add column if not exists release_requested_at timestamptz null;
+alter table public.food_lot_quarantines add column if not exists release_evidence_reference text null;
+
+create or replace function public.quality_request_food_lot_release(
+ p_tenant_id uuid,p_branch_id uuid,p_quarantine_id uuid,p_reason text,p_evidence_reference text,
+ p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.food_lot_quarantines%rowtype;
+begin
+ if length(btrim(coalesce(p_reason,'')))<3 or length(btrim(coalesce(p_evidence_reference,'')))<3
+  or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='FOOD_LOT_RELEASE_EVIDENCE_REQUIRED';
+ end if;
+ if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+  return jsonb_build_object('status','duplicate','quarantine_id',p_quarantine_id);
+ end if;
+ select * into v from public.food_lot_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_quarantine_id for update;
+ if not found then raise exception using errcode='P0002',message='FOOD_LOT_QUARANTINE_NOT_FOUND'; end if;
+ if v.status<>'held' then raise exception using errcode='23514',message='FOOD_LOT_QUARANTINE_NOT_REQUESTABLE'; end if;
+ if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_FOOD_LOT_RELEASE_REQUESTER_REQUIRED'; end if;
+ update public.food_lot_quarantines set status='release_pending',release_requested_by=p_actor_user_id,
+  release_requested_at=now(),release_evidence_reference=btrim(p_evidence_reference)
+  where tenant_id=p_tenant_id and id=p_quarantine_id;
+ insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
+ values(p_tenant_id,p_branch_id,'food_lot_quarantine',p_quarantine_id,'food_lot.release_requested',p_actor_user_id,p_idempotency_key,
+  jsonb_build_object('reason',p_reason,'evidence_reference',p_evidence_reference));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'quality.food_lot.release_requested','food_lot_quarantine',p_quarantine_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'reason',p_reason,'evidence_reference',p_evidence_reference));
+ return jsonb_build_object('status','release_pending','quarantine_id',p_quarantine_id);
+end; $$;
+revoke all on function public.quality_request_food_lot_release(uuid,uuid,uuid,text,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.quality_request_food_lot_release(uuid,uuid,uuid,text,text,text,uuid) to service_role;
+
+create or replace function public.quality_approve_food_lot_release(
+ p_tenant_id uuid,p_branch_id uuid,p_quarantine_id uuid,p_decision text,p_evidence_reference text,
+ p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.food_lot_quarantines%rowtype;
+begin
+ if p_decision not in ('released','destroyed') or length(btrim(coalesce(p_evidence_reference,'')))<3
+  or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_FOOD_LOT_RELEASE_DECISION';
+ end if;
+ if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+  return jsonb_build_object('status','duplicate','quarantine_id',p_quarantine_id,'decision',p_decision);
+ end if;
+ select * into v from public.food_lot_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_quarantine_id for update;
+ if not found then raise exception using errcode='P0002',message='FOOD_LOT_QUARANTINE_NOT_FOUND'; end if;
+ if v.status<>'release_pending' then raise exception using errcode='23514',message='FOOD_LOT_RELEASE_REQUEST_REQUIRED'; end if;
+ if p_actor_user_id in (v.created_by,v.release_requested_by) then
+  raise exception using errcode='42501',message='INDEPENDENT_FOOD_LOT_RELEASE_APPROVER_REQUIRED';
+ end if;
+ if p_decision='released' and exists(select 1 from public.food_lot_registry where tenant_id=p_tenant_id
+   and branch_id=p_branch_id and lot_code=v.lot_code and status='recalled') then
+  raise exception using errcode='23514',message='RECALLED_FOOD_LOT_CANNOT_BE_RELEASED';
+ end if;
+ update public.food_lot_quarantines set status=p_decision,released_by=p_actor_user_id,released_at=now()
+  where tenant_id=p_tenant_id and id=p_quarantine_id;
+ if p_decision='released' then
+  update public.food_lot_registry set status='available' where tenant_id=p_tenant_id and branch_id=p_branch_id
+   and lot_code=v.lot_code and status='quarantined'
+   and not exists(select 1 from public.food_lot_quarantines q where q.tenant_id=p_tenant_id
+    and q.branch_id=p_branch_id and q.lot_code=v.lot_code and q.id<>p_quarantine_id and q.status in ('held','release_pending'));
+ elsif p_decision='destroyed' then
+  update public.food_lot_registry set status='destroyed' where tenant_id=p_tenant_id and branch_id=p_branch_id and lot_code=v.lot_code;
+ end if;
+ insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
+ values(p_tenant_id,p_branch_id,'food_lot_quarantine',p_quarantine_id,'food_lot.'||p_decision,p_actor_user_id,p_idempotency_key,
+  jsonb_build_object('release_requested_by',v.release_requested_by,'release_evidence_reference',v.release_evidence_reference,
+   'approval_evidence_reference',p_evidence_reference));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'quality.food_lot.'||p_decision,'food_lot_quarantine',p_quarantine_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'release_requested_by',v.release_requested_by,
+   'evidence_reference',p_evidence_reference));
+ return jsonb_build_object('status',p_decision,'quarantine_id',p_quarantine_id);
+end; $$;
+revoke all on function public.quality_approve_food_lot_release(uuid,uuid,uuid,text,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.quality_approve_food_lot_release(uuid,uuid,uuid,text,text,text,uuid) to service_role;
