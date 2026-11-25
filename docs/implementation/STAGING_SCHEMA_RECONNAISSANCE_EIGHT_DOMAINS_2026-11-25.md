@@ -130,3 +130,10 @@ Added `src/hr-payroll-calculation.mjs` as a deterministic, side-effect-free payr
 - non-negative net pay, safe-integer IDR amounts, duplicate component rejection, and a versioned calculation result.
 
 The module intentionally does not invent statutory tax tables, contribution rates, overtime rules, or payment providers. It is not yet wired into the persisted payroll run/line schema or Finance journal batch. Edge authorization, approval provenance for every input, database constraints, payment execution, journal posting, reversal and reconciliation remain outstanding. No tests were run, as requested; this source change is queued for the final test batch. No migration or staging/production mutation was performed.
+
+
+## Payroll-to-Finance batch construction kernel (source-only, 2026-11-25)
+
+Added `src/hr-payroll-finance-batch.mjs`. It accepts only an approved payroll run and immutable payroll line snapshots, requires explicit Finance account mappings for wage expense, net wages payable, each deduction liability and each employer-contribution expense, and emits a draft multi-line journal batch. It checks per-employee gross minus deductions equals net, unique employee lines, safe integer IDR values, component-to-total balance, and aggregate debit/credit equality. It deliberately returns `paymentStatus=not_paid` and `reconciliationStatus=not_reconciled`; it does not write the Finance ledger or claim posting.
+
+This kernel is not yet connected to a persisted Finance batch header/lines, open fiscal-period lock, independent Finance approval, posting/reversal RPC, payment execution, or settlement reconciliation. Finance must approve account codes and the payroll calculation policy before runtime wiring. No tests, migrations, shared staging writes, merges or production operations were run.
