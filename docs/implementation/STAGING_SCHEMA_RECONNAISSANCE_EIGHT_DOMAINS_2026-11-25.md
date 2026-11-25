@@ -45,6 +45,13 @@
 - CRM Edge actions intentionally return a fail-closed response for non-Platform-Owner callers while `TENANT_ISOLATION_RELEASED=false`. This is a temporary implementation boundary, not final role coverage.
 - The CRM workspace will not function against staging until the draft is reconciled, generated as a proper Supabase migration, reviewed, replayed and applied during the final batch.
 
+## HR source implementation added after CRM reconnaissance
+
+- Added an HR workspace to `erp.html` for active branch staff and attendance event capture.
+- Added Edge Function commands for branch-scoped staff lookup and attendance read/write. Attendance writes call the proposed `hr_record_attendance` database RPC; that RPC serializes each employee/branch stream, checks active membership and assignment, enforces clock-in/break/clock-out order, and relies on an audit trigger.
+- Added `docs/implementation/sql/HR_WORKFORCE_SCHEMA_DRAFT.sql` for schedules, attendance, leave, timesheets and payroll, with service-role-only RLS and audit triggers.
+- The HR workspace will not function against staging until the draft is reconciled, generated as a proper Supabase migration, replayed and applied during the final batch. Leave, schedule, timesheet and payroll commands are not yet wired end-to-end.
+
 ## Release decision
 
 This is reconnaissance only. No DDL, DML, RPC, Auth Admin, Edge Function deployment, Vercel deployment, or Production operation was performed. SQL migration authoring and all merge/migration/runtime validation remain deferred to the agreed final batch. The schema inventory is not a completion claim.
