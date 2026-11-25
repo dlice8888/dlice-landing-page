@@ -523,3 +523,101 @@ begin
 end; $$;
 revoke all on function public.quality_verify_supplier_capa(uuid,uuid,uuid,text,text,boolean,uuid) from public,anon,authenticated;
 grant execute on function public.quality_verify_supplier_capa(uuid,uuid,uuid,text,text,boolean,uuid) to service_role;
+
+
+alter table public.food_safety_policies add column if not exists request_idempotency_key text null;
+alter table public.supplier_quality_policies add column if not exists request_idempotency_key text null;
+create unique index if not exists food_safety_policy_request_idem_uq
+ on public.food_safety_policies(tenant_id,request_idempotency_key) where request_idempotency_key is not null;
+create unique index if not exists supplier_quality_policy_request_idem_uq
+ on public.supplier_quality_policies(tenant_id,request_idempotency_key) where request_idempotency_key is not null;
+
+create or replace function public.quality_request_food_safety_policy(
+ p_tenant_id uuid,p_branch_id uuid,p_product_class text,p_min_temp_c numeric,p_max_temp_c numeric,
+ p_required_allergens text[],p_effective_from timestamptz,p_effective_until timestamptz,
+ p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.food_safety_policies%rowtype; v_version integer;
+begin
+ if length(btrim(coalesce(p_product_class,''))) not between 1 and 80
+  or p_min_temp_c is null or p_max_temp_c is null or p_min_temp_c>p_max_temp_c
+  or p_required_allergens is null
+  or exists(select 1 from unnest(p_required_allergens) a where length(btrim(coalesce(a,'')))=0)
+  or p_effective_from is null or (p_effective_until is not null and p_effective_until<=p_effective_from)
+  or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_FOOD_SAFETY_POLICY_REQUEST';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_product_class,0));
+ select * into v from public.food_safety_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
+ if found then
+  if v.branch_id<>p_branch_id or v.product_class<>p_product_class or v.min_temp_c<>p_min_temp_c
+   or v.max_temp_c<>p_max_temp_c or v.required_allergens<>p_required_allergens then
+   raise exception using errcode='23505',message='FOOD_SAFETY_POLICY_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
+ end if;
+ if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id) then
+  raise exception using errcode='23503',message='FOOD_SAFETY_POLICY_BRANCH_NOT_IN_TENANT';
+ end if;
+ select coalesce(max(policy_version),0)+1 into v_version from public.food_safety_policies
+  where tenant_id=p_tenant_id and branch_id=p_branch_id and product_class=p_product_class;
+ insert into public.food_safety_policies(tenant_id,branch_id,policy_version,product_class,min_temp_c,max_temp_c,
+  required_allergens,effective_from,effective_until,status,created_by,request_idempotency_key)
+ values(p_tenant_id,p_branch_id,v_version,p_product_class,p_min_temp_c,p_max_temp_c,
+  (select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) from unnest(p_required_allergens) a),
+  p_effective_from,p_effective_until,'draft',p_actor_user_id,p_idempotency_key) returning * into v;
+ insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
+ values(p_tenant_id,p_branch_id,'food_safety_policy',v.id,'food_safety_policy.requested',p_actor_user_id,p_idempotency_key,
+  jsonb_build_object('policy_version',v.policy_version,'product_class',v.product_class,'min_temp_c',v.min_temp_c,
+   'max_temp_c',v.max_temp_c,'required_allergens',v.required_allergens));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'quality.food_safety.policy_requested','food_safety_policy',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'policy_version',v.policy_version));
+ return jsonb_build_object('status','draft','policy_id',v.id,'policy_version',v.policy_version);
+end; $$;
+revoke all on function public.quality_request_food_safety_policy(uuid,uuid,text,numeric,numeric,text[],timestamptz,timestamptz,text,uuid) from public,anon,authenticated;
+grant execute on function public.quality_request_food_safety_policy(uuid,uuid,text,numeric,numeric,text[],timestamptz,timestamptz,text,uuid) to service_role;
+
+create or replace function public.quality_request_supplier_quality_policy(
+ p_tenant_id uuid,p_branch_id uuid,p_supplier_id uuid,p_critical_finding_codes text[],
+ p_effective_from timestamptz,p_effective_until timestamptz,p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.supplier_quality_policies%rowtype; v_version integer;
+begin
+ if p_supplier_id is null or p_critical_finding_codes is null
+  or exists(select 1 from unnest(p_critical_finding_codes) c where length(btrim(coalesce(c,'')))=0)
+  or p_effective_from is null or (p_effective_until is not null and p_effective_until<=p_effective_from)
+  or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_SUPPLIER_QUALITY_POLICY_REQUEST';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_supplier_id::text,0));
+ select * into v from public.supplier_quality_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
+ if found then
+  if v.branch_id<>p_branch_id or v.supplier_id<>p_supplier_id or v.critical_finding_codes<>p_critical_finding_codes then
+   raise exception using errcode='23505',message='SUPPLIER_QUALITY_POLICY_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
+ end if;
+ if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id)
+  or not exists(select 1 from public.suppliers where id=p_supplier_id) then
+  raise exception using errcode='23503',message='SUPPLIER_QUALITY_POLICY_SCOPE_INVALID';
+ end if;
+ select coalesce(max(policy_version),0)+1 into v_version from public.supplier_quality_policies
+  where tenant_id=p_tenant_id and branch_id=p_branch_id and supplier_id=p_supplier_id;
+ insert into public.supplier_quality_policies(tenant_id,branch_id,supplier_id,policy_version,critical_finding_codes,
+  effective_from,effective_until,status,created_by,request_idempotency_key)
+ values(p_tenant_id,p_branch_id,p_supplier_id,v_version,
+  (select coalesce(array_agg(distinct btrim(c) order by btrim(c)),'{}'::text[]) from unnest(p_critical_finding_codes) c),
+  p_effective_from,p_effective_until,'draft',p_actor_user_id,p_idempotency_key) returning * into v;
+ insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
+ values(p_tenant_id,p_branch_id,'supplier_quality_policy',v.id,'supplier_quality_policy.requested',p_actor_user_id,p_idempotency_key,
+  jsonb_build_object('supplier_id',v.supplier_id,'policy_version',v.policy_version,'critical_finding_codes',v.critical_finding_codes));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'quality.supplier.policy_requested','supplier_quality_policy',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'supplier_id',v.supplier_id,'policy_version',v.policy_version));
+ return jsonb_build_object('status','draft','policy_id',v.id,'policy_version',v.policy_version);
+end; $$;
+revoke all on function public.quality_request_supplier_quality_policy(uuid,uuid,uuid,text[],timestamptz,timestamptz,text,uuid) from public,anon,authenticated;
+grant execute on function public.quality_request_supplier_quality_policy(uuid,uuid,uuid,text[],timestamptz,timestamptz,text,uuid) to service_role;
