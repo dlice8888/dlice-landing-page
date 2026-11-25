@@ -170,7 +170,7 @@ create table if not exists public.crm_marketing_campaigns (
  updated_at timestamptz not null default now(),
  unique(tenant_id,id),
  check((channel='email' and purpose='marketing_email') or (channel='sms' and purpose='marketing_sms') or (channel='whatsapp' and purpose='marketing_whatsapp')),
- check(status not in ('approved','audience_prepared','queued','sending','sent') or (approved_by is not null and approved_at is not null))
+ check(status not in ('approved','audience_prepared','queued','sending','sent') or (approved_by is not null and approved_at is not null and approved_by<>created_by))
 );
 create table if not exists public.crm_campaign_recipients (
  id uuid primary key default gen_random_uuid(),
@@ -372,6 +372,23 @@ end;
 $;
 revoke all on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) to service_role;
+
+create or replace function public.crm_approve_campaign(p_tenant_id uuid,p_campaign_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.crm_marketing_campaigns%rowtype;
+begin
+ select * into v from public.crm_marketing_campaigns where tenant_id=p_tenant_id and id=p_campaign_id for update;
+ if not found then raise exception using errcode='P0002',message='CRM_CAMPAIGN_NOT_FOUND'; end if;
+ if v.status<>'draft' then raise exception using errcode='23514',message='CRM_CAMPAIGN_NOT_DRAFT'; end if;
+ if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_CAMPAIGN_APPROVER_REQUIRED'; end if;
+ update public.crm_marketing_campaigns set status='approved',approved_by=p_actor_user_id,approved_at=now(),updated_at=now() where id=p_campaign_id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'crm.campaign.approved','crm_marketing_campaign',p_campaign_id::text,jsonb_build_object('tenant_id',p_tenant_id));
+ return jsonb_build_object('campaign_id',p_campaign_id,'status','approved');
+end $;
+revoke all on function public.crm_approve_campaign(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_approve_campaign(uuid,uuid,uuid) to service_role;
 
 create or replace function public.crm_prepare_campaign_audience(p_tenant_id uuid,p_campaign_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
