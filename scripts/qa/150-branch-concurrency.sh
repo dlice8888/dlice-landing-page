@@ -51,6 +51,22 @@ CREATE POLICY branch_tenant_isolation ON public.branches
   FOR SELECT TO authenticated
   USING (tenant_id=nullif(current_setting('app.tenant_id',true),'')::uuid);
 GRANT SELECT ON public.branches TO authenticated;
+CREATE OR REPLACE FUNCTION public.assert_branch_tenant_scope(expected_tenant uuid, expected_count bigint, forbidden_tenant uuid)
+RETURNS boolean LANGUAGE plpgsql AS $
+DECLARE visible_count bigint;
+DECLARE forbidden_count bigint;
+BEGIN
+  IF current_user <> 'authenticated' OR current_setting('app.tenant_id',true) IS DISTINCT FROM expected_tenant::text THEN
+    RAISE EXCEPTION 'authenticated role or tenant context mismatch';
+  END IF;
+  SELECT count(*) INTO visible_count FROM public.branches;
+  SELECT count(*) INTO forbidden_count FROM public.branches WHERE tenant_id=forbidden_tenant;
+  IF visible_count <> expected_count OR forbidden_count <> 0 THEN
+    RAISE EXCEPTION 'tenant visibility mismatch: visible %, forbidden %', visible_count, forbidden_count;
+  END IF;
+  RETURN true;
+END $;
+GRANT EXECUTE ON FUNCTION public.assert_branch_tenant_scope(uuid,bigint,uuid) TO authenticated;
 INSERT INTO public.tenants(id,tenant_code) VALUES
   ('$TENANT_A','TENANT-A'),('$TENANT_B','TENANT-B');
 INSERT INTO public.branches(tenant_id,branch_code)
@@ -64,12 +80,10 @@ B_BRANCHES="$(psql -qAt -d "$DB" -c "SELECT count(*) FROM public.branches WHERE 
 [[ "$BRANCHES" == "151" && "$A_BRANCHES" == "150" && "$B_BRANCHES" == "1" ]]
 
 cat > "$LOG_DIR/tenant-a.sql" <<SQL
-SELECT CASE WHEN current_user='authenticated' AND current_setting('app.tenant_id')='$TENANT_A' AND count(*)=150 THEN 1 ELSE 1/0 END FROM public.branches;
-SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_B';
+SELECT public.assert_branch_tenant_scope('$TENANT_A',150,'$TENANT_B');
 SQL
 cat > "$LOG_DIR/tenant-b.sql" <<SQL
-SELECT CASE WHEN current_user='authenticated' AND current_setting('app.tenant_id')='$TENANT_B' AND count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
-SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_A';
+SELECT public.assert_branch_tenant_scope('$TENANT_B',1,'$TENANT_A');
 SQL
 
 run_probe() {
