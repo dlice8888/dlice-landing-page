@@ -311,6 +311,9 @@ begin
  if not found then raise exception using errcode='23503',message='BANK_STATEMENT_LINE_NOT_FOUND'; end if;
  select * into b from public.hr_payroll_payment_batches where tenant_id=p_tenant_id and id=c.payment_batch_id for share;
  select * into m from public.hr_payroll_payment_finance_mappings where tenant_id=p_tenant_id and id=c.mapping_id for share;
+ if not found or m.status<>'approved' then
+  raise exception using errcode='23514',message='APPROVED_PAYROLL_PAYMENT_FINANCE_MAPPING_REQUIRED';
+ end if;
  if s.branch_id<>b.branch_id or s.provider_payout_reference<>c.payout_provider_reference
   or s.amount_idr<>c.amount_idr or s.currency<>'IDR'
   or s.bank_account_fingerprint_sha256<>m.bank_account_fingerprint_sha256 then
@@ -570,11 +573,34 @@ begin
  if new.tenant_id<>old.tenant_id or new.payment_batch_id<>old.payment_batch_id
   or new.payment_item_id<>old.payment_item_id or new.provider_event_id<>old.provider_event_id
   or new.mapping_id<>old.mapping_id or new.payout_provider_reference<>old.payout_provider_reference
-  or new.amount_idr<>old.amount_idr or new.payout_journal_entry_id<>old.payout_journal_entry_id then
+  or new.amount_idr<>old.amount_idr or new.payout_journal_entry_id<>old.payout_journal_entry_id
+  or new.created_by<>old.created_by or new.created_at<>old.created_at then
   raise exception using errcode='55000',message='PAYROLL_PAYMENT_CLEARING_IDENTITY_IMMUTABLE';
  end if;
- if old.status='bank_matched' and new.status<>'bank_matched' then
+ if old.status='bank_matched' and (
+   new.status<>'bank_matched'
+   or new.bank_statement_line_id is distinct from old.bank_statement_line_id
+   or new.bank_journal_entry_id is distinct from old.bank_journal_entry_id
+   or new.bank_matched_by is distinct from old.bank_matched_by
+   or new.bank_matched_at is distinct from old.bank_matched_at) then
   raise exception using errcode='55000',message='BANK_MATCHED_CLEARING_IS_IMMUTABLE';
+ end if;
+ if old.status='reversal_exception' and new is distinct from old then
+  raise exception using errcode='55000',message='REVERSAL_EXCEPTION_CLEARING_IS_IMMUTABLE';
+ end if;
+ if old.status='provider_cleared' and new.status='bank_matched'
+  and (new.bank_statement_line_id is null or new.bank_journal_entry_id is null
+   or new.bank_matched_by is null or new.bank_matched_at is null) then
+  raise exception using errcode='23514',message='COMPLETE_BANK_MATCH_EVIDENCE_REQUIRED';
+ end if;
+ if old.status='provider_cleared' and new.status='reversal_exception'
+  and (new.bank_statement_line_id is not null or new.bank_journal_entry_id is not null
+   or new.bank_matched_by is not null or new.bank_matched_at is not null) then
+  raise exception using errcode='23514',message='REVERSAL_EXCEPTION_CANNOT_CLAIM_BANK_MATCH';
+ end if;
+ if old.status not in ('provider_cleared','bank_matched','reversal_exception')
+  or new.status not in ('provider_cleared','bank_matched','reversal_exception') then
+  raise exception using errcode='23514',message='INVALID_PAYROLL_CLEARING_STATE';
  end if;
  return new;
 end $$;
