@@ -45,6 +45,7 @@ create table if not exists public.crm_customer_consent_events (
   occurred_at timestamptz not null,
   actor_user_id uuid null references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
+  unique (tenant_id,id),
   unique (tenant_id,idempotency_key),
   foreign key (tenant_id,customer_id) references public.crm_customers(tenant_id,id) on delete restrict
 );
@@ -159,7 +160,7 @@ create table if not exists public.crm_campaign_recipients (
  campaign_id uuid not null,
  customer_id uuid not null,
  destination_snapshot text not null,
- consent_event_id uuid null references public.crm_customer_consent_events(id) on delete restrict,
+ consent_event_id uuid null,
  status text not null default 'queued' check(status in ('queued','sent','delivered','failed','suppressed','unsubscribed')),
  provider_message_id text null,
  attempted_at timestamptz null,
@@ -171,7 +172,8 @@ create table if not exists public.crm_campaign_recipients (
  unique(tenant_id,campaign_id,customer_id),
  unique(tenant_id,idempotency_key),
  foreign key(tenant_id,campaign_id) references public.crm_marketing_campaigns(tenant_id,id) on delete restrict,
- foreign key(tenant_id,customer_id) references public.crm_customers(tenant_id,id) on delete restrict
+ foreign key(tenant_id,customer_id) references public.crm_customers(tenant_id,id) on delete restrict,
+ foreign key(tenant_id,consent_event_id) references public.crm_customer_consent_events(tenant_id,id) on delete restrict
 );
 create index if not exists crm_campaign_recipient_queue_idx on public.crm_campaign_recipients(tenant_id,campaign_id,status);
 
@@ -1248,7 +1250,7 @@ end $$;
   received_at timestamptz not null default now(),
   payload jsonb not null check(jsonb_typeof(payload)='object'),
   unique(tenant_id,id),
-  unique(tenant_id,provider_id,provider_event_id)
+  unique(provider_id,provider_event_id)
 );
 create index if not exists crm_campaign_provider_message_idx
   on public.crm_campaign_provider_events(tenant_id,provider_id,provider_message_id);
