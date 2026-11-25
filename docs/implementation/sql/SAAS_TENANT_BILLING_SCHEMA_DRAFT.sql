@@ -412,7 +412,7 @@ declare v_invoice public.saas_invoices%rowtype; v_payment public.saas_invoice_pa
 begin
  if length(btrim(coalesce(p_provider,''))) not between 2 and 80 or
   length(btrim(coalesce(p_provider_reference,''))) not between 2 and 160 or p_amount_idr<=0 or
-  p_status not in ('pending','succeeded','failed','refunded') or
+  p_status not in ('pending','succeeded','failed') or
   (p_status='succeeded' and p_settled_at is null) then
   raise exception using errcode='22023',message='INVALID_SAAS_INVOICE_PAYMENT';
  end if;
