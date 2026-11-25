@@ -165,3 +165,33 @@ grant execute on function public.procurement_approve_supplier_link(uuid,uuid) to
 -- Three-way matching must compare invoice lines to PO quantities/prices and accepted GRN lines.
 -- Posting must be a single balanced Finance AP journal transaction with invoice reference.
 -- Do not update suppliers directly from tenant-scoped endpoints until supplier_tenant_links is active.
+
+
+-- Invoice approval is separate from receiving and three-way matching.
+-- Only a fully matched invoice can be approved, and the receiver/matcher
+-- cannot approve their own invoice. Payment/posting is intentionally separate.
+create or replace function public.procurement_approve_supplier_invoice(
+ p_invoice_id uuid,p_actor_user_id uuid,p_reason text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.procurement_supplier_invoices%rowtype; v_line_count integer; v_bad_count integer;
+begin
+ select * into v from public.procurement_supplier_invoices where id=p_invoice_id for update;
+ if not found then raise exception using errcode='P0002',message='SUPPLIER_INVOICE_NOT_FOUND'; end if;
+ if v.status<>'matched' then raise exception using errcode='23514',message='ONLY_MATCHED_INVOICE_CAN_BE_APPROVED'; end if;
+ if v.received_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_INVOICE_APPROVER_REQUIRED'; end if;
+ if length(btrim(coalesce(p_reason,'')))<3 then raise exception using errcode='22023',message='INVOICE_APPROVAL_REASON_REQUIRED'; end if;
+ select count(*),count(*) filter(where match_status<>'matched')
+ into v_line_count,v_bad_count from public.procurement_invoice_match_lines
+ where tenant_id=v.tenant_id and invoice_id=v.id;
+ if v_line_count=0 or v_bad_count>0 then raise exception using errcode='23514',message='THREE_WAY_MATCH_NOT_CLEAN'; end if;
+ update public.procurement_supplier_invoices set status='approved',approved_by=p_actor_user_id where id=v.id;
+ insert into public.procurement_approval_events(tenant_id,entity_type,entity_id,event_type,actor_user_id,reason)
+ values(v.tenant_id,'supplier_invoice',v.id,'approved',p_actor_user_id,left(p_reason,500));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'procurement.supplier_invoice.approved','procurement_supplier_invoice',v.id::text,
+  jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'purchase_order_id',v.purchase_order_id,'supplier_id',v.supplier_id,'line_count',v_line_count,'total_idr',v.total_idr,'received_by',v.received_by));
+ return jsonb_build_object('invoice_id',v.id,'status','approved','approved_by',p_actor_user_id,'line_count',v_line_count,'total_idr',v.total_idr);
+end $$;
+revoke all on function public.procurement_approve_supplier_invoice(uuid,uuid,text) from public,anon,authenticated;
+grant execute on function public.procurement_approve_supplier_invoice(uuid,uuid,text) to service_role;
