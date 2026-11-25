@@ -26,15 +26,16 @@ create table if not exists public.crm_financial_close_projections (
   branch_id uuid not null,
   source_type text not null check(source_type in ('pos_sale','online_order')),
   source_id uuid not null,
-  shift_reconciliation_id uuid not null,
+  shift_reconciliation_id uuid null,
   settlement_reconciliation_id uuid not null,
-  finance_journal_batch_id uuid not null,
+  settlement_ids uuid[] not null default '{}',
+  finance_journal_entry_ids uuid[] not null default '{}',
   currency text not null check(currency='IDR'),
   subtotal_idr bigint not null check(subtotal_idr>=0),
   discount_idr bigint not null check(discount_idr>=0),
   processed_refunds_idr bigint not null check(processed_refunds_idr>=0),
   refund_evidence jsonb not null check(jsonb_typeof(refund_evidence)='array'),
-  shift_reconciliation_status text not null check(shift_reconciliation_status='approved'),
+  shift_reconciliation_status text not null check(shift_reconciliation_status in ('approved','not_required')),
   settlement_reconciliation_status text not null check(settlement_reconciliation_status='reconciled'),
   finance_journal_status text not null check(finance_journal_status in ('posted','reconciled')),
   finance_source_reconciliation_status text not null check(finance_source_reconciliation_status='reconciled'),
@@ -158,7 +159,8 @@ begin
      and source_type=p_source_type and source_id=p_source_id and status='reconciled'
    order by reconciled_at desc limit 1 for update;
   if not found then raise exception using errcode='P0002',message='FINANCIAL_CLOSE_NOT_RECONCILED'; end if;
-  if v_close.shift_reconciliation_status<>'approved'
+  if (p_source_type='pos_sale' and v_close.shift_reconciliation_status<>'approved')
+     or (p_source_type='online_order' and v_close.shift_reconciliation_status<>'not_required')
      or v_close.settlement_reconciliation_status<>'reconciled'
      or v_close.finance_journal_status not in ('posted','reconciled')
      or v_close.finance_source_reconciliation_status<>'reconciled' then
@@ -218,11 +220,10 @@ grant execute on function public.crm_award_loyalty_for_reconciled_close(uuid,uui
 
 -- Automatically link identifiable paid orders and paid POS sales to CRM.
 -- This does not award points; points require the separate reconciled-close RPC.
+-- Automatically link identifiable paid sources. Loyalty earning remains gated
+-- by the reconciled financial-close projection RPC.
 create or replace function public.crm_auto_link_paid_transaction_customer()
-returns trigger
-language plpgsql
-security invoker
-set search_path = ''
+returns trigger language plpgsql security invoker set search_path=''
 as $$
 declare
   v_tenant_id uuid;
@@ -245,109 +246,18 @@ begin
   else
     return new;
   end if;
-
-  if v_raw_phone !~ '^[+0-9[:space:]()-]+
-returns trigger language plpgsql security invoker set search_path = ''
-as $$
-begin
-  raise exception using errcode='55000',message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
-    detail=tg_table_name||' is append-only; record a compensating event instead';
-end;
-$$;
-revoke all on function public.crm_reject_append_only_mutation() from public,anon,authenticated;
-drop trigger if exists crm_consent_events_append_only on public.crm_customer_consent_events;
-create trigger crm_consent_events_append_only before update or delete on public.crm_customer_consent_events
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_loyalty_ledger_append_only on public.crm_loyalty_ledger;
-create trigger crm_loyalty_ledger_append_only before update or delete on public.crm_loyalty_ledger
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_provider_events_append_only on public.crm_campaign_provider_events;
-create trigger crm_campaign_provider_events_append_only before update or delete on public.crm_campaign_provider_events
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_attributions_append_only on public.crm_campaign_attributions;
-create trigger crm_campaign_attributions_append_only before update or delete on public.crm_campaign_attributions
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_costs_append_only on public.crm_campaign_costs;
-create trigger crm_campaign_costs_append_only before update or delete on public.crm_campaign_costs
-for each row execute function public.crm_reject_append_only_mutation();
-
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'crm_loyalty_earning_rules',
-    'crm_financial_close_projections',
-    'crm_campaign_outbox',
-    'crm_campaign_provider_events',
-    'crm_campaign_attributions',
-    'crm_campaign_costs'
-  ] loop
-    execute format('alter table public.%I enable row level security',t);
-    execute format('drop policy if exists service_role_only on public.%I',t);
-    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
-    execute format('revoke all on public.%I from anon, authenticated',t);
-    execute format('grant select,insert,update,delete on public.%I to service_role',t);
-  end loop;
-end $$;
- then return new; end if;
+  if v_raw_phone !~ '^[+0-9[:space:]()-]+$' then return new; end if;
   v_digits:=regexp_replace(v_raw_phone,'[^0-9]','','g');
   if v_digits='' then return new; end if;
-  if left(v_digits,1)='0' then
-    v_digits:='62'||substr(v_digits,2);
-  elsif left(v_digits,1)='8' then
-    v_digits:='62'||v_digits;
+  if left(v_digits,1)='0' then v_digits:='62'||substr(v_digits,2);
+  elsif left(v_digits,1)='8' then v_digits:='62'||v_digits;
   end if;
   v_phone:='+'||v_digits;
-  if v_phone !~ '^\+[1-9][0-9]{7,14}
-returns trigger language plpgsql security invoker set search_path = ''
-as $$
-begin
-  raise exception using errcode='55000',message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
-    detail=tg_table_name||' is append-only; record a compensating event instead';
-end;
-$$;
-revoke all on function public.crm_reject_append_only_mutation() from public,anon,authenticated;
-drop trigger if exists crm_consent_events_append_only on public.crm_customer_consent_events;
-create trigger crm_consent_events_append_only before update or delete on public.crm_customer_consent_events
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_loyalty_ledger_append_only on public.crm_loyalty_ledger;
-create trigger crm_loyalty_ledger_append_only before update or delete on public.crm_loyalty_ledger
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_provider_events_append_only on public.crm_campaign_provider_events;
-create trigger crm_campaign_provider_events_append_only before update or delete on public.crm_campaign_provider_events
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_attributions_append_only on public.crm_campaign_attributions;
-create trigger crm_campaign_attributions_append_only before update or delete on public.crm_campaign_attributions
-for each row execute function public.crm_reject_append_only_mutation();
-drop trigger if exists crm_campaign_costs_append_only on public.crm_campaign_costs;
-create trigger crm_campaign_costs_append_only before update or delete on public.crm_campaign_costs
-for each row execute function public.crm_reject_append_only_mutation();
-
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'crm_loyalty_earning_rules',
-    'crm_financial_close_projections',
-    'crm_campaign_outbox',
-    'crm_campaign_provider_events',
-    'crm_campaign_attributions',
-    'crm_campaign_costs'
-  ] loop
-    execute format('alter table public.%I enable row level security',t);
-    execute format('drop policy if exists service_role_only on public.%I',t);
-    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
-    execute format('revoke all on public.%I from anon, authenticated',t);
-    execute format('grant select,insert,update,delete on public.%I to service_role',t);
-  end loop;
-end $$;
- then return new; end if;
-
+  if v_phone !~ '^\+[1-9][0-9]{7,14}$' then return new; end if;
   select tenant_id into v_tenant_id from public.branches where id=new.branch_id;
   if v_tenant_id is null then
     raise exception using errcode='23503',message='CRM_SOURCE_BRANCH_TENANT_NOT_FOUND';
   end if;
-
   perform public.crm_link_transaction_customer(
     v_tenant_id,new.branch_id,v_source_type,new.id,null,v_display_name,v_phone,auth.uid()
   );
@@ -365,7 +275,7 @@ after insert or update of payment_status,customer_reference,branch_id on public.
 for each row execute function public.crm_auto_link_paid_transaction_customer();
 
 create or replace function public.crm_reject_append_only_mutation()
-returns trigger language plpgsql security invoker set search_path = ''
+returns trigger language plpgsql security invoker set search_path=''
 as $$
 begin
   raise exception using errcode='55000',message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
@@ -393,21 +303,17 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'crm_loyalty_earning_rules',
-    'crm_financial_close_projections',
-    'crm_campaign_outbox',
-    'crm_campaign_provider_events',
-    'crm_campaign_attributions',
+    'crm_loyalty_earning_rules','crm_financial_close_projections',
+    'crm_campaign_outbox','crm_campaign_provider_events','crm_campaign_attributions',
     'crm_campaign_costs'
   ] loop
     execute format('alter table public.%I enable row level security',t);
     execute format('drop policy if exists service_role_only on public.%I',t);
-    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
-    execute format('revoke all on public.%I from anon, authenticated',t);
+    execute format('create policy service_role_only on public.%I for all to service_role using(true) with check(true)',t);
+    execute format('revoke all on public.%I from anon,authenticated',t);
     execute format('grant select,insert,update,delete on public.%I to service_role',t);
   end loop;
 end $$;
-
 
 -- Provider configuration is a secret-name reference only. A real provider
 -- adapter must be explicitly approved before campaign outbox can be queued.
