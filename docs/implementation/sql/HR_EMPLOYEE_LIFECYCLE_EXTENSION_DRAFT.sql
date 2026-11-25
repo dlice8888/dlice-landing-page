@@ -94,6 +94,9 @@ begin
     or length(btrim(coalesce(p_display_name_snapshot,'')))>160 then
     raise exception using errcode='22023',message='INVALID_HR_EMPLOYEE_CREATE';
   end if;
+  if not exists(select 1 from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true) then
+    raise exception using errcode='42501',message='HR_EMPLOYEE_CREATOR_NOT_ACTIVE';
+  end if;
   perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_employee_user_id::text,0));
   select * into v_event from public.hr_employee_lifecycle_events
    where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
@@ -174,7 +177,9 @@ begin
    where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
   if found then
     if v_event.employee_user_id<>p_employee_user_id or v_event.event_type<>p_event_type
-       or v_event.effective_on<>p_effective_on then
+       or v_event.effective_on<>p_effective_on
+       or (p_event_type in ('transfer','position_change','reactivated') and p_new_branch_id is not null and v_event.new_state->>'primary_branch_id'<>p_new_branch_id::text)
+       or (p_event_type in ('transfer','position_change','reactivated') and p_new_job_position_id is not null and v_event.new_state->>'job_position_id'<>p_new_job_position_id::text) then
       raise exception using errcode='23505',message='HR_LIFECYCLE_IDEMPOTENCY_COLLISION';
     end if;
     return jsonb_build_object('status','duplicate','event_id',v_event.id,'event_type',v_event.event_type);
@@ -269,6 +274,7 @@ begin
     end if;
     select role into v_membership_role from public.tenant_memberships
      where tenant_id=p_tenant_id and user_id=p_employee_user_id and status='active' for update;
+    if v_membership_role is null then raise exception using errcode='23514',message='HR_ACTIVE_TENANT_MEMBERSHIP_REQUIRED'; end if;
     if v_membership_role='tenant_owner' then
       select count(*) into v_owner_count from public.tenant_memberships
        where tenant_id=p_tenant_id and role='tenant_owner' and status='active';
