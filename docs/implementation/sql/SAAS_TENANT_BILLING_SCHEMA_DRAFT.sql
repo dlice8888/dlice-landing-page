@@ -193,3 +193,46 @@ grant execute on function public.saas_approve_offboarding(uuid,uuid,integer,bool
 
 -- Entitlement check RPC must lock/read active subscription and aggregate current-period usage.
 -- Tenant suspension/offboarding must preserve audit and retention/legal-hold requirements.
+
+-- Harden usage metering for retry-safe server-side event ingestion.
+-- A retry with identical facts returns the original event even if the plan
+-- has since changed; reusing a key with different facts is rejected.
+create or replace function public.saas_record_usage(
+ p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_source_entity text,p_source_id text,
+ p_idempotency_key text,p_metadata jsonb,p_at timestamptz
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v_check jsonb; v_event public.saas_usage_events%rowtype;
+begin
+ if p_tenant_id is null or length(btrim(coalesce(p_entitlement_key,''))) not between 2 and 100
+  or p_quantity<=0 or length(btrim(coalesce(p_source_entity,''))) not between 2 and 80
+  or length(btrim(coalesce(p_source_id,''))) not between 1 and 160
+  or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160
+  or p_at is null or octet_length(coalesce(p_metadata,'{}')::text)>8192 then
+  raise exception using errcode='22023',message='INVALID_USAGE_EVENT';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_entitlement_key,0));
+ select * into v_event from public.saas_usage_events
+  where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if found then
+  if v_event.entitlement_key<>p_entitlement_key or v_event.quantity<>p_quantity
+   or v_event.source_entity<>p_source_entity or v_event.source_id<>p_source_id or v_event.occurred_at<>p_at then
+   raise exception using errcode='23505',message='USAGE_IDEMPOTENCY_KEY_PAYLOAD_MISMATCH';
+  end if;
+  return jsonb_build_object('usage_event_id',v_event.id,'quantity',v_event.quantity,
+   'entitlement_key',v_event.entitlement_key,'duplicate',true);
+ end if;
+ v_check:=public.saas_check_entitlement(p_tenant_id,p_entitlement_key,p_quantity,p_at);
+ if coalesce((v_check->>'allowed')::boolean,false)=false then
+  raise exception using errcode='23514',message=coalesce(v_check->>'reason','ENTITLEMENT_DENIED');
+ end if;
+ insert into public.saas_usage_events(tenant_id,entitlement_key,quantity,occurred_at,source_entity,source_id,idempotency_key,metadata)
+ values(p_tenant_id,p_entitlement_key,p_quantity,p_at,p_source_entity,p_source_id,p_idempotency_key,coalesce(p_metadata,'{}'))
+ returning * into v_event;
+ return jsonb_build_object('usage_event_id',v_event.id,'quantity',v_event.quantity,
+  'entitlement_key',v_event.entitlement_key,'duplicate',false);
+exception when unique_violation then
+ raise exception using errcode='23505',message='USAGE_SOURCE_ALREADY_METERED_OR_IDEMPOTENCY_CONFLICT';
+end $$;
+revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated;
+grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) to service_role;
