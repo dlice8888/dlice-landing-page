@@ -125,7 +125,9 @@ create table if not exists public.hr_payroll_runs (
   unique (tenant_id,idempotency_key),
   check (period_end>=period_start),
   check (deductions_amount_idr<=gross_amount_idr),
-  check (approved_by is null or approved_by<>created_by)
+  check (approved_by is null or approved_by<>created_by),
+  check (status not in ('approved','posted') or approved_by is not null),
+  check (status<>'posted' or posted_at is not null)
 );
 create index if not exists hr_payroll_period_idx
   on public.hr_payroll_runs(tenant_id,period_start,period_end,status);
@@ -185,6 +187,9 @@ begin
 end;
 $$;
 revoke all on function public.hr_audit_row_change() from public,anon,authenticated;
+drop trigger if exists hr_schedule_audit_change on public.hr_shift_schedules;
+create trigger hr_schedule_audit_change after insert or update on public.hr_shift_schedules
+for each row execute function public.hr_audit_row_change();
 drop trigger if exists hr_attendance_audit_insert on public.hr_attendance_events;
 create trigger hr_attendance_audit_insert after insert on public.hr_attendance_events
 for each row execute function public.hr_audit_row_change();
@@ -197,6 +202,79 @@ for each row execute function public.hr_audit_row_change();
 drop trigger if exists hr_payroll_audit_change on public.hr_payroll_runs;
 create trigger hr_payroll_audit_change after insert or update on public.hr_payroll_runs
 for each row execute function public.hr_audit_row_change();
+drop trigger if exists hr_payroll_line_audit_insert on public.hr_payroll_lines;
+create trigger hr_payroll_line_audit_insert after insert on public.hr_payroll_lines
+for each row execute function public.hr_audit_row_change();
+
+-- Transactional attendance command with per-employee/branch serialization.
+create or replace function public.hr_record_attendance(
+  p_tenant_id uuid,
+  p_branch_id uuid,
+  p_employee_user_id uuid,
+  p_event_type text,
+  p_source text,
+  p_idempotency_key text,
+  p_notes text,
+  p_recorded_by uuid
+) returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_last_event text;
+  v_event public.hr_attendance_events%rowtype;
+begin
+  if p_event_type not in ('clock_in','clock_out','break_start','break_end')
+    or p_source not in ('kiosk','manager','mobile','system')
+    or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+    raise exception using errcode='22023', message='INVALID_ATTENDANCE_COMMAND';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_employee_user_id::text,0));
+
+  if exists(select 1 from public.hr_attendance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+    raise exception using errcode='23505', message='DUPLICATE_ATTENDANCE_COMMAND';
+  end if;
+
+  if not exists(
+    select 1 from public.branches b
+    join public.tenant_memberships tm on tm.tenant_id=b.tenant_id and tm.user_id=p_employee_user_id and tm.status='active'
+    join public.branch_assignments ba on ba.branch_id=b.id and ba.user_id=p_employee_user_id
+      and ba.employment_status='active' and ba.starts_on<=current_date
+      and (ba.ends_on is null or ba.ends_on>=current_date)
+    join public.admin_profiles ap on ap.user_id=p_employee_user_id and ap.is_active=true
+    where b.id=p_branch_id and b.tenant_id=p_tenant_id
+  ) then
+    raise exception using errcode='42501', message='EMPLOYEE_NOT_ASSIGNED_TO_BRANCH';
+  end if;
+
+  select event_type into v_last_event from public.hr_attendance_events
+   where tenant_id=p_tenant_id and branch_id=p_branch_id and employee_user_id=p_employee_user_id
+   order by occurred_at desc,created_at desc limit 1;
+
+  if p_event_type='clock_in' and v_last_event is not null and v_last_event<>'clock_out' then
+    raise exception using errcode='22023', message='ATTENDANCE_ALREADY_OPEN';
+  elsif p_event_type='break_start' and v_last_event not in ('clock_in','break_end') then
+    raise exception using errcode='22023', message='BREAK_START_REQUIRES_WORKING_STATE';
+  elsif p_event_type='break_end' and v_last_event<>'break_start' then
+    raise exception using errcode='22023', message='BREAK_END_REQUIRES_OPEN_BREAK';
+  elsif p_event_type='clock_out' and v_last_event not in ('clock_in','break_end') then
+    raise exception using errcode='22023', message='CLOCK_OUT_REQUIRES_WORKING_STATE';
+  end if;
+
+  insert into public.hr_attendance_events
+    (tenant_id,branch_id,employee_user_id,event_type,occurred_at,source,idempotency_key,notes,recorded_by)
+  values
+    (p_tenant_id,p_branch_id,p_employee_user_id,p_event_type,now(),p_source,p_idempotency_key,p_notes,p_recorded_by)
+  returning * into v_event;
+
+  return jsonb_build_object('id',v_event.id,'employee_user_id',v_event.employee_user_id,
+    'event_type',v_event.event_type,'occurred_at',v_event.occurred_at,'source',v_event.source,'notes',v_event.notes);
+end;
+$;
+revoke all on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) to service_role;
 
 -- Important: attendance and leave endpoints must verify an active tenant membership
 -- AND an active branch_assignment for the employee before accepting a record.
