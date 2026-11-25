@@ -458,3 +458,156 @@ grant execute on function public.hr_approve_timesheet(uuid,uuid) to service_role
 -- AND an active branch_assignment for the employee before accepting a record.
 -- Payroll posting must later write a balanced finance_journal_entries source reference
 -- and reconcile approved timesheets before status may move to posted.
+
+
+-- Payroll source-of-truth extension (design draft only).
+-- Hourly compensation is explicit and effective-dated. Do not infer a rate
+-- from job-position defaults or accept client-supplied gross/net amounts.
+create table if not exists public.hr_compensation_rates (
+ id uuid primary key default gen_random_uuid(),
+ tenant_id uuid not null references public.tenants(id) on delete restrict,
+ employee_user_id uuid not null references auth.users(id) on delete restrict,
+ branch_id uuid not null,
+ currency_code text not null default 'IDR' check(currency_code='IDR'),
+ hourly_rate_idr bigint not null check(hourly_rate_idr>0),
+ effective_from date not null,
+ effective_to date null,
+ approved_by uuid not null references auth.users(id) on delete restrict,
+ approved_at timestamptz not null default now(),
+ created_at timestamptz not null default now(),
+ unique(tenant_id,id),
+ foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
+ check(effective_to is null or effective_to>=effective_from),
+ check(approved_by<>employee_user_id)
+);
+create index if not exists hr_compensation_effective_lookup_idx
+ on public.hr_compensation_rates(tenant_id,employee_user_id,branch_id,effective_from desc);
+
+create table if not exists public.hr_payroll_runs (
+ id uuid primary key default gen_random_uuid(),
+ tenant_id uuid not null references public.tenants(id) on delete restrict,
+ branch_id uuid not null,
+ period_start date not null,
+ period_end date not null,
+ status text not null default 'draft' check(status in ('draft','submitted','approved','posted','reconciled','voided')),
+ generated_by uuid not null references auth.users(id) on delete restrict,
+ submitted_by uuid null references auth.users(id) on delete restrict,
+ approved_by uuid null references auth.users(id) on delete restrict,
+ approved_at timestamptz null,
+ posted_by uuid null references auth.users(id) on delete restrict,
+ posted_at timestamptz null,
+ finance_journal_id uuid null,
+ reconciliation_reference text null,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ unique(tenant_id,id),
+ foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
+ check(period_end>=period_start),
+ check(approved_by is null or approved_by<>generated_by),
+ check(status not in ('approved','posted','reconciled') or (approved_by is not null and approved_at is not null)),
+ check(status not in ('posted','reconciled') or (posted_by is not null and posted_at is not null and finance_journal_id is not null)),
+ check(status<>'reconciled' or reconciliation_reference is not null)
+);
+create unique index if not exists hr_payroll_one_open_run_per_period_uq
+ on public.hr_payroll_runs(tenant_id,branch_id,period_start,period_end)
+ where status in ('draft','submitted','approved');
+
+create table if not exists public.hr_payroll_lines (
+ id uuid primary key default gen_random_uuid(),
+ tenant_id uuid not null references public.tenants(id) on delete restrict,
+ payroll_run_id uuid not null,
+ timesheet_id uuid not null,
+ employee_user_id uuid not null references auth.users(id) on delete restrict,
+ compensation_rate_id uuid not null,
+ approved_minutes integer not null check(approved_minutes>0),
+ hourly_rate_idr bigint not null check(hourly_rate_idr>0),
+ gross_amount_idr bigint not null check(gross_amount_idr>0),
+ created_at timestamptz not null default now(),
+ unique(tenant_id,id),
+ unique(tenant_id,timesheet_id),
+ foreign key(tenant_id,payroll_run_id) references public.hr_payroll_runs(tenant_id,id) on delete restrict,
+ foreign key(tenant_id,timesheet_id) references public.hr_timesheets(tenant_id,id) on delete restrict,
+ foreign key(tenant_id,compensation_rate_id) references public.hr_compensation_rates(tenant_id,id) on delete restrict
+);
+create index if not exists hr_payroll_lines_run_idx on public.hr_payroll_lines(tenant_id,payroll_run_id);
+
+create or replace function public.hr_generate_payroll_run(
+ p_tenant_id uuid,p_branch_id uuid,p_period_start date,p_period_end date,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v_run public.hr_payroll_runs%rowtype; v_count integer; v_total bigint;
+begin
+ if p_period_end<p_period_start then raise exception using errcode='22023',message='INVALID_PAYROLL_PERIOD'; end if;
+ if not exists(select 1 from public.branches where id=p_branch_id and tenant_id=p_tenant_id) then
+  raise exception using errcode='42501',message='PAYROLL_BRANCH_TENANT_MISMATCH';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_period_start::text||':'||p_period_end::text,0));
+ if exists(select 1 from public.hr_payroll_runs where tenant_id=p_tenant_id and branch_id=p_branch_id
+   and period_start=p_period_start and period_end=p_period_end and status in ('draft','submitted','approved')) then
+  raise exception using errcode='23505',message='PAYROLL_RUN_ALREADY_EXISTS';
+ end if;
+ insert into public.hr_payroll_runs(tenant_id,branch_id,period_start,period_end,generated_by)
+ values(p_tenant_id,p_branch_id,p_period_start,p_period_end,p_actor_user_id) returning * into v_run;
+ insert into public.hr_payroll_lines(tenant_id,payroll_run_id,timesheet_id,employee_user_id,compensation_rate_id,approved_minutes,hourly_rate_idr,gross_amount_idr)
+ select t.tenant_id,v_run.id,t.id,t.employee_user_id,r.id,t.total_minutes,r.hourly_rate_idr,
+   floor((t.total_minutes::numeric*r.hourly_rate_idr)/60)::bigint
+ from public.hr_timesheets t
+ join lateral (
+   select cr.id,cr.hourly_rate_idr from public.hr_compensation_rates cr
+   where cr.tenant_id=t.tenant_id and cr.employee_user_id=t.employee_user_id and cr.branch_id=t.branch_id
+    and cr.effective_from<=t.period_end and (cr.effective_to is null or cr.effective_to>=t.period_start)
+   order by cr.effective_from desc limit 1
+ ) r on true
+ where t.tenant_id=p_tenant_id and t.branch_id=p_branch_id and t.status='approved'
+  and t.period_start>=p_period_start and t.period_end<=p_period_end and t.total_minutes>0
+  and not exists(select 1 from public.hr_payroll_lines old where old.tenant_id=t.tenant_id and old.timesheet_id=t.id);
+ get diagnostics v_count=row_count;
+ if v_count=0 then raise exception using errcode='23514',message='NO_APPROVED_TIMESHEETS_WITH_EFFECTIVE_COMPENSATION'; end if;
+ select coalesce(sum(gross_amount_idr),0) into v_total from public.hr_payroll_lines where tenant_id=p_tenant_id and payroll_run_id=v_run.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'hr.payroll.generated','hr_payroll_run',v_run.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'line_count',v_count,'gross_total_idr',v_total,'period_start',p_period_start,'period_end',p_period_end));
+ return jsonb_build_object('payroll_run_id',v_run.id,'status','draft','line_count',v_count,'gross_total_idr',v_total);
+end $$;
+revoke all on function public.hr_generate_payroll_run(uuid,uuid,date,date,uuid) from public,anon,authenticated;
+grant execute on function public.hr_generate_payroll_run(uuid,uuid,date,date,uuid) to service_role;
+
+create or replace function public.hr_submit_payroll_run(p_payroll_run_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.hr_payroll_runs%rowtype;
+begin
+ select * into v from public.hr_payroll_runs where id=p_payroll_run_id for update;
+ if not found then raise exception using errcode='P0002',message='PAYROLL_RUN_NOT_FOUND'; end if;
+ if v.status<>'draft' or not exists(select 1 from public.hr_payroll_lines where tenant_id=v.tenant_id and payroll_run_id=v.id) then
+  raise exception using errcode='23514',message='PAYROLL_RUN_NOT_SUBMITTABLE';
+ end if;
+ if p_actor_user_id=v.generated_by then raise exception using errcode='42501',message='INDEPENDENT_PAYROLL_SUBMITTER_REQUIRED'; end if;
+ update public.hr_payroll_runs set status='submitted',submitted_by=p_actor_user_id,updated_at=now() where id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'hr.payroll.submitted','hr_payroll_run',v.id::text,jsonb_build_object('tenant_id',v.tenant_id));
+ return jsonb_build_object('payroll_run_id',v.id,'status','submitted');
+end $$;
+revoke all on function public.hr_submit_payroll_run(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_submit_payroll_run(uuid,uuid) to service_role;
+
+create or replace function public.hr_approve_payroll_run(p_payroll_run_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.hr_payroll_runs%rowtype;
+begin
+ select * into v from public.hr_payroll_runs where id=p_payroll_run_id for update;
+ if not found then raise exception using errcode='P0002',message='PAYROLL_RUN_NOT_FOUND'; end if;
+ if v.status<>'submitted' then raise exception using errcode='23514',message='PAYROLL_RUN_NOT_SUBMITTED'; end if;
+ if p_actor_user_id in (v.generated_by,v.submitted_by) then raise exception using errcode='42501',message='INDEPENDENT_PAYROLL_APPROVER_REQUIRED'; end if;
+ update public.hr_payroll_runs set status='approved',approved_by=p_actor_user_id,approved_at=now(),updated_at=now() where id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'hr.payroll.approved','hr_payroll_run',v.id::text,jsonb_build_object('tenant_id',v.tenant_id));
+ return jsonb_build_object('payroll_run_id',v.id,'status','approved');
+end $$;
+revoke all on function public.hr_approve_payroll_run(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_approve_payroll_run(uuid,uuid) to service_role;
+
+-- Posting is intentionally not implemented until Finance journal schema and
+-- reconciliation contract are inspected and matched. Approved payroll is not
+-- equivalent to paid payroll or a posted accounting liability.
