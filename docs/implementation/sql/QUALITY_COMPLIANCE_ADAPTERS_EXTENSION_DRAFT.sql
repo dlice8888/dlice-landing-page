@@ -156,7 +156,7 @@ begin
  select * into v_existing from public.food_lot_registry where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then
   if v_existing.branch_id<>p_branch_id or v_existing.source_type<>p_source_type or v_existing.source_id<>p_source_id
-   or v_existing.lot_code<>p_lot_code or v_existing.quantity<>p_quantity then
+   or v_existing.lot_code<>p_lot_code or v_existing.quantity<>p_quantity or v_existing.unit<>p_unit then
    raise exception using errcode='23505',message='FOOD_LOT_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','lot_id',v_existing.id,'lot_code',v_existing.lot_code);
@@ -211,7 +211,7 @@ begin
  if not found or v_lot.status not in ('available','quarantined') or v_lot.branch_id<>p_branch_id then raise exception using errcode='23514',message='FOOD_LOT_NOT_DISTRIBUTABLE_OR_SCOPE_MISMATCH'; end if;
  select * into v_existing from public.food_lot_distributions where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then
-  if v_existing.lot_id<>p_lot_id or v_existing.impact_type<>p_impact_type or v_existing.impact_entity_id<>p_impact_entity_id then
+  if v_existing.lot_id<>p_lot_id or v_existing.impact_type<>p_impact_type or v_existing.impact_entity_id<>p_impact_entity_id or v_existing.quantity is distinct from p_quantity then
    raise exception using errcode='23505',message='FOOD_LOT_DISTRIBUTION_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','distribution_id',v_existing.id);
@@ -260,7 +260,13 @@ begin
   raise exception using errcode='22023',message='INVALID_FOOD_SAFETY_INSPECTION';
  end if;
  select * into v_existing from public.food_safety_inspections where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','inspection_id',v_existing.id,'disposition',v_existing.disposition); end if;
+ if found then
+  if v_existing.branch_id<>p_branch_id or v_existing.source_type<>p_source_type or v_existing.source_id<>p_source_id
+   or v_existing.lot_code<>p_lot_code or v_existing.policy_id<>p_policy_id or v_existing.measured_temp_c<>p_measured_temp_c then
+   raise exception using errcode='23505',message='FOOD_SAFETY_INSPECTION_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','inspection_id',v_existing.id,'disposition',v_existing.disposition);
+ end if;
  select * into v_policy from public.food_safety_policies where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_policy_id
   and status='approved' and effective_from<=now() and (effective_until is null or effective_until>now()) for share;
  if not found then raise exception using errcode='23514',message='APPROVED_EFFECTIVE_FOOD_SAFETY_POLICY_REQUIRED'; end if;
@@ -327,7 +333,12 @@ begin
   raise exception using errcode='22023',message='INVALID_FOOD_RECALL_COMMAND';
  end if;
  select * into v_existing from public.food_recalls where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','recall_id',v_existing.id); end if;
+ if found then
+  if v_existing.branch_id<>p_branch_id or v_existing.lot_code<>p_lot_code or v_existing.reason<>p_reason or v_existing.severity<>p_severity then
+   raise exception using errcode='23505',message='FOOD_RECALL_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','recall_id',v_existing.id);
+ end if;
  select * into v_lot from public.food_lot_registry where tenant_id=p_tenant_id and branch_id=p_branch_id
   and lot_code=p_lot_code for update;
  if not found or v_lot.status not in ('available','quarantined') then raise exception using errcode='23514',message='RECALLABLE_FOOD_LOT_REQUIRED'; end if;
@@ -378,7 +389,12 @@ begin
   raise exception using errcode='22023',message='INVALID_SUPPLIER_QUALITY_INSPECTION';
  end if;
  select * into v_existing from public.supplier_quality_inspections where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','inspection_id',v_existing.id,'disposition',v_existing.disposition); end if;
+ if found then
+  if v_existing.branch_id<>p_branch_id or v_existing.receipt_item_id<>p_receipt_item_id or v_existing.policy_id<>p_policy_id or v_existing.findings<>p_findings then
+   raise exception using errcode='23505',message='SUPPLIER_QUALITY_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','inspection_id',v_existing.id,'disposition',v_existing.disposition);
+ end if;
  select po.supplier_id,pri.quantity_received into v_supplier,v_quantity
   from public.purchase_receipt_items pri join public.purchase_receipts pr on pr.id=pri.receipt_id
   join public.purchase_orders po on po.id=pr.purchase_order_id
@@ -470,7 +486,7 @@ create or replace function public.quality_verify_supplier_capa(
 as $$
 declare v public.supplier_corrective_actions%rowtype; v_released integer:=0; v_event_key text;
 begin
- v_event_key:='capa-verify:'||p_capa_id::text||':'||p_decision;
+ v_event_key:='capa-verify:'||p_capa_id::text||':'||p_decision||':'||p_release_quarantine::text||':'||md5(coalesce(p_evidence_reference,''));
  if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=v_event_key) then
   return jsonb_build_object('status','duplicate','capa_id',p_capa_id,'decision',p_decision);
  end if;
@@ -493,7 +509,9 @@ begin
   update public.food_lot_registry set status='available'
    where tenant_id=p_tenant_id and branch_id=p_branch_id and source_type='receipt_item'
      and source_id in (select receipt_item_id from public.supplier_quality_quarantines where tenant_id=p_tenant_id and inspection_id=v.inspection_id)
-     and status='quarantined';
+     and status='quarantined'
+   and not exists(select 1 from public.food_lot_quarantines q where q.tenant_id=p_tenant_id
+     and q.branch_id=p_branch_id and q.lot_code=food_lot_registry.lot_code and q.status in ('held','release_pending'));
  end if;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'supplier_capa',v.id,'supplier_capa.'||p_decision,p_actor_user_id,
