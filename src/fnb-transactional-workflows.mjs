@@ -642,6 +642,10 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
     if (!saved?.eventId) {
       fail("PAYROLL_WEBHOOK_PERSIST_FAILED", "Webhook event and state decision must persist atomically");
     }
+    if (saved.duplicate) {
+      return Object.freeze({ status: "duplicate", eventId: saved.eventId, paymentId: payment.id,
+        matched: decision.matched, reconciliationRequired: false, mismatches: decision.mismatches ?? [] });
+    }
     await audit(deps, tx, {
       tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
       action: "hr.payroll.payment.webhook_received",
