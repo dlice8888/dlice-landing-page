@@ -1361,6 +1361,9 @@ if (action === "admin-set-profile-role") {
     "erp-hr-generate-payroll-run",
     "erp-hr-submit-payroll-run",
     "erp-hr-approve-payroll-run",
+    "erp-hr-list-payroll-finance-mappings",
+    "erp-hr-request-payroll-finance-mapping",
+    "erp-hr-approve-payroll-finance-mapping",
     "erp-hr-queue-payroll-finance",
     "erp-hr-post-payroll-finance",
     "erp-hr-reconcile-payroll-finance",
@@ -1446,6 +1449,39 @@ if (action === "admin-set-profile-role") {
       await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"hr.compensation.rate_approved",entity_type:"hr_compensation_rate",entity_id:data.id,metadata:{tenant_id:branch.tenant_id,branch_id:branchId,employee_user_id:employeeId,effective_from:effectiveFrom}});
       return json({compensation_rate:data},201,origin);
     }
+    if(action==="erp-hr-list-payroll-finance-mappings"){
+      const {data,error}=await admin.from("hr_payroll_finance_account_mappings")
+        .select("id,branch_id,payroll_expense_account,payroll_payable_account,payroll_deduction_account,status,created_by,approved_by,approved_at")
+        .eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(50);
+      if(error)return fail("Mapping akun payroll Finance belum tersedia.",503,origin);
+      return json({finance_mappings:data||[]},200,origin);
+    }
+    if(action==="erp-hr-request-payroll-finance-mapping"){
+      const expense=safeText(body.payroll_expense_account,80),payable=safeText(body.payroll_payable_account,80),deduction=safeText(body.payroll_deduction_account,80);
+      if(!expense||!payable||!deduction||expense===payable||expense===deduction||payable===deduction)
+        return fail("Kode akun payroll harus lengkap dan berbeda satu sama lain.",422,origin);
+      const {data,error}=await admin.from("hr_payroll_finance_account_mappings").insert({
+        tenant_id:branch.tenant_id,branch_id:branchId,payroll_expense_account:expense,
+        payroll_payable_account:payable,payroll_deduction_account:deduction,
+        status:"pending",created_by:actor.user.id,
+      }).select("id,branch_id,payroll_expense_account,payroll_payable_account,payroll_deduction_account,status,created_by").single();
+      if(error)return fail("Mapping akun payroll tidak dapat disimpan. Periksa apakah mapping cabang sudah ada.",409,origin);
+      return json({finance_mapping:data,approval_required:true},201,origin);
+    }
+    if(action==="erp-hr-approve-payroll-finance-mapping"){
+      const mappingId=safeText(body.mapping_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(mappingId))return fail("Mapping ID tidak valid.",422,origin);
+      const {data:mapping,error:mappingError}=await admin.from("hr_payroll_finance_account_mappings")
+        .select("id,tenant_id,branch_id").eq("id",mappingId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(mappingError)return fail("Mapping belum dapat diverifikasi.",503,origin);
+      if(!mapping)return fail("Mapping tidak ditemukan pada tenant/cabang ini.",404,origin);
+      const {data,error}=await admin.rpc("hr_approve_payroll_finance_mapping",{
+        p_tenant_id:branch.tenant_id,p_mapping_id:mappingId,p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Approval mapping ditolak. Approver harus independen dari pembuat.",409,origin);
+      return json({finance_mapping:data},200,origin);
+    }
+
     if(action==="erp-hr-list-payroll-runs"){
       const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at,hr_payroll_finance_postings(id,status,finance_entry_ids,posted_at,reconciled_at,reconciliation_sha256)").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
       if(error)return fail("Payroll belum tersedia. Terapkan skema HR pada batch migrasi final.",503,origin);
