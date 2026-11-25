@@ -202,18 +202,26 @@ begin
  select * into v_post from public.hr_payroll_finance_postings
   where tenant_id=p_tenant_id and id=v_run.finance_journal_id and payroll_run_id=v_run.id
    and status='reconciled' for share;
- if not found then raise exception using errcode='23514',message='RECONCILED_FINANCE_POSTING_REQUIRED'; end if;
+ if not found or v_post.gross_amount_idr<>v_run.gross_amount_idr
+   or v_post.deductions_amount_idr<>v_run.deductions_amount_idr
+   or v_post.net_amount_idr<>v_run.net_amount_idr then
+  raise exception using errcode='23514',message='RECONCILED_FINANCE_POSTING_REQUIRED';
+ end if;
  select * into v_provider from public.hr_payroll_payment_provider_configs
   where tenant_id=p_tenant_id and id=p_provider_config_id and status='active' for share;
  if not found then raise exception using errcode='23514',message='APPROVED_PAYROLL_PAYMENT_PROVIDER_REQUIRED'; end if;
- select count(*),coalesce(sum(net_amount_idr),0) into v_count,v_amount
-  from public.hr_payroll_lines where tenant_id=p_tenant_id and payroll_run_id=p_payroll_run_id;
+ select count(*) filter(where net_amount_idr>0),coalesce(sum(net_amount_idr),0) into v_count,v_amount
+  from public.hr_payroll_lines where tenant_id=p_tenant_id and payroll_run_id=p_payroll_run_id and branch_id=p_branch_id;
+ if exists(select 1 from public.hr_payroll_lines where tenant_id=p_tenant_id and payroll_run_id=p_payroll_run_id and branch_id<>p_branch_id) then
+  raise exception using errcode='23514',message='PAYROLL_LINE_BRANCH_SCOPE_MISMATCH';
+ end if;
  if v_count=0 or v_amount<>v_run.net_amount_idr then
   raise exception using errcode='23514',message='PAYROLL_PAYMENT_LINES_DO_NOT_RECONCILE';
  end if;
  if exists(
   select 1 from public.hr_payroll_lines l
   where l.tenant_id=p_tenant_id and l.payroll_run_id=p_payroll_run_id
+   and l.net_amount_idr>0
    and not exists(select 1 from public.hr_payroll_beneficiary_profiles b
     where b.tenant_id=l.tenant_id and b.branch_id=l.branch_id and b.employee_user_id=l.employee_user_id
      and b.status='active' and b.approved_by is not null and b.approved_at is not null)
@@ -240,7 +248,7 @@ begin
  from public.hr_payroll_lines l
  join public.hr_payroll_beneficiary_profiles b
   on b.tenant_id=l.tenant_id and b.branch_id=l.branch_id and b.employee_user_id=l.employee_user_id and b.status='active'
- where l.tenant_id=p_tenant_id and l.payroll_run_id=p_payroll_run_id
+ where l.tenant_id=p_tenant_id and l.payroll_run_id=p_payroll_run_id and l.net_amount_idr>0
  order by l.employee_user_id,l.id;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'hr.payroll.payment_batch_prepared','hr_payroll_payment_batches',v_batch.id::text,
@@ -255,12 +263,13 @@ create or replace function public.hr_approve_payroll_payment_batch(
  p_tenant_id uuid,p_payment_batch_id uuid,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.hr_payroll_payment_batches%rowtype; r public.hr_payroll_runs%rowtype;
+declare v public.hr_payroll_payment_batches%rowtype; r public.hr_payroll_runs%rowtype; f public.hr_payroll_finance_postings%rowtype;
 begin
  select * into v from public.hr_payroll_payment_batches where tenant_id=p_tenant_id and id=p_payment_batch_id for update;
  if not found or v.status<>'draft' then raise exception using errcode='23514',message='PAYROLL_PAYMENT_DRAFT_REQUIRED'; end if;
  select * into r from public.hr_payroll_runs where tenant_id=p_tenant_id and id=v.payroll_run_id for share;
- if p_actor_user_id in (v.created_by,r.created_by,r.generated_by,r.submitted_by,r.approved_by) then
+ select * into f from public.hr_payroll_finance_postings where tenant_id=p_tenant_id and id=v.finance_posting_id for share;
+ if p_actor_user_id in (v.created_by,r.created_by,r.generated_by,r.submitted_by,r.approved_by,f.created_by,f.posted_by,f.reconciled_by) then
   raise exception using errcode='42501',message='INDEPENDENT_PAYROLL_PAYMENT_APPROVER_REQUIRED';
  end if;
  if exists(select 1 from public.hr_payroll_payment_items i
@@ -353,12 +362,13 @@ as $$
 declare
  v public.hr_payroll_payment_batches%rowtype;
  r public.hr_payroll_runs%rowtype;
- v_count integer; v_settled bigint; v_event_ids uuid[]; v_evidence jsonb; v_hash text;
+ v_count integer; v_settled bigint; v_event_ids uuid[]; v_event_item_count integer; v_event_amount bigint; v_evidence jsonb; v_hash text; f public.hr_payroll_finance_postings%rowtype;
 begin
  select * into v from public.hr_payroll_payment_batches where tenant_id=p_tenant_id and id=p_payment_batch_id for update;
  if not found or v.status<>'processing' then raise exception using errcode='23514',message='PROCESSING_PAYROLL_PAYMENT_BATCH_REQUIRED'; end if;
  select * into r from public.hr_payroll_runs where tenant_id=p_tenant_id and id=v.payroll_run_id for share;
- if p_actor_user_id in (v.created_by,v.approved_by,r.created_by,r.generated_by,r.submitted_by,r.approved_by) then
+ select * into f from public.hr_payroll_finance_postings where tenant_id=p_tenant_id and id=v.finance_posting_id for share;
+ if p_actor_user_id in (v.created_by,v.approved_by,r.created_by,r.generated_by,r.submitted_by,r.approved_by,f.created_by,f.posted_by,f.reconciled_by) then
   raise exception using errcode='42501',message='INDEPENDENT_PAYROLL_PAYMENT_RECONCILER_REQUIRED';
  end if;
  if exists(select 1 from public.hr_payroll_payment_items where tenant_id=p_tenant_id and payment_batch_id=v.id and status<>'settled') then
@@ -369,12 +379,14 @@ begin
  if v_count<>v.item_count or v_settled<>v.amount_idr then
   raise exception using errcode='23514',message='PAYROLL_PAYMENT_SETTLEMENT_TOTAL_MISMATCH';
  end if;
- select coalesce(array_agg(e.id order by e.id),'{}'::uuid[]) into v_event_ids
+ select coalesce(array_agg(e.id order by e.id),'{}'::uuid[]),
+        count(distinct e.payment_item_id),coalesce(sum(e.amount_idr),0)
+  into v_event_ids,v_event_item_count,v_event_amount
   from public.hr_payroll_provider_events e
   join public.hr_payroll_payment_items i on i.tenant_id=e.tenant_id and i.id=e.payment_item_id
   where e.tenant_id=p_tenant_id and e.payment_batch_id=v.id and e.event_kind='settled'
    and i.status='settled';
- if cardinality(v_event_ids)<v.item_count then
+ if cardinality(v_event_ids)=0 or v_event_item_count<>v.item_count or v_event_amount<>v.amount_idr then
   raise exception using errcode='23514',message='SETTLED_PROVIDER_EVENT_MISSING_FOR_PAYMENT_ITEM';
  end if;
  select jsonb_build_object('tenant_id',p_tenant_id,'payment_batch_id',v.id,
