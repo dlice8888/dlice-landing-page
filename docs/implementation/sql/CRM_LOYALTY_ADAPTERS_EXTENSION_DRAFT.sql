@@ -223,7 +223,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $$
 declare
   v_tenant_id uuid;
   v_raw_phone text;
