@@ -72,7 +72,7 @@ create table if not exists public.hr_leave_requests (
   foreign key (tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
   check (ends_on>=starts_on),
   check (coverage_employee_user_id is null or coverage_employee_user_id<>employee_user_id),
-  check (status<>'approved' or (coverage_employee_user_id is not null and coverage_approved=true and reviewed_by is not null))
+  check (status<>'approved' or (reviewed_by is not null and (leave_type='sick' or (coverage_employee_user_id is not null and coverage_approved=true))))
 );
 create index if not exists hr_leave_branch_period_idx
   on public.hr_leave_requests(tenant_id,branch_id,starts_on,ends_on,status);
@@ -176,7 +176,7 @@ declare
   v_actor_id uuid;
   v_tenant_id uuid;
 begin
-  v_actor_id := nullif(coalesce(v_row->>'recorded_by',v_row->>'requested_by',v_row->>'approved_by',v_row->>'created_by'),'')::uuid;
+  v_actor_id := nullif(coalesce(v_row->>'recorded_by',v_row->>'reviewed_by',v_row->>'approved_by',v_row->>'requested_by',v_row->>'created_by'),'')::uuid;
   v_tenant_id := nullif(v_row->>'tenant_id','')::uuid;
   insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
   values (v_actor_id,'hr.'||tg_table_name||'.'||lower(tg_op),tg_table_name,v_row->>'id',
