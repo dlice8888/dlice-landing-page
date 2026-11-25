@@ -92,5 +92,30 @@ begin foreach t in array array['bi_metric_definitions','bi_source_watermarks','b
  execute format('revoke all on public.%I from anon,authenticated',t);
  execute format('grant select,insert,update,delete on public.%I to service_role',t);
 end loop; end $$;
+create or replace function public.bi_publish_metric_snapshot(p_snapshot_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_metric_snapshots%rowtype; v_sla integer;
+begin
+ select * into v from public.bi_metric_snapshots where id=p_snapshot_id for update;
+ if not found then raise exception using errcode='P0002',message='BI_SNAPSHOT_NOT_FOUND'; end if;
+ if v.status not in ('draft','validated') then raise exception using errcode='23514',message='BI_SNAPSHOT_NOT_PUBLISHABLE'; end if;
+ select freshness_sla_minutes into v_sla from public.bi_metric_definitions where id=v.metric_id and active=true and formula_version=v.formula_version;
+ if not found then raise exception using errcode='23514',message='BI_METRIC_VERSION_INACTIVE'; end if;
+ if cardinality(v.source_watermark_ids)=0 or cardinality(v.reconciliation_run_ids)=0 then raise exception using errcode='23514',message='BI_EVIDENCE_REQUIRED'; end if;
+ if exists(select 1 from unnest(v.source_watermark_ids) x(id) left join public.bi_source_watermarks w on w.id=x.id and w.tenant_id=v.tenant_id where w.id is null or w.status<>'complete' or w.source_window_end<v.period_end or w.max_source_updated_at<now()-make_interval(mins=>v_sla)) then
+  raise exception using errcode='23514',message='BI_SOURCE_STALE_OR_INCOMPLETE';
+ end if;
+ if exists(select 1 from unnest(v.reconciliation_run_ids) x(id) left join public.bi_reconciliation_runs r on r.id=x.id and r.tenant_id=v.tenant_id where r.id is null or r.status<>'passed' or r.period_start>v.period_start::date or r.period_end<v.period_end::date) then
+  raise exception using errcode='23514',message='BI_RECONCILIATION_NOT_PASSED';
+ end if;
+ update public.bi_metric_snapshots set status='published',published_at=now(),published_by=p_actor_user_id where id=p_snapshot_id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.metric_snapshot.published','bi_metric_snapshot',p_snapshot_id::text,jsonb_build_object('tenant_id',v.tenant_id,'metric_id',v.metric_id,'formula_version',v.formula_version));
+ return jsonb_build_object('snapshot_id',p_snapshot_id,'status','published');
+end $;
+revoke all on function public.bi_publish_metric_snapshot(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.bi_publish_metric_snapshot(uuid,uuid) to service_role;
+
 -- Snapshot publishing RPC must verify every referenced watermark is complete and fresh,
 -- every reconciliation run passed, metric version matches, and caller has BI publish authority.
