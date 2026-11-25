@@ -41,5 +41,6 @@ test("pgTAP draft verifies RLS, least privilege, invoker functions and append-on
  assert.match(pgtap,/has_table_privilege\('anon'/);
  assert.match(pgtap,/has_function_privilege\('authenticated'/);
  assert.match(pgtap,/SECURITY INVOKER/);
+ assert.match(pgtap,/throws_ok/);
  assert.match(pgtap,/food_safety_inspections_append_only/);
 });
