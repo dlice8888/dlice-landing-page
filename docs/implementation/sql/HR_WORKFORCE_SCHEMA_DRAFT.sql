@@ -494,12 +494,16 @@ alter table public.hr_payroll_runs
 alter table public.hr_payroll_runs drop constraint if exists hr_payroll_runs_status_check;
 alter table public.hr_payroll_runs add constraint hr_payroll_runs_status_check
  check(status in ('draft','submitted','approved','posted','reconciled','cancelled'));
+alter table public.hr_payroll_runs drop constraint if exists hr_payroll_runs_branch_scope_fk;
 alter table public.hr_payroll_runs add constraint hr_payroll_runs_branch_scope_fk
  foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict;
+alter table public.hr_payroll_runs drop constraint if exists hr_payroll_runs_approval_trace_check;
 alter table public.hr_payroll_runs add constraint hr_payroll_runs_approval_trace_check
  check(status not in ('approved','posted','reconciled') or (approved_by is not null and approved_at is not null));
+alter table public.hr_payroll_runs drop constraint if exists hr_payroll_runs_posting_trace_check;
 alter table public.hr_payroll_runs add constraint hr_payroll_runs_posting_trace_check
  check(status not in ('posted','reconciled') or (posted_by is not null and posted_at is not null and finance_journal_id is not null));
+alter table public.hr_payroll_runs drop constraint if exists hr_payroll_runs_reconciliation_trace_check;
 alter table public.hr_payroll_runs add constraint hr_payroll_runs_reconciliation_trace_check
  check(status<>'reconciled' or reconciliation_reference is not null);
 
@@ -508,8 +512,10 @@ alter table public.hr_payroll_lines
  add column if not exists compensation_rate_id uuid,
  add column if not exists approved_minutes integer,
  add column if not exists hourly_rate_idr bigint;
+alter table public.hr_payroll_lines drop constraint if exists hr_payroll_lines_timesheet_fk;
 alter table public.hr_payroll_lines add constraint hr_payroll_lines_timesheet_fk
  foreign key(tenant_id,timesheet_id) references public.hr_timesheets(tenant_id,id) on delete restrict;
+alter table public.hr_payroll_lines drop constraint if exists hr_payroll_lines_compensation_fk;
 alter table public.hr_payroll_lines add constraint hr_payroll_lines_compensation_fk
  foreign key(tenant_id,compensation_rate_id) references public.hr_compensation_rates(tenant_id,id) on delete restrict;
 create unique index if not exists hr_payroll_one_line_per_timesheet_uq
