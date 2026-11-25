@@ -432,3 +432,91 @@ grant execute on function public.crm_prepare_campaign_audience(uuid,uuid,uuid) t
 -- that source_id belongs to branch_id and branch_id belongs to p_tenant_id.
 -- Do not add customer_id to legacy orders/POS until their tenant attribution,
 -- including historical/unassigned online orders, has been reconciled.
+
+
+-- POS voucher lifecycle. A voucher can be consumed only against an already
+-- verified crm_transaction_links row; the Edge Function must create that
+-- link only after proving the source order belongs to this tenant and branch.
+create table if not exists public.crm_voucher_consumptions (
+ id uuid primary key default gen_random_uuid(),
+ tenant_id uuid not null references public.tenants(id) on delete restrict,
+ voucher_id uuid not null,
+ source_type text not null check(source_type in ('online_order','pos_sale')),
+ source_id uuid not null,
+ branch_id uuid not null,
+ consumed_by uuid not null references auth.users(id) on delete restrict,
+ consumed_at timestamptz not null default now(),
+ voided_by uuid null references auth.users(id) on delete restrict,
+ voided_at timestamptz null,
+ void_reason text null,
+ unique(tenant_id,id),
+ unique(tenant_id,voucher_id),
+ foreign key(tenant_id,voucher_id) references public.crm_reward_vouchers(tenant_id,id) on delete restrict,
+ foreign key(tenant_id,source_type,source_id) references public.crm_transaction_links(tenant_id,source_type,source_id) on delete restrict,
+ foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
+ check((voided_at is null and voided_by is null) or (voided_at is not null and voided_by is not null and length(btrim(coalesce(void_reason,'')))>=3))
+);
+alter table public.crm_voucher_consumptions enable row level security;
+drop policy if exists service_role_only on public.crm_voucher_consumptions;
+create policy service_role_only on public.crm_voucher_consumptions for all to service_role using(true) with check(true);
+revoke all on public.crm_voucher_consumptions from anon,authenticated;
+grant select,insert,update,delete on public.crm_voucher_consumptions to service_role;
+
+create or replace function public.crm_consume_voucher(
+ p_tenant_id uuid,p_voucher_code text,p_source_type text,p_source_id uuid,p_branch_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.crm_reward_vouchers%rowtype; v_link public.crm_transaction_links%rowtype; v_consumption public.crm_voucher_consumptions%rowtype;
+begin
+ if p_source_type not in ('online_order','pos_sale') or length(btrim(coalesce(p_voucher_code,''))) not between 6 and 80 then
+  raise exception using errcode='22023',message='INVALID_VOUCHER_CONSUMPTION_COMMAND';
+ end if;
+ select * into v from public.crm_reward_vouchers where tenant_id=p_tenant_id and code=upper(btrim(p_voucher_code)) for update;
+ if not found then raise exception using errcode='P0002',message='VOUCHER_NOT_FOUND'; end if;
+ if v.status<>'reserved' or v.expires_at<=now() then raise exception using errcode='23514',message='VOUCHER_NOT_REDEEMABLE'; end if;
+ select * into v_link from public.crm_transaction_links
+  where tenant_id=p_tenant_id and source_type=p_source_type and source_id=p_source_id and branch_id=p_branch_id and customer_id=v.customer_id;
+ if not found then raise exception using errcode='42501',message='VERIFIED_CUSTOMER_TRANSACTION_LINK_REQUIRED'; end if;
+ insert into public.crm_voucher_consumptions(tenant_id,voucher_id,source_type,source_id,branch_id,consumed_by)
+ values(p_tenant_id,v.id,p_source_type,p_source_id,p_branch_id,p_actor_user_id) returning * into v_consumption;
+ update public.crm_reward_vouchers set status='redeemed',redeemed_at=now() where tenant_id=p_tenant_id and id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'crm.voucher.consumed','crm_reward_voucher',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'source_type',p_source_type,'source_id',p_source_id,'branch_id',p_branch_id));
+ return jsonb_build_object('voucher_id',v.id,'status','redeemed','consumption_id',v_consumption.id,'source_id',p_source_id);
+end $$;
+revoke all on function public.crm_consume_voucher(uuid,text,text,uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_consume_voucher(uuid,text,text,uuid,uuid,uuid) to service_role;
+
+create or replace function public.crm_void_voucher(
+ p_tenant_id uuid,p_voucher_id uuid,p_source_type text,p_source_id uuid,p_reason text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.crm_reward_vouchers%rowtype; c public.crm_voucher_consumptions%rowtype; l public.crm_loyalty_ledger%rowtype; v_reversal_id uuid;
+begin
+ select * into v from public.crm_reward_vouchers where tenant_id=p_tenant_id and id=p_voucher_id for update;
+ if not found then raise exception using errcode='P0002',message='VOUCHER_NOT_FOUND'; end if;
+ if v.status<>'redeemed' then raise exception using errcode='23514',message='ONLY_REDEEMED_VOUCHER_CAN_BE_VOIDED'; end if;
+ select * into c from public.crm_voucher_consumptions
+  where tenant_id=p_tenant_id and voucher_id=v.id and source_type=p_source_type and source_id=p_source_id for update;
+ if not found or c.voided_at is not null then raise exception using errcode='23514',message='VOUCHER_CONSUMPTION_NOT_VOIDABLE'; end if;
+ if length(btrim(coalesce(p_reason,'')))<3 then raise exception using errcode='22023',message='VOUCHER_VOID_REASON_REQUIRED'; end if;
+ select * into l from public.crm_loyalty_ledger
+  where tenant_id=p_tenant_id and customer_id=v.customer_id and source_reference='voucher:'||v.id::text and entry_kind='redeem' for update;
+ if not found then raise exception using errcode='23514',message='VOUCHER_DEBIT_LEDGER_ENTRY_MISSING'; end if;
+ if exists(select 1 from public.crm_loyalty_ledger where tenant_id=p_tenant_id and reverses_entry_id=l.id) then
+  raise exception using errcode='23505',message='VOUCHER_DEBIT_ALREADY_REVERSED';
+ end if;
+ insert into public.crm_loyalty_ledger(tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,reverses_entry_id,created_by)
+ values(p_tenant_id,v.customer_id,'reversal',v.points_cost,'voucher-void:'||v.id::text,'voucher-void:'||v.id::text,l.id,p_actor_user_id)
+ returning id into v_reversal_id;
+ update public.crm_voucher_consumptions set voided_by=p_actor_user_id,voided_at=now(),void_reason=left(p_reason,500)
+  where tenant_id=p_tenant_id and id=c.id;
+ update public.crm_reward_vouchers set status='cancelled' where tenant_id=p_tenant_id and id=v.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'crm.voucher.voided','crm_reward_voucher',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'source_type',p_source_type,'source_id',p_source_id,'reversal_entry_id',v_reversal_id,'reason',left(p_reason,500)));
+ return jsonb_build_object('voucher_id',v.id,'status','cancelled','reversal_entry_id',v_reversal_id,'points_restored',v.points_cost);
+end $$;
+revoke all on function public.crm_void_voucher(uuid,uuid,text,uuid,text,uuid) from public,anon,authenticated;
+grant execute on function public.crm_void_voucher(uuid,uuid,text,uuid,text,uuid) to service_role;
