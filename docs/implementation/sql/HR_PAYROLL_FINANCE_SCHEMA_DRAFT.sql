@@ -215,7 +215,7 @@ create or replace function public.hr_persist_approved_payroll_run(
   p_journal_lines jsonb
 ) returns jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare
   v_run public.hr_payroll_runs%rowtype;
   v_period public.fiscal_periods%rowtype;
