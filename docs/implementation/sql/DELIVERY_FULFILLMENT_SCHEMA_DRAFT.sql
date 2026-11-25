@@ -171,6 +171,51 @@ end $;
 revoke all on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) to service_role;
 
+create or replace function public.delivery_transition_dispatch(
+ p_dispatch_id uuid,p_next_status text,p_event_id text,p_payload_hash text,p_actor_user_id uuid,p_note text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.delivery_dispatches%rowtype; v_next_order_status text;
+begin
+ if p_next_status not in ('picked_up','in_transit','delivered','failed','cancelled')
+  or length(btrim(coalesce(p_event_id,''))) not between 8 and 160
+  or length(coalesce(p_payload_hash,'')) not between 32 and 128 then
+  raise exception using errcode='22023',message='INVALID_DELIVERY_EVENT';
+ end if;
+ select * into v from public.delivery_dispatches where id=p_dispatch_id for update;
+ if not found then raise exception using errcode='P0002',message='DELIVERY_DISPATCH_NOT_FOUND'; end if;
+ if exists(select 1 from public.delivery_provider_events where tenant_id=v.tenant_id and provider=v.provider and provider_event_id=p_event_id) then
+  raise exception using errcode='23505',message='DUPLICATE_DELIVERY_EVENT';
+ end if;
+ if not (
+  (v.status='booked' and p_next_status in ('picked_up','failed','cancelled')) or
+  (v.status='picked_up' and p_next_status in ('in_transit','failed')) or
+  (v.status='in_transit' and p_next_status in ('delivered','failed'))
+ ) then raise exception using errcode='23514',message='INVALID_DELIVERY_TRANSITION'; end if;
+ if p_next_status='delivered' and not exists(select 1 from public.delivery_proof_of_delivery where tenant_id=v.tenant_id and dispatch_id=v.id) then
+  raise exception using errcode='23514',message='DELIVERY_PROOF_REQUIRED';
+ end if;
+ insert into public.delivery_provider_events(tenant_id,dispatch_id,provider,provider_event_id,event_type,provider_status,occurred_at,payload_hash,processed_at,processing_status,processing_note)
+ values(v.tenant_id,v.id,v.provider,p_event_id,'manual_status_update',p_next_status,now(),p_payload_hash,now(),'processed',left(coalesce(p_note,''),500));
+ update public.delivery_dispatches set status=p_next_status,delivered_at=case when p_next_status='delivered' then now() else delivered_at end,
+  failed_at=case when p_next_status='failed' then now() else failed_at end,
+  failure_reason=case when p_next_status='failed' then left(coalesce(p_note,''),500) else failure_reason end,
+  updated_by=p_actor_user_id,updated_at=now() where id=v.id returning * into v;
+ if p_next_status='delivered' then
+  update public.orders set fulfillment_status='fulfilled',fulfilled_at=now(),updated_at=now()
+   where id=v.order_id and fulfillment_status='dispatched';
+  if not found then raise exception using errcode='40001',message='ORDER_FULFILLMENT_STATE_MISMATCH'; end if;
+  insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
+   values(v.order_id,'operational','dispatched','fulfilled','Delivery confirmed with proof of delivery');
+ end if;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'delivery.dispatch.'||p_next_status,'delivery_dispatch',v.id::text,
+  jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'order_id',v.order_id,'event_id',p_event_id,'note',left(coalesce(p_note,''),500)));
+ return jsonb_build_object('dispatch_id',v.id,'status',v.status,'order_id',v.order_id);
+end $;
+revoke all on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) to service_role;
+
 -- Required before production use:
 -- 1) Dedicated provider webhook signature verification + raw-body hashing.
 -- 2) Atomic dispatch/status transition RPC that locks the order and dispatch.
