@@ -30,7 +30,9 @@ The adapter validates the configured Xendit callback token using constant-time c
 
 The payout-specific API reference documents event payloads but does not enumerate the callback header in its schema. The implementation uses Xendit's documented callback-token mechanism; confirm the exact header shown in the merchant Dashboard's payout webhook test before enabling endpoint delivery. Fail closed if the configured header/token contract differs.
 
-The webhook verifier produces a stable SHA-256 event fingerprint. The receiving persistence adapter must enforce a unique constraint on (provider, event fingerprint), locate the payment by provider payout ID/reference ID, verify tenant and amount, and persist event + state transition atomically. Duplicate fingerprints must be acknowledged without applying a second state transition. Do not treat webhook receipt alone as Finance reconciliation.
+The webhook verifier produces a stable SHA-256 event fingerprint. `ingestXenditPayrollPayoutWebhook` resolves the tenant from a trusted provider/payment mapping, reloads and locks the payment in a tenant-authorized transaction, matches provider business ID, payout ID, immutable reference, currency and amount, and calls the atomic persistence port. The persistence adapter must enforce a unique constraint on (provider, event fingerprint), reject backwards/invalid state transitions, and persist event + state decision atomically. Duplicate fingerprints are acknowledged without a second business transition or duplicate audit. Do not treat webhook receipt alone as Finance reconciliation.
+
+`reconcileXenditPayrollPayoutEvidence` performs the strict provider-to-payment matching decision. The existing `reconcileApprovedPayrollPayment` Finance workflow must consume the persisted webhook evidence, verify the posted balanced payroll journal and create the approved bank/provider clearing and reversal journals. That final database adapter and journal policy are still a staging implementation task.
 
 ## Settlement and Finance rules
 
