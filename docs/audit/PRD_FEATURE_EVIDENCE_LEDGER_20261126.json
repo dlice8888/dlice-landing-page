@@ -6946,7 +6946,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Provider integration and payroll reconciliation missing.",
+      "evidence_or_gap": "Provider integration and payroll reconciliation missing. PR #146 contains per-employee Xendit payout, signed webhook, payroll-to-Finance clearing and immutable bank statement reconciliation source/SQL drafts. Disposable run 45659462961 failed on an older merge candidate at a dollar-quote syntax error; current head bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8 has balanced delimiters, but exact-head replay/pgTAP is not yet visible. Provider credentials and webhook/bank fixtures are absent.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 196
@@ -7005,7 +7005,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
       }
     },
     {
@@ -7015,7 +7016,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Approved payroll-to-branch allocation missing.",
+      "evidence_or_gap": "Approved payroll-to-branch allocation missing. PR #146 contains per-employee Xendit payout, signed webhook, payroll-to-Finance clearing and immutable bank statement reconciliation source/SQL drafts. Disposable run 45659462961 failed on an older merge candidate at a dollar-quote syntax error; current head bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8 has balanced delimiters, but exact-head replay/pgTAP is not yet visible. Provider credentials and webhook/bank fixtures are absent.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 197
@@ -7074,7 +7075,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
       }
     },
     {
@@ -11307,6 +11309,21 @@
       "staging_migration": "NOT_APPLIED",
       "staging_e2e": "NOT_RUN",
       "known_gap": "Lot distribution links are explicit, not yet automatically sourced from procurement, stock transfer, production consumption, POS/Order fulfillment."
+    },
+    "payroll_increment": {
+      "pr": 146,
+      "latest_head": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+      "old_failed_run": 45659462961,
+      "old_candidate_merge_sha": "2731e0946f50af0f19d5179ed2bd6b10e9288a9c",
+      "old_failure": "SQL syntax at immutable Finance evidence trigger delimiter in earlier merge candidate",
+      "current_delimiters_balanced": true,
+      "static_contract_added": true,
+      "exact_head_replay": "NOT_OBSERVED",
+      "pgTap": "NOT_RUN",
+      "provider_webhook": "BLOCKED_NO_XENDIT_CREDENTIALS_OR_FIXTURES",
+      "bank_statement_e2e": "NOT_RUN",
+      "staging_migration": "NOT_APPLIED",
+      "live_payout": "NOT_ENABLED"
     }
   }
 }
