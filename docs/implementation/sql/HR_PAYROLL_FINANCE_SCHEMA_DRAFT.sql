@@ -324,7 +324,7 @@ begin
     'debit_total_idr',v_debits,'credit_total_idr',v_credits,'line_count',v_line_count,
     'requires_independent_approval',true);
 end;
-$;
+$$;
 revoke all on function public.hr_persist_approved_payroll_run(uuid,uuid,uuid,uuid,text,uuid,jsonb) from public,anon,authenticated;
 grant execute on function public.hr_persist_approved_payroll_run(uuid,uuid,uuid,uuid,text,uuid,jsonb) to service_role;
 
