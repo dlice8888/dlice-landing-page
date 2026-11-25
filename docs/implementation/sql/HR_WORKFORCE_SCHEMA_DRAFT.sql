@@ -255,11 +255,11 @@ begin
 
   if p_event_type='clock_in' and v_last_event is not null and v_last_event<>'clock_out' then
     raise exception using errcode='22023', message='ATTENDANCE_ALREADY_OPEN';
-  elsif p_event_type='break_start' and v_last_event not in ('clock_in','break_end') then
+  elsif p_event_type='break_start' and (v_last_event is null or v_last_event not in ('clock_in','break_end')) then
     raise exception using errcode='22023', message='BREAK_START_REQUIRES_WORKING_STATE';
-  elsif p_event_type='break_end' and v_last_event<>'break_start' then
+  elsif p_event_type='break_end' and (v_last_event is null or v_last_event<>'break_start') then
     raise exception using errcode='22023', message='BREAK_END_REQUIRES_OPEN_BREAK';
-  elsif p_event_type='clock_out' and v_last_event not in ('clock_in','break_end') then
+  elsif p_event_type='clock_out' and (v_last_event is null or v_last_event not in ('clock_in','break_end')) then
     raise exception using errcode='22023', message='CLOCK_OUT_REQUIRES_WORKING_STATE';
   end if;
 
