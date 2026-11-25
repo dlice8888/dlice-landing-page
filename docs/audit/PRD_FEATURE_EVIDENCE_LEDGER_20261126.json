@@ -5409,7 +5409,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5419,7 +5419,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 includes append-only consent events, consent-filtered campaign audience, signed unsubscribe persistence and provider/tenant event dedupe. Provider webhook deployment and cross-channel consent E2E remain open.",
+      "evidence_or_gap": "PR #145 includes append-only consent events, consent-filtered campaign audience, signed unsubscribe persistence and provider/tenant event dedupe. Provider webhook deployment and cross-channel consent E2E remain open. Existing PR #145 source also includes append-only consent, signed unsubscribe and campaign suppression; provider E2E remains unrun.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 163
@@ -5473,7 +5473,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5529,7 +5529,7 @@
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
         "pr_evidence": [],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5539,7 +5539,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "New PR #145 SQL draft adds points_validity_days with independent approval, expires_at on earn lots, FIFO redemption allocation, expiry RPC, and reversal of redemption allocations. Expiry is only a source draft/UI/Edge increment; no disposable replay, pgTAP or staging runtime proof yet.",
+      "evidence_or_gap": "New PR #145 SQL draft adds points_validity_days with independent approval, expires_at on earn lots, FIFO redemption allocation, expiry RPC, and reversal of redemption allocations. Expiry is only a source draft/UI/Edge increment; no disposable replay, pgTAP or staging runtime proof yet. Current increment adds configurable validity, deterministic expiry from reconciled-close timestamp, FIFO lot allocation, expiry RPC, redemption reversal allocation and Owner UI; all draft-only/unexecuted.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 165
@@ -5593,7 +5593,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5649,7 +5649,7 @@
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
         "pr_evidence": [],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5705,7 +5705,7 @@
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
         "pr_evidence": [],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5769,7 +5769,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5825,7 +5825,7 @@
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
         "pr_evidence": [],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -5881,7 +5881,7 @@
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
         "pr_evidence": [],
-        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
+        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       }
     },
     {
@@ -11244,6 +11244,24 @@
       "118": "explicit staging mutation confirmation policy",
       "119": "scheduled staging mutation policy"
     },
-    "note": "All 24 open PRs visible in the repository listing were reviewed for file scope. The 123 unmatched IDs need historical PR/commit/source review; unmatched means no direct feature-level mapping in this open-PR set, not that the feature has no code."
+    "note": "All 24 open PRs visible in the repository listing were reviewed for file scope. The 123 unmatched IDs need historical PR/commit/source review; unmatched means no direct feature-level mapping in this open-PR set, not that the feature has no code.",
+    "crm_increment": {
+      "pr": 145,
+      "head": "e8858252242ed0e2f7525fee63f403ee8485d1f5",
+      "files": [
+        "docs/implementation/sql/CRM_LOYALTY_EXPIRY_EXTENSION_DRAFT.sql",
+        "supabase/functions/dlice-orders/index.ts",
+        "erp.html",
+        "tests/contracts/crm-loyalty-expiry-sql-contract.test.mjs",
+        "tests/contracts/crm-loyalty-expiry-ui-contract.test.mjs"
+      ],
+      "new_edge_actions": 4,
+      "edge_action_inventory": 206,
+      "ci_status": "NOT_OBSERVED",
+      "vercel_status": "FAILURE_BUILD_RATE_LIMIT",
+      "staging_migration": "NOT_APPLIED",
+      "staging_e2e": "NOT_RUN",
+      "done_features": 0
+    }
   }
 }
