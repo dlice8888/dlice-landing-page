@@ -150,6 +150,42 @@ begin
   end loop;
 end $$;
 
+-- Audit inserts in the same transaction as customer/consent/reward writes.
+create or replace function public.crm_audit_insert_row()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_row jsonb := to_jsonb(new);
+  v_actor_id uuid;
+  v_tenant_id uuid;
+begin
+  v_actor_id := nullif(coalesce(v_row->>'actor_user_id',v_row->>'created_by'),'')::uuid;
+  v_tenant_id := nullif(v_row->>'tenant_id','')::uuid;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values (
+    v_actor_id,
+    'crm.'||tg_table_name||'.'||lower(tg_op),
+    tg_table_name,
+    v_row->>'id',
+    jsonb_build_object('tenant_id',v_tenant_id)
+  );
+  return new;
+end;
+$;
+revoke all on function public.crm_audit_insert_row() from public,anon,authenticated;
+drop trigger if exists crm_customers_audit_insert on public.crm_customers;
+create trigger crm_customers_audit_insert after insert on public.crm_customers
+for each row execute function public.crm_audit_insert_row();
+drop trigger if exists crm_consent_audit_insert on public.crm_customer_consent_events;
+create trigger crm_consent_audit_insert after insert on public.crm_customer_consent_events
+for each row execute function public.crm_audit_insert_row();
+drop trigger if exists crm_rewards_audit_insert on public.crm_rewards;
+create trigger crm_rewards_audit_insert after insert on public.crm_rewards
+for each row execute function public.crm_audit_insert_row();
+
 -- Append-only ledger RPC. EXECUTE is granted only to service_role; callers
 -- must be authenticated/authorized in the Edge Function before invoking it.
 create or replace function public.crm_append_loyalty_entry(
