@@ -35,6 +35,8 @@ test("generic ledger RPC cannot bypass source-backed earn/redeem and reversal re
   assert.match(sql, /USE_FINANCIAL_CLOSE_OR_REWARD_REDEMPTION_RPC/);
   assert.match(sql, /redemption_reversal/);
   assert.match(sql, /EARN_ENTRY_ALREADY_CONSUMED_OR_EXPIRED/);
+  assert.match(sql, /ADJUSTMENT_REVERSAL_REQUIRES_NEW_ADJUSTMENT/);
+  assert.match(sql, /entry_kind='adjustment' and points>0/);
 });
 
 test("allocation and ledger write paths remain append-only and service-role-only", () => {
