@@ -203,6 +203,131 @@ create table if not exists public.finance_source_reconciliations (
   check((status='reconciled' and expected_amount_idr=posted_amount_idr and reconciled_by is not null and reconciled_at is not null) or status<>'reconciled')
 );
 
+
+-- Persist approved payroll snapshot and its balanced draft Finance batch atomically.
+create or replace function public.hr_persist_approved_payroll_run(
+  p_tenant_id uuid,
+  p_branch_id uuid,
+  p_payroll_run_id uuid,
+  p_fiscal_period_id uuid,
+  p_idempotency_key text,
+  p_actor_user_id uuid,
+  p_journal_lines jsonb
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare
+  v_run public.hr_payroll_runs%rowtype;
+  v_period public.fiscal_periods%rowtype;
+  v_existing public.finance_journal_batches%rowtype;
+  v_batch public.finance_journal_batches%rowtype;
+  v_employee_count integer;
+  v_gross bigint;
+  v_deductions bigint;
+  v_employer bigint;
+  v_net bigint;
+  v_debits bigint;
+  v_credits bigint;
+  v_line_count integer;
+begin
+  if p_tenant_id is null or p_branch_id is null or p_payroll_run_id is null
+     or p_fiscal_period_id is null or p_actor_user_id is null
+     or length(coalesce(p_idempotency_key,'')) not between 8 and 160
+     or jsonb_typeof(p_journal_lines)<>'array' then
+    raise exception using errcode='22023',message='INVALID_PAYROLL_POST_COMMAND';
+  end if;
+
+  select * into v_run from public.hr_payroll_runs
+   where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_payroll_run_id
+   for update;
+  if not found or v_run.status<>'approved' or v_run.approved_by is null
+     or v_run.approved_at is null or v_run.approved_by=v_run.created_by then
+    raise exception using errcode='23514',message='APPROVED_PAYROLL_RUN_REQUIRED';
+  end if;
+
+  select * into v_period from public.fiscal_periods where id=p_fiscal_period_id for update;
+  if not found or v_period.status<>'open'
+     or v_period.starts_on>v_run.period_start or v_period.ends_on<v_run.period_end then
+    raise exception using errcode='23514',message='FISCAL_PERIOD_NOT_OPEN';
+  end if;
+
+  select count(*),coalesce(sum(gross_amount_idr),0),
+         coalesce(sum(deductions_idr),0),coalesce(sum(employer_contributions_idr),0),
+         coalesce(sum(net_amount_idr),0)
+    into v_employee_count,v_gross,v_deductions,v_employer,v_net
+    from public.hr_payroll_run_lines
+   where tenant_id=p_tenant_id and payroll_run_id=p_payroll_run_id;
+  if v_employee_count=0 or v_employee_count<>v_run.employee_count
+     or v_gross<>v_run.gross_amount_idr or v_deductions<>v_run.deductions_amount_idr
+     or v_employer<>v_run.employer_contributions_idr or v_net<>v_run.net_amount_idr
+     or v_gross-v_deductions<>v_net then
+    raise exception using errcode='23514',message='PAYROLL_LINE_SNAPSHOT_TOTAL_MISMATCH';
+  end if;
+
+  select * into v_existing from public.finance_journal_batches
+   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
+  if found then
+    if v_existing.source_type<>'hr_payroll_run' or v_existing.source_id<>p_payroll_run_id
+       or v_existing.debit_total_idr<>v_gross+v_employer
+       or v_existing.credit_total_idr<>v_net+v_deductions+v_employer then
+      raise exception using errcode='23505',message='PAYROLL_FINANCE_IDEMPOTENCY_COLLISION';
+    end if;
+    return jsonb_build_object('status','duplicate','batch_id',v_existing.id,
+      'debit_total_idr',v_existing.debit_total_idr,'credit_total_idr',v_existing.credit_total_idr);
+  end if;
+
+  select count(*),
+         coalesce(sum(case when x.side='debit' then x.amount_idr else 0 end),0),
+         coalesce(sum(case when x.side='credit' then x.amount_idr else 0 end),0)
+    into v_line_count,v_debits,v_credits
+    from jsonb_to_recordset(p_journal_lines) as x(
+      line_no integer,account_code text,side text,amount_idr bigint,
+      component_code text,description text
+    );
+  if v_line_count=0 or exists(
+    select 1 from jsonb_to_recordset(p_journal_lines) as x(
+      line_no integer,account_code text,side text,amount_idr bigint,
+      component_code text,description text
+    )
+    where x.line_no is null or x.line_no<=0 or nullif(btrim(x.account_code),'') is null
+      or x.side not in ('debit','credit') or x.amount_idr is null or x.amount_idr<=0
+      or nullif(btrim(x.description),'') is null
+  ) or v_debits<>v_credits or v_debits<>v_gross+v_employer
+     or v_credits<>v_net+v_deductions+v_employer then
+    raise exception using errcode='23514',message='PAYROLL_JOURNAL_LINES_UNBALANCED';
+  end if;
+
+  insert into public.finance_journal_batches(
+    tenant_id,branch_id,fiscal_period_id,source_type,source_id,status,currency,
+    debit_total_idr,credit_total_idr,idempotency_key,created_by
+  ) values(
+    p_tenant_id,p_branch_id,p_fiscal_period_id,'hr_payroll_run',p_payroll_run_id,'draft','IDR',
+    v_debits,v_credits,p_idempotency_key,p_actor_user_id
+  ) returning * into v_batch;
+
+  insert into public.finance_journal_batch_lines(
+    tenant_id,batch_id,line_no,account_code,side,amount_idr,component_code,description
+  )
+  select p_tenant_id,v_batch.id,x.line_no,x.account_code,x.side,x.amount_idr,x.component_code,x.description
+    from jsonb_to_recordset(p_journal_lines) as x(
+      line_no integer,account_code text,side text,amount_idr bigint,
+      component_code text,description text
+    )
+   order by x.line_no;
+
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'hr.payroll.finance_batch_created','finance_journal_batches',v_batch.id::text,
+    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,
+      'payroll_run_id',p_payroll_run_id,'fiscal_period_id',p_fiscal_period_id,
+      'debit_total_idr',v_debits,'credit_total_idr',v_credits,'line_count',v_line_count));
+  return jsonb_build_object('status','draft','batch_id',v_batch.id,
+    'debit_total_idr',v_debits,'credit_total_idr',v_credits,'line_count',v_line_count,
+    'requires_independent_approval',true);
+end;
+$;
+revoke all on function public.hr_persist_approved_payroll_run(uuid,uuid,uuid,uuid,text,uuid,jsonb) from public,anon,authenticated;
+grant execute on function public.hr_persist_approved_payroll_run(uuid,uuid,uuid,uuid,text,uuid,jsonb) to service_role;
+
 create or replace function public.hr_reject_payroll_snapshot_mutation()
 returns trigger language plpgsql security invoker set search_path=''
 as $$
