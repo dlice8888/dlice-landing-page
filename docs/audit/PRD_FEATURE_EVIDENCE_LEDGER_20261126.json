@@ -4859,8 +4859,8 @@
       "requirement": "Pickup/delivery selection and fulfillment queue",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Order type and fulfillment state foundations exist.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds atomic quote selection and dispatch creation from a paid/verified/settled order in ready state; locks order/quote, creates dispatch and outbox together, and transitions order to dispatched. Existing ERP queue/UI remains; runtime UI/E2E is not proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 150
@@ -4910,10 +4910,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -4923,7 +4925,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Live quote provider and validation missing.",
+      "evidence_or_gap": "PR #145 adds provider quote persistence, IDR validation, two-hour expiry bound, branch/tenant scoping and idempotency collision detection. Address geocoding/normalization and real carrier quote sandbox remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 151
@@ -4973,10 +4975,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -4986,7 +4990,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No provider credentials, contract tests or live integration evidence.",
+      "evidence_or_gap": "PR #145 adds pending provider config plus independent approval, API/manual mode, secret-reference-only storage, injected carrier adapter and booking outbox worker. No Biteship/carrier credentials or sandbox call are available; provider integration remains blocked.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 152
@@ -5036,10 +5040,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -5049,7 +5055,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Courier lifecycle and tracking callbacks missing.",
+      "evidence_or_gap": "PR #145 adds provider booking reference/tracking updates, verified provider-event RPC, event dedupe, state transition checks and outbox retry/dead-letter. Hosted worker scheduling and webhook signature E2E remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 153
@@ -5099,10 +5105,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -5112,7 +5120,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "POD capture and access policy missing.",
+      "evidence_or_gap": "PR #145 adds proof-required delivery transition and private-storage evidence metadata schema. Actual private Storage bucket policy, upload/download, file hash and signed-link E2E are not verified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 154
@@ -5162,10 +5170,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -5175,7 +5185,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Idempotent retry, cancellation and compensation missing.",
+      "evidence_or_gap": "PR #145 adds SKIP LOCKED outbox claim, retry delay, attempt cap, dead-letter handling and final dispatch failure. Compensation/cancel worker and fault-injection against a real provider remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 155
@@ -5225,10 +5235,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -5238,7 +5250,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Cost model and reconciliation report missing.",
+      "evidence_or_gap": "PR #145 adds immutable delivery cost reconciliation against a posted Finance journal source/branch/amount and checks COD collection/remittance, subsidy, courier cost, provider fee and settlement. Finance journal integration and reconciliation transaction fixtures are not yet replayed.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 156
@@ -5288,10 +5300,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -5301,7 +5315,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Notification foundation exists; provider event → customer status E2E missing.",
+      "evidence_or_gap": "Customer completion notification is still a gap: no end-to-end delivery-completed notification outbox/template/provider receipt is included in this increment.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 157
@@ -5342,11 +5356,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 145,
+            "kind": "delivery_atomic_adapters_worker_edge_actions_and_contract_tests",
+            "commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+            "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
+          }
+        ],
+        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
       }
     },
     {
@@ -11324,6 +11348,37 @@
       "bank_statement_e2e": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
       "live_payout": "NOT_ENABLED"
+    },
+    "delivery_increment": {
+      "pr": 145,
+      "latest_head": "5bf43d1736551ee65a8bff18a64b37ad10b4902b",
+      "feature_ids": [
+        "D09-F01",
+        "D09-F02",
+        "D09-F03",
+        "D09-F04",
+        "D09-F05",
+        "D09-F06",
+        "D09-F07",
+        "D09-F08"
+      ],
+      "new_sql": "docs/implementation/sql/DELIVERY_ATOMIC_ADAPTERS_EXTENSION_DRAFT.sql",
+      "adapter": "src/supabase-delivery-adapter.mjs",
+      "worker": "src/workers/delivery-outbox-worker.mjs",
+      "edge_actions": 8,
+      "edge_action_inventory": 214,
+      "contract_tests": [
+        "tests/contracts/delivery-atomic-adapter-worker.test.mjs",
+        "tests/contracts/delivery-sql-contract.test.mjs",
+        "tests/contracts/eight-domain-sql-delimiter-contract.test.mjs"
+      ],
+      "exact_head_ci": "NOT_OBSERVED",
+      "disposable_replay": "NOT_RUN",
+      "pgTap": "NOT_RUN",
+      "provider_sandbox": "BLOCKED_NO_CREDENTIALS_OR_FIXTURES",
+      "storage_e2e": "NOT_RUN",
+      "staging_migration": "NOT_APPLIED",
+      "tenant_release_flags": "UNCHANGED_FALSE"
     }
   }
 }
