@@ -25,25 +25,25 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED | DONE | Partial coverage* |
 |---|---:|---:|---:|---:|---:|---:|
-| Executive Command Center | 10 | 4 | 5 | 1 | 0 | 40.0% |
+| Executive Command Center | 10 | 6 | 3 | 1 | 0 | 60.0% |
 | POS & Checkout | 13 | 7 | 5 | 1 | 0 | 53.8% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% |
-| Procurement & Supplier | 10 | 5 | 5 | 0 | 0 | 50.0% |
+| Procurement & Supplier | 10 | 6 | 4 | 0 | 0 | 60.0% |
 | Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% |
-| Delivery & Fulfillment | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 | 0 | 11.1% |
-| Finance & Accounting | 12 | 7 | 4 | 1 | 0 | 58.3% |
-| HR & Workforce | 9 | 1 | 8 | 0 | 0 | 11.1% |
-| Franchise & Expansion | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| BI & Analytics | 10 | 3 | 7 | 0 | 0 | 30.0% |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100.0% |
+| CRM, Loyalty & Marketing | 9 | 5 | 4 | 0 | 0 | 55.6% |
+| Finance & Accounting | 12 | 8 | 3 | 1 | 0 | 66.7% |
+| HR & Workforce | 9 | 2 | 7 | 0 | 0 | 22.2% |
+| Franchise & Expansion | 8 | 6 | 2 | 0 | 0 | 75.0% |
+| BI & Analytics | 10 | 6 | 4 | 0 | 0 | 60.0% |
 | Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% |
-| SaaS Tenant Management | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| Integrations & Automation | 9 | 5 | 4 | 0 | 0 | 55.6% |
+| SaaS Tenant Management | 8 | 4 | 4 | 0 | 0 | 50.0% |
+| Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% |
 | Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60.0% |
-| **TOTAL** | 189 | 95 | 88 | 6 | 0 | 50.3% |
+| **TOTAL** | **189** | **120** | **63** | **6** | **0** | **63.5%** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -982,3 +982,19 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 - 18-domain counts remain 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE. Partial coverage is 95/189 = 50.3%; this is the share of features with implementation started, not weighted completion.
 - Only two PARTIAL features have evidence-based weighted scores: tenant/member isolation 58% provisional and tenant directory/onboarding 30% provisional. The other 93 PARTIAL features remain unscored until six-dimension criteria are decomposed; do not invent percentages.
 - Vercel Preview for exact staging head is READY: [deployment](https://vercel.com/dlice8888-7332/dlice-landing-page/D9NVHeXQ9tBx1f37h6t6kMf6wcHV). Preview is not production release or business workflow acceptance.
+
+## Superseding current audit — 25 November 2026
+
+The latest row-level PRD reconciliation is **189 total / 120 PARTIAL / 63 NOT VERIFIED / 6 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 25 NOT VERIFIED → PARTIAL transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 25 transitions are: Executive (2), CRM (4), Delivery (6), Finance (1), HR (1), Franchise (4), BI (3), Procurement (1), Integrations (1), SaaS (2).
+
+**Important scoring distinction:** partial coverage (120/189 = 63.5%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 118 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
+
+### Live platform evidence checked 25 November
+- GitHub: PR #145 and #146 are OPEN Draft. PR #146 exact-head quality checks passed on 23e4b6c2a057b9b8bdeed68f71088c6e4c88d105; its database replay and provider/bank E2E remain unverified.
+- Supabase staging higoadrzxnhzbbwhdbmh: ACTIVE_HEALTHY, PostgreSQL 17.11.0.003; 63 applied migrations through 20261124134222; 67 public tables and 67/67 have RLS enabled; dlice-orders ACTIVE v73 with verify_jwt=false and custom handler authorization; Security Advisor 1 WARN (leaked-password protection disabled); Performance Advisor 83 informational unused-index suggestions; Health Advisor 0 findings.
+- Live table counts show no positive business lifecycle evidence yet for purchase orders/receipts, production batches/consumptions, settlements, refunds, cash reconciliation, fiscal periods, finance journals, stock transfers/counts, procurement requisitions, POS tenders/receipts, or new HR/CRM/Delivery/Franchise/BI draft extensions. Existing schema rows do not prove complete workflows.
+- Vercel Hobby: staging Preview READY on aed9353d2d2daac57462a108beb43d983ec54946; PR #146 Preview READY on 4406c31250378dc9eaf13d6fa6d88726ef8fd6dd, which is behind PR #146 head; Production is READY on main commit cca72d336426688d8d7f6e01b819613ddc82fa6c. These were read-only inspections; no deploy was made.
+- Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
+
+### Highest priority remaining NOT VERIFIED counts
+CRM 4; BI 4; Procurement 4; HR 7; Delivery 0 (all 6 have implementation started, not accepted); Franchise 2; Executive 3; POS 5; Branch Ops 5; SaaS 4. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
