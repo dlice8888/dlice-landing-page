@@ -6,6 +6,7 @@ const fail=(c,m)=>{const e=new Error(m);e.code=c;throw e;};
 export async function dispatchConsentedCampaignMessage({campaign,customer,consent,outbox,provider,claimOutbox,sendProvider,recordProviderAcceptance,scheduleRetry,now=new Date().toISOString()}) {
  if(!campaign?.id||campaign.status!=="approved"||!campaign.version)fail("CAMPAIGN_NOT_APPROVED","Campaign must be approved and versioned");
  if(!customer?.id||!customer.tenantId||!customer.destination)fail("CAMPAIGN_CUSTOMER_DESTINATION_REQUIRED","Tenant-scoped customer and destination are required");
+ if(campaign.tenantId!==customer.tenantId)fail("CAMPAIGN_TENANT_MISMATCH","Campaign and customer must belong to the same tenant");
  if(!consent||consent.status!=="granted"||consent.channel!==campaign.channel||consent.purpose!==campaign.purpose||!consent.recordedAt||consent.withdrawnAt) return Object.freeze({status:"suppressed",reason:"CONSENT_NOT_GRANTED"});
  if(consent.customerId!==customer.id||consent.tenantId!==customer.tenantId)fail("CONSENT_SCOPE_MISMATCH","Consent must belong to this customer and tenant");
  if(customer.unsubscribedAt&&Date.parse(customer.unsubscribedAt)<=Date.parse(now))return Object.freeze({status:"suppressed",reason:"UNSUBSCRIBED"});
