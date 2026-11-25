@@ -216,11 +216,17 @@ begin
     if v_record.employment_status<>'active' then
       raise exception using errcode='23514',message='HR_EMPLOYEE_NOT_TRANSFER_ELIGIBLE';
     end if;
+    select count(*) into v_pending_count from public.hr_timesheets
+     where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id and status in ('draft','submitted');
+    if v_pending_count>0 then raise exception using errcode='23514',message='HR_PENDING_TIMESHEETS_BLOCK_TRANSFER'; end if;
     if exists(select 1 from public.branch_assignments ba join public.branches b on b.id=ba.branch_id
       where b.tenant_id=p_tenant_id and ba.user_id=p_employee_user_id
         and ba.employment_status='active' and p_effective_on<=ba.starts_on) then
       raise exception using errcode='23514',message='HR_TRANSFER_EFFECTIVE_DATE_INVALID';
     end if;
+    update public.hr_shift_schedules set status='cancelled',updated_at=now()
+     where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+       and starts_at>=p_effective_on::timestamptz and status in ('scheduled','confirmed');
     update public.branch_assignments ba set employment_status='inactive',
       ends_on=p_effective_on-1,updated_at=now()
      from public.branches b
@@ -241,6 +247,10 @@ begin
     if not found or p_effective_on not between v_leave.starts_on and v_leave.ends_on then
       raise exception using errcode='23514',message='HR_APPROVED_LEAVE_PERIOD_MISMATCH';
     end if;
+    update public.hr_shift_schedules set status='cancelled',updated_at=now()
+     where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+       and starts_at<v_leave.ends_on+1 and ends_at>=v_leave.starts_on
+       and status in ('scheduled','confirmed');
     update public.branch_assignments ba set employment_status='on_leave',updated_at=now()
      from public.branches b where b.id=ba.branch_id and b.tenant_id=p_tenant_id
        and ba.user_id=p_employee_user_id and ba.employment_status='active';
@@ -292,6 +302,9 @@ begin
        where tenant_id=p_tenant_id and role='tenant_owner' and status='active';
       if v_owner_count<=1 then raise exception using errcode='23514',message='HR_CANNOT_REVOKE_LAST_TENANT_OWNER'; end if;
     end if;
+    update public.hr_shift_schedules set status='cancelled',updated_at=now()
+     where tenant_id=p_tenant_id and employee_user_id=p_employee_user_id
+       and starts_at>=p_effective_on::timestamptz and status in ('scheduled','confirmed');
     update public.branch_assignments ba set employment_status='inactive',
       ends_on=greatest(ba.starts_on,p_effective_on),updated_at=now()
      from public.branches b where b.id=ba.branch_id and b.tenant_id=p_tenant_id
