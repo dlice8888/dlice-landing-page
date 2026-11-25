@@ -26,10 +26,12 @@ psql -qv ON_ERROR_STOP=1 -d postgres <<'SQL'
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_roles WHERE rolname='authenticated') THEN
-    CREATE ROLE authenticated NOLOGIN;
+    CREATE ROLE authenticated LOGIN PASSWORD 'local-only';
+  ELSE
+    ALTER ROLE authenticated LOGIN PASSWORD 'local-only';
   END IF;
 END
-$$;
+$;
 SQL
 
 dropdb --if-exists "$DB"
@@ -62,14 +64,10 @@ B_BRANCHES="$(psql -qAt -d "$DB" -c "SELECT count(*) FROM public.branches WHERE 
 [[ "$BRANCHES" == "151" && "$A_BRANCHES" == "150" && "$B_BRANCHES" == "1" ]]
 
 cat > "$LOG_DIR/tenant-a.sql" <<SQL
-SET LOCAL ROLE authenticated;
-SET LOCAL app.tenant_id='$TENANT_A';
-SELECT CASE WHEN current_setting('role')='authenticated' AND current_setting('app.tenant_id')='$TENANT_A' AND count(*)=150 THEN 1 ELSE 1/0 END FROM public.branches;
+SELECT CASE WHEN current_user='authenticated' AND current_setting('app.tenant_id')='$TENANT_A' AND count(*)=150 THEN 1 ELSE 1/0 END FROM public.branches;
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_B';
 SQL
 cat > "$LOG_DIR/tenant-b.sql" <<SQL
-SET LOCAL ROLE authenticated;
-SET LOCAL app.tenant_id='$TENANT_B';
 SELECT CASE WHEN current_setting('role')='authenticated' AND current_setting('app.tenant_id')='$TENANT_B' AND count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_A';
 SQL
@@ -79,7 +77,8 @@ run_probe() {
   local output="$LOG_DIR/$tenant.out"
   (
     cd "$LOG_DIR"
-    pgbench -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DB" \
+    PGOPTIONS="-c app.tenant_id=$([[ "$tenant" == "tenant-a" ]] && printf '%s' "$TENANT_A" || printf '%s' "$TENANT_B")" \
+      PGPASSWORD=local-only pgbench -h "$PGHOST" -p "$PGPORT" -U authenticated -d "$DB" \
       -n -c 50 -j 4 -T 10 -r -l --log-prefix="$tenant" -f "$file"
   ) | tee "$output"
   local failed
