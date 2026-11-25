@@ -67,6 +67,7 @@ test('SaaS tenant lifecycle is gated by approval and offboarding evidence',()=>{
  const input={tenant_id:'t1',from:'trial',to:'active',owner_approval:true};
  assert.equal(validateTenantLifecycle(input).status,'active');
  assert.equal(validateTenantLifecycle({...input,owner_approval:false}).code,'TENANT_ACTIVATION_APPROVAL_REQUIRED');
+ assert.equal(validateTenantLifecycle({tenant_id:'t1',from:'active',to:'offboarding'}).code,'TENANT_OBLIGATIONS_REMAIN');
  assert.equal(validateTenantLifecycle({tenant_id:'t1',from:'offboarding',to:'closed',retention_policy_confirmed:true,offboarding_export_verified:false}).code,'OFFBOARDING_EVIDENCE_REQUIRED');
 });
 test('Procurement approval enforces segregation, limits and active master data',()=>{
@@ -81,10 +82,10 @@ test('Procurement receipt reconciles accepted and damaged quantities',()=>{
  assert.equal(validateProcurementReceipt({...input,received_quantity:10}).code,'RECEIPT_QUANTITY_MISMATCH');
 });
 test('Executive drilldown respects tenant, branch and level boundaries',()=>{
- const input={actor_tenant_ids:['t1'],resource_tenant_id:'t1',actor_branch_ids:['b1'],resource_branch_id:'b1',requested_level:'branch',resource_level:'shift'};
+ const input={actor_tenant_ids:['t1'],resource_tenant_id:'t1',actor_branch_ids:['b1'],resource_branch_id:'b1',max_level:'transaction',resource_level:'shift'};
  assert.equal(validateExecutiveDrilldown(input).allowed,true);
  assert.equal(validateExecutiveDrilldown({...input,resource_tenant_id:'t2'}).code,'TENANT_SCOPE_MISMATCH');
- assert.equal(validateExecutiveDrilldown({...input,resource_level:'transaction',requested_level:'branch'}).code,'DRILLDOWN_LEVEL_ESCALATION');
+ assert.equal(validateExecutiveDrilldown({...input,resource_level:'transaction',max_level:'branch'}).code,'DRILLDOWN_LEVEL_ESCALATION');
 });
 test('Executive targets require reconciled sources and return variance',()=>{
  const input={tenant_id:'t1',target_tenant_id:'t1',metric_key:'net_sales',period_start:'2026-11-01',period_end:'2026-11-30',target_value:1000000,actual_value:900000,unit:'IDR',source_reconciled:true};
