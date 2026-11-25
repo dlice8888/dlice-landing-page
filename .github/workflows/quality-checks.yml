@@ -29,7 +29,7 @@ jobs:
         run: node scripts/quality-checks.mjs
       - name: Verify feature matrix consistency
         run: node --test tests/contracts/feature-matrix-contract.test.mjs
-      - name: Run Xendit payout, webhook and settlement contract tests
+      - name: Run Xendit per-item payout, webhook and settlement contract tests
         run: node --test tests/contracts/xendit-payout-v3.test.mjs tests/contracts/payroll-payment-provider-workflow.test.mjs tests/contracts/xendit-payout-reconciliation.test.mjs tests/contracts/payroll-payout-webhook-workflow.test.mjs tests/contracts/payroll-payment-batch-execution.test.mjs
       - name: Run staging release contract tests
         run: node scripts/staging-release-contract-tests.mjs
