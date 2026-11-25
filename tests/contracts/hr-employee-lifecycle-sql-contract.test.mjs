@@ -10,6 +10,7 @@ test("HR employee identity is tenant-scoped and linked to existing Auth/profile/
  assert.match(sql,/join public\.tenant_memberships tm/);
  assert.match(sql,/join public\.branch_assignments ba/);
  assert.match(sql,/join public\.admin_profiles ap/);
+ assert.match(sql,/INDEPENDENT_HR_EMPLOYEE_CREATOR_REQUIRED/);
 });
 
 test("employee lifecycle event history is append-only and service-role-only",()=>{
