@@ -118,15 +118,33 @@ RTO_MS="$((END_MS-RESTORE_START_MS))"
 POST_SNAPSHOT_ROWS="$((SOURCE_AFTER-RESTORED_EVENTS))"
 PRE_SNAPSHOT_LOST="$((EXPECTED_EVENTS-RESTORED_EVENTS))"
 
-[[ "$RESTORED_BRANCHES" == "$EXPECTED_BRANCHES" ]]
-[[ "$RESTORED_EVENTS" == "$EXPECTED_EVENTS" ]]
-[[ "$RESTORED_CHECKSUM" == "$EXPECTED_CHECKSUM" ]]
-[[ "$RLS_TABLES" == "2" ]]
-[[ "$A_BRANCHES" == "150" && "$A_EVENTS" == "150" ]]
-[[ "$B_BRANCHES" == "1" && "$B_EVENTS" == "1" ]]
-[[ "$CROSS_TENANT" == "0" ]]
-[[ "$PRE_SNAPSHOT_LOST" == "0" ]]
-[[ "$POST_SNAPSHOT_ROWS" == "1" ]]
+printf 'diagnostic_expected_branches=%s restored_branches=%s\\n' "$EXPECTED_BRANCHES" "$RESTORED_BRANCHES"
+printf 'diagnostic_expected_events=%s restored_events=%s\\n' "$EXPECTED_EVENTS" "$RESTORED_EVENTS"
+printf 'diagnostic_expected_checksum=%s\\n' "$EXPECTED_CHECKSUM"
+printf 'diagnostic_restored_checksum=%s\\n' "$RESTORED_CHECKSUM"
+printf 'diagnostic_rls_tables=%s\\n' "$RLS_TABLES"
+printf 'diagnostic_tenant_a_branches=%s tenant_a_events=%s\\n' "$A_BRANCHES" "$A_EVENTS"
+printf 'diagnostic_tenant_b_branches=%s tenant_b_events=%s\\n' "$B_BRANCHES" "$B_EVENTS"
+printf 'diagnostic_cross_tenant_rows=%s pre_snapshot_lost=%s post_snapshot_rows=%s\\n' "$CROSS_TENANT" "$PRE_SNAPSHOT_LOST" "$POST_SNAPSHOT_ROWS"
+
+assert_eq() {
+  local actual="$1" expected="$2" label="$3"
+  if [[ "$actual" != "$expected" ]]; then
+    printf 'ASSERT_FAILED %s expected=%s actual=%s\\n' "$label" "$expected" "$actual" >&2
+    exit 1
+  fi
+}
+assert_eq "$RESTORED_BRANCHES" "$EXPECTED_BRANCHES" "restored branch count"
+assert_eq "$RESTORED_EVENTS" "$EXPECTED_EVENTS" "restored event count"
+assert_eq "$RESTORED_CHECKSUM" "$EXPECTED_CHECKSUM" "restored event checksum"
+assert_eq "$RLS_TABLES" "2" "RLS table count"
+assert_eq "$A_BRANCHES" "150" "Tenant A visible branches"
+assert_eq "$A_EVENTS" "150" "Tenant A visible events"
+assert_eq "$B_BRANCHES" "1" "Tenant B visible branches"
+assert_eq "$B_EVENTS" "1" "Tenant B visible events"
+assert_eq "$CROSS_TENANT" "0" "cross tenant visible events"
+assert_eq "$PRE_SNAPSHOT_LOST" "0" "pre snapshot committed rows lost"
+assert_eq "$POST_SNAPSHOT_ROWS" "1" "intentional post snapshot rows"
 
 printf 'BACKUP_RESTORE_DRILL=PASS\n'
 printf 'postgres_version=%s\n' "$(psql -At -d "$TARGET_DB" -c 'SHOW server_version')"
