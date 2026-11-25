@@ -9,6 +9,7 @@ const paths=[
  "../../docs/implementation/sql/CRM_LOYALTY_EXPIRY_EXTENSION_DRAFT.sql",
  "../../docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql",
  "../../docs/implementation/sql/DELIVERY_FULFILLMENT_SCHEMA_DRAFT.sql",
+ "../../docs/implementation/sql/DELIVERY_ATOMIC_ADAPTERS_EXTENSION_DRAFT.sql",
  "../../docs/implementation/sql/DELIVERY_PROVIDER_STORAGE_SCHEMA_DRAFT.sql",
  "../../docs/implementation/sql/EXECUTIVE_COMMAND_CENTER_SCHEMA_DRAFT.sql",
  "../../docs/implementation/sql/FRANCHISE_EXPANSION_SCHEMA_DRAFT.sql",
