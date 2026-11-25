@@ -136,25 +136,31 @@
         {
           "requirement": "Alert → assign task → resolve → audit result",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Assignment and action-outcome workflow not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 41
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds executive operational alert records and event transitions alongside Owner ranking and target publishing. Assignment/closure UI, alert rule accuracy and runtime proof remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 6,
-        "not_verified": 3,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 60,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1031,13 +1037,19 @@
         {
           "requirement": "Three-way match: PO, receipt, supplier invoice",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Invoice matching and tolerance/exception handling missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 129
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds supplier invoice evidence and PO/receipt invoice-match RPC contracts. Tolerance policy, full three-way match E2E and AP posting remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "AP handoff and supplier payment",
@@ -1072,12 +1084,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 6,
-        "not_verified": 4,
+        "partial": 7,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 60,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1439,13 +1451,19 @@
         {
           "requirement": "Rewards and vouchers/coupons",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Issuance, eligibility, redemption and reversal missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 166
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds reward/voucher entities and eligibility, redemption, consume/void RPC contracts. Provider delivery, staging replay and redemption workflow remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Referral program",
@@ -1502,12 +1520,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 5,
-        "not_verified": 4,
+        "partial": 6,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 55.6,
+      "partial_coverage_percent": 66.7,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1557,13 +1575,19 @@
         {
           "requirement": "AR/AP subledgers and aging",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Complete AR/AP workflows and control-account tie-out missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 178
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds supplier invoice/AP evidence and payment-intent orchestration. Full AR/AP subledger and aging reports remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Chart of accounts and general ledger",
@@ -1669,12 +1693,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 8,
-        "not_verified": 3,
+        "partial": 9,
+        "not_verified": 2,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 66.7,
+      "partial_coverage_percent": 75,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1689,13 +1713,19 @@
         {
           "requirement": "Employee directory and lifecycle",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Employee hire/change/termination lifecycle missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 191
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Organization hierarchy and job positions",
@@ -1712,35 +1742,53 @@
         {
           "requirement": "Attendance and timesheets",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Clock-in/out, approvals and exception handling missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 193
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Shift scheduling and replacement",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Demand-based scheduling and shift swaps missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 194
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Leave and overtime",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Approval and policy engine missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 195
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Payroll calculation/integration",
@@ -1762,13 +1810,19 @@
         {
           "requirement": "Labor cost by branch",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Approved payroll-to-branch allocation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 197
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Training/certification and performance reviews",
@@ -1797,12 +1851,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 2,
-        "not_verified": 7,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 22.2,
+      "partial_coverage_percent": 77.8,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1846,13 +1900,19 @@
         {
           "requirement": "Site selection and feasibility",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Site scorecard, financial forecast and approval missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 206
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds franchise site/application/due-diligence records and review RPCs, plus independently checked opening gates. Site scorecard/forecast and ongoing compliance performance remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Opening project and readiness",
@@ -1920,25 +1980,31 @@
         {
           "requirement": "Franchise compliance and performance",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Audit, corrective action and partner reporting missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 211
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds franchise site/application/due-diligence records and review RPCs, plus independently checked opening gates. Site scorecard/forecast and ongoing compliance performance remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 6,
-        "not_verified": 2,
+        "partial": 8,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 75,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2051,13 +2117,19 @@
         {
           "requirement": "Data quality monitoring and anomaly detection",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Freshness/completeness checks and alert lifecycle missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 223
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds versioned metric definitions, source watermarks, reconciliation runs, source lineage and immutable snapshots. Data-quality anomaly rules and alert closure remain incomplete.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Export and scheduled executive reports",
@@ -2086,12 +2158,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 6,
-        "not_verified": 4,
+        "partial": 7,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 60,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2406,13 +2478,19 @@
         {
           "requirement": "Tenant settings and suspension",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Lifecycle and grace/suspension behavior missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 248
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds subscription/entitlement checks, usage events, invoices/payments, and offboarding request/approval contracts. API-wide enforcement, billing provider settlement and deletion/export E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Support access with approval/audit",
@@ -2428,13 +2506,19 @@
         {
           "requirement": "Export/offboarding and data deletion policy",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Audited export, retention and deletion workflow missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 250
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds subscription/entitlement checks, usage events, invoices/payments, and offboarding request/approval contracts. API-wide enforcement, billing provider settlement and deletion/export E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Multiple companies sharing one platform safely",
@@ -2452,12 +2536,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 4,
-        "not_verified": 4,
+        "partial": 6,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 50,
+      "partial_coverage_percent": 75,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -5305,8 +5389,8 @@
   "audit_method": "189 PRD rows reviewed against staging source matrix, live Supabase staging catalog/advisors, Vercel Preview/Production deployment metadata, and open PR evidence. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open Draft PRs are not staging/runtime acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 120,
-    "not_verified": 63,
+    "partial": 134,
+    "not_verified": 49,
     "blocked": 6,
     "done": 0
   }
