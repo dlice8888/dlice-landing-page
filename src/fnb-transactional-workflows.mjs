@@ -578,6 +578,94 @@ export async function executeApprovedPayrollPayment(input, deps) {
     providerReference: providerResult.providerReference, reconciliationRequired: true });
 }
 
+/**
+ * Execute one payout per approved payroll line/item. A payroll run is never
+ * sent as one aggregate transfer to a single beneficiary.
+ */
+export async function executeApprovedPayrollPaymentBatch(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.payment_batch.execute" };
+  const prepared = await inTenantTransaction(deps, scope, async (tx) => {
+    const batch = await adapter(deps, "loadApprovedPayrollPaymentBatchForExecution")(tx, input.paymentBatchId);
+    assertScope(batch, scope, "payrollPaymentBatch");
+    if (!["approved", "processing"].includes(batch.status)) {
+      fail("APPROVED_PAYROLL_PAYMENT_BATCH_REQUIRED", "Payroll payment batch must be approved or processing");
+    }
+    const items = await adapter(deps, "loadPayrollPaymentItemsForExecution")(tx, batch.id);
+    if (!Array.isArray(items) || items.length !== batch.itemCount) {
+      fail("PAYROLL_PAYMENT_BATCH_ITEMS_INCOMPLETE", "Every approved payroll line must have exactly one payment item");
+    }
+    return { batch, items };
+  });
+
+  let submittedCount = 0;
+  let skippedCount = 0;
+  let blockedCount = 0;
+  for (const item of prepared.items) {
+    assertScope(item, scope, "payrollPaymentItem");
+    if (item.paymentBatchId !== prepared.batch.id || !Number.isSafeInteger(item.amountIdr) || item.amountIdr <= 0) {
+      fail("PAYROLL_PAYMENT_ITEM_INVALID", "Payment item must match the approved batch and contain a positive IDR amount");
+    }
+    if (item.status === "accepted" || item.status === "settled") {
+      skippedCount += 1;
+      continue;
+    }
+    if (item.status !== "pending") {
+      blockedCount += 1;
+      continue;
+    }
+    const referenceId = item.providerReferenceId ?? item.id;
+    const idempotencyKey = `DLC-PAY-${prepared.batch.id}-${item.id}`;
+    if (idempotencyKey.length > 100) fail("PAYROLL_PROVIDER_IDEMPOTENCY_KEY_INVALID", "Stable item idempotency key exceeds provider limit");
+    const providerPayload = await inTenantTransaction(deps, scope, async (tx) => {
+      const payload = await adapter(deps, "loadApprovedPayrollPayoutProviderPayload")(tx, {
+        paymentBatchId: prepared.batch.id, paymentItemId: item.id,
+        beneficiaryReference: item.beneficiaryReference, amountIdr: item.amountIdr,
+        currency: "IDR", providerReferenceId: referenceId,
+      });
+      if (!payload || payload.reference_id !== referenceId ||
+          payload.payout_details?.source_amount !== item.amountIdr ||
+          payload.payout_details?.source_currency !== "IDR" ||
+          payload.payout_details?.destination_currency !== "IDR") {
+        fail("PAYROLL_PROVIDER_PAYLOAD_MISMATCH", "Each payout payload must match its own approved payroll item");
+      }
+      return payload;
+    });
+    const providerResult = await adapter(deps, "executePayrollPaymentProvider")({
+      providerId: prepared.batch.providerId, providerPayload,
+      paymentBatchId: prepared.batch.id, paymentItemId: item.id,
+      amountIdr: item.amountIdr, currency: "IDR", idempotencyKey,
+      beneficiaryReference: item.beneficiaryReference,
+    });
+    if (!providerResult?.accepted || !providerResult.providerReference) {
+      fail("PAYROLL_PAYMENT_ACCEPTANCE_UNVERIFIED", "Provider acceptance requires a stable payout ID");
+    }
+    await inTenantTransaction(deps, scope, async (tx) => {
+      const saved = await adapter(deps, "finalizePayrollPaymentItemSubmission")(tx, {
+        paymentBatchId: prepared.batch.id, paymentItemId: item.id,
+        providerReference: providerResult.providerReference,
+        providerStatus: providerResult.providerStatus ?? "ACCEPTED",
+        idempotencyKey, actorId: scope.actorId,
+      });
+      if (!saved?.paymentItemId || saved.status !== "accepted") {
+        fail("PAYROLL_PAYMENT_ITEM_FINALIZATION_FAILED", "Provider payout acceptance must persist on the matching item");
+      }
+      await audit(deps, tx, {
+        tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+        action: "hr.payroll.payment_item.submitted",
+        entityType: "hr_payroll_payment_item", entityId: saved.paymentItemId,
+        idempotencyKey,
+      });
+    });
+    submittedCount += 1;
+  }
+  return Object.freeze({
+    status: blockedCount > 0 ? "requires_attention" : "submitted_for_settlement",
+    paymentBatchId: prepared.batch.id,
+    submittedCount, skippedCount, blockedCount,
+    reconciliationRequired: true,
+  });
+}
+
 export async function reconcileApprovedPayrollPayment(input, deps) {
   const scope = { ...scopeOf(input), action: "hr.payroll.payment.reconcile" };
   return inTenantTransaction(deps, scope, async (tx) => {
