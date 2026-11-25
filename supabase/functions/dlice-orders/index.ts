@@ -961,7 +961,51 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
+    const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
+  if(saasActions.has(action)){
+    if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
+    if(action==="erp-saas-list-plan-versions"){
+      const {data,error}=await admin.from("saas_plan_versions").select("id,plan_key,version,display_name,billing_interval,price_idr,currency,effective_from,effective_to,active,saas_plan_entitlements(entitlement_key,limit_value,enabled,unit)").eq("active",true).order("plan_key").order("version",{ascending:false});
+      if(error)return fail("Katalog paket SaaS belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({plans:data||[]},200,origin);
+    }
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-saas-list-subscriptions"){
+      const {data,error}=await admin.from("saas_tenant_subscriptions").select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at,grace_ends_at,cancelled_at,saas_plan_versions(plan_key,version,display_name,billing_interval,price_idr)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(50);
+      if(error)return fail("Subscription tenant belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({subscriptions:data||[]},200,origin);
+    }
+    if(action==="erp-saas-start-trial"){
+      const planId=safeText(body.plan_version_id,64),days=Number(body.trial_days??14);
+      if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(days)||days<1||days>60)return fail("Paket atau durasi trial tidak valid.",422,origin);
+      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now.getTime()+30*86400000);
+      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active").eq("id",planId).maybeSingle();
+      if(planError)return fail("Paket belum dapat diverifikasi.",503,origin);
+      if(!plan||!plan.active||new Date(plan.effective_from)>now||(plan.effective_to&&new Date(plan.effective_to)<now))return fail("Versi paket tidak aktif pada tanggal mulai.",409,origin);
+      const {data,error}=await admin.from("saas_tenant_subscriptions").insert({tenant_id:tenantId,plan_version_id:planId,status:"trialing",starts_at:now.toISOString(),current_period_start:now.toISOString(),current_period_end:periodEnd.toISOString(),trial_ends_at:end.toISOString(),created_by:actor.user.id})
+        .select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at").single();
+      if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.trial_started",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,plan_version_id:planId,trial_days:days}});
+      return json({subscription:data},201,origin);
+    }
+    if(action==="erp-saas-cancel-subscription"){
+      const subscriptionId=safeText(body.subscription_id,64),reason=safeText(body.reason,500);
+      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||reason.length<8)return fail("ID subscription dan alasan pembatalan wajib valid.",422,origin);
+      const {data:old,error:oldError}=await admin.from("saas_tenant_subscriptions").select("id,status").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
+      if(oldError)return fail("Subscription belum dapat diverifikasi.",503,origin);
+      if(!old||!["trialing","active","past_due","suspended"].includes(old.status))return fail("Subscription tidak dapat dibatalkan dari status saat ini.",409,origin);
+      const {data,error}=await admin.from("saas_tenant_subscriptions").update({status:"cancelled",cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("tenant_id",tenantId).eq("id",subscriptionId).in("status",["trialing","active","past_due","suspended"]).select("id,status,cancelled_at").maybeSingle();
+      if(error||!data)return fail("Pembatalan gagal atau status berubah. Muat ulang.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.cancelled",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,reason}});
+      return json({subscription:data},200,origin);
+    }
+  }
+
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
