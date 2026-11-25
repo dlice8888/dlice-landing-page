@@ -204,6 +204,50 @@ end $;
 revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
 
+create or replace function public.franchise_generate_royalty_statement(
+ p_tenant_id uuid,p_branch_id uuid,p_agreement_id uuid,p_period_start date,p_period_end date,
+ p_reconciliation_run_id uuid,p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_agreement public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
+ v_metric_id uuid; v_sales numeric; v_recon public.bi_reconciliation_runs%rowtype; v_statement public.franchise_royalty_statements%rowtype;
+begin
+ if p_period_end<p_period_start or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_ROYALTY_PERIOD_OR_IDEMPOTENCY';
+ end if;
+ select * into v_agreement from public.franchise_agreements where id=p_agreement_id and tenant_id=p_tenant_id and branch_id=p_branch_id and agreement_status='active' for update;
+ if not found then raise exception using errcode='42501',message='ACTIVE_FRANCHISE_AGREEMENT_NOT_FOUND'; end if;
+ select * into v_version from public.franchise_agreement_versions where agreement_id=p_agreement_id and version=v_agreement.current_version
+  and effective_from<=p_period_start and (effective_to is null or effective_to>=p_period_end);
+ if not found then raise exception using errcode='23514',message='FRANCHISE_VERSION_NOT_EFFECTIVE_FOR_PERIOD'; end if;
+ select * into v_recon from public.bi_reconciliation_runs where id=p_reconciliation_run_id and tenant_id=p_tenant_id
+  and status='passed' and period_start<=p_period_start and period_end>=p_period_end;
+ if not found then raise exception using errcode='23514',message='SALES_RECONCILIATION_REQUIRED'; end if;
+ select id into v_metric_id from public.bi_metric_definitions where metric_key='net_sales' and active=true and unit='idr';
+ if not found then raise exception using errcode='23514',message='NET_SALES_METRIC_NOT_CONFIGURED'; end if;
+ select metric_value into v_sales from public.bi_metric_snapshots where tenant_id=p_tenant_id and metric_id=v_metric_id
+  and status='published' and dimension_key='branch_id' and dimension_value=p_branch_id::text
+  and period_start::date=p_period_start and period_end::date=p_period_end
+  and formula_version=(select formula_version from public.bi_metric_definitions where id=v_metric_id)
+  order by published_at desc limit 1;
+ if not found or v_sales is null or v_sales<0 or v_sales<>trunc(v_sales) then
+  raise exception using errcode='23514',message='PUBLISHED_RECONCILED_BRANCH_NET_SALES_REQUIRED';
+ end if;
+ insert into public.franchise_royalty_statements(tenant_id,branch_id,agreement_id,agreement_version_id,period_start,period_end,
+  eligible_net_sales_idr,royalty_rate_bps,marketing_fee_rate_bps,status,source_reconciliation_reference,idempotency_key)
+ values(p_tenant_id,p_branch_id,p_agreement_id,v_version.id,p_period_start,p_period_end,v_sales::bigint,
+  v_version.royalty_rate_bps,v_version.marketing_fee_rate_bps,'draft',p_reconciliation_run_id::text,p_idempotency_key)
+ returning * into v_statement;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.royalty_statement.generated','franchise_royalty_statement',v_statement.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'period_start',p_period_start,'period_end',p_period_end,
+   'net_sales_idr',v_statement.eligible_net_sales_idr,'royalty_idr',v_statement.royalty_amount_idr,'reconciliation_id',p_reconciliation_run_id));
+ return jsonb_build_object('statement_id',v_statement.id,'eligible_net_sales_idr',v_statement.eligible_net_sales_idr,
+  'royalty_amount_idr',v_statement.royalty_amount_idr,'marketing_fee_amount_idr',v_statement.marketing_fee_amount_idr,'status',v_statement.status);
+end $;
+revoke all on function public.franchise_generate_royalty_statement(uuid,uuid,uuid,date,date,uuid,text,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_generate_royalty_statement(uuid,uuid,uuid,date,date,uuid,text,uuid) to service_role;
+
 -- Royalty statement generation must consume reconciled net sales, never raw order totals.
 -- The caller supplies a signed-off reconciliation reference and the exact effective agreement version.
 
