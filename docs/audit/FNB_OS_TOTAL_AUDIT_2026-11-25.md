@@ -347,3 +347,29 @@ Bobot resmi: Code/UI 20%, Database/integrity 20%, Authorization/scope 15%, Autom
 ## 9. Hasil audit
 
 Feature matrix diperbarui dan 27 fitur dipindahkan ke PARTIAL karena implementasi konkret telah dimulai. Belum ada fitur yang dinyatakan selesai. Blocker langsung: selisih baseline 3 fitur Admin/Quality yang belum terpetakan, PR #144 salah base/diverged, exact-head syntax/CI belum PASS, serta seluruh gap acceptance di atas.
+
+## Update implementasi workflow delapan domain — 2026-11-25 (source-only)
+
+Setelah audit sebelumnya, source-level workflow kernels bertambah pada branch `feat/eight-domain-workflow-kernel-20261125` dan evidence matrix diperbarui. Angka feature-level saat ini: **189 total; 126 PARTIAL; 59 NOT VERIFIED; 4 BLOCKED; 0 DONE**. Angka PARTIAL berarti implementasi sudah dimulai, bukan acceptance selesai. Tidak ada fitur yang dinaikkan ke DONE.
+
+### Implementasi yang ditambahkan
+- CRM: `src/crm-financial-close.mjs`, `src/crm-eligible-net-sales.mjs`, `src/crm-campaign-delivery.mjs`. Campaign flow memerlukan consent aktif/expiry, provider yang disetujui, durable outbox, signed provider receipt/unsubscribe dan collision-safe dedupe. Eligible loyalty memerlukan financial close, processed refunds, settlement, shift dan Finance reconciliation. Provider campaign belum dipilih dan source adapter/RPC belum terhubung.
+- HR: `src/hr-payroll-calculation.mjs`, `src/hr-payroll-finance-batch.mjs`, `src/hr-payroll-payment-reconciliation.mjs`. Perhitungan hourly/monthly, overtime dengan multiplier yang disetujui, effective-dated components, balanced journal draft dan payment settlement gate. Persisted Finance batch, account governance, period lock, independent approval dan payment rail masih terbuka.
+- Delivery: `src/delivery-webhook-verification.mjs`, `src/delivery-financial-reconciliation.mjs`. Signed raw-body webhook contract, replay window/dedupe dan fee/subsidy/COD-to-Finance reconciliation. Provider adapter, endpoint, durable inbox dan live tracking belum ada.
+- Franchise: `src/franchise-opening-governance.mjs`, `src/franchise-contract-lifecycle.mjs`. Territory conflict, ten opening gates, contract hash versioning, independent review dan closure obligations/export controls. Persisted contract/signature/provisioning workflows belum ada.
+- BI: `src/bi-lineage-freshness.mjs`, `src/bi-branch-performance.mjs`. Source lineage/freshness/reconciliation gates dan strict 150-active-branch target-vs-actual aggregation. Ini tidak membuktikan 150 cabang aktif/berdata telah tersedia.
+- SaaS: `src/saas-post-commit-metering.mjs`, `src/saas-entitlement-enforcement.mjs`. Usage hanya setelah authoritative commit, quota gate, suspension eligibility. API-wide wiring, atomic quota reservation, billing invoice/payment dan export/deletion workflow masih terbuka.
+- Procurement: `src/procurement-ap-journal.mjs`, `src/procurement-payment-reconciliation.mjs`. Balanced AP draft dan supplier settlement reconciliation setelah payment executed. Invoice intake, credit notes/returns, payment rail dan persisted AP posting belum selesai.
+- Executive: `src/executive-drilldown-authorization.mjs`, `src/executive-finance-kpi.mjs`. Fail-closed ancestry/tenant scope dan Finance-backed KPI/target gate. Source query adapters, live 150-branch facts, alert lifecycle dan browser drill-down belum selesai.
+
+### Status integrasi dan release
+- PR #144 masih OPEN; tidak di-merge. Branch source terbaru yang diperbarui oleh catatan audit ini adalah `feat/eight-domain-workflow-kernel-20261125`.
+- GitHub Actions otomatis berjalan karena commit. Pada pemeriksaan terakhir, workflow pada head `b717f5605e537e9febeacee7990fa8516a117afd` masih queued/pending. Beberapa contract jobs pada head sebelumnya selesai success, tetapi exact-head final status belum PASS.
+- Tidak menjalankan test tambahan secara manual, tidak melakukan merge, migration, Supabase data/schema mutation, Edge deployment, Vercel production deployment, atau perubahan release flags. Hal-hal tersebut tetap ditahan untuk final batch sesuai instruksi.
+- Release flags tetap wajib false: `TENANT_ISOLATION_RELEASED=false` dan `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+### Gap kritis berikutnya
+1. CRM: server-side canonical source query + atomic close snapshot/award RPC; pilih provider resmi campaign agar adapter dan signed webhook dapat diselesaikan.
+2. HR: persist payroll snapshots dan Finance batch header/lines, period/approval/reversal RPC, payment adapter.
+3. Delivery: pilih provider yang disetujui, provision private Storage dan webhook inbox/retry endpoint.
+4. Franchise/BI/SaaS/Procurement/Executive: wire domain kernels ke database/API/UI, lalu jalankan sumber reconciliation setelah final test/migration batch.
