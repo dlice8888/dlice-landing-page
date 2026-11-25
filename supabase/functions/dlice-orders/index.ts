@@ -1166,6 +1166,10 @@ if (action === "admin-set-profile-role") {
     "erp-hr-create-leave-request",
     "erp-hr-confirm-leave-coverage",
     "erp-hr-review-leave-request",
+    "erp-hr-list-timesheets",
+    "erp-hr-generate-timesheet",
+    "erp-hr-submit-timesheet",
+    "erp-hr-approve-timesheet",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1210,6 +1214,26 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.rpc("hr_create_shift_schedule",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_employee_user_id:employeeId,p_job_position_id:positionId,p_starts_at:startsAt,p_ends_at:endsAt,p_created_by:actor.user.id,p_notes:notes});
       if(error)return fail("Jadwal ditolak. Periksa penugasan aktif dan konflik shift.",409,origin);
       return json({schedule:data},201,origin);
+    }
+    if(action==="erp-hr-list-timesheets"){
+      const {data,error}=await admin.from("hr_timesheets").select("id,employee_user_id,period_start,period_end,total_minutes,status,submitted_at,approved_by,approved_at,attendance_event_ids").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("period_start",{ascending:false}).limit(100);
+      if(error)return fail("Timesheet belum tersedia. Terapkan migrasi HR pada batch final.",503,origin);
+      return json({timesheets:data||[]},200,origin);
+    }
+    if(action==="erp-hr-generate-timesheet"){
+      const employeeId=safeText(body.employee_user_id,64),start=safeText(body.period_start,10),end=safeText(body.period_end,10);
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end))return fail("Periode timesheet tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_generate_timesheet",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_employee_user_id:employeeId,p_period_start:start,p_period_end:end,p_created_by:actor.user.id});
+      if(error)return fail("Timesheet gagal dibuat. Pastikan semua event absensi berurutan dan memiliki clock-out.",409,origin);
+      return json({timesheet:data},201,origin);
+    }
+    if(action==="erp-hr-submit-timesheet"||action==="erp-hr-approve-timesheet"){
+      const timesheetId=safeText(body.timesheet_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(timesheetId))return fail("Timesheet tidak valid.",422,origin);
+      const rpc=action==="erp-hr-submit-timesheet"?"hr_submit_timesheet":"hr_approve_timesheet";
+      const {data,error}=await admin.rpc(rpc,{p_timesheet_id:timesheetId,p_actor_user_id:actor.user.id});
+      if(error)return fail(action==="erp-hr-submit-timesheet"?"Hanya karyawan pemilik timesheet yang dapat mengirim untuk approval.":"Approval ditolak. Approver harus berbeda dari karyawan.",409,origin);
+      return json({timesheet:data},200,origin);
     }
     if(action==="erp-hr-list-leave-requests"){
       const {data,error}=await admin.from("hr_leave_requests").select("id,employee_user_id,leave_type,starts_on,ends_on,requested_days,coverage_employee_user_id,coverage_approved,status,reason,requested_by,reviewed_by,reviewed_at,review_note").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(150);
