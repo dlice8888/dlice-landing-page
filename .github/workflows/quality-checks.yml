@@ -57,6 +57,8 @@ jobs:
         run: node --test tests/contracts/delivery-atomic-adapter-worker.test.mjs tests/contracts/delivery-sql-contract.test.mjs
       - name: Run eight-domain SQL delimiter contracts
         run: node --test tests/contracts/eight-domain-sql-delimiter-contract.test.mjs
+      - name: Run BI evidence ingestion and reconciliation contracts
+        run: node --test tests/contracts/bi-evidence-ingestion-contract.test.mjs
       - name: Run Franchise opening gate workflow contracts
         run: node --test tests/contracts/franchise-opening-gates-contract.test.mjs
       - name: Run ERP command-center contract tests
