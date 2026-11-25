@@ -2837,13 +2837,19 @@
         {
           "requirement": "Load/concurrency test for 150 branches",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No approved realistic workload test or latency/error SLO evidence.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 278
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            149
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #149 adds a free PostgreSQL 17 local fixture with Tenant A 150 branches and Tenant B one branch, RLS-scoped authenticated reads, 50 concurrent pgbench clients, cross-tenant zero-row assertions and p95/p99 measurements. Workflow result is not yet verified; it is a database read probe, not a full application/API load test.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Pilot, rollout and rollback",
@@ -2966,12 +2972,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 20,
-        "partial": 13,
-        "not_verified": 7,
+        "partial": 14,
+        "not_verified": 6,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 65,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     }
   ],
@@ -3005,6 +3011,12 @@
         "draft": true,
         "head_sha": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
         "workflow": "Initial run 45662328574 failed in RLS result assertions because psql command tags were included in captured output; script now uses quiet psql output and emits explicit assertion diagnostics. No successful rerun evidence available yet."
+      },
+      "pr149": {
+        "state": "OPEN",
+        "draft": true,
+        "head_sha": "267c6e41ebe6e6315e03c1de1595d92d4ff9c48e",
+        "workflow": "No completed run visible yet; no performance pass claimed"
       }
     },
     "supabase": {
@@ -5452,8 +5464,8 @@
   "audit_method": "189 PRD rows reviewed against staging source matrix, open implementation PRs #143/#145/#146, live Supabase staging catalog/advisors, and Vercel deployment metadata. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open PRs and BLOCKED preflight workflows are not staging/runtime acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 140,
-    "not_verified": 44,
+    "partial": 141,
+    "not_verified": 43,
     "blocked": 5,
     "done": 0
   }
