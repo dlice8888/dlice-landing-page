@@ -19,18 +19,18 @@ create table if not exists public.crm_loyalty_point_allocations (
   tenant_id uuid not null references public.tenants(id) on delete restrict,
   customer_id uuid not null,
   source_entry_id uuid not null,
-  earn_entry_id uuid not null,
+  point_lot_entry_id uuid not null,
   allocation_kind text not null check(allocation_kind in ('redemption','redemption_reversal','expiry')),
   points_allocated bigint not null check(points_allocated>0),
   created_at timestamptz not null default now(),
   unique(tenant_id,id),
-  unique(tenant_id,source_entry_id,earn_entry_id,allocation_kind),
+  unique(tenant_id,source_entry_id,point_lot_entry_id,allocation_kind),
   foreign key(tenant_id,customer_id) references public.crm_customers(tenant_id,id) on delete restrict,
   foreign key(tenant_id,source_entry_id) references public.crm_loyalty_ledger(tenant_id,id) on delete restrict,
-  foreign key(tenant_id,earn_entry_id) references public.crm_loyalty_ledger(tenant_id,id) on delete restrict
+  foreign key(tenant_id,point_lot_entry_id) references public.crm_loyalty_ledger(tenant_id,id) on delete restrict
 );
 create index if not exists crm_loyalty_allocations_lot_idx
-  on public.crm_loyalty_point_allocations(tenant_id,earn_entry_id,allocation_kind);
+  on public.crm_loyalty_point_allocations(tenant_id,point_lot_entry_id,allocation_kind);
 
 alter table public.crm_loyalty_point_allocations enable row level security;
 drop policy if exists service_role_only on public.crm_loyalty_point_allocations;
@@ -179,7 +179,7 @@ begin
       else 0 end),0)
       into v_allocated
       from public.crm_loyalty_point_allocations
-     where tenant_id=p_tenant_id and earn_entry_id=v_lot.id;
+     where tenant_id=p_tenant_id and point_lot_entry_id=v_lot.id;
     v_remaining:=greatest(v_lot.points-v_allocated,0);
     if v_remaining>0 then
       v_key:='crm-expire:'||v_lot.id::text;
@@ -189,12 +189,12 @@ begin
         values(p_tenant_id,p_customer_id,'adjustment',-v_remaining,v_key,
           'expiry:'||v_lot.id::text,p_actor_user_id) returning * into v_expiry_entry;
         insert into public.crm_loyalty_point_allocations
-          (tenant_id,customer_id,source_entry_id,earn_entry_id,allocation_kind,points_allocated)
+          (tenant_id,customer_id,source_entry_id,point_lot_entry_id,allocation_kind,points_allocated)
         values(p_tenant_id,p_customer_id,v_expiry_entry.id,v_lot.id,'expiry',v_remaining);
         insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
         values(p_actor_user_id,'crm.loyalty.points_expired','crm_loyalty_ledger',v_expiry_entry.id::text,
           jsonb_build_object('tenant_id',p_tenant_id,'customer_id',p_customer_id,
-            'earn_entry_id',v_lot.id,'points_expired',v_remaining,'expires_at',v_lot.expires_at));
+            'point_lot_entry_id',v_lot.id,'points_expired',v_remaining,'expires_at',v_lot.expires_at));
         v_expired_total:=v_expired_total+v_remaining;
         v_lot_count:=v_lot_count+1;
       end if;
@@ -253,7 +253,8 @@ begin
   v_remaining:=v_reward.points_cost;
   for v_lot in
     select id,points from public.crm_loyalty_ledger
-     where tenant_id=p_tenant_id and customer_id=p_customer_id and entry_kind='earn'
+     where tenant_id=p_tenant_id and customer_id=p_customer_id
+       and (entry_kind='earn' or (entry_kind='adjustment' and points>0))
        and (expires_at is null or expires_at>now())
      order by expires_at nulls last,created_at,id for update
   loop
@@ -262,11 +263,11 @@ begin
       when allocation_kind='redemption_reversal' then -points_allocated
       else 0 end),0)
       into v_allocated from public.crm_loyalty_point_allocations
-     where tenant_id=p_tenant_id and earn_entry_id=v_lot.id;
+     where tenant_id=p_tenant_id and point_lot_entry_id=v_lot.id;
     v_available:=greatest(v_lot.points-v_allocated,0);
     if v_available>0 and v_remaining>0 then
       insert into public.crm_loyalty_point_allocations
-        (tenant_id,customer_id,source_entry_id,earn_entry_id,allocation_kind,points_allocated)
+        (tenant_id,customer_id,source_entry_id,point_lot_entry_id,allocation_kind,points_allocated)
       values(p_tenant_id,p_customer_id,v_debit.id,v_lot.id,'redemption',least(v_available,v_remaining));
       v_remaining:=v_remaining-least(v_available,v_remaining);
     end if;
@@ -319,12 +320,15 @@ begin
     if exists(select 1 from public.crm_loyalty_ledger where tenant_id=p_tenant_id and reverses_entry_id=p_reverses_entry_id) then
       raise exception using errcode='23505',message='ENTRY_ALREADY_REVERSED';
     end if;
+    if v_original.entry_kind='adjustment' then
+      raise exception using errcode='23514',message='ADJUSTMENT_REVERSAL_REQUIRES_NEW_ADJUSTMENT';
+    end if;
     if v_original.entry_kind='earn' then
       select coalesce(sum(case
         when allocation_kind in ('redemption','expiry') then points_allocated
         when allocation_kind='redemption_reversal' then -points_allocated else 0 end),0)
         into v_allocated from public.crm_loyalty_point_allocations
-       where tenant_id=p_tenant_id and earn_entry_id=v_original.id;
+       where tenant_id=p_tenant_id and point_lot_entry_id=v_original.id;
       if v_allocated>0 then raise exception using errcode='23514',message='EARN_ENTRY_ALREADY_CONSUMED_OR_EXPIRED'; end if;
     end if;
   elsif p_reverses_entry_id is not null then
@@ -339,13 +343,13 @@ begin
   returning * into v_entry;
 
   if p_entry_kind='reversal' and v_original.entry_kind='redeem' then
-    for v_allocation in select earn_entry_id,points_allocated
+    for v_allocation in select point_lot_entry_id,points_allocated
       from public.crm_loyalty_point_allocations
      where tenant_id=p_tenant_id and source_entry_id=v_original.id and allocation_kind='redemption'
     loop
       insert into public.crm_loyalty_point_allocations
-        (tenant_id,customer_id,source_entry_id,earn_entry_id,allocation_kind,points_allocated)
-      values(p_tenant_id,p_customer_id,v_entry.id,v_allocation.earn_entry_id,'redemption_reversal',v_allocation.points_allocated);
+        (tenant_id,customer_id,source_entry_id,point_lot_entry_id,allocation_kind,points_allocated)
+      values(p_tenant_id,p_customer_id,v_entry.id,v_allocation.point_lot_entry_id,'redemption_reversal',v_allocation.points_allocated);
     end loop;
   end if;
   insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
