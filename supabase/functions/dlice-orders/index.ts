@@ -1409,6 +1409,8 @@ if (action === "admin-set-profile-role") {
   // derived from the database; no caller-supplied tenant_id is trusted.
   const hrActions = new Set([
     "erp-hr-list-employees",
+    "erp-hr-create-employee-record",
+    "erp-hr-apply-employee-lifecycle-event",
     "erp-hr-list-attendance",
     "erp-hr-record-attendance",
     "erp-hr-list-schedules",
@@ -1443,18 +1445,70 @@ if (action === "admin-set-profile-role") {
     if (branchError) return fail("Cabang belum dapat diverifikasi.", 503, origin);
     if (!branch || !branch.tenant_id) return fail("Cabang tidak ditemukan.", 404, origin);
 
+    if (action === "erp-hr-create-employee-record") {
+      const employeeId=safeText(body.employee_user_id,64),employeeNumber=safeText(body.employee_number,80);
+      const positionId=safeText(body.job_position_id,64),hiredOn=safeText(body.hired_on,10);
+      const displayName=safeText(body.display_name,160)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^[0-9a-f-]{36}$/i.test(positionId)||
+         !employeeNumber||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(hiredOn))
+        return fail("Data identitas karyawan tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_create_employee_record",{
+        p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_employee_user_id:employeeId,
+        p_employee_number:employeeNumber,p_display_name_snapshot:displayName,
+        p_job_position_id:positionId,p_hired_on:hiredOn,
+        p_idempotency_key:safeText(body.idempotency_key,120),p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Employee record belum dapat dibuat. Pastikan identitas, membership, assignment, dan schema HR valid.",409,origin);
+      return json({employee_record:data},201,origin);
+    }
+
+    if (action === "erp-hr-apply-employee-lifecycle-event") {
+      const employeeId=safeText(body.employee_user_id,64),eventType=safeText(body.event_type,40);
+      const effectiveOn=safeText(body.effective_on,10),newBranchId=safeText(body.new_branch_id,64)||null;
+      const newPositionId=safeText(body.new_job_position_id,64)||null;
+      const leaveId=safeText(body.related_leave_request_id,64)||null;
+      const reason=safeText(body.reason,500),idempotencyKey=safeText(body.idempotency_key,120);
+      const allowed=["transfer","position_change","leave_started","leave_ended","offboarding_requested","terminated","reactivated"];
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!allowed.includes(eventType)||
+         !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(effectiveOn)||reason.length<3||idempotencyKey.length<8||
+         (newBranchId&&!/^[0-9a-f-]{36}$/i.test(newBranchId))||
+         (newPositionId&&!/^[0-9a-f-]{36}$/i.test(newPositionId))||
+         (leaveId&&!/^[0-9a-f-]{36}$/i.test(leaveId)))
+        return fail("Perintah lifecycle karyawan tidak valid.",422,origin);
+      if(newBranchId&&!(await actorCanAccessBranch(newBranchId)))
+        return fail("Akses cabang tujuan tidak diizinkan.",403,origin);
+      const {data,error}=await admin.rpc("hr_apply_employee_lifecycle_event",{
+        p_tenant_id:branch.tenant_id,p_employee_user_id:employeeId,p_event_type:eventType,
+        p_effective_on:effectiveOn,p_new_branch_id:newBranchId,p_new_job_position_id:newPositionId,
+        p_related_leave_request_id:leaveId,p_idempotency_key:idempotencyKey,p_reason:reason,
+        p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Lifecycle karyawan ditolak. Periksa status, approval cuti, timesheet, tanggal efektif, dan tenant scope.",409,origin);
+      return json({lifecycle_event:data},200,origin);
+    }
+
     if (action === "erp-hr-list-employees") {
       const { data, error } = await admin.from("branch_assignments")
         .select("user_id,job_position_id,starts_on,ends_on,employment_status,job_positions(title),admin_profiles(display_name,username,is_active)")
-        .eq("branch_id", branchId).eq("employment_status", "active").lte("starts_on", todayDate())
+        .eq("branch_id", branchId).in("employment_status", ["active","on_leave"]).lte("starts_on", todayDate())
         .or("ends_on.is.null,ends_on.gte."+todayDate()).order("starts_on", { ascending: false });
       if (error) return fail("Daftar staf cabang belum dapat dimuat.", 503, origin);
-      const employees = (data || []).filter((row: any) => row.admin_profiles?.is_active === true).map((row: any) => ({
-        user_id: row.user_id, display_name: row.admin_profiles?.display_name || row.admin_profiles?.username || row.user_id,
-        username: row.admin_profiles?.username || null, job_position_id: row.job_position_id,
-        job_title: row.job_positions?.title || null, starts_on: row.starts_on,
-      }));
-      return json({ employees }, 200, origin);
+      const lifecycle=await admin.from("hr_employee_records")
+        .select("employee_user_id,employee_number,employment_status,hired_on,terminated_on")
+        .eq("tenant_id",branch.tenant_id);
+      const lifecycleByUser=new Map((lifecycle.data||[]).map((x:any)=>[x.employee_user_id,x]));
+      const employees = (data || []).filter((row: any) => row.admin_profiles?.is_active === true).map((row: any) => {
+        const record:any=lifecycleByUser.get(row.user_id)||null;
+        return {
+          user_id: row.user_id, display_name: row.admin_profiles?.display_name || row.admin_profiles?.username || row.user_id,
+          username: row.admin_profiles?.username || null, job_position_id: row.job_position_id,
+          job_title: row.job_positions?.title || null, starts_on: row.starts_on,
+          assignment_status:row.employment_status,employee_number:record?.employee_number||null,
+          employment_status:record?.employment_status||row.employment_status,hired_on:record?.hired_on||row.starts_on,
+          terminated_on:record?.terminated_on||null,
+        };
+      });
+      return json({ employees, lifecycle_schema_available:!lifecycle.error }, 200, origin);
     }
 
     if (action === "erp-hr-list-attendance") {
