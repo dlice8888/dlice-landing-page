@@ -383,9 +383,6 @@ begin
  if not found or v_version.approved_by=p_actor_user_id or v_version.effective_from is null then
   raise exception using errcode='23514',message='APPROVED_EFFECTIVE_AGREEMENT_VERSION_REQUIRED';
  end if;
- if v_version.signed_document_reference is null then
-  raise exception using errcode='23514',message='SIGNED_DOCUMENT_REFERENCE_MUST_BE_ATTACHED_AFTER_SIGNATURE';
- end if;
  update public.franchise_agreements set agreement_status='pending_signature' where id=v.id;
  insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
  values(v.id,'submitted_for_signature',p_actor_user_id,v_version.signed_document_reference,
@@ -442,3 +439,14 @@ begin
 end $$;
 revoke all on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) from public,anon,authenticated;
 grant execute on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) to service_role;
+
+create or replace function public.franchise_reject_agreement_event_mutation()
+returns trigger language plpgsql security invoker set search_path=''
+as $$
+begin
+ raise exception using errcode='42501',message='FRANCHISE_AGREEMENT_EVENTS_APPEND_ONLY';
+end $$;
+revoke all on function public.franchise_reject_agreement_event_mutation() from public,anon,authenticated;
+drop trigger if exists franchise_agreement_events_immutable on public.franchise_agreement_events;
+create trigger franchise_agreement_events_immutable before update or delete on public.franchise_agreement_events
+for each row execute function public.franchise_reject_agreement_event_mutation();
