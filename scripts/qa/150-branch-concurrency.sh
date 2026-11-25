@@ -52,7 +52,7 @@ CREATE POLICY branch_tenant_isolation ON public.branches
   USING (tenant_id=nullif(current_setting('app.tenant_id',true),'')::uuid);
 GRANT SELECT ON public.branches TO authenticated;
 CREATE OR REPLACE FUNCTION public.assert_branch_tenant_scope(expected_tenant uuid, expected_count bigint, forbidden_tenant uuid)
-RETURNS boolean LANGUAGE plpgsql AS $
+RETURNS boolean LANGUAGE plpgsql AS \$\$
 DECLARE visible_count bigint;
 DECLARE forbidden_count bigint;
 BEGIN
@@ -65,7 +65,7 @@ BEGIN
     RAISE EXCEPTION 'tenant visibility mismatch: visible %, forbidden %', visible_count, forbidden_count;
   END IF;
   RETURN true;
-END $;
+END \$\$;
 GRANT EXECUTE ON FUNCTION public.assert_branch_tenant_scope(uuid,bigint,uuid) TO authenticated;
 INSERT INTO public.tenants(id,tenant_code) VALUES
   ('$TENANT_A','TENANT-A'),('$TENANT_B','TENANT-B');
