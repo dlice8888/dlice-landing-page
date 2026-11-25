@@ -30,7 +30,7 @@ test("dispatch uses v3 headers and stable idempotency key in test mode", async (
   const adapter = createXenditPayoutV3Adapter({ secretApiKey: "xnd_development_test", enableTestNetwork: true,
     fetchImpl: async (url, init) => {
       request = { url, init };
-      return new Response(JSON.stringify({ id: "po-test-001", reference_id: payoutBody.reference_id,
+      return new Response(JSON.stringify({ payout_id: "po-test-001", reference_id: payoutBody.reference_id,
         status: "ACCEPTED" }), { status: 200, headers: { "content-type": "application/json" } });
     } });
   const result = await adapter.executePayrollPaymentProvider({ providerPayload: payoutBody,
