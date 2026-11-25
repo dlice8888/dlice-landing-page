@@ -1837,8 +1837,8 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-saas-issue-invoice"){
       const subscriptionId=safeText(body.subscription_id,64),periodStart=safeText(body.period_start,10),
        periodEnd=safeText(body.period_end,10),dueAt=safeText(body.due_at,40),tax=Number(body.tax_idr||0);
-      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(periodStart)||
-       !/^\\d{4}-\\d{2}-\\d{2}$/.test(periodEnd)||periodEnd<periodStart||
+      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||!/^\d{4}-\d{2}-\d{2}$/.test(periodStart)||
+       !/^\d{4}-\d{2}-\d{2}$/.test(periodEnd)||periodEnd<periodStart||
        !Number.isSafeInteger(tax)||tax<0||!Number.isFinite(Date.parse(dueAt)))
        return fail("Data penerbitan invoice SaaS tidak valid.",422,origin);
       const {data:subscription,error:subscriptionError}=await admin.from("saas_tenant_subscriptions").select("id").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
