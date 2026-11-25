@@ -206,3 +206,16 @@ draft Finance batch and audit record atomically. It does not post or pay payroll
 The draft has not been applied; payroll calculation inputs, journal approval/
 posting, payment provider execution and settlement reconciliation still need
 their concrete adapters and lifecycle routes.
+
+
+## Delivery persistence schema increment
+
+Added `docs/implementation/sql/DELIVERY_PROVIDER_STORAGE_SCHEMA_DRAFT.sql`.
+It defines tenant/branch-scoped provider quotes, dispatch bookings, signed
+provider-event dedupe, private Storage evidence metadata, COD/courier-cost
+reconciliation and a retryable delivery outbox. The draft expects a private
+`delivery-private` Storage bucket and server-side uploads only; it grants no
+client upload path. Provider quote/booking execution, webhook route wiring,
+Storage bucket provisioning and actual COD/Finance settlement adapters remain
+outstanding. No provider credentials were configured and no Storage bucket or
+database schema was changed in staging.
