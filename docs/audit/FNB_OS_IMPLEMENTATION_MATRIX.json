@@ -3003,8 +3003,8 @@
       "pr148": {
         "state": "OPEN",
         "draft": true,
-        "head_sha": "54184990084c03b7bbe7916aa66b1b5dba8e382d",
-        "workflow": "PENDING / no completed run observed; no success claim"
+        "head_sha": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
+        "workflow": "Initial run 45662328574 failed in RLS result assertions because psql command tags were included in captured output; script now uses quiet psql output and emits explicit assertion diagnostics. No successful rerun evidence available yet."
       }
     },
     "supabase": {
