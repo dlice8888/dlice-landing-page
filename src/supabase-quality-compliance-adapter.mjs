@@ -58,6 +58,16 @@ export function createSupabaseQualityComplianceAdapter(client){
    p_receipt_item_id:required(input.receiptItemId,"receiptItemId"),p_policy_id:required(input.policyId,"policyId"),
    p_findings:input.findings,p_idempotency_key:required(input.idempotencyKey,"idempotencyKey"),
    p_actor_user_id:required(input.actorId,"actorId")});},
+  requestFoodLotRelease(input){return invoke("quality_request_food_lot_release",{
+   p_tenant_id:required(input.tenantId,"tenantId"),p_branch_id:required(input.branchId,"branchId"),
+   p_quarantine_id:required(input.quarantineId,"quarantineId"),p_reason:required(input.reason,"reason"),
+   p_evidence_reference:required(input.evidenceReference,"evidenceReference"),
+   p_idempotency_key:required(input.idempotencyKey,"idempotencyKey"),p_actor_user_id:required(input.actorId,"actorId")});},
+  approveFoodLotRelease(input){return invoke("quality_approve_food_lot_release",{
+   p_tenant_id:required(input.tenantId,"tenantId"),p_branch_id:required(input.branchId,"branchId"),
+   p_quarantine_id:required(input.quarantineId,"quarantineId"),p_decision:required(input.decision,"decision"),
+   p_evidence_reference:required(input.evidenceReference,"evidenceReference"),
+   p_idempotency_key:required(input.idempotencyKey,"idempotencyKey"),p_actor_user_id:required(input.actorId,"actorId")});},
   submitSupplierCorrectiveAction(input){return invoke("quality_submit_supplier_capa",{
    p_tenant_id:required(input.tenantId,"tenantId"),p_branch_id:required(input.branchId,"branchId"),
    p_capa_id:required(input.capaId,"capaId"),p_root_cause:required(input.rootCause,"rootCause"),
