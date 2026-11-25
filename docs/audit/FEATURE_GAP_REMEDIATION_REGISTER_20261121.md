@@ -25,25 +25,25 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED | DONE | Partial coverage* |
 |---|---:|---:|---:|---:|---:|---:|
-| Executive Command Center | 10 | 6 | 3 | 1 | 0 | 60.0% |
+| Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% |
 | POS & Checkout | 13 | 7 | 5 | 1 | 0 | 53.8% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% |
-| Procurement & Supplier | 10 | 6 | 4 | 0 | 0 | 60.0% |
+| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70.0% |
 | Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% |
 | Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100.0% |
-| CRM, Loyalty & Marketing | 9 | 5 | 4 | 0 | 0 | 55.6% |
-| Finance & Accounting | 12 | 8 | 3 | 1 | 0 | 66.7% |
-| HR & Workforce | 9 | 2 | 7 | 0 | 0 | 22.2% |
-| Franchise & Expansion | 8 | 6 | 2 | 0 | 0 | 75.0% |
-| BI & Analytics | 10 | 6 | 4 | 0 | 0 | 60.0% |
+| CRM, Loyalty & Marketing | 9 | 6 | 3 | 0 | 0 | 66.7% |
+| Finance & Accounting | 12 | 9 | 2 | 1 | 0 | 75.0% |
+| HR & Workforce | 9 | 7 | 2 | 0 | 0 | 77.8% |
+| Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100.0% |
+| BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70.0% |
 | Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% |
-| SaaS Tenant Management | 8 | 4 | 4 | 0 | 0 | 50.0% |
+| SaaS Tenant Management | 8 | 6 | 2 | 0 | 0 | 75.0% |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% |
 | Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60.0% |
-| **TOTAL** | **189** | **120** | **63** | **6** | **0** | **63.5%** |
+| **TOTAL** | **189** | **134** | **49** | **6** | **0** | **70.9%** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -985,9 +985,9 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 
 ## Superseding current audit — 25 November 2026
 
-The latest row-level PRD reconciliation is **189 total / 120 PARTIAL / 63 NOT VERIFIED / 6 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 25 NOT VERIFIED → PARTIAL transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 25 transitions are: Executive (2), CRM (4), Delivery (6), Finance (1), HR (1), Franchise (4), BI (3), Procurement (1), Integrations (1), SaaS (2).
+The latest row-level PRD reconciliation is **189 total / 134 PARTIAL / 49 NOT VERIFIED / 6 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 39 NOT VERIFIED → PARTIAL transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 39 transitions are: Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4).
 
-**Important scoring distinction:** partial coverage (120/189 = 63.5%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 118 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
+**Important scoring distinction:** partial coverage (134/189 = 70.9%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 132 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
 
 ### Live platform evidence checked 25 November
 - GitHub: PR #145 and #146 are OPEN Draft. PR #146 exact-head quality checks passed on 23e4b6c2a057b9b8bdeed68f71088c6e4c88d105; its database replay and provider/bank E2E remain unverified.
@@ -997,4 +997,4 @@ The latest row-level PRD reconciliation is **189 total / 120 PARTIAL / 63 NOT VE
 - Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
 
 ### Highest priority remaining NOT VERIFIED counts
-CRM 4; BI 4; Procurement 4; HR 7; Delivery 0 (all 6 have implementation started, not accepted); Franchise 2; Executive 3; POS 5; Branch Ops 5; SaaS 4. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
+Quality & Security 8; POS 5; Branch Ops 5; CRM 3; BI 3; Procurement 3; Integrations 3; Menu 3; HR 2; Executive 2; Finance 2; SaaS 2; Order 2; Kitchen 2; Delivery 0; Franchise 0. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
