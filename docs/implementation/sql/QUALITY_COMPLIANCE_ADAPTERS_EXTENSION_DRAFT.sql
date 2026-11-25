@@ -49,12 +49,12 @@ create index if not exists food_lot_distributions_impact_idx on public.food_lot_
 create unique index if not exists supplier_quality_one_active_quarantine_uq
  on public.supplier_quality_quarantines(tenant_id,branch_id,receipt_item_id) where status in ('held','release_pending');
 
-do $ begin
+do $$ begin
  if not exists(select 1 from pg_constraint where conname='food_lot_quarantines_recall_fk' and conrelid='public.food_lot_quarantines'::regclass) then
   alter table public.food_lot_quarantines add constraint food_lot_quarantines_recall_fk
    foreign key(tenant_id,recall_id) references public.food_recalls(tenant_id,id) on delete restrict;
  end if;
-end $;
+end $$;
 create unique index if not exists food_lot_one_active_quarantine_uq
   on public.food_lot_quarantines(tenant_id,branch_id,lot_code) where status in ('held','release_pending');
 
