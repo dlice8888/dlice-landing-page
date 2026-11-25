@@ -4,7 +4,7 @@
   "repository": "dlice8888/dlice-landing-page",
   "source_matrix_commit": "35f7f816bf0155be112aab8634830960b22e229c",
   "prd_feature_count": 189,
-  "status": "CROSSWALK_IN_PROGRESS",
+  "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
     "PARTIAL": 141,
     "NOT VERIFIED": 43,
@@ -58,7 +58,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D01-F02",
@@ -106,7 +114,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D01-F03",
@@ -154,7 +168,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D01-F04",
@@ -202,7 +224,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D01-F05",
@@ -250,7 +280,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D01-F06",
@@ -298,7 +334,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D01-F07",
@@ -346,7 +388,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D01-F08",
@@ -394,7 +442,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D01-F09",
@@ -442,7 +496,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D01-F10",
@@ -490,7 +552,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F01",
@@ -538,7 +606,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F02",
@@ -586,7 +660,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F03",
@@ -634,7 +714,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F04",
@@ -682,7 +768,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D02-F05",
@@ -730,7 +824,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F06",
@@ -778,7 +878,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F07",
@@ -826,7 +932,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D02-F08",
@@ -874,7 +988,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D02-F09",
@@ -922,7 +1044,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F10",
@@ -970,7 +1098,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D02-F11",
@@ -1018,7 +1154,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D02-F12",
@@ -1066,7 +1208,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D02-F13",
@@ -1114,7 +1264,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F01",
@@ -1162,7 +1318,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F02",
@@ -1210,7 +1372,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F03",
@@ -1258,7 +1426,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F04",
@@ -1306,7 +1480,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F05",
@@ -1354,7 +1534,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F06",
@@ -1402,7 +1588,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F07",
@@ -1450,7 +1642,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          123,
+          127
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D03-F08",
@@ -1498,7 +1699,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F09",
@@ -1546,7 +1753,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D03-F10",
@@ -1594,7 +1807,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F01",
@@ -1642,7 +1861,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F02",
@@ -1690,7 +1915,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F03",
@@ -1738,7 +1969,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F04",
@@ -1786,7 +2023,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F05",
@@ -1834,7 +2077,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F06",
@@ -1882,7 +2131,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F07",
@@ -1930,7 +2185,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F08",
@@ -1978,7 +2239,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F09",
@@ -2026,7 +2293,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D04-F10",
@@ -2074,7 +2347,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F01",
@@ -2122,7 +2401,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F02",
@@ -2170,7 +2455,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F03",
@@ -2218,7 +2509,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F04",
@@ -2266,7 +2563,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F05",
@@ -2314,7 +2617,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F06",
@@ -2362,7 +2671,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F07",
@@ -2410,7 +2725,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F08",
@@ -2458,7 +2779,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F09",
@@ -2506,7 +2833,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F10",
@@ -2554,7 +2887,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D05-F11",
@@ -2602,7 +2941,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F01",
@@ -2650,7 +2995,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F02",
@@ -2698,7 +3049,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F03",
@@ -2746,7 +3103,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F04",
@@ -2794,7 +3157,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F05",
@@ -2842,7 +3211,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F06",
@@ -2890,7 +3265,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F07",
@@ -2938,7 +3319,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F08",
@@ -2986,7 +3373,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F09",
@@ -3034,7 +3427,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F10",
@@ -3082,7 +3481,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F11",
@@ -3130,7 +3535,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D06-F12",
@@ -3178,7 +3589,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F01",
@@ -3226,7 +3643,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F02",
@@ -3274,7 +3697,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F03",
@@ -3322,7 +3751,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F04",
@@ -3370,7 +3805,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F05",
@@ -3418,7 +3859,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F06",
@@ -3466,7 +3913,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F07",
@@ -3514,7 +3967,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          150
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D07-F08",
@@ -3562,7 +4023,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D07-F09",
@@ -3610,7 +4077,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D07-F10",
@@ -3658,7 +4133,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F01",
@@ -3706,7 +4187,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F02",
@@ -3754,7 +4241,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F03",
@@ -3802,7 +4295,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F04",
@@ -3850,7 +4349,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F05",
@@ -3898,7 +4403,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F06",
@@ -3946,7 +4457,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F07",
@@ -3994,7 +4511,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F08",
@@ -4042,7 +4565,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F09",
@@ -4090,7 +4619,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D08-F10",
@@ -4138,7 +4673,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D09-F01",
@@ -4186,7 +4727,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F02",
@@ -4234,7 +4783,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F03",
@@ -4282,7 +4839,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F04",
@@ -4330,7 +4895,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F05",
@@ -4378,7 +4951,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F06",
@@ -4426,7 +5007,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F07",
@@ -4474,7 +5063,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D09-F08",
@@ -4522,7 +5119,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D10-F01",
@@ -4570,7 +5173,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D10-F02",
@@ -4618,7 +5229,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D10-F03",
@@ -4666,7 +5285,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D10-F04",
@@ -4714,7 +5339,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D10-F05",
@@ -4762,7 +5395,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D10-F06",
@@ -4810,7 +5449,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D10-F07",
@@ -4858,7 +5503,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D10-F08",
@@ -4906,7 +5559,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D10-F09",
@@ -4954,7 +5613,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F01",
@@ -5002,7 +5667,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F02",
@@ -5050,7 +5721,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D11-F03",
@@ -5098,7 +5777,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F04",
@@ -5146,7 +5831,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F05",
@@ -5194,7 +5885,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D11-F06",
@@ -5242,7 +5942,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D11-F07",
@@ -5290,7 +5999,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D11-F08",
@@ -5338,7 +6055,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F09",
@@ -5386,7 +6109,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F10",
@@ -5434,7 +6163,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F11",
@@ -5482,7 +6217,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D11-F12",
@@ -5530,7 +6271,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D12-F01",
@@ -5578,7 +6325,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F02",
@@ -5626,7 +6382,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F03",
@@ -5674,7 +6439,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F04",
@@ -5722,7 +6496,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F05",
@@ -5770,7 +6553,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F06",
@@ -5818,7 +6610,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F07",
@@ -5866,7 +6667,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D12-F08",
@@ -5914,7 +6724,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D12-F09",
@@ -5962,7 +6778,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D13-F01",
@@ -6010,7 +6832,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F02",
@@ -6058,7 +6889,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F03",
@@ -6106,7 +6945,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F04",
@@ -6154,7 +7001,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F05",
@@ -6202,7 +7057,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F06",
@@ -6250,7 +7113,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F07",
@@ -6298,7 +7169,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D13-F08",
@@ -6346,7 +7225,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F01",
@@ -6394,7 +7281,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F02",
@@ -6442,7 +7338,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F03",
@@ -6490,7 +7395,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F04",
@@ -6538,7 +7452,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F05",
@@ -6586,7 +7509,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F06",
@@ -6634,7 +7566,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          144,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F07",
@@ -6682,7 +7623,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D14-F08",
@@ -6730,7 +7677,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D14-F09",
@@ -6778,7 +7733,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D14-F10",
@@ -6826,7 +7787,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F01",
@@ -6874,7 +7841,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F02",
@@ -6922,7 +7895,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F03",
@@ -6970,7 +7949,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F04",
@@ -7018,7 +8003,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F05",
@@ -7066,7 +8057,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F06",
@@ -7114,7 +8111,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F07",
@@ -7162,7 +8165,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F08",
@@ -7210,7 +8219,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F09",
@@ -7258,7 +8273,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D15-F10",
@@ -7306,7 +8327,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D16-F01",
@@ -7354,7 +8381,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F02",
@@ -7402,7 +8437,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          149
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F03",
@@ -7450,7 +8493,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F04",
@@ -7498,7 +8549,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F05",
@@ -7546,7 +8605,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F06",
@@ -7594,7 +8661,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D16-F07",
@@ -7642,7 +8715,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D16-F08",
@@ -7690,7 +8771,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D17-F01",
@@ -7738,7 +8825,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D17-F02",
@@ -7786,7 +8879,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D17-F03",
@@ -7834,7 +8935,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D17-F04",
@@ -7882,7 +8989,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D17-F05",
@@ -7930,7 +9046,17 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          123,
+          127,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D17-F06",
@@ -7978,7 +9104,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D17-F07",
@@ -8026,7 +9160,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D17-F08",
@@ -8074,7 +9214,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D17-F09",
@@ -8122,7 +9268,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F01",
@@ -8170,7 +9322,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F02",
@@ -8218,7 +9376,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F03",
@@ -8266,7 +9430,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F04",
@@ -8314,7 +9484,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F05",
@@ -8362,7 +9538,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F06",
@@ -8410,7 +9592,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          150
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F07",
@@ -8458,7 +9648,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          150
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F08",
@@ -8506,7 +9704,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          148
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F09",
@@ -8554,7 +9760,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F10",
@@ -8602,7 +9814,15 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          149
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F11",
@@ -8650,7 +9870,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F12",
@@ -8698,7 +9924,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F13",
@@ -8746,7 +9978,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143,
+          145
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F14",
@@ -8794,7 +10035,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F15",
@@ -8842,7 +10092,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F16",
@@ -8890,7 +10146,16 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145,
+          146
+        ],
+        "audit_pr": 147,
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring."
+      }
     },
     {
       "feature_id": "D18-F17",
@@ -8938,7 +10203,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F18",
@@ -8986,7 +10257,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F19",
@@ -9034,7 +10311,13 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     },
     {
       "feature_id": "D18-F20",
@@ -9082,7 +10365,33 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK"
+      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "crosswalk": {
+        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
+        "matched_prs": [],
+        "audit_pr": 147,
+        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work."
+      }
     }
-  ]
+  ],
+  "crosswalk_scope": {
+    "reviewed_prs": [
+      123,
+      127,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150
+    ],
+    "active_pr_count": 10,
+    "feature_id_count": 189,
+    "matched_feature_ids": 66,
+    "unmatched_feature_ids": 123,
+    "duplicate_rule": "Each feature ID counted once; multiple PRs remain attached to the same ID and do not increase feature count.",
+    "evidence_boundary": "PR match is not DONE and does not automatically change source status. Exact-head tests, database, authorization, E2E and reconciliation remain independently scored."
+  }
 }
