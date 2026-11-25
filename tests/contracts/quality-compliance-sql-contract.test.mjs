@@ -7,7 +7,7 @@ const adapter=readFileSync(new URL("../../src/supabase-quality-compliance-adapte
 const pgtap=readFileSync(new URL("../../docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql",import.meta.url),"utf8");
 
 test("Quality persistence and atomic RPC surface covers inspection, recall, supplier and CAPA",()=>{
- for(const name of ["quality_request_food_safety_policy","quality_request_supplier_quality_policy","quality_register_food_lot","quality_link_food_lot_distribution","quality_record_food_safety_inspection","quality_initiate_food_recall","quality_record_supplier_quality_inspection","quality_submit_supplier_capa","quality_verify_supplier_capa","quality_approve_food_safety_policy","quality_approve_supplier_quality_policy"])
+ for(const name of ["quality_request_food_safety_policy","quality_request_supplier_quality_policy","quality_register_food_lot","quality_link_food_lot_distribution","quality_record_food_safety_inspection","quality_initiate_food_recall","quality_record_supplier_quality_inspection","quality_submit_supplier_capa","quality_verify_supplier_capa","quality_request_food_lot_release","quality_approve_food_lot_release","quality_approve_food_safety_policy","quality_approve_supplier_quality_policy"])
   assert.match(sql,new RegExp("function public\\."+name));
  assert.match(sql,/security invoker/);
  assert.doesNotMatch(sql,/security definer/i);
@@ -25,6 +25,8 @@ test("supplier quality creates quarantine and CAPA; release requires independent
  assert.match(sql,/SUPPLIER_RECEIPT_ALREADY_QUARANTINED/);
  assert.match(sql,/INDEPENDENT_SUPPLIER_CAPA_REVIEWER_REQUIRED/);
  assert.match(sql,/SUPPLIER_QUARANTINE_NOT_HELD/);
+ assert.match(sql,/INDEPENDENT_FOOD_LOT_RELEASE_APPROVER_REQUIRED/);
+ assert.match(sql,/RECALLED_FOOD_LOT_CANNOT_BE_RELEASED/);
  assert.match(sql,/status='released'/);
 });
 
