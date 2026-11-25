@@ -66,7 +66,7 @@ create index if not exists procurement_supplier_invoice_period_idx on public.pro
 create or replace function public.procurement_match_supplier_invoice(
  p_invoice_id uuid,p_lines jsonb,p_tolerance_idr bigint,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_invoice public.procurement_supplier_invoices%rowtype; v_line jsonb;
  v_po_item public.purchase_order_items%rowtype; v_receipt_item public.purchase_receipt_items%rowtype;
  v_received_po uuid; v_total_invoiced numeric:=0; v_total_received numeric:=0;
@@ -120,7 +120,7 @@ begin
    'invoiced_subtotal_idr',round(v_total_invoiced),'po_received_value_idr',round(v_total_received),'tolerance_idr',p_tolerance_idr));
  return jsonb_build_object('invoice_id',v_invoice.id,'status',v_status,'line_count',v_count,
   'invoiced_subtotal_idr',round(v_total_invoiced),'po_received_value_idr',round(v_total_received));
-end $;
+end $$;
 revoke all on function public.procurement_match_supplier_invoice(uuid,jsonb,bigint,uuid) from public,anon,authenticated;
 grant execute on function public.procurement_match_supplier_invoice(uuid,jsonb,bigint,uuid) to service_role;
 
@@ -146,7 +146,7 @@ begin foreach t in array array['supplier_tenant_links','procurement_supplier_inv
 end loop; end $$;
 create or replace function public.procurement_approve_supplier_link(p_link_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.supplier_tenant_links%rowtype;
 begin
  select * into v from public.supplier_tenant_links where id=p_link_id for update;
@@ -158,7 +158,7 @@ begin
  values(p_actor_user_id,'procurement.supplier_link.approved','supplier_tenant_link',v.id::text,
  jsonb_build_object('tenant_id',v.tenant_id,'supplier_id',v.supplier_id,'relationship_type',v.relationship_type,'created_by',v.created_by));
  return jsonb_build_object('link_id',v.id,'status',v.status);
-end $;
+end $$;
 revoke all on function public.procurement_approve_supplier_link(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.procurement_approve_supplier_link(uuid,uuid) to service_role;
 
