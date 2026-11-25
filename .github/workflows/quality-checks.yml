@@ -53,6 +53,10 @@ jobs:
         run: deno test supabase/functions/dlice-orders/password-security_test.ts
       - name: Verify leaked-password guard on Auth flows
         run: node --test tests/contracts/leaked-password-guard-contract.test.mjs
+      - name: Run Delivery atomic adapter, worker and SQL contracts
+        run: node --test tests/contracts/delivery-atomic-adapter-worker.test.mjs tests/contracts/delivery-sql-contract.test.mjs
+      - name: Run eight-domain SQL delimiter contracts
+        run: node --test tests/contracts/eight-domain-sql-delimiter-contract.test.mjs
       - name: Run ERP command-center contract tests
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
