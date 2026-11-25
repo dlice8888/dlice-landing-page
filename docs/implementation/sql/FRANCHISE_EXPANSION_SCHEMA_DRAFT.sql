@@ -168,14 +168,14 @@ create or replace function public.franchise_create_application(
  p_applicant_name text,p_applicant_email text,p_applicant_phone text,p_proposed_region text,
  p_proposed_city text,p_investment_capacity_idr bigint,p_experience_summary text,p_created_by uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_app public.franchise_applications%rowtype;
 begin
  if length(btrim(coalesce(p_applicant_name,''))) not between 2 and 160
   or p_applicant_email !~ '^\\S+@\\S+\\.\\S+
  p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_app public.franchise_applications%rowtype; v_checks integer; v_passed integer; v_site integer; v_previous_status text;
 begin
  if p_decision not in ('screening','due_diligence','approved','rejected') then
@@ -201,7 +201,7 @@ begin
  values(p_actor_user_id,'franchise.application.'||p_decision,'franchise_application',v_app.id::text,
   jsonb_build_object('previous_status',v_previous_status,'notes',left(coalesce(p_notes,''),500)));
  return jsonb_build_object('application_id',v_app.id,'status',v_app.status);
-end $;
+end $$;
 revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
 
@@ -209,7 +209,7 @@ create or replace function public.franchise_generate_royalty_statement(
  p_tenant_id uuid,p_branch_id uuid,p_agreement_id uuid,p_period_start date,p_period_end date,
  p_reconciliation_run_id uuid,p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_agreement public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
  v_metric_id uuid; v_sales numeric; v_recon public.bi_reconciliation_runs%rowtype; v_statement public.franchise_royalty_statements%rowtype;
 begin
@@ -245,7 +245,7 @@ begin
    'net_sales_idr',v_statement.eligible_net_sales_idr,'royalty_idr',v_statement.royalty_amount_idr,'reconciliation_id',p_reconciliation_run_id));
  return jsonb_build_object('statement_id',v_statement.id,'eligible_net_sales_idr',v_statement.eligible_net_sales_idr,
   'royalty_amount_idr',v_statement.royalty_amount_idr,'marketing_fee_amount_idr',v_statement.marketing_fee_amount_idr,'status',v_statement.status);
-end $;
+end $$;
 revoke all on function public.franchise_generate_royalty_statement(uuid,uuid,uuid,date,date,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_generate_royalty_statement(uuid,uuid,uuid,date,date,uuid,text,uuid) to service_role;
 
@@ -265,14 +265,14 @@ grant execute on function public.franchise_generate_royalty_statement(uuid,uuid,
  values(p_created_by,'franchise.application.created','franchise_application',v_app.id::text,
   jsonb_build_object('proposed_region',v_app.proposed_region,'proposed_city',v_app.proposed_city));
  return jsonb_build_object('id',v_app.id,'applicant_name',v_app.applicant_name,'status',v_app.status,'submitted_at',v_app.submitted_at);
-end $;
+end $$;
 revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
 
 create or replace function public.franchise_review_due_diligence_check(
  p_check_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.franchise_due_diligence_checks%rowtype; v_creator uuid;
 begin
  if p_status not in ('passed','failed','waived','pending') then raise exception using errcode='22023',message='INVALID_DUE_DILIGENCE_STATUS'; end if;
@@ -288,14 +288,14 @@ begin
  values(p_actor_user_id,'franchise.due_diligence.'||p_status,'franchise_due_diligence_check',v.id::text,
  jsonb_build_object('application_id',v.application_id,'check_key',v.check_key));
  return jsonb_build_object('check_id',v.id,'check_key',v.check_key,'status',v.status);
-end $;
+end $$;
 revoke all on function public.franchise_review_due_diligence_check(uuid,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_due_diligence_check(uuid,text,text,uuid,text) to service_role;
 
 create or replace function public.franchise_review_site(
  p_site_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_site public.franchise_sites%rowtype;
 begin
  if p_status not in ('approved','rejected','assessing') then raise exception using errcode='22023',message='INVALID_SITE_DECISION'; end if;
@@ -308,14 +308,14 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'franchise.site.'||p_status,'franchise_site',v_site.id::text,jsonb_build_object('application_id',v_site.application_id,'notes',left(coalesce(p_notes,''),500)));
  return jsonb_build_object('site_id',v_site.id,'status',v_site.feasibility_status);
-end $;
+end $$;
 revoke all on function public.franchise_review_site(uuid,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_site(uuid,text,text,uuid,text) to service_role;
 
 create or replace function public.franchise_review_application(
  p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_app public.franchise_applications%rowtype; v_checks integer; v_passed integer; v_site integer; v_previous_status text;
 begin
  if p_decision not in ('screening','due_diligence','approved','rejected') then
@@ -340,7 +340,7 @@ begin
  values(p_actor_user_id,'franchise.application.'||p_decision,'franchise_application',v_app.id::text,
   jsonb_build_object('previous_status',v_previous_status,'notes',left(coalesce(p_notes,''),500)));
  return jsonb_build_object('application_id',v_app.id,'status',v_app.status);
-end $;
+end $$;
 revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
 
