@@ -186,6 +186,10 @@ begin
   legal_hold=p_legal_hold,legal_hold_reference=case when p_legal_hold then p_legal_hold_reference else null end,
   approved_by=p_actor_user_id,approved_at=now(),retention_until=now()+make_interval(days=>p_retention_days),updated_at=now()
  where id=p_request_id returning * into v;
+ if not p_legal_hold then
+  update public.saas_tenant_subscriptions set status='suspended',updated_at=now()
+   where tenant_id=v.tenant_id and status in ('trialing','active','past_due');
+ end if;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'saas.tenant.offboarding.'||v.status,'saas_tenant_offboarding_request',v.id::text,
   jsonb_build_object('tenant_id',v.tenant_id,'retention_until',v.retention_until,'legal_hold',v.legal_hold));
@@ -413,16 +417,24 @@ begin
   raise exception using errcode='22023',message='INVALID_SAAS_INVOICE_PAYMENT';
  end if;
  select * into v_invoice from public.saas_invoices where tenant_id=p_tenant_id and id=p_invoice_id for update;
- if not found or v_invoice.status in ('void','paid') then raise exception using errcode='23514',message='SAAS_INVOICE_NOT_PAYABLE'; end if;
+ if not found then raise exception using errcode='P0002',message='SAAS_INVOICE_NOT_FOUND'; end if;
  select * into v_payment from public.saas_invoice_payments where tenant_id=p_tenant_id and provider=p_provider and provider_reference=p_provider_reference for update;
  if found then
-  if v_payment.invoice_id<>p_invoice_id or v_payment.amount_idr<>p_amount_idr or v_payment.status<>p_status then
+  if v_payment.invoice_id<>p_invoice_id or v_payment.amount_idr<>p_amount_idr then
    raise exception using errcode='23505',message='SAAS_PAYMENT_PROVIDER_REFERENCE_COLLISION';
   end if;
-  return jsonb_build_object('status','duplicate','payment_id',v_payment.id,'invoice_status',v_invoice.status);
+  if v_payment.status=p_status then
+   return jsonb_build_object('status','duplicate','payment_id',v_payment.id,'invoice_status',v_invoice.status);
+  end if;
+  if v_payment.status<>'pending' or p_status not in ('succeeded','failed') then
+   raise exception using errcode='23505',message='SAAS_PAYMENT_STATUS_TRANSITION_INVALID';
+  end if;
+  update public.saas_invoice_payments set status=p_status,settled_at=p_settled_at where id=v_payment.id returning * into v_payment;
+ else
+  if v_invoice.status in ('void','paid') then raise exception using errcode='23514',message='SAAS_INVOICE_NOT_PAYABLE'; end if;
+  insert into public.saas_invoice_payments(tenant_id,invoice_id,provider,provider_reference,amount_idr,status,settled_at)
+  values(p_tenant_id,p_invoice_id,p_provider,p_provider_reference,p_amount_idr,p_status,p_settled_at) returning * into v_payment;
  end if;
- insert into public.saas_invoice_payments(tenant_id,invoice_id,provider,provider_reference,amount_idr,status,settled_at)
- values(p_tenant_id,p_invoice_id,p_provider,p_provider_reference,p_amount_idr,p_status,p_settled_at) returning * into v_payment;
  select coalesce(sum(amount_idr),0) into v_paid from public.saas_invoice_payments
   where tenant_id=p_tenant_id and invoice_id=p_invoice_id and status='succeeded';
  if v_paid>v_invoice.total_idr then raise exception using errcode='23514',message='SAAS_INVOICE_OVERPAYMENT'; end if;
