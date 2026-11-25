@@ -186,3 +186,23 @@ been applied; therefore runtime integration is not yet verified.
   `PUBLIC_TENANT_ROUTING_RELEASED=false`.
 - Never claim provider acceptance, payment execution, delivery, reconciliation,
   provisioning or usage metering without persisted authoritative evidence.
+
+
+## HR/Finance persistence schema increment
+
+Read-only inspection of staging found no `hr_*` payroll tables and no
+multi-line Finance journal batch/line model. The existing
+`finance_journal_entries` table is a legacy single-row debit/credit record and
+is not sufficient to persist the immutable payroll journal produced by the
+domain kernel.
+
+Added `docs/implementation/sql/HR_PAYROLL_FINANCE_SCHEMA_DRAFT.sql` with
+tenant/branch-scoped employee and effective payroll profiles, immutable
+payroll run lines, Finance journal batches/lines, payment batches/items and
+Finance source reconciliation records. The new
+`hr_persist_approved_payroll_run` RPC validates an approved run, an open fiscal
+period, immutable line totals and balanced debit/credit lines, then persists a
+draft Finance batch and audit record atomically. It does not post or pay payroll.
+The draft has not been applied; payroll calculation inputs, journal approval/
+posting, payment provider execution and settlement reconciliation still need
+their concrete adapters and lifecycle routes.
