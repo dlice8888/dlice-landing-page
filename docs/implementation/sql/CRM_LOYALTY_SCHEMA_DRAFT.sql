@@ -286,8 +286,18 @@ begin
    for update;
   if not found then raise exception using errcode='P0002', message='CUSTOMER_NOT_FOUND'; end if;
 
-  if exists(select 1 from public.crm_loyalty_ledger where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
-    raise exception using errcode='23505', message='DUPLICATE_IDEMPOTENCY_KEY';
+  select * into v_existing from public.crm_loyalty_ledger
+   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
+  if found then
+    if v_existing.customer_id<>p_customer_id or v_existing.entry_kind<>p_entry_kind
+       or v_existing.points<>p_points or v_existing.source_reference<>p_source_reference
+       or v_existing.reverses_entry_id is distinct from p_reverses_entry_id then
+      raise exception using errcode='23505', message='LOYALTY_IDEMPOTENCY_COLLISION';
+    end if;
+    select coalesce(sum(points),0) into v_balance from public.crm_loyalty_ledger
+     where tenant_id=p_tenant_id and customer_id=p_customer_id;
+    return jsonb_build_object('entry_id',v_existing.id,'balance_after',v_balance,
+      'entry_kind',v_existing.entry_kind,'duplicate',true);
   end if;
 
   if (p_entry_kind='earn' and p_points<0) or (p_entry_kind='redeem' and p_points>=0)
