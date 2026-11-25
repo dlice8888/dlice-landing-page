@@ -3010,13 +3010,13 @@
         "state": "OPEN",
         "draft": true,
         "head_sha": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
-        "workflow": "Initial run 45662328574 failed in RLS result assertions because psql command tags were included in captured output; script now uses quiet psql output and emits explicit assertion diagnostics. No successful rerun evidence available yet."
+        "workflow": "PASS: run 45662909781; PostgreSQL 17.11; 151 branches and 151 events restored; checksum exact; zero committed pre-snapshot rows lost; one intentional post-snapshot row excluded; RLS 2/2; Tenant A 150 branches/events, Tenant B 1/1, cross-tenant visible rows 0; measured local restore verification RTO 439 ms. Quality checks run 45662909991 PASS. This is not Supabase managed backup/PITR or production RPO/RTO."
       },
       "pr149": {
         "state": "OPEN",
         "draft": true,
-        "head_sha": "267c6e41ebe6e6315e03c1de1595d92d4ff9c48e",
-        "workflow": "No completed run visible yet; no performance pass claimed"
+        "head_sha": "b6299bccb6cbcc21e327a0ee0bf165972edaa6d2",
+        "workflow": "Initial run 45663438285 failed because pgbench runs each command outside an explicit transaction, so SET LOCAL did not persist. Replaced with session-level SET ROLE and SET app.tenant_id. No successful rerun visible yet."
       }
     },
     "supabase": {
