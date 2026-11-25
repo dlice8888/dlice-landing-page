@@ -41,6 +41,7 @@ test('HR leave requires balance and approved shift coverage',()=>{
  assert.equal(validateLeaveRequest(input).status,'submitted');
  assert.equal(validateLeaveRequest({...input,requested_days:6}).code,'INSUFFICIENT_LEAVE_BALANCE');
  assert.equal(validateLeaveRequest({...input,coverage_approved:false}).code,'SHIFT_COVERAGE_REQUIRED');
+ assert.equal(validateLeaveRequest({...input,leave_type:'sick',coverage_employee_id:null,coverage_approved:false}).status,'submitted');
 });
 test('HR overtime enforces independent approval and period cap',()=>{
  const input={tenant_id:'t1',employee_tenant_id:'t1',employee_id:'e1',branch_id:'b1',shift_id:'s1',minutes:60,reason:'peak demand',approved_by:'manager',employee_approver_id:'manager',period_minutes:120,period_cap_minutes:240};
