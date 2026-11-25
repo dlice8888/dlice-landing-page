@@ -168,3 +168,42 @@ test("Finance clearing SQL draft keeps payout, bank and reversal evidence servic
   assert.match(sql, /before update on public\.hr_payroll_payment_finance_clearings/);
   assert.match(sql, /before update or delete on public\.hr_payroll_bank_statement_lines/);
 });
+
+test("treats database idempotency duplicates as safe no-op results", async () => {
+  const postDeps = transactionDeps({
+    loadPayrollPaymentFinanceClearingSource: async () => ({
+      batch, payrollRun: { status: "reconciled" },
+      financePosting: { id: "posting-a", status: "reconciled" }, items,
+    }),
+    postPayrollPaymentFinanceClearing: async () => ({
+      status: "duplicate", amountIdr: 300000, itemCount: 2,
+    }),
+  });
+  const posted = await postReconciledPayrollPaymentFinanceClearing({
+    ...base, paymentBatchId: "batch-a",
+  }, postDeps);
+  assert.equal(posted.status, "duplicate");
+
+  const bankDeps = transactionDeps({
+    loadPayrollPaymentBankBatchEvidence: async () => ({
+      batch,
+      clearings: [
+        { id: "clear-a", tenantId: "tenant-a", branchId: "branch-a", paymentBatchId: "batch-a",
+          status: "bank_matched", statementLineId: "line-a", bankJournalEntryId: "journal-a",
+          statementCurrency: "IDR", statementAmountIdr: 100000, statementProviderReference: "po-a",
+          providerReference: "po-a", amountIdr: 100000 },
+        { id: "clear-b", tenantId: "tenant-a", branchId: "branch-a", paymentBatchId: "batch-a",
+          status: "bank_matched", statementLineId: "line-b", bankJournalEntryId: "journal-b",
+          statementCurrency: "IDR", statementAmountIdr: 200000, statementProviderReference: "po-b",
+          providerReference: "po-b", amountIdr: 200000 },
+      ],
+    }),
+    reconcilePayrollPaymentBankBatch: async () => ({
+      status: "duplicate", reconciliationId: "bank-recon-a", amountIdr: 300000, itemCount: 2,
+    }),
+  });
+  const bankClosed = await reconcilePayrollPaymentBankBatch({
+    ...base, paymentBatchId: "batch-a",
+  }, bankDeps);
+  assert.equal(bankClosed.status, "duplicate");
+});
