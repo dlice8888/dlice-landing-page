@@ -201,6 +201,19 @@ begin
   failed_at=case when p_next_status='failed' then now() else failed_at end,
   failure_reason=case when p_next_status='failed' then left(coalesce(p_note,''),500) else failure_reason end,
   updated_by=p_actor_user_id,updated_at=now() where id=v.id returning * into v;
+ if p_next_status='failed' then
+  update public.orders set fulfillment_status='failed',updated_at=now() where id=v.order_id and fulfillment_status='dispatched';
+  if found then
+   insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
+    values(v.order_id,'operational','dispatched','failed','Delivery dispatch failed: '||left(coalesce(p_note,''),300));
+  end if;
+ elsif p_next_status='cancelled' then
+  update public.orders set fulfillment_status='ready',updated_at=now() where id=v.order_id and fulfillment_status='dispatched';
+  if found then
+   insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
+    values(v.order_id,'operational','dispatched','ready','Delivery booking cancelled; order returned to ready');
+  end if;
+ end if;
  if p_next_status='delivered' then
   update public.orders set fulfillment_status='fulfilled',fulfilled_at=now(),updated_at=now()
    where id=v.order_id and fulfillment_status='dispatched';
