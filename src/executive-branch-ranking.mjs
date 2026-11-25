@@ -14,6 +14,10 @@ export function rankReconciledBranches({tenantId,periodStart,periodEnd,branchSna
   if(!target||!Number.isSafeInteger(target.netSalesTargetIdr)||target.netSalesTargetIdr<=0)fail("BRANCH_TARGET_REQUIRED",s.branchId);
   rows.push({branchId:s.branchId,netSalesIdr:s.netSalesIdr,targetNetSalesIdr:target.netSalesTargetIdr,achievementBps:Math.floor(s.netSalesIdr*10000/target.netSalesTargetIdr),financeJournalBatchId:s.financeJournalBatchId,sourceReconciliationId:s.sourceReconciliationId});
  }
+ const rankedIds=new Set(rows.map(r=>r.branchId));
+ const missing=expectedBranchIds.filter(id=>!rankedIds.has(id));
+ if(missing.length)fail("BRANCH_RANKING_INCOMPLETE",missing.join(","));
+ if(rows.length!==expectedBranchIds.length)fail("BRANCH_RANKING_SCOPE_MISMATCH","Ranking must contain exactly the authorized branch scope");
  rows.sort((a,b)=>b.netSalesIdr-a.netSalesIdr||a.branchId.localeCompare(b.branchId));
  return Object.freeze({tenantId,periodStart,periodEnd,branchCount:rows.length,ranking:Object.freeze(rows.slice(0,limit).map((r,i)=>Object.freeze({...r,rank:i+1})))});
 }
