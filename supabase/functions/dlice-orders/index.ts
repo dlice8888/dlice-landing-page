@@ -960,7 +960,7 @@ if (action === "admin-set-profile-role") {
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
     if (action === "erp-crm-list-customers") {
-      const search = safeText(body.search, 80);
+      const search = safeText(body.search, 80).replace(/[%,()]/g, " ");
       let query = admin.from("crm_customers")
         .select("id,tenant_id,branch_id,display_name,phone_e164,email_normalized,status,marketing_status,created_at,updated_at")
         .eq("tenant_id", tenantId).neq("status", "merged")
@@ -993,10 +993,6 @@ if (action === "admin-set-profile-role") {
         marketing_status: "unknown", created_by: actor.user.id,
       }).select("id,tenant_id,branch_id,display_name,phone_e164,email_normalized,status,marketing_status,created_at").single();
       if (error) return fail(error.code === "23505" ? "Pelanggan dengan nomor telepon/email tersebut sudah terdaftar pada tenant ini." : "Pelanggan belum dapat disimpan.", error.code === "23505" ? 409 : 503, origin);
-      await admin.from("admin_audit_logs").insert({
-        actor_user_id: actor.user.id, action: "crm.customer.create", entity_type: "crm_customers",
-        entity_id: data.id, metadata: { tenant_id: tenantId, branch_id: branchId },
-      });
       return json({ customer: data }, 201, origin);
     }
 
@@ -1024,10 +1020,6 @@ if (action === "admin-set-profile-role") {
         occurred_at: new Date().toISOString(), actor_user_id: actor.user.id,
       }).select("id,customer_id,purpose,channel,decision,policy_version,occurred_at").single();
       if (error) return fail(error.code === "23505" ? "Kunci idempotensi consent sudah digunakan." : "Consent belum dapat dicatat.", error.code === "23505" ? 409 : 503, origin);
-      await admin.from("admin_audit_logs").insert({
-        actor_user_id: actor.user.id, action: "crm.customer.consent."+decision, entity_type: "crm_customer_consent_events",
-        entity_id: data.id, metadata: { tenant_id: tenantId, customer_id: customerId, purpose, channel },
-      });
       return json({ consent_event: data }, 201, origin);
     }
 
@@ -1094,10 +1086,6 @@ if (action === "admin-set-profile-role") {
         starts_at: startsAt, expires_at: expiresAt, status: "draft", created_by: actor.user.id,
       }).select("id,name,points_cost,starts_at,expires_at,status").single();
       if (error) return fail("Reward belum dapat disimpan.", 503, origin);
-      await admin.from("admin_audit_logs").insert({
-        actor_user_id: actor.user.id, action: "crm.reward.create", entity_type: "crm_rewards",
-        entity_id: data.id, metadata: { tenant_id: tenantId, points_cost: pointsCost },
-      });
       return json({ reward: data }, 201, origin);
     }
   }
