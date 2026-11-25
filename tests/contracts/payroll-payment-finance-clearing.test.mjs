@@ -141,7 +141,7 @@ test("does not close a bank batch with a missing or mismatched statement line", 
   });
   await assert.rejects(
     reconcilePayrollPaymentBankBatch({ ...base, paymentBatchId: "batch-a" }, deps),
-    { code: "PAYROLL_BANK_CLEARING_EVIDENCE_MISMATCH" },
+    { code: "PAYROLL_BANK_CLEARING_BATCH_INCOMPLETE" },
   );
   assert.equal(deps.calls.length, 0);
 });
