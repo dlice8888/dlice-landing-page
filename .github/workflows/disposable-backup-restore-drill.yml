@@ -1,5 +1,8 @@
 name: Free disposable backup restore drill
 on:
+  push:
+    branches:
+      - "qa/backup-restore-drill-20261125"
   pull_request:
     paths:
       - "scripts/qa/backup-restore-drill.sh"
