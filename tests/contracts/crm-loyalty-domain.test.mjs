@@ -42,6 +42,7 @@ test('reward redemption validates points, tenant, and effective dates', () => {
   assert.equal(validateRewardRedemption(input).redemption.status, 'reserved');
   assert.equal(validateRewardRedemption({ ...input, balance: 10 }).code, 'INSUFFICIENT_POINTS');
   assert.equal(validateRewardRedemption({ ...input, customer_tenant_id: 't2' }).code, 'TENANT_SCOPE_MISMATCH');
+  assert.equal(validateRewardRedemption({ ...input, existingRedemptions: [{ tenant_id: 't1', voucher_id: 'v1', idempotency_key: 'old' }] }).code, 'DUPLICATE_REDEMPTION');
 });
 
 test('campaign audience requires active customer and current channel consent', () => {
