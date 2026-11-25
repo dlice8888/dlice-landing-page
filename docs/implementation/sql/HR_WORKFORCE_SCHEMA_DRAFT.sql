@@ -221,7 +221,7 @@ create or replace function public.hr_record_attendance(
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $$
 declare
   v_last_event text;
   v_event public.hr_attendance_events%rowtype;
@@ -273,7 +273,7 @@ begin
   return jsonb_build_object('id',v_event.id,'employee_user_id',v_event.employee_user_id,
     'event_type',v_event.event_type,'occurred_at',v_event.occurred_at,'source',v_event.source,'notes',v_event.notes);
 end;
-$;
+$$;
 revoke all on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.hr_record_attendance(uuid,uuid,uuid,text,text,text,text,uuid) to service_role;
 
@@ -281,7 +281,7 @@ create or replace function public.hr_create_leave_request(
  p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_leave_type text,
  p_starts_on date,p_ends_on date,p_coverage_employee_user_id uuid,p_reason text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_leave_requests%rowtype;
 begin
  if p_leave_type not in ('annual','sick','unpaid','maternity','paternity','other')
@@ -307,13 +307,13 @@ begin
  values(p_tenant_id,p_branch_id,p_employee_user_id,p_leave_type,p_starts_on,p_ends_on,(p_ends_on-p_starts_on+1),
   p_coverage_employee_user_id,btrim(p_reason),p_actor_user_id) returning * into v;
  return jsonb_build_object('leave_request_id',v.id,'status',v.status,'requested_days',v.requested_days);
-end $;
+end $$;
 revoke all on function public.hr_create_leave_request(uuid,uuid,uuid,text,date,date,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.hr_create_leave_request(uuid,uuid,uuid,text,date,date,uuid,text,uuid) to service_role;
 
 create or replace function public.hr_confirm_leave_coverage(p_leave_request_id uuid,p_actor_user_id uuid,p_approved boolean,p_note text)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_leave_requests%rowtype;
 begin
  select * into v from public.hr_leave_requests where id=p_leave_request_id for update;
@@ -332,13 +332,13 @@ begin
  values(p_actor_user_id,case when p_approved then 'hr.leave.coverage_accepted' else 'hr.leave.coverage_rejected' end,
  'hr_leave_request',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'employee_user_id',v.employee_user_id));
  return jsonb_build_object('leave_request_id',v.id,'coverage_approved',p_approved);
-end $;
+end $$;
 revoke all on function public.hr_confirm_leave_coverage(uuid,uuid,boolean,text) from public,anon,authenticated;
 grant execute on function public.hr_confirm_leave_coverage(uuid,uuid,boolean,text) to service_role;
 
 create or replace function public.hr_review_leave_request(p_leave_request_id uuid,p_actor_user_id uuid,p_approve boolean,p_note text)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_leave_requests%rowtype;
 begin
  select * into v from public.hr_leave_requests where id=p_leave_request_id for update;
@@ -352,7 +352,7 @@ begin
   reviewed_by=p_actor_user_id,reviewed_at=now(),review_note=left(coalesce(p_note,''),500),updated_at=now()
  where id=v.id returning * into v;
  return jsonb_build_object('leave_request_id',v.id,'status',v.status,'reviewed_by',v.reviewed_by);
-end $;
+end $$;
 revoke all on function public.hr_review_leave_request(uuid,uuid,boolean,text) from public,anon,authenticated;
 grant execute on function public.hr_review_leave_request(uuid,uuid,boolean,text) to service_role;
 
@@ -360,7 +360,7 @@ create or replace function public.hr_create_shift_schedule(
  p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_job_position_id uuid,
  p_starts_at timestamptz,p_ends_at timestamptz,p_created_by uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_shift_schedules%rowtype;
 begin
  if p_ends_at<=p_starts_at then raise exception using errcode='22023',message='INVALID_SHIFT_WINDOW'; end if;
@@ -379,14 +379,14 @@ begin
  values(p_tenant_id,p_branch_id,p_employee_user_id,p_job_position_id,p_starts_at,p_ends_at,p_created_by,p_notes)
  returning * into v;
  return jsonb_build_object('shift_schedule_id',v.id,'status',v.status);
-end $;
+end $$;
 revoke all on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) from public,anon,authenticated;
 grant execute on function public.hr_create_shift_schedule(uuid,uuid,uuid,uuid,timestamptz,timestamptz,uuid,text) to service_role;
 
 create or replace function public.hr_generate_timesheet(
  p_tenant_id uuid,p_branch_id uuid,p_employee_user_id uuid,p_period_start date,p_period_end date,p_created_by uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_event record; v_state text:='off'; v_clock_in timestamptz; v_break_start timestamptz;
  v_minutes integer:=0; v_ids uuid[]:='{}'; v_count integer:=0; v_id uuid;
 begin
@@ -415,13 +415,13 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_created_by,'hr.timesheet.generated','hr_timesheet',v_id::text,jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'employee_user_id',p_employee_user_id,'total_minutes',v_minutes,'attendance_event_count',v_count));
  return jsonb_build_object('timesheet_id',v_id,'total_minutes',v_minutes,'attendance_event_count',v_count,'status','draft');
-end $;
+end $$;
 revoke all on function public.hr_generate_timesheet(uuid,uuid,uuid,date,date,uuid) from public,anon,authenticated;
 grant execute on function public.hr_generate_timesheet(uuid,uuid,uuid,date,date,uuid) to service_role;
 
 create or replace function public.hr_submit_timesheet(p_timesheet_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_timesheets%rowtype;
 begin
  select * into v from public.hr_timesheets where id=p_timesheet_id for update;
@@ -430,13 +430,13 @@ begin
  if v.status<>'draft' or cardinality(v.attendance_event_ids)=0 then raise exception using errcode='23514',message='TIMESHEET_NOT_SUBMITTABLE'; end if;
  update public.hr_timesheets set status='submitted',submitted_at=now(),updated_at=now() where id=v.id;
  return jsonb_build_object('timesheet_id',v.id,'status','submitted');
-end $;
+end $$;
 revoke all on function public.hr_submit_timesheet(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.hr_submit_timesheet(uuid,uuid) to service_role;
 
 create or replace function public.hr_approve_timesheet(p_timesheet_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.hr_timesheets%rowtype;
 begin
  select * into v from public.hr_timesheets where id=p_timesheet_id for update;
@@ -450,7 +450,7 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'hr.timesheet.approved','hr_timesheet',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'employee_user_id',v.employee_user_id,'total_minutes',v.total_minutes));
  return jsonb_build_object('timesheet_id',v.id,'status','approved','total_minutes',v.total_minutes);
-end $;
+end $$;
 revoke all on function public.hr_approve_timesheet(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.hr_approve_timesheet(uuid,uuid) to service_role;
 
