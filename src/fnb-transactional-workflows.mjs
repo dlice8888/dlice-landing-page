@@ -16,6 +16,13 @@ import { verifyDeliveryWebhook, deliveryWebhookEventDecision } from "./delivery-
 import { recordUsageAfterAuthoritativeCommit } from "./saas-post-commit-metering.mjs";
 import { reconcileSupplierPayment } from "./procurement-ap-settlement.mjs";
 import { verifyExecutiveFinanceKpi } from "./executive-finance-kpi.mjs";
+import {
+  dispatchConsentedCampaignMessage,
+  applyCampaignProviderReceipt,
+  applyCampaignUnsubscribe,
+  calculateCampaignRoi,
+} from "./crm-campaign-delivery.mjs";
+import { reconcilePayrollPayment } from "./hr-payroll-payment-reconciliation.mjs";
 
 const fail = (code, message) => {
   const error = new Error(message);
@@ -345,5 +352,156 @@ export async function readAuthorizedExecutiveDrilldown(input, deps) {
       entityType: hierarchy.at(-1).type, entityId: hierarchy.at(-1).id,
       idempotencyKey: scope.idempotencyKey });
     return Object.freeze({ status: "verified", hierarchy: resolved, data });
+  });
+}
+
+
+/** CRM campaign: atomically claim outbox, call approved provider, persist acceptance. */
+export async function dispatchApprovedCampaignMessage(input, deps) {
+  const scope = { tenantId: required(input.tenantId, "tenantId"),
+    branchId: input.branchId == null ? null : required(input.branchId, "branchId"),
+    actorId: required(input.actorId, "actorId"),
+    idempotencyKey: required(input.idempotencyKey, "idempotencyKey"),
+    action: "crm.campaign.dispatch" };
+  const records = await inTenantTransaction(deps, scope, async (tx) => {
+    const campaign = await adapter(deps, "loadApprovedCampaign")(tx, input.campaignId);
+    const customer = await adapter(deps, "loadCampaignCustomer")(tx, input.customerId);
+    const consent = await adapter(deps, "loadCurrentCustomerConsent")(tx, input.customerId, campaign?.channel, campaign?.purpose);
+    const provider = await adapter(deps, "loadApprovedCampaignProvider")(tx, campaign?.channel);
+    assertScope(campaign, scope, "campaign");
+    assertScope(customer, scope, "customer");
+    return { campaign, customer, consent, provider };
+  });
+  return dispatchConsentedCampaignMessage({
+    ...records, outbox: null,
+    claimOutbox: (args) => adapter(deps, "claimCampaignOutbox")(scope, args),
+    sendProvider: (args) => adapter(deps, "sendCampaignProviderMessage")(records.provider, args),
+    recordProviderAcceptance: (args) => adapter(deps, "persistCampaignProviderAcceptance")(scope, args),
+    scheduleRetry: (args) => adapter(deps, "scheduleCampaignRetry")(scope, args),
+    now: input.now,
+  });
+}
+
+/** CRM campaign receipt: provider-specific signature verification precedes dedupe and state update. */
+export async function ingestSignedCampaignReceipt(input, deps) {
+  const verified = await adapter(deps, "verifyCampaignReceiptSignature")({
+    providerId: input.providerId, rawBody: input.rawBody,
+    signature: input.signature, timestamp: input.timestamp,
+  });
+  if (verified?.verified !== true || !verified.receipt) {
+    fail("CAMPAIGN_RECEIPT_SIGNATURE_INVALID", "Provider receipt signature must be verified over the raw body");
+  }
+  const scope = { tenantId: required(input.tenantId, "tenantId"),
+    branchId: input.branchId == null ? null : required(input.branchId, "branchId"),
+    actorId: "system:campaign-webhook", idempotencyKey: required(verified.receipt.eventId, "eventId"),
+    action: "crm.campaign.receipt" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const outbox = await adapter(deps, "loadCampaignOutboxForUpdate")(tx, verified.receipt.providerMessageId);
+    assertScope(outbox, scope, "campaignOutbox");
+    const existingEvent = await adapter(deps, "findCampaignProviderEvent")(tx, verified.receipt.eventId);
+    const decision = applyCampaignProviderReceipt({
+      outbox, receipt: verified.receipt, signatureVerified: true,
+      existingEvent, maxAttempts: input.maxAttempts ?? 5,
+    });
+    if (decision.action === "duplicate") return Object.freeze({ status: "duplicate", eventId: verified.receipt.eventId });
+    const saved = await adapter(deps, "persistCampaignReceiptAndOutboxState")(tx, {
+      decision, receipt: verified.receipt, outboxId: outbox.id,
+    });
+    if (!saved?.eventId) fail("CAMPAIGN_RECEIPT_PERSIST_FAILED", "Campaign receipt event was not persisted");
+    await audit(deps, tx, { tenantId: scope.tenantId, branchId: scope.branchId,
+      actorId: scope.actorId, action: "crm.campaign.receipt_applied",
+      entityType: "campaign_provider_event", entityId: saved.eventId,
+      idempotencyKey: verified.receipt.eventId });
+    return Object.freeze({ status: "applied", eventId: saved.eventId,
+      deliveryStatus: decision.status, retryScheduled: decision.retryScheduled === true,
+      deadLetter: decision.deadLetter === true });
+  });
+}
+
+/** Campaign ROI is calculated only from attributed, Finance-reconciled eligible net sales. */
+export async function calculateReconciledCampaignRoi(input, deps) {
+  const scope = { tenantId: required(input.tenantId, "tenantId"),
+    branchId: input.branchId == null ? null : required(input.branchId, "branchId"),
+    actorId: required(input.actorId, "actorId"),
+    idempotencyKey: required(input.idempotencyKey, "idempotencyKey"),
+    action: "crm.campaign.roi.read" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const campaign = await adapter(deps, "loadApprovedCampaign")(tx, input.campaignId);
+    assertScope(campaign, scope, "campaign");
+    const attributedOrders = await adapter(deps, "loadReconciledCampaignAttribution")(tx, campaign.id, input.windowStart, input.windowEnd);
+    const result = calculateCampaignRoi({
+      campaignCostIdr: await adapter(deps, "loadCampaignCostIdr")(tx, campaign.id),
+      attributedOrders, attributionWindowStart: input.windowStart,
+      attributionWindowEnd: input.windowEnd,
+    });
+    return Object.freeze({ ...result, campaignId: campaign.id, tenantId: scope.tenantId });
+  });
+}
+
+/** HR payroll payment: create a durable intent, execute externally, then reconcile bank/provider settlement. */
+export async function executeApprovedPayrollPayment(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.payment.execute" };
+  const intent = await inTenantTransaction(deps, scope, async (tx) => {
+    const run = await adapter(deps, "loadApprovedPayrollRunForPayment")(tx, input.payrollRunId);
+    assertScope(run, scope, "payrollRun");
+    const journal = await adapter(deps, "loadApprovedPostedPayrollJournal")(tx, run.id);
+    if (!journal || journal.status !== "posted" || journal.debitIdr !== journal.creditIdr) {
+      fail("PAYROLL_JOURNAL_NOT_POSTED", "Balanced posted payroll journal is required before payment");
+    }
+    const prior = await adapter(deps, "findPayrollPaymentIntent")(tx, scope.idempotencyKey);
+    if (prior) return { duplicate: true, intent: prior };
+    const created = await adapter(deps, "createPayrollPaymentIntent")(tx, {
+      run, journal, idempotencyKey: scope.idempotencyKey, actorId: scope.actorId,
+    });
+    if (!created?.intentId || !created?.providerId || !Number.isSafeInteger(created.amountIdr) || created.amountIdr <= 0) {
+      fail("PAYROLL_PAYMENT_INTENT_INVALID", "Durable payroll payment intent is required");
+    }
+    await audit(deps, tx, { tenantId: scope.tenantId, branchId: scope.branchId,
+      actorId: scope.actorId, action: "hr.payroll.payment_intent.created",
+      entityType: "payroll_payment_intent", entityId: created.intentId,
+      idempotencyKey: scope.idempotencyKey });
+    return { duplicate: false, intent: created };
+  });
+  if (intent.duplicate && intent.intent.status === "executed") {
+    return Object.freeze({ status: "duplicate", providerReference: intent.intent.providerReference });
+  }
+  const providerResult = await adapter(deps, "executePayrollPaymentProvider")({
+    providerId: intent.intent.providerId, amountIdr: intent.intent.amountIdr,
+    currency: "IDR", idempotencyKey: scope.idempotencyKey,
+    beneficiaryReference: intent.intent.beneficiaryReference,
+  });
+  if (!providerResult?.accepted || !providerResult.providerReference) {
+    fail("PAYROLL_PAYMENT_ACCEPTANCE_UNVERIFIED", "Payment provider acceptance needs a stable reference");
+  }
+  const saved = await inTenantTransaction(deps, scope, async (tx) => {
+    const result = await adapter(deps, "finalizePayrollPaymentIntent")(tx, {
+      intentId: intent.intent.intentId, providerResult, actorId: scope.actorId,
+    });
+    if (!result?.paymentId || result.status !== "submitted") fail("PAYROLL_PAYMENT_FINALIZATION_FAILED", "Provider result must persist");
+    await audit(deps, tx, { tenantId: scope.tenantId, branchId: scope.branchId,
+      actorId: scope.actorId, action: "hr.payroll.payment.submitted",
+      entityType: "payroll_payment", entityId: result.paymentId,
+      idempotencyKey: scope.idempotencyKey });
+    return result;
+  });
+  return Object.freeze({ status: "submitted_for_settlement", paymentId: saved.paymentId,
+    providerReference: providerResult.providerReference, reconciliationRequired: true });
+}
+
+export async function reconcileApprovedPayrollPayment(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.payment.reconcile" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const evidence = await adapter(deps, "loadPayrollPaymentSettlementEvidence")(tx, input.payrollRunId);
+    assertScope(evidence?.payrollRun, scope, "payrollRun");
+    const result = reconcilePayrollPayment(evidence);
+    const saved = await adapter(deps, "persistPayrollPaymentReconciliation")(tx, {
+      ...result, actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.reconciliationId) fail("PAYROLL_PAYMENT_RECONCILIATION_PERSIST_FAILED", "Payroll payment reconciliation must persist");
+    await audit(deps, tx, { tenantId: scope.tenantId, branchId: scope.branchId,
+      actorId: scope.actorId, action: "hr.payroll.payment.reconciled",
+      entityType: "payroll_payment_reconciliation", entityId: saved.reconciliationId,
+      idempotencyKey: scope.idempotencyKey });
+    return Object.freeze({ ...result, reconciliationId: saved.reconciliationId });
   });
 }
