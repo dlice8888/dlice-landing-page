@@ -1354,6 +1354,124 @@ if (action === "admin-set-profile-role") {
     }
   }
 
+  const qualityActions = new Set([
+    "erp-quality-request-food-policy",
+    "erp-quality-approve-food-policy",
+    "erp-quality-request-supplier-policy",
+    "erp-quality-approve-supplier-policy",
+    "erp-quality-register-food-lot",
+    "erp-quality-link-lot-distribution",
+    "erp-quality-record-food-inspection",
+    "erp-quality-initiate-recall",
+    "erp-quality-record-supplier-inspection",
+    "erp-quality-submit-capa",
+    "erp-quality-verify-capa",
+  ]);
+  if (qualityActions.has(action)) {
+    if (!isPlatformOwner) return fail("Modul Quality sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.",423,origin);
+    const branchId=safeText(body.branch_id,64);
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(branchId))
+      return fail("Cabang Quality tidak valid.",422,origin);
+    if(!(await actorCanAccessBranch(branchId)))return fail("Akses cabang Quality tidak diizinkan.",403,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("id,tenant_id,status").eq("id",branchId).maybeSingle();
+    if(branchError)return fail("Tenant cabang Quality belum dapat diverifikasi.",503,origin);
+    if(!branch||!branch.tenant_id)return fail("Cabang Quality tidak ditemukan.",404,origin);
+    const uuid=(value:any)=>typeof value==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    const idem=safeText(body.idempotency_key,120);
+    const allergens=Array.isArray(body.required_allergens)?body.required_allergens.map((x:any)=>safeText(x,80)).filter(Boolean):[];
+    const callQuality=async(name:string,args:Record<string,unknown>)=>{
+      const {data,error}=await admin.rpc(name,args);
+      if(error)return fail("Quality workflow ditolak atau belum tersedia: "+String(error.message||"database error").slice(0,180),409,origin);
+      return json({quality:data},200,origin);
+    };
+    if(action==="erp-quality-request-food-policy"){
+      const productClass=safeText(body.product_class,80),min=Number(body.min_temp_c),max=Number(body.max_temp_c);
+      const from=safeText(body.effective_from,40),until=safeText(body.effective_until,40)||null;
+      if(!productClass||!Number.isFinite(min)||!Number.isFinite(max)||min>max||!Array.isArray(body.required_allergens)||
+        (until&&Date.parse(until)<=Date.parse(from))||!idem)return fail("Parameter kebijakan suhu/alergen tidak valid.",422,origin);
+      return await callQuality("quality_request_food_safety_policy",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_product_class:productClass,p_min_temp_c:min,p_max_temp_c:max,p_required_allergens:allergens,
+        p_effective_from:from,p_effective_until:until,p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-approve-food-policy"){
+      if(!uuid(body.policy_id))return fail("Policy ID tidak valid.",422,origin);
+      return await callQuality("quality_approve_food_safety_policy",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_policy_id:body.policy_id,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-request-supplier-policy"){
+      const supplierId=body.supplier_id,codes=Array.isArray(body.critical_finding_codes)?body.critical_finding_codes.map((x:any)=>safeText(x,80)).filter(Boolean):[];
+      const from=safeText(body.effective_from,40),until=safeText(body.effective_until,40)||null;
+      if(!uuid(supplierId)||!Array.isArray(body.critical_finding_codes)||!from||(until&&Date.parse(until)<=Date.parse(from))||!idem)
+        return fail("Parameter kebijakan supplier tidak valid.",422,origin);
+      return await callQuality("quality_request_supplier_quality_policy",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_supplier_id:supplierId,p_critical_finding_codes:codes,p_effective_from:from,p_effective_until:until,
+        p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-approve-supplier-policy"){
+      if(!uuid(body.policy_id))return fail("Policy ID tidak valid.",422,origin);
+      return await callQuality("quality_approve_supplier_quality_policy",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_policy_id:body.policy_id,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-register-food-lot"){
+      const sourceType=safeText(body.source_type,30),quantity=Number(body.quantity);
+      if(!["receipt_item","production_batch","branch_check"].includes(sourceType)||!uuid(body.source_id)||
+        !safeText(body.lot_code,120)||!Number.isFinite(quantity)||quantity<=0||!safeText(body.unit,24)||!idem)
+        return fail("Data registrasi lot tidak valid.",422,origin);
+      return await callQuality("quality_register_food_lot",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_source_type:sourceType,p_source_id:body.source_id,p_lot_code:safeText(body.lot_code,120),
+        p_quantity:quantity,p_unit:safeText(body.unit,24),p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-link-lot-distribution"){
+      const impactType=safeText(body.impact_type,30),quantity=body.quantity===null||body.quantity===undefined?null:Number(body.quantity);
+      if(!uuid(body.lot_id)||!["branch","order","receipt","production_batch"].includes(impactType)||!uuid(body.impact_entity_id)||
+        (quantity!==null&&(!Number.isFinite(quantity)||quantity<0))||!idem)return fail("Relasi distribusi lot tidak valid.",422,origin);
+      return await callQuality("quality_link_food_lot_distribution",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_lot_id:body.lot_id,p_impact_type:impactType,p_impact_entity_id:body.impact_entity_id,
+        p_quantity:quantity,p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-record-food-inspection"){
+      const sourceType=safeText(body.source_type,30),temperature=Number(body.measured_temp_c);
+      const declared=Array.isArray(body.declared_allergens)?body.declared_allergens.map((x:any)=>safeText(x,80)).filter(Boolean):[];
+      if(!["receipt_item","production_batch","branch_check"].includes(sourceType)||!uuid(body.source_id)||!uuid(body.policy_id)||
+        !safeText(body.lot_code,120)||!Number.isFinite(temperature)||!Array.isArray(body.declared_allergens)||!idem)
+        return fail("Data inspeksi food safety tidak valid.",422,origin);
+      return await callQuality("quality_record_food_safety_inspection",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_source_type:sourceType,p_source_id:body.source_id,p_lot_code:safeText(body.lot_code,120),
+        p_policy_id:body.policy_id,p_measured_temp_c:temperature,p_declared_allergens:declared,
+        p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-initiate-recall"){
+      const severity=safeText(body.severity,20);
+      if(!safeText(body.lot_code,120)||safeText(body.reason,500).length<3||!["low","medium","high","critical"].includes(severity)||!idem)
+        return fail("Data recall tidak valid.",422,origin);
+      return await callQuality("quality_initiate_food_recall",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_lot_code:safeText(body.lot_code,120),p_reason:safeText(body.reason,500),p_severity:severity,
+        p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-record-supplier-inspection"){
+      if(!uuid(body.receipt_item_id)||!uuid(body.policy_id)||!Array.isArray(body.findings)||body.findings.length===0||!idem)
+        return fail("Data inspeksi supplier tidak valid.",422,origin);
+      const findings=body.findings.slice(0,100).map((x:any)=>({code:safeText(x?.code,80),severity:safeText(x?.severity,20),note:safeText(x?.note,300)}));
+      if(findings.some((x:any)=>!x.code||!["minor","major","critical"].includes(x.severity)))
+        return fail("Kode atau severity temuan supplier tidak valid.",422,origin);
+      return await callQuality("quality_record_supplier_quality_inspection",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_receipt_item_id:body.receipt_item_id,p_policy_id:body.policy_id,p_findings:findings,
+        p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-submit-capa"){
+      if(!uuid(body.capa_id))return fail("CAPA ID tidak valid.",422,origin);
+      return await callQuality("quality_submit_supplier_capa",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_capa_id:body.capa_id,p_root_cause:safeText(body.root_cause,1000),p_corrective_action:safeText(body.corrective_action,1000),
+        p_preventive_action:safeText(body.preventive_action,1000),p_evidence_reference:safeText(body.evidence_reference,500),
+        p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-verify-capa"){
+      if(!uuid(body.capa_id)||!["verified","rejected"].includes(safeText(body.decision,20)))
+        return fail("Keputusan CAPA tidak valid.",422,origin);
+      return await callQuality("quality_verify_supplier_capa",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_capa_id:body.capa_id,p_decision:safeText(body.decision,20),p_evidence_reference:safeText(body.evidence_reference,500),
+        p_release_quarantine:body.release_quarantine===true,p_actor_user_id:actor.user.id});
+    }
+  }
+
   // HR attendance reads/writes are branch-scoped. The branch tenant is always
   // derived from the database; no caller-supplied tenant_id is trusted.
   const hrActions = new Set([
