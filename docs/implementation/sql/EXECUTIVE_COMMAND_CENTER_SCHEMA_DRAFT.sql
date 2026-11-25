@@ -205,7 +205,7 @@ begin
     and t.period_start<=p_period_start and t.period_end>=p_period_end
    order by t.approved_at desc limit 1
   ) target on true
-  where b.tenant_id=p_tenant_id and b.is_active=true
+  where b.tenant_id=p_tenant_id and b.status='active'
    and (snap.id is null or target.id is null)
  ) then raise exception using errcode='23514',message='EXECUTIVE_BRANCH_SNAPSHOT_OR_APPROVED_TARGET_MISSING'; end if;
  select array_agg(snap.id order by b.id) into v_snapshot_ids
@@ -217,7 +217,7 @@ begin
    and s.period_start::date=p_period_start and s.period_end::date>=p_period_end
   order by s.published_at desc limit 1
  ) snap on true
- where b.tenant_id=p_tenant_id and b.is_active=true;
+ where b.tenant_id=p_tenant_id and b.status='active';
  insert into public.executive_branch_rankings(
   tenant_id,metric_id,period_start,period_end,branch_count,status,source_snapshot_ids,idempotency_key,published_by
  ) values(p_tenant_id,p_metric_id,p_period_start,p_period_end,v_count,'published',v_snapshot_ids,p_idempotency_key,p_actor_user_id)
@@ -243,7 +243,7 @@ begin
    and t.period_start<=p_period_start and t.period_end>=p_period_end
   order by t.approved_at desc limit 1
  ) target on true
- where b.tenant_id=p_tenant_id and b.is_active=true;
+ where b.tenant_id=p_tenant_id and b.status='active';
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.branch_ranking.published','executive_branch_rankings',v_ranking.id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'metric_id',p_metric_id,'period_start',p_period_start,
