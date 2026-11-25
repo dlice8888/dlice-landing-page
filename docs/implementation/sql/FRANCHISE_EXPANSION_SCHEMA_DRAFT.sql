@@ -545,7 +545,7 @@ create or replace function public.franchise_review_opening_gate(
  p_agreement_id uuid,p_gate_key text,p_status text,p_evidence_reference text,
  p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.franchise_agreements%rowtype; g public.franchise_opening_gates%rowtype;
  v_approver uuid;
 begin
@@ -581,7 +581,7 @@ begin
   jsonb_build_object('agreement_id',v.id,'gate_key',g.gate_key,'evidence_reference',g.evidence_reference));
  return jsonb_build_object('agreement_id',v.id,'gate_key',g.gate_key,'status',g.status,
   'verified_by',g.verified_by,'verified_at',g.verified_at);
-end $;
+end $$;
 revoke all on function public.franchise_review_opening_gate(uuid,text,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.franchise_review_opening_gate(uuid,text,text,text,uuid,text) to service_role;
 
