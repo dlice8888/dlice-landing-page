@@ -1359,7 +1359,7 @@ if (action === "admin-set-profile-role") {
       return json({compensation_rate:data},201,origin);
     }
     if(action==="erp-hr-list-payroll-runs"){
-      const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at,hr_payroll_finance_outbox(status,finance_journal_reference,reconciliation_reference)").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
       if(error)return fail("Payroll belum tersedia. Terapkan skema HR pada batch migrasi final.",503,origin);
       return json({payroll_runs:data||[]},200,origin);
     }
