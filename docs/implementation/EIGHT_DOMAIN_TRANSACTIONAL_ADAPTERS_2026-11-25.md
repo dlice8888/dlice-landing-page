@@ -326,18 +326,26 @@ The actual send adapter and provider-specific signed webhook route are still
 blocked on an approved, known provider contract and its staging credentials.
 The new UI explicitly states that queuing is not sending.
 
-### HR schema integration conflict found
+### HR/Finance canonical model reconciliation
 
-The two HR SQL drafts currently describe overlapping but incompatible payroll
-models: `HR_WORKFORCE_SCHEMA_DRAFT.sql` creates `hr_payroll_runs` and
-`hr_payroll_lines`, while `HR_PAYROLL_FINANCE_SCHEMA_DRAFT.sql` attempts to
-create a second `hr_payroll_runs` shape and `hr_payroll_run_lines`. Because
-both use `CREATE TABLE IF NOT EXISTS`, applying them in sequence would not
-upgrade the first table to the columns expected by the second draft's
-functions. This is a real integration blocker, not something to paper over
-with another duplicate table. The canonical payroll schema and Finance posting
-adapter must be reconciled into one additive migration before the final batch.
-No migration was run.
+Resolved at source level: `HR_PAYROLL_FINANCE_SCHEMA_DRAFT.sql` now explicitly
+extends the canonical `hr_payroll_runs` and `hr_payroll_lines` definitions.
+The shadow `hr_payroll_run_lines` / `finance_journal_batches` design was
+removed. The legacy `hr_payroll_finance_outbox` and its queue RPC were also
+removed from the HR workforce draft so there is one authoritative posting
+lifecycle: approved payroll → `hr_payroll_finance_postings` draft →
+`finance_journal_entries` posted → server-computed reconciliation hash.
+
+The Edge Function and ERP payroll screen now expose independent account
+mapping approval, Finance draft preparation against an open fiscal period,
+journal posting and reconciliation. Reconciliation computes SHA-256 from the
+actual posted journal rows in PostgreSQL; the client cannot supply the hash.
+Payroll calculation currently uses approved timesheets and effective approved
+hourly rates. Allowance, overtime premium, tax/benefit and statutory deduction
+policies are not inferred or invented; those components need approved policy
+inputs before being represented in payroll.
+
+No SQL draft has been applied to staging and no payroll posting has been run.
 
 
 ### Franchise agreement lifecycle increment
@@ -378,3 +386,43 @@ alternate schema names. It does not yet provide target authoring/approval UI,
 automated alert generation, region/company rollups, or the full hierarchy
 drill-down. A complete 150-branch ranking cannot be claimed until source
 snapshots and approved targets exist for all branches.
+
+
+### CRM financial close source adapter increment
+
+The CRM projection builder now derives its evidence directly from the current
+staging source model rather than trusting caller-provided totals or evidence
+JSON. It reads:
+
+- `pos_sales` / `orders` and their paid status, branch, amounts and tender;
+- `payment_records` for paid online-order amounts;
+- `payment_settlement_items` + `payment_settlements`, requiring matched
+  settlement batches and received/net amount parity for electronic tender;
+- `cash_reconciliations`, requiring approved shift cash reconciliation for
+  POS cash sales;
+- `refund_records`, including processed refund amounts and blocking open
+  requested/approved refunds;
+- `finance_journal_entries`, requiring posted source journals matching the
+  source gross and a posted journal matching each processed refund.
+
+Cash POS uses approved shift cash evidence instead of provider settlement.
+POS split tender is deliberately rejected until the source model has an explicit
+cash/provider allocation. The adapter hashes a canonical source snapshot,
+persists an immutable `crm_financial_close_projections` row, and exposes
+Platform Owner-only `erp-crm-build-financial-close`. Loyalty award then reads
+that projection and requires the customer transaction link and an approved
+earning rule. No points are awarded by the projection builder itself.
+
+This is still a source-level draft: the CRM schema/RPC has not been applied to
+staging, and no staging transaction has been mutated or used to claim a runtime
+pass. The source Finance journal mapping is fail-closed: a source without exact
+posted journal parity cannot earn points.
+
+### Current execution boundary
+
+Payroll HR/Finance model unification and CRM source adapters are now
+implemented in PR #145 source, but are not runtime-complete until the final
+migration replay and integration batch. Payroll payment remains intentionally
+deferred until the new Finance posting is reconciled and an approved provider
+contract is available. Tests, migrations, E2E, P01–P09 and merge remain deferred
+to the final batch per instruction.
