@@ -2976,7 +2976,9 @@
         "state": "OPEN",
         "draft": true,
         "head_sha": "e0f31cb5350a7f6777028a64b24414e820925b72",
-        "note": "eight-domain source implementation; no merge"
+        "note": "eight-domain source implementation; no merge",
+        "preview_commit": "bf2c187d92b19aab0c66deb3585a9edbd7b0459d",
+        "preview_is_exact_head": false
       },
       "pr146": {
         "state": "OPEN",
@@ -3030,6 +3032,12 @@
         "state": "READY",
         "commit": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
         "url": "https://dlice-landing-page-10txkj9ag-dlice8888-7332.vercel.app"
+      },
+      "pr145_preview": {
+        "state": "READY",
+        "commit": "bf2c187d92b19aab0c66deb3585a9edbd7b0459d",
+        "url": "https://dlice-landing-page-l3x2f4r0w-dlice8888-7332.vercel.app",
+        "exact_pr_head": false
       }
     },
     "release_flags": {
@@ -5429,7 +5437,7 @@
     "status": "SOURCE_AHEAD_OF_DATABASE",
     "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
   },
-  "audit_method": "189 PRD rows reviewed against staging source matrix, live Supabase staging catalog/advisors, Vercel Preview/Production deployment metadata, and open PR evidence. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open Draft PRs are not staging/runtime acceptance.",
+  "audit_method": "189 PRD rows reviewed against staging source matrix, open implementation PRs #143/#145/#146, live Supabase staging catalog/advisors, and Vercel deployment metadata. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open PRs and BLOCKED preflight workflows are not staging/runtime acceptance.",
   "current_totals": {
     "total": 189,
     "partial": 139,
