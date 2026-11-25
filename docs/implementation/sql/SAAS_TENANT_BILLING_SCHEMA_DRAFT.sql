@@ -102,9 +102,32 @@ create table if not exists public.saas_invoice_payments (
  foreign key(tenant_id,invoice_id) references public.saas_invoices(tenant_id,id) on delete restrict,
  check(status<>'succeeded' or settled_at is not null)
 );
-do $$
+create table if not exists public.saas_tenant_offboarding_requests (
+ id uuid primary key default gen_random_uuid(),
+ tenant_id uuid not null references public.tenants(id) on delete restrict,
+ status text not null default 'requested' check(status in ('requested','approved','blocked','processing','completed','cancelled')),
+ reason text not null check(length(btrim(reason)) between 8 and 1000),
+ legal_hold boolean not null default false,
+ legal_hold_reference text null,
+ requested_by uuid not null references auth.users(id) on delete restrict,
+ approved_by uuid null references auth.users(id) on delete restrict,
+ approved_at timestamptz null,
+ retention_until timestamptz null,
+ completed_at timestamptz null,
+ completion_evidence text null,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ unique(tenant_id,id),
+ check(not legal_hold or length(btrim(coalesce(legal_hold_reference,'')))>=8),
+ check(status not in ('approved','processing','completed') or (approved_by is not null and approved_at is not null and retention_until is not null)),
+ check(status<>'completed' or (completed_at is not null and length(btrim(coalesce(completion_evidence,'')))>=8)),
+ check(approved_by is null or approved_by<>requested_by)
+);
+create unique index if not exists saas_one_open_offboarding_per_tenant
+ on public.saas_tenant_offboarding_requests(tenant_id) where status in ('requested','approved','blocked','processing');
+do $
 declare t text;
-begin foreach t in array array['saas_plan_versions','saas_plan_entitlements','saas_tenant_subscriptions','saas_usage_events','saas_invoices','saas_invoice_payments'] loop
+begin foreach t in array array['saas_plan_versions','saas_plan_entitlements','saas_tenant_subscriptions','saas_usage_events','saas_invoices','saas_invoice_payments','saas_tenant_offboarding_requests'] loop
  execute format('alter table public.%I enable row level security',t);
  execute format('drop policy if exists service_role_only on public.%I',t);
  execute format('create policy service_role_only on public.%I for all to service_role using(true) with check(true)',t);
@@ -144,6 +167,29 @@ begin
 end $;
 revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated;
 grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) to service_role;
+
+create or replace function public.saas_approve_offboarding(p_request_id uuid,p_actor_user_id uuid,p_retention_days integer,p_legal_hold boolean,p_legal_hold_reference text)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.saas_tenant_offboarding_requests%rowtype;
+begin
+ if p_retention_days<30 or p_retention_days>3650 then raise exception using errcode='22023',message='INVALID_RETENTION_PERIOD'; end if;
+ select * into v from public.saas_tenant_offboarding_requests where id=p_request_id for update;
+ if not found then raise exception using errcode='P0002',message='OFFBOARDING_REQUEST_NOT_FOUND'; end if;
+ if v.status<>'requested' then raise exception using errcode='23514',message='OFFBOARDING_NOT_REQUESTED'; end if;
+ if v.requested_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_OFFBOARDING_APPROVER_REQUIRED'; end if;
+ if p_legal_hold and length(btrim(coalesce(p_legal_hold_reference,'')))<8 then raise exception using errcode='22023',message='LEGAL_HOLD_REFERENCE_REQUIRED'; end if;
+ update public.saas_tenant_offboarding_requests set status=case when p_legal_hold then 'blocked' else 'approved' end,
+  legal_hold=p_legal_hold,legal_hold_reference=case when p_legal_hold then p_legal_hold_reference else null end,
+  approved_by=p_actor_user_id,approved_at=now(),retention_until=now()+make_interval(days=>p_retention_days),updated_at=now()
+ where id=p_request_id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'saas.tenant.offboarding.'||v.status,'saas_tenant_offboarding_request',v.id::text,
+  jsonb_build_object('tenant_id',v.tenant_id,'retention_until',v.retention_until,'legal_hold',v.legal_hold));
+ return jsonb_build_object('request_id',v.id,'status',v.status,'retention_until',v.retention_until);
+end $;
+revoke all on function public.saas_approve_offboarding(uuid,uuid,integer,boolean,text) from public,anon,authenticated;
+grant execute on function public.saas_approve_offboarding(uuid,uuid,integer,boolean,text) to service_role;
 
 -- Entitlement check RPC must lock/read active subscription and aggregate current-period usage.
 -- Tenant suspension/offboarding must preserve audit and retention/legal-hold requirements.
