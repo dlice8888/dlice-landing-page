@@ -329,7 +329,7 @@ create or replace function public.quality_initiate_food_recall(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v_lot public.food_lot_registry%rowtype; v_id uuid; v_quarantine uuid;
- v_branch_count integer; v_order_count integer; v_existing public.food_recalls%rowtype;
+ v_branch_count integer; v_order_count integer; v_pos_sale_count integer; v_existing public.food_recalls%rowtype;
 begin
  if length(btrim(coalesce(p_lot_code,'')))=0 or length(btrim(coalesce(p_reason,'')))<3
   or p_severity not in ('low','medium','high','critical') or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
@@ -345,12 +345,13 @@ begin
  select * into v_lot from public.food_lot_registry where tenant_id=p_tenant_id and branch_id=p_branch_id
   and lot_code=p_lot_code for update;
  if not found or v_lot.status not in ('available','quarantined') then raise exception using errcode='23514',message='RECALLABLE_FOOD_LOT_REQUIRED'; end if;
- select count(distinct branch_id),count(distinct impact_entity_id) filter(where impact_type='order')
-  into v_branch_count,v_order_count from public.food_lot_distributions where tenant_id=p_tenant_id and lot_id=v_lot.id;
- if v_branch_count=0 and v_order_count=0 then raise exception using errcode='23514',message='FOOD_RECALL_TRACEABILITY_INCOMPLETE'; end if;
+ select count(distinct branch_id),count(distinct impact_entity_id) filter(where impact_type='order'),
+  count(distinct impact_entity_id) filter(where impact_type='pos_sale')
+  into v_branch_count,v_order_count,v_pos_sale_count from public.food_lot_distributions where tenant_id=p_tenant_id and lot_id=v_lot.id;
+ if v_branch_count=0 and v_order_count=0 and v_pos_sale_count=0 then raise exception using errcode='23514',message='FOOD_RECALL_TRACEABILITY_INCOMPLETE'; end if;
  v_branch_count:=v_branch_count+case when not exists(select 1 from public.food_lot_distributions where tenant_id=p_tenant_id and lot_id=v_lot.id and branch_id=p_branch_id) then 1 else 0 end;
- insert into public.food_recalls(tenant_id,branch_id,lot_code,reason,severity,status,affected_branch_count,affected_order_count,idempotency_key,created_by)
- values(p_tenant_id,p_branch_id,p_lot_code,btrim(p_reason),p_severity,'initiated',v_branch_count,v_order_count,p_idempotency_key,p_actor_user_id)
+ insert into public.food_recalls(tenant_id,branch_id,lot_code,reason,severity,status,affected_branch_count,affected_order_count,affected_pos_sale_count,idempotency_key,created_by)
+ values(p_tenant_id,p_branch_id,p_lot_code,btrim(p_reason),p_severity,'initiated',v_branch_count,v_order_count,v_pos_sale_count,p_idempotency_key,p_actor_user_id)
  returning id into v_id;
  insert into public.food_recall_impacts(tenant_id,recall_id,impact_type,impact_entity_id,quantity)
  select p_tenant_id,v_id,impact_type,impact_entity_id,quantity from public.food_lot_distributions
@@ -369,12 +370,12 @@ begin
  update public.food_lot_registry set status='recalled' where tenant_id=p_tenant_id and id=v_lot.id;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'food_recall',v_id,'food_recall.initiated',p_actor_user_id,p_idempotency_key,
-  jsonb_build_object('lot_code',p_lot_code,'affected_branch_count',v_branch_count,'affected_order_count',v_order_count,'quarantine_id',v_quarantine));
+  jsonb_build_object('lot_code',p_lot_code,'affected_branch_count',v_branch_count,'affected_order_count',v_order_count,'affected_pos_sale_count',v_pos_sale_count,'quarantine_id',v_quarantine));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'quality.food_recall.initiated','food_recall',v_id::text,
-  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'lot_code',p_lot_code,'affected_branch_count',v_branch_count,'affected_order_count',v_order_count));
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'lot_code',p_lot_code,'affected_branch_count',v_branch_count,'affected_order_count',v_order_count,'affected_pos_sale_count',v_pos_sale_count));
  return jsonb_build_object('status','initiated','recall_id',v_id,'quarantine_id',v_quarantine,
-  'affected_branch_count',v_branch_count,'affected_order_count',v_order_count);
+  'affected_branch_count',v_branch_count,'affected_order_count',v_order_count,'affected_pos_sale_count',v_pos_sale_count);
 end; $$;
 revoke all on function public.quality_initiate_food_recall(uuid,uuid,text,text,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.quality_initiate_food_recall(uuid,uuid,text,text,text,text,uuid) to service_role;
