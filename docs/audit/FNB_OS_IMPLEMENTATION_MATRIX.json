@@ -1,8 +1,8 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-24 00:00 WIB",
-  "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
+  "snapshot_at": "2026-11-25",
+  "baseline_commit": "staging branch snapshot; implementation deltas cite active PR #145/#146 and remain pre-merge",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
@@ -45,13 +45,19 @@
         {
           "requirement": "Branch ranking, region/format comparison",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No verified 150-branch ranking/cohort output.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 34
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
@@ -102,13 +108,19 @@
         {
           "requirement": "Target vs actual and executive reports",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Official targets, scheduled reports, and exports not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 39
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Company → region → branch → shift → transaction drill-down",
@@ -137,12 +149,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 4,
-        "not_verified": 5,
+        "partial": 6,
+        "not_verified": 3,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 40,
+      "partial_coverage_percent": 60,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1030,13 +1042,19 @@
         {
           "requirement": "AP handoff and supplier payment",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Procurement-to-AP-to-payment reconciliation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 130
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Supplier return and supplier performance",
@@ -1054,12 +1072,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 5,
-        "not_verified": 5,
+        "partial": 6,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 50,
+      "partial_coverage_percent": 60,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1222,68 +1240,104 @@
         {
           "requirement": "Address validation and delivery quote",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Live quote provider and validation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 151
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Courier booking / Biteship integration",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No provider credentials, contract tests or live integration evidence.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 152
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Dispatch and shipment tracking",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Courier lifecycle and tracking callbacks missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 153
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Proof of delivery",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "POD capture and access policy missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 154
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cancel/retry/provider exception handling",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Idempotent retry, cancellation and compensation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 155
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Cost model and reconciliation report missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 156
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Delivery completion notification",
@@ -1302,12 +1356,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 2,
-        "not_verified": 6,
+        "partial": 8,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 25,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1334,35 +1388,53 @@
         {
           "requirement": "Consent and communication preferences",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Consent lifecycle, withdrawal and audit missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 163
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Customer segments",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Segment rules and refresh jobs missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 164
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Loyalty points and tiers",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Ledger, expiry, reversal and duplicate-event protection missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 165
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Rewards and vouchers/coupons",
@@ -1389,13 +1461,19 @@
         {
           "requirement": "Campaign management and ROI",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Campaign lifecycle and attribution metrics missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 168
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Feedback/reviews/support cases",
@@ -1424,12 +1502,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 1,
-        "not_verified": 8,
+        "partial": 5,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 11.1,
+      "partial_coverage_percent": 55.6,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1502,13 +1580,19 @@
         {
           "requirement": "Automated journals from POS/procurement/payroll",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Source mapping and balanced journal posting missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 180
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Bank reconciliation",
@@ -1585,12 +1669,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 7,
-        "not_verified": 4,
+        "partial": 8,
+        "not_verified": 3,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 58.3,
+      "partial_coverage_percent": 66.7,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1661,13 +1745,19 @@
         {
           "requirement": "Payroll calculation/integration",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Provider integration and payroll reconciliation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 196
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Labor cost by branch",
@@ -1707,12 +1797,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 1,
-        "not_verified": 8,
+        "partial": 2,
+        "not_verified": 7,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 11.1,
+      "partial_coverage_percent": 22.2,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1739,13 +1829,19 @@
         {
           "requirement": "Franchise directory/application",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Application and due diligence workflow missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 205
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Site selection and feasibility",
@@ -1773,35 +1869,53 @@
         {
           "requirement": "Agreements and contract expiry",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Document/version/renewal controls missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 208
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Royalty calculation and reconciliation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Contract-driven royalty ledger and settlement missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 209
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Territory and franchise-specific access",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Geographic scope and tenant/franchise isolation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 210
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Franchise compliance and performance",
@@ -1819,12 +1933,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 2,
-        "not_verified": 6,
+        "partial": 6,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 25,
+      "partial_coverage_percent": 75,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1851,13 +1965,19 @@
         {
           "requirement": "Official KPI dictionary and versioning",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Formula, source, timezone, refresh SLA and owner missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 217
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Net sales/AOV/gross margin",
@@ -1874,13 +1994,19 @@
         {
           "requirement": "Food cost %, labor cost %, waste %",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Actual vs theoretical cost data and formula definitions missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 219
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Stock variance and fulfillment/cancellation rates",
@@ -1897,13 +2023,19 @@
         {
           "requirement": "Branch benchmarking by comparable cohorts",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Format/region/hours cohort definitions missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 221
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Demand forecasting and accuracy monitoring",
@@ -1954,12 +2086,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 3,
-        "not_verified": 7,
+        "partial": 6,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 30,
+      "partial_coverage_percent": 60,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2240,24 +2372,36 @@
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Server-enforced entitlements and usage limits missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 246
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Billing, invoices and usage metering",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Subscription billing and idempotent usage ledger missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 247
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            145
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Tenant settings and suspension",
@@ -2308,12 +2452,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 2,
-        "not_verified": 6,
+        "partial": 4,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 25,
+      "partial_coverage_percent": 50,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2340,13 +2484,19 @@
         {
           "requirement": "Payment provider callback signature and status validation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No verified live provider webhook evidence.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 257
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            146
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #146 adds Xendit Payout v3 adapter, signed webhook verification, item-level payroll payout dispatch, Finance clearing, bank statement matching and reconciliation contracts. Exact-head quality passed on 23e4b6c; disposable database replay and provider/bank runtime E2E remain unverified.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
@@ -2434,12 +2584,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 5,
-        "not_verified": 4,
+        "partial": 6,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 55.6,
+      "partial_coverage_percent": 66.7,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2706,661 +2856,59 @@
     }
   ],
   "current_platform_evidence": {
-    "supabase_project": "higoadrzxnhzbbwhdbmh",
-    "supabase_status": "ACTIVE_HEALTHY",
-    "postgres_major": 17,
-    "public_tables": 64,
-    "public_tables_rls_enabled": 64,
-    "public_tables_rls_disabled": 0,
-    "public_functions": 29,
-    "function_execute_grants": {
-      "anon": 0,
-      "authenticated": 0,
-      "service_role": 29,
-      "public": 0
-    },
-    "applied_migrations": 49,
-    "latest_applied_migration": "20261119182606",
-    "total_tenants": 2,
-    "active_tenants": 1,
-    "total_branches": 155,
-    "active_branches": 5,
-    "active_tenant_memberships": 3,
-    "distinct_active_members": 3,
-    "active_owner_profiles": 1,
-    "branch_assignments": 4,
-    "branch_inventory_rows": 4,
-    "pos_sales": 6,
-    "pos_shifts": 7,
-    "orders": 7,
-    "order_items": 21,
-    "payment_records": 6,
-    "kitchen_tickets": 6,
-    "kitchen_ticket_items": 6,
-    "stock_movements": 26,
-    "stock_transfers": 0,
-    "stock_counts": 0,
-    "purchase_requisitions": 0,
-    "purchase_orders": 0,
-    "purchase_receipts": 0,
-    "production_batches": 0,
-    "production_consumptions": 0,
-    "inventory_waste_events": 0,
-    "payment_settlements": 0,
-    "cash_reconciliations": 0,
-    "finance_journal_entries": 0,
-    "fiscal_periods": 0,
-    "branch_expenses": 0,
-    "branch_operation_checklist_runs": 1,
-    "shift_handover_records": 0,
-    "integration_connections": 0,
-    "integration_outbox": 0,
-    "backup_restore_runs": 0,
-    "notification_log": 3,
-    "owner_authorization": {
-      "active_owner_profile_exists": true,
-      "existing_auth_identity_must_be_used": true,
-      "app_metadata_platform_owner_true": "NOT VERIFIED / KNOWN ABSENT IN LAST AUTH AUDIT",
-      "protected_allowlist": "NOT VERIFIED",
-      "completion": "BLOCKED — requires authorized Supabase Auth Admin"
-    },
-    "release_protection": {
-      "main_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
-      "staging_ruleset": "NOT VERIFIED; prior ruleset query empty and branch-protection read 403",
-      "required_status_checks": [],
-      "staging_deployment_reviewers": "NOT VERIFIED",
-      "admin_mutation_available_via_current_connector": false,
-      "github_ruleset_id": 27559290,
-      "github_ruleset_enforcement": "ACTIVE",
-      "github_ruleset_applies_to": "~ALL branches",
-      "required_approving_review_count": 0,
-      "required_reviewers": [],
-      "require_code_owner_review": true,
-      "require_last_push_approval": true,
-      "required_review_thread_resolution": true,
-      "required_deployment_environments": [],
-      "required_signatures": true,
-      "required_linear_history": true,
-      "prevent_deletion": true,
-      "prevent_non_fast_forward": true,
-      "code_scanning_threshold": "high_or_higher; alerts=errors",
-      "code_quality_threshold": "errors",
-      "code_coverage_minimum": null,
-      "copilot_code_review": {
-        "review_on_push": true,
-        "review_draft_pull_requests": true
+    "github": {
+      "repository": "dlice8888/dlice-landing-page",
+      "pr145": {
+        "state": "OPEN",
+        "draft": true,
+        "head_sha": "e0f31cb5350a7f6777028a64b24414e820925b72",
+        "note": "eight-domain source implementation; no merge"
       },
-      "bypass_actors": [
-        {
-          "type": "DeployKey",
-          "id": null,
-          "mode": "always"
-        },
-        {
-          "type": "RepositoryRole",
-          "id": 2,
-          "mode": "always"
-        },
-        {
-          "type": "RepositoryRole",
-          "id": 4,
-          "mode": "always"
-        },
-        {
-          "type": "RepositoryRole",
-          "id": 5,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 8329,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 656270,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 946600,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 1143301,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 1144995,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 4229212,
-          "mode": "always"
-        },
-        {
-          "type": "Integration",
-          "id": 4518051,
-          "mode": "always"
-        }
-      ],
-      "current_connection_can_bypass": "always",
-      "branch_protection_main": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
-      "branch_protection_staging": "403_RESOURCE_NOT_ACCESSIBLE_BY_INTEGRATION",
-      "staging_environment_protection": "NOT_READABLE_WITH_CURRENT_CONNECTOR",
-      "release_gate": "FAIL: no required human approval, no required status checks/deployment reviewers, always-bypass actors"
-    },
-    "tenant_acceptance": {
-      "workflow": "manual-dispatch-only on staging after #110 change",
-      "required_probes": [
-        "P01",
-        "P02",
-        "P03",
-        "P04",
-        "P05",
-        "P06",
-        "P07",
-        "P08",
-        "P09"
-      ],
-      "runtime_executed": 0,
-      "blocked": 0,
-      "skipped": 0,
-      "result": "NOT RUN",
-      "latest_candidate_head": "df43b2b4707186ea31d7068f85f7caa8e252c057",
-      "latest_static_quality_for_exact_head": "NOT OBSERVED",
-      "latest_vercel": "SUCCESS",
-      "environment_secret_validity": "NOT VERIFIED — GitHub Environment API unavailable"
-    },
-    "pending_migrations": [
-      {
-        "pr": 102,
-        "file": "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-        "status": "IN STAGING GIT; NOT APPLIED"
-      },
-      {
-        "pr": 103,
-        "file": "20261120110000_command_center_summary.sql",
-        "status": "IN STAGING GIT; NOT APPLIED"
-      },
-      {
-        "pr": 105,
-        "file": "20261120120000_atomic_branch_checklist_audit.sql",
-        "status": "IN STAGING GIT; NOT APPLIED"
-      },
-      {
-        "pr": 109,
-        "file": "20261120130000_enforce_same_tenant_stock_transfers.sql",
-        "status": "OPEN DRAFT; NOT APPLIED"
-      },
-      {
-        "pr": 111,
-        "file": "20261120140000_staging_machine_session_issuance_audit.sql",
-        "status": "FEATURE BRANCH ONLY; NOT APPLIED"
-      }
-    ],
-    "latest_pr_inventory": {
-      "actual_prs": 125,
-      "merged": 77,
-      "closed_without_merge": 26,
-      "open": 22,
-      "latest_issue_number": 127
-    },
-    "production_changes": "NONE in this audit",
-    "database_performance": {
-      "advisor_observed_at": "2026-11-21",
-      "unindexed_foreign_keys": 26,
-      "unused_indexes": 49,
-      "statistics_reset_at": "2026-10-02T18:01:15Z",
-      "remediation_pr": 122,
-      "proposed_nonredundant_indexes": 24,
-      "migration": "supabase/migrations/20261121120000_add_fk_covering_indexes.sql",
-      "pgTap_assertions": 24,
-      "ci": {
-        "free_quality_checks": "PASS",
-        "disposable_migration_replay": "PASS",
-        "kds_contract_tests": "PASS",
-        "tested_head_sha": "621b1850d20f5571547d7a2b98aae9de05a4ec4c"
-      },
-      "status": "IMPLEMENTATION_IN_PROGRESS — PR #122 Draft; disposable replay and quality checks passed; shared staging unchanged",
-      "unused_index_policy": "RETAIN_ALL_PENDING_QUERY_PLAN_AND_REALISTIC_WORKLOAD_EVIDENCE; no DROP INDEX",
-      "unused_index_review": {
-        "advisor_unused_indexes": 49,
-        "catalog_zero_scan_nonunique_secondary": 49,
-        "affected_tables": 30,
-        "combined_size": "488 kB",
-        "stats_reset_at": "2026-10-02T18:01:15Z",
-        "primary_and_unique_indexes_excluded": true,
-        "drop_index_proposed": false,
-        "review_document": "docs/audit/SUPABASE_UNUSED_INDEX_REVIEW_20261121.md",
-        "decision": "RETAIN_UNTIL_REPRESENTATIVE_QUERY_PLANS_AND_150_BRANCH_LOAD_TEST"
+      "pr146": {
+        "state": "OPEN",
+        "draft": true,
+        "head_sha": "23e4b6c2a057b9b8bdeed68f71088c6e4c88d105",
+        "quality": "Free quality checks PASS at exact head; DB replay and provider/bank E2E not yet passed"
       }
     },
-    "order_lifecycle_findings": {
-      "orders_by_state": {
-        "paid": 3,
-        "unpaid": 3,
-        "pending_verification": 1,
-        "all_fulfillment_unassigned": 7,
-        "all_operational_received": 7
-      },
-      "reservation_rows": {
-        "active_expired": 9,
-        "consumed": 9,
-        "held_for_verification_expired": 3
-      },
-      "payment_records": {
-        "paid_with_proof": 3,
-        "pending_without_proof_on_paid_orders": 2,
-        "pending_with_proof_on_pending_order": 1
-      },
-      "cron_jobs": [
-        {
-          "name": "dlice-operational-retention",
-          "schedule": "17 3 * * *",
-          "active": true
-        }
-      ],
-      "expiry_worker": "NOT INSTALLED",
-      "source": "read-only aggregate SQL on staging 2026-11-21",
-      "data_mutation": "NONE"
-    },
-    "free_tier_policy": {
-      "supabase_organization_plan": "FREE",
-      "vercel_project_plan": "HOBBY",
-      "spend_policy": "NO PAID UPGRADE / NO PAID SERVICE",
-      "feature_limits": "If a required native feature is unavailable on free tier, document blocker and use only safe free mitigations; do not claim equivalence."
-    },
-    "index_performance": {
-      "performance_advisor_unindexed_foreign_keys": 26,
-      "performance_advisor_unused_indexes": 49,
-      "zero_scan_indexes_total": 126,
-      "zero_scan_constraint_or_unique_indexes": 77,
-      "zero_scan_nonunique_indexes": 49,
-      "nonunique_zero_scan_size": "488 kB",
-      "stats_reset": "2026-10-02",
-      "exact_prefix_redundancies": 2,
-      "proposed_drop_indexes": [
-        "stock_count_items_count_idx",
-        "stock_transfer_items_transfer_idx"
-      ],
-      "retained_zero_scan_nonunique_indexes": 47,
-      "applied_to_shared_staging": false,
-      "fk_leading_zero_scan_nonunique_indexes": 42,
-      "non_fk_query_path_zero_scan_nonunique_indexes": 7,
-      "zero_scan_indexes_on_empty_tables": 37,
-      "empty_tables_with_zero_scan_indexes": 20
-    },
-    "saas_tenant_isolation": {
-      "status": "PARTIAL_WORK_IN_PROGRESS",
-      "public_tables_rls_enabled": 64,
-      "public_tables_total": 64,
-      "direct_client_rls_contract_assertions": 35,
-      "direct_client_rls_contract_previous_head": "PASS",
-      "latest_admin_erp_default_deny_guard": "IN_PROGRESS",
-      "tenant_a_b_runtime": "NOT_RUN",
-      "tenant_isolation_released": false,
-      "progress_percent": 38,
-      "latest_quality": "PASS",
-      "latest_disposable_migration_replay": "PASS",
-      "tenant_onboarding_progress_percent": 30,
-      "invitation_lifecycle_pgtap_assertions": 15,
-      "invitation_lifecycle_replay": "PASS on exact head a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
-    },
-    "vercel_preview_status": {
-      "plan": "HOBBY",
-      "api_deployment_creation": "BLOCKED_BY_FREE_DAILY_API_LIMIT",
-      "api_limit_message": "More than 100 deployments in one day; retry after 24 hours",
-      "latest_preview_pr122": "READY on older commit 621b1850d20f5571547d7a2b98aae9de05a4ec4c; latest PR head not previewed",
-      "latest_preview_pr126": "READY on older commit c86f93a360c7579596f11f61529a5217fb8ec73f; latest PR head not previewed",
-      "latest_preview_pr127": "No preview deployment found",
-      "no_plan_upgrade": true
-    },
-    "order_lifecycle_atomicity": {
-      "pr123_idempotency_pgtap": 74,
-      "pr125_expiry_compensation_pgtap": 27,
-      "pr127_payment_proof_pgtap": 16,
-      "pr127_source_contract_tests": 5,
-      "legacy_declare_payment": "READ_ONLY_IDEMPOTENT",
-      "storage_postgres_atomicity": "NOT_POSSIBLE; COMPENSATING_DELETE + PER_ORDER BEST_EFFORT ORPHAN CLEANUP",
-      "browser_concurrency_runtime": "PENDING",
-      "global_storage_orphan_sweeper": "PENDING"
-    },
-    "repo_staging_migration_files": 52,
-    "unapplied_staging_migrations": [
-      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-      "20261120110000_command_center_summary.sql",
-      "20261120120000_atomic_branch_checklist_audit.sql"
-    ],
-    "staging_positive_path_e2e": {
-      "procurement": {
-        "run_id": 44892019085,
-        "status": "BLOCKED",
-        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
-      },
-      "kds_pos_stock_offline": {
-        "run_id": 44891634215,
-        "status": "BLOCKED",
-        "reason": "Missing STAGING_TEST_OWNER_USERNAME, STAGING_TEST_OWNER_PASSWORD, STAGING_TEST_BRANCH_A_USERNAME; business flow did not execute."
-      },
-      "secret_values_exposed": false
-    },
-    "security_advisors": {
-      "leaked_password_protection": "DISABLED",
-      "finding": "auth_leaked_password_protection",
-      "level": "WARN"
-    },
-    "performance_advisors": {
-      "unindexed_foreign_keys": 26,
-      "unused_indexes": 49,
-      "observed_at": "2026-11-21T10:32:23Z"
-    },
-    "vercel_latest_preview_pr126": {
-      "state": "READY",
-      "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8"
-    },
-    "pr_statuses": {
-      "pr120": {
-        "state": "OPEN_DRAFT",
-        "head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
-        "quality": "PASS",
-        "tenant_permission_unit_tests": "8 PASS",
-        "contract_tests": "atomic permission RPC + fail-closed audit persistence PASS",
-        "disposable_migration_replay": "PASS",
-        "database_test_files": [
-          "admin_permission_audit.test.sql",
-          "admin_profile_mutation_audit.test.sql",
-          "tenant_invite_audited.test.sql"
-        ],
-        "gap": "No staging runtime/real identity E2E; overlaps migration 20261121100000 with PR #124 and shares dlice-orders Edge Function edits. PR #120 also introduces 20261121160000; reconcile order and duplicate changes before integration."
-      },
-      "pr123": {
-        "state": "OPEN_DRAFT",
-        "head": "31976673a9289add4c1bb10d6f29f3ff6c3c15a5",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "migration": "20261121130000_atomic_online_order_idempotency.sql",
-        "gap": "Need real checkout retries, duplicate request replay, timeout/late webhook and reservation/payment/order consistency E2E."
-      },
-      "pr124": {
-        "state": "OPEN_DRAFT",
-        "head": "a74200d60d6af06df5a5da4ed87a464283f0f9ff",
-        "quality": "PASS",
-        "password_guard_unit_tests": "3 PASS",
-        "contract_tests": "k-anonymity, response padding and fail-closed behavior PASS",
-        "disposable_migration_replay": "PASS",
-        "supabase_auth_platform_setting": "STILL_DISABLED per Supabase security advisor",
-        "gap": "PR implements application-side official password-flow protection but does not switch on the Supabase Auth leaked-password setting. Must reconcile shared 20261121100000 migration with PR #120."
-      },
-      "pr125": {
-        "state": "OPEN_DRAFT",
-        "head": "1c97dd74ac3e17bf1cfdfa926cd6ab5f5a40156d",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "migration": "20261121140000_order_expiry_payment_lifecycle.sql",
-        "gap": "Need scheduler/expiry execution in staging, late payment callback, compensation and stock/reservation release E2E. Migration overlaps PR #127."
-      },
-      "pr126": {
-        "head": "cf9d6781111f01c2da6d798c14fe70fd577d1ffd",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS on exact head cf9d6781",
-        "invitation_pgtap_assertions": 15,
-        "invitation_tests": "PASS on exact head cf9d6781",
-        "passwordless_existing_auth_workflow": "IMPLEMENTED; source-contract tests PASS; live manual dispatch pending integration and protected service-role secret",
-        "identity_a": "qa_dlice_staging_no_permission@accounts.dlice.internal",
-        "identity_b": "qa_dlice_staging_branch_a@accounts.dlice.internal",
-        "old_username_password_secrets": "REMOVED from workflow",
-        "required_secret": "STAGING_SUPABASE_SERVICE_ROLE_KEY in protected staging GitHub Environment",
-        "session_cleanup": "temporary magic-link sessions revoked after probes",
-        "live_workflow_dispatch": "NOT RUN; workflow_dispatch only available after integration to staging and service-role secret configuration",
-        "actual_tenant_a_b_api_runtime": "NOT RUN",
-        "status": "OPEN_DRAFT",
-        "staging_deploy": false
-      },
-      "pr127": {
-        "state": "OPEN_DRAFT",
-        "head": "5c597c2ec37a130501ed19591cfc9383396ba1b6",
-        "quality": "PASS",
-        "disposable_migration_replay": "PASS",
-        "migrations": [
-          "20261121140000_order_expiry_payment_lifecycle.sql",
-          "20261121150000_atomic_customer_payment_proof.sql",
-          "20261121180000_supersede_stale_payment_attempts.sql"
-        ],
-        "gap": "Need real upload retry, duplicate submission, storage metadata/ACL, expiry and supersession E2E; migration 20261121140000 overlaps PR #125."
-      }
-    },
-    "domain_4_5_schema_gaps": {
-      "kitchen_station_table": "ABSENT",
-      "product_station_routing": "ABSENT",
-      "recipe_versions_table": "ABSENT; version/effective dates currently stored on recipes rows",
-      "allergen_compliance_tables": "ABSENT",
-      "lot_batch_expiry_tables": "ABSENT",
-      "recipe_consumption_behavior": "dlice_consume_order_recipe_stock selects the highest active recipe version at consumption time; no order-time recipe-version snapshot is evidenced",
-      "production_batch_recipe_reference": "production_batches.recipe_id references a recipe row, but no explicit immutable version snapshot contract is evidenced",
-      "kitchen_dispatch_behavior": "dlice_dispatch_kitchen_ticket creates tickets on paid orders/POS sales; station assignment and station queue routing are absent",
-      "production_batch_behavior": "erp_complete_production_batch records planned/actual consumption and waste, but theoretical-vs-actual variance approval workflow is not evidenced",
-      "staging_records": {
-        "kitchen_tickets": 6,
-        "kitchen_ticket_items": 6,
-        "production_batches": 0,
-        "production_consumptions": 0,
-        "inventory_waste_events": 0
-      }
-    },
-    "vercel_preview_status_pr120": {
-      "current_branch_head": "29d6d808c2b56eb9596335805499266de4e1b4ba",
-      "latest_preview_commit": "cfa72df3fa8e9147e585f18e02470df1b5c17300",
-      "latest_preview_state": "READY",
-      "current_head_preview": "NOT FOUND"
-    },
-    "order_payment_reconciliation": {
-      "orders": {
-        "total": 7,
-        "paid": 3,
-        "pending_verification": 1,
-        "unpaid": 3
-      },
-      "payment_records": {
-        "total": 6,
-        "paid": 3,
-        "pending_verification": 3,
-        "pending_with_proof": 1,
-        "pending_without_proof": 2
-      },
-      "reservations": {
-        "total": 21,
-        "consumed": 9,
-        "held_for_verification": 3,
-        "active": 9
-      },
-      "orphan_payment_records": 0,
-      "orphan_reservations": 0,
-      "reservation_state_alignment": {
-        "paid_orders_consumed": true,
-        "pending_order_held": true,
-        "unpaid_orders_active": true
-      },
-      "anomalies": [
-        {
-          "count": 2,
-          "issue": "Two paid orders each retain a sibling pending_verification attempt with proof_storage_path NULL. These are safe to close/supersede after payment approval; proof-bearing attempts must remain pending for manual double-payment review."
-        }
-      ],
-      "root_cause": "public.admin_apply_payment_verification updates only the selected payment row and order status; it does not supersede other pending/unpaid payment attempts for the same order.",
-      "remediation": "PR #127 adds an atomic superseded state and link for unpaid or no-proof pending sibling attempts when a payment is approved. Proof-bearing sibling attempts remain pending for manual double-payment review. A 14-assertion pgTAP test verifies both paths. Existing staging rows remain unchanged until authorized reconciliation.",
-      "no_staging_mutation": true
-    },
-    "supabase_auth_identity_audit": {
-      "project": "dlice-staging",
-      "auth_users_found": 4,
-      "tenant_records": 2,
-      "active_memberships_by_tenant": {
-        "dlice_default": 2,
-        "dlice_qa_isolation_b": 1
-      },
-      "existing_owner_identity": "present; active tenant_owner in dlice-default",
-      "existing_branch_a_qa_identity": "present; active branch_manager in dlice-qa-isolation-b",
-      "other_qa_identities": [
-        "no_permission_active_profile",
-        "inactive_profile_without_active_membership"
-      ],
-      "password_retrieval": "not possible; Supabase Auth stores password hashes",
-      "auth_admin_generate_link_or_passwordless_session_tool": "not available through current connected Supabase actions",
-      "account_mutation_performed": false,
-      "secrets_read_or_changed": false,
-      "tenant_a_identity": "existing active qa_dlice_staging_no_permission user; sales_admin profile, branch_manager membership in dlice-default, non-empty permissions, active QA-DLICE-A assignment",
-      "tenant_b_identity": "existing active qa_dlice_staging_branch_a user; sales_admin profile, branch_manager membership in dlice-qa-isolation-b, same non-empty permission set, active QA-TENANT-B assignment",
-      "last_reverified": "2026-11-21T19:07:00+07:00",
-      "tenant_a_permissions": [
-        "orders",
-        "branches",
-        "inventory",
-        "pos",
-        "procurement",
-        "reports"
-      ],
-      "tenant_b_permissions": [
-        "orders",
-        "branches",
-        "inventory",
-        "pos",
-        "procurement",
-        "reports"
-      ],
-      "tenant_a_active_branches": [
-        "DLC-B001",
-        "QA-DLICE-A"
-      ],
-      "tenant_b_active_branches": [
-        "QA-TENANT-B"
-      ]
-    },
-    "tenant_isolation_runtime": {
-      "direct_client_rls_boundary": "PASS: branches, tenants and tenant_memberships are explicitly deny_direct_client_access for anon/authenticated; expected zero rows",
-      "simulated_authenticated_role_checks": "Owner and QA Branch A identities resolve auth.uid(), but direct table SELECT is intentionally denied by restrictive/permissive deny policies",
-      "actual_edge_function_api_tenant_a_b": "NOT RUN: existing Auth identities found but workflow expects username/password; passwords cannot be recovered and current connector has no Auth Admin generate-link/session action",
-      "tenant_a_identity": "existing qa_dlice_staging_no_permission branch-manager account in dlice-default",
-      "tenant_b_identity": "existing qa_dlice_staging_branch_a branch-manager account in dlice-qa-isolation-b",
-      "cross_tenant_api_read_write": "NOT PROVEN",
-      "storage_cache_background_jobs": "NOT PROVEN",
-      "TENANT_ISOLATION_RELEASED": false,
-      "PUBLIC_TENANT_ROUTING_RELEASED": false
-    },
-    "migration_reconciliation": {
-      "repository_branch": "staging",
-      "repository_migration_files": 52,
-      "staging_applied_migrations": 49,
-      "pending_repository_only": [
-        "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-        "20261120110000_command_center_summary.sql",
-        "20261120120000_atomic_branch_checklist_audit.sql"
-      ],
-      "staging_only": [],
-      "status": "DRIFT_3_PENDING_NOT_APPLIED",
-      "action": "Do not apply yet. Validate migration dependencies, security-definer/invoker behavior, owner bootstrap preconditions, branch scope, SQL tests and rollback/replay on disposable DB; obtain explicit staging gate approval."
-    },
-    "supabase_advisors": {
-      "security": {
-        "warning": "auth_leaked_password_protection",
-        "count": 1,
-        "status": "OPEN",
-        "detail": "Supabase Auth platform leaked-password protection is disabled; PR #124's app-side check does not prove platform setting enabled."
-      },
-      "performance": {
-        "unindexed_foreign_keys": 26,
-        "unused_indexes": 49,
-        "status": "REVIEW_REQUIRED",
-        "detail": "26 foreign keys lack covering indexes; 49 indexes are unused according to current advisor snapshot. Do not drop unused indexes without workload/EXPLAIN validation."
-      },
-      "health": {
-        "findings": 0,
-        "status": "PASS"
-      }
+    "supabase": {
+      "project_ref": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "postgres": "17.11.0.003",
+      "applied_migrations": 63,
+      "latest_migration": "20261124134222",
+      "public_tables": 67,
+      "public_tables_rls_enabled": "67/67",
+      "edge_function": "dlice-orders ACTIVE v73; verify_jwt=false; custom handler authorization must remain tested",
+      "security_advisor": "1 WARN: leaked-password protection disabled",
+      "performance_advisor": "83 INFO: unused-index suggestions; no unindexed-FK finding returned in this live advisor response",
+      "health_advisor": "0 findings",
+      "business_data_gaps": "purchase_orders, purchase_receipts, production_batches, production_consumptions, payment_settlements, payment_settlement_items, refund_records, cash_reconciliations, fiscal_periods, finance_journal_entries, stock_transfers, stock_counts, purchase_requisitions, POS tenders/receipts and CRM/HR/Delivery/Franchise/BI extension records are empty or absent in the live catalog; schema existence is not workflow proof."
     },
     "vercel": {
-      "project": "dlice-landing-page",
-      "project_found": true,
-      "pr126_preview": {
+      "plan": "Hobby",
+      "staging_preview": {
         "state": "READY",
-        "commit": "a36636974a625e4a56e84e6c61fcce3d2b7a95d8",
-        "note": "Preview is not on current PR #126 head cf9d6781; current-head preview not found."
+        "commit": "aed9353d2d2daac57462a108beb43d983ec54946",
+        "url": "https://dlice-landing-page-bjg9ooqwg-dlice8888-7332.vercel.app"
       },
-      "pr127_preview": {
-        "state": "NOT FOUND"
+      "pr146_preview": {
+        "state": "READY",
+        "commit": "4406c31250378dc9eaf13d6fa6d88726ef8fd6dd",
+        "url": "https://dlice-landing-page-iok1w076w-dlice8888-7332.vercel.app",
+        "stale_vs_pr_head": true
       },
-      "production_mutated": false
+      "production": {
+        "state": "READY",
+        "branch": "main",
+        "commit": "cca72d336426688d8d7f6e01b819613ddc82fa6c",
+        "note": "read-only inspection only; no production changes"
+      }
     },
-    "password_mutation_bypass": {
-      "application_layer_guard": "PR #124 checks passwords before the app's admin create/reset actions",
-      "direct_auth_api": "not proven blocked; direct Supabase Auth updateUser path can bypass application Edge Function checks unless platform password-change protections are enabled",
-      "required_platform_controls": [
-        "require reauthentication when changing password",
-        "require current password when changing password",
-        "native leaked-password protection (requires Pro or above)"
-      ],
-      "organization_plan": "free",
-      "platform_settings_mutated": false,
-      "release_status": "BLOCKED"
-    },
-    "last_audit_at": "2026-11-21T19:07:00+07:00",
-    "vercel_staging": {
-      "latest_ready_deployments": [
-        {
-          "commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
-          "state": "READY"
-        },
-        {
-          "commit": "cf15f33379a731c1952ec22b5d12739595a21a93",
-          "state": "READY"
-        }
-      ],
-      "status": "BUILD_READY_NOT_FUNCTIONAL_ACCEPTANCE",
-      "note": "Staging deployments are READY, but this does not prove authenticated browser E2E, tenant isolation, database consistency or 150-branch load readiness."
-    },
-    "staging_migrations": 49,
-    "latest_staging_migration": "20261119182606",
-    "deployed_edge_function": {
-      "name": "dlice-orders",
-      "version": 71,
-      "status": "ACTIVE",
-      "verify_jwt": false,
-      "custom_handler_auth": true,
+    "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
-    },
-    "security_advisor": {
-      "leaked_password_protection": "WARN_DISABLED"
-    },
-    "performance_advisor": {
-      "unindexed_foreign_keys": 26,
-      "unused_indexes": 49
-    },
-    "health_advisor": {
-      "findings": 0
-    },
-    "latest_tenant_acceptance_run": 45236931758,
-    "latest_tenant_acceptance_status": "PASS 9/9; 230/230 auth action probes; supplemental 6/6; cleanup PASS",
-    "staging_head": "666f2a432e236f15161cef8d2d9905279d0f5144",
-    "source_migration_files": 56,
-    "source_only_migrations": [
-      "20261120100000_atomic_owner_and_tenant_bootstrap.sql",
-      "20261120110000_command_center_summary.sql",
-      "20261120120000_atomic_branch_checklist_audit.sql",
-      "20261121100000_atomic_admin_permission_audit.sql",
-      "20261121130000_atomic_tenant_invite_lifecycle.sql",
-      "20261121160000_atomic_admin_profile_mutation_audit.sql",
-      "20261121170000_atomic_branch_assignment_audit.sql"
-    ],
-    "db_only_migrations": [],
-    "duplicate_source_versions": 0,
-    "vercel_preview_deployment": "dpl_WA4PNxDM97qGxzT4Mva9sWG9xkQq",
-    "vercel_preview_state": "READY",
-    "edge_function_version": 71,
-    "edge_function_status": "ACTIVE"
+    }
   },
   "tenant_acceptance": {
     "workflow": ".github/workflows/staging-tenant-isolation-acceptance.yml",
@@ -5753,5 +5301,13 @@
     },
     "status": "SOURCE_AHEAD_OF_DATABASE",
     "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
+  },
+  "audit_method": "189 PRD rows reviewed against staging source matrix, live Supabase staging catalog/advisors, Vercel Preview/Production deployment metadata, and open PR evidence. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open Draft PRs are not staging/runtime acceptance.",
+  "current_totals": {
+    "total": 189,
+    "partial": 120,
+    "not_verified": 63,
+    "blocked": 6,
+    "done": 0
   }
 }
