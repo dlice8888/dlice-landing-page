@@ -132,7 +132,7 @@ alter table public.bi_metric_snapshots
 create or replace function public.bi_record_source_watermark(
  p_tenant_id uuid,p_source_key text,p_window_start timestamptz,p_window_end timestamptz,
  p_max_source_updated_at timestamptz,p_expected_count bigint,p_observed_count bigint,
- p_ingestion_run_id text
+ p_ingestion_run_id text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v public.bi_source_watermarks%rowtype; v_status text;
@@ -158,9 +158,12 @@ begin
   max_source_updated_at,expected_record_count,observed_record_count,ingestion_run_id,status)
  values(p_tenant_id,p_source_key,p_window_start,p_window_end,p_max_source_updated_at,
   p_expected_count,p_observed_count,p_ingestion_run_id,v_status) returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.source_watermark.recorded','bi_source_watermark',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'source_key',p_source_key,'status',v.status,'ingestion_run_id',p_ingestion_run_id));
  return jsonb_build_object('status','recorded','watermark_id',v.id,'watermark_status',v.status);
 end $$;
-revoke all on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) from public,anon,authenticated;
+revoke all on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) to service_role;
 
 create or replace function public.bi_create_reconciliation_run(
@@ -188,6 +191,9 @@ begin
   expected_total,observed_total,tolerance,status,created_by,idempotency_key)
  values(p_tenant_id,p_period_start,p_period_end,p_source_domain,p_source_reference,p_expected_total,
   p_observed_total,p_tolerance,'pending',p_actor_user_id,p_idempotency_key) returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.reconciliation.created','bi_reconciliation_run',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'source_domain',p_source_domain,'period_start',p_period_start,'period_end',p_period_end));
  return jsonb_build_object('status','created','reconciliation_id',v.id,'reconciliation_status',v.status,'variance',v.variance);
 end $$;
 revoke all on function public.bi_create_reconciliation_run(uuid,date,date,text,text,numeric,numeric,numeric,text,uuid) from public,anon,authenticated;
@@ -254,6 +260,9 @@ begin
   join_rule,aggregation_rule,transformation_reference,approved_by,approved_at)
  values(p_metric_id,p_formula_version,p_source_entity,p_source_field,p_source_key,p_join_rule,
   p_aggregation_rule,p_transformation_reference,p_actor_user_id,now()) returning * into l;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.metric_source_lineage.approved','bi_metric_source_lineage',l.id::text,
+  jsonb_build_object('metric_id',p_metric_id,'formula_version',p_formula_version,'source_entity',p_source_entity));
  return jsonb_build_object('status','approved','lineage_id',l.id);
 end $$;
 revoke all on function public.bi_register_metric_source_lineage(uuid,integer,text,text,text,text,text,text,uuid) from public,anon,authenticated;
@@ -291,6 +300,9 @@ begin
  values(p_tenant_id,p_metric_id,p_period_start,p_period_end,p_dimension_key,p_dimension_value,p_metric_value,
   p_source_watermark_ids,p_reconciliation_run_ids,p_formula_version,'draft',p_idempotency_key,p_actor_user_id)
  returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.metric_snapshot.created','bi_metric_snapshot',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'metric_id',p_metric_id,'formula_version',p_formula_version,'status',v.status));
  return jsonb_build_object('status','created','snapshot_id',v.id,'snapshot_status',v.status);
 end $$;
 revoke all on function public.bi_create_metric_snapshot(uuid,uuid,timestamptz,timestamptz,text,text,numeric,uuid[],uuid[],integer,text,uuid) from public,anon,authenticated;
