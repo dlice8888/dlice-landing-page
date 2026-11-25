@@ -51,8 +51,12 @@ function validatePayoutRequest(body) {
   if (body.payout_details.source_currency !== "IDR" || body.payout_details.destination_currency !== "IDR") {
     throw Object.assign(new Error("Payroll payout adapter currently supports IDR-to-IDR only"), { code: "XENDIT_PAYOUT_CURRENCY_UNSUPPORTED" });
   }
-  requiredString(body.source_of_fund, "source_of_fund");
-  requiredString(body.purpose_code, "purpose_code");
+  if (!["INVESTMENT", "PERSONAL_SAVINGS", "BUSINESS_REVENUE", "LEGACY", "BUSINESS_ARRANGEMENT", "LOAN", "SALARY", "OTHER"].includes(body.source_of_fund)) {
+    throw Object.assign(new Error("source_of_fund is not a supported Xendit v3 value"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
+  }
+  if (body.purpose_code !== "SALARY") {
+    throw Object.assign(new Error("Payroll payout purpose_code must be SALARY"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
+  }
   return body;
 }
 
