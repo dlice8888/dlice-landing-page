@@ -26,7 +26,7 @@ store, a client-side authorization check, or a best-effort write.
 
 | Domain | Service | Transaction boundary |
 |---|---|---|
-| CRM | `awardLoyaltyForFinancialClose`, `dispatchApprovedCampaignMessage`, `ingestSignedCampaignReceipt`, `calculateReconciledCampaignRoi` | Reconciled source close, idempotent ledger + balance, consent-gated provider outbox, signed receipt persistence and reconciled ROI |
+| CRM | `awardLoyaltyForFinancialClose`, `dispatchApprovedCampaignMessage`, `ingestSignedCampaignReceipt`, `ingestSignedCampaignUnsubscribe`, `calculateReconciledCampaignRoi` | Reconciled source close, idempotent ledger + balance, consent-gated provider outbox, signed receipt and unsubscribe persistence, tenant/provider-scoped event dedupe, and reconciled ROI |
 | HR / Finance | `persistApprovedPayrollRun`, `executeApprovedPayrollPayment`, `reconcileApprovedPayrollPayment` | Approved run, open fiscal period, immutable lines, balanced draft journal, payment intent and settlement reconciliation |
 | Delivery | `ingestSignedDeliveryWebhook` | HMAC verification, event dedupe, dispatch update, audit |
 | Franchise | `provisionApprovedFranchise` | Signed effective contract, 10 independently verified gates, territory check, atomic tenant/branch provisioning |
@@ -34,6 +34,15 @@ store, a client-side authorization check, or a best-effort write.
 | SaaS | `meterCommittedTenantOperation` | Meter only after authoritative operation commit; durable retry remains an adapter responsibility |
 | Procurement | `executeApprovedSupplierPayment`, `reconcileApprovedSupplierSettlement` | Payment intent in transaction, provider call outside transaction, persisted result, later settlement reconciliation |
 | Executive | `readAuthorizedExecutiveDrilldown` | Authorization at each hierarchy node and Finance-reconciled source transaction read |
+
+### CRM campaign unsubscribe workflow increment
+
+Added `ingestSignedCampaignUnsubscribe`. It requires a provider-specific raw-body
+signature verifier, resolves the customer and consent from trusted server-side
+provider context, rejects provider-event ID collisions, appends the consent
+withdrawal, suppresses queued recipients and persists the provider event in one
+tenant transaction. Provider-event lookup is explicitly scoped by provider and
+tenant. No live provider is configured and no unsubscribe webhook is deployed.
 
 ### CRM POS/order identity adapter increment
 
@@ -63,7 +72,62 @@ been applied; therefore runtime integration is not yet verified.
    for the new entities. These are intentionally not applied in this branch.
 3. Wire the services into authenticated Edge Function routes and UI workflows.
 4. Complete campaign dispatch provider selection, provider receipt webhook,
-   unsubscribe persistence, retries and ROI attribution.
+   durable unsubscribe RPC/adapter wiring, retries and ROI attribution.
+5. Complete payroll payment-provider execution, payroll reversal and bank
+   settlement reconciliation.
+6. Complete delivery quote/booking adapters, approved provider contract,
+   private Storage upload policy/UI, retry/compensation, COD and actual-cost
+   reconciliation.
+7. Complete franchise due-diligence evidence, contract signature verification,
+   renewal/closure and royalty payment settlement.
+8. Complete BI scheduled ingestion, freshness alerting and KPI formula review.
+9. Complete SaaS invoice/payment settlement, API-wide entitlement enforcement,
+   suspend/reactivate, export/retention and deletion evidence.
+10. Complete Procurement invoice intake, return/credit-note lifecycle and AP
+    balanced posting before payment.
+11. Complete Executive 150-branch ranking, target-vs-actual and alert workflow
+    on top of verified Finance facts.
+12. Run static checks, unit/contract tests, disposable migration replay, pgTAP,
+    Edge Function type checks, staging P01-P09 and E2E only in the final
+    validation batch, as requested.
+
+## Operational guardrails
+
+- No production database, credentials, deployment or data changes.
+- No migration execution, PR merge, release flag changes or protection changes.
+- Keep `TENANT_ISOLATION_RELEASED=false` and
+  `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+- Never claim provider acceptance, payment execution, delivery, reconciliation,
+  provisioning or usage metering without persisted authoritative evidence.
+
+
+The existing `erp-crm-link-paid-transaction` action in
+`supabase/functions/dlice-orders/index.ts` previously performed customer
+lookup/create, transaction-link insert, customer promotion and audit as
+separate REST writes. It now delegates those related writes to the single
+`crm_link_transaction_customer` database RPC contract in the CRM schema draft.
+The RPC validates tenant/branch ownership, resolves or locks the customer,
+enforces a single customer link per source transaction, handles duplicate
+requests idempotently, promotes prospects and writes the link audit record in
+one transaction. The Edge Function still verifies the source order/POS sale,
+branch ownership and phone identity before calling it.
+
+This closes the non-atomic identity-link adapter boundary for both
+`online_order` and `pos_sale`. It does **not** automatically award points:
+the financial-close projection still requires approved shift close, reconciled
+settlement, posted/reconciled Finance source batch and complete processed
+refund evidence. The action remains Platform Owner-only while the tenant
+isolation release gate is closed. The SQL remains a design draft and has not
+been applied; therefore runtime integration is not yet verified.
+
+## Still required before any domain can be marked DONE
+
+1. Implement concrete Supabase repository adapters and RPCs for every named port.
+2. Add database-enforced unique constraints, foreign keys, tenant isolation and RLS
+   for the new entities. These are intentionally not applied in this branch.
+3. Wire the services into authenticated Edge Function routes and UI workflows.
+4. Complete campaign dispatch provider selection, provider receipt webhook,
+   durable unsubscribe RPC/adapter wiring, retries and ROI attribution.
 5. Complete payroll payment-provider execution, payroll reversal and bank
    settlement reconciliation.
 6. Complete delivery quote/booking adapters, approved provider contract,
