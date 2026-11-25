@@ -29,6 +29,8 @@ jobs:
         run: node scripts/quality-checks.mjs
       - name: Verify feature matrix consistency
         run: node --test tests/contracts/feature-matrix-contract.test.mjs
+      - name: Run complete payroll payout execution and reconciliation regression tests
+        run: node --test tests/contracts/xendit-payout-v3.test.mjs tests/contracts/payroll-payment-provider-workflow.test.mjs tests/contracts/xendit-payout-reconciliation.test.mjs tests/contracts/payroll-payout-webhook-workflow.test.mjs tests/contracts/payroll-payment-batch-execution.test.mjs tests/contracts/payroll-payment-batch-reconciliation.test.mjs tests/contracts/payroll-payment-finance-clearing.test.mjs tests/contracts/payroll-payment-finance-supabase-adapter.test.mjs
       - name: Run staging release contract tests
         run: node scripts/staging-release-contract-tests.mjs
       - name: Run KDS POS stock and offline recovery contract
