@@ -961,7 +961,52 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    if (action === "erp-crm-list-customers") {
+    const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
+  if(franchiseActions.has(action)){
+    if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
+    if(action==="erp-franchise-list-applications"){
+      const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(check_key,status)").order("submitted_at",{ascending:false}).limit(100);
+      if(error)return fail("Data aplikasi franchise belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({applications:data||[]},200,origin);
+    }
+    if(action==="erp-franchise-create-application"){
+      const name=safeText(body.applicant_name,160),email=safeText(body.applicant_email,254).toLowerCase(),phone=safeText(body.applicant_phone,40),
+        region=safeText(body.proposed_region,100),city=safeText(body.proposed_city,100),capacity=Number(body.investment_capacity_idr),
+        experience=safeText(body.experience_summary,2000)||null;
+      if(name.length<2||!/^\S+@\S+\.\S+$/.test(email)||phone.length<8||region.length<2||city.length<2||!Number.isSafeInteger(capacity)||capacity<0)
+        return fail("Data aplikasi franchise tidak valid.",422,origin);
+      const {data,error}=await admin.from("franchise_applications").insert({applicant_name:name,applicant_email:email,applicant_phone:phone,proposed_region:region,proposed_city:city,investment_capacity_idr:capacity,experience_summary:experience,created_by:actor.user.id})
+        .select("id,applicant_name,applicant_email,proposed_region,proposed_city,status,submitted_at").single();
+      if(error)return fail("Aplikasi franchise gagal disimpan.",503,origin);
+      const keys=["identity","financial","legal","operational_experience","territory_conflict","reputation"];
+      const checks=await admin.from("franchise_due_diligence_checks").insert(keys.map(check_key=>({application_id:data.id,check_key})));
+      if(checks.error)return fail("Aplikasi tersimpan tetapi checklist due diligence belum lengkap. Perlu rekonsiliasi sebelum review.",503,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"franchise.application.created",entity_type:"franchise_application",entity_id:data.id,metadata:{proposed_region:region,proposed_city:city}});
+      return json({application:data,checklist:keys},201,origin);
+    }
+    if(action==="erp-franchise-add-site"){
+      const applicationId=safeText(body.application_id,64),address=safeText(body.proposed_address,500),city=safeText(body.city,100),province=safeText(body.province,100);
+      const latitude=body.latitude===null||body.latitude===""?null:Number(body.latitude),longitude=body.longitude===null||body.longitude===""?null:Number(body.longitude);
+      const area=body.floor_area_sqm===null||body.floor_area_sqm===""?null:Number(body.floor_area_sqm);
+      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||address.length<5||city.length<2||province.length<2||
+        ((latitude===null)!==(longitude===null))||(latitude!==null&&(!Number.isFinite(latitude)||latitude< -90||latitude>90))||
+        (longitude!==null&&(!Number.isFinite(longitude)||longitude< -180||longitude>180))||
+        (area!==null&&(!Number.isFinite(area)||area<=0)))return fail("Data lokasi franchise tidak valid.",422,origin);
+      const {data,error}=await admin.from("franchise_sites").insert({application_id:applicationId,proposed_address:address,city,province,latitude,longitude,floor_area_sqm:area})
+        .select("id,application_id,proposed_address,city,province,feasibility_status").single();
+      if(error)return fail("Lokasi franchise gagal disimpan.",503,origin);
+      return json({site:data},201,origin);
+    }
+    if(action==="erp-franchise-review-application"){
+      const applicationId=safeText(body.application_id,64),decision=safeText(body.decision,30),notes=safeText(body.notes,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||!["screening","due_diligence","approved","rejected"].includes(decision))return fail("Keputusan review franchise tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_application",{p_application_id:applicationId,p_decision:decision,p_actor_user_id:actor.user.id,p_notes:notes});
+      if(error)return fail("Keputusan belum dapat disimpan. Pastikan seluruh bukti due diligence dan kelayakan lokasi lengkap.",409,origin);
+      return json({review:data},200,origin);
+    }
+  }
+
+  if (action === "erp-crm-list-customers") {
       const search = safeText(body.search, 80).replace(/[%,()]/g, " ");
       let query = admin.from("crm_customers")
         .select("id,tenant_id,branch_id,display_name,phone_e164,email_normalized,status,marketing_status,created_at,updated_at")
