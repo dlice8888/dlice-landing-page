@@ -35,6 +35,27 @@ store, a client-side authorization check, or a best-effort write.
 | Procurement | `executeApprovedSupplierPayment`, `reconcileApprovedSupplierSettlement` | Payment intent in transaction, provider call outside transaction, persisted result, later settlement reconciliation |
 | Executive | `readAuthorizedExecutiveDrilldown` | Authorization at each hierarchy node and Finance-reconciled source transaction read |
 
+### CRM POS/order identity adapter increment
+
+The existing `erp-crm-link-paid-transaction` action in
+`supabase/functions/dlice-orders/index.ts` previously performed customer
+lookup/create, transaction-link insert, customer promotion and audit as
+separate REST writes. It now delegates those related writes to the single
+`crm_link_transaction_customer` database RPC contract in the CRM schema draft.
+The RPC validates tenant/branch ownership, resolves or locks the customer,
+enforces a single customer link per source transaction, handles duplicate
+requests idempotently, promotes prospects and writes the link audit record in
+one transaction. The Edge Function still verifies the source order/POS sale,
+branch ownership and phone identity before calling it.
+
+This closes the non-atomic identity-link adapter boundary for both
+`online_order` and `pos_sale`. It does **not** automatically award points:
+the financial-close projection still requires approved shift close, reconciled
+settlement, posted/reconciled Finance source batch and complete processed
+refund evidence. The action remains Platform Owner-only while the tenant
+isolation release gate is closed. The SQL remains a design draft and has not
+been applied; therefore runtime integration is not yet verified.
+
 ## Still required before any domain can be marked DONE
 
 1. Implement concrete Supabase repository adapters and RPCs for every named port.
