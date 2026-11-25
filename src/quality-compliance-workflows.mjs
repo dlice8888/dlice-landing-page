@@ -57,8 +57,8 @@ export async function recordFoodSafetyInspection(input, deps) {
   const sourceId = required(input.sourceId, "sourceId");
   const lotCode = required(input.lotCode, "lotCode");
   const policyId = required(input.policyId, "policyId");
-  const measuredTempC = Number(input.measuredTempC);
-  if (!Number.isFinite(measuredTempC)) fail("FOOD_SAFETY_TEMPERATURE_INVALID", "A finite temperature in Celsius is required");
+  const measuredTempC = input.measuredTempC;
+  if (typeof measuredTempC !== "number" || !Number.isFinite(measuredTempC)) fail("FOOD_SAFETY_TEMPERATURE_INVALID", "A finite temperature in Celsius is required");
   if (!Array.isArray(input.declaredAllergens)) fail("FOOD_SAFETY_ALLERGENS_INVALID", "Declared allergens must be an array");
 
   return transact(deps, scope, async (tx) => {
@@ -118,7 +118,8 @@ export async function initiateFoodRecall(input, deps) {
     const impact = await adapter(deps, "findFoodLotDistributionImpact")(tx, {
       tenantId: scope.tenantId, branchId: scope.branchId, lotCode,
     });
-    if (!impact || !Array.isArray(impact.affectedBranches) || !Array.isArray(impact.affectedOrders)) {
+    if (!impact || !Array.isArray(impact.affectedBranches) || !Array.isArray(impact.affectedOrders) ||
+        (impact.affectedBranches.length === 0 && impact.affectedOrders.length === 0)) {
       fail("FOOD_RECALL_TRACEABILITY_INCOMPLETE", "Affected branch and order traceability is required");
     }
     const saved = await adapter(deps, "persistFoodRecall")(tx, {
@@ -126,10 +127,11 @@ export async function initiateFoodRecall(input, deps) {
       lotCode, reason, severity, impact, idempotencyKey: scope.idempotencyKey,
     });
     if (!saved?.id) fail("FOOD_RECALL_PERSIST_FAILED", "Recall record was not persisted");
-    await adapter(deps, "quarantineFoodLot")(tx, {
+    const quarantine = await adapter(deps, "quarantineFoodLot")(tx, {
       tenantId: scope.tenantId, branchId: scope.branchId, lotCode,
       recallId: saved.id, reasonCodes: ["FOOD_RECALL"], idempotencyKey: scope.idempotencyKey,
     });
+    if (!quarantine?.id) fail("FOOD_RECALL_QUARANTINE_FAILED", "Recalled lot must be durably quarantined");
     await audit(deps, tx, scope, {
       action: "quality.food_recall.initiated", entityType: "food_recall",
       entityId: saved.id, idempotencyKey: scope.idempotencyKey,
@@ -204,6 +206,7 @@ export async function verifySupplierCorrectiveAction(input, deps) {
   const capaId = required(input.capaId, "capaId");
   const decision = required(input.decision, "decision");
   if (!["verified", "rejected"].includes(decision)) fail("SUPPLIER_CAPA_DECISION_INVALID", "Decision must be verified or rejected");
+  if (input.releaseQuarantine === true && decision !== "verified") fail("SUPPLIER_CAPA_RELEASE_REQUIRES_VERIFICATION", "Quarantine release requires a verified CAPA");
   const evidenceReference = required(input.evidenceReference, "evidenceReference");
   return transact(deps, scope, async (tx) => {
     const capa = await adapter(deps, "loadSupplierCorrectiveActionForUpdate")(tx, { tenantId: scope.tenantId, branchId: scope.branchId, capaId });
