@@ -166,3 +166,28 @@ end $$;
 -- The existing delivery-proof bucket must be PRIVATE. No client upload policy
 -- is granted; the Edge Function verifies actor/branch, file signature, size,
 -- hashes the bytes and records immutable metadata after server-side upload.
+
+
+create or replace function public.delivery_approve_provider_config(
+  p_config_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.delivery_provider_configs%rowtype;
+begin
+  select * into v from public.delivery_provider_configs where id=p_config_id for update;
+  if not found then raise exception using errcode='P0002',message='DELIVERY_PROVIDER_CONFIG_NOT_FOUND'; end if;
+  if v.status<>'pending' then raise exception using errcode='23514',message='DELIVERY_PROVIDER_CONFIG_NOT_PENDING'; end if;
+  if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_DELIVERY_PROVIDER_APPROVER_REQUIRED'; end if;
+  if length(btrim(coalesce(v.credential_secret_reference,'')))<3 then
+    raise exception using errcode='22023',message='DELIVERY_PROVIDER_SECRET_REFERENCE_REQUIRED';
+  end if;
+  update public.delivery_provider_configs set status='active',approved_by=p_actor_user_id,
+    approved_at=now(),updated_at=now() where id=p_config_id returning * into v;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'delivery.provider_config.approved','delivery_provider_config',v.id::text,
+    jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'provider_key',v.provider_key,
+      'integration_mode',v.integration_mode,'credential_secret_reference',v.credential_secret_reference));
+  return jsonb_build_object('provider_config_id',v.id,'status',v.status,'provider_key',v.provider_key);
+end $$;
+revoke all on function public.delivery_approve_provider_config(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.delivery_approve_provider_config(uuid,uuid) to service_role;
