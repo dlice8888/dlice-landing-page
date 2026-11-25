@@ -6595,7 +6595,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Employee hire/change/termination lifecycle missing.",
+      "evidence_or_gap": "PR #145 existing HR workforce draft reuses admin_profiles/tenant_memberships/branch_assignments; new employee lifecycle extension adds tenant-scoped employee records and append-only lifecycle events. Auth users are not created or globally disabled by this workflow.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 191
@@ -6654,7 +6654,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
       }
     },
     {
@@ -6663,8 +6664,8 @@
       "requirement": "Organization hierarchy and job positions",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Job positions and branch assignments exist.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "New HR lifecycle RPC supports hire record, transfer, position change, leave start/end, offboarding request, termination and reactivation. Transfer/termination close assignments and cancel future rosters; termination revokes only the selected tenant membership. SQL/Edge/UI are draft/source evidence only.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 192
@@ -6723,7 +6724,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
       }
     },
     {
@@ -6733,7 +6735,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Clock-in/out, approvals and exception handling missing.",
+      "evidence_or_gap": "Existing HR draft supports shift scheduling and overlap checks. Lifecycle extension cancels scheduled/confirmed shifts affected by transfer, leave and termination; no staging runtime evidence yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 193
@@ -6792,7 +6794,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
       }
     },
     {
@@ -6802,7 +6805,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Demand-based scheduling and shift swaps missing.",
+      "evidence_or_gap": "Existing HR draft supports server-timestamp attendance and append-only attendance events. Active assignment status is synchronized on leave/offboarding/termination; pgTAP and E2E remain unrun.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 194
@@ -6861,7 +6864,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
       }
     },
     {
@@ -6871,7 +6875,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Approval and policy engine missing.",
+      "evidence_or_gap": "Existing HR draft supports leave request, coverage confirmation and independent review. Lifecycle start/end requires approved leave ID and updates assignment status atomically; pending leave blocks termination.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 195
@@ -6930,7 +6934,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
       }
     },
     {
@@ -11259,6 +11264,23 @@
       "edge_action_inventory": 206,
       "ci_status": "NOT_OBSERVED",
       "vercel_status": "FAILURE_BUILD_RATE_LIMIT",
+      "staging_migration": "NOT_APPLIED",
+      "staging_e2e": "NOT_RUN",
+      "done_features": 0
+    },
+    "hr_increment": {
+      "pr": 145,
+      "latest_head": "1f6a4a7f4a865b58d1ffe593c8044e8e74e289da",
+      "files": [
+        "docs/implementation/sql/HR_EMPLOYEE_LIFECYCLE_EXTENSION_DRAFT.sql",
+        "supabase/functions/dlice-orders/index.ts",
+        "erp.html",
+        "tests/contracts/hr-employee-lifecycle-sql-contract.test.mjs",
+        "tests/contracts/hr-employee-lifecycle-ui-contract.test.mjs"
+      ],
+      "new_edge_actions": 2,
+      "edge_action_inventory": 208,
+      "ci_status": "NOT_OBSERVED",
       "staging_migration": "NOT_APPLIED",
       "staging_e2e": "NOT_RUN",
       "done_features": 0
