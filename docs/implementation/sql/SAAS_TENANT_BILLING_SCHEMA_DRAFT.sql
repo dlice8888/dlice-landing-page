@@ -125,7 +125,7 @@ create table if not exists public.saas_tenant_offboarding_requests (
 );
 create unique index if not exists saas_one_open_offboarding_per_tenant
  on public.saas_tenant_offboarding_requests(tenant_id) where status in ('requested','approved','blocked','processing');
-do $
+do $$
 declare t text;
 begin foreach t in array array['saas_plan_versions','saas_plan_entitlements','saas_tenant_subscriptions','saas_usage_events','saas_invoices','saas_invoice_payments','saas_tenant_offboarding_requests'] loop
  execute format('alter table public.%I enable row level security',t);
