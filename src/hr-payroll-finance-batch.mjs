@@ -91,11 +91,15 @@ export function buildPayrollFinanceJournalBatch(input) {
     });
 
     const components = payrollLine.components ?? [];
+    let lineDeductions = 0;
+    let lineEmployerCosts = 0;
+    let lineEarnings = 0;
     for (const component of components) {
       if (!component || !Number.isSafeInteger(component.amountIdr) || component.amountIdr < 0) {
         invalid("INVALID_PAYROLL_COMPONENT_SNAPSHOT", payrollLine.employeeId);
       }
       if (component.kind === "deduction") {
+        lineDeductions += component.amountIdr;
         if (component.amountIdr > 0) {
           const code = account(mapping.deductionLiabilities?.[component.code], `deductionLiabilities.${component.code}`);
           appendLine(lines, {
@@ -104,16 +108,29 @@ export function buildPayrollFinanceJournalBatch(input) {
           });
         }
       } else if (component.kind === "employer_contribution") {
+        lineEmployerCosts += component.amountIdr;
         if (component.amountIdr > 0) {
-          const code = account(mapping.employerContributionExpenses?.[component.code], `employerContributionExpenses.${component.code}`);
+          const expenseCode = account(mapping.employerContributionExpenses?.[component.code], `employerContributionExpenses.${component.code}`);
+          const liabilityCode = account(mapping.employerContributionLiabilities?.[component.code], `employerContributionLiabilities.${component.code}`);
           appendLine(lines, {
-            accountCode: code, side: "debit", amountIdr: component.amountIdr,
-            componentCode: component.code, description: `Employer contribution ${component.code}`,
+            accountCode: expenseCode, side: "debit", amountIdr: component.amountIdr,
+            componentCode: component.code, description: `Employer contribution expense ${component.code}`,
+          });
+          appendLine(lines, {
+            accountCode: liabilityCode, side: "credit", amountIdr: component.amountIdr,
+            componentCode: component.code, description: `Employer contribution payable ${component.code}`,
           });
         }
-      } else if (component.kind !== "earning") {
+      } else if (component.kind === "earning") {
+        lineEarnings += component.amountIdr;
+      } else {
         invalid("UNKNOWN_PAYROLL_COMPONENT_KIND", String(component.kind));
       }
+    }
+    if (lineDeductions !== deductions || lineEmployerCosts !== employerCosts ||
+        lineEarnings !== (payrollLine.earningsIdr ?? 0) ||
+        gross !== (payrollLine.baseGrossIdr ?? gross) + lineEarnings) {
+      invalid("PAYROLL_COMPONENT_SNAPSHOT_MISMATCH", payrollLine.employeeId);
     }
 
     appendLine(lines, {
