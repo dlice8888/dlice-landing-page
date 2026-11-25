@@ -29,7 +29,7 @@ These are pure domain modules. They do not access a database or authenticate cal
 
 | Domain | Workflow coverage added | Integration and acceptance still required |
 |---|---|---|
-| CRM | Customer identity, consent lifecycle, campaign audience eligibility, points earn/redeem/reversal and reward validity rules | Existing schema reconciliation; tenant-scoped persistence; server commands; POS/order linkage; atomic immutable ledger; voucher reservation/consume; UI; consent withdrawal and duplicate-event E2E |
+| CRM | Customer identity, consent lifecycle, campaign audience eligibility, points earn/redeem/reversal and reward validity rules; Owner UI + server command source for customer/consent/ledger/reward draft | Generate and validate migration; add atomic voucher redemption/activation; historical POS/order identity linking; tenant-scoped staff authorization after isolation gate; run pgTAP/Edge/UI E2E and consent/reversal/reconciliation checks |
 | HR | Attendance event, submitted timesheet approval, self-approval prevention and payroll input guards | Employee/branch assignment; schedules, leave/overtime, shift conflict policy, payroll persistence and accounting reconciliation; access revocation; UI and E2E |
 | Delivery | Quote/cost split, manual-vs-provider quote reference, provider callback deduplication | Provider contract and signature verification; order/payment separation; booking, tracking, POD, retry, compensation/refund; notification and finance integration; UI and E2E |
 | Franchise | Effective contract version and royalty calculation | Application/due diligence/site feasibility/territory, approval, signed agreement, opening readiness, tenant provisioning, royalty ledger and compliance workflows |
@@ -44,7 +44,7 @@ These are pure domain modules. They do not access a database or authenticate cal
 - Enforce tenant and branch isolation in RLS and database constraints; keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
 - Write state transitions, idempotency records, ledgers, and audit events atomically where they form one business operation.
 - Never expose service-role credentials in browser code, logs, or client responses.
-- No migrations have been applied, no Supabase Auth metadata was changed, no Vercel deployment was made, and no production resource was touched.
+- No migrations have been applied and no Supabase Auth metadata was changed. GitHub commit status reports the Vercel check as success; no manual Production deployment or Supabase Edge Function deployment was performed.
 - No PR has been created or merged. Final merge, disposable replay, staging migration application, full E2E, and reconciliation remain a single coordinated final phase.
 
 ## Acceptance rule
