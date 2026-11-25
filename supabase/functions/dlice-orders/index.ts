@@ -1495,7 +1495,7 @@ if (action === "admin-set-profile-role") {
       if (error) return fail("Daftar staf cabang belum dapat dimuat.", 503, origin);
       const lifecycle=await admin.from("hr_employee_records")
         .select("employee_user_id,employee_number,employment_status,hired_on,terminated_on")
-        .eq("tenant_id",branch.tenant_id);
+        .eq("tenant_id",branch.tenant_id).eq("primary_branch_id",branchId);
       const lifecycleByUser=new Map((lifecycle.data||[]).map((x:any)=>[x.employee_user_id,x]));
       const employees = (data || []).filter((row: any) => row.admin_profiles?.is_active === true).map((row: any) => {
         const record:any=lifecycleByUser.get(row.user_id)||null;
