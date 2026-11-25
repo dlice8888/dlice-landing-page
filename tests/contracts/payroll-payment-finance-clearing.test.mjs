@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   postReconciledPayrollPaymentFinanceClearing,
   matchPayrollPaymentBankStatement,
+  reconcilePayrollPaymentBankBatch,
   quarantineReversedPayrollPaymentClearing,
 } from "../../src/fnb-transactional-workflows.mjs";
 
@@ -102,4 +103,44 @@ test("quarantines authenticated provider reversals without mutating original cle
   }, deps);
   assert.equal(result.status, "reversal_exception");
   assert.equal(result.bankReturnEvidenceRequired, true);
+});
+
+test("closes the bank batch only when every payout clearing has exact bank evidence", async () => {
+  const clearings = [
+    { id: "clear-a", tenantId: "tenant-a", branchId: "branch-a", paymentBatchId: "batch-a",
+      status: "bank_matched", statementLineId: "line-a", bankJournalEntryId: "bank-journal-a",
+      statementCurrency: "IDR", statementAmountIdr: 100000, statementProviderReference: "po-a",
+      providerReference: "po-a", amountIdr: 100000 },
+    { id: "clear-b", tenantId: "tenant-a", branchId: "branch-a", paymentBatchId: "batch-a",
+      status: "bank_matched", statementLineId: "line-b", bankJournalEntryId: "bank-journal-b",
+      statementCurrency: "IDR", statementAmountIdr: 200000, statementProviderReference: "po-b",
+      providerReference: "po-b", amountIdr: 200000 },
+  ];
+  const deps = transactionDeps({
+    loadPayrollPaymentBankBatchEvidence: async () => ({ batch, clearings }),
+    reconcilePayrollPaymentBankBatch: async () => ({
+      status: "bank_reconciled", reconciliationId: "bank-recon-a", amountIdr: 300000, itemCount: 2,
+    }),
+  });
+  const result = await reconcilePayrollPaymentBankBatch({
+    ...base, paymentBatchId: "batch-a",
+  }, deps);
+  assert.equal(result.status, "bank_reconciled");
+  assert.equal(result.amountIdr, 300000);
+});
+
+test("does not close a bank batch with a missing or mismatched statement line", async () => {
+  const deps = transactionDeps({
+    loadPayrollPaymentBankBatchEvidence: async () => ({
+      batch,
+      clearings: [{ id: "clear-a", tenantId: "tenant-a", branchId: "branch-a",
+        paymentBatchId: "batch-a", status: "provider_cleared", amountIdr: 300000,
+        providerReference: "po-a" }],
+    }),
+  });
+  await assert.rejects(
+    reconcilePayrollPaymentBankBatch({ ...base, paymentBatchId: "batch-a" }, deps),
+    { code: "PAYROLL_BANK_CLEARING_EVIDENCE_MISMATCH" },
+  );
+  assert.equal(deps.calls.length, 0);
 });
