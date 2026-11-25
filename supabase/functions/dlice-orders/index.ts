@@ -1173,23 +1173,20 @@ if (action === "admin-set-profile-role") {
           !["clock_in","clock_out","break_start","break_end"].includes(eventType) || idempotencyKey.length < 8) {
         return fail("Perintah absensi tidak valid.", 422, origin);
       }
-      const { data: assignment, error: assignmentError } = await admin.from("branch_assignments")
-        .select("id,admin_profiles!inner(is_active)").eq("branch_id", branchId)
-        .eq("user_id", employeeUserId).eq("employment_status", "active")
-        .eq("admin_profiles.is_active", true).lte("starts_on", todayDate())
-        .or("ends_on.is.null,ends_on.gte."+todayDate()).limit(1).maybeSingle();
-      if (assignmentError) return fail("Penugasan staf belum dapat diverifikasi.", 503, origin);
-      if (!assignment) return fail("Staf tidak memiliki penugasan aktif pada cabang ini.", 403, origin);
       const source = employeeUserId === actor.user.id ? "mobile" : "manager";
-      const { data, error } = await admin.from("hr_attendance_events").insert({
-        tenant_id: branch.tenant_id, branch_id: branchId, employee_user_id: employeeUserId,
-        event_type: eventType, occurred_at: new Date().toISOString(), source,
-        idempotency_key: idempotencyKey, notes, recorded_by: actor.user.id,
-      }).select("id,employee_user_id,event_type,occurred_at,source,notes").single();
-      if (error) return fail(error.code === "23505" ? "Perintah absensi sudah pernah dicatat." : "Absensi belum dapat disimpan.", error.code === "23505" ? 409 : 503, origin);
+      const { data, error } = await admin.rpc("hr_record_attendance", {
+        p_tenant_id: branch.tenant_id, p_branch_id: branchId, p_employee_user_id: employeeUserId,
+        p_event_type: eventType, p_source: source, p_idempotency_key: idempotencyKey,
+        p_notes: notes, p_recorded_by: actor.user.id,
+      });
+      if (error) {
+        const duplicate = error.code === "23505";
+        const forbidden = error.code === "42501";
+        const invalidState = String(error.message || "").includes("ATTENDANCE_") || String(error.message || "").includes("BREAK_") || String(error.message || "").includes("CLOCK_OUT_");
+        return fail(duplicate ? "Perintah absensi sudah pernah dicatat." : forbidden ? "Staf tidak memiliki penugasan aktif pada tenant/cabang ini." : invalidState ? "Urutan event absensi tidak sesuai. Periksa clock-in, istirahat, dan clock-out terakhir." : "Absensi belum dapat disimpan.", duplicate || invalidState ? 409 : forbidden ? 403 : 422, origin);
+      }
       return json({ attendance_event: data }, 201, origin);
-    }
-  }
+    }  }
 
   if (action === "erp-list-tenants") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin tenant tidak diizinkan.",403,origin);
