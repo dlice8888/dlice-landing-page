@@ -709,7 +709,38 @@ revoke all on function public.crm_award_loyalty_for_reconciled_close(uuid,uuid,t
 
 
 
-do $$
+
+-- Append-only evidence records: corrections are represented by compensating/new rows.
+create or replace function public.crm_reject_append_only_mutation()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+begin
+  raise exception using errcode='55000',
+    message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
+    detail=tg_table_name||' is append-only; record a compensating event instead';
+end;
+$;
+revoke all on function public.crm_reject_append_only_mutation() from public,anon,authenticated;
+drop trigger if exists crm_consent_events_append_only on public.crm_customer_consent_events;
+create trigger crm_consent_events_append_only before update or delete on public.crm_customer_consent_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_loyalty_ledger_append_only on public.crm_loyalty_ledger;
+create trigger crm_loyalty_ledger_append_only before update or delete on public.crm_loyalty_ledger
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_provider_events_append_only on public.crm_campaign_provider_events;
+create trigger crm_campaign_provider_events_append_only before update or delete on public.crm_campaign_provider_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_attributions_append_only on public.crm_campaign_attributions;
+create trigger crm_campaign_attributions_append_only before update or delete on public.crm_campaign_attributions
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_costs_append_only on public.crm_campaign_costs;
+create trigger crm_campaign_costs_append_only before update or delete on public.crm_campaign_costs
+for each row execute function public.crm_reject_append_only_mutation();
+
+do $
 declare t text;
 begin
   foreach t in array array[
