@@ -91,7 +91,7 @@ run_probe() {
   local output="$LOG_DIR/$tenant.out"
   local tenant_id
   if [[ "$tenant" == "tenant-a" ]]; then tenant_id="$TENANT_A"; else tenant_id="$TENANT_B"; fi
-  printf 'probe=%s expected_tenant=%s\\n' "$tenant" "$tenant_id"
+  printf 'probe=%s expected_tenant=%s\n' "$tenant" "$tenant_id"
   PGOPTIONS="-c app.tenant_id=$tenant_id" PGPASSWORD=local-only \
     psql -v ON_ERROR_STOP=1 -h "$PGHOST" -p "$PGPORT" -U authenticated -d "$DB" -At \
     -c "SELECT current_user || '|' || session_user || '|' || current_setting('app.tenant_id') || '|' || count(*) FROM public.branches;"
@@ -108,8 +108,18 @@ run_probe() {
     return 1
   fi
   local p95 p99
-  p95="$(awk '{print $5}' "$LOG_DIR/$tenant".* 2>/dev/null | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.95+0.999)]}')"
-  p99="$(awk '{print $5}' "$LOG_DIR/$tenant".* 2>/dev/null | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.99+0.999)]}')"
+  local log_files=( "$LOG_DIR/$tenant".[0-9]* )
+  if [[ ! -e "${log_files[0]}" ]]; then
+    printf 'LOAD_ASSERT_FAILED tenant=%s missing_pgbench_log_files\n' "$tenant" >&2
+    return 1
+  fi
+  p95="$(awk '$5 ~ /^[0-9]+([.][0-9]+)?$/ {print $5}' "${log_files[@]}" | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.95+0.999)]}')"
+  p99="$(awk '$5 ~ /^[0-9]+([.][0-9]+)?$/ {print $5}' "${log_files[@]}" | sort -n | awk '{a[NR]=$1} END {if(NR) print a[int(NR*0.99+0.999)]}')"
+  if [[ -z "$p95" || -z "$p99" ]]; then
+    printf 'LOAD_ASSERT_FAILED tenant=%s latency_samples_missing\n' "$tenant" >&2
+    return 1
+  fi
+  printf 'tenant=%s transactions_p95_us=%s transactions_p99_us=%s\n' "$tenant" "$p95" "$p99"
   printf 'tenant=%s transactions_p95_us=%s transactions_p99_us=%s\n' "$tenant" "${p95:-unavailable}" "${p99:-unavailable}"
 }
 
