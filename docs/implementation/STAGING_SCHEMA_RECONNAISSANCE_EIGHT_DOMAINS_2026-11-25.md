@@ -91,3 +91,29 @@ The current CRM draft can approve campaigns and prepare a consent-filtered recip
 ### Security and release boundary
 
 This inspection was read-only. No migrations, SQL writes, Auth Admin changes, Edge deployments, staging data mutations, production operations, tests, merges or release-flag changes were performed. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain mandatory.
+
+
+## Payroll-to-Finance schema mapping (read-only, 2026-11-25)
+
+The next payroll slice was grounded against live staging columns in `branch_expenses`, `cash_reconciliations`, `fiscal_periods`, `finance_journal_entries`, `payment_settlements`, `payment_settlement_items`, `refund_records`, `pos_sales`, `pos_sale_tenders`, and `pos_shifts`.
+
+### Confirmed journal contract (and its limitation)
+
+- `finance_journal_entries` has one row per entry with `entry_code`, nullable `fiscal_period_id` and `branch_id`, `source_type`, nullable `source_id`, `entry_date`, `debit_account`, `credit_account`, positive `amount_idr`, `description`, status defaulting to `posted`, optional `reverses_entry_id`, and `created_by`.
+- This is a paired-account single-row journal model, not a multi-line journal batch. It has no explicit tenant id, journal-batch id, independent approval fields, posting idempotency key, or payroll source FK in the inspected columns. A single row may express a debit/credit pair, but a complete payroll journal needs multiple balanced entries and a durable batch-level balance invariant.
+- `fiscal_periods` provides date boundaries and open/closed state with close/reopen actor/time metadata. Posting must be rejected outside an open period and must not infer a valid period from a client date alone.
+- `branch_expenses` has branch, category, amount, payment method, approval status and reviewer metadata, but zero staging rows were reported in the table catalogue.
+- `payment_settlements` has gross, fee, optional net/received amount, provider reference, status, and reconciliation actor/time. Settlement items can reference payment records or POS sales. `matched`/received is distinct from a posted payroll journal and a reconciled payroll liability.
+- `cash_reconciliations` is a shift/business-date record with cash/bank/QRIS expected and received values plus review status. It is not an AP/payroll liability ledger.
+- `refund_records` carries order/payment/POS source refs, amount, requested/reviewed/processed lifecycle and actor/time fields. Only processed refunds can reduce eligible transaction revenue; refund-to-line allocation and over-refund prevention must be enforced before any CRM award or BI net-sales snapshot.
+- `pos_sales` exposes branch/shift, subtotal, discount, total and payment status. `pos_sale_tenders` records tender method and amount per sale. Neither alone establishes Finance close or payroll expense posting.
+
+### Payroll implementation consequence
+
+The existing HR payroll outbox remains a safe handoff draft only. The Finance table is not yet adequate evidence for claiming an atomic, balanced, tenant-scoped payroll journal. The next implementation must either extend Finance with an immutable journal-batch/header plus lines, source references, idempotency, independent approval, period validation, balanced debit/credit totals, reversal linkage, and audit events—or formally model payroll postings as a sequence of paired entries under a new immutable batch envelope. Do not insert one arbitrary journal row or mark the HR outbox posted.
+
+Required account mapping must be explicitly approved: wage expense by branch, employer contribution/benefit expense where applicable, payroll tax/deduction liabilities, net wages payable, and payment clearing/cash. The payroll calculation itself must first support the applicable effective-dated compensation components (hourly/monthly, overtime, allowances, benefits, tax, deductions) and independently reviewed net pay. No component rates, tax tables, or payment provider may be invented.
+
+### Staging evidence and restrictions
+
+The live table catalogue showed zero rows in `finance_journal_entries`, `fiscal_periods`, `payment_settlements`, `payment_settlement_items`, `refund_records`, `cash_reconciliations`, and `branch_expenses` at the time of inspection. This is absence of positive workflow fixtures, not proof that the schemas are unusable. No data was read or written for this mapping. No migration, Auth change, Edge deployment, test, merge, or release-flag change was performed.
