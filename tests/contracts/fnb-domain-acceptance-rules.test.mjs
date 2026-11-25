@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
  calculateLoyaltyEarn,validateCustomerMerge,validateCampaignSend,
- validateShiftAssignment,validateLeaveRequest,validateOvertime,
+ validateAttendanceSequence,validateShiftAssignment,validateLeaveRequest,validateOvertime,
  validateDeliveryTransition,validateFranchiseApplication,validateFranchiseOpening,
  validateBiSnapshot,validateTenantLifecycle,validateProcurementApproval,
  validateProcurementReceipt,validateExecutiveDrilldown,validateExecutiveTarget,
@@ -23,6 +23,13 @@ test('CRM campaign send excludes suppressed and requires fresh consent and activ
  const input={tenant_id:'t1',campaign_tenant_id:'t1',channel:'whatsapp',eligible_customer_ids:['c1','c2'],suppressed_customer_ids:['c2'],consent_checked_at:'2026-11-25T08:00:00Z',content_approved_by:'owner',scheduled_at:'2026-11-26T08:00:00Z',now:'2026-11-25T09:00:00Z',provider_connection_status:'active'};
  assert.equal(validateCampaignSend(input).recipient_count,1);
  assert.equal(validateCampaignSend({...input,provider_connection_status:'disabled'}).code,'CHANNEL_CONNECTION_NOT_ACTIVE');
+});
+test('HR attendance sequence requires clock-in before breaks and clock-out',()=>{
+ assert.equal(validateAttendanceSequence({last_event:null,event_type:'clock_in'}).ok,true);
+ assert.equal(validateAttendanceSequence({last_event:null,event_type:'clock_out'}).code,'INVALID_ATTENDANCE_SEQUENCE');
+ assert.equal(validateAttendanceSequence({last_event:'clock_in',event_type:'break_start'}).ok,true);
+ assert.equal(validateAttendanceSequence({last_event:'break_start',event_type:'clock_out'}).code,'INVALID_ATTENDANCE_SEQUENCE');
+ assert.equal(validateAttendanceSequence({last_event:'break_end',event_type:'clock_out'}).ok,true);
 });
 test('HR shift assignment rejects overlaps and inactive staff',()=>{
  const input={tenant_id:'t1',employee_tenant_id:'t1',employee_id:'e1',branch_id:'b1',starts_at:'2026-11-25T08:00:00Z',ends_at:'2026-11-25T16:00:00Z',existingAssignments:[{employee_id:'e1',starts_at:'2026-11-25T12:00:00Z',ends_at:'2026-11-25T20:00:00Z',status:'scheduled'}],position_id:'cashier',employee_status:'active'};
