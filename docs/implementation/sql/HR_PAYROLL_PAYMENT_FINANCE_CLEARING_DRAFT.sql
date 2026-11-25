@@ -520,6 +520,30 @@ create trigger hr_payroll_bank_statement_lines_append_only
  before update or delete on public.hr_payroll_bank_statement_lines
  for each row execute function public.hr_reject_payroll_bank_statement_mutation();
 
+-- Immutable imported bank evidence and reconciliation outcomes.
+create or replace function public.hr_reject_payroll_finance_immutable_mutation()
+returns trigger language plpgsql security invoker set search_path=''
+as $
+begin
+ raise exception using errcode='55000',message='PAYROLL_FINANCE_EVIDENCE_IS_APPEND_ONLY';
+end $;
+revoke all on function public.hr_reject_payroll_finance_immutable_mutation() from public,anon,authenticated;
+drop trigger if exists hr_payroll_bank_reconciliation_append_only on public.hr_payroll_payment_bank_reconciliations;
+create trigger hr_payroll_bank_reconciliation_append_only
+ before update or delete on public.hr_payroll_payment_bank_reconciliations
+ for each row execute function public.hr_reject_payroll_finance_immutable_mutation();
+drop trigger if exists hr_payroll_reversal_exception_append_only on public.hr_payroll_payment_reversal_exceptions;
+create trigger hr_payroll_reversal_exception_append_only
+ before update or delete on public.hr_payroll_payment_reversal_exceptions
+ for each row execute function public.hr_reject_payroll_finance_immutable_mutation();
+
+revoke update,delete on public.hr_payroll_bank_statement_lines from service_role;
+revoke update,delete on public.hr_payroll_payment_bank_reconciliations from service_role;
+revoke update,delete on public.hr_payroll_payment_reversal_exceptions from service_role;
+grant select,insert on public.hr_payroll_bank_statement_lines to service_role;
+grant select,insert on public.hr_payroll_payment_bank_reconciliations to service_role;
+grant select,insert on public.hr_payroll_payment_reversal_exceptions to service_role;
+
 create or replace function public.hr_guard_payroll_payment_clearing_identity()
 returns trigger language plpgsql security invoker set search_path=''
 as $$
