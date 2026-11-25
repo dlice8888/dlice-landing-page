@@ -28,7 +28,7 @@ function makeDeps(currentItems = items) {
       dispatched.push(args);
       return { accepted: true, providerReference: "po-" + args.paymentItemId, providerStatus: "ACCEPTED" };
     },
-    finalizePayrollPaymentItemSubmission: async (args) => ({ paymentItemId: args.paymentItemId, status: "accepted" }),
+    finalizePayrollPaymentItemSubmission: async (_tx, args) => ({ paymentItemId: args.paymentItemId, status: "accepted" }),
   };
 }
 
