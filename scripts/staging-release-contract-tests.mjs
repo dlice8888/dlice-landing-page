@@ -126,5 +126,9 @@ for (const file of ["index.html", "admin.html", "track.html", "erp.html"]) {
     }
   }
 }
-if (process.exitCode) process.exit(process.exitCode);
+if (process.exitCode) {
+  const missing = erpAuthorizationCoverage();
+  if (missing.length) console.error("ERP authorization gaps:", missing.join(", "));
+  process.exit(process.exitCode);
+}
 console.log("Staging release contract checks completed. These checks do not replace browser E2E.");
