@@ -357,3 +357,21 @@ for agreement terms, signature evidence, and tenant/branch activation. Actual
 tenant and branch provisioning, e-sign provider verification, amendment/
 renewal/termination, opening gate execution and royalty invoice/payment
 settlement remain outstanding.
+
+
+### Executive ranking increment
+
+Added tenant-scoped immutable ranking headers/items and
+`executive_publish_branch_ranking`. The RPC accepts only 1–150 active
+branches and refuses publication unless every active branch has a published
+BI snapshot for the requested metric/period and an active approved branch
+target. It stores the exact snapshot lineage, rank, target and variance.
+The Edge Function exposes Platform Owner-only publish/read routes and the ERP
+workspace now provides a ranking publication form and persisted ranking view.
+
+The ranking contract uses the repository's existing branch status
+(`status='active'`) and BI dimension key (`branch_id`), rather than inventing
+alternate schema names. It does not yet provide target authoring/approval UI,
+automated alert generation, region/company rollups, or the full hierarchy
+drill-down. A complete 150-branch ranking cannot be claimed until source
+snapshots and approved targets exist for all branches.
