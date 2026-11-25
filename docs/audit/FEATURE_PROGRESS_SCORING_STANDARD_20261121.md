@@ -135,3 +135,11 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 - PR #136 merged 24 FK covering indexes for 26 constraints; exact-head disposable replay applied all 58 source migrations and passed 11 pgTAP files / 234 tests. Shared Supabase staging still has 49 applied versions and 9 source-only migrations; no shared DB migration was applied.
 - Feature counts: 189 total, 95 PARTIAL, 88 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two PARTIAL scores remain 58% and 30%; 93 PARTIAL features remain unscored. Domain partial-coverage ratios are published in the remediation register but are not weighted completion scores.
 - Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+## Superseding audit — 25 November 2026
+
+Current row-level distribution: **189 total / 120 PARTIAL / 63 NOT VERIFIED / 6 BLOCKED / 0 DONE**. The 25 new PARTIAL classifications are implementation-start evidence linked to Draft PRs #145/#146; they do not mean deployed, database-replayed, E2E accepted, or complete. PR #145 and #146 remain OPEN Draft.
+
+Current partial coverage = 120/189 = **63.5%**. This is a count of features with implementation started, not the weighted progress of PARTIAL features. Feature weighted percentages are awarded only when the six acceptance dimensions have evidence-backed criteria. Keep unscored partials explicitly unscored; do not substitute a generic percent. Existing defensible scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% pending criterion-level rescore.
+
+Live evidence snapshot 25-Nov: Supabase staging 63 applied migrations, 67/67 public tables with RLS, dlice-orders ACTIVE v73 with verify_jwt=false (custom auth guard required), Security Advisor 1 WARN (leaked-password protection disabled), Performance Advisor 83 INFO unused-index suggestions, Health Advisor 0. Vercel Hobby staging Preview READY at commit aed9353; PR #146 Preview READY at stale commit 4406c31, behind current PR head 23e4b6c; Production READY at cca72d3 and was only inspected read-only. PR #146 exact-head quality passed; disposable replay and provider/bank E2E remain open.
