@@ -952,6 +952,10 @@ if (action === "admin-set-profile-role") {
     "erp-crm-record-consent",
     "erp-crm-list-loyalty-ledger",
     "erp-crm-append-loyalty-entry",
+    "erp-crm-list-earning-rules",
+    "erp-crm-request-earning-rule",
+    "erp-crm-approve-earning-rule",
+    "erp-crm-expire-loyalty-points",
     "erp-crm-list-rewards",
     "erp-crm-create-reward",
     "erp-crm-activate-reward",
@@ -1208,6 +1212,53 @@ if (action === "admin-set-profile-role") {
       return json({ consent_event: data }, 201, origin);
     }
 
+    if (action === "erp-crm-list-earning-rules") {
+      const {data,error}=await admin.from("crm_loyalty_earning_rules")
+        .select("id,version,points_per_thousand_idr,points_validity_days,status,created_by,approved_by,approved_at,created_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(50);
+      if(error)return fail("Aturan earning loyalty belum tersedia.",503,origin);
+      return json({earning_rules:data||[]},200,origin);
+    }
+
+    if (action === "erp-crm-request-earning-rule") {
+      const version=safeText(body.version,80);
+      const pointsPerThousand=Number(body.points_per_thousand_idr);
+      const validityDays=Number(body.points_validity_days);
+      if(version.length<1||!Number.isSafeInteger(pointsPerThousand)||pointsPerThousand<0||
+         !Number.isSafeInteger(validityDays)||validityDays<1||validityDays>3650) {
+        return fail("Versi, rasio poin, atau masa berlaku earning rule tidak valid.",422,origin);
+      }
+      const {data,error}=await admin.from("crm_loyalty_earning_rules").insert({
+        tenant_id:tenantId,version,points_per_thousand_idr:pointsPerThousand,
+        points_validity_days:validityDays,status:"draft",created_by:actor.user.id,
+      }).select("id,version,points_per_thousand_idr,points_validity_days,status,created_by").single();
+      if(error)return fail(error.code==="23505"?"Versi earning rule sudah digunakan.":"Earning rule gagal disimpan.",error.code==="23505"?409:503,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"crm.loyalty.earning_rule_requested",entity_type:"crm_loyalty_earning_rules",entity_id:data.id,metadata:{tenant_id:tenantId,version,points_validity_days:validityDays}});
+      return json({earning_rule:data},201,origin);
+    }
+
+    if (action === "erp-crm-approve-earning-rule") {
+      const ruleId=safeText(body.rule_id,64);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ruleId))
+        return fail("Earning rule tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("crm_approve_loyalty_earning_rule",{p_tenant_id:tenantId,p_rule_id:ruleId,p_actor_user_id:actor.user.id});
+      if(error)return fail(String(error.message||"").includes("INDEPENDENT_EARNING_RULE_APPROVER_REQUIRED")?"Pembuat aturan tidak boleh menyetujui aturannya sendiri.":"Earning rule belum dapat disetujui.",409,origin);
+      return json({earning_rule:data},200,origin);
+    }
+
+    if (action === "erp-crm-expire-loyalty-points") {
+      const customerId=safeText(body.customer_id,64);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId))
+        return fail("Pelanggan tidak valid.",422,origin);
+      const {data:customer,error:customerError}=await admin.from("crm_customers").select("id")
+        .eq("tenant_id",tenantId).eq("id",customerId).maybeSingle();
+      if(customerError)return fail("Pelanggan belum dapat diverifikasi.",503,origin);
+      if(!customer)return fail("Pelanggan tidak ditemukan pada tenant ini.",404,origin);
+      const {data,error}=await admin.rpc("crm_expire_loyalty_points",{p_tenant_id:tenantId,p_customer_id:customerId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Expiry poin belum dapat diproses.",409,origin);
+      return json({expiry:data},200,origin);
+    }
+
     if (action === "erp-crm-list-loyalty-ledger") {
       const customerId = safeText(body.customer_id, 64);
       const { data: customer, error: customerError } = await admin.from("crm_customers").select("id")
@@ -1215,7 +1266,7 @@ if (action === "admin-set-profile-role") {
       if (customerError) return fail("Pelanggan belum dapat diverifikasi.", 503, origin);
       if (!customer) return fail("Pelanggan tidak ditemukan pada tenant ini.", 404, origin);
       const { data, error } = await admin.from("crm_loyalty_ledger")
-        .select("id,entry_kind,points,idempotency_key,source_reference,reverses_entry_id,created_at")
+        .select("id,entry_kind,points,idempotency_key,source_reference,reverses_entry_id,expires_at,created_at")
         .eq("tenant_id", tenantId).eq("customer_id", customerId).order("created_at", { ascending: false }).limit(200);
       if (error) return fail("Ledger loyalty belum tersedia. Pastikan skema CRM sudah diterapkan.", 503, origin);
       const balance = (data || []).reduce((sum: number, row: any) => sum + Number(row.points || 0), 0);
@@ -1230,7 +1281,7 @@ if (action === "admin-set-profile-role") {
       const sourceReference = safeText(body.source_reference, 160);
       const reversesEntryId = safeText(body.reverses_entry_id, 64) || null;
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId) ||
-          !["earn","redeem","adjustment","reversal"].includes(entryKind) ||
+          !["adjustment","reversal"].includes(entryKind) ||
           !Number.isSafeInteger(points) || points === 0 || idempotencyKey.length < 8 || !sourceReference) {
         return fail("Perintah poin loyalty tidak valid.", 422, origin);
       }
