@@ -1160,6 +1160,12 @@ if (action === "admin-set-profile-role") {
     "erp-hr-list-employees",
     "erp-hr-list-attendance",
     "erp-hr-record-attendance",
+    "erp-hr-list-schedules",
+    "erp-hr-create-schedule",
+    "erp-hr-list-leave-requests",
+    "erp-hr-create-leave-request",
+    "erp-hr-confirm-leave-coverage",
+    "erp-hr-review-leave-request",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1191,6 +1197,45 @@ if (action === "admin-set-profile-role") {
         .order("occurred_at", { ascending: false }).limit(150);
       if (error) return fail("Data absensi belum tersedia. Pastikan skema HR diterapkan pada batch migrasi final.", 503, origin);
       return json({ attendance: data || [] }, 200, origin);
+    }
+
+    if(action==="erp-hr-list-schedules"){
+      const {data,error}=await admin.from("hr_shift_schedules").select("id,employee_user_id,job_position_id,starts_at,ends_at,status,notes,job_positions(title)").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).gte("starts_at",new Date(Date.now()-7*86400000).toISOString()).order("starts_at").limit(200);
+      if(error)return fail("Roster belum tersedia. Terapkan migrasi HR pada batch final.",503,origin);
+      return json({schedules:data||[]},200,origin);
+    }
+    if(action==="erp-hr-create-schedule"){
+      const employeeId=safeText(body.employee_user_id,64),positionId=safeText(body.job_position_id,64),startsAt=safeText(body.starts_at,40),endsAt=safeText(body.ends_at,40),notes=safeText(body.notes,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^[0-9a-f-]{36}$/i.test(positionId)||!startsAt||!endsAt||Number.isNaN(Date.parse(startsAt))||Number.isNaN(Date.parse(endsAt))||Date.parse(endsAt)<=Date.parse(startsAt))return fail("Jadwal shift tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_create_shift_schedule",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_employee_user_id:employeeId,p_job_position_id:positionId,p_starts_at:startsAt,p_ends_at:endsAt,p_created_by:actor.user.id,p_notes:notes});
+      if(error)return fail("Jadwal ditolak. Periksa penugasan aktif dan konflik shift.",409,origin);
+      return json({schedule:data},201,origin);
+    }
+    if(action==="erp-hr-list-leave-requests"){
+      const {data,error}=await admin.from("hr_leave_requests").select("id,employee_user_id,leave_type,starts_on,ends_on,requested_days,coverage_employee_user_id,coverage_approved,status,reason,requested_by,reviewed_by,reviewed_at,review_note").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(150);
+      if(error)return fail("Data cuti belum tersedia. Terapkan migrasi HR pada batch final.",503,origin);
+      return json({leave_requests:data||[]},200,origin);
+    }
+    if(action==="erp-hr-create-leave-request"){
+      const employeeId=safeText(body.employee_user_id,64),leaveType=safeText(body.leave_type,30),startsOn=safeText(body.starts_on,10),endsOn=safeText(body.ends_on,10),coverageId=safeText(body.coverage_employee_user_id,64)||null,reason=safeText(body.reason,500);
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^\d{4}-\d{2}-\d{2}$/.test(startsOn)||!/^\d{4}-\d{2}-\d{2}$/.test(endsOn)||!["annual","sick","unpaid","maternity","paternity","other"].includes(leaveType)||reason.length<3||(coverageId&&!/^[0-9a-f-]{36}$/i.test(coverageId)))return fail("Permintaan cuti tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_create_leave_request",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_employee_user_id:employeeId,p_leave_type:leaveType,p_starts_on:startsOn,p_ends_on:endsOn,p_coverage_employee_user_id:coverageId,p_reason:reason,p_actor_user_id:actor.user.id});
+      if(error)return fail("Permintaan cuti ditolak. Karyawan harus mengajukan sendiri dan memiliki penugasan aktif.",409,origin);
+      return json({leave_request:data},201,origin);
+    }
+    if(action==="erp-hr-confirm-leave-coverage"){
+      const requestId=safeText(body.leave_request_id,64),approved=body.approved===true,note=safeText(body.note,500)||"";
+      if(!/^[0-9a-f-]{36}$/i.test(requestId))return fail("Permintaan cuti tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_confirm_leave_coverage",{p_leave_request_id:requestId,p_actor_user_id:actor.user.id,p_approved:approved,p_note:note});
+      if(error)return fail("Konfirmasi coverage ditolak. Hanya staf pengganti yang ditunjuk dapat mengonfirmasi.",403,origin);
+      return json({coverage:data},200,origin);
+    }
+    if(action==="erp-hr-review-leave-request"){
+      const requestId=safeText(body.leave_request_id,64),approve=body.approve===true,note=safeText(body.note,500)||"";
+      if(!/^[0-9a-f-]{36}$/i.test(requestId))return fail("Permintaan cuti tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_review_leave_request",{p_leave_request_id:requestId,p_actor_user_id:actor.user.id,p_approve:approve,p_note:note});
+      if(error)return fail("Review cuti ditolak. Reviewer harus independen dan coverage wajib dikonfirmasi.",409,origin);
+      return json({review:data},200,origin);
     }
 
     if (action === "erp-hr-record-attendance") {
