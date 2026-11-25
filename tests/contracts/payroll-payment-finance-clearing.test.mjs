@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   postReconciledPayrollPaymentFinanceClearing,
   matchPayrollPaymentBankStatement,
@@ -143,4 +144,27 @@ test("does not close a bank batch with a missing or mismatched statement line", 
     { code: "PAYROLL_BANK_CLEARING_EVIDENCE_MISMATCH" },
   );
   assert.equal(deps.calls.length, 0);
+});
+
+test("Finance clearing SQL draft keeps payout, bank and reversal evidence service-role scoped", async () => {
+  const sql = await readFile(new URL("../../docs/implementation/sql/HR_PAYROLL_PAYMENT_FINANCE_CLEARING_DRAFT.sql", import.meta.url), "utf8");
+  for (const required of [
+    "hr_payroll_payment_finance_mappings",
+    "hr_payroll_payment_finance_clearings",
+    "hr_payroll_bank_statement_lines",
+    "hr_payroll_payment_bank_reconciliations",
+    "hr_payroll_payment_reversal_exceptions",
+    "hr_post_payroll_payment_finance_clearing",
+    "hr_import_payroll_bank_statement_line",
+    "hr_match_payroll_payment_bank_statement",
+    "hr_reconcile_payroll_payment_bank_batch",
+    "hr_mark_payroll_payment_reversal_exception",
+    "bank_account_fingerprint_sha256",
+    "signature_verified is distinct from true",
+    "revoke all on function",
+    "to service_role",
+    "enable row level security",
+  ]) assert.ok(sql.includes(required), `Finance clearing SQL contract missing: ${required}`);
+  assert.match(sql, /before update on public\.hr_payroll_payment_finance_clearings/);
+  assert.match(sql, /before update or delete on public\.hr_payroll_bank_statement_lines/);
 });
