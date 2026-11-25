@@ -950,6 +950,8 @@ if (action === "admin-set-profile-role") {
     "erp-crm-append-loyalty-entry",
     "erp-crm-list-rewards",
     "erp-crm-create-reward",
+    "erp-crm-activate-reward",
+    "erp-crm-redeem-reward",
   ]);
   if (crmActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul CRM hanya dapat dikelola Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1068,6 +1070,39 @@ if (action === "admin-set-profile-role") {
         .eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100);
       if (error) return fail("Daftar reward belum tersedia. Pastikan skema CRM sudah diterapkan.", 503, origin);
       return json({ rewards: data || [] }, 200, origin);
+    }
+
+    if (action === "erp-crm-activate-reward") {
+      const rewardId = safeText(body.reward_id, 64);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rewardId)) return fail("Reward tidak valid.", 422, origin);
+      const { data: reward, error: rewardError } = await admin.from("crm_rewards").select("id,status,starts_at,expires_at")
+        .eq("tenant_id", tenantId).eq("id", rewardId).maybeSingle();
+      if (rewardError) return fail("Reward belum dapat diverifikasi.", 503, origin);
+      if (!reward || !["draft","paused"].includes(reward.status)) return fail("Status reward tidak dapat diaktifkan.", 409, origin);
+      if (Date.parse(reward.expires_at) <= Date.now()) return fail("Masa berlaku reward sudah berakhir.", 422, origin);
+      const { data, error } = await admin.from("crm_rewards").update({ status: "active", updated_at: new Date().toISOString() })
+        .eq("tenant_id", tenantId).eq("id", rewardId).select("id,name,status,starts_at,expires_at").single();
+      if (error) return fail("Reward belum dapat diaktifkan.", 503, origin);
+      return json({ reward: data }, 200, origin);
+    }
+
+    if (action === "erp-crm-redeem-reward") {
+      const customerId = safeText(body.customer_id, 64);
+      const rewardId = safeText(body.reward_id, 64);
+      const idempotencyKey = safeText(body.idempotency_key, 120);
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidPattern.test(customerId) || !uuidPattern.test(rewardId) || idempotencyKey.length < 8) return fail("Permintaan penukaran reward tidak valid.", 422, origin);
+      const { data, error } = await admin.rpc("crm_redeem_reward", {
+        p_tenant_id: tenantId, p_customer_id: customerId, p_reward_id: rewardId,
+        p_idempotency_key: idempotencyKey, p_actor_user_id: actor.user.id,
+      });
+      if (error) {
+        const duplicate = error.code === "23505";
+        const insufficient = String(error.message || "").includes("INSUFFICIENT_POINTS");
+        const inactive = String(error.message || "").includes("REWARD_NOT_ACTIVE");
+        return fail(duplicate ? "Permintaan penukaran sudah pernah diproses." : insufficient ? "Saldo poin tidak mencukupi." : inactive ? "Reward tidak aktif atau sudah kedaluwarsa." : "Penukaran reward ditolak.", duplicate || insufficient || inactive ? 409 : 422, origin);
+      }
+      return json({ voucher: data }, 201, origin);
     }
 
     if (action === "erp-crm-create-reward") {
