@@ -661,7 +661,7 @@ begin
   select coalesce(array_agg(id order by id),'{}'::uuid[]),coalesce(sum(amount_idr),0),count(*)
    into v_journal_ids,v_finance_total,v_count
    from public.finance_journal_entries
-   where branch_id=p_branch_id and source_id=any(v_payment_ids) and status='posted';
+   where branch_id=p_branch_id and (source_id=p_source_id or source_id=any(v_payment_ids)) and status='posted';
  end if;
  if v_count=0 or v_finance_total<>v_gross then
   raise exception using errcode='23514',message='POSTED_FINANCE_SOURCE_JOURNAL_DOES_NOT_RECONCILE';
@@ -687,7 +687,7 @@ begin
   select coalesce(array_agg(id order by id),'{}'::uuid[]) into v_journal_ids
    from public.finance_journal_entries
    where branch_id=p_branch_id and status='posted'
-     and (source_id=any(v_payment_ids) or source_id=any(v_refund_ids));
+     and (source_id=p_source_id or source_id=any(v_payment_ids) or source_id=any(v_refund_ids));
  end if;
 
  v_snapshot:=jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,
