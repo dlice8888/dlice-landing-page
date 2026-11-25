@@ -160,7 +160,12 @@ begin
   raise exception using errcode='23514',message='RECONCILED_PAYROLL_FINANCE_POSTING_REQUIRED';
  end if;
  if p_actor_user_id in (v_batch.created_by,v_batch.approved_by,v_batch.reconciled_by,
-   v_post.created_by,v_post.posted_by,v_post.reconciled_by) then
+   v_post.created_by,v_post.posted_by,v_post.reconciled_by,
+   v_map.created_by,v_map.approved_by,
+   (select created_by from public.hr_payroll_payment_provider_configs
+    where tenant_id=p_tenant_id and id=v_batch.provider_config_id),
+   (select approved_by from public.hr_payroll_payment_provider_configs
+    where tenant_id=p_tenant_id and id=v_batch.provider_config_id)) then
   raise exception using errcode='42501',message='INDEPENDENT_FINANCE_CLEARING_POSTER_REQUIRED';
  end if;
  select * into v_map from public.hr_payroll_payment_finance_mappings
@@ -289,7 +294,18 @@ declare
 begin
  select * into v from public.hr_payroll_payment_finance_clearings
   where tenant_id=p_tenant_id and id=p_clearing_id for update;
- if not found or v.status<>'provider_cleared' then
+ if not found then
+  raise exception using errcode='23514',message='UNMATCHED_PROVIDER_CLEARING_REQUIRED';
+ end if;
+ if v.status='bank_matched' then
+  if v.bank_statement_line_id=p_statement_line_id then
+   return jsonb_build_object('status','duplicate','clearing_id',v.id,
+    'statement_line_id',v.bank_statement_line_id,'bank_journal_entry_id',v.bank_journal_entry_id,
+    'amount_idr',v.amount_idr);
+  end if;
+  raise exception using errcode='23505',message='PAYROLL_CLEARING_ALREADY_MATCHED_TO_ANOTHER_STATEMENT_LINE';
+ end if;
+ if v.status<>'provider_cleared' then
   raise exception using errcode='23514',message='UNMATCHED_PROVIDER_CLEARING_REQUIRED';
  end if;
  select * into s from public.hr_payroll_bank_statement_lines
@@ -394,6 +410,9 @@ begin
   if v_exception.payload_sha256<>v_event.payload_sha256 or v_exception.payment_item_id<>v_item.id then
    raise exception using errcode='23505',message='PAYROLL_PROVIDER_REVERSAL_IDEMPOTENCY_COLLISION';
   end if;
+  return jsonb_build_object('status','duplicate','exception_id',v_exception.id,
+   'payment_item_id',v_item.id,'clearing_id',v_clear.id,
+   'bank_return_evidence_required',true);
  end if;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'hr.payroll.payment_reversal_quarantined',
@@ -497,6 +516,17 @@ begin
  into v_count,v_provider_total,v_bank_total,v_lines
  from public.hr_payroll_payment_finance_clearings
  where tenant_id=p_tenant_id and payment_batch_id=b.id;
+ if p_actor_user_id in (
+   select c.bank_matched_by from public.hr_payroll_payment_finance_clearings c
+    where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+   union
+   select s.imported_by from public.hr_payroll_payment_finance_clearings c
+    join public.hr_payroll_bank_statement_lines s
+     on s.tenant_id=c.tenant_id and s.id=c.bank_statement_line_id
+    where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+  ) then
+  raise exception using errcode='42501',message='INDEPENDENT_BANK_BATCH_RECONCILER_REQUIRED';
+ end if;
  if v_count<>b.item_count or v_provider_total<>b.amount_idr
   or v_bank_total<>b.amount_idr or cardinality(v_lines)<>b.item_count
   or exists(select 1 from public.hr_payroll_payment_finance_clearings
