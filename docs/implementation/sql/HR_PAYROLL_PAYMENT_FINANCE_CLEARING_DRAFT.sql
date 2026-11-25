@@ -382,8 +382,19 @@ begin
   select c.bank_matched_by from public.hr_payroll_payment_finance_clearings c
    where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
   union
+  select c.created_by from public.hr_payroll_payment_finance_clearings c
+   where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+  union
   select s.imported_by from public.hr_payroll_payment_finance_clearings c
    join public.hr_payroll_bank_statement_lines s on s.tenant_id=c.tenant_id and s.id=c.bank_statement_line_id
+   where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+  union
+  select m.created_by from public.hr_payroll_payment_finance_clearings c
+   join public.hr_payroll_payment_finance_mappings m on m.tenant_id=c.tenant_id and m.id=c.mapping_id
+   where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
+  union
+  select m.approved_by from public.hr_payroll_payment_finance_clearings c
+   join public.hr_payroll_payment_finance_mappings m on m.tenant_id=c.tenant_id and m.id=c.mapping_id
    where c.tenant_id=p_tenant_id and c.payment_batch_id=b.id
  ) then raise exception using errcode='42501',message='INDEPENDENT_BANK_BATCH_RECONCILER_REQUIRED'; end if;
  if n<>b.item_count or provider_total<>b.amount_idr or bank_total<>b.amount_idr
@@ -461,6 +472,14 @@ begin
  end if;
  select * into c from public.hr_payroll_payment_finance_clearings
   where tenant_id=p_tenant_id and payment_item_id=i.id for update;
+ if found then
+  if p_actor_user_id in (c.created_by,c.bank_matched_by,
+   (select created_by from public.hr_payroll_payment_finance_mappings where tenant_id=p_tenant_id and id=c.mapping_id),
+   (select approved_by from public.hr_payroll_payment_finance_mappings where tenant_id=p_tenant_id and id=c.mapping_id),
+   (select imported_by from public.hr_payroll_bank_statement_lines where tenant_id=p_tenant_id and id=c.bank_statement_line_id)) then
+   raise exception using errcode='42501',message='INDEPENDENT_REVERSAL_EXCEPTION_REVIEWER_REQUIRED';
+  end if;
+ end if;
  if found and c.status='bank_matched' then
   reason:='provider_reversal_after_bank_match';
  else
