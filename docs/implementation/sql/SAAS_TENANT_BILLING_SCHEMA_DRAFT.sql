@@ -136,7 +136,7 @@ begin foreach t in array array['saas_plan_versions','saas_plan_entitlements','sa
 end loop; end $$;
 create or replace function public.saas_check_entitlement(p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_at timestamptz)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_subscription public.saas_tenant_subscriptions%rowtype; v_limit bigint; v_enabled boolean; v_used bigint;
 begin
  if p_quantity<=0 then raise exception using errcode='22023',message='INVALID_USAGE_QUANTITY'; end if;
@@ -149,13 +149,13 @@ begin
   and occurred_at>=v_subscription.current_period_start and occurred_at<v_subscription.current_period_end;
  if v_limit is not null and v_used+p_quantity>v_limit then return jsonb_build_object('allowed',false,'reason','QUOTA_EXCEEDED','used',v_used,'limit',v_limit); end if;
  return jsonb_build_object('allowed',true,'used',v_used,'limit',v_limit,'subscription_id',v_subscription.id);
-end $;
+end $$;
 revoke all on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) from public,anon,authenticated;
 grant execute on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) to service_role;
 
 create or replace function public.saas_record_usage(p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_source_entity text,p_source_id text,p_idempotency_key text,p_metadata jsonb,p_at timestamptz)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_check jsonb; v_event public.saas_usage_events%rowtype;
 begin
  perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_entitlement_key,0));
@@ -164,13 +164,13 @@ begin
  insert into public.saas_usage_events(tenant_id,entitlement_key,quantity,occurred_at,source_entity,source_id,idempotency_key,metadata)
  values(p_tenant_id,p_entitlement_key,p_quantity,p_at,p_source_entity,p_source_id,p_idempotency_key,coalesce(p_metadata,'{}')) returning * into v_event;
  return jsonb_build_object('usage_event_id',v_event.id,'quantity',v_event.quantity,'entitlement_key',v_event.entitlement_key);
-end $;
+end $$;
 revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated;
 grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) to service_role;
 
 create or replace function public.saas_approve_offboarding(p_request_id uuid,p_actor_user_id uuid,p_retention_days integer,p_legal_hold boolean,p_legal_hold_reference text)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.saas_tenant_offboarding_requests%rowtype;
 begin
  if p_retention_days<30 or p_retention_days>3650 then raise exception using errcode='22023',message='INVALID_RETENTION_PERIOD'; end if;
@@ -187,7 +187,7 @@ begin
  values(p_actor_user_id,'saas.tenant.offboarding.'||v.status,'saas_tenant_offboarding_request',v.id::text,
   jsonb_build_object('tenant_id',v.tenant_id,'retention_until',v.retention_until,'legal_hold',v.legal_hold));
  return jsonb_build_object('request_id',v.id,'status',v.status,'retention_until',v.retention_until);
-end $;
+end $$;
 revoke all on function public.saas_approve_offboarding(uuid,uuid,integer,boolean,text) from public,anon,authenticated;
 grant execute on function public.saas_approve_offboarding(uuid,uuid,integer,boolean,text) to service_role;
 
