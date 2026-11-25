@@ -54,9 +54,9 @@ These files are design artifacts only. They must be reconciled against the exact
 
 ## Current branch inspection (2026-11-25)
 
-- Branch is ahead of `staging` by 118 commits, behind by 0; 20 files differ.
-- Source-level structural inspection: ERP section tags balanced (19/19), no duplicate static element IDs, no missing static element references in the ERP script, and all listed CRM/HR/Delivery/Franchise/BI/Executive/SaaS/Procurement actions are present in the Edge Function source.
-- The latest GitHub combined status for head `8ab8f14c41497d4ed1ac9fe5c846e45f3c8c4057` reports Vercel `failure` with a build-rate-limit/upgrade URL. This is an infrastructure/build quota block, not a successful build. No exact-head automated tests or integrated runtime checks have been run in this phase.
+- Latest compare: branch is ahead of `staging` by 132 commits, behind by 0; 20 files differ. Current inspected Edge Function head: `bc2b73b32afd2896ada88b514be549a4aab6bb28`.
+- Source-level structural inspection: ERP section tags balanced (19/19), no missing static element references in the ERP script, new CRM voucher consume/void and HR compensation/payroll action handlers are present, and both release flags remain false. A quick raw ID regex sees two template-string false positives; it is not treated as a duplicate-ID pass.
+- No new build, test, deploy, migration replay, staging runtime or E2E job was triggered in this implementation increment. Prior Vercel build-rate-limit failure is historical evidence only and must be rechecked at final batch.
 - A green Preview build, CI tests, disposable migration replay, staging runtime, full E2E and transaction reconciliation remain unproven.
 
 ## Final acceptance rule
