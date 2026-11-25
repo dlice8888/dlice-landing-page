@@ -15,6 +15,12 @@ import {
   issueSaasSubscriptionInvoice,
   requestDeliveryQuotes,
   bookDeliveryDispatch,
+  buildCrmFinancialCloseProjection,
+  calculateAndPersistPayrollRun,
+  createReconciledFranchiseRoyaltyStatement,
+  postMatchedSupplierInvoiceToApJournal,
+  publishExecutiveBranchRanking,
+  runScheduledBiKpiIngestion
 } from "../../src/fnb-transactional-workflows.mjs";
 
 const base = { tenantId: "tenant-a", branchId: "branch-a", actorId: "actor-a", idempotencyKey: "workflow-key-0001" };
@@ -146,6 +152,57 @@ test("delivery booking fails closed without a durable booking-intent adapter", a
   await assert.rejects(
     bookDeliveryDispatch({
       ...base, quoteId: "quote-a", customerAcceptedQuote: true,
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+
+test("CRM close projection requires authoritative transaction adapters", async () => {
+  await assert.rejects(
+    buildCrmFinancialCloseProjection({
+      ...base, sourceType: "pos_sale", sourceId: "sale-a", financialCloseId: "close-a",
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("payroll calculation requires locked run and approved time adapters", async () => {
+  await assert.rejects(
+    calculateAndPersistPayrollRun({ ...base, payrollRunId: "run-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("franchise royalty requires tenant-scoped agreement and reconciled close adapters", async () => {
+  await assert.rejects(
+    createReconciledFranchiseRoyaltyStatement({
+      ...base, agreementId: "agreement-a", periodStart: "2026-11-01", periodEnd: "2026-11-30",
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("supplier AP journal requires tenant transaction and independent approval adapters", async () => {
+  await assert.rejects(
+    postMatchedSupplierInvoiceToApJournal({ ...base, invoiceId: "invoice-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("executive branch ranking requires an authoritative complete branch scope", async () => {
+  await assert.rejects(
+    publishExecutiveBranchRanking({
+      ...base, periodStart: "2026-11-01", periodEnd: "2026-11-30",
+    }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("scheduled BI ingestion requires active governed KPI definitions", async () => {
+  await assert.rejects(
+    runScheduledBiKpiIngestion({
+      ...base, periodStart: "2026-11-01", periodEnd: "2026-11-30",
     }, {}),
     { code: "WORKFLOW_ADAPTER_REQUIRED" },
   );
