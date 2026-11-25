@@ -194,7 +194,7 @@ begin
   left join lateral (
    select s.id,s.metric_value from public.bi_metric_snapshots s
    where s.tenant_id=p_tenant_id and s.metric_id=p_metric_id
-    and s.status='published' and s.dimension_key='branch' and s.dimension_value=b.id::text
+    and s.status='published' and s.dimension_key='branch_id' and s.dimension_value=b.id::text
     and s.period_start::date=p_period_start and s.period_end::date>=p_period_end
    order by s.published_at desc limit 1
   ) snap on true
@@ -213,7 +213,7 @@ begin
  join lateral (
   select s.id from public.bi_metric_snapshots s
   where s.tenant_id=p_tenant_id and s.metric_id=p_metric_id
-   and s.status='published' and s.dimension_key='branch' and s.dimension_value=b.id::text
+   and s.status='published' and s.dimension_key='branch_id' and s.dimension_value=b.id::text
    and s.period_start::date=p_period_start and s.period_end::date>=p_period_end
   order by s.published_at desc limit 1
  ) snap on true
@@ -232,7 +232,7 @@ begin
  join lateral (
   select s.id,s.metric_value from public.bi_metric_snapshots s
   where s.tenant_id=p_tenant_id and s.metric_id=p_metric_id and s.status='published'
-   and s.dimension_key='branch' and s.dimension_value=b.id::text
+   and s.dimension_key='branch_id' and s.dimension_value=b.id::text
    and s.period_start::date=p_period_start and s.period_end::date>=p_period_end
   order by s.published_at desc limit 1
  ) snap on true
