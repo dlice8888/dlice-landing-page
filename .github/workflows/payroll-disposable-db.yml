@@ -33,7 +33,7 @@ jobs:
       - name: Start disposable local Supabase stack
         run: supabase start
       - name: Replay canonical repository migrations
-        run: supabase db reset --local
+        run: supabase db reset
       - name: Replay HR and payroll dependencies in dependency order
         env:
           LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
