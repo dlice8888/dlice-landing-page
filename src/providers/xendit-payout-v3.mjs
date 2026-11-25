@@ -29,13 +29,22 @@ function validatePayoutRequest(body) {
     throw Object.assign(new Error("Payout request body must be an object"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
   }
   requiredString(body.reference_id, "reference_id");
-  if (!body.recipient?.account_details || !body.payout_details) {
-    throw Object.assign(new Error("Recipient account_details and payout_details are required"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
+  const recipient = body.recipient;
+  const account = recipient?.account_details;
+  if (!account || !body.payout_details || !recipient.address || typeof recipient.address !== "object") {
+    throw Object.assign(new Error("Recipient account_details, address and payout_details are required"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
   }
-  requiredString(body.recipient.account_details.account_number, "recipient.account_details.account_number");
-  requiredString(body.recipient.account_details.account_holder_name, "recipient.account_details.account_holder_name");
-  requiredString(body.recipient.account_details.routing_type_1, "recipient.account_details.routing_type_1");
-  requiredString(body.recipient.account_details.routing_value_1, "recipient.account_details.routing_value_1");
+  if (!["INDIVIDUAL", "BUSINESS"].includes(recipient.type) ||
+      !["BRANCH_REPRESENTATIVE_OFFICE", "BUSINESS_PARTNER", "CHILDREN", "CREDITOR", "CUSTOMER", "DEBTOR", "EMPLOYEE", "EX_SPOUSE", "FRANCHISEE_FRANCHISOR", "GRANDPARENTS", "HOLDING_COMPANY", "MAID", "OWNSELF", "PARENTS", "RELATIVE", "SIBLING", "SPOUSE", "SUBSIDIARY_COMPANY", "SUPPLIER", "FRIEND", "GOVERNMENT_BODY", "EDUCATION_INSTITUTION", "NON_GOVERNMENT_BODY", "OTHER"].includes(recipient.relationship)) {
+    throw Object.assign(new Error("Recipient type and relationship must match Xendit v3 enums"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
+  }
+  if (account.currency !== "IDR" || account.account_country !== "ID" || recipient.address.country !== "ID") {
+    throw Object.assign(new Error("Payroll beneficiary account and address must be domestic IDR/Indonesia"), { code: "XENDIT_PAYOUT_CURRENCY_UNSUPPORTED" });
+  }
+  requiredString(account.account_number, "recipient.account_details.account_number");
+  requiredString(account.account_holder_name, "recipient.account_details.account_holder_name");
+  requiredString(account.routing_type_1, "recipient.account_details.routing_type_1");
+  requiredString(account.routing_value_1, "recipient.account_details.routing_value_1");
   if (!Number.isSafeInteger(body.payout_details.source_amount) || body.payout_details.source_amount <= 0) {
     throw Object.assign(new Error("payout_details.source_amount must be a positive safe integer in currency minor units"), { code: "XENDIT_PAYOUT_INPUT_INVALID" });
   }
