@@ -94,7 +94,7 @@ test("tenant membership lookup is actor-self-scoped and independent of global br
 test("verify_jwt=false custom auth negative probes cover every deployed admin and ERP action", () => {
   assert.ok(workflow.includes("tests/runtime/dlice-orders-auth-action-probes.mjs"));
   assert.ok(workflow.includes("Verify missing and invalid authentication across all admin and ERP actions"));
-  assert.ok(actionAuthProbe.includes("actions.length !== 206"));
+  assert.ok(actionAuthProbe.includes("actions.length !== 208"));
   assert.ok(actionAuthProbe.includes('credential: "missing"'));
   assert.ok(actionAuthProbe.includes('credential: "invalid"'));
   assert.ok(actionAuthProbe.includes('current.action === "admin-bootstrap-owner" ? 403 : 401'));
@@ -108,7 +108,7 @@ test("verify_jwt=false custom auth negative probes cover every deployed admin an
   const actionNames = [...new Set([...edgeSource.matchAll(/action\s*===\s*"([^"]+)"/g)]
     .map((match) => match[1])
     .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")))];
-  assert.equal(actionNames.length, 206, "action probe inventory must match the 206 current staging admin/ERP actions");
+  assert.equal(actionNames.length, 208, "action probe inventory must match the 208 current staging admin/ERP actions");
 });
 
 test("all admin and ERP action handlers are behind explicit actor authentication", () => {
