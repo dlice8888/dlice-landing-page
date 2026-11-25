@@ -765,7 +765,7 @@ export async function postReconciledPayrollPaymentFinanceClearing(input, deps) {
       tenantId: scope.tenantId, paymentBatchId: evidence.batch.id,
       actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
     });
-    if (saved?.status !== "provider_cleared" ||
+    if (!["provider_cleared", "duplicate"].includes(saved?.status) ||
         saved.amountIdr !== evidence.batch.amountIdr ||
         saved.itemCount !== evidence.batch.itemCount) {
       fail("PAYROLL_FINANCE_CLEARING_POST_FAILED",
@@ -777,8 +777,8 @@ export async function postReconciledPayrollPaymentFinanceClearing(input, deps) {
       entityType: "hr_payroll_payment_batch", entityId: evidence.batch.id,
       idempotencyKey: scope.idempotencyKey,
     });
-    return Object.freeze({ status: "provider_cleared", paymentBatchId: evidence.batch.id,
-      amountIdr: saved.amountIdr, itemCount: saved.itemCount,
+    return Object.freeze({ status: saved.status === "duplicate" ? "duplicate" : "provider_cleared",
+      paymentBatchId: evidence.batch.id, amountIdr: saved.amountIdr, itemCount: saved.itemCount,
       bankStatementReconciliationRequired: true });
   });
 }
@@ -807,7 +807,8 @@ export async function matchPayrollPaymentBankStatement(input, deps) {
       clearingId: evidence.clearing.id, statementLineId: evidence.statementLine.id,
       actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
     });
-    if (saved?.status !== "bank_matched" || saved.amountIdr !== evidence.clearing.amountIdr) {
+    if (!["bank_matched", "duplicate"].includes(saved?.status) ||
+        saved.amountIdr !== evidence.clearing.amountIdr) {
       fail("PAYROLL_BANK_STATEMENT_MATCH_PERSIST_FAILED",
         "Independent bank statement match and clearing journal must persist atomically");
     }
@@ -817,8 +818,8 @@ export async function matchPayrollPaymentBankStatement(input, deps) {
       entityType: "hr_payroll_payment_finance_clearing", entityId: evidence.clearing.id,
       idempotencyKey: scope.idempotencyKey,
     });
-    return Object.freeze({ status: "bank_matched", clearingId: evidence.clearing.id,
-      statementLineId: evidence.statementLine.id, amountIdr: saved.amountIdr });
+    return Object.freeze({ status: saved.status === "duplicate" ? "duplicate" : "bank_matched",
+      clearingId: evidence.clearing.id, statementLineId: evidence.statementLine.id, amountIdr: saved.amountIdr });
   });
 }
 
@@ -858,8 +859,9 @@ export async function reconcilePayrollPaymentBankBatch(input, deps) {
       tenantId: scope.tenantId, paymentBatchId: evidence.batch.id,
       actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
     });
-    if (saved?.status !== "bank_reconciled" || saved.amountIdr !== amount ||
-        saved.itemCount !== evidence.batch.itemCount || !saved.reconciliationId) {
+    if (!["bank_reconciled", "duplicate"].includes(saved?.status) ||
+        saved.amountIdr !== amount || saved.itemCount !== evidence.batch.itemCount ||
+        !saved.reconciliationId) {
       fail("PAYROLL_BANK_BATCH_RECONCILIATION_PERSIST_FAILED",
         "Immutable bank batch reconciliation evidence must persist for the exact amount and item count");
     }
@@ -869,8 +871,9 @@ export async function reconcilePayrollPaymentBankBatch(input, deps) {
       entityType: "hr_payroll_payment_bank_reconciliation",
       entityId: saved.reconciliationId, idempotencyKey: scope.idempotencyKey,
     });
-    return Object.freeze({ status: "bank_reconciled", reconciliationId: saved.reconciliationId,
-      paymentBatchId: evidence.batch.id, itemCount: evidence.batch.itemCount, amountIdr: amount });
+    return Object.freeze({ status: saved.status === "duplicate" ? "duplicate" : "bank_reconciled",
+      reconciliationId: saved.reconciliationId, paymentBatchId: evidence.batch.id,
+      itemCount: evidence.batch.itemCount, amountIdr: amount });
   });
 }
 
@@ -891,7 +894,7 @@ export async function quarantineReversedPayrollPaymentClearing(input, deps) {
       paymentItemId: evidence.item.id, providerEventId: evidence.event.id,
       actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
     });
-    if (saved?.status !== "reversal_exception") {
+    if (!["reversal_exception", "duplicate"].includes(saved?.status)) {
       fail("PAYROLL_PROVIDER_REVERSAL_QUARANTINE_FAILED",
         "Provider reversal must remain an explicit Finance exception pending bank-return evidence");
     }
@@ -901,8 +904,8 @@ export async function quarantineReversedPayrollPaymentClearing(input, deps) {
       entityType: "hr_payroll_payment_item", entityId: evidence.item.id,
       idempotencyKey: scope.idempotencyKey,
     });
-    return Object.freeze({ status: "reversal_exception", paymentItemId: evidence.item.id,
-      bankReturnEvidenceRequired: true });
+    return Object.freeze({ status: "reversal_exception", duplicate: saved.status === "duplicate",
+      paymentItemId: evidence.item.id, bankReturnEvidenceRequired: true });
   });
 }
 
@@ -1001,7 +1004,7 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
         paymentItemId: payment.id, providerEventId: saved.eventId,
         actorId: scope.actorId, idempotencyKey: evidence.eventId,
       });
-      if (reversalException?.status !== "reversal_exception") {
+      if (!["reversal_exception", "duplicate"].includes(reversalException?.status)) {
         fail("PAYROLL_PROVIDER_REVERSAL_QUARANTINE_FAILED",
           "Authenticated payout reversal must be retained as a Finance exception");
       }
