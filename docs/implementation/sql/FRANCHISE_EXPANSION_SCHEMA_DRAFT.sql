@@ -224,6 +224,29 @@ end $;
 revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
 
+create or replace function public.franchise_review_due_diligence_check(
+ p_check_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.franchise_due_diligence_checks%rowtype; v_creator uuid;
+begin
+ if p_status not in ('passed','failed','waived','pending') then raise exception using errcode='22023',message='INVALID_DUE_DILIGENCE_STATUS'; end if;
+ if p_status in ('passed','waived') and length(btrim(coalesce(p_evidence_reference,'')))<8 then raise exception using errcode='22023',message='DUE_DILIGENCE_EVIDENCE_REQUIRED'; end if;
+ select * into v from public.franchise_due_diligence_checks where id=p_check_id for update;
+ if not found then raise exception using errcode='P0002',message='DUE_DILIGENCE_CHECK_NOT_FOUND'; end if;
+ select created_by into v_creator from public.franchise_applications where id=v.application_id;
+ if v_creator=p_actor_user_id then raise exception using errcode='42501',message='APPLICANT_CANNOT_REVIEW_OWN_CHECK'; end if;
+ update public.franchise_due_diligence_checks set status=p_status,evidence_reference=case when p_status in ('passed','waived') then p_evidence_reference else evidence_reference end,
+ reviewer_user_id=p_actor_user_id,reviewed_at=now(),notes=left(coalesce(p_notes,''),1000)
+ where id=p_check_id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.due_diligence.'||p_status,'franchise_due_diligence_check',v.id::text,
+ jsonb_build_object('application_id',v.application_id,'check_key',v.check_key));
+ return jsonb_build_object('check_id',v.id,'check_key',v.check_key,'status',v.status);
+end $;
+revoke all on function public.franchise_review_due_diligence_check(uuid,text,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.franchise_review_due_diligence_check(uuid,text,text,uuid,text) to service_role;
+
 create or replace function public.franchise_review_site(
  p_site_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
