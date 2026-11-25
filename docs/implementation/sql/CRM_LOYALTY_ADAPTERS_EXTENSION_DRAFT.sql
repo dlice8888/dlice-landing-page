@@ -551,6 +551,7 @@ begin
    or p_source_type not in ('pos_sale','online_order') or p_actor_user_id is null then
   raise exception using errcode='22023',message='INVALID_CRM_FINANCIAL_CLOSE_COMMAND';
  end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_source_type||':'||p_source_id::text,0));
  select tenant_id into v_branch_tenant from public.branches where id=p_branch_id;
  if v_branch_tenant is distinct from p_tenant_id then
   raise exception using errcode='42501',message='CRM_FINANCIAL_CLOSE_TENANT_BRANCH_MISMATCH';
@@ -610,21 +611,25 @@ begin
    from public.payment_settlement_items psi
    join public.payment_settlements ps on ps.id=psi.settlement_id
    where psi.payment_record_id=any(v_payment_ids) and ps.status='matched'
-     and ps.received_amount_idr=ps.net_amount_idr;
+     and ps.received_amount_idr=ps.net_amount_idr and ps.reconciled_by is not null and ps.reconciled_at is not null;
   if exists(select 1 from public.payment_settlement_items psi
     join public.payment_settlements ps on ps.id=psi.settlement_id
     where psi.payment_record_id=any(v_payment_ids) and
-      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr)) then
+      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr or ps.reconciled_by is null or ps.reconciled_at is null)) then
    raise exception using errcode='23514',message='ORDER_SETTLEMENT_BATCH_NOT_RECONCILED';
   end if;
  end if;
- if cardinality(v_settlement_ids)=0 or v_settled<>v_paid then
+ if (v_settlement_status='matched' and cardinality(v_settlement_ids)=0) or v_settled<>v_paid then
   raise exception using errcode='23514',message='SETTLEMENT_ITEMS_DO_NOT_RECONCILE_TO_SOURCE_PAYMENT';
  end if;
 
  -- Processed refunds only reduce eligible sales. An unresolved refund blocks
  -- the close rather than allowing points to be awarded prematurely.
  if p_source_type='pos_sale' then
+  if exists(select 1 from public.refund_records where pos_sale_id=p_source_id and status='processed'
+    and (processed_by is null or processed_at is null)) then
+   raise exception using errcode='23514',message='PROCESSED_POS_REFUND_AUDIT_EVIDENCE_MISSING';
+  end if;
   if exists(select 1 from public.refund_records where pos_sale_id=p_source_id
     and status in ('requested','approved')) then
    raise exception using errcode='23514',message='POS_REFUND_REVIEW_STILL_OPEN';
@@ -633,6 +638,11 @@ begin
    into v_refunds,v_refund_ids from public.refund_records
    where pos_sale_id=p_source_id and branch_id=p_branch_id and status='processed' and processed_by is not null and processed_at is not null;
  else
+  if exists(select 1 from public.refund_records r
+    where (r.order_id=p_source_id or r.payment_record_id=any(v_payment_ids)) and r.status='processed'
+      and (r.processed_by is null or r.processed_at is null)) then
+   raise exception using errcode='23514',message='PROCESSED_ORDER_REFUND_AUDIT_EVIDENCE_MISSING';
+  end if;
   if exists(select 1 from public.refund_records r
     where (r.order_id=p_source_id or r.payment_record_id=any(v_payment_ids))
       and r.status in ('requested','approved')) then
