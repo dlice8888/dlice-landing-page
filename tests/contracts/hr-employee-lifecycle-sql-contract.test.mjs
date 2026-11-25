@@ -32,6 +32,9 @@ test("leave transitions require an approved leave request and update branch assi
 test("termination is two-step, blocks pending timesheets and revokes only the selected tenant membership",()=>{
  assert.match(sql,/offboarding_pending/);
  assert.match(sql,/HR_PENDING_TIMESHEETS_BLOCK_TERMINATION/);
+ assert.match(sql,/INDEPENDENT_OFFBOARDING_APPROVER_REQUIRED/);
+ assert.match(sql,/HR_OPEN_LEAVE_BLOCKS_TERMINATION/);
+ assert.match(sql,/FUTURE_DATED_LIFECYCLE_EVENT_REQUIRES_SCHEDULED_WORKER/);
  assert.match(sql,/HR_CANNOT_REVOKE_LAST_TENANT_OWNER/);
  assert.match(sql,/update public\.tenant_memberships set status='revoked'/);
  assert.doesNotMatch(sql,/update public\.admin_profiles set is_active=false/);
