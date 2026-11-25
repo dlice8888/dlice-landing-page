@@ -167,6 +167,9 @@ test("Finance clearing SQL draft keeps payout, bank and reversal evidence servic
   ]) assert.ok(sql.includes(required), `Finance clearing SQL contract missing: ${required}`);
   assert.match(sql, /before update on public\.hr_payroll_payment_finance_clearings/);
   assert.match(sql, /before update or delete on public\.hr_payroll_bank_statement_lines/);
+  assert.match(sql, /before update or delete on public\\.hr_payroll_payment_bank_reconciliations/);
+  assert.match(sql, /before update or delete on public\\.hr_payroll_payment_reversal_exceptions/);
+  assert.ok(sql.includes("revoke update,delete on public.hr_payroll_payment_bank_reconciliations from service_role"));
 });
 
 test("treats database idempotency duplicates as safe no-op results", async () => {
