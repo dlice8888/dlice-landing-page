@@ -159,3 +159,14 @@ Added the following provider-neutral/domain-boundary modules on the active featu
 - Payroll batch correction: employer contribution components now debit the explicit expense account and credit the explicit payable liability account; component subtotals must reconcile to payroll line totals.
 
 These are source-level workflow kernels, not end-to-end feature completion. The matrix now moves four features from NOT VERIFIED/BLOCKED to PARTIAL because concrete work has started: Delivery cancel/retry, Franchise territory controls, Procurement AP handoff, and Executive drill-down authorization. Their remaining persistence, adapters, runtime and reconciliation gaps are explicit. No feature was marked DONE. No tests, merge, migration, Supabase mutation, deployment or release change was performed, per the agreed sequencing.
+
+
+## CRM financial-close contract extension (source-only, 2026-11-25)
+
+Added `src/crm-financial-close.mjs`. This is a server-side projection contract, not a DB transaction or authorization layer. It requires tenant/branch/source-scoped source identity, the complete processed-refund set, source-linked reconciled settlement with gross/fee/net/received arithmetic, approved shift close containing the source exactly once with expected=received totals, and a posted/reconciled balanced Finance batch whose amount matches the approved source mapping. It derives eligible net sales only after those checks. Callers must load all records server-side under verified tenant scope; never accept this projection from a browser/client.
+
+The contract does not prove the existing staging schema currently stores one canonical close snapshot or provides a transactionally atomic RPC. That persistence/RPC and actual POS/order/refund/settlement/shift/Finance adapters remain a blocker before automated award writes. Loyalty earning must remain disabled until these are implemented and verified.
+
+## Payroll journal balance correction (source-only, 2026-11-25)
+
+Reviewed `src/hr-payroll-finance-batch.mjs`: employer contribution expense now has an explicit matching payable credit, and line-level component totals are checked against deductions, earnings and employer contribution totals. Both expense and liability account mappings are required. The batch remains a draft-only projection, not a Finance posting. This change is source-only; no tests, migrations or database writes were run.
