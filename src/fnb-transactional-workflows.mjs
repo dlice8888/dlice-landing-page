@@ -537,9 +537,26 @@ export async function executeApprovedPayrollPayment(input, deps) {
   if (intent.duplicate && intent.intent.status === "executed") {
     return Object.freeze({ status: "duplicate", providerReference: intent.intent.providerReference });
   }
+  const providerPayload = await inTenantTransaction(deps, scope, async (tx) => {
+    const payload = await adapter(deps, "loadApprovedPayrollPayoutProviderPayload")(tx, {
+      payrollRunId: input.payrollRunId,
+      paymentIntentId: intent.intent.intentId,
+      beneficiaryReference: intent.intent.beneficiaryReference,
+      amountIdr: intent.intent.amountIdr,
+      currency: "IDR",
+    });
+    if (!payload || payload.payout_details?.source_amount !== intent.intent.amountIdr ||
+        payload.payout_details?.source_currency !== "IDR" ||
+        payload.payout_details?.destination_currency !== "IDR" ||
+        payload.reference_id !== (intent.intent.providerReferenceId ?? intent.intent.intentId)) {
+      fail("PAYROLL_PROVIDER_PAYLOAD_MISMATCH", "Provider payload must match the approved intent amount, currency and stable reference");
+    }
+    return payload;
+  });
   const providerResult = await adapter(deps, "executePayrollPaymentProvider")({
-    providerId: intent.intent.providerId, amountIdr: intent.intent.amountIdr,
-    currency: "IDR", idempotencyKey: scope.idempotencyKey,
+    providerId: intent.intent.providerId, providerPayload,
+    amountIdr: intent.intent.amountIdr, currency: "IDR",
+    idempotencyKey: scope.idempotencyKey,
     beneficiaryReference: intent.intent.beneficiaryReference,
   });
   if (!providerResult?.accepted || !providerResult.providerReference) {
