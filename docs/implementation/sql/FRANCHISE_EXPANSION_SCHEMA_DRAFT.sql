@@ -82,11 +82,12 @@ create table if not exists public.franchise_agreement_versions (
  effective_from date not null,
  effective_to date null,
  signed_document_reference text null,
- approved_by uuid not null references auth.users(id) on delete restrict,
- approved_at timestamptz not null,
+ approved_by uuid null references auth.users(id) on delete restrict,
+ approved_at timestamptz null,
  created_at timestamptz not null default now(),
  unique(agreement_id,version),
- check(effective_to is null or effective_to>=effective_from)
+ check(effective_to is null or effective_to>=effective_from),
+ check((approved_by is null)=(approved_at is null))
 );
 create index if not exists franchise_agreement_version_effective_idx on public.franchise_agreement_versions(agreement_id,effective_from,effective_to);
 
@@ -354,7 +355,7 @@ grant execute on function public.franchise_review_application(uuid,text,uuid,tex
 create table if not exists public.franchise_agreement_events (
  id uuid primary key default gen_random_uuid(),
  agreement_id uuid not null references public.franchise_agreements(id) on delete restrict,
- event_type text not null check(event_type in ('submitted_for_signature','signature_recorded','activated','expired','terminated','amended')),
+ event_type text not null check(event_type in ('submitted_for_signature','version_approved','signature_recorded','activated','expired','terminated','amended')),
  actor_user_id uuid not null references auth.users(id) on delete restrict,
  document_reference text null,
  occurred_at timestamptz not null default now(),
@@ -380,7 +381,7 @@ begin
  if p_actor_user_id=v.created_by then raise exception using errcode='42501',message='INDEPENDENT_AGREEMENT_SUBMITTER_REQUIRED'; end if;
  select * into v_version from public.franchise_agreement_versions
   where agreement_id=v.id and version=v.current_version for update;
- if not found or v_version.approved_by=p_actor_user_id or v_version.effective_from is null then
+ if not found or v_version.approved_by is null or v_version.approved_by=p_actor_user_id or v_version.effective_from is null then
   raise exception using errcode='23514',message='APPROVED_EFFECTIVE_AGREEMENT_VERSION_REQUIRED';
  end if;
  update public.franchise_agreements set agreement_status='pending_signature' where id=v.id;
@@ -482,9 +483,9 @@ begin
  values(v_app.id,'draft',1,p_actor_user_id) returning * into v_agreement;
  insert into public.franchise_agreement_versions(
   agreement_id,version,royalty_rate_bps,marketing_fee_rate_bps,fixed_monthly_fee_idr,
-  effective_from,effective_to,approved_by,approved_at
+  effective_from,effective_to
  ) values(v_agreement.id,1,p_royalty_rate_bps,p_marketing_fee_rate_bps,
-  p_fixed_monthly_fee_idr,p_effective_from,p_effective_to,p_actor_user_id,now())
+  p_fixed_monthly_fee_idr,p_effective_from,p_effective_to)
  returning * into v_version;
  insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,metadata)
  values(v_agreement.id,'amended',p_actor_user_id,jsonb_build_object('version',1,'initial_draft',true));
@@ -574,3 +575,32 @@ begin
 end $$;
 revoke all on function public.franchise_activate_signed_agreement(uuid,uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_activate_signed_agreement(uuid,uuid,uuid,uuid) to service_role;
+
+
+create or replace function public.franchise_approve_agreement_version(
+ p_agreement_id uuid,p_version integer,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.franchise_agreements%rowtype; vv public.franchise_agreement_versions%rowtype;
+begin
+ select * into v from public.franchise_agreements where id=p_agreement_id for update;
+ if not found or v.agreement_status<>'draft' or v.current_version<>p_version then
+  raise exception using errcode='23514',message='FRANCHISE_AGREEMENT_DRAFT_VERSION_REQUIRED';
+ end if;
+ if p_actor_user_id=v.created_by then raise exception using errcode='42501',message='INDEPENDENT_AGREEMENT_VERSION_APPROVER_REQUIRED'; end if;
+ select * into vv from public.franchise_agreement_versions
+  where agreement_id=v.id and version=p_version for update;
+ if not found or vv.approved_by is not null then
+  raise exception using errcode='23514',message='AGREEMENT_VERSION_ALREADY_APPROVED_OR_MISSING';
+ end if;
+ update public.franchise_agreement_versions set approved_by=p_actor_user_id,approved_at=now()
+  where id=vv.id returning * into vv;
+ insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,metadata)
+ values(v.id,'version_approved',p_actor_user_id,jsonb_build_object('version',p_version));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.agreement.version_approved','franchise_agreement_version',vv.id::text,
+  jsonb_build_object('agreement_id',v.id,'version',p_version));
+ return jsonb_build_object('agreement_id',v.id,'version_id',vv.id,'version',p_version,'approved_by',p_actor_user_id);
+end $$;
+revoke all on function public.franchise_approve_agreement_version(uuid,integer,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_approve_agreement_version(uuid,integer,uuid) to service_role;
