@@ -20,7 +20,7 @@
 - `branches` has `tenant_id`; `tenant_memberships` binds `tenant_id` to `user_id`, role, permissions and active status.
 - `admin_profiles` is a global profile table. It must not be treated as sufficient tenant authorization.
 - Existing tenant-aware tables include composite tenant/branch foreign keys, for example branch settings, warehouses, inventory waste and integration outbox. New branch-scoped entities should follow this referential-integrity pattern.
-- The inspected public tables had RLS enabled. This inventory does not prove that every policy is correct; policy-by-policy and cross-tenant negative tests remain required.
+- The inspected public tables had RLS enabled. Read-only policy inspection showed `admin_profiles`, `orders`, and `admin_audit_logs` use service-role-only access; `branches`, `tenant_memberships`, `suppliers`, `purchase_orders`, `purchase_receipts`, and `pos_sales` deny direct `anon`/`authenticated` access. This is a deliberate server-mediated pattern, not evidence that every Edge action is correctly authorized. Policy-by-policy and cross-tenant negative tests remain required.
 - Edge Function `dlice-orders` has server-side service-role access. New commands must authenticate with the caller JWT, derive tenant and branch scope from active membership, authorize the specific command, and append audit evidence. Never trust client-supplied tenant_id as authority.
 - Existing global owner authorization remains dual-gated by the server UUID allowlist and boolean `app_metadata.platform_owner === true`. Do not change that path here.
 
@@ -34,6 +34,13 @@
 6. SaaS: define plan versions, entitlements, metering and billing lifecycle over existing tenant records; enforce entitlement server-side and preserve isolation flags.
 7. Procurement: reuse the existing requisition/PO/receipt entities; close the supplier ownership, approval separation, receipt-to-stock and invoice three-way-match gaps.
 8. Executive: use only reconciled source metrics and enforce role-safe drilldown at every level.
+
+## CRM source implementation added after reconnaissance
+
+- Added `erp.html` CRM workspace and server action source for Platform Owner customer list/create, consent event append, loyalty ledger read/post, and reward draft create/list.
+- Added a non-executable schema design draft at `docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql`, including tenant-composite customer/branch references, append-only consent and loyalty records, service-role-only RLS, a transactional loyalty posting RPC, and same-transaction audit triggers.
+- CRM Edge actions intentionally return a fail-closed response for non-Platform-Owner callers while `TENANT_ISOLATION_RELEASED=false`. This is a temporary implementation boundary, not final role coverage.
+- The CRM workspace will not function against staging until the draft is reconciled, generated as a proper Supabase migration, reviewed, replayed and applied during the final batch.
 
 ## Release decision
 
