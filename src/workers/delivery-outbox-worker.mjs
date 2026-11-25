@@ -10,9 +10,10 @@ export async function runDeliveryOutboxBatch({adapter,providerAdapters,loadSecre
  const jobs=await adapter.claimOutboxBatch({workerId,limit});
  const results=[];
  for(const job of jobs||[]){
+  let context=null;
   try{
    if(job.event_type!=="book")throw Object.assign(new Error("Unsupported delivery outbox event"),{code:"DELIVERY_OUTBOX_EVENT_UNSUPPORTED"});
-   const context=await adapter.getOutboxJobContext({outboxId:job.id,workerId});
+   context=await adapter.getOutboxJobContext({outboxId:job.id,workerId});
    const config=context?.provider_config;
    if(!config||config.integration_mode!=="api")throw Object.assign(new Error("Approved API-mode provider config required"),{code:"DELIVERY_PROVIDER_API_CONFIG_REQUIRED"});
    const secret=await loadSecret(config.credential_secret_reference);
@@ -31,8 +32,8 @@ export async function runDeliveryOutboxBatch({adapter,providerAdapters,loadSecre
    results.push({outboxId:job.id,status:finished.status,dispatchId:job.dispatch_id});
   }catch(error){
    const finished=await adapter.finishOutbox({outboxId:job.id,workerId,succeeded:false,errorCode:error?.code||"DELIVERY_WORKER_FAILED",retryAfterSeconds:60});
-   if(finished.status==="dead_letter"&&job.event_type==="book"){
-    try{const context=await adapter.getOutboxJobContext({outboxId:job.id,workerId});await adapter.confirmProviderBooking({tenantId:job.tenant_id,dispatchId:job.dispatch_id,succeeded:false,errorCode:error?.code||"DELIVERY_WORKER_FAILED",actorId:context.dispatch.created_by});}catch{}
+   if(finished.status==="dead_letter"&&job.event_type==="book"&&context){
+    try{await adapter.confirmProviderBooking({tenantId:job.tenant_id,dispatchId:job.dispatch_id,succeeded:false,errorCode:error?.code||"DELIVERY_WORKER_FAILED",actorId:context.dispatch.created_by});}catch{}
    }
    results.push({outboxId:job.id,status:finished.status,errorCode:error?.code||"DELIVERY_WORKER_FAILED"});
   }
