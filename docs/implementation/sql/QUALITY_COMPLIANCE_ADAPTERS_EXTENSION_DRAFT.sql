@@ -556,7 +556,8 @@ begin
  select * into v from public.food_safety_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
  if found then
   if v.branch_id<>p_branch_id or v.product_class<>p_product_class or v.min_temp_c<>p_min_temp_c
-   or v.max_temp_c<>p_max_temp_c or v.required_allergens<>v_allergens then
+   or v.max_temp_c<>p_max_temp_c or v.required_allergens<>v_allergens
+   or v.effective_from<>p_effective_from or v.effective_until is distinct from p_effective_until or v.created_by<>p_actor_user_id then
    raise exception using errcode='23505',message='FOOD_SAFETY_POLICY_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
@@ -600,7 +601,8 @@ begin
  perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_supplier_id::text,0));
  select * into v from public.supplier_quality_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
  if found then
-  if v.branch_id<>p_branch_id or v.supplier_id<>p_supplier_id or v.critical_finding_codes<>v_codes then
+  if v.branch_id<>p_branch_id or v.supplier_id<>p_supplier_id or v.critical_finding_codes<>v_codes
+   or v.effective_from<>p_effective_from or v.effective_until is distinct from p_effective_until or v.created_by<>p_actor_user_id then
    raise exception using errcode='23505',message='SUPPLIER_QUALITY_POLICY_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
@@ -637,13 +639,18 @@ create or replace function public.quality_request_food_lot_release(
  p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.food_lot_quarantines%rowtype;
+declare v public.food_lot_quarantines%rowtype; v_event public.quality_compliance_events%rowtype;
 begin
  if length(btrim(coalesce(p_reason,'')))<3 or length(btrim(coalesce(p_evidence_reference,'')))<3
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='FOOD_LOT_RELEASE_EVIDENCE_REQUIRED';
  end if;
- if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+ select * into v_event from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if found then
+  if v_event.entity_id<>p_quarantine_id or v_event.action<>'food_lot.release_requested'
+   or v_event.evidence->>'reason'<>p_reason or v_event.evidence->>'evidence_reference'<>p_evidence_reference then
+   raise exception using errcode='23505',message='FOOD_LOT_RELEASE_REQUEST_IDEMPOTENCY_COLLISION';
+  end if;
   return jsonb_build_object('status','duplicate','quarantine_id',p_quarantine_id);
  end if;
  select * into v from public.food_lot_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_quarantine_id for update;
@@ -669,13 +676,18 @@ create or replace function public.quality_approve_food_lot_release(
  p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.food_lot_quarantines%rowtype;
+declare v public.food_lot_quarantines%rowtype; v_event public.quality_compliance_events%rowtype;
 begin
  if p_decision not in ('released','destroyed') or length(btrim(coalesce(p_evidence_reference,'')))<3
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_FOOD_LOT_RELEASE_DECISION';
  end if;
- if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+ select * into v_event from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if found then
+  if v_event.entity_id<>p_quarantine_id or v_event.action<>'food_lot.'||p_decision
+   or v_event.evidence->>'approval_evidence_reference'<>p_evidence_reference then
+   raise exception using errcode='23505',message='FOOD_LOT_RELEASE_APPROVAL_IDEMPOTENCY_COLLISION';
+  end if;
   return jsonb_build_object('status','duplicate','quarantine_id',p_quarantine_id,'decision',p_decision);
  end if;
  select * into v from public.food_lot_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_quarantine_id for update;
