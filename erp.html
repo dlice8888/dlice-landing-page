@@ -426,7 +426,7 @@ async function loadBiSnapshots(){
 
 }
 $('loadBiSnapshots').onclick=()=>loadBiSnapshots().catch(e=>note(e.message,true));
-$('biTenant').onchange=()=>loadBiSnapshots().catch(e=>note(e.message,true));
+$('biTenant').onchange=()=>Promise.all([loadBiSnapshots(),loadBiReconciliations()]).catch(e=>note(e.message,true));
 async function loadExecutiveBranchKpis(){
  const tenant=$('executiveTenant').value;if(!tenant){$('executiveBranchKpiList').innerHTML='<p class="muted">Pilih tenant.</p>';return}
  const d=await call('erp-executive-branch-kpis',{tenant_id:tenant});
