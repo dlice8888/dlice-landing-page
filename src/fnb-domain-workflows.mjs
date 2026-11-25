@@ -71,7 +71,7 @@ export const DOMAIN_WORKFLOWS = Object.freeze({
   }, invariants:['kpis_from_authoritative_events','drilldown_preserves_role_and_tenant_scope','resolution_requires_measured_outcome','branch_cohorts_versioned'] }
 });
 
-const present = (v) => v !== undefined && v !== null && v !== '';
+const present = (v) => v !== undefined && v !== null && v !== '' && v !== false;
 export function validateWorkflowCommand({domain,action,currentState,actorRoles=[],context={}}) {
   const wf=DOMAIN_WORKFLOWS[domain]; if(!wf) return {ok:false,code:'UNKNOWN_DOMAIN'};
   const t=wf.transitions[action]; if(!t) return {ok:false,code:'UNKNOWN_ACTION'};
