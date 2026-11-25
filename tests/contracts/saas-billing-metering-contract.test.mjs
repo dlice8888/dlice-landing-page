@@ -27,13 +27,16 @@ test("usage worker accepts only committed business events and records idempotent
  assert.equal(result.status,"partial");assert.equal(result.results[0].status,"recorded");assert.equal(result.results[1].errorCode,"SAAS_SOURCE_NOT_COMMITTED");assert.equal(calls.length,1);
 });
 
-test("invoice worker issues only for active or past-due subscriptions",async()=>{
+test("invoice worker issues for active and expired-trial subscriptions only",async()=>{
  const calls=[];const adapter={issueInvoice:async x=>{calls.push(x);return {status:"issued",invoice_id:"inv-1"}}};
- const result=await runSaasInvoiceIssuanceBatch({adapter,actorId:"u",dueAt:"2026-02-10T00:00:00Z",runKey:"billing-run-2026",subscriptions:[
-  {id:"s1",tenant_id:"t",status:"active",current_period_start:"2026-01-01T00:00:00Z",current_period_end:"2026-02-01T00:00:00Z"},
-  {id:"s2",tenant_id:"t",status:"trialing",current_period_start:"2026-01-01T00:00:00Z",current_period_end:"2026-02-01T00:00:00Z"}
+ const result=await runSaasInvoiceIssuanceBatch({adapter,actorId:"u",dueAt:"2026-02-10T00:00:00Z",runKey:"billing-run-2026",now:Date.parse("2026-01-20T00:00:00Z"),subscriptions:[
+  {id:"s1",tenant_id:"t",status:"active",current_period_start:"2026-01-01T00:00:00Z",current_period_end:"2026-02-01T00:00:00Z",saas_plan_versions:{billing_interval:"monthly"}},
+  {id:"s2",tenant_id:"t",status:"trialing",trial_ends_at:"2026-01-15T00:00:00Z",current_period_start:"2026-01-01T00:00:00Z",current_period_end:"2026-01-15T00:00:00Z",saas_plan_versions:{billing_interval:"monthly"}},
+  {id:"s3",tenant_id:"t",status:"trialing",trial_ends_at:"2026-02-01T00:00:00Z",current_period_start:"2026-01-01T00:00:00Z",current_period_end:"2026-02-01T00:00:00Z"}
  ]});
- assert.equal(result.status,"partial");assert.equal(calls.length,1);assert.equal(result.results[1].errorCode,"SAAS_SUBSCRIPTION_NOT_BILLABLE");
+ assert.equal(result.status,"partial");assert.equal(calls.length,2);
+ assert.equal(calls[1].periodStart,"2026-01-15");assert.equal(calls[1].periodEnd,"2026-02-15");
+ assert.equal(result.results[2].errorCode,"SAAS_SUBSCRIPTION_NOT_BILLABLE");
 });
 
 test("SaaS entitlement respects trial/grace expiry and metering is idempotent and audited",()=>{
