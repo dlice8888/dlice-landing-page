@@ -217,8 +217,9 @@ begin
   end if;
   if cardinality(v.finance_entry_ids)=0 or exists(
     select 1 from public.finance_journal_entries e
-     where e.id=any(v.finance_entry_ids) and (e.status<>'draft' or e.source_type<>'hr_payroll_run' or e.source_id<>r.id)
-  ) or (select count(*) from public.finance_journal_entries e where e.id=any(v.finance_entry_ids))<>cardinality(v.finance_entry_ids) then
+     where e.id=any(v.finance_entry_ids) and (e.status<>'draft' or e.source_type<>'hr_payroll_run' or e.source_id<>r.id or e.branch_id<>v.branch_id or e.fiscal_period_id<>v.fiscal_period_id)
+  ) or (select count(*) from public.finance_journal_entries e where e.id=any(v.finance_entry_ids))<>cardinality(v.finance_entry_ids)
+    or (select coalesce(sum(e.amount_idr),0) from public.finance_journal_entries e where e.id=any(v.finance_entry_ids))<>v.gross_amount_idr then
     raise exception using errcode='23514',message='PAYROLL_FINANCE_DRAFT_ENTRIES_CHANGED';
   end if;
   update public.finance_journal_entries set status='posted' where id=any(v.finance_entry_ids);
