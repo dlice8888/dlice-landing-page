@@ -160,3 +160,7 @@ PR #148 starts one Quality/Compliance/Security feature with a local PostgreSQL 1
 ### 150-branch concurrency progress — PR #149
 
 PR #149 starts the load/concurrency feature with a free PostgreSQL 17 fixture of 150 Tenant A branches and Tenant B, 50 concurrent clients, tenant-scoped RLS reads, cross-tenant zero-row checks, and p95/p99 measurements. No completed run is visible yet; no pass or SLO is claimed. This is a database read workload only and must be expanded to API/POS/ERP writes, stock locks, kitchen, Finance and realistic network/data volume before release acceptance.
+
+### Backup/restore drill — exact-head pass
+
+PR #148 workflow `45662909781` passed on PostgreSQL 17.11 and quality workflow `45662909991` passed. Verified 151 branches and events, checksum parity, no pre-snapshot loss, RLS 2/2, Tenant A/B read isolation, zero cross-tenant visibility, and 439 ms local restore verification. Managed Supabase backup/PITR, Auth/Storage restore and production RPO/RTO remain unproven. Do not mark DONE.
