@@ -153,19 +153,75 @@ grant select,insert,update,delete on public.bi_metric_source_lineage to service_
 create or replace function public.bi_enforce_snapshot_lineage()
 returns trigger language plpgsql security invoker set search_path=''
 as $$
-declare v_sources text[]; v_version integer; v_missing text[];
+declare
+ v_sources text[];
+ v_version integer;
+ v_sla integer;
+ v_missing text[];
+ v_bad_watermarks integer;
+ v_bad_reconciliations integer;
 begin
  if new.status<>'published' then return new; end if;
- select source_entities,formula_version into v_sources,v_version
+ select source_entities,formula_version,freshness_sla_minutes
+ into v_sources,v_version,v_sla
  from public.bi_metric_definitions where id=new.metric_id and active=true;
  if not found or v_version<>new.formula_version then
   raise exception using errcode='23514',message='BI_METRIC_FORMULA_VERSION_MISMATCH';
  end if;
+
  select array_agg(src) into v_missing from unnest(v_sources) src
  where not exists(select 1 from public.bi_metric_source_lineage l
   where l.metric_id=new.metric_id and l.formula_version=new.formula_version and l.source_entity=src);
  if coalesce(cardinality(v_missing),0)>0 then
   raise exception using errcode='23514',message='BI_METRIC_SOURCE_LINEAGE_INCOMPLETE';
+ end if;
+
+ if coalesce(cardinality(new.source_watermark_ids),0)=0
+   or coalesce(cardinality(new.reconciliation_run_ids),0)=0 then
+  raise exception using errcode='23514',message='BI_SNAPSHOT_EVIDENCE_REQUIRED';
+ end if;
+
+ select count(*) into v_bad_watermarks
+ from unnest(new.source_watermark_ids) selected(id)
+ left join public.bi_source_watermarks w
+   on w.id=selected.id and w.tenant_id=new.tenant_id
+ where w.id is null
+    or w.status<>'complete'
+    or w.source_window_start>new.period_start
+    or w.source_window_end<new.period_end
+    or w.created_at<now()-make_interval(mins=>v_sla)
+    or w.expected_record_count is null
+    or w.observed_record_count<>w.expected_record_count;
+ if v_bad_watermarks>0 then
+  raise exception using errcode='23514',message='BI_SOURCE_WATERMARK_INCOMPLETE_STALE_OR_OUT_OF_SCOPE';
+ end if;
+
+ select array_agg(src) into v_missing from unnest(v_sources) src
+ where not exists(
+  select 1 from unnest(new.source_watermark_ids) selected(id)
+  join public.bi_source_watermarks w on w.id=selected.id
+  where w.tenant_id=new.tenant_id and w.source_key=src
+    and w.status='complete'
+    and w.source_window_start<=new.period_start
+    and w.source_window_end>=new.period_end
+    and w.created_at>=now()-make_interval(mins=>v_sla)
+    and w.expected_record_count is not null
+    and w.observed_record_count=w.expected_record_count
+ );
+ if coalesce(cardinality(v_missing),0)>0 then
+  raise exception using errcode='23514',message='BI_SOURCE_WATERMARK_MISSING_FOR_SOURCE';
+ end if;
+
+ select count(*) into v_bad_reconciliations
+ from unnest(new.reconciliation_run_ids) selected(id)
+ left join public.bi_reconciliation_runs r
+   on r.id=selected.id and r.tenant_id=new.tenant_id
+ where r.id is null or r.status<>'passed'
+    or r.period_start>new.period_start::date
+    or r.period_end<new.period_end::date
+    or r.reviewed_by is null or r.reviewed_at is null;
+ if v_bad_reconciliations>0 then
+  raise exception using errcode='23514',message='BI_RECONCILIATION_NOT_PASSED_OR_OUT_OF_SCOPE';
  end if;
  return new;
 end $$;
