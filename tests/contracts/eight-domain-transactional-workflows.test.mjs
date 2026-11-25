@@ -6,7 +6,7 @@ import {
   ingestSignedDeliveryWebhook,
   provisionApprovedFranchise,
   meterCommittedTenantOperation,
-  readAuthorizedExecutiveDrilldown,
+  readAuthorizedExecutiveDrilldown,\n  dispatchApprovedCampaignMessage,\n  ingestSignedCampaignReceipt,\n  executeApprovedPayrollPayment,\n  reconcileApprovedPayrollPayment,
 } from "../../src/fnb-transactional-workflows.mjs";
 
 const base = { tenantId: "tenant-a", branchId: "branch-a", actorId: "actor-a", idempotencyKey: "workflow-key-0001" };
@@ -72,5 +72,33 @@ test("executive drilldown rejects empty and over-deep hierarchy before repositor
   await assert.rejects(
     readAuthorizedExecutiveDrilldown({ ...base, hierarchy: Array.from({ length: 6 }, () => ({ type: "company", id: "x" })) }, deps),
     { code: "EXECUTIVE_HIERARCHY_REQUIRED" },
+  );
+});
+
+test("campaign dispatch requires server-side transactional authorization", async () => {
+  await assert.rejects(
+    dispatchApprovedCampaignMessage({ ...base, campaignId: "campaign-a", customerId: "customer-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("campaign receipts cannot be applied without a provider signature verifier", async () => {
+  await assert.rejects(
+    ingestSignedCampaignReceipt({ ...base, providerId: "provider-a", rawBody: "{}", signature: "bad", timestamp: "1" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("payroll payment requires a tenant transaction and authorization", async () => {
+  await assert.rejects(
+    executeApprovedPayrollPayment({ ...base, payrollRunId: "run-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
+  );
+});
+
+test("payroll settlement cannot be reconciled without persisted evidence adapters", async () => {
+  await assert.rejects(
+    reconcileApprovedPayrollPayment({ ...base, payrollRunId: "run-a" }, {}),
+    { code: "WORKFLOW_ADAPTER_REQUIRED" },
   );
 });
