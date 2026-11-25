@@ -723,8 +723,29 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
       fail("PAYROLL_WEBHOOK_PROVIDER_SCOPE_MISMATCH", "Provider business and payment mapping must match");
     }
     const decision = reconcileXenditPayrollPayoutEvidence({ payment, evidence });
+    if (!decision.matched) {
+      const exception = await adapter(deps, "persistPayrollPaymentWebhookException")(tx, {
+        payment, evidence, decision, idempotencyKey: evidence.eventId, actorId: scope.actorId,
+      });
+      if (!exception?.eventId) fail("PAYROLL_WEBHOOK_EXCEPTION_PERSIST_FAILED", "Mismatched provider evidence must be retained as an exception");
+      if (!exception.duplicate) {
+        await audit(deps, tx, {
+          tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+          action: "hr.payroll.payment.webhook_exception",
+          entityType: "payroll_payment_webhook_exception", entityId: exception.eventId,
+          idempotencyKey: evidence.eventId,
+        });
+      }
+      return Object.freeze({ status: exception.duplicate ? "duplicate" : "exception",
+        eventId: exception.eventId, paymentId: payment.id, matched: false,
+        reconciliationRequired: false, mismatches: decision.mismatches ?? [] });
+    }
+    const eventKind = decision.status === "settled" ? "settled"
+      : decision.status === "reversed" ? "reversed"
+      : decision.status === "failed" || decision.status === "rejected" ? "failed"
+      : "accepted";
     const saved = await adapter(deps, "persistPayrollPaymentWebhookEvidence")(tx, {
-      payment, evidence, decision, idempotencyKey: evidence.eventId,
+      payment, evidence, decision, eventKind, idempotencyKey: evidence.eventId,
       actorId: scope.actorId,
     });
     if (!saved?.eventId) {
@@ -732,7 +753,7 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
     }
     if (saved.duplicate) {
       return Object.freeze({ status: "duplicate", eventId: saved.eventId, paymentId: payment.id,
-        matched: decision.matched, reconciliationRequired: false, mismatches: decision.mismatches ?? [] });
+        matched: decision.matched, reconciliationRequired: false, mismatches: [] });
     }
     await audit(deps, tx, {
       tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
@@ -741,10 +762,10 @@ export async function ingestXenditPayrollPayoutWebhook(input, deps) {
       idempotencyKey: evidence.eventId,
     });
     return Object.freeze({
-      status: saved.duplicate ? "duplicate" : decision.status,
-      eventId: saved.eventId, paymentId: payment.id,
-      matched: decision.matched, reconciliationRequired: decision.settled === true || decision.reversalRequired === true,
-      mismatches: decision.mismatches ?? [],
+      status: decision.status, eventId: saved.eventId, paymentId: payment.id,
+      matched: true, eventKind,
+      reconciliationRequired: decision.settled === true || decision.reversalRequired === true,
+      mismatches: [],
     });
   });
 }
