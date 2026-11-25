@@ -961,7 +961,34 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
+    const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
+  if(biExecutiveActions.has(action)){
+    if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-bi-list-snapshots"){
+      const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").order("period_end",{ascending:false}).limit(200);
+      if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({snapshots:data||[]},200,origin);
+    }
+    if(action==="erp-executive-list-alerts"){
+      const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
+      if(error)return fail("Alert Executive belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({alerts:data||[]},200,origin);
+    }
+    if(action==="erp-executive-verify-alert"){
+      const alertId=safeText(body.alert_id,64),note=safeText(body.note,500),evidence=safeText(body.evidence_reference,500);
+      if(!/^[0-9a-f-]{36}$/i.test(alertId)||note.length<8||evidence.length<8)return fail("Catatan dan referensi bukti verifikasi wajib diisi.",422,origin);
+      const {data,error}=await admin.rpc("executive_verify_alert",{p_alert_id:alertId,p_actor_user_id:actor.user.id,p_note:note,p_evidence_reference:evidence});
+      if(error)return fail("Verifikasi alert ditolak. Verifikator harus berbeda dari petugas penyelesai.",409,origin);
+      return json({verification:data},200,origin);
+    }
+  }
+
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     if(action==="erp-franchise-list-applications"){
