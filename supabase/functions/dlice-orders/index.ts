@@ -1432,7 +1432,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     if(action==="erp-franchise-list-applications"){
@@ -1478,6 +1478,13 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.rpc("franchise_review_site",{p_site_id:siteId,p_status:decision,p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes});
       if(error)return fail("Review kelayakan lokasi gagal disimpan.",409,origin);
       return json({site_review:data},200,origin);
+    }
+    if(action==="erp-franchise-generate-royalty-statement"){
+      const branchId=safeText(body.branch_id,64),agreementId=safeText(body.agreement_id,64),start=safeText(body.period_start,10),end=safeText(body.period_end,10),reconciliationId=safeText(body.reconciliation_run_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(agreementId)||!/^[0-9a-f-]{36}$/i.test(reconciliationId)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end))return fail("Periode, cabang, agreement, atau reconciliation reference tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_generate_royalty_statement",{p_tenant_id:tenantId,p_branch_id:branchId,p_agreement_id:agreementId,p_period_start:start,p_period_end:end,p_reconciliation_run_id:reconciliationId,p_idempotency_key:crypto.randomUUID(),p_actor_user_id:actor.user.id});
+      if(error)return fail("Royalty tidak dapat dihitung. Diperlukan agreement aktif, versi efektif, BI net sales terpublikasi, dan rekonsiliasi lulus.",409,origin);
+      return json({royalty_statement:data},201,origin);
     }
     if(action==="erp-franchise-review-application"){
       const applicationId=safeText(body.application_id,64),decision=safeText(body.decision,30),notes=safeText(body.notes,500)||null;
