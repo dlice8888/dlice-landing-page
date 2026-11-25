@@ -41,8 +41,8 @@ const erpAuthorizationCoverage = () => {
       /p_actor_user_id:\s*actor\.user\.id/.test(block) &&
       /tokenHash/.test(block)) continue;
     const guardedByActionGroup = [...edge.matchAll(/const\s+(\w+)\s*=\s*new Set\(\[([\s\S]*?)\]\);/g)].some(([, groupName, groupBody]) => {
-      if (!groupBody.includes(\`"\${action}"\`)) return false;
-      const guardStart = edge.indexOf(\`if (\${groupName}.has(action))\`, actions[i].index);
+      if (!groupBody.includes('"' + action + '"')) return false;
+      const guardStart = edge.indexOf("if (" + groupName + ".has(action))", actions[i].index);
       const guard = guardStart >= 0 ? edge.slice(guardStart, guardStart + 500) : "";
       return /if\s*\(\s*!\s*(?:isOwner|isPlatformOwner|hasPerm\()/.test(guard);
     });
