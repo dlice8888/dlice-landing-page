@@ -211,7 +211,7 @@ begin
   or p_at is null or octet_length(coalesce(p_metadata,'{}')::text)>8192 then
   raise exception using errcode='22023',message='INVALID_USAGE_EVENT';
  end if;
- perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_entitlement_key,0));
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text,0));
  select * into v_event from public.saas_usage_events
   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then
