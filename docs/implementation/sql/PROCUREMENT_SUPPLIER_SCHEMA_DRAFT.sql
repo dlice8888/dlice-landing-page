@@ -63,6 +63,62 @@ create table if not exists public.procurement_invoice_match_lines (
  unique(tenant_id,id)
 );
 create index if not exists procurement_supplier_invoice_period_idx on public.procurement_supplier_invoices(tenant_id,branch_id,invoice_date,status);
+create or replace function public.procurement_match_supplier_invoice(
+ p_invoice_id uuid,p_lines jsonb,p_tolerance_idr bigint,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_invoice public.procurement_supplier_invoices%rowtype; v_line jsonb;
+ v_po_item public.purchase_order_items%rowtype; v_receipt_item public.purchase_receipt_items%rowtype;
+ v_received_po uuid; v_total_invoiced numeric:=0; v_total_received numeric:=0;
+ v_all_match boolean:=true; v_count integer:=0; v_invoice_qty numeric; v_invoice_cost bigint;
+ v_variance bigint; v_status text;
+begin
+ if p_tolerance_idr<0 or jsonb_typeof(p_lines)<>'array' or jsonb_array_length(p_lines)=0 then
+  raise exception using errcode='22023',message='INVALID_INVOICE_MATCH_INPUT';
+ end if;
+ select * into v_invoice from public.procurement_supplier_invoices where id=p_invoice_id for update;
+ if not found then raise exception using errcode='P0002',message='SUPPLIER_INVOICE_NOT_FOUND'; end if;
+ if v_invoice.status not in ('received','matching') then raise exception using errcode='23514',message='SUPPLIER_INVOICE_NOT_MATCHABLE'; end if;
+ if not exists(select 1 from public.supplier_tenant_links l where l.tenant_id=v_invoice.tenant_id and l.supplier_id=v_invoice.supplier_id and l.status='active') then
+  raise exception using errcode='42501',message='SUPPLIER_NOT_LINKED_TO_TENANT';
+ end if;
+ delete from public.procurement_invoice_match_lines where tenant_id=v_invoice.tenant_id and invoice_id=v_invoice.id;
+ for v_line in select value from jsonb_array_elements(p_lines) loop
+  select * into v_po_item from public.purchase_order_items where id=(v_line->>'purchase_order_item_id')::uuid and purchase_order_id=v_invoice.purchase_order_id;
+  if not found then raise exception using errcode='23514',message='PO_ITEM_MISMATCH'; end if;
+  select ri.* into v_receipt_item from public.purchase_receipt_items ri
+   join public.purchase_receipts r on r.id=ri.receipt_id
+   where ri.id=(v_line->>'receipt_item_id')::uuid and ri.purchase_order_item_id=v_po_item.id
+    and r.purchase_order_id=v_invoice.purchase_order_id and r.status in ('received','reconciled');
+  if not found then raise exception using errcode='23514',message='ACCEPTED_RECEIPT_ITEM_REQUIRED'; end if;
+  v_invoice_qty:=(v_line->>'invoiced_quantity')::numeric;
+  v_invoice_cost:=(v_line->>'invoiced_unit_cost_idr')::bigint;
+  if v_invoice_qty<=0 or v_invoice_cost<0 then raise exception using errcode='22023',message='INVALID_INVOICE_LINE'; end if;
+  v_variance:=v_invoice_cost-v_po_item.unit_cost_idr;
+  insert into public.procurement_invoice_match_lines
+   (tenant_id,invoice_id,purchase_order_item_id,receipt_item_id,invoiced_quantity,invoiced_unit_cost_idr,
+    received_quantity,ordered_quantity,unit_cost_variance_idr,match_status)
+  values(v_invoice.tenant_id,v_invoice.id,v_po_item.id,v_receipt_item.id,v_invoice_qty,v_invoice_cost,
+    v_receipt_item.quantity_received,v_po_item.quantity,v_variance,
+    case when v_invoice_qty<=v_receipt_item.quantity_received and abs(v_variance)<=p_tolerance_idr then 'matched'
+      when v_invoice_qty>v_receipt_item.quantity_received then 'quantity_variance' else 'price_variance' end);
+  if v_invoice_qty>v_receipt_item.quantity_received or abs(v_variance)>p_tolerance_idr then v_all_match:=false; end if;
+  v_total_invoiced:=v_total_invoiced+(v_invoice_qty*v_invoice_cost);
+  v_total_received:=v_total_received+(least(v_invoice_qty,v_receipt_item.quantity_received)*v_po_item.unit_cost_idr);
+  v_count:=v_count+1;
+ end loop;
+ v_status:=case when v_all_match and abs(round(v_total_invoiced)-v_invoice.subtotal_idr)<=p_tolerance_idr then 'matched' else 'disputed' end;
+ update public.procurement_supplier_invoices set status=v_status where id=v_invoice.id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'procurement.supplier_invoice.'||v_status,'procurement_supplier_invoice',v_invoice.id::text,
+  jsonb_build_object('tenant_id',v_invoice.tenant_id,'purchase_order_id',v_invoice.purchase_order_id,'line_count',v_count,
+   'invoiced_subtotal_idr',round(v_total_invoiced),'po_received_value_idr',round(v_total_received),'tolerance_idr',p_tolerance_idr));
+ return jsonb_build_object('invoice_id',v_invoice.id,'status',v_status,'line_count',v_count,
+  'invoiced_subtotal_idr',round(v_total_invoiced),'po_received_value_idr',round(v_total_received));
+end $;
+revoke all on function public.procurement_match_supplier_invoice(uuid,jsonb,bigint,uuid) from public,anon,authenticated;
+grant execute on function public.procurement_match_supplier_invoice(uuid,jsonb,bigint,uuid) to service_role;
+
 create table if not exists public.procurement_approval_events (
  id uuid primary key default gen_random_uuid(),
  tenant_id uuid not null references public.tenants(id) on delete restrict,
