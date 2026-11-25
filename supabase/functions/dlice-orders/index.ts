@@ -940,6 +940,168 @@ if (action === "admin-set-profile-role") {
 
 
 
+  // CRM commands are intentionally Platform Owner-only until the tenant isolation
+  // release gate is satisfied. They never accept a client-provided user identity.
+  const crmActions = new Set([
+    "erp-crm-list-customers",
+    "erp-crm-create-customer",
+    "erp-crm-record-consent",
+    "erp-crm-list-loyalty-ledger",
+    "erp-crm-append-loyalty-entry",
+    "erp-crm-list-rewards",
+    "erp-crm-create-reward",
+  ]);
+  if (crmActions.has(action)) {
+    if (!isPlatformOwner) return fail("Modul CRM hanya dapat dikelola Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
+    const tenantId = safeText(body.tenant_id, 64);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId)) return fail("Tenant tidak valid.", 422, origin);
+    const { data: tenant, error: tenantError } = await admin.from("tenants").select("id,status").eq("id", tenantId).maybeSingle();
+    if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
+    if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
+
+    if (action === "erp-crm-list-customers") {
+      const search = safeText(body.search, 80);
+      let query = admin.from("crm_customers")
+        .select("id,tenant_id,branch_id,display_name,phone_e164,email_normalized,status,marketing_status,created_at,updated_at")
+        .eq("tenant_id", tenantId).neq("status", "merged")
+        .order("created_at", { ascending: false }).limit(100);
+      if (search) query = query.or("display_name.ilike.%"+search+"%,phone_e164.ilike.%"+search+"%,email_normalized.ilike.%"+search+"%");
+      const { data, error } = await query;
+      if (error) return fail("Data CRM belum tersedia. Pastikan skema CRM sudah diterapkan pada batch migrasi final.", 503, origin);
+      return json({ customers: data || [] }, 200, origin);
+    }
+
+    if (action === "erp-crm-create-customer") {
+      const displayName = safeText(body.display_name, 120);
+      const rawPhone = safeText(body.phone, 40);
+      const digits = rawPhone.replace(/[^0-9]/g, "");
+      const normalizedDigits = digits.startsWith("0") ? "62"+digits.slice(1) : digits.startsWith("8") ? "62"+digits : digits;
+      const phone = normalizedDigits ? "+"+normalizedDigits : null;
+      const email = safeText(body.email, 254).toLowerCase() || null;
+      const branchId = safeText(body.branch_id, 64) || null;
+      if (!phone && !email) return fail("Nomor telepon atau email wajib diisi.", 422, origin);
+      if (phone && !/^\+[1-9][0-9]{7,14}$/.test(phone)) return fail("Nomor telepon tidak valid.", 422, origin);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail("Email tidak valid.", 422, origin);
+      if (branchId) {
+        const { data: branch, error: branchError } = await admin.from("branches").select("id").eq("id", branchId).eq("tenant_id", tenantId).maybeSingle();
+        if (branchError) return fail("Cabang belum dapat diverifikasi.", 503, origin);
+        if (!branch) return fail("Cabang tidak termasuk tenant yang dipilih.", 403, origin);
+      }
+      const { data, error } = await admin.from("crm_customers").insert({
+        tenant_id: tenantId, branch_id: branchId, display_name: displayName || null,
+        phone_e164: phone, email_normalized: email, status: "prospect",
+        marketing_status: "unknown", created_by: actor.user.id,
+      }).select("id,tenant_id,branch_id,display_name,phone_e164,email_normalized,status,marketing_status,created_at").single();
+      if (error) return fail(error.code === "23505" ? "Pelanggan dengan nomor telepon/email tersebut sudah terdaftar pada tenant ini." : "Pelanggan belum dapat disimpan.", error.code === "23505" ? 409 : 503, origin);
+      await admin.from("admin_audit_logs").insert({
+        actor_user_id: actor.user.id, action: "crm.customer.create", entity_type: "crm_customers",
+        entity_id: data.id, metadata: { tenant_id: tenantId, branch_id: branchId },
+      });
+      return json({ customer: data }, 201, origin);
+    }
+
+    if (action === "erp-crm-record-consent") {
+      const customerId = safeText(body.customer_id, 64);
+      const purpose = safeText(body.purpose, 40);
+      const channel = safeText(body.channel, 20);
+      const decision = safeText(body.decision, 20);
+      const policyVersion = safeText(body.policy_version, 80);
+      const idempotencyKey = safeText(body.idempotency_key, 120);
+      const allowed = {
+        marketing_email: ["email"], marketing_sms: ["sms"], marketing_whatsapp: ["whatsapp"],
+        personalization: ["pos","web","staff"],
+      } as Record<string,string[]>;
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId) ||
+          !allowed[purpose]?.includes(channel) || !["granted","withdrawn"].includes(decision) ||
+          !policyVersion || idempotencyKey.length < 8) return fail("Catatan consent tidak valid.", 422, origin);
+      const { data: customer, error: customerError } = await admin.from("crm_customers").select("id")
+        .eq("tenant_id", tenantId).eq("id", customerId).maybeSingle();
+      if (customerError) return fail("Pelanggan belum dapat diverifikasi.", 503, origin);
+      if (!customer) return fail("Pelanggan tidak ditemukan pada tenant ini.", 404, origin);
+      const { data, error } = await admin.from("crm_customer_consent_events").insert({
+        tenant_id: tenantId, customer_id: customerId, purpose, channel, decision,
+        policy_version: policyVersion, idempotency_key: idempotencyKey,
+        occurred_at: new Date().toISOString(), actor_user_id: actor.user.id,
+      }).select("id,customer_id,purpose,channel,decision,policy_version,occurred_at").single();
+      if (error) return fail(error.code === "23505" ? "Kunci idempotensi consent sudah digunakan." : "Consent belum dapat dicatat.", error.code === "23505" ? 409 : 503, origin);
+      await admin.from("admin_audit_logs").insert({
+        actor_user_id: actor.user.id, action: "crm.customer.consent."+decision, entity_type: "crm_customer_consent_events",
+        entity_id: data.id, metadata: { tenant_id: tenantId, customer_id: customerId, purpose, channel },
+      });
+      return json({ consent_event: data }, 201, origin);
+    }
+
+    if (action === "erp-crm-list-loyalty-ledger") {
+      const customerId = safeText(body.customer_id, 64);
+      const { data: customer, error: customerError } = await admin.from("crm_customers").select("id")
+        .eq("tenant_id", tenantId).eq("id", customerId).maybeSingle();
+      if (customerError) return fail("Pelanggan belum dapat diverifikasi.", 503, origin);
+      if (!customer) return fail("Pelanggan tidak ditemukan pada tenant ini.", 404, origin);
+      const { data, error } = await admin.from("crm_loyalty_ledger")
+        .select("id,entry_kind,points,idempotency_key,source_reference,reverses_entry_id,created_at")
+        .eq("tenant_id", tenantId).eq("customer_id", customerId).order("created_at", { ascending: false }).limit(200);
+      if (error) return fail("Ledger loyalty belum tersedia. Pastikan skema CRM sudah diterapkan.", 503, origin);
+      const balance = (data || []).reduce((sum: number, row: any) => sum + Number(row.points || 0), 0);
+      return json({ entries: data || [], balance }, 200, origin);
+    }
+
+    if (action === "erp-crm-append-loyalty-entry") {
+      const customerId = safeText(body.customer_id, 64);
+      const entryKind = safeText(body.entry_kind, 20);
+      const points = Number(body.points);
+      const idempotencyKey = safeText(body.idempotency_key, 120);
+      const sourceReference = safeText(body.source_reference, 160);
+      const reversesEntryId = safeText(body.reverses_entry_id, 64) || null;
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(customerId) ||
+          !["earn","redeem","adjustment","reversal"].includes(entryKind) ||
+          !Number.isSafeInteger(points) || points === 0 || idempotencyKey.length < 8 || !sourceReference) {
+        return fail("Perintah poin loyalty tidak valid.", 422, origin);
+      }
+      const { data, error } = await admin.rpc("crm_append_loyalty_entry", {
+        p_tenant_id: tenantId, p_customer_id: customerId, p_entry_kind: entryKind,
+        p_points: points, p_idempotency_key: idempotencyKey, p_source_reference: sourceReference,
+        p_reverses_entry_id: reversesEntryId, p_actor_user_id: actor.user.id,
+      });
+      if (error) {
+        const duplicate = error.code === "23505";
+        const insufficient = String(error.message || "").includes("INSUFFICIENT_POINTS");
+        return fail(duplicate ? "Perintah loyalty duplikat." : insufficient ? "Saldo poin tidak mencukupi." : "Perintah loyalty ditolak.", duplicate || insufficient ? 409 : 422, origin);
+      }
+      return json({ ledger: data }, 201, origin);
+    }
+
+    if (action === "erp-crm-list-rewards") {
+      const { data, error } = await admin.from("crm_rewards")
+        .select("id,name,description,points_cost,starts_at,expires_at,status,created_at")
+        .eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100);
+      if (error) return fail("Daftar reward belum tersedia. Pastikan skema CRM sudah diterapkan.", 503, origin);
+      return json({ rewards: data || [] }, 200, origin);
+    }
+
+    if (action === "erp-crm-create-reward") {
+      const name = safeText(body.name, 120);
+      const description = safeText(body.description, 1000) || null;
+      const pointsCost = Number(body.points_cost);
+      const startsAt = safeText(body.starts_at, 40);
+      const expiresAt = safeText(body.expires_at, 40);
+      if (!name || !Number.isSafeInteger(pointsCost) || pointsCost <= 0 ||
+          !startsAt || !expiresAt || Number.isNaN(Date.parse(startsAt)) ||
+          Number.isNaN(Date.parse(expiresAt)) || Date.parse(expiresAt) <= Date.parse(startsAt)) {
+        return fail("Definisi reward tidak valid.", 422, origin);
+      }
+      const { data, error } = await admin.from("crm_rewards").insert({
+        tenant_id: tenantId, name, description, points_cost: pointsCost,
+        starts_at: startsAt, expires_at: expiresAt, status: "draft", created_by: actor.user.id,
+      }).select("id,name,points_cost,starts_at,expires_at,status").single();
+      if (error) return fail("Reward belum dapat disimpan.", 503, origin);
+      await admin.from("admin_audit_logs").insert({
+        actor_user_id: actor.user.id, action: "crm.reward.create", entity_type: "crm_rewards",
+        entity_id: data.id, metadata: { tenant_id: tenantId, points_cost: pointsCost },
+      });
+      return json({ reward: data }, 201, origin);
+    }
+  }
+
   if (action === "erp-list-tenants") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin tenant tidak diizinkan.",403,origin);
     const tenantIds=await tenantIdsForActor().catch(()=>[]);
