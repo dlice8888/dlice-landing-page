@@ -1,8 +1,8 @@
 # Eight-domain workflow implementation baseline
 
-**Branch:** feat/eight-domain-workflow-kernel-20261125  
-**Base:** current staging head at branch creation  
-**Scope:** application-independent domain rules and workflow contracts. Merge, migration execution, Supabase mutation, and production changes remain deferred by decision.
+**Branch:** `feat/eight-domain-workflow-kernel-20261125`  
+**Base:** `staging` at branch creation  
+**Scope:** Domain rules, first CRM and HR vertical slices, and design-only SQL drafts. Merge, migration execution, Supabase mutation, and Production release remain deferred by decision.
 
 ## Delivery order
 
@@ -19,32 +19,39 @@
 
 | File | Scope | Current evidence |
 |---|---|---|
-| src/fnb-domain-workflows.mjs | Lifecycle transitions, role intent, required evidence, tenant/branch mismatch and idempotency guards across all eight domains | Source committed; workflow contract tests exist |
-| src/crm-loyalty-domain.mjs | Customer identity normalization, consent grant/withdrawal, consent-aware audience eligibility, immutable-ledger command validation, idempotency, reversal, balance and reward-window validation | Source + CRM contract tests committed |
-| src/fnb-cross-domain-rules.mjs | HR attendance/timesheet/payroll invariants; delivery quote and provider-event deduplication; franchise effective-version royalty calculation; BI KPI lineage/version/reconciliation; SaaS entitlement/quota guards; procurement 3-way match; executive alert independent verification | Source + cross-domain contract tests committed |
+| `src/fnb-domain-workflows.mjs` | Lifecycle transitions, role intent, required evidence, tenant/branch mismatch and idempotency guards across all eight domains | Source committed; contract test source committed |
+| `src/crm-loyalty-domain.mjs` | Customer identity normalization, consent grant/withdrawal, consent-aware audience eligibility, immutable-ledger command validation, idempotency, reversal, balance and reward-window validation | Source + CRM contract test source committed |
+| `src/fnb-cross-domain-rules.mjs` | HR attendance/timesheet/payroll; delivery quote/provider-event; franchise royalty; BI KPI lineage/reconciliation; SaaS entitlement/quota; procurement 3-way match; executive alert verification | Source + cross-domain contract test source committed |
+| `src/fnb-domain-acceptance-rules.mjs` | Loyalty earn/campaign, HR shift/leave/overtime, delivery transitions, franchise due diligence/opening, BI freshness/completeness, tenant lifecycle, procurement approvals/receipts, executive drilldown/targets | Source + acceptance test source committed |
+| `erp.html` + `supabase/functions/dlice-orders/index.ts` (CRM) | Owner CRM workspace; customer list/create, consent event append, loyalty ledger read/post, reward draft create/list/activate and atomic voucher redemption command | Source committed; CRM non-Owner access fails closed while tenant isolation is unreleased |
+| `docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql` | Tenant-scoped customer, consent, append-only ledger, reward, voucher and transaction-link schema; service-role-only RLS; transactional ledger/reward RPCs; audit triggers | Design SQL only; not a Supabase migration and not applied |
+| `erp.html` + `supabase/functions/dlice-orders/index.ts` (HR) | Branch-scoped active staff list, attendance read and attendance event write; event write routes through a serialized database RPC with state-order validation | Source committed; HR non-Owner access fails closed while tenant isolation is unreleased |
+| `docs/implementation/sql/HR_WORKFORCE_SCHEMA_DRAFT.sql` | Tenant-scoped schedule, attendance, leave, timesheet and payroll entities; service-role-only RLS; audit triggers; serialized attendance RPC | Design SQL only; not a Supabase migration and not applied |
+| `docs/implementation/STAGING_SCHEMA_RECONNAISSANCE_EIGHT_DOMAINS_2026-11-25.md` | Read-only inventory of existing staging entities, RLS policy patterns and tenant attribution gaps | Read-only schema/policy inspection recorded |
 
-These are pure domain modules. They do not access a database or authenticate callers. The guards are not a substitute for server authorization, RLS, database constraints, atomic transactions, or audit logging.
+These source modules and UI/server additions do not by themselves prove runtime completion. All server commands still require exact authorization, database constraints, transactionality and audit. No new CRM/HR table exists in staging until the final migration batch.
 
 ## End-to-end workflow slices still to implement
 
 | Domain | Workflow coverage added | Integration and acceptance still required |
 |---|---|---|
-| CRM | Customer identity, consent lifecycle, campaign audience eligibility, points earn/redeem/reversal and reward validity rules; Owner UI + server command source for customer/consent/ledger/reward draft | Generate and validate migration; complete voucher consume/void and POS redemption linkage; historical POS/order identity linking; tenant-scoped staff authorization after isolation gate; run pgTAP/Edge/UI E2E and consent/reversal/reconciliation checks |
-| HR | Attendance event, submitted timesheet approval, self-approval prevention and payroll input guards | Employee/branch assignment; schedules, leave/overtime, shift conflict policy, payroll persistence and accounting reconciliation; access revocation; UI and E2E |
-| Delivery | Quote/cost split, manual-vs-provider quote reference, provider callback deduplication | Provider contract and signature verification; order/payment separation; booking, tracking, POD, retry, compensation/refund; notification and finance integration; UI and E2E |
-| Franchise | Effective contract version and royalty calculation | Application/due diligence/site feasibility/territory, approval, signed agreement, opening readiness, tenant provisioning, royalty ledger and compliance workflows |
-| BI | KPI lineage, timezone, owner, immutable version progression and reconciliation gate | Source event models, aggregation jobs, freshness/completeness, cohorts/forecasting, exports, source-to-report reconciliation and UI |
-| SaaS Tenant | Tenant entitlement, status and quota decision rules | Existing tenant schema and Auth membership integration, plan/metering/billing lifecycle, RLS negative tests, JIT support, offboarding/retention, server-side enforcement and UI |
-| Procurement | Supplier consistency, accepted receipt and tolerance-based PO/receipt/invoice match | Reconcile with existing requisition/PO/GRN migrations and RPCs; atomic receipt/stock ledger; approval separation; returns/AP; warehouse consolidation; UI and E2E |
-| Executive | Alert resolution evidence, measured outcome and independent verification | 150-branch KPI source reconciliation, role-safe company→region→branch→shift→transaction drilldown, targets, rankings, approvals, assignment and alert UI |
+| CRM | Customer identity, consent lifecycle, ledger earn/redeem/reversal, reward draft/activation/redemption command and Owner UI | Generate/review migration; voucher consume/void and POS redemption linkage; historical order/POS identity linking; tenant-scoped staff authorization after isolation gate; pgTAP, Edge/UI E2E, consent withdrawal, concurrency and reconciliation |
+| HR | Active staff list and attendance UI/server commands; attendance sequence and idempotency guards; shift/leave/timesheet/payroll domain rules | Generate/review migration; roster overlap RPC; leave request, coverage confirmation and independent approval; timesheet evidence and approval; payroll posting to Finance; role-specific UI and E2E |
+| Delivery | Quote/cost split, provider quote reference, webhook deduplication and state-transition guards | Provider contract/signature verification; order/payment linkage; booking, tracking, POD, retries, compensation/refund, notifications and finance integration |
+| Franchise | Effective contract version, royalty calculation, due-diligence and opening-readiness rules | Application, territory, site feasibility, legal approval, signed agreements, tenant provisioning, royalty ledger and compliance workflows |
+| BI | KPI lineage/version/reconciliation rules, freshness/completeness and source watermark acceptance | Source events, aggregation, versioned snapshots, cohorts, exports, source-to-report reconciliation and UI |
+| SaaS Tenant | Tenant lifecycle, entitlement, quota and offboarding guards | Plan catalogue/version, metering, billing/invoice lifecycle, membership integration, server enforcement, RLS negative tests, retention and offboarding UI |
+| Procurement | Supplier consistency, accepted receipt, three-way match, approval segregation and tolerance rules | Resolve existing supplier table's missing tenant ownership; verify PO/GRN/stock atomicity, invoice/AP posting, returns, warehouse consolidation and UI |
+| Executive | Alert evidence/independent verification, KPI target and drilldown scope rules | Reconciled 150-branch KPIs, role-safe company→region→branch→shift→transaction drilldown, targets, rankings, assignment and alert UI |
 
 ## Security and release constraints
 
 - Every command handler must authenticate the request and resolve tenant/branch scope from trusted server-side membership data, never from client-supplied identifiers alone.
-- Enforce tenant and branch isolation in RLS and database constraints; keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
+- CRM and HR server actions are currently Platform-Owner-only while `TENANT_ISOLATION_RELEASED=false`; tenant-user access is not enabled by this branch.
+- Enforce tenant and branch isolation in RLS and database constraints; keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
 - Write state transitions, idempotency records, ledgers, and audit events atomically where they form one business operation.
 - Never expose service-role credentials in browser code, logs, or client responses.
-- No migrations have been applied and no Supabase Auth metadata was changed. GitHub commit status reports the Vercel check as success; no manual Production deployment or Supabase Edge Function deployment was performed.
+- No migrations have been applied and no Supabase Auth metadata was changed. The latest Vercel branch Preview is READY; no manual Production deployment or Supabase Edge Function deployment was performed.
 - No PR has been created or merged. Final merge, disposable replay, staging migration application, full E2E, and reconciliation remain a single coordinated final phase.
 
 ## Acceptance rule
