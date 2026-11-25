@@ -1717,7 +1717,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement","erp-franchise-list-agreements","erp-franchise-create-agreement-draft","erp-franchise-submit-agreement-signature","erp-franchise-record-agreement-signature","erp-franchise-activate-signed-agreement"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement","erp-franchise-list-agreements","erp-franchise-create-agreement-draft","erp-franchise-approve-agreement-version","erp-franchise-submit-agreement-signature","erp-franchise-record-agreement-signature","erp-franchise-activate-signed-agreement"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     // Franchise applications are platform-owned before provisioning. Royalty
@@ -1755,6 +1755,16 @@ if (action === "admin-set-profile-role") {
       });
       if(error)return fail("Draft agreement hanya dapat dibuat setelah due diligence dan site disetujui.",409,origin);
       return json({agreement:data},201,origin);
+    }
+    if(action==="erp-franchise-approve-agreement-version"){
+      const agreementId=safeText(body.agreement_id,64),version=Number(body.version);
+      if(!/^[0-9a-f-]{36}$/i.test(agreementId)||!Number.isInteger(version)||version<1)
+        return fail("Agreement ID atau versi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_approve_agreement_version",{
+        p_agreement_id:agreementId,p_version:version,p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Approval term agreement ditolak. Approver harus berbeda dari pembuat agreement.",409,origin);
+      return json({agreement_version:data},200,origin);
     }
     if(action==="erp-franchise-submit-agreement-signature"){
       const agreementId=safeText(body.agreement_id,64);
