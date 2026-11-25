@@ -100,6 +100,7 @@ begin
  select * into v from public.bi_metric_snapshots where id=p_snapshot_id for update;
  if not found then raise exception using errcode='P0002',message='BI_SNAPSHOT_NOT_FOUND'; end if;
  if v.status not in ('draft','validated') then raise exception using errcode='23514',message='BI_SNAPSHOT_NOT_PUBLISHABLE'; end if;
+ if v.created_by is null or v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_BI_SNAPSHOT_PUBLISHER_REQUIRED'; end if;
  select freshness_sla_minutes into v_sla from public.bi_metric_definitions where id=v.metric_id and active=true and formula_version=v.formula_version;
  if not found then raise exception using errcode='23514',message='BI_METRIC_VERSION_INACTIVE'; end if;
  if cardinality(v.source_watermark_ids)=0 or cardinality(v.reconciliation_run_ids)=0 then raise exception using errcode='23514',message='BI_EVIDENCE_REQUIRED'; end if;
@@ -116,6 +117,184 @@ begin
 end $$;
 revoke all on function public.bi_publish_metric_snapshot(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.bi_publish_metric_snapshot(uuid,uuid) to service_role;
+
+
+-- Evidence ingestion/reconciliation RPCs. Workers create evidence; a different
+-- reviewer must approve reconciliation before snapshots can be published.
+alter table public.bi_reconciliation_runs
+ add column if not exists created_by uuid null references auth.users(id) on delete restrict,
+ add column if not exists idempotency_key text null;
+create unique index if not exists bi_reconciliation_idempotency_uq
+ on public.bi_reconciliation_runs(tenant_id,idempotency_key) where idempotency_key is not null;
+alter table public.bi_metric_snapshots
+ add column if not exists created_by uuid null references auth.users(id) on delete restrict;
+
+create or replace function public.bi_record_source_watermark(
+ p_tenant_id uuid,p_source_key text,p_window_start timestamptz,p_window_end timestamptz,
+ p_max_source_updated_at timestamptz,p_expected_count bigint,p_observed_count bigint,
+ p_ingestion_run_id text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_source_watermarks%rowtype; v_status text;
+begin
+ if length(btrim(coalesce(p_source_key,''))) not between 2 and 120
+  or length(btrim(coalesce(p_ingestion_run_id,''))) not between 8 and 160
+  or p_window_start is null or p_window_end<=p_window_start or p_max_source_updated_at is null
+  or p_max_source_updated_at>now()+interval '5 minutes'
+  or p_observed_count<0 or (p_expected_count is not null and (p_expected_count<0 or p_observed_count>p_expected_count)) then
+  raise exception using errcode='22023',message='INVALID_BI_SOURCE_WATERMARK';
+ end if;
+ v_status:=case when p_expected_count is not null and p_observed_count=p_expected_count then 'complete' else 'partial' end;
+ select * into v from public.bi_source_watermarks where tenant_id=p_tenant_id and source_key=p_source_key
+  and source_window_start=p_window_start and source_window_end=p_window_end and ingestion_run_id=p_ingestion_run_id for update;
+ if found then
+  if v.max_source_updated_at<>p_max_source_updated_at or v.expected_record_count is distinct from p_expected_count
+   or v.observed_record_count<>p_observed_count or v.status<>v_status then
+   raise exception using errcode='23505',message='BI_WATERMARK_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','watermark_id',v.id,'watermark_status',v.status);
+ end if;
+ insert into public.bi_source_watermarks(tenant_id,source_key,source_window_start,source_window_end,
+  max_source_updated_at,expected_record_count,observed_record_count,ingestion_run_id,status)
+ values(p_tenant_id,p_source_key,p_window_start,p_window_end,p_max_source_updated_at,
+  p_expected_count,p_observed_count,p_ingestion_run_id,v_status) returning * into v;
+ return jsonb_build_object('status','recorded','watermark_id',v.id,'watermark_status',v.status);
+end $;
+revoke all on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) from public,anon,authenticated;
+grant execute on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) to service_role;
+
+create or replace function public.bi_create_reconciliation_run(
+ p_tenant_id uuid,p_period_start date,p_period_end date,p_source_domain text,p_source_reference text,
+ p_expected_total numeric,p_observed_total numeric,p_tolerance numeric,p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_reconciliation_runs%rowtype;
+begin
+ if p_period_end<p_period_start or length(btrim(coalesce(p_source_domain,''))) not between 2 and 80
+  or length(btrim(coalesce(p_source_reference,'')))<8 or p_expected_total<0 or p_observed_total<0
+  or p_tolerance<0 or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_BI_RECONCILIATION_RUN';
+ end if;
+ select * into v from public.bi_reconciliation_runs where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
+ if found then
+  if v.period_start<>p_period_start or v.period_end<>p_period_end or v.source_domain<>p_source_domain
+   or v.source_reference<>p_source_reference or v.expected_total<>p_expected_total
+   or v.observed_total<>p_observed_total or v.tolerance<>p_tolerance then
+   raise exception using errcode='23505',message='BI_RECONCILIATION_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','reconciliation_id',v.id,'reconciliation_status',v.status);
+ end if;
+ insert into public.bi_reconciliation_runs(tenant_id,period_start,period_end,source_domain,source_reference,
+  expected_total,observed_total,tolerance,status,created_by,idempotency_key)
+ values(p_tenant_id,p_period_start,p_period_end,p_source_domain,p_source_reference,p_expected_total,
+  p_observed_total,p_tolerance,'pending',p_actor_user_id,p_idempotency_key) returning * into v;
+ return jsonb_build_object('status','created','reconciliation_id',v.id,'reconciliation_status',v.status,'variance',v.variance);
+end $;
+revoke all on function public.bi_create_reconciliation_run(uuid,date,date,text,text,numeric,numeric,numeric,text,uuid) from public,anon,authenticated;
+grant execute on function public.bi_create_reconciliation_run(uuid,date,date,text,text,numeric,numeric,numeric,text,uuid) to service_role;
+
+create or replace function public.bi_review_reconciliation_run(
+ p_reconciliation_id uuid,p_decision text,p_waiver_reason text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_reconciliation_runs%rowtype;
+begin
+ if p_decision not in ('passed','failed','waived') then
+  raise exception using errcode='22023',message='INVALID_BI_RECONCILIATION_DECISION';
+ end if;
+ select * into v from public.bi_reconciliation_runs where id=p_reconciliation_id for update;
+ if not found then raise exception using errcode='P0002',message='BI_RECONCILIATION_NOT_FOUND'; end if;
+ if v.status<>'pending' then raise exception using errcode='23514',message='BI_RECONCILIATION_ALREADY_REVIEWED'; end if;
+ if v.created_by is null or v.created_by=p_actor_user_id then
+  raise exception using errcode='42501',message='INDEPENDENT_BI_RECONCILIATION_REVIEWER_REQUIRED';
+ end if;
+ if p_decision='passed' and abs(v.variance)>v.tolerance then
+  raise exception using errcode='23514',message='BI_RECONCILIATION_VARIANCE_EXCEEDS_TOLERANCE';
+ end if;
+ if p_decision='waived' and length(btrim(coalesce(p_waiver_reason,'')))<10 then
+  raise exception using errcode='22023',message='BI_RECONCILIATION_WAIVER_REASON_REQUIRED';
+ end if;
+ update public.bi_reconciliation_runs set status=p_decision,reviewed_by=p_actor_user_id,reviewed_at=now(),
+  waiver_reason=case when p_decision='waived' then p_waiver_reason else null end
+ where id=p_reconciliation_id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'bi.reconciliation.'||p_decision,'bi_reconciliation_run',v.id::text,
+  jsonb_build_object('tenant_id',v.tenant_id,'variance',v.variance,'tolerance',v.tolerance,'source_domain',v.source_domain));
+ return jsonb_build_object('reconciliation_id',v.id,'status',v.status,'variance',v.variance,'reviewed_by',v.reviewed_by);
+end $;
+revoke all on function public.bi_review_reconciliation_run(uuid,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.bi_review_reconciliation_run(uuid,text,text,uuid) to service_role;
+
+create or replace function public.bi_register_metric_source_lineage(
+ p_metric_id uuid,p_formula_version integer,p_source_entity text,p_source_field text,p_source_key text,
+ p_join_rule text,p_aggregation_rule text,p_transformation_reference text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_metric_definitions%rowtype; l public.bi_metric_source_lineage%rowtype;
+begin
+ select * into v from public.bi_metric_definitions where id=p_metric_id for share;
+ if not found or not v.active or v.formula_version<>p_formula_version then
+  raise exception using errcode='23514',message='BI_METRIC_FORMULA_VERSION_INACTIVE';
+ end if;
+ if not p_source_entity=any(v.source_entities) or length(btrim(coalesce(p_source_field,'')))<1
+  or length(btrim(coalesce(p_source_key,'')))<1 or length(btrim(coalesce(p_join_rule,'')))<3
+  or length(btrim(coalesce(p_aggregation_rule,'')))<3 or length(btrim(coalesce(p_transformation_reference,'')))<3 then
+  raise exception using errcode='22023',message='INVALID_BI_METRIC_SOURCE_LINEAGE';
+ end if;
+ if p_actor_user_id=v.created_by then raise exception using errcode='42501',message='INDEPENDENT_BI_LINEAGE_APPROVER_REQUIRED'; end if;
+ select * into l from public.bi_metric_source_lineage where metric_id=p_metric_id and formula_version=p_formula_version
+  and source_entity=p_source_entity and source_field=p_source_field and source_key=p_source_key for update;
+ if found then
+  if l.join_rule<>p_join_rule or l.aggregation_rule<>p_aggregation_rule or l.transformation_reference<>p_transformation_reference then
+   raise exception using errcode='23505',message='BI_LINEAGE_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','lineage_id',l.id);
+ end if;
+ insert into public.bi_metric_source_lineage(metric_id,formula_version,source_entity,source_field,source_key,
+  join_rule,aggregation_rule,transformation_reference,approved_by,approved_at)
+ values(p_metric_id,p_formula_version,p_source_entity,p_source_field,p_source_key,p_join_rule,
+  p_aggregation_rule,p_transformation_reference,p_actor_user_id,now()) returning * into l;
+ return jsonb_build_object('status','approved','lineage_id',l.id);
+end $;
+revoke all on function public.bi_register_metric_source_lineage(uuid,integer,text,text,text,text,text,text,uuid) from public,anon,authenticated;
+grant execute on function public.bi_register_metric_source_lineage(uuid,integer,text,text,text,text,text,text,uuid) to service_role;
+
+create or replace function public.bi_create_metric_snapshot(
+ p_tenant_id uuid,p_metric_id uuid,p_period_start timestamptz,p_period_end timestamptz,
+ p_dimension_key text,p_dimension_value text,p_metric_value numeric,p_source_watermark_ids uuid[],
+ p_reconciliation_run_ids uuid[],p_formula_version integer,p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.bi_metric_snapshots%rowtype; m public.bi_metric_definitions%rowtype;
+begin
+ if p_period_end<=p_period_start or p_metric_value is null or
+  length(btrim(coalesce(p_dimension_key,''))) not between 1 and 80 or
+  length(btrim(coalesce(p_dimension_value,''))) not between 1 and 160 or
+  coalesce(cardinality(p_source_watermark_ids),0)=0 or coalesce(cardinality(p_reconciliation_run_ids),0)=0 or
+  length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+  raise exception using errcode='22023',message='INVALID_BI_METRIC_SNAPSHOT';
+ end if;
+ select * into m from public.bi_metric_definitions where id=p_metric_id and active=true and formula_version=p_formula_version for share;
+ if not found then raise exception using errcode='23514',message='BI_METRIC_FORMULA_VERSION_INACTIVE'; end if;
+ select * into v from public.bi_metric_snapshots where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
+ if found then
+  if v.metric_id<>p_metric_id or v.period_start<>p_period_start or v.period_end<>p_period_end
+   or v.dimension_key<>p_dimension_key or v.dimension_value<>p_dimension_value
+   or v.metric_value<>p_metric_value or v.source_watermark_ids<>p_source_watermark_ids
+   or v.reconciliation_run_ids<>p_reconciliation_run_ids or v.formula_version<>p_formula_version then
+   raise exception using errcode='23505',message='BI_SNAPSHOT_IDEMPOTENCY_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','snapshot_id',v.id,'snapshot_status',v.status);
+ end if;
+ insert into public.bi_metric_snapshots(tenant_id,metric_id,period_start,period_end,dimension_key,dimension_value,
+  metric_value,source_watermark_ids,reconciliation_run_ids,formula_version,status,idempotency_key,created_by)
+ values(p_tenant_id,p_metric_id,p_period_start,p_period_end,p_dimension_key,p_dimension_value,p_metric_value,
+  p_source_watermark_ids,p_reconciliation_run_ids,p_formula_version,'draft',p_idempotency_key,p_actor_user_id)
+ returning * into v;
+ return jsonb_build_object('status','created','snapshot_id',v.id,'snapshot_status',v.status);
+end $;
+revoke all on function public.bi_create_metric_snapshot(uuid,uuid,timestamptz,timestamptz,text,text,numeric,uuid[],uuid[],integer,text,uuid) from public,anon,authenticated;
+grant execute on function public.bi_create_metric_snapshot(uuid,uuid,timestamptz,timestamptz,text,text,numeric,uuid[],uuid[],integer,text,uuid) to service_role;
 
 -- Snapshot publishing RPC must verify every referenced watermark is complete and fresh,
 -- every reconciliation run passed, metric version matches, and caller has BI publish authority.
