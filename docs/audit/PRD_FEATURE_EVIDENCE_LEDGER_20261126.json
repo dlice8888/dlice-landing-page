@@ -7745,8 +7745,8 @@
       "requirement": "Basic overview, funnel metrics and reports",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Basic overview/funnel metrics exist.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 extends the BI screen to show draft/published tenant snapshots and review state; executive branch KPI view still consumes published snapshots only. No complete owner dashboard/portfolio KPI E2E yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 216
@@ -7802,10 +7802,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -7815,7 +7817,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Formula, source, timezone, refresh SLA and owner missing.",
+      "evidence_or_gap": "PR #145 adds metric dictionary fields for formula version, owner domain, unit, aggregation, source entities and freshness SLA, plus independently approved source-field lineage RPC. Timezone policy, complete metric catalogue and lineage population remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 217
@@ -7871,10 +7873,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -7883,8 +7887,8 @@
       "requirement": "Net sales/AOV/gross margin",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Source data exists; canonical totals and reconciliation tests missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds evidence-first ingestion, source watermarks, pending reconciliation and draft snapshots. Canonical POS/Order/Finance net-sales source collectors and actual reconciled totals are not yet wired or proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 218
@@ -7940,10 +7944,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -7953,7 +7959,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Actual vs theoretical cost data and formula definitions missing.",
+      "evidence_or_gap": "No approved formulas/source collectors yet for food cost, labor cost or waste percentage. Generic ingestion primitives exist but these metrics remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 219
@@ -8009,10 +8015,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -8022,7 +8030,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Source entities exist; canonical metric outputs not proven.",
+      "evidence_or_gap": "Generic source watermark and reconciliation primitives are added, but stock variance, fulfillment and cancellation source adapters/formulas are not implemented.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 220
@@ -8078,10 +8086,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -8091,7 +8101,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Format/region/hours cohort definitions missing.",
+      "evidence_or_gap": "No branch cohort definition by format, region or opening hours; comparable-cohort benchmarking remains a gap.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 221
@@ -8147,10 +8157,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -8215,7 +8227,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Freshness/completeness checks and alert lifecycle missing.",
+      "evidence_or_gap": "PR #145 adds tenant-scoped source freshness/completeness watermarks, variance/tolerance reconciliation, independent review and publish blocking for stale/incomplete evidence. Anomaly detection and alert lifecycle are not implemented.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 223
@@ -8265,10 +8277,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "bi_evidence_ingestion_reconciliation_lineage_worker_edge_and_ui",
+            "commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+            "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
-        ]
+        ],
+        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
       }
     },
     {
@@ -11422,6 +11436,40 @@
       "pgTap": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
       "tenant_provisioning_e2e": "NOT_RUN"
+    },
+    "bi_increment": {
+      "pr": 145,
+      "latest_head": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f",
+      "feature_ids": [
+        "D14-F01",
+        "D14-F02",
+        "D14-F03",
+        "D14-F04",
+        "D14-F05",
+        "D14-F06",
+        "D14-F08"
+      ],
+      "sql": "docs/implementation/sql/BI_ANALYTICS_SCHEMA_DRAFT.sql",
+      "adapter": "src/supabase-bi-analytics-adapter.mjs",
+      "worker": "src/workers/bi-evidence-ingestion-worker.mjs",
+      "edge_actions": [
+        "erp-bi-list-reconciliations",
+        "erp-bi-review-reconciliation",
+        "erp-bi-publish-snapshot",
+        "erp-bi-register-source-lineage"
+      ],
+      "ui": [
+        "draft_and_published_snapshots",
+        "reconciliation_review",
+        "publish_guard"
+      ],
+      "contract_test": "tests/contracts/bi-evidence-ingestion-contract.test.mjs",
+      "exact_head_ci": "NOT_OBSERVED",
+      "disposable_replay": "NOT_RUN",
+      "pgTap": "NOT_RUN",
+      "source_collectors": "NOT_IMPLEMENTED",
+      "scheduled_worker": "NOT_WIRED",
+      "staging_migration": "NOT_APPLIED"
     }
   }
 }
