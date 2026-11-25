@@ -62,15 +62,15 @@ B_BRANCHES="$(psql -qAt -d "$DB" -c "SELECT count(*) FROM public.branches WHERE 
 [[ "$BRANCHES" == "151" && "$A_BRANCHES" == "150" && "$B_BRANCHES" == "1" ]]
 
 cat > "$LOG_DIR/tenant-a.sql" <<SQL
-SET ROLE authenticated;
-SET app.tenant_id='$TENANT_A';
-SELECT CASE WHEN count(*)=150 THEN 1 ELSE 1/0 END FROM public.branches;
+SET LOCAL ROLE authenticated;
+SET LOCAL app.tenant_id='$TENANT_A';
+SELECT CASE WHEN current_setting('role')='authenticated' AND current_setting('app.tenant_id')='$TENANT_A' AND count(*)=150 THEN 1 ELSE 1/0 END FROM public.branches;
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_B';
 SQL
 cat > "$LOG_DIR/tenant-b.sql" <<SQL
-SET ROLE authenticated;
-SET app.tenant_id='$TENANT_B';
-SELECT CASE WHEN count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
+SET LOCAL ROLE authenticated;
+SET LOCAL app.tenant_id='$TENANT_B';
+SELECT CASE WHEN current_setting('role')='authenticated' AND current_setting('app.tenant_id')='$TENANT_B' AND count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_A';
 SQL
 
