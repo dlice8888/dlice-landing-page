@@ -219,3 +219,81 @@ client upload path. Provider quote/booking execution, webhook route wiring,
 Storage bucket provisioning and actual COD/Finance settlement adapters remain
 outstanding. No provider credentials were configured and no Storage bucket or
 database schema was changed in staging.
+
+
+## 2026-11-25 implementation continuation
+
+The branch now adds the following fail-closed orchestration entry points on top
+of the domain kernels:
+
+- CRM: `buildCrmFinancialCloseProjection` loads POS/order, processed refunds,
+  approved shift close, reconciled settlement and posted Finance evidence through
+  server adapters before creating an immutable projection.
+- HR: `calculateAndPersistPayrollRun` calculates immutable payroll lines only
+  from active scoped employees, approved time, effective approved compensation
+  and explicit payroll components.
+- Delivery: `requestDeliveryQuotes` and `bookDeliveryDispatch` require approved
+  provider adapters, persist quote/booking intent before claiming completion,
+  and leave ambiguous provider responses pending reconciliation.
+- Franchise: `createReconciledFranchiseRoyaltyStatement` requires an effective
+  signed agreement and reconciled net-sales/Finance close.
+- BI: `runScheduledBiKpiIngestion` executes governed KPI definitions and
+  persists per-metric failures; it does not silently omit failed sources.
+- SaaS: `enforceSaasTenantEntitlement` checks active subscription, plan
+  entitlement and committed usage in a tenant transaction;
+  `issueSaasSubscriptionInvoice` requires an approved tax decision, including
+  an explicit zero-tax decision.
+- Procurement: `postMatchedSupplierInvoiceToApJournal` creates only a balanced
+  AP journal draft after independent invoice approval and an open fiscal period.
+- Executive: `publishExecutiveBranchRanking` requires the complete authorized
+  active branch set (1–150) and Finance-reconciled snapshots plus approved targets.
+
+The delivery schema extension was reconciled with the existing baseline draft:
+it no longer attempts to recreate the already-defined
+`delivery_dispatches` or `delivery_provider_events` tables. It extends the
+existing dispatch lifecycle, adds tenant/branch-scoped provider configuration
+and quotes, hashed private Storage evidence metadata, cost reconciliation and
+retry outbox. Manual booking now requires an active, independently approved
+provider configuration. Provider API credentials are referenced by environment
+secret name only; secret values are never stored in the database or returned.
+
+The delivery proof upload route now hashes uploaded bytes, persists metadata
+against the dispatch, and removes the uploaded object if metadata or audit
+persistence fails. The bucket contract remains private
+(`delivery-proof`); no client upload policy is granted.
+
+Static source review also corrected PostgreSQL dollar-quote delimiters in the
+CRM, HR, Delivery, Franchise, BI, SaaS, Procurement and Executive SQL drafts,
+and corrected the BI publication watermark comparison to use the actual
+`max_source_updated_at` column.
+
+### Remaining integration gates
+
+These increments are source-level implementations and adapter contracts, not
+end-to-end completion. The following still need concrete Supabase adapters,
+authenticated UI/API wiring where noted, and provider-specific contracts:
+
+1. Wire the new CRM close-projection builder to actual staging source records
+   and reconcile the SQL projection columns with the Finance/settlement source
+   model.
+2. Wire payroll calculation inputs, approval/posting and payroll provider
+   execution/webhook settlement.
+3. Configure and approve a real delivery provider before API quote/booking or
+   signed webhook execution; add the signed provider event RPC/endpoint and COD
+   Finance reconciliation. No provider is claimed configured.
+4. Complete franchise agreement signature/version lifecycle, tenant/branch
+   provisioning adapter and royalty invoice/payment settlement.
+5. Implement BI source ingestion workers, approved metric formulas and target
+   aggregation adapters; current runner is orchestration only.
+6. Implement SaaS invoice payment provider execution, signed receipt processing,
+   renewal/grace-period enforcement and route-wide entitlement checks.
+7. Complete Procurement supplier invoice intake/attachment, credit-note/return
+   lifecycle, Finance posting adapter and payment provider settlement.
+8. Wire Executive ranking persistence, target-vs-actual views, KPI aggregation,
+   hierarchy drill-down routes and alert escalation.
+9. Add UI controls for the new provider configuration lifecycle and the newly
+   added workflow operations.
+
+No tests, migration replay, pgTAP, Edge type-check, staging data writes,
+Production changes or merges were performed. These remain reserved for the
+final validation batch. Keep both release flags false.
