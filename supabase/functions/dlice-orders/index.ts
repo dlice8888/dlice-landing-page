@@ -961,7 +961,33 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    const procurementLinkActions=new Set(["erp-procurement-list-supplier-links","erp-procurement-create-supplier-link","erp-procurement-approve-supplier-link"]);
+    const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice"]);
+  if(procurementInvoiceActions.has(action)){
+    if(!hasPerm("procurement"))return fail("Izin invoice procurement tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,64),invoiceId=safeText(body.invoice_id,64);
+    if(action==="erp-procurement-list-invoices"){
+      if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+      const {data,error}=await admin.from("procurement_supplier_invoices").select("id,supplier_id,purchase_order_id,supplier_invoice_number,invoice_date,due_date,subtotal_idr,tax_idr,total_idr,status,created_at,procurement_invoice_match_lines(id,match_status,quantity_variance,unit_cost_variance_idr)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Invoice supplier belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({invoices:data||[]},200,origin);
+    }
+    if(!/^[0-9a-f-]{36}$/i.test(invoiceId)||!Array.isArray(body.lines)||body.lines.length<1||body.lines.length>100)
+      return fail("Invoice atau baris pencocokan tidak valid.",422,origin);
+    const lines=body.lines.map((x:any)=>({purchase_order_item_id:safeText(x.purchase_order_item_id,64),receipt_item_id:safeText(x.receipt_item_id,64),invoiced_quantity:Number(x.invoiced_quantity),invoiced_unit_cost_idr:Number(x.invoiced_unit_cost_idr)}));
+    if(lines.some((x:any)=>!/^[0-9a-f-]{36}$/i.test(x.purchase_order_item_id)||!/^[0-9a-f-]{36}$/i.test(x.receipt_item_id)||!Number.isFinite(x.invoiced_quantity)||x.invoiced_quantity<=0||!Number.isSafeInteger(x.invoiced_unit_cost_idr)||x.invoiced_unit_cost_idr<0))
+      return fail("Satu atau lebih baris invoice tidak valid.",422,origin);
+    const {data:invoice,error:invoiceError}=await admin.from("procurement_supplier_invoices").select("id,tenant_id,branch_id,status").eq("id",invoiceId).maybeSingle();
+    if(invoiceError)return fail("Invoice belum dapat diverifikasi.",503,origin);
+    if(!invoice)return fail("Invoice tidak ditemukan.",404,origin);
+    if(!await branchAccess(invoice.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const tolerance=Number(body.tolerance_idr??0);
+    if(!Number.isSafeInteger(tolerance)||tolerance<0||tolerance>1000000)return fail("Toleransi harga tidak valid.",422,origin);
+    const {data,error}=await admin.rpc("procurement_match_supplier_invoice",{p_invoice_id:invoiceId,p_lines:lines,p_tolerance_idr:tolerance,p_actor_user_id:actor.user.id});
+    if(error)return fail("Three-way match gagal. Periksa PO, receipt yang diterima, supplier, jumlah, dan toleransi.",409,origin);
+    return json({match:data},200,origin);
+  }
+
+  const procurementLinkActions=new Set(["erp-procurement-list-supplier-links","erp-procurement-create-supplier-link","erp-procurement-approve-supplier-link"]);
   if(procurementLinkActions.has(action)){
     if(!isOwner)return fail("Pengelolaan kepemilikan supplier sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
