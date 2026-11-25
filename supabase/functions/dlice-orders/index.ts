@@ -1643,6 +1643,17 @@ if (action === "admin-set-profile-role") {
   const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
+    // Franchise applications are platform-owned before provisioning. Royalty
+    // statements are tenant-owned and must resolve the tenant/branch pair here;
+    // do not rely on a tenantId from another action's block scope.
+    let franchiseTenantId: string | null = null;
+    if(action==="erp-franchise-generate-royalty-statement"){
+      franchiseTenantId=safeText(body.tenant_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(franchiseTenantId))return fail("Tenant wajib dipilih untuk perhitungan royalty.",422,origin);
+      const {data:franchiseTenant,error:franchiseTenantError}=await admin.from("tenants").select("id").eq("id",franchiseTenantId).maybeSingle();
+      if(franchiseTenantError)return fail("Tenant franchise belum dapat diverifikasi.",503,origin);
+      if(!franchiseTenant)return fail("Tenant franchise tidak ditemukan.",404,origin);
+    }
     if(action==="erp-franchise-list-applications"){
       const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(id,check_key,status,evidence_reference,reviewer_user_id)").order("submitted_at",{ascending:false}).limit(100);
       if(error)return fail("Data aplikasi franchise belum tersedia. Terapkan migrasi pada batch final.",503,origin);
@@ -1690,7 +1701,12 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-franchise-generate-royalty-statement"){
       const branchId=safeText(body.branch_id,64),agreementId=safeText(body.agreement_id,64),start=safeText(body.period_start,10),end=safeText(body.period_end,10),reconciliationId=safeText(body.reconciliation_run_id,64);
       if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(agreementId)||!/^[0-9a-f-]{36}$/i.test(reconciliationId)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end))return fail("Periode, cabang, agreement, atau reconciliation reference tidak valid.",422,origin);
-      const {data,error}=await admin.rpc("franchise_generate_royalty_statement",{p_tenant_id:tenantId,p_branch_id:branchId,p_agreement_id:agreementId,p_period_start:start,p_period_end:end,p_reconciliation_run_id:reconciliationId,p_idempotency_key:crypto.randomUUID(),p_actor_user_id:actor.user.id});
+      const {data:branch,error:branchError}=await admin.from("branches").select("id,tenant_id").eq("id",branchId).eq("tenant_id",franchiseTenantId).maybeSingle();
+      if(branchError)return fail("Cabang franchise belum dapat diverifikasi.",503,origin);
+      if(!branch)return fail("Cabang bukan milik tenant franchise yang dipilih.",403,origin);
+      const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+      if(idempotencyKey.length<8)return fail("Kunci idempotensi royalty tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_generate_royalty_statement",{p_tenant_id:franchiseTenantId,p_branch_id:branchId,p_agreement_id:agreementId,p_period_start:start,p_period_end:end,p_reconciliation_run_id:reconciliationId,p_idempotency_key:idempotencyKey,p_actor_user_id:actor.user.id});
       if(error)return fail("Royalty tidak dapat dihitung. Diperlukan agreement aktif, versi efektif, BI net sales terpublikasi, dan rekonsiliasi lulus.",409,origin);
       return json({royalty_statement:data},201,origin);
     }
