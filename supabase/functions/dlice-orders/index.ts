@@ -1609,7 +1609,7 @@ if (action === "admin-set-profile-role") {
     }
     if(action==="erp-hr-generate-payroll-run"){
       const start=safeText(body.period_start,10),end=safeText(body.period_end,10),key=safeText(body.idempotency_key,120);
-      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start||key.length<8)return fail("Periode atau idempotency key payroll tidak valid.",422,origin);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start||key.length<8)return fail("Periode atau idempotency key payroll tidak valid.",422,origin);
       const {data,error}=await admin.rpc("hr_generate_payroll_run",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_period_start:start,p_period_end:end,p_actor_user_id:actor.user.id,p_idempotency_key:key});
       if(error)return fail("Payroll belum dapat dihitung. Pastikan timesheet telah approved dan rate efektif mencakup seluruh periode.",409,origin);
       return json({payroll_run:data},201,origin);
@@ -1948,8 +1948,8 @@ if (action === "admin-set-profile-role") {
         marketing=Number(body.marketing_fee_rate_bps||0),fixed=Number(body.fixed_monthly_fee_idr||0),
         effectiveFrom=safeText(body.effective_from,10),effectiveTo=safeText(body.effective_to,10)||null;
       if(!/^[0-9a-f-]{36}$/i.test(applicationId)||!Number.isInteger(royalty)||!Number.isInteger(marketing)||
-        !Number.isSafeInteger(fixed)||fixed<0||!/^\\d{4}-\\d{2}-\\d{2}$/.test(effectiveFrom)||
-        (effectiveTo&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(effectiveTo)))
+        !Number.isSafeInteger(fixed)||fixed<0||!/^\d{4}-\d{2}-\d{2}$/.test(effectiveFrom)||
+        (effectiveTo&&!/^\d{4}-\d{2}-\d{2}$/.test(effectiveTo)))
         return fail("Term agreement dan periode efektif tidak valid.",422,origin);
       const {data,error}=await admin.rpc("franchise_create_agreement_draft",{
         p_application_id:applicationId,p_royalty_rate_bps:royalty,p_marketing_fee_rate_bps:marketing,
