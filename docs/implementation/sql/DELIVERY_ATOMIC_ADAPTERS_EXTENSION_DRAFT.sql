@@ -13,6 +13,7 @@ alter table public.delivery_outbox add column if not exists claimed_by text null
 alter table public.delivery_outbox add column if not exists claimed_at timestamptz null;
 
 alter table public.delivery_cost_reconciliations alter column finance_source_reconciliation_id drop not null;
+alter table public.delivery_cost_reconciliations drop constraint if exists delivery_cost_reconciled_requires_finance_fk;
 alter table public.delivery_cost_reconciliations add constraint delivery_cost_reconciled_requires_finance_fk
  check(status<>'reconciled' or finance_source_reconciliation_id is not null);
 do $ begin
@@ -171,6 +172,9 @@ begin
  if v.provider_booking_status='confirmed' and p_succeeded and v.provider_booking_reference=p_provider_booking_reference then
   return jsonb_build_object('status','duplicate','dispatch_id',v.id);
  end if;
+ if v.provider_booking_status='failed' and not p_succeeded and v.failure_reason=left(coalesce(p_error_code,'PROVIDER_BOOKING_FAILED'),500) then
+  return jsonb_build_object('status','duplicate','dispatch_id',v.id);
+ end if;
  if v.provider_booking_status<>'pending' then raise exception using errcode='23514',message='DELIVERY_BOOKING_RESULT_ALREADY_FINAL'; end if;
  if p_succeeded then
   if length(btrim(coalesce(p_provider_booking_reference,'')))<2 then raise exception using errcode='22023',message='PROVIDER_BOOKING_REFERENCE_REQUIRED'; end if;
@@ -288,6 +292,7 @@ declare v public.delivery_outbox%rowtype;
 begin
  select * into v from public.delivery_outbox where id=p_outbox_id for update;
  if not found then raise exception using errcode='P0002',message='DELIVERY_OUTBOX_NOT_FOUND'; end if;
+ if v.status='completed' and p_succeeded then return jsonb_build_object('outbox_id',v.id,'status','duplicate','attempts',v.attempts); end if;
  if v.status<>'claimed' or v.claimed_by<>p_worker_id then raise exception using errcode='42501',message='DELIVERY_OUTBOX_CLAIM_MISMATCH'; end if;
  if p_succeeded then
   update public.delivery_outbox set status='completed',claimed_by=null,claimed_at=null,last_error_code=null,updated_at=now()
@@ -312,7 +317,7 @@ create or replace function public.delivery_reconcile_cost(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v public.delivery_dispatches%rowtype; v_journal public.finance_journal_entries%rowtype;
- v_existing public.delivery_cost_reconciliations%rowtype; v_status text; v_id uuid;
+ v_existing public.delivery_cost_reconciliations%rowtype; v_status text; v_id uuid; v_journal_found boolean;
 begin
  if least(p_customer_fee_idr,p_merchant_subsidy_idr,p_cod_expected_idr,p_cod_collected_idr,p_cod_remitted_idr,
   p_courier_cost_expected_idr,p_courier_cost_final_idr,p_provider_settlement_idr,p_provider_fee_idr)<0
@@ -327,15 +332,19 @@ begin
  select * into v_existing from public.delivery_cost_reconciliations where tenant_id=p_tenant_id and dispatch_id=p_dispatch_id;
  if found then
   if v_existing.evidence_sha256<>p_evidence_sha256 or v_existing.customer_fee_idr<>p_customer_fee_idr
-   or v_existing.merchant_subsidy_idr<>p_merchant_subsidy_idr or v_existing.cod_collected_idr<>p_cod_collected_idr
-   or v_existing.cod_remitted_idr<>p_cod_remitted_idr or v_existing.courier_cost_final_idr<>p_courier_cost_final_idr then
+   or v_existing.merchant_subsidy_idr<>p_merchant_subsidy_idr or v_existing.cod_expected_idr<>p_cod_expected_idr
+   or v_existing.cod_collected_idr<>p_cod_collected_idr or v_existing.cod_remitted_idr<>p_cod_remitted_idr
+   or v_existing.courier_cost_expected_idr<>p_courier_cost_expected_idr or v_existing.courier_cost_final_idr<>p_courier_cost_final_idr
+   or v_existing.provider_settlement_idr<>p_provider_settlement_idr or v_existing.provider_fee_idr<>p_provider_fee_idr
+   or v_existing.finance_source_reconciliation_id is distinct from p_finance_journal_entry_id then
    raise exception using errcode='23505',message='DELIVERY_RECONCILIATION_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','reconciliation_id',v_existing.id,'reconciliation_status',v_existing.status);
  end if;
  select * into v_journal from public.finance_journal_entries where id=p_finance_journal_entry_id
   and branch_id=p_branch_id and source_type='delivery_dispatch' and source_id=p_dispatch_id and status='posted';
- v_status:=case when found and p_cod_expected_idr=p_cod_collected_idr and p_cod_collected_idr=p_cod_remitted_idr
+ v_journal_found:=found;
+ v_status:=case when v_journal_found and p_cod_expected_idr=p_cod_collected_idr and p_cod_collected_idr=p_cod_remitted_idr
   and p_courier_cost_final_idr=p_customer_fee_idr+p_merchant_subsidy_idr
   and p_provider_settlement_idr=p_courier_cost_final_idr-p_provider_fee_idr
   then 'reconciled' else 'exception' end;
@@ -344,7 +353,7 @@ begin
   provider_settlement_idr,provider_fee_idr,finance_source_reconciliation_id,status,evidence_sha256,reconciled_by,reconciled_at)
  values(p_tenant_id,p_branch_id,p_dispatch_id,p_customer_fee_idr,p_merchant_subsidy_idr,p_cod_expected_idr,
   p_cod_collected_idr,p_cod_remitted_idr,p_courier_cost_expected_idr,p_courier_cost_final_idr,
-  p_provider_settlement_idr,p_provider_fee_idr,case when found then p_finance_journal_entry_id else null end,v_status,p_evidence_sha256,
+  p_provider_settlement_idr,p_provider_fee_idr,case when v_journal_found then p_finance_journal_entry_id else null end,v_status,p_evidence_sha256,
   case when v_status='reconciled' then p_actor_user_id else null end,
   case when v_status='reconciled' then now() else null end) returning id into v_id;
  update public.delivery_dispatches set cod_collected_idr=p_cod_collected_idr,cod_remitted_idr=p_cod_remitted_idr,
