@@ -1397,7 +1397,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -1414,6 +1414,14 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
       if(error)return fail("Alert Executive belum tersedia. Terapkan migrasi pada batch final.",503,origin);
       return json({alerts:data||[]},200,origin);
+    }
+    if(action==="erp-executive-transition-alert"){
+      const alertId=safeText(body.alert_id,64),next=safeText(body.next_status,30),note=safeText(body.note,500)||"",evidence=safeText(body.evidence_reference,500)||"";
+      if(!/^[0-9a-f-]{36}$/i.test(alertId)||!["acknowledged","investigating","resolved","dismissed","open"].includes(next))return fail("Perubahan alert tidak valid.",422,origin);
+      if(next==="resolved"&&(note.length<8||evidence.length<8))return fail("Penyelesaian alert memerlukan catatan dan referensi bukti.",422,origin);
+      const {data,error}=await admin.rpc("executive_transition_alert",{p_alert_id:alertId,p_next_status:next,p_actor_user_id:actor.user.id,p_note:note,p_evidence_reference:evidence});
+      if(error)return fail("Perubahan status alert ditolak. Periksa status saat ini dan bukti penyelesaian.",409,origin);
+      return json({transition:data},200,origin);
     }
     if(action==="erp-executive-verify-alert"){
       const alertId=safeText(body.alert_id,64),note=safeText(body.note,500),evidence=safeText(body.evidence_reference,500);
