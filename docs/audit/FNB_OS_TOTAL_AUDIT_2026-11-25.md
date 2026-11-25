@@ -36,7 +36,7 @@ PR #142 yang sudah merged dan feature-level matrix pada staging berisi 95 PARTIA
 
 ## 3. Tabel feature-level setelah pengerjaan audit ini
 
-27 fitur yang sebelumnya NOT VERIFIED/BLOCKED memiliki pekerjaan implementasi konkret dan sekarang dipindahkan ke PARTIAL. Satu perpindahan berasal dari BLOCKED (digital receipt), 26 dari NOT VERIFIED. PARTIAL bukan DONE dan bukan berarti workflow diterima.
+27 fitur yang sebelumnya NOT VERIFIED/BLOCKED memiliki pekerjaan implementasi konkret dan sekarang dipindahkan ke PARTIAL. Satu perpindahan berasal dari BLOCKED (digital receipt), 26 dari NOT VERIFIED. Setelah perubahan ini, total menjadi 122 PARTIAL, 62 NOT VERIFIED, 5 BLOCKED, 0 DONE. PARTIAL bukan DONE dan bukan berarti workflow diterima.
 
 | Domain | Total | Partial | Belum terbukti | Blocked | Selesai | Cakupan Partial |
 |---|---:|---:|---:|---:|---:|---:|
@@ -91,7 +91,7 @@ Bobot resmi: Code/UI 20%, Database/integrity 20%, Authorization/scope 15%, Autom
 
 - Tenant onboarding: 30% provisional (skor terdahulu; perlu verifikasi ulang).
 - Tenant/member isolation: 58% provisional pada snapshot bukti sebelumnya; harus dihitung ulang terhadap katalog 68 tabel dan bukti exact-head terbaru.
-- 27 fitur baru berstatus PARTIAL tetapi skor weighted belum diberikan. Artefak source/UI/SQL draft memulai pekerjaan, namun migration, tests, runtime dan rekonsiliasi belum membuktikan dimensi lainnya.
+- 27 fitur baru berstatus PARTIAL tetapi skor weighted belum diberikan. Setelah menghitung 122 PARTIAL dikurangi dua fitur yang memiliki skor provisional (tenant/member isolation 58% dan tenant directory/onboarding 30%), terdapat 120 PARTIAL yang belum memiliki skor enam dimensi. Artefak source/UI/SQL draft memulai pekerjaan, namun migration, tests, runtime dan rekonsiliasi belum membuktikan dimensi lainnya.
 - Fitur Partial lainnya juga perlu dipecah ke enam dimensi. Jangan memberi angka tebakan. Matrix menandai skor yang belum punya evidence breakdown sebagai UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED.
 - Tidak ada fitur DONE.
 
