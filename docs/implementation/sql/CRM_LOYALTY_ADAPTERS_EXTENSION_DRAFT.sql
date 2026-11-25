@@ -353,7 +353,7 @@ end $$;
   );
   return new;
 end;
-$;
+$$;
 revoke all on function public.crm_auto_link_paid_transaction_customer() from public,anon,authenticated;
 drop trigger if exists crm_auto_link_paid_order on public.orders;
 create trigger crm_auto_link_paid_order
