@@ -101,7 +101,7 @@ export function createXenditPayoutV3Adapter({
       error.providerErrorCode = responseBody?.error_code ?? responseBody?.code ?? null;
       throw error;
     }
-    if (!responseBody?.id || !responseBody?.reference_id || !responseBody?.status) {
+    if (!responseBody?.payout_id || !responseBody?.reference_id || !responseBody?.status) {
       throw Object.assign(new Error("Xendit response lacks stable payout identity/status; outcome must be checked before retry"), {
         code: "XENDIT_PAYOUT_RESPONSE_UNVERIFIED",
       });
@@ -109,7 +109,7 @@ export function createXenditPayoutV3Adapter({
     return Object.freeze({
       accepted: true,
       provider: "xendit",
-      providerReference: responseBody.id,
+      providerReference: responseBody.payout_id,
       referenceId: responseBody.reference_id,
       providerStatus: responseBody.status,
       amountIdr: body.payout_details.source_amount,
