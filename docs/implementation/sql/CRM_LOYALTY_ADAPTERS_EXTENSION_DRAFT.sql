@@ -506,6 +506,9 @@ begin
   select id from public.crm_campaign_outbox
   where tenant_id=p_tenant_id and provider_id=p_provider_id
    and status in ('queued','failed') and coalesce(next_attempt_at,now())<=now()
+   and exists(select 1 from public.crm_campaign_provider_configs c
+    where c.tenant_id=p_tenant_id and c.provider_id=p_provider_id
+     and c.channel=public.crm_campaign_outbox.channel and c.status='active')
   order by created_at,id for update skip locked limit p_limit
  )
  update public.crm_campaign_outbox o set status='claimed',attempts=o.attempts+1,updated_at=now()
