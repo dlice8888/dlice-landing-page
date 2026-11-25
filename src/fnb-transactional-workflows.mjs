@@ -29,6 +29,7 @@ import { rankReconciledBranches } from "./executive-branch-ranking.mjs";
 import { calculateFranchiseRoyalty } from "./franchise-royalty-calculation.mjs";
 import { calculatePayrollLine } from "./hr-payroll-calculation.mjs";
 import { buildCrmFinancialCloseEvidence } from "./crm-financial-close.mjs";
+import { reconcileXenditPayrollPayoutEvidence } from "./providers/xendit-payout-reconciliation.mjs";
 
 const fail = (code, message) => {
   const error = new Error(message);
@@ -597,6 +598,64 @@ export async function reconcileApprovedPayrollPayment(input, deps) {
 
 
 
+
+/**
+ * Xendit payroll webhook ingestion. Resolve tenant scope from trusted server-side
+ * provider/payment mapping, then re-lock and re-verify the payment in its tenant transaction.
+ * Finance posting remains a separate reconciliation action.
+ */
+export async function ingestXenditPayrollPayoutWebhook(input, deps) {
+  const evidence = await adapter(deps, "verifyPayrollPayoutWebhook")({
+    rawBody: input.rawBody, callbackToken: input.callbackToken,
+  });
+  if (!evidence?.authenticated || evidence.provider !== "xendit") {
+    fail("PAYROLL_WEBHOOK_UNAUTHENTICATED", "Authenticated Xendit payout evidence is required");
+  }
+  const resolved = await adapter(deps, "resolvePayrollPayoutWebhookScope")({
+    provider: "xendit", businessId: evidence.businessId,
+    providerReference: evidence.providerReference, referenceId: evidence.referenceId,
+  });
+  if (!resolved?.tenantId || !resolved?.actorId) {
+    fail("PAYROLL_WEBHOOK_PAYMENT_NOT_FOUND", "Webhook must resolve to a known tenant-scoped payroll payment");
+  }
+  const scope = {
+    tenantId: required(resolved.tenantId, "resolved.tenantId"),
+    branchId: resolved.branchId == null ? null : required(resolved.branchId, "resolved.branchId"),
+    actorId: required(resolved.actorId, "resolved.actorId"),
+    idempotencyKey: evidence.eventId,
+    action: "hr.payroll.payment.webhook",
+  };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const payment = await adapter(deps, "loadPayrollPaymentForWebhookUpdate")(tx, {
+      providerReference: evidence.providerReference, referenceId: evidence.referenceId,
+      businessId: evidence.businessId,
+    });
+    assertScope(payment, scope, "payrollPayment");
+    if (payment.providerId !== "xendit" || payment.providerBusinessId !== evidence.businessId) {
+      fail("PAYROLL_WEBHOOK_PROVIDER_SCOPE_MISMATCH", "Provider business and payment mapping must match");
+    }
+    const decision = reconcileXenditPayrollPayoutEvidence({ payment, evidence });
+    const saved = await adapter(deps, "persistPayrollPaymentWebhookEvidence")(tx, {
+      payment, evidence, decision, idempotencyKey: evidence.eventId,
+      actorId: scope.actorId,
+    });
+    if (!saved?.eventId) {
+      fail("PAYROLL_WEBHOOK_PERSIST_FAILED", "Webhook event and state decision must persist atomically");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "hr.payroll.payment.webhook_received",
+      entityType: "payroll_payment_webhook_event", entityId: saved.eventId,
+      idempotencyKey: evidence.eventId,
+    });
+    return Object.freeze({
+      status: saved.duplicate ? "duplicate" : decision.status,
+      eventId: saved.eventId, paymentId: payment.id,
+      matched: decision.matched, reconciliationRequired: decision.settled === true || decision.reversalRequired === true,
+      mismatches: decision.mismatches ?? [],
+    });
+  });
+}
 
 /** CRM: build a close projection only from server-loaded reconciled source evidence. */
 export async function buildCrmFinancialCloseProjection(input, deps) {
