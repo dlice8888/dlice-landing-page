@@ -114,7 +114,8 @@ begin
   if not found then raise exception using errcode='P0002',message='ACTIVE_CUSTOMER_NOT_FOUND'; end if;
   v_points:=floor(v_net/1000.0)::bigint*v_rule.points_per_thousand_idr;
   v_key:='crm-earn:'||p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_rule.version;
-  v_expires_at:=now()+make_interval(days=>v_rule.points_validity_days);
+  if v_close.reconciled_at is null then raise exception using errcode='23514',message='FINANCIAL_CLOSE_RECONCILIATION_TIMESTAMP_REQUIRED'; end if;
+  v_expires_at:=v_close.reconciled_at+make_interval(days=>v_rule.points_validity_days);
   select * into v_existing from public.crm_loyalty_ledger
    where tenant_id=p_tenant_id and idempotency_key=v_key;
   if found then
@@ -343,6 +344,14 @@ begin
   returning * into v_entry;
 
   if p_entry_kind='reversal' and v_original.entry_kind='redeem' then
+    if exists(
+      select 1 from public.crm_loyalty_point_allocations a
+      join public.crm_loyalty_ledger lot on lot.tenant_id=a.tenant_id and lot.id=a.point_lot_entry_id
+      where a.tenant_id=p_tenant_id and a.source_entry_id=v_original.id
+        and a.allocation_kind='redemption' and lot.expires_at is not null and lot.expires_at<=now()
+    ) then
+      raise exception using errcode='23514',message='REDEMPTION_REVERSAL_AFTER_EXPIRY_BLOCKED';
+    end if;
     for v_allocation in select point_lot_entry_id,points_allocated
       from public.crm_loyalty_point_allocations
      where tenant_id=p_tenant_id and source_entry_id=v_original.id and allocation_kind='redemption'
