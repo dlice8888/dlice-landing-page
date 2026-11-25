@@ -119,3 +119,56 @@ grant execute on function public.bi_publish_metric_snapshot(uuid,uuid) to servic
 
 -- Snapshot publishing RPC must verify every referenced watermark is complete and fresh,
 -- every reconciliation run passed, metric version matches, and caller has BI publish authority.
+
+
+-- Versioned metric lineage: a metric cannot be published until every declared
+-- source entity has an explicit field/key/aggregation mapping for that formula.
+create table if not exists public.bi_metric_source_lineage (
+ id uuid primary key default gen_random_uuid(),
+ metric_id uuid not null references public.bi_metric_definitions(id) on delete restrict,
+ formula_version integer not null check(formula_version>0),
+ source_entity text not null,
+ source_field text not null,
+ source_key text not null,
+ join_rule text not null,
+ aggregation_rule text not null,
+ transformation_reference text not null,
+ approved_by uuid not null references auth.users(id) on delete restrict,
+ approved_at timestamptz not null,
+ created_at timestamptz not null default now(),
+ unique(metric_id,formula_version,source_entity,source_field,source_key),
+ check(length(btrim(source_entity)) between 2 and 100),
+ check(length(btrim(source_field)) between 1 and 160),
+ check(length(btrim(source_key)) between 1 and 160),
+ check(length(btrim(join_rule)) between 3 and 500),
+ check(length(btrim(aggregation_rule)) between 3 and 500),
+ check(length(btrim(transformation_reference)) between 3 and 500)
+);
+alter table public.bi_metric_source_lineage enable row level security;
+drop policy if exists service_role_only on public.bi_metric_source_lineage;
+create policy service_role_only on public.bi_metric_source_lineage for all to service_role using(true) with check(true);
+revoke all on public.bi_metric_source_lineage from anon,authenticated;
+grant select,insert,update,delete on public.bi_metric_source_lineage to service_role;
+
+create or replace function public.bi_enforce_snapshot_lineage()
+returns trigger language plpgsql security invoker set search_path=''
+as $$
+declare v_sources text[]; v_version integer; v_missing text[];
+begin
+ if new.status<>'published' then return new; end if;
+ select source_entities,formula_version into v_sources,v_version
+ from public.bi_metric_definitions where id=new.metric_id and active=true;
+ if not found or v_version<>new.formula_version then
+  raise exception using errcode='23514',message='BI_METRIC_FORMULA_VERSION_MISMATCH';
+ end if;
+ select array_agg(src) into v_missing from unnest(v_sources) src
+ where not exists(select 1 from public.bi_metric_source_lineage l
+  where l.metric_id=new.metric_id and l.formula_version=new.formula_version and l.source_entity=src);
+ if coalesce(cardinality(v_missing),0)>0 then
+  raise exception using errcode='23514',message='BI_METRIC_SOURCE_LINEAGE_INCOMPLETE';
+ end if;
+ return new;
+end $$;
+drop trigger if exists bi_snapshot_lineage_guard on public.bi_metric_snapshots;
+create trigger bi_snapshot_lineage_guard before insert or update of status,metric_id,formula_version
+ on public.bi_metric_snapshots for each row execute function public.bi_enforce_snapshot_lineage();
