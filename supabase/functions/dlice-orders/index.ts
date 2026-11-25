@@ -961,7 +961,47 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
+    const procurementLinkActions=new Set(["erp-procurement-list-supplier-links","erp-procurement-create-supplier-link","erp-procurement-approve-supplier-link"]);
+  if(procurementLinkActions.has(action)){
+    if(!isOwner)return fail("Pengelolaan kepemilikan supplier sementara hanya dapat diakses Platform Owner.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-procurement-list-supplier-links"){
+      const [links,suppliers]=await Promise.all([
+        admin.from("supplier_tenant_links").select("id,supplier_id,status,relationship_type,created_by,approved_by,approved_at,created_at").eq("tenant_id",tenantId).order("created_at",{ascending:false}),
+        admin.from("suppliers").select("id").eq("is_active",true).order("id").limit(500)
+      ]);
+      if(links.error||suppliers.error)return fail("Data supplier ownership belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({links:links.data||[],available_suppliers:suppliers.data||[]},200,origin);
+    }
+    if(action==="erp-procurement-create-supplier-link"){
+      const supplierId=safeText(body.supplier_id,64),relationship=safeText(body.relationship_type,20);
+      if(!/^[0-9a-f-]{36}$/i.test(supplierId)||!["exclusive","shared"].includes(relationship))return fail("Supplier atau jenis hubungan tidak valid.",422,origin);
+      const {data:supplier,error:supplierError}=await admin.from("suppliers").select("id").eq("id",supplierId).eq("is_active",true).maybeSingle();
+      if(supplierError)return fail("Supplier belum dapat diverifikasi.",503,origin);
+      if(!supplier)return fail("Supplier tidak aktif atau tidak ditemukan.",404,origin);
+      const {data,error}=await admin.from("supplier_tenant_links").insert({tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship,status:"pending",created_by:actor.user.id})
+        .select("id,supplier_id,status,relationship_type,created_at").single();
+      if(error)return fail(error.code==="23505"?"Supplier sudah memiliki relasi untuk tenant ini.":"Relasi supplier gagal dibuat.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"procurement.supplier_link.requested",entity_type:"supplier_tenant_link",entity_id:data.id,metadata:{tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship}});
+      return json({link:data},201,origin);
+    }
+    if(action==="erp-procurement-approve-supplier-link"){
+      const linkId=safeText(body.link_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(linkId))return fail("Relasi supplier tidak valid.",422,origin);
+      const {data:link,error:linkError}=await admin.from("supplier_tenant_links").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",linkId).maybeSingle();
+      if(linkError)return fail("Relasi supplier belum dapat diverifikasi.",503,origin);
+      if(!link)return fail("Relasi supplier tidak ditemukan.",404,origin);
+      const {data,error}=await admin.rpc("procurement_approve_supplier_link",{p_link_id:linkId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Persetujuan ditolak. Approver harus berbeda dari pembuat permintaan.",409,origin);
+      return json({link:data},200,origin);
+    }
+  }
+
+  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
   if(saasActions.has(action)){
     if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
     if(action==="erp-saas-list-plan-versions"){
