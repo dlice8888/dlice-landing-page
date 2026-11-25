@@ -162,3 +162,12 @@ Still required:
 
 ## No-release statement
 All work in this increment is draft/PR-only. No Production changes, no shared staging migration, no Xendit network request or payout, no bank transfer, no merge, and no release-flag change occurred.
+
+
+## Reconciliation hold — conflicting active audit snapshots
+
+The closing snapshot above is a **working reclassification based on the owner-supplied 92 PARTIAL / 91 NOT VERIFIED baseline**, not yet the consolidated repository-wide total. A separate open audit PR #147 reports 134 PARTIAL / 49 NOT VERIFIED / 6 BLOCKED / 0 DONE for the same 189-feature scope. These totals differ by 13 features and cannot both be the canonical current count. The 18-domain arithmetic in this document is internally consistent (121 + 62 + 6 = 189), but that arithmetic alone does not resolve the feature-level discrepancy.
+
+Before publishing one canonical total, reconcile each of the 189 stable PRD feature IDs across the owner matrix, `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json`, PR #147, and implementation PRs #143–#150. Deduplicate features started in stacked PRs; count a feature once even if several PRs touch it. Preserve the six named BLOCKED gates unless their external prerequisite is demonstrably cleared. Do not convert any PARTIAL to DONE based only on a PR or CI pass. Until that reconciliation is committed, report both snapshots and label the consolidated total **UNRESOLVED**, rather than silently selecting 121 or 134.
+
+The exact-head PR #149 evidence is now verified: commit `8994c2ef3576c1982b83d9b6bd87ee35e2aad702` has successful Free quality checks (run `45667246991`) and PostgreSQL concurrency probe (run `45667247057`). This changes evidence for the 150-branch synthetic RLS-read probe only; it does not change the feature to DONE or resolve the 13-feature ledger discrepancy.
