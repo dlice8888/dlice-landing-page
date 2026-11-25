@@ -62,6 +62,13 @@ reconciliation, complete processed-refund evidence, a tenant-scoped customer
 link and an approved earning rule. It calculates eligible net sales after
 discounts and refunds and writes one idempotent ledger award plus audit event.
 
+The extension also adds database triggers for paid online orders and paid
+POS sales. When a branch and valid Indonesian/international phone identity are
+present, the trigger resolves or creates the tenant customer and records the
+source link through `crm_link_transaction_customer`. Missing/invalid identity
+is left unlinked for manual verification; it does not block checkout. These
+triggers do not award points.
+
 The Edge Function action `erp-crm-award-reconciled-close` now routes to this
 RPC and remains Platform Owner-only while tenant isolation is unreleased.
 **The projection builder is not yet wired to source Finance/settlement records**:
