@@ -38,33 +38,49 @@ Definitions:
 
 ## Closing snapshot — after this implementation increment
 
-The Quality PR starts implementation for two previously unverified PRD capabilities:
-1. Food safety, temperature/allergen inspection and recall traceability.
-2. Supplier quality inspection, quarantine and corrective/preventive action (CAPA).
-
-The Quality domain moves from 11 PARTIAL / 9 NOT VERIFIED to 13 PARTIAL / 7 NOT VERIFIED. These remain PARTIAL; none is DONE. The other domain counts are unchanged because this increment did not produce qualifying evidence to reclassify their features.
+The eight-domain workflow PR (#145) starts work across CRM, HR/Finance, Delivery, Franchise, BI, SaaS, Procurement and Executive; PR #146 adds the payroll payout/provider boundary; PR #149 adds the 150-branch concurrency probe; PR #150 starts food safety/recall and supplier quality/CAPA. All newly started features remain PARTIAL. None is DONE.
 
 | Domain | Total | P | BT | B | S | Partial coverage |
 |---|---:|---:|---:|---:|---:|---:|
-| Executive Command Center | 10 | 4 | 5 | 1 | 0 | 40% |
+| Executive Command Center | 10 | 6 | 3 | 1 | 0 | 60% |
 | POS & Checkout | 13 | 7 | 5 | 1 | 0 | 54% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70% |
 | Menu & Recipe | 11 | 7 | 3 | 1 | 0 | 64% |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83% |
-| Procurement & Supplier | 10 | 5 | 5 | 0 | 0 | 50% |
+| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70% |
 | Branch Operations | 10 | 4 | 5 | 1 | 0 | 40% |
-| Delivery & Fulfillment | 8 | 2 | 6 | 0 | 0 | 25% |
-| CRM & Loyalty | 9 | 1 | 8 | 0 | 0 | 11% |
-| Finance & Accounting | 12 | 7 | 4 | 1 | 0 | 58% |
-| HR & Workforce | 9 | 1 | 8 | 0 | 0 | 11% |
-| Franchise & Expansion | 8 | 2 | 6 | 0 | 0 | 25% |
-| BI & Analytics | 10 | 3 | 7 | 0 | 0 | 30% |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100% |
+| CRM & Loyalty | 9 | 4 | 5 | 0 | 0 | 44% |
+| Finance & Accounting | 12 | 8 | 3 | 1 | 0 | 67% |
+| HR & Workforce | 9 | 2 | 7 | 0 | 0 | 22% |
+| Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100% |
+| BI & Analytics | 10 | 4 | 6 | 0 | 0 | 40% |
 | Admin & Access Control | 10 | 6 | 4 | 0 | 0 | 60% |
-| SaaS Tenant Management | 8 | 2 | 6 | 0 | 0 | 25% |
-| Integrations & Automation | 9 | 5 | 4 | 0 | 0 | 56% |
-| Quality, Compliance & Security | 20 | 13 | 7 | 0 | 0 | 65% |
-| **TOTAL** | **189** | **94** | **89** | **6** | **0** | **50%** |
+| SaaS Tenant Management | 8 | 4 | 4 | 0 | 0 | 50% |
+| Integrations & Automation | 9 | 7 | 2 | 0 | 0 | 78% |
+| Quality, Compliance & Security | 20 | 14 | 6 | 0 | 0 | 70% |
+| **TOTAL** | **189** | **121** | **62** | **6** | **0** | **64%** |
+
+## Newly started features moved from NOT VERIFIED to PARTIAL
+
+The following reclassifications are based on source orchestration, schema drafts and contract tests in PRs #145–#150. A source implementation counts as PARTIAL under the owner's rule, but does not imply deployed/runtime completion.
+
+| Domain | Newly started PRD features | Evidence now present | Remaining acceptance gap | Estimated engineering progress |
+|---|---|---|---|---:|
+| Executive | Branch ranking; target vs actual | 1–150 branch ranking service, BI snapshot lineage and approved target requirements | Full source snapshots/targets, region rollups, browser drill-down and alert workflow | 30% |
+| Procurement | Three-way match; AP handoff/supplier payment | Supplier invoice approval and balanced AP journal draft/payment+settlement orchestration | Concrete AP subledger adapters, invoice evidence intake, DB replay, provider settlement and staging reconciliation | 30% |
+| Delivery | Address/quote; courier booking; dispatch/tracking; POD; retry/exception; fee vs actual cost | Quote/booking orchestration, signed webhook ingestion, private proof metadata/upload path, cost reconciliation and retry outbox schema | Provider approval/credentials, signed endpoint integration, Storage provisioning/policies, cancellation compensation and COD/bank E2E | 30% |
+| CRM | Consent; loyalty points; campaign/ROI | Signed unsubscribe/consent withdrawal, reconciled-close loyalty award, provider-neutral campaign outbox/receipt/ROI orchestration | Supabase RPC adapters, provider contract/secrets, signed webhook route, source reconciliation, UI and campaign E2E | 30% |
+| Finance | Automated journals from payroll | Canonical HR payroll-to-Finance draft journal and reconciliation source model | Exact disposable SQL replay, pgTAP, real payroll source, posting approval and bank evidence | 35% |
+| HR | Payroll calculation/integration | Approved employee/time/pay inputs, payroll calculation, immutable run lines and Finance mapping workflow | Statutory/tax/benefit policies, provider dispatch, webhook, Finance clearing, bank statement and employee lifecycle E2E | 35% |
+| Franchise | Application/due diligence; site feasibility; agreements; royalty; territory access; compliance | Ten due-diligence gates, site approval, agreement draft/approval/signature-reference/activation, royalty statement and tenant/territory checks | E-sign verification, operational provisioning, expiry/renewal, partner reporting, royalty invoice/payment and branch acceptance | 30% |
+| BI | Official KPI dictionary/versioning | Published KPI formula/version and reconciled immutable snapshot ingestion | Scheduled workers, source completeness, freshness/anomaly alerting, cohort comparison, target authoring and report UI | 30% |
+| SaaS Tenant | Plans/entitlements/quotas; billing/invoices/usage metering | Tenant entitlement enforcement and subscription invoice orchestration with committed-operation metering | Payment execution/receipts, quotas across every API route, grace/suspension, export/offboarding and tenant E2E | 30% |
+| Integrations | Payment callback validation; external connectors | Xendit v3 webhook/payout adapter contract plus CRM/delivery provider adapter/outbox contracts | Real dev credentials, provider signature contract, callback endpoint runtime, retries and settlement reconciliation | 35% |
+| Quality | Food safety/recall; supplier quality/CAPA; 150-branch concurrency | Inspection/quarantine/recall and CAPA orchestration with 8 contracts; local synthetic 150-branch RLS test with 50 concurrent clients | Concrete Supabase RPCs, SQL replay/pgTAP, two real Auth tenants on staging, Storage evidence and realistic app/API workload | 30% |
+
+**Count arithmetic:** 29 newly started features move the owner-supplied baseline from 92 PARTIAL / 91 NOT VERIFIED to 121 PARTIAL / 62 NOT VERIFIED. BLOCKED remains 6; DONE remains 0. Partial coverage is 121/189 = 64%. This is not a weighted completion percentage. Legacy PARTIAL rows still require feature-level progress scoring; the older repository matrix marks them as unscored.
 
 ## Progress inside the two newly started PARTIAL features
 
