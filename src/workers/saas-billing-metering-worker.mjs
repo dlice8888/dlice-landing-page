@@ -27,9 +27,18 @@ export async function runSaasInvoiceIssuanceBatch({subscriptions,adapter,actorId
   try{
    const billable=["active","past_due"].includes(sub?.status)||(sub?.status==="trialing"&&sub.trial_ends_at&&Date.parse(sub.trial_ends_at)<=now);
    if(!billable)throw Object.assign(new Error("Only active, past-due or expired-trial subscriptions can be invoiced"),{code:"SAAS_SUBSCRIPTION_NOT_BILLABLE"});
-   const key=(runKey+":"+sub.id+":"+String(sub.current_period_start)).slice(0,120);
+   let periodStart=new Date(sub.current_period_start),periodEnd=new Date(sub.current_period_end);
+   const expiredTrial=sub.status==="trialing"&&sub.trial_ends_at&&Date.parse(sub.trial_ends_at)<=now;
+   const expiredPeriod=sub.status==="active"&&periodEnd.getTime()<=now;
+   if(expiredTrial||expiredPeriod){
+    periodStart=new Date(expiredTrial?sub.trial_ends_at:sub.current_period_end);
+    periodEnd=new Date(periodStart);
+    if(sub.saas_plan_versions?.billing_interval==="annual")periodEnd.setFullYear(periodEnd.getFullYear()+1);
+    else periodEnd.setMonth(periodEnd.getMonth()+1);
+   }
+   const key=(runKey+":"+sub.id+":"+periodStart.toISOString().slice(0,10)).slice(0,120);
    const invoice=await adapter.issueInvoice({tenantId:sub.tenant_id,subscriptionId:sub.id,
-    periodStart:String(sub.current_period_start).slice(0,10),periodEnd:String(sub.current_period_end).slice(0,10),
+    periodStart:periodStart.toISOString().slice(0,10),periodEnd:periodEnd.toISOString().slice(0,10),
     taxIdr,dueAt,idempotencyKey:key,actorId});
    results.push({subscriptionId:sub.id,status:invoice.status||"issued",invoiceId:invoice.invoice_id||null});
   }catch(error){results.push({subscriptionId:sub?.id||null,status:"failed",errorCode:error?.code||"SAAS_INVOICE_FAILED"});}
