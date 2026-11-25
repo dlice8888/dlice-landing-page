@@ -450,3 +450,127 @@ revoke all on function public.franchise_reject_agreement_event_mutation() from p
 drop trigger if exists franchise_agreement_events_immutable on public.franchise_agreement_events;
 create trigger franchise_agreement_events_immutable before update or delete on public.franchise_agreement_events
 for each row execute function public.franchise_reject_agreement_event_mutation();
+
+
+-- Create a controlled draft agreement only after application, due diligence,
+-- and site assessment are approved. The creator cannot submit their own
+-- agreement for signature.
+create or replace function public.franchise_create_agreement_draft(
+ p_application_id uuid,p_royalty_rate_bps integer,p_marketing_fee_rate_bps integer,
+ p_fixed_monthly_fee_idr bigint,p_effective_from date,p_effective_to date,
+ p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v_app public.franchise_applications%rowtype; v_agreement public.franchise_agreements%rowtype;
+ v_version public.franchise_agreement_versions%rowtype;
+begin
+ select * into v_app from public.franchise_applications where id=p_application_id for update;
+ if not found or v_app.status<>'approved' then raise exception using errcode='23514',message='APPROVED_FRANCHISE_APPLICATION_REQUIRED'; end if;
+ if not exists(select 1 from public.franchise_due_diligence_checks
+   where application_id=v_app.id and status in ('passed','waived') group by application_id having count(*)=6) then
+  raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_INCOMPLETE';
+ end if;
+ if not exists(select 1 from public.franchise_sites where application_id=v_app.id and feasibility_status='approved') then
+  raise exception using errcode='23514',message='APPROVED_FRANCHISE_SITE_REQUIRED';
+ end if;
+ if p_royalty_rate_bps not between 0 and 5000 or p_marketing_fee_rate_bps not between 0 and 2000
+   or p_fixed_monthly_fee_idr<0 or p_effective_from is null
+   or (p_effective_to is not null and p_effective_to<p_effective_from) then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_AGREEMENT_TERMS';
+ end if;
+ insert into public.franchise_agreements(application_id,agreement_status,current_version,created_by)
+ values(v_app.id,'draft',1,p_actor_user_id) returning * into v_agreement;
+ insert into public.franchise_agreement_versions(
+  agreement_id,version,royalty_rate_bps,marketing_fee_rate_bps,fixed_monthly_fee_idr,
+  effective_from,effective_to,approved_by,approved_at
+ ) values(v_agreement.id,1,p_royalty_rate_bps,p_marketing_fee_rate_bps,
+  p_fixed_monthly_fee_idr,p_effective_from,p_effective_to,p_actor_user_id,now())
+ returning * into v_version;
+ insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,metadata)
+ values(v_agreement.id,'amended',p_actor_user_id,jsonb_build_object('version',1,'initial_draft',true));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.agreement.draft_created','franchise_agreement',v_agreement.id::text,
+  jsonb_build_object('application_id',v_app.id,'version',1));
+ return jsonb_build_object('agreement_id',v_agreement.id,'version_id',v_version.id,'status','draft');
+end $$;
+revoke all on function public.franchise_create_agreement_draft(uuid,integer,integer,bigint,date,date,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_create_agreement_draft(uuid,integer,integer,bigint,date,date,uuid) to service_role;
+
+-- Record externally signed document evidence before tenant/branch activation.
+create or replace function public.franchise_record_agreement_signature(
+ p_agreement_id uuid,p_actor_user_id uuid,p_signed_at timestamptz,
+ p_signed_document_reference text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
+begin
+ select * into v from public.franchise_agreements where id=p_agreement_id for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_AGREEMENT_NOT_FOUND'; end if;
+ if v.agreement_status<>'pending_signature' then raise exception using errcode='23514',message='FRANCHISE_AGREEMENT_NOT_PENDING_SIGNATURE'; end if;
+ if p_signed_at is null or p_signed_at>now()+interval '5 minutes' or length(btrim(coalesce(p_signed_document_reference,'')))<8 then
+  raise exception using errcode='22023',message='SIGNED_DOCUMENT_EVIDENCE_REQUIRED';
+ end if;
+ select * into v_version from public.franchise_agreement_versions
+  where agreement_id=v.id and version=v.current_version for update;
+ if not found or p_actor_user_id in (v.created_by,v_version.approved_by) then
+  raise exception using errcode='42501',message='INDEPENDENT_SIGNATURE_REVIEWER_REQUIRED';
+ end if;
+ if p_signed_at::date<v_version.effective_from or
+    (v_version.effective_to is not null and p_signed_at::date>v_version.effective_to) then
+  raise exception using errcode='23514',message='AGREEMENT_VERSION_NOT_EFFECTIVE_AT_SIGNATURE';
+ end if;
+ update public.franchise_agreement_versions set signed_document_reference=p_signed_document_reference
+  where id=v_version.id;
+ update public.franchise_agreements set signed_at=p_signed_at,
+  effective_from=v_version.effective_from,effective_to=v_version.effective_to where id=v.id;
+ insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
+ values(v.id,'signature_recorded',p_actor_user_id,p_signed_document_reference,
+  jsonb_build_object('version',v.current_version,'signed_at',p_signed_at));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.agreement.signature_recorded','franchise_agreement',v.id::text,
+  jsonb_build_object('version',v.current_version,'signed_at',p_signed_at));
+ return jsonb_build_object('agreement_id',v.id,'status','signed_pending_provisioning',
+  'version',v.current_version,'signed_at',p_signed_at);
+end $$;
+revoke all on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) from public,anon,authenticated;
+grant execute on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) to service_role;
+
+create or replace function public.franchise_activate_signed_agreement(
+ p_agreement_id uuid,p_tenant_id uuid,p_branch_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
+begin
+ select * into v from public.franchise_agreements where id=p_agreement_id for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_AGREEMENT_NOT_FOUND'; end if;
+ if v.agreement_status<>'pending_signature' or v.signed_at is null then
+  raise exception using errcode='23514',message='SIGNED_AGREEMENT_REQUIRED';
+ end if;
+ if v.tenant_id is not null or v.branch_id is not null then
+  raise exception using errcode='23514',message='FRANCHISE_AGREEMENT_ALREADY_PROVISIONED';
+ end if;
+ if not exists(select 1 from public.branches where id=p_branch_id and tenant_id=p_tenant_id) then
+  raise exception using errcode='42501',message='FRANCHISE_BRANCH_TENANT_MISMATCH';
+ end if;
+ select * into v_version from public.franchise_agreement_versions
+  where agreement_id=v.id and version=v.current_version for update;
+ if not found or v_version.signed_document_reference is null or
+   v_version.effective_from>current_date or
+   (v_version.effective_to is not null and v_version.effective_to<current_date) then
+  raise exception using errcode='23514',message='SIGNED_EFFECTIVE_AGREEMENT_VERSION_REQUIRED';
+ end if;
+ if p_actor_user_id in (v.created_by,v_version.approved_by) then
+  raise exception using errcode='42501',message='INDEPENDENT_AGREEMENT_ACTIVATOR_REQUIRED';
+ end if;
+ update public.franchise_agreements set tenant_id=p_tenant_id,branch_id=p_branch_id,
+  agreement_status='active' where id=v.id;
+ insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
+ values(v.id,'activated',p_actor_user_id,v_version.signed_document_reference,
+  jsonb_build_object('version',v.current_version,'tenant_id',p_tenant_id,'branch_id',p_branch_id));
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.agreement.activated','franchise_agreement',v.id::text,
+  jsonb_build_object('version',v.current_version,'tenant_id',p_tenant_id,'branch_id',p_branch_id));
+ return jsonb_build_object('agreement_id',v.id,'status','active','tenant_id',p_tenant_id,'branch_id',p_branch_id);
+end $$;
+revoke all on function public.franchise_activate_signed_agreement(uuid,uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_activate_signed_agreement(uuid,uuid,uuid,uuid) to service_role;
