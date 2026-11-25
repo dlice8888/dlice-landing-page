@@ -352,8 +352,11 @@ signature reference is evidence metadata; no e-signature cryptographic
 verification provider is claimed.
 
 The Franchise Edge Function now exposes Owner-only agreement list/create/
-submit/signature-record/activate actions. The ERP workspace now has controls
-for agreement terms, signature evidence, and tenant/branch activation. Actual
+independent term approval/submit/signature-record/activate actions. Agreement
+term approval is separate from draft creation and signature submission; the
+creator cannot approve their own version. The ERP workspace now has controls
+for agreement terms, independent approval, signature evidence, and tenant/branch
+activation. Actual
 tenant and branch provisioning, e-sign provider verification, amendment/
 renewal/termination, opening gate execution and royalty invoice/payment
 settlement remain outstanding.
