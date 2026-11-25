@@ -20,7 +20,7 @@ test("CRM award fails closed when tenant transaction adapter is missing", async 
 
 test("payroll posting fails closed without trusted authorization and transaction ports", async () => {
   await assert.rejects(
-    persistApprovedPayrollRun({ ...base, payrollRunId: "run-a" }, { withTenantTransaction: async () => null }),
+    persistApprovedPayrollRun({ ...base, payrollRunId: "run-a" }, { withTenantTransaction: async (_scope, callback) => callback({}) }),
     { code: "WORKFLOW_ADAPTER_REQUIRED" },
   );
 });
