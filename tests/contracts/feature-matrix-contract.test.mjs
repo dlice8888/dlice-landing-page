@@ -27,7 +27,7 @@ test("feature counts and progress metadata match the matrix rows", () => {
   ).length;
 
   assert.equal(features.length, 189);
-  assert.deepEqual(counts, { PARTIAL: 122, "NOT VERIFIED": 62, BLOCKED: 5, DONE: 0 });
+  assert.deepEqual(counts, { PARTIAL: 126, "NOT VERIFIED": 59, BLOCKED: 4, DONE: 0 });
   assert.equal(matrix.progress_scoring.scored_partial_features, scoredPartial);
   assert.equal(matrix.progress_scoring.unscored_partial_features, counts.PARTIAL - scoredPartial);
 });
