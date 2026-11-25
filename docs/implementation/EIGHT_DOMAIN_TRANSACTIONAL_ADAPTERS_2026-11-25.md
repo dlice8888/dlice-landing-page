@@ -338,3 +338,22 @@ functions. This is a real integration blocker, not something to paper over
 with another duplicate table. The canonical payroll schema and Finance posting
 adapter must be reconciled into one additive migration before the final batch.
 No migration was run.
+
+
+### Franchise agreement lifecycle increment
+
+Added an append-only agreement event timeline and server-only lifecycle RPCs
+for creating a draft agreement after the six due-diligence checks and site
+approval, independent submission for signature, recording the signed-document
+reference, and activating only after a tenant/branch pair is verified. The
+signature-recording step is deliberately separate from tenant/branch
+activation so that legal signing can precede operational provisioning. The
+signature reference is evidence metadata; no e-signature cryptographic
+verification provider is claimed.
+
+The Franchise Edge Function now exposes Owner-only agreement list/create/
+submit/signature-record/activate actions. The ERP workspace now has controls
+for agreement terms, signature evidence, and tenant/branch activation. Actual
+tenant and branch provisioning, e-sign provider verification, amendment/
+renewal/termination, opening gate execution and royalty invoice/payment
+settlement remain outstanding.
