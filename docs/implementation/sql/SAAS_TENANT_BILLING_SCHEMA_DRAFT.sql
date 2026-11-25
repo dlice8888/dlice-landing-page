@@ -111,5 +111,39 @@ begin foreach t in array array['saas_plan_versions','saas_plan_entitlements','sa
  execute format('revoke all on public.%I from anon,authenticated',t);
  execute format('grant select,insert,update,delete on public.%I to service_role',t);
 end loop; end $$;
+create or replace function public.saas_check_entitlement(p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_at timestamptz)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_subscription public.saas_tenant_subscriptions%rowtype; v_limit bigint; v_enabled boolean; v_used bigint;
+begin
+ if p_quantity<=0 then raise exception using errcode='22023',message='INVALID_USAGE_QUANTITY'; end if;
+ select * into v_subscription from public.saas_tenant_subscriptions where tenant_id=p_tenant_id and status in ('trialing','active','past_due')
+  and current_period_start<=p_at and current_period_end>p_at order by created_at desc limit 1 for update;
+ if not found then return jsonb_build_object('allowed',false,'reason','NO_ACTIVE_SUBSCRIPTION'); end if;
+ select enabled,limit_value into v_enabled,v_limit from public.saas_plan_entitlements where plan_version_id=v_subscription.plan_version_id and entitlement_key=p_entitlement_key;
+ if not found or not v_enabled then return jsonb_build_object('allowed',false,'reason','ENTITLEMENT_DISABLED'); end if;
+ select coalesce(sum(quantity),0) into v_used from public.saas_usage_events where tenant_id=p_tenant_id and entitlement_key=p_entitlement_key
+  and occurred_at>=v_subscription.current_period_start and occurred_at<v_subscription.current_period_end;
+ if v_limit is not null and v_used+p_quantity>v_limit then return jsonb_build_object('allowed',false,'reason','QUOTA_EXCEEDED','used',v_used,'limit',v_limit); end if;
+ return jsonb_build_object('allowed',true,'used',v_used,'limit',v_limit,'subscription_id',v_subscription.id);
+end $;
+revoke all on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) from public,anon,authenticated;
+grant execute on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) to service_role;
+
+create or replace function public.saas_record_usage(p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_source_entity text,p_source_id text,p_idempotency_key text,p_metadata jsonb,p_at timestamptz)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_check jsonb; v_event public.saas_usage_events%rowtype;
+begin
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_entitlement_key,0));
+ v_check:=public.saas_check_entitlement(p_tenant_id,p_entitlement_key,p_quantity,p_at);
+ if coalesce((v_check->>'allowed')::boolean,false)=false then raise exception using errcode='23514',message=coalesce(v_check->>'reason','ENTITLEMENT_DENIED'); end if;
+ insert into public.saas_usage_events(tenant_id,entitlement_key,quantity,occurred_at,source_entity,source_id,idempotency_key,metadata)
+ values(p_tenant_id,p_entitlement_key,p_quantity,p_at,p_source_entity,p_source_id,p_idempotency_key,coalesce(p_metadata,'{}')) returning * into v_event;
+ return jsonb_build_object('usage_event_id',v_event.id,'quantity',v_event.quantity,'entitlement_key',v_event.entitlement_key);
+end $;
+revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated;
+grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) to service_role;
+
 -- Entitlement check RPC must lock/read active subscription and aggregate current-period usage.
 -- Tenant suspension/offboarding must preserve audit and retention/legal-hold requirements.
