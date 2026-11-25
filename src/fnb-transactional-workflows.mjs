@@ -656,9 +656,13 @@ export async function calculateAndPersistPayrollRun(input, deps) {
       action: "hr.payroll.calculated", entityType: "hr_payroll_run",
       entityId: run.id, idempotencyKey: scope.idempotencyKey,
     });
+    const grossTotalIdr = lines.reduce((n, x) => n + x.grossAmountIdr, 0);
+    const netTotalIdr = lines.reduce((n, x) => n + x.netAmountIdr, 0);
+    if (!Number.isSafeInteger(grossTotalIdr) || !Number.isSafeInteger(netTotalIdr)) {
+      fail("PAYROLL_RUN_TOTAL_OVERFLOW", "Payroll run totals must remain safe integer IDR amounts");
+    }
     return Object.freeze({ status: "calculated", payrollRunId: run.id,
-      lineCount: lines.length, grossTotalIdr: lines.reduce((n, x) => n + x.grossAmountIdr, 0),
-      netTotalIdr: lines.reduce((n, x) => n + x.netAmountIdr, 0) });
+      lineCount: lines.length, grossTotalIdr, netTotalIdr });
   });
 }
 
