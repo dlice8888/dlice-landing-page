@@ -1387,14 +1387,14 @@
           "requirement": "Loyalty points and tiers",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Ledger, expiry, reversal and duplicate-event protection missing.",
+          "evidence_or_gap": "Eligible net-sales gate is implemented as a pure source contract; canonical persisted close model, adapter wiring, award RPC integration and runtime reconciliation remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 165
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/crm-loyalty-domain.mjs; supabase/functions/dlice-orders/index.ts; erp.html; docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql — consent lifecycle, loyalty ledger/rewards/vouchers, campaign approval/audience queue and paid transaction identity linking. Automatic earning from reconciled net sales and outbound provider delivery remain gaps.",
+          "implementation_evidence": "src/crm-loyalty-domain.mjs; supabase/functions/dlice-orders/index.ts; erp.html; docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql — consent lifecycle, loyalty ledger/rewards/vouchers, campaign approval/audience queue and paid transaction identity linking. Automatic earning from reconciled net sales and outbound provider delivery remain gaps. src/crm-eligible-net-sales.mjs now rejects raw paid/matched sources and requires a reconciled close, processed refund evidence, approved shift close, reconciled settlement, posted Finance journal batch/source reconciliation, and approved versioned earning rule; it emits an idempotent award candidate only, not a ledger write.",
           "progress_pct": null
         },
         {
