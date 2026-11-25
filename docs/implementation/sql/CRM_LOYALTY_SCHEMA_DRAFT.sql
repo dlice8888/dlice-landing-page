@@ -369,7 +369,7 @@ begin
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'crm.campaign.approved','crm_marketing_campaign',p_campaign_id::text,jsonb_build_object('tenant_id',p_tenant_id));
  return jsonb_build_object('campaign_id',p_campaign_id,'status','approved');
-end $;
+end $$;
 revoke all on function public.crm_approve_campaign(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_approve_campaign(uuid,uuid,uuid) to service_role;
 
@@ -407,7 +407,7 @@ begin
  values(p_actor_user_id,'crm.campaign.audience_prepared','crm_marketing_campaign',p_campaign_id::text,
  jsonb_build_object('tenant_id',p_tenant_id,'queued',v_inserted,'suppressed',v_suppressed,'purpose',v_campaign.purpose));
  return jsonb_build_object('campaign_id',p_campaign_id,'queued',v_inserted,'suppressed',v_suppressed);
-end $;
+end $$;
 revoke all on function public.crm_prepare_campaign_audience(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_prepare_campaign_audience(uuid,uuid,uuid) to service_role;
 
