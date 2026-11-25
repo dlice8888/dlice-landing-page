@@ -105,7 +105,7 @@ begin
  update public.food_safety_policies set status='approved',approved_by=p_actor_user_id,approved_at=now()
   where tenant_id=p_tenant_id and id=p_policy_id returning * into v;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
- values(p_tenant_id,p_branch_id,'food_safety_inspection',v.id,'food_safety_policy.approved',p_actor_user_id,
+ values(p_tenant_id,p_branch_id,'food_safety_policy',v.id,'food_safety_policy.approved',p_actor_user_id,
   'policy-approve:'||v.id::text||':'||v.policy_version::text,jsonb_build_object('policy_version',v.policy_version,'product_class',v.product_class));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'quality.food_safety.policy_approved','food_safety_policy',v.id::text,
@@ -130,7 +130,7 @@ begin
  update public.supplier_quality_policies set status='approved',approved_by=p_actor_user_id,approved_at=now()
   where tenant_id=p_tenant_id and id=p_policy_id returning * into v;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
- values(p_tenant_id,p_branch_id,'supplier_quality_inspection',v.id,'supplier_quality_policy.approved',p_actor_user_id,
+ values(p_tenant_id,p_branch_id,'supplier_quality_policy',v.id,'supplier_quality_policy.approved',p_actor_user_id,
   'supplier-policy-approve:'||v.id::text||':'||v.policy_version::text,jsonb_build_object('supplier_id',v.supplier_id,'policy_version',v.policy_version));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'quality.supplier.policy_approved','supplier_quality_policy',v.id::text,
@@ -341,9 +341,17 @@ begin
  insert into public.food_recall_impacts(tenant_id,recall_id,impact_type,impact_entity_id,quantity)
  select p_tenant_id,v_id,impact_type,impact_entity_id,quantity from public.food_lot_distributions
  where tenant_id=p_tenant_id and lot_id=v_lot.id on conflict(tenant_id,recall_id,impact_type,impact_entity_id) do nothing;
- insert into public.food_lot_quarantines(tenant_id,branch_id,lot_code,recall_id,reason_codes,idempotency_key,created_by)
- values(p_tenant_id,p_branch_id,p_lot_code,v_id,array['FOOD_RECALL'],p_idempotency_key||':quarantine',p_actor_user_id)
- returning id into v_quarantine;
+ select id into v_quarantine from public.food_lot_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id
+  and lot_code=p_lot_code and status in ('held','release_pending') for update;
+ if v_quarantine is not null then
+  update public.food_lot_quarantines set recall_id=v_id,
+   reason_codes=array(select distinct x from unnest(reason_codes||array['FOOD_RECALL']) x)
+   where tenant_id=p_tenant_id and id=v_quarantine;
+ else
+  insert into public.food_lot_quarantines(tenant_id,branch_id,lot_code,recall_id,reason_codes,idempotency_key,created_by)
+  values(p_tenant_id,p_branch_id,p_lot_code,v_id,array['FOOD_RECALL'],p_idempotency_key||':quarantine',p_actor_user_id)
+  returning id into v_quarantine;
+ end if;
  update public.food_lot_registry set status='recalled' where tenant_id=p_tenant_id and id=v_lot.id;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'food_recall',v_id,'food_recall.initiated',p_actor_user_id,p_idempotency_key,
@@ -378,6 +386,10 @@ begin
   where pri.id=p_receipt_item_id and pr.branch_id=p_branch_id and b.tenant_id=p_tenant_id and pr.status='posted'
   for update of pri,pr;
  if not found then raise exception using errcode='P0002',message='POSTED_SUPPLIER_RECEIPT_ITEM_NOT_FOUND'; end if;
+ if exists(select 1 from public.supplier_quality_quarantines where tenant_id=p_tenant_id and branch_id=p_branch_id
+   and receipt_item_id=p_receipt_item_id and status in ('held','release_pending')) then
+  raise exception using errcode='23514',message='SUPPLIER_RECEIPT_ALREADY_QUARANTINED';
+ end if;
  select * into v_policy from public.supplier_quality_policies where tenant_id=p_tenant_id and branch_id=p_branch_id
   and id=p_policy_id and supplier_id=v_supplier and status='approved'
   and effective_from<=now() and (effective_until is null or effective_until>now()) for share;
@@ -401,6 +413,9 @@ begin
   insert into public.supplier_corrective_actions(tenant_id,branch_id,supplier_id,inspection_id,status,created_by,idempotency_key)
   values(p_tenant_id,p_branch_id,v_supplier,v_id,'open',p_actor_user_id,p_idempotency_key||':capa')
   returning id into v_capa;
+  update public.food_lot_registry set status='quarantined'
+   where tenant_id=p_tenant_id and branch_id=p_branch_id and source_type='receipt_item'
+     and source_id=p_receipt_item_id and status='available';
  end if;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'supplier_quality_inspection',v_id,
@@ -421,8 +436,12 @@ create or replace function public.quality_submit_supplier_capa(
  p_preventive_action text,p_evidence_reference text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.supplier_corrective_actions%rowtype;
+declare v public.supplier_corrective_actions%rowtype; v_event_key text;
 begin
+ v_event_key:='capa-submit:'||p_capa_id::text||':'||md5(coalesce(p_evidence_reference,''));
+ if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=v_event_key) then
+  return jsonb_build_object('status','duplicate','capa_id',p_capa_id);
+ end if;
  select * into v from public.supplier_corrective_actions where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_capa_id for update;
  if not found then raise exception using errcode='P0002',message='SUPPLIER_CAPA_NOT_FOUND'; end if;
  if v.status not in ('open','in_progress') then raise exception using errcode='23514',message='SUPPLIER_CAPA_NOT_SUBMITTABLE'; end if;
@@ -435,7 +454,7 @@ begin
   evidence_reference=btrim(p_evidence_reference),submitted_by=p_actor_user_id where tenant_id=p_tenant_id and id=p_capa_id returning * into v;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'supplier_capa',v.id,'supplier_capa.submitted',p_actor_user_id,
-  'capa-submit:'||v.id::text||':'||md5(p_evidence_reference),jsonb_build_object('evidence_reference',p_evidence_reference));
+  v_event_key,jsonb_build_object('evidence_reference',p_evidence_reference));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'quality.supplier.capa_submitted','supplier_corrective_action',v.id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'inspection_id',v.inspection_id));
@@ -449,8 +468,12 @@ create or replace function public.quality_verify_supplier_capa(
  p_release_quarantine boolean,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.supplier_corrective_actions%rowtype; v_released integer:=0;
+declare v public.supplier_corrective_actions%rowtype; v_released integer:=0; v_event_key text;
 begin
+ v_event_key:='capa-verify:'||p_capa_id::text||':'||p_decision;
+ if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=v_event_key) then
+  return jsonb_build_object('status','duplicate','capa_id',p_capa_id,'decision',p_decision);
+ end if;
  if p_decision not in ('verified','rejected') or (p_release_quarantine and p_decision<>'verified')
   or length(btrim(coalesce(p_evidence_reference,'')))<3 then
   raise exception using errcode='22023',message='INVALID_SUPPLIER_CAPA_VERIFICATION';
@@ -467,10 +490,14 @@ begin
    where tenant_id=p_tenant_id and inspection_id=v.inspection_id and status in ('held','release_pending');
   get diagnostics v_released=row_count;
   if v_released=0 then raise exception using errcode='23514',message='SUPPLIER_QUARANTINE_NOT_HELD'; end if;
+  update public.food_lot_registry set status='available'
+   where tenant_id=p_tenant_id and branch_id=p_branch_id and source_type='receipt_item'
+     and source_id in (select receipt_item_id from public.supplier_quality_quarantines where tenant_id=p_tenant_id and inspection_id=v.inspection_id)
+     and status='quarantined';
  end if;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'supplier_capa',v.id,'supplier_capa.'||p_decision,p_actor_user_id,
-  'capa-verify:'||v.id::text||':'||p_decision,jsonb_build_object('release_quarantine',p_release_quarantine,'evidence_reference',p_evidence_reference));
+  v_event_key,jsonb_build_object('release_quarantine',p_release_quarantine,'evidence_reference',p_evidence_reference));
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'quality.supplier.capa_'||p_decision,'supplier_corrective_action',v.id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'released_quarantines',v_released));
