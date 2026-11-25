@@ -1353,15 +1353,27 @@ if (action === "admin-set-profile-role") {
       return json({ attendance_event: data }, 201, origin);
     }  }
 
-    const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice"]);
+    const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice","erp-procurement-approve-invoice"]);
   if(procurementInvoiceActions.has(action)){
     if(!hasPerm("procurement"))return fail("Izin invoice procurement tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,64),invoiceId=safeText(body.invoice_id,64);
     if(action==="erp-procurement-list-invoices"){
       if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-      const {data,error}=await admin.from("procurement_supplier_invoices").select("id,supplier_id,purchase_order_id,supplier_invoice_number,invoice_date,due_date,subtotal_idr,tax_idr,total_idr,status,created_at,procurement_invoice_match_lines(id,match_status,quantity_variance,unit_cost_variance_idr)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      const {data,error}=await admin.from("procurement_supplier_invoices").select("id,supplier_id,purchase_order_id,supplier_invoice_number,invoice_date,due_date,subtotal_idr,tax_idr,total_idr,status,received_by,approved_by,created_at,procurement_invoice_match_lines(id,match_status,quantity_variance,unit_cost_variance_idr)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
       if(error)return fail("Invoice supplier belum tersedia. Terapkan migrasi pada batch final.",503,origin);
       return json({invoices:data||[]},200,origin);
+    }
+    if(action==="erp-procurement-approve-invoice"){
+      if(!/^[0-9a-f-]{36}$/i.test(invoiceId))return fail("Invoice ID tidak valid.",422,origin);
+      const reason=safeText(body.reason,500);
+      if(reason.length<3)return fail("Alasan persetujuan invoice wajib diisi.",422,origin);
+      const {data:invoice,error:invoiceError}=await admin.from("procurement_supplier_invoices").select("id,tenant_id,branch_id,status,received_by").eq("id",invoiceId).maybeSingle();
+      if(invoiceError)return fail("Invoice belum dapat diverifikasi.",503,origin);
+      if(!invoice)return fail("Invoice tidak ditemukan.",404,origin);
+      if(!await branchAccess(invoice.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+      const {data,error}=await admin.rpc("procurement_approve_supplier_invoice",{p_invoice_id:invoiceId,p_actor_user_id:actor.user.id,p_reason:reason});
+      if(error)return fail("Persetujuan invoice ditolak. Pastikan three-way match bersih dan approver berbeda dari penerima invoice.",409,origin);
+      return json({approval:data},200,origin);
     }
     if(!/^[0-9a-f-]{36}$/i.test(invoiceId)||!Array.isArray(body.lines)||body.lines.length<1||body.lines.length>100)
       return fail("Invoice atau baris pencocokan tidak valid.",422,origin);
