@@ -1355,11 +1355,11 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-application"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     if(action==="erp-franchise-list-applications"){
-      const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(check_key,status)").order("submitted_at",{ascending:false}).limit(100);
+      const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(id,check_key,status,evidence_reference,reviewer_user_id)").order("submitted_at",{ascending:false}).limit(100);
       if(error)return fail("Data aplikasi franchise belum tersedia. Terapkan migrasi pada batch final.",503,origin);
       return json({applications:data||[]},200,origin);
     }
@@ -1385,6 +1385,14 @@ if (action === "admin-set-profile-role") {
         .select("id,application_id,proposed_address,city,province,feasibility_status").single();
       if(error)return fail("Lokasi franchise gagal disimpan.",503,origin);
       return json({site:data},201,origin);
+    }
+    if(action==="erp-franchise-review-check"){
+      const checkId=safeText(body.check_id,64),decision=safeText(body.decision,20),evidence=safeText(body.evidence_reference,500),notes=safeText(body.notes,1000)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(checkId)||!["passed","failed","waived","pending"].includes(decision)||(["passed","waived"].includes(decision)&&evidence.length<8))
+        return fail("Status due diligence dan referensi bukti tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_due_diligence_check",{p_check_id:checkId,p_status:decision,p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes});
+      if(error)return fail("Review due diligence ditolak. Pemohon tidak boleh menilai pemeriksaannya sendiri.",409,origin);
+      return json({check:data},200,origin);
     }
     if(action==="erp-franchise-review-site"){
       const siteId=safeText(body.site_id,64),decision=safeText(body.decision,30),evidence=safeText(body.evidence_reference,500),notes=safeText(body.notes,500)||null;
