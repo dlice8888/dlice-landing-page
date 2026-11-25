@@ -408,7 +408,7 @@ export async function ingestSignedCampaignReceipt(input, deps) {
   return inTenantTransaction(deps, scope, async (tx) => {
     const outbox = await adapter(deps, "loadCampaignOutboxForUpdate")(tx, verified.receipt.providerMessageId);
     assertScope(outbox, scope, "campaignOutbox");
-    const existingEvent = await adapter(deps, "findCampaignProviderEvent")(tx, verified.receipt.eventId);
+    const existingEvent = await adapter(deps, "findCampaignProviderEvent")(tx, input.providerId, scope.tenantId, verified.receipt.eventId);
     const decision = applyCampaignProviderReceipt({
       outbox, receipt: verified.receipt, signatureVerified: true,
       existingEvent, maxAttempts: input.maxAttempts ?? 5,
@@ -450,7 +450,7 @@ export async function ingestSignedCampaignUnsubscribe(input, deps) {
       providerId: input.providerId, providerEvent: verified.event,
     });
     assertScope(context?.customer, scope, "campaignUnsubscribeCustomer");
-    const existing = await adapter(deps, "findCampaignProviderEvent")(tx, verified.event.eventId);
+    const existing = await adapter(deps, "findCampaignProviderEvent")(tx, input.providerId, scope.tenantId, verified.event.eventId);
     if (existing) {
       if (existing.bodySha256 !== verified.bodySha256) {
         fail("CAMPAIGN_PROVIDER_EVENT_COLLISION", "Provider event id was reused with a different payload");
