@@ -1170,6 +1170,12 @@ if (action === "admin-set-profile-role") {
     "erp-hr-generate-timesheet",
     "erp-hr-submit-timesheet",
     "erp-hr-approve-timesheet",
+    "erp-hr-list-compensation-rates",
+    "erp-hr-set-compensation-rate",
+    "erp-hr-list-payroll-runs",
+    "erp-hr-generate-payroll-run",
+    "erp-hr-submit-payroll-run",
+    "erp-hr-approve-payroll-run",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1235,6 +1241,44 @@ if (action === "admin-set-profile-role") {
       if(error)return fail(action==="erp-hr-submit-timesheet"?"Hanya karyawan pemilik timesheet yang dapat mengirim untuk approval.":"Approval ditolak. Approver harus berbeda dari karyawan.",409,origin);
       return json({timesheet:data},200,origin);
     }
+    if(action==="erp-hr-list-compensation-rates"){
+      const {data,error}=await admin.from("hr_compensation_rates").select("id,employee_user_id,hourly_rate_idr,effective_from,effective_to,approved_by,approved_at").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("effective_from",{ascending:false}).limit(200);
+      if(error)return fail("Data kompensasi belum tersedia. Terapkan skema HR pada batch migrasi final.",503,origin);
+      return json({compensation_rates:data||[]},200,origin);
+    }
+    if(action==="erp-hr-set-compensation-rate"){
+      const employeeId=safeText(body.employee_user_id,64),rate=Number(body.hourly_rate_idr),effectiveFrom=safeText(body.effective_from,10),effectiveTo=safeText(body.effective_to,10)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!Number.isSafeInteger(rate)||rate<=0||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(effectiveFrom)||(effectiveTo&&!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(effectiveTo))||(effectiveTo&&effectiveTo<effectiveFrom))return fail("Rate kompensasi atau periode efektif tidak valid.",422,origin);
+      if(employeeId===actor.user.id)return fail("Pemberi persetujuan kompensasi tidak boleh menjadi penerima rate.",403,origin);
+      const assignment=await admin.from("branch_assignments").select("user_id").eq("branch_id",branchId).eq("user_id",employeeId).eq("employment_status","active").lte("starts_on",effectiveFrom).or("ends_on.is.null,ends_on.gte."+effectiveFrom).maybeSingle();
+      if(assignment.error)return fail("Penugasan staf belum dapat diverifikasi.",503,origin);
+      if(!assignment.data)return fail("Staf tidak memiliki penugasan aktif pada cabang dan tanggal efektif.",403,origin);
+      const {data,error}=await admin.from("hr_compensation_rates").insert({tenant_id:branch.tenant_id,branch_id:branchId,employee_user_id:employeeId,hourly_rate_idr:rate,effective_from:effectiveFrom,effective_to:effectiveTo,approved_by:actor.user.id}).select("id,employee_user_id,hourly_rate_idr,effective_from,effective_to,approved_by,approved_at").single();
+      if(error)return fail("Rate kompensasi gagal disimpan. Periksa overlap/periode dan skema HR.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"hr.compensation.rate_approved",entity_type:"hr_compensation_rate",entity_id:data.id,metadata:{tenant_id:branch.tenant_id,branch_id:branchId,employee_user_id:employeeId,effective_from:effectiveFrom}});
+      return json({compensation_rate:data},201,origin);
+    }
+    if(action==="erp-hr-list-payroll-runs"){
+      const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Payroll belum tersedia. Terapkan skema HR pada batch migrasi final.",503,origin);
+      return json({payroll_runs:data||[]},200,origin);
+    }
+    if(action==="erp-hr-generate-payroll-run"){
+      const start=safeText(body.period_start,10),end=safeText(body.period_end,10),key=safeText(body.idempotency_key,120);
+      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start||key.length<8)return fail("Periode atau idempotency key payroll tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_generate_payroll_run",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_period_start:start,p_period_end:end,p_actor_user_id:actor.user.id,p_idempotency_key:key});
+      if(error)return fail("Payroll belum dapat dihitung. Pastikan timesheet telah approved dan rate efektif mencakup seluruh periode.",409,origin);
+      return json({payroll_run:data},201,origin);
+    }
+    if(action==="erp-hr-submit-payroll-run"||action==="erp-hr-approve-payroll-run"){
+      const payrollId=safeText(body.payroll_run_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(payrollId))return fail("Payroll run tidak valid.",422,origin);
+      const rpc=action==="erp-hr-submit-payroll-run"?"hr_submit_payroll_run":"hr_approve_payroll_run";
+      const {data,error}=await admin.rpc(rpc,{p_payroll_run_id:payrollId,p_actor_user_id:actor.user.id});
+      if(error)return fail(action==="erp-hr-submit-payroll-run"?"Submit payroll ditolak; pemohon harus independen dari pembuat.":"Approval payroll ditolak; approver harus berbeda dari pembuat dan submitter.",409,origin);
+      return json({payroll_run:data},200,origin);
+    }
+
     if(action==="erp-hr-list-leave-requests"){
       const {data,error}=await admin.from("hr_leave_requests").select("id,employee_user_id,leave_type,starts_on,ends_on,requested_days,coverage_employee_user_id,coverage_approved,status,reason,requested_by,reviewed_by,reviewed_at,review_note").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(150);
       if(error)return fail("Data cuti belum tersedia. Terapkan migrasi HR pada batch final.",503,origin);
