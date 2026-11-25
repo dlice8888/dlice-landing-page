@@ -44,6 +44,31 @@ withdrawal, suppresses queued recipients and persists the provider event in one
 tenant transaction. Provider-event lookup is explicitly scoped by provider and
 tenant. No live provider is configured and no unsubscribe webhook is deployed.
 
+### CRM reconciled-close award and persistence extension
+
+Added the companion draft
+`docs/implementation/sql/CRM_LOYALTY_ADAPTERS_EXTENSION_DRAFT.sql` after
+reconnaissance confirmed the current staging schema has POS sales, orders,
+shifts, cash reconciliations, payment settlements, refunds and journal entries,
+but does not expose a complete settlement-reconciliation or Finance-source-
+reconciliation entity. The extension defines the missing durable CRM contracts:
+versioned earning rules, immutable close projections, campaign outbox,
+provider-event dedupe, Finance-backed campaign attribution and campaign costs.
+
+The new `crm_award_loyalty_for_reconciled_close` RPC is fail-closed. It requires
+an existing reconciled close projection, approved shift reconciliation,
+reconciled settlement evidence, posted/reconciled Finance journal plus source
+reconciliation, complete processed-refund evidence, a tenant-scoped customer
+link and an approved earning rule. It calculates eligible net sales after
+discounts and refunds and writes one idempotent ledger award plus audit event.
+
+The Edge Function action `erp-crm-award-reconciled-close` now routes to this
+RPC and remains Platform Owner-only while tenant isolation is unreleased.
+**The projection builder is not yet wired to source Finance/settlement records**:
+the current staging schema lacks the full source-reconciliation entities needed
+to prove that projection. The draft SQL has not been applied, and no points were
+awarded in staging. This is a code/schema contract increment, not runtime proof.
+
 ### CRM POS/order identity adapter increment
 
 The existing `erp-crm-link-paid-transaction` action in
