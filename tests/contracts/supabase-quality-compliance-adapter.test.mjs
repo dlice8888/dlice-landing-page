@@ -26,7 +26,7 @@ test("each Quality workflow delegates to exactly one atomic RPC",async()=>{
   "quality_record_food_safety_inspection","quality_initiate_food_recall",
   "quality_record_supplier_quality_inspection","quality_request_food_lot_release","quality_approve_food_lot_release","quality_submit_supplier_capa","quality_verify_supplier_capa"
  ]);
- assert.equal(calls[10].args.p_release_quarantine,true);
+ assert.equal(calls[12].args.p_release_quarantine,true);
 });
 test("adapter fails closed without an RPC client or required tenant scope",async()=>{
  assert.throws(()=>createSupabaseQualityComplianceAdapter({}),{code:"QUALITY_RPC_CLIENT_REQUIRED"});
