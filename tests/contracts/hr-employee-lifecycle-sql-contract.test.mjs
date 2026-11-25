@@ -20,6 +20,9 @@ test("employee lifecycle event history is append-only and service-role-only",()=
 });
 
 test("transfer and position change close prior tenant assignments and create a new effective assignment atomically",()=>{
+ assert.match(sql,/HR_TRANSFER_REQUIRES_DIFFERENT_TARGET_BRANCH/);
+ assert.match(sql,/HR_POSITION_CHANGE_REQUIRES_DIFFERENT_POSITION/);
+ assert.match(sql,/HR_REACTIVATION_REQUIRES_BRANCH_AND_POSITION/);
  assert.match(sql,/employment_status='inactive',[\s\S]*ends_on=p_effective_on-1/);
  assert.match(sql,/insert into public\.branch_assignments\(branch_id,user_id,job_position_id,employment_status,starts_on,ends_on,assigned_by\)/);
 });
