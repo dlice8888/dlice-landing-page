@@ -88,7 +88,7 @@ EXPECTED_EVENTS="$(psql -v ON_ERROR_STOP=1 -At -d "$SOURCE_DB" -c 'SELECT count(
 EXPECTED_CHECKSUM="$(psql -v ON_ERROR_STOP=1 -At -d "$SOURCE_DB" -c "SELECT md5(string_agg(tenant_id::text||':'||branch_id::text||':'||idempotency_key||':'||amount_minor::text,E'\\n' ORDER BY tenant_id,branch_id,idempotency_key)) FROM public.operational_events")"
 
 # The snapshot includes every committed row before this point.
-pg_dump --format=custom --no-owner --no-acl --file="$BACKUP_FILE" "$SOURCE_DB"
+pg_dump --format=custom --no-owner --file="$BACKUP_FILE" "$SOURCE_DB"
 BACKUP_BYTES="$(wc -c < "$BACKUP_FILE" | tr -d ' ')"
 
 # One committed row after the snapshot is intentionally not expected in restore.
@@ -99,8 +99,9 @@ FROM public.branches b
 WHERE b.branch_code='A-001';
 SQL
 
+RESTORE_START_MS="$(date +%s%3N)"
 createdb "$TARGET_DB"
-pg_restore --exit-on-error --no-owner --no-acl --dbname="$TARGET_DB" "$BACKUP_FILE"
+pg_restore --exit-on-error --no-owner --dbname="$TARGET_DB" "$BACKUP_FILE"
 
 RESTORED_BRANCHES="$(psql -v ON_ERROR_STOP=1 -At -d "$TARGET_DB" -c 'SELECT count(*) FROM public.branches')"
 RESTORED_EVENTS="$(psql -v ON_ERROR_STOP=1 -At -d "$TARGET_DB" -c 'SELECT count(*) FROM public.operational_events')"
@@ -113,7 +114,7 @@ B_EVENTS="$(psql -v ON_ERROR_STOP=1 -At -d "$TARGET_DB" -c "BEGIN; SET ROLE auth
 CROSS_TENANT="$(psql -v ON_ERROR_STOP=1 -At -d "$TARGET_DB" -c "BEGIN; SET ROLE authenticated; SET app.tenant_id='$TENANT_A'; SELECT count(*) FROM public.operational_events WHERE tenant_id='$TENANT_B'; COMMIT" | tail -n 1)"
 SOURCE_AFTER="$(psql -v ON_ERROR_STOP=1 -At -d "$SOURCE_DB" -c 'SELECT count(*) FROM public.operational_events')"
 END_MS="$(date +%s%3N)"
-RTO_MS="$((END_MS-START_MS))"
+RTO_MS="$((END_MS-RESTORE_START_MS))"
 POST_SNAPSHOT_ROWS="$((SOURCE_AFTER-RESTORED_EVENTS))"
 PRE_SNAPSHOT_LOST="$((EXPECTED_EVENTS-RESTORED_EVENTS))"
 
