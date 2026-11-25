@@ -115,14 +115,14 @@
           "requirement": "Company → region → branch → shift → transaction drill-down",
           "source_status": "GATE",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Moved from BLOCKED to PARTIAL because src/executive-drilldown-authorization.mjs adds fail-closed tenant/parent-chain/branch-scope checks for company-to-transaction ancestry; source query adapters, authorization at each persisted level and Finance KPI tie-out/browser E2E remain missing.",
+          "evidence_or_gap": "Trusted ancestry resolver, UI integration, target-vs-actual and runtime evidence remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Moved from BLOCKED to PARTIAL because src/executive-drilldown-authorization.mjs adds fail-closed tenant/parent-chain/branch-scope checks for company-to-transaction ancestry; source query adapters, authorization at each persisted level and Finance KPI tie-out/browser E2E remain missing.",
+          "implementation_evidence": "Moved from BLOCKED to PARTIAL because src/executive-drilldown-authorization.mjs adds fail-closed tenant/parent-chain/branch-scope checks for company-to-transaction ancestry; source query adapters, authorization at each persisted level and Finance KPI tie-out/browser E2E remain missing. src/executive-drilldown-authorization.mjs: Fail-closed hierarchy authorization requires complete ancestry, tenant match and authorization at each level; finance source reconciliation required at transaction level.",
           "evidence": "src/executive-drilldown-authorization.mjs validates tenant ancestry and branch scope; source query adapters and per-level persisted authorization remain open."
         },
         {
@@ -1056,14 +1056,14 @@
           "requirement": "AP handoff and supplier payment",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Moved to PARTIAL because src/procurement-ap-journal.mjs builds a balanced AP journal draft only from approved, three-way-matched invoice lines and explicit expense/AP accounts; persisted posting, period/approval controls, payment execution and supplier settlement reconciliation remain missing.",
+          "evidence_or_gap": "Invoice intake/storage, AP journal persistence, payment provider integration, return/credit note workflow and runtime reconciliation remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 130
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Moved to PARTIAL because src/procurement-ap-journal.mjs builds a balanced AP journal draft only from approved, three-way-matched invoice lines and explicit expense/AP accounts; persisted posting, period/approval controls, payment execution and supplier settlement reconciliation remain missing.",
+          "implementation_evidence": "Moved to PARTIAL because src/procurement-ap-journal.mjs builds a balanced AP journal draft only from approved, three-way-matched invoice lines and explicit expense/AP accounts; persisted posting, period/approval controls, payment execution and supplier settlement reconciliation remain missing. src/procurement-ap-settlement.mjs: Settlement gate requires approved invoice, independent AP approval, balanced posted journal, executed payment reference, reconciled bank/provider settlement and approved credit notes.",
           "evidence": "src/procurement-ap-journal.mjs builds balanced AP journal draft only from approved three-way matched invoice lines; src/procurement-payment-reconciliation.mjs requires executed supplier payment, final unique settlements and posted/reconciled AP journal. Persistence, payment rail, return/credit-note handling and runtime AP reconciliation remain open."
         },
         {
@@ -1302,14 +1302,14 @@
           "requirement": "Cancel/retry/provider exception handling",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Moved to PARTIAL because signed webhook verification and collision-safe duplicate event decision kernel now exist; durable retry/backoff/dead-letter, cancel/compensation and provider adapter remain missing.",
+          "evidence_or_gap": "Provider-specific signature adapter, durable event dedupe/retry queue, compensation workflow, UI upload and live provider remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 155
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Moved to PARTIAL because signed webhook verification and collision-safe duplicate event decision kernel now exist; durable retry/backoff/dead-letter, cancel/compensation and provider adapter remain missing."
+          "implementation_evidence": "Moved to PARTIAL because signed webhook verification and collision-safe duplicate event decision kernel now exist; durable retry/backoff/dead-letter, cancel/compensation and provider adapter remain missing. src/delivery-webhook-verification.mjs: Provider-neutral HMAC signature verification, timestamp replay window, event id/body hash collision detection and private proof-upload intent contract are present."
         },
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
@@ -1836,14 +1836,14 @@
           "requirement": "Opening project and readiness",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "src/franchise-opening-governance.mjs enforces signed versioned contract, approved site evidence, ten named opening checks, independent verifier and verified tenant/branch provisioning before opening eligibility; not yet wired to persisted workflow.",
+          "evidence_or_gap": "Tenant/branch provisioning, contract lifecycle, renewals/closure and runtime evidence remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 207
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/franchise-opening-governance.mjs enforces signed versioned contract, approved site evidence, ten named opening checks, independent verifier and verified tenant/branch provisioning before opening eligibility; not yet wired to persisted workflow."
+          "implementation_evidence": "src/franchise-opening-governance.mjs enforces signed versioned contract, approved site evidence, ten named opening checks, independent verifier and verified tenant/branch provisioning before opening eligibility; not yet wired to persisted workflow. src/franchise-opening-gates.mjs: Opening gate requires approved application, passed due diligence with evidence/reviewer, versioned signed contract hash, all opening gates and independent verification."
         },
         {
           "requirement": "Agreements and contract expiry",
@@ -1878,14 +1878,14 @@
           "requirement": "Territory and franchise-specific access",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Moved to PARTIAL because src/franchise-opening-governance.mjs detects active/reserved city and postal-code territory conflicts; authoritative territory geometry, persisted reservation locks and API/RLS access enforcement remain missing.",
+          "evidence_or_gap": "Persistent geospatial conflict query and tenant/territory RLS/API authorization integration remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 210
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Moved to PARTIAL because src/franchise-opening-governance.mjs detects active/reserved city and postal-code territory conflicts; authoritative territory geometry, persisted reservation locks and API/RLS access enforcement remain missing.",
+          "implementation_evidence": "Moved to PARTIAL because src/franchise-opening-governance.mjs detects active/reserved city and postal-code territory conflicts; authoritative territory geometry, persisted reservation locks and API/RLS access enforcement remain missing. src/franchise-opening-gates.mjs: Opening eligibility requires clear timestamped territory checks and fail-closed evidence.",
           "evidence": "src/franchise-opening-governance.mjs checks active/reserved city/postal overlap and opening gates; authoritative territory reservation locks and API/RLS access enforcement remain missing."
         },
         {
@@ -1937,14 +1937,14 @@
           "requirement": "Official KPI dictionary and versioning",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "src/bi-lineage-freshness.mjs requires active metric, exact approved formula version, declared source set, tenant-scoped source row IDs/hashes, period-covering fresh complete watermarks and reviewed passed reconciliation.",
+          "evidence_or_gap": "Ingestion/aggregation jobs, persisted lineage/watermarks and published snapshots remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 217
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/bi-lineage-freshness.mjs requires active metric, exact approved formula version, declared source set, tenant-scoped source row IDs/hashes, period-covering fresh complete watermarks and reviewed passed reconciliation.",
+          "implementation_evidence": "src/bi-lineage-freshness.mjs requires active metric, exact approved formula version, declared source set, tenant-scoped source row IDs/hashes, period-covering fresh complete watermarks and reviewed passed reconciliation. src/bi-publication-readiness.mjs: Publication readiness requires active versioned metric, approved formula, declared source lineage, complete fresh source windows, passed reconciliation and independent reviewer.",
           "progress_pct": null,
           "evidence": "src/bi-lineage-freshness.mjs enforces active metric/formula version, declared sources, source hashes, complete fresh period watermarks and reviewed reconciliation; formula governance UI and ingestion jobs remain open."
         },
@@ -2334,14 +2334,14 @@
           "requirement": "Plans, subscriptions, entitlements and quotas",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Existing SQL draft contains entitlement checks and idempotent usage RPC; new post-commit coordinator prevents client-side/pre-commit usage fabrication. Full enforcement on every authoritative API still unproven.",
+          "evidence_or_gap": "Atomic DB meter RPC, quota reservation/enforcement across every API, invoice/payment settlement and lifecycle operations remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 246
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Existing SQL draft contains entitlement checks and idempotent usage RPC; new post-commit coordinator prevents client-side/pre-commit usage fabrication. Full enforcement on every authoritative API still unproven.",
+          "implementation_evidence": "Existing SQL draft contains entitlement checks and idempotent usage RPC; new post-commit coordinator prevents client-side/pre-commit usage fabrication. Full enforcement on every authoritative API still unproven. src/saas-usage-commit-contract.mjs: Usage event contract requires authoritative committed operation, matching tenant/source, idempotency key, units and active feature entitlement.",
           "progress_pct": null,
           "evidence": "src/saas-entitlement-enforcement.mjs provides a fail-closed tenant/subscription/entitlement/quota gate; src/saas-post-commit-metering.mjs meters only after authoritative commit. All mutation API routes, atomic quota reservation, durable retry/outbox and runtime usage settlement remain open."
         },
@@ -2349,14 +2349,14 @@
           "requirement": "Billing, invoices and usage metering",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "src/saas-post-commit-metering.mjs refuses metering without authoritative commit ID, calls server-side usage RPC only after commit, and surfaces metering failure with retry context; durable outbox retry and invoice/payment settlement remain missing.",
+          "evidence_or_gap": "Invoice/payment execution, suspension/reactivation and settlement reconciliation remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 247
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "src/saas-post-commit-metering.mjs refuses metering without authoritative commit ID, calls server-side usage RPC only after commit, and surfaces metering failure with retry context; durable outbox retry and invoice/payment settlement remain missing.",
+          "implementation_evidence": "src/saas-post-commit-metering.mjs refuses metering without authoritative commit ID, calls server-side usage RPC only after commit, and surfaces metering failure with retry context; durable outbox retry and invoice/payment settlement remain missing. src/saas-usage-commit-contract.mjs: Usage event contract only emits after authoritative commit; persistence must enforce tenant/idempotency uniqueness.",
           "progress_pct": null
         },
         {
