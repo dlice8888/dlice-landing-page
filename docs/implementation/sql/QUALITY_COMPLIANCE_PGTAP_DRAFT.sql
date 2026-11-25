@@ -1,7 +1,7 @@
 -- PGTAP DRAFT — run only after applying QUALITY_COMPLIANCE_SCHEMA_DRAFT.sql
 -- and QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql to a disposable local DB.
 begin;
-select plan(36);
+select plan(46);
 
 select ok(to_regclass('public.food_lot_registry') is not null,'food lot registry exists');
 select ok(to_regclass('public.food_lot_distributions') is not null,'food lot distribution trace exists');
@@ -49,6 +49,28 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
 
 select ok(to_regclass('public.food_lot_one_active_quarantine_uq') is not null,'food lot active quarantine uniqueness index exists');
 select ok(to_regclass('public.supplier_quality_one_active_quarantine_uq') is not null,'supplier active quarantine uniqueness index exists');
+
+
+select throws_ok($select public.quality_request_food_safety_policy(null::uuid,null::uuid,'cold'::text,5::numeric,1::numeric,'{}'::text[],now(),null::timestamptz,'quality-invalid-1'::text,null::uuid)$,
+ '22023','INVALID_FOOD_SAFETY_POLICY_REQUEST','food safety policy rejects invalid temperature ranges');
+select throws_ok($select public.quality_request_supplier_quality_policy(null::uuid,null::uuid,null::uuid,'{}'::text[],now(),null::timestamptz,'quality-invalid-2'::text,null::uuid)$,
+ '22023','INVALID_SUPPLIER_QUALITY_POLICY_REQUEST','supplier policy requires a supplier and valid scope');
+select throws_ok($select public.quality_register_food_lot(null::uuid,null::uuid,'unknown'::text,null::uuid,'LOT'::text,1::numeric,'kg'::text,'quality-invalid-3'::text,null::uuid)$,
+ '22023','INVALID_FOOD_LOT_REGISTRATION','food lot rejects unsupported source types');
+select throws_ok($select public.quality_link_food_lot_distribution(null::uuid,null::uuid,null::uuid,'unknown'::text,null::uuid,null::numeric,'quality-invalid-4'::text,null::uuid)$,
+ '22023','INVALID_FOOD_LOT_DISTRIBUTION','lot distribution rejects unsupported impact types');
+select throws_ok($select public.quality_record_food_safety_inspection(null::uuid,null::uuid,'unknown'::text,null::uuid,'LOT'::text,null::uuid,2::numeric,'{}'::text[],'quality-invalid-5'::text,null::uuid)$,
+ '22023','INVALID_FOOD_SAFETY_INSPECTION','food safety inspection rejects unsupported source types');
+select throws_ok($select public.quality_initiate_food_recall(null::uuid,null::uuid,'LOT'::text,'reason'::text,'urgent'::text,'quality-invalid-6'::text,null::uuid)$,
+ '22023','INVALID_FOOD_RECALL_COMMAND','recall rejects unsupported severity');
+select throws_ok($select public.quality_record_supplier_quality_inspection(null::uuid,null::uuid,null::uuid,null::uuid,null::jsonb,'quality-invalid-7'::text,null::uuid)$,
+ '22023','INVALID_SUPPLIER_QUALITY_INSPECTION','supplier inspection requires findings');
+select throws_ok($select public.quality_verify_supplier_capa(null::uuid,null::uuid,null::uuid,'approved'::text,'evidence'::text,false,null::uuid)$,
+ '22023','INVALID_SUPPLIER_CAPA_VERIFICATION','CAPA verifier rejects unsupported decisions');
+select throws_ok($select public.quality_request_food_lot_release(null::uuid,null::uuid,null::uuid,'x'::text,'x'::text,'quality-invalid-8'::text,null::uuid)$,
+ '22023','FOOD_LOT_RELEASE_EVIDENCE_REQUIRED','food lot release requires evidence');
+select throws_ok($select public.quality_approve_food_lot_release(null::uuid,null::uuid,null::uuid,'pending'::text,'evidence'::text,'quality-invalid-9'::text,null::uuid)$,
+ '22023','INVALID_FOOD_LOT_RELEASE_DECISION','food lot release decision is constrained');
 
 select * from finish();
 rollback;
