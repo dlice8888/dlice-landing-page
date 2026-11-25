@@ -45,6 +45,15 @@
 - CRM Edge actions intentionally return a fail-closed response for non-Platform-Owner callers while `TENANT_ISOLATION_RELEASED=false`. This is a temporary implementation boundary, not final role coverage.
 - The CRM workspace will not function against staging until the draft is reconciled, generated as a proper Supabase migration, reviewed, replayed and applied during the final batch.
 
+## CRM transaction identity linking increment (2026-11-25)
+
+- Added the `erp-crm-link-paid-transaction` Edge action, still Platform-Owner-only while tenant isolation is unreleased.
+- The action accepts only `online_order` or `pos_sale` source IDs, reloads the source record server-side, requires `payment_status='paid'`, derives its branch from the source row, and verifies that branch belongs to the selected tenant. A nullable/unassigned online-order branch is rejected rather than guessed.
+- Online-order customer identity is matched from the order WhatsApp number. POS `customer_reference` is treated as a phone only when the entire value is phone-shaped; arbitrary labels are never converted to digits. Otherwise an explicit CRM customer selection is required.
+- The action creates or reuses a tenant-scoped CRM customer, inserts the unique `crm_transaction_links` record, returns an idempotent success for the same link, and rejects relinking a source transaction to a different customer. It does not grant loyalty points.
+- Added a CRM workspace form to link a paid online order or POS sale to a customer. The UI does not decide whether a sale is eligible for points.
+- Automatic loyalty earning remains intentionally blocked until the actual Finance/POS reconciliation source and authoritative net-sales fields are mapped. Payment status alone is not proof of reconciled net sales. No fabricated points or revenue basis is used.
+
 ## HR source implementation added after CRM reconnaissance
 
 - Added an HR workspace to `erp.html` for active branch staff and attendance event capture.
