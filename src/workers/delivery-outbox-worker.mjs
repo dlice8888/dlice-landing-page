@@ -21,8 +21,8 @@ export async function runDeliveryOutboxBatch({adapter,providerAdapters,loadSecre
    if(typeof provider?.book!=="function")throw Object.assign(new Error("Provider adapter unavailable"),{code:"DELIVERY_PROVIDER_ADAPTER_UNAVAILABLE"});
    const result=await provider.book({dispatch:context.dispatch,quote:context.quote,order:context.order,secret,idempotencyKey:job.idempotency_key});
    if(!result?.success){
-    await adapter.confirmProviderBooking({tenantId:job.tenant_id,dispatchId:job.dispatch_id,succeeded:false,errorCode:result?.errorCode||"PROVIDER_BOOKING_FAILED",actorId:context.dispatch.created_by});
     const finished=await adapter.finishOutbox({outboxId:job.id,workerId,succeeded:false,errorCode:result?.errorCode||"PROVIDER_BOOKING_FAILED",retryAfterSeconds:result?.retryAfterSeconds||60});
+    if(finished.status==="dead_letter")await adapter.confirmProviderBooking({tenantId:job.tenant_id,dispatchId:job.dispatch_id,succeeded:false,errorCode:result?.errorCode||"PROVIDER_BOOKING_FAILED",actorId:context.dispatch.created_by});
     results.push({outboxId:job.id,status:finished.status,errorCode:result?.errorCode||"PROVIDER_BOOKING_FAILED"});
     continue;
    }
@@ -31,6 +31,9 @@ export async function runDeliveryOutboxBatch({adapter,providerAdapters,loadSecre
    results.push({outboxId:job.id,status:finished.status,dispatchId:job.dispatch_id});
   }catch(error){
    const finished=await adapter.finishOutbox({outboxId:job.id,workerId,succeeded:false,errorCode:error?.code||"DELIVERY_WORKER_FAILED",retryAfterSeconds:60});
+   if(finished.status==="dead_letter"&&job.event_type==="book"){
+    try{const context=await adapter.getOutboxJobContext({outboxId:job.id,workerId});await adapter.confirmProviderBooking({tenantId:job.tenant_id,dispatchId:job.dispatch_id,succeeded:false,errorCode:error?.code||"DELIVERY_WORKER_FAILED",actorId:context.dispatch.created_by});}catch{}
+   }
    results.push({outboxId:job.id,status:finished.status,errorCode:error?.code||"DELIVERY_WORKER_FAILED"});
   }
  }
