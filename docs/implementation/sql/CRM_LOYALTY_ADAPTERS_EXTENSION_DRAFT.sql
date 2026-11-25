@@ -407,3 +407,146 @@ begin
     execute format('grant select,insert,update,delete on public.%I to service_role',t);
   end loop;
 end $$;
+
+
+-- Provider configuration is a secret-name reference only. A real provider
+-- adapter must be explicitly approved before campaign outbox can be queued.
+create table if not exists public.crm_campaign_provider_configs (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references public.tenants(id) on delete restrict,
+  provider_id text not null check(length(btrim(provider_id)) between 2 and 100),
+  channel text not null check(channel in ('email','sms','whatsapp')),
+  credential_secret_reference text not null check(credential_secret_reference ~ '^[A-Z][A-Z0-9_]{2,119}$'),
+  status text not null default 'pending' check(status in ('pending','active','suspended','revoked')),
+  created_by uuid not null references auth.users(id) on delete restrict,
+  approved_by uuid null references auth.users(id) on delete restrict,
+  approved_at timestamptz null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(tenant_id,id),
+  unique(tenant_id,provider_id,channel),
+  check(status<>'active' or (approved_by is not null and approved_at is not null and approved_by<>created_by))
+);
+
+create or replace function public.crm_approve_campaign_provider_config(
+  p_tenant_id uuid,p_config_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.crm_campaign_provider_configs%rowtype;
+begin
+  select * into v from public.crm_campaign_provider_configs
+   where tenant_id=p_tenant_id and id=p_config_id for update;
+  if not found then raise exception using errcode='P0002',message='CRM_CAMPAIGN_PROVIDER_CONFIG_NOT_FOUND'; end if;
+  if v.status<>'pending' then raise exception using errcode='23514',message='CRM_CAMPAIGN_PROVIDER_CONFIG_NOT_PENDING'; end if;
+  if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_CAMPAIGN_PROVIDER_APPROVER_REQUIRED'; end if;
+  update public.crm_campaign_provider_configs set status='active',approved_by=p_actor_user_id,
+   approved_at=now(),updated_at=now() where id=p_config_id returning * into v;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'crm.campaign.provider_config_approved','crm_campaign_provider_configs',v.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'provider_id',v.provider_id,'channel',v.channel,
+    'credential_secret_reference',v.credential_secret_reference));
+  return jsonb_build_object('config_id',v.id,'provider_id',v.provider_id,'channel',v.channel,'status',v.status);
+end $$;
+revoke all on function public.crm_approve_campaign_provider_config(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_approve_campaign_provider_config(uuid,uuid,uuid) to service_role;
+
+-- Convert consent-filtered recipients into durable provider-neutral outbox
+-- rows. No network call occurs in this database function.
+create or replace function public.crm_queue_campaign_outbox(
+ p_tenant_id uuid,p_campaign_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v_campaign public.crm_marketing_campaigns%rowtype;
+ v_provider public.crm_campaign_provider_configs%rowtype; v_count integer;
+begin
+ select * into v_campaign from public.crm_marketing_campaigns
+  where tenant_id=p_tenant_id and id=p_campaign_id for update;
+ if not found then raise exception using errcode='P0002',message='CRM_CAMPAIGN_NOT_FOUND'; end if;
+ if v_campaign.status not in ('audience_prepared','queued','sending') then
+  raise exception using errcode='23514',message='CRM_CAMPAIGN_AUDIENCE_NOT_PREPARED';
+ end if;
+ select * into v_provider from public.crm_campaign_provider_configs
+  where tenant_id=p_tenant_id and channel=v_campaign.channel and status='active'
+  order by approved_at desc limit 1;
+ if not found then raise exception using errcode='23514',message='APPROVED_CAMPAIGN_PROVIDER_REQUIRED'; end if;
+ insert into public.crm_campaign_outbox(
+  tenant_id,campaign_id,recipient_id,provider_id,channel,destination_snapshot,
+  rendered_payload,status,attempts,next_attempt_at,idempotency_key
+ )
+ select r.tenant_id,r.campaign_id,r.id,v_provider.provider_id,v_campaign.channel,
+  r.destination_snapshot,
+  jsonb_build_object('campaign_id',v_campaign.id,'channel',v_campaign.channel,
+   'subject',v_campaign.subject,'message',v_campaign.message_template,
+   'recipient_id',r.id,'customer_id',r.customer_id),
+  'queued',0,now(),v_campaign.id::text||':'||r.id::text
+ from public.crm_campaign_recipients r
+ where r.tenant_id=p_tenant_id and r.campaign_id=p_campaign_id and r.status='queued'
+ on conflict(tenant_id,idempotency_key) do nothing;
+ get diagnostics v_count=row_count;
+ update public.crm_marketing_campaigns set status='queued',updated_at=now() where id=p_campaign_id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'crm.campaign.outbox_queued','crm_marketing_campaign',p_campaign_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'queued_count',v_count,'provider_id',v_provider.provider_id));
+ return jsonb_build_object('campaign_id',p_campaign_id,'queued_count',v_count,'provider_id',v_provider.provider_id);
+end $$;
+revoke all on function public.crm_queue_campaign_outbox(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_queue_campaign_outbox(uuid,uuid,uuid) to service_role;
+
+-- Atomic worker claim with SKIP LOCKED prevents two workers from sending
+-- the same outbox row. Provider delivery is performed outside this transaction.
+create or replace function public.crm_claim_campaign_outbox(
+ p_tenant_id uuid,p_provider_id text,p_limit integer
+) returns setof public.crm_campaign_outbox
+language plpgsql security invoker set search_path=''
+as $$
+begin
+ if p_limit<1 or p_limit>100 then raise exception using errcode='22023',message='INVALID_CAMPAIGN_CLAIM_LIMIT'; end if;
+ return query
+ with picked as (
+  select id from public.crm_campaign_outbox
+  where tenant_id=p_tenant_id and provider_id=p_provider_id
+   and status in ('queued','failed') and coalesce(next_attempt_at,now())<=now()
+  order by created_at,id for update skip locked limit p_limit
+ )
+ update public.crm_campaign_outbox o set status='claimed',attempts=o.attempts+1,updated_at=now()
+ from picked where o.id=picked.id returning o.*;
+end $$;
+revoke all on function public.crm_claim_campaign_outbox(uuid,text,integer) from public,anon,authenticated;
+grant execute on function public.crm_claim_campaign_outbox(uuid,text,integer) to service_role;
+
+create or replace function public.crm_finalize_campaign_outbox(
+ p_tenant_id uuid,p_outbox_id uuid,p_status text,p_provider_message_id text,
+ p_error_code text,p_max_attempts integer default 5
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.crm_campaign_outbox%rowtype; v_next text;
+begin
+ select * into v from public.crm_campaign_outbox where tenant_id=p_tenant_id and id=p_outbox_id for update;
+ if not found then raise exception using errcode='P0002',message='CRM_CAMPAIGN_OUTBOX_NOT_FOUND'; end if;
+ if v.status<>'claimed' then raise exception using errcode='23514',message='CRM_CAMPAIGN_OUTBOX_NOT_CLAIMED'; end if;
+ if p_status='accepted' and length(btrim(coalesce(p_provider_message_id,'')))>0 then
+  update public.crm_campaign_outbox set status='accepted',provider_message_id=p_provider_message_id,
+   last_error_code=null,updated_at=now() where id=p_outbox_id returning * into v;
+  update public.crm_campaign_recipients set status='sent',provider_message_id=p_provider_message_id,
+   attempted_at=now() where tenant_id=p_tenant_id and id=v.recipient_id;
+ elsif p_status='failed' then
+  v_next:=case when v.attempts>=p_max_attempts then 'dead_letter' else 'failed' end;
+  update public.crm_campaign_outbox set status=v_next,last_error_code=left(coalesce(p_error_code,'PROVIDER_SEND_FAILED'),100),
+   next_attempt_at=case when v_next='failed' then now()+make_interval(secs=>least(3600,power(2,least(v.attempts,10))::integer*15)) else null end,
+   updated_at=now() where id=p_outbox_id returning * into v;
+  update public.crm_campaign_recipients set status='failed',failure_reason=v.last_error_code,
+   attempted_at=now() where tenant_id=p_tenant_id and id=v.recipient_id;
+ else
+  raise exception using errcode='22023',message='INVALID_CAMPAIGN_OUTBOX_RESULT';
+ end if;
+ return jsonb_build_object('outbox_id',v.id,'status',v.status,'attempts',v.attempts,
+  'provider_message_id',v.provider_message_id,'next_attempt_at',v.next_attempt_at);
+end $$;
+revoke all on function public.crm_finalize_campaign_outbox(uuid,uuid,text,text,text,integer) from public,anon,authenticated;
+grant execute on function public.crm_finalize_campaign_outbox(uuid,uuid,text,text,text,integer) to service_role;
+
+alter table public.crm_campaign_provider_configs enable row level security;
+drop policy if exists service_role_only on public.crm_campaign_provider_configs;
+create policy service_role_only on public.crm_campaign_provider_configs for all to service_role using(true) with check(true);
+revoke all on public.crm_campaign_provider_configs from anon,authenticated;
+grant select,insert,update,delete on public.crm_campaign_provider_configs to service_role;
