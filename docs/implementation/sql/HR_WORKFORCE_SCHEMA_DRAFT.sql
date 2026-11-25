@@ -72,7 +72,7 @@ create table if not exists public.hr_leave_requests (
   foreign key (tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
   check (ends_on>=starts_on),
   check (coverage_employee_user_id is null or coverage_employee_user_id<>employee_user_id),
-  check (status<>'approved' or (reviewed_by is not null and (leave_type='sick' or (coverage_employee_user_id is not null and coverage_approved=true))))
+  check (status<>'approved' or (reviewed_by is not null and reviewed_by<>employee_user_id and (leave_type='sick' or (coverage_employee_user_id is not null and coverage_approved=true))))
 );
 create index if not exists hr_leave_branch_period_idx
   on public.hr_leave_requests(tenant_id,branch_id,starts_on,ends_on,status);
@@ -142,6 +142,7 @@ create table if not exists public.hr_payroll_lines (
   deductions_amount_idr bigint not null check (deductions_amount_idr>=0),
   net_amount_idr bigint generated always as (gross_amount_idr-deductions_amount_idr) stored,
   source_timesheet_ids uuid[] not null default '{}',
+  created_by uuid not null references auth.users(id) on delete restrict,
   created_at timestamptz not null default now(),
   unique (tenant_id,id),
   unique (tenant_id,payroll_run_id,employee_user_id),
