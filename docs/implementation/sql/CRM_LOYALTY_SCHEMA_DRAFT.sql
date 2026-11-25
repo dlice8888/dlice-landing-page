@@ -180,7 +180,7 @@ returns trigger
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $$
 declare
   v_row jsonb := to_jsonb(new);
   v_actor_id uuid;
@@ -198,7 +198,7 @@ begin
   );
   return new;
 end;
-$;
+$$;
 revoke all on function public.crm_audit_insert_row() from public,anon,authenticated;
 drop trigger if exists crm_customers_audit_insert on public.crm_customers;
 create trigger crm_customers_audit_insert after insert on public.crm_customers
@@ -298,7 +298,7 @@ create or replace function public.crm_redeem_reward(
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $$
 declare
   v_reward public.crm_rewards%rowtype;
   v_voucher public.crm_reward_vouchers%rowtype;
@@ -350,13 +350,13 @@ begin
   return jsonb_build_object('voucher_id',v_voucher.id,'voucher_code',v_voucher.code,
     'points_cost',v_voucher.points_cost,'expires_at',v_voucher.expires_at,'balance_after',v_balance-v_voucher.points_cost);
 end;
-$;
+$$;
 revoke all on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) to service_role;
 
 create or replace function public.crm_approve_campaign(p_tenant_id uuid,p_campaign_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.crm_marketing_campaigns%rowtype;
 begin
  select * into v from public.crm_marketing_campaigns where tenant_id=p_tenant_id and id=p_campaign_id for update;
@@ -373,7 +373,7 @@ grant execute on function public.crm_approve_campaign(uuid,uuid,uuid) to service
 
 create or replace function public.crm_prepare_campaign_audience(p_tenant_id uuid,p_campaign_id uuid,p_actor_user_id uuid)
 returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_campaign public.crm_marketing_campaigns%rowtype; v_inserted integer; v_suppressed integer;
 begin
  select * into v_campaign from public.crm_marketing_campaigns where tenant_id=p_tenant_id and id=p_campaign_id for update;
