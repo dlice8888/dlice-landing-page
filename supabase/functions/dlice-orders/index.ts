@@ -2828,6 +2828,16 @@ if (action === "admin-set-profile-role") {
     if(orderError)return fail("Pesanan belum dapat diverifikasi.",503,origin);
     if(!order)return fail("Pesanan tidak ditemukan.",404,origin);
     if(!order.branch_id||!await branchAccess(order.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("id,tenant_id").eq("id",order.branch_id).maybeSingle();
+    if(branchError)return fail("Kepemilikan tenant/cabang belum dapat diverifikasi.",503,origin);
+    if(!branch)return fail("Cabang pesanan tidak ditemukan.",404,origin);
+    const {data:providerConfig,error:providerConfigError}=await admin.from("delivery_provider_configs")
+      .select("id,provider_key,integration_mode,status")
+      .eq("tenant_id",branch.tenant_id).eq("branch_id",branch.id)
+      .eq("provider_key",provider).eq("status","active").eq("integration_mode","manual")
+      .maybeSingle();
+    if(providerConfigError)return fail("Konfigurasi provider delivery belum tersedia. Terapkan schema extension dan setujui provider pada batch final.",503,origin);
+    if(!providerConfig)return fail("Provider belum disetujui untuk booking manual pada tenant/cabang ini.",403,origin);
     const {data,error}=await admin.rpc("delivery_book_dispatch",{
       p_order_id:orderId,p_provider:provider,p_provider_service:providerService,
       p_tracking_number:trackingNumber,p_tracking_url:trackingUrl,p_delivery_fee_idr:deliveryFee,
