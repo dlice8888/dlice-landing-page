@@ -248,6 +248,8 @@ grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,te
 alter table public.saas_tenant_offboarding_requests add column if not exists idempotency_key text null;
 create unique index if not exists saas_offboarding_idempotency_uq
  on public.saas_tenant_offboarding_requests(tenant_id,idempotency_key) where idempotency_key is not null;
+create unique index if not exists saas_invoice_period_uq
+ on public.saas_invoices(tenant_id,subscription_id,period_start,period_end);
 
 -- Revoke the legacy usage RPC without actor/audit context; use the audited overload below.
 revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated,service_role;
@@ -374,7 +376,7 @@ create or replace function public.saas_issue_invoice(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v_sub public.saas_tenant_subscriptions%rowtype; v_plan public.saas_plan_versions%rowtype;
- v_invoice public.saas_invoices%rowtype; v_number text;
+ v_invoice public.saas_invoices%rowtype; v_number text; v_next_start timestamptz; v_next_end timestamptz;
 begin
  if p_period_end<p_period_start or p_tax_idr<0 or p_due_at<=now()
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
@@ -383,12 +385,29 @@ begin
  select * into v_invoice from public.saas_invoices where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
  if found then return jsonb_build_object('status','duplicate','invoice_id',v_invoice.id,'invoice_status',v_invoice.status); end if;
  select * into v_sub from public.saas_tenant_subscriptions where tenant_id=p_tenant_id and id=p_subscription_id for update;
- if not found or v_sub.status not in ('active','past_due') or
+ if not found then raise exception using errcode='23514',message='SAAS_BILLABLE_SUBSCRIPTION_PERIOD_REQUIRED'; end if;
+ select * into v_plan from public.saas_plan_versions where id=v_sub.plan_version_id;
+ if not found then raise exception using errcode='23514',message='SAAS_PLAN_VERSION_NOT_FOUND'; end if;
+ if v_sub.status='trialing' then
+  if v_sub.trial_ends_at is null or v_sub.trial_ends_at>now() then
+   raise exception using errcode='23514',message='SAAS_TRIAL_NOT_EXPIRED';
+  end if;
+  v_next_start:=v_sub.trial_ends_at;
+  v_next_end:=case when v_plan.billing_interval='annual' then v_next_start+interval '1 year' else v_next_start+interval '1 month' end;
+  update public.saas_tenant_subscriptions set status='past_due',current_period_start=v_next_start,
+   current_period_end=v_next_end,grace_ends_at=now()+interval '7 days',updated_at=now()
+   where id=v_sub.id returning * into v_sub;
+ elsif v_sub.status='active' and v_sub.current_period_end<=now() then
+  v_next_start:=v_sub.current_period_end;
+  v_next_end:=case when v_plan.billing_interval='annual' then v_next_start+interval '1 year' else v_next_start+interval '1 month' end;
+  update public.saas_tenant_subscriptions set status='past_due',current_period_start=v_next_start,
+   current_period_end=v_next_end,grace_ends_at=now()+interval '7 days',updated_at=now()
+   where id=v_sub.id returning * into v_sub;
+ end if;
+ if v_sub.status not in ('active','past_due') or
   v_sub.current_period_start::date<>p_period_start or v_sub.current_period_end::date<>p_period_end then
   raise exception using errcode='23514',message='SAAS_BILLABLE_SUBSCRIPTION_PERIOD_REQUIRED';
  end if;
- select * into v_plan from public.saas_plan_versions where id=v_sub.plan_version_id;
- if not found then raise exception using errcode='23514',message='SAAS_PLAN_VERSION_NOT_FOUND'; end if;
  v_number:='SAAS-'||to_char(p_period_start,'YYYYMM')||'-'||upper(substr(replace(gen_random_uuid()::text,'-',''),1,8));
  insert into public.saas_invoices(tenant_id,subscription_id,invoice_number,period_start,period_end,subtotal_idr,tax_idr,
   status,issued_at,due_at,idempotency_key)
