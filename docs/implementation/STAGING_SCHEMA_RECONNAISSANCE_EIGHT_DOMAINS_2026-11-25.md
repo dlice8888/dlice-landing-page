@@ -187,3 +187,17 @@ The following additional domain-boundary modules were added on the active featur
 - `src/crm-campaign-delivery.mjs` additionally enforces consent expiry and handles signed receipt/unsubscribe event contracts with duplicate collision protection and bounded retry/dead-letter decisions.
 
 The feature matrix evidence was refreshed for these workflows. Overall counts remain 126 PARTIAL / 59 NOT VERIFIED / 4 BLOCKED / 0 DONE out of 189; no feature was promoted to DONE. These are implementation starts, not E2E acceptance. Tests, merges, migrations and staging/production mutations remain deferred to the final batch as requested. CI may run automatically from source commits and is tracked separately.
+
+
+## Eight-domain workflow contract increments (source-only, 2026-11-25)
+
+The active feature branch now contains the following additional pure workflow contracts. These are implementation increments, not completion claims:
+
+- Delivery: `src/delivery-webhook-verification.mjs` includes HMAC signature verification over the raw body, timestamp replay-window validation, stable event identity/body-digest collision handling, and a private proof-upload intent with MIME/size/path constraints. No courier provider is selected; the signature format is a provider-neutral adapter contract until provider docs/credentials are approved.
+- Franchise: `src/franchise-opening-gates.mjs` requires clear territory checks, complete evidenced due diligence, versioned signed contract hash, all opening gates and independent verification before declaring provisioning eligible. It does not provision a tenant or branch.
+- BI: `src/bi-publication-readiness.mjs` blocks publication unless the active metric/formula versions align, every declared source has complete fresh lineage/window evidence, source reconciliation passes, and a reviewer independent of the formula approver reviews publication. It does not ingest or aggregate data.
+- SaaS: `src/saas-usage-commit-contract.mjs` refuses client-asserted usage and only constructs a usage event from a committed authoritative operation, tenant/source identity, idempotency key and active entitlement. Atomic persistence/quota enforcement remain required.
+- Procurement: `src/procurement-ap-settlement.mjs` requires approved invoice, independent approval, balanced posted AP journal, executed payment with provider reference, reconciled settlement and approved credit notes. Three-way match alone is insufficient.
+- Executive: existing `src/executive-drilldown-authorization.mjs` is recorded as the fail-closed company-to-transaction ancestry authorization contract; the resolver must use trusted DB ancestry and authorize each level. Finance reconciliation is required at the transaction leaf.
+
+These modules are not yet wired to Edge Function routes, database RPCs, durable queues or UI. No test suite, migration, merge or staging/production data mutation was run. The final integration/E2E/reconciliation batch remains deferred as requested.
