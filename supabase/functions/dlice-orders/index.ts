@@ -1850,7 +1850,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -1859,11 +1859,53 @@ if (action === "admin-set-profile-role") {
     if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
     if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
     if(action==="erp-bi-list-snapshots"){
-      const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").order("period_end",{ascending:false}).limit(200);
+      const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).order("period_end",{ascending:false}).limit(200);
       if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
       return json({snapshots:data||[]},200,origin);
     }
-    if(action==="erp-executive-branch-kpis"){
+        if(action==="erp-bi-list-reconciliations"){
+       const {data,error}=await admin.from("bi_reconciliation_runs")
+        .select("id,period_start,period_end,source_domain,source_reference,expected_total,observed_total,variance,tolerance,status,created_by,reviewed_by,reviewed_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
+       if(error)return fail("Rekonsiliasi BI belum tersedia. Terapkan schema pada batch final.",503,origin);
+       return json({reconciliations:data||[]},200,origin);
+     }
+     if(action==="erp-bi-review-reconciliation"){
+       const reconciliationId=safeText(body.reconciliation_id,64),decision=safeText(body.decision,20),
+        waiverReason=safeText(body.waiver_reason,1000)||null;
+       if(!/^[0-9a-f-]{36}$/i.test(reconciliationId)||!["passed","failed","waived"].includes(decision)||
+        (decision==="waived"&&(!waiverReason||waiverReason.length<10)))
+        return fail("Keputusan review BI atau alasan waiver tidak valid.",422,origin);
+       const {data,error}=await admin.rpc("bi_review_reconciliation_run",{
+        p_reconciliation_id:reconciliationId,p_decision:decision,p_waiver_reason:waiverReason,p_actor_user_id:actor.user.id,
+       });
+       if(error)return fail("Review rekonsiliasi BI ditolak. Reviewer harus berbeda dari pembuat dan variance harus dalam toleransi.",409,origin);
+       return json({reconciliation:data},200,origin);
+     }
+     if(action==="erp-bi-publish-snapshot"){
+       const snapshotId=safeText(body.snapshot_id,64);
+       if(!/^[0-9a-f-]{36}$/i.test(snapshotId))return fail("Snapshot ID tidak valid.",422,origin);
+       const {data,error}=await admin.rpc("bi_publish_metric_snapshot",{p_snapshot_id:snapshotId,p_actor_user_id:actor.user.id});
+       if(error)return fail("Snapshot belum dapat dipublikasikan. Periksa lineage, watermark freshness, completeness, rekonsiliasi dan independensi publisher.",409,origin);
+       return json({snapshot:data},200,origin);
+     }
+     if(action==="erp-bi-register-source-lineage"){
+       const metricId=safeText(body.metric_id,64),version=Number(body.formula_version),
+        sourceEntity=safeText(body.source_entity,100),sourceField=safeText(body.source_field,160),
+        sourceKey=safeText(body.source_key,160),joinRule=safeText(body.join_rule,500),
+        aggregationRule=safeText(body.aggregation_rule,500),transformation=safeText(body.transformation_reference,500);
+       if(!/^[0-9a-f-]{36}$/i.test(metricId)||!Number.isInteger(version)||version<1||
+        sourceEntity.length<2||!sourceField||!sourceKey||joinRule.length<3||aggregationRule.length<3||transformation.length<3)
+        return fail("Pemetaan lineage BI tidak lengkap.",422,origin);
+       const {data,error}=await admin.rpc("bi_register_metric_source_lineage",{
+        p_metric_id:metricId,p_formula_version:version,p_source_entity:sourceEntity,p_source_field:sourceField,
+        p_source_key:sourceKey,p_join_rule:joinRule,p_aggregation_rule:aggregationRule,
+        p_transformation_reference:transformation,p_actor_user_id:actor.user.id,
+       });
+       if(error)return fail("Lineage BI ditolak. Metrik harus aktif dan approver harus independen dari pembuat metrik.",409,origin);
+       return json({lineage:data},200,origin);
+     }
+if(action==="erp-executive-branch-kpis"){
       const [branches,snapshots]=await Promise.all([
         admin.from("branches").select("id,code,name,status").eq("tenant_id",tenantId).order("code").limit(200),
         admin.from("bi_metric_snapshots").select("id,metric_value,period_start,period_end,dimension_value,formula_version,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").eq("dimension_key","branch_id").order("period_end",{ascending:false}).limit(3000)
