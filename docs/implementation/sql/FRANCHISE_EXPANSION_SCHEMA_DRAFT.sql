@@ -185,6 +185,7 @@ begin
  if not found then raise exception using errcode='P0002',message='FRANCHISE_APPLICATION_NOT_FOUND'; end if;
  v_previous_status:=v_app.status;
  if v_app.status in ('approved','rejected','withdrawn') then raise exception using errcode='23514',message='FRANCHISE_APPLICATION_TERMINAL'; end if;
+ if p_decision='approved' and v_app.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_FRANCHISE_APPROVER_REQUIRED'; end if;
  if p_decision='approved' then
   if v_app.status<>'due_diligence' then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_REQUIRED'; end if;
   select count(*),count(*) filter(where status in ('passed','waived')) into v_checks,v_passed
@@ -301,6 +302,7 @@ begin
  if p_status='approved' and length(btrim(coalesce(p_evidence_reference,'')))<8 then raise exception using errcode='22023',message='SITE_EVIDENCE_REQUIRED'; end if;
  select * into v_site from public.franchise_sites where id=p_site_id for update;
  if not found then raise exception using errcode='P0002',message='FRANCHISE_SITE_NOT_FOUND'; end if;
+ if exists(select 1 from public.franchise_applications a where a.id=v_site.application_id and a.created_by=p_actor_user_id) then raise exception using errcode='42501',message='APPLICANT_CANNOT_APPROVE_OWN_SITE'; end if;
  update public.franchise_sites set feasibility_status=p_status,evidence_reference=case when p_status='approved' then p_evidence_reference else evidence_reference end,
   reviewed_by=p_actor_user_id,reviewed_at=now() where id=p_site_id returning * into v_site;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
