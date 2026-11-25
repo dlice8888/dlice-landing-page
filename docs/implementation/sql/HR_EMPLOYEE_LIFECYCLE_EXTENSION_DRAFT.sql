@@ -195,6 +195,15 @@ begin
     'terminated_on',v_record.terminated_on);
   v_branch:=coalesce(p_new_branch_id,v_record.primary_branch_id);
   v_position:=coalesce(p_new_job_position_id,v_record.job_position_id);
+  if p_event_type='transfer' and (p_new_branch_id is null or p_new_branch_id=v_record.primary_branch_id) then
+    raise exception using errcode='22023',message='HR_TRANSFER_REQUIRES_DIFFERENT_TARGET_BRANCH';
+  end if;
+  if p_event_type='position_change' and (p_new_job_position_id is null or p_new_job_position_id=v_record.job_position_id) then
+    raise exception using errcode='22023',message='HR_POSITION_CHANGE_REQUIRES_DIFFERENT_POSITION';
+  end if;
+  if p_event_type='reactivated' and (p_new_branch_id is null or p_new_job_position_id is null) then
+    raise exception using errcode='22023',message='HR_REACTIVATION_REQUIRES_BRANCH_AND_POSITION';
+  end if;
 
   if p_event_type in ('transfer','position_change','reactivated') then
     if not exists(select 1 from public.branches b join public.job_positions jp on jp.id=v_position and jp.is_active=true
