@@ -9096,7 +9096,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Server-enforced entitlements and usage limits missing.",
+      "evidence_or_gap": "PR #145 now has plan-version/entitlement tables, tenant-locked server-side quota checks, trial/grace-aware entitlement decisions, idempotent usage RPC and committed-event metering worker. Entitlement checks are not yet enforced on every API/Edge mutation; plan upgrades/downgrades and 150-branch quota E2E remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 246
@@ -9146,10 +9146,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "saas_atomic_subscription_billing_metering_and_offboarding",
+            "commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+            "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
       }
     },
     {
@@ -9159,7 +9161,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Subscription billing and idempotent usage ledger missing.",
+      "evidence_or_gap": "PR #145 adds audited usage metering, atomic invoice issuance, invoice payment status/partial settlement RPC and an invoice issuance worker/UI. Provider-signed webhook, gateway adapter, tax treatment, proration, dunning and Finance settlement reconciliation remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 247
@@ -9209,10 +9211,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "saas_atomic_subscription_billing_metering_and_offboarding",
+            "commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+            "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
       }
     },
     {
@@ -9222,7 +9226,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Lifecycle and grace/suspension behavior missing.",
+      "evidence_or_gap": "PR #145 adds trial expiry handling during invoice issuance, grace-window entitlement checks, past_due transition, subscription cancellation and payment-based reactivation. Scheduled grace expiry/suspension, retry/dunning and service restoration E2E are not yet wired.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 248
@@ -9272,10 +9276,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "saas_atomic_subscription_billing_metering_and_offboarding",
+            "commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+            "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
       }
     },
     {
@@ -9340,7 +9346,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Audited export, retention and deletion workflow missing.",
+      "evidence_or_gap": "PR #145 adds idempotent offboarding request, independent approval, legal-hold blocking, retention window, subscription suspension when approved and independent completion evidence. Export generation, object/data deletion policy and deletion execution are intentionally not implemented.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 250
@@ -9390,10 +9396,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "saas_atomic_subscription_billing_metering_and_offboarding",
+            "commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+            "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
       }
     },
     {
@@ -11469,6 +11477,44 @@
       "pgTap": "NOT_RUN",
       "source_collectors": "NOT_IMPLEMENTED",
       "scheduled_worker": "NOT_WIRED",
+      "staging_migration": "NOT_APPLIED"
+    },
+    "saas_increment": {
+      "pr": 145,
+      "latest_head": "9f86d3efc583a021a027f6279a10c2ecf2fe9947",
+      "feature_ids": [
+        "D16-F03",
+        "D16-F04",
+        "D16-F05",
+        "D16-F07"
+      ],
+      "sql": "docs/implementation/sql/SAAS_TENANT_BILLING_SCHEMA_DRAFT.sql",
+      "adapter": "src/supabase-saas-adapter.mjs",
+      "workers": [
+        "src/workers/saas-billing-metering-worker.mjs"
+      ],
+      "edge_actions": [
+        "erp-saas-start-trial",
+        "erp-saas-cancel-subscription",
+        "erp-saas-request-offboarding",
+        "erp-saas-approve-offboarding",
+        "erp-saas-complete-offboarding",
+        "erp-saas-list-invoices",
+        "erp-saas-issue-invoice"
+      ],
+      "ui": [
+        "subscription_lifecycle",
+        "invoice_issuance_and_list",
+        "offboarding_retention_completion"
+      ],
+      "contract_test": "tests/contracts/saas-billing-metering-contract.test.mjs",
+      "exact_head_ci": "NOT_OBSERVED",
+      "disposable_replay": "NOT_RUN",
+      "pgTap": "NOT_RUN",
+      "payment_webhook": "NOT_IMPLEMENTED_PROVIDER_SPECIFIC",
+      "api_wide_entitlement_enforcement": "NOT_COMPLETE",
+      "scheduled_dunning": "NOT_WIRED",
+      "data_export_deletion": "NOT_IMPLEMENTED",
       "staging_migration": "NOT_APPLIED"
     }
   }
