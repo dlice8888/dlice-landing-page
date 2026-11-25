@@ -1362,6 +1362,8 @@ if (action === "admin-set-profile-role") {
     "erp-hr-submit-payroll-run",
     "erp-hr-approve-payroll-run",
     "erp-hr-queue-payroll-finance",
+    "erp-hr-post-payroll-finance",
+    "erp-hr-reconcile-payroll-finance",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1445,7 +1447,7 @@ if (action === "admin-set-profile-role") {
       return json({compensation_rate:data},201,origin);
     }
     if(action==="erp-hr-list-payroll-runs"){
-      const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at,hr_payroll_finance_outbox(status,finance_journal_reference,reconciliation_reference)").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      const {data,error}=await admin.from("hr_payroll_runs").select("id,branch_id,period_start,period_end,gross_amount_idr,deductions_amount_idr,net_amount_idr,status,created_by,generated_by,submitted_by,approved_by,approved_at,posted_at,hr_payroll_finance_postings(id,status,finance_entry_ids,posted_at,reconciled_at,reconciliation_sha256)").eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
       if(error)return fail("Payroll belum tersedia. Terapkan skema HR pada batch migrasi final.",503,origin);
       return json({payroll_runs:data||[]},200,origin);
     }
@@ -1459,12 +1461,31 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-hr-queue-payroll-finance"){
       const payrollId=safeText(body.payroll_run_id,64);
       if(!/^[0-9a-f-]{36}$/i.test(payrollId))return fail("Payroll run tidak valid.",422,origin);
-      const {data:run,error:runError}=await admin.from("hr_payroll_runs").select("id,tenant_id,branch_id,status").eq("id",payrollId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
-      if(runError)return fail("Payroll belum dapat diverifikasi untuk antrean Finance.",503,origin);
+      const {data:run,error:runError}=await admin.from("hr_payroll_runs").select("id,tenant_id,branch_id,period_start,period_end,status").eq("id",payrollId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(runError)return fail("Payroll belum dapat diverifikasi untuk Finance.",503,origin);
       if(!run||run.status!=="approved")return fail("Hanya payroll approved pada tenant/cabang ini yang dapat disiapkan untuk Finance.",409,origin);
-      const {data,error}=await admin.rpc("hr_queue_payroll_finance_posting",{p_payroll_run_id:payrollId,p_actor_user_id:actor.user.id});
-      if(error)return fail("Payroll tidak dapat masuk antrean Finance. Periksa approval independen, timesheet, rate efektif, dan rekonsiliasi total.",409,origin);
-      return json({finance_outbox:data},201,origin);
+      const {data:period,error:periodError}=await admin.from("fiscal_periods").select("id").eq("status","open").lte("starts_on",run.period_start).gte("ends_on",run.period_end).maybeSingle();
+      if(periodError)return fail("Periode fiskal terbuka tidak dapat ditentukan secara unik.",409,origin);
+      if(!period)return fail("Tidak ada fiscal period terbuka yang mencakup seluruh periode payroll.",409,origin);
+      const {data,error}=await admin.rpc("hr_prepare_payroll_finance_posting",{
+        p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_payroll_run_id:payrollId,
+        p_fiscal_period_id:period.id,p_idempotency_key:"hr-payroll-finance:"+payrollId,
+        p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Payroll tidak dapat disiapkan ke jurnal Finance. Periksa mapping akun yang disetujui, approval independen, timesheet, rate efektif, dan total payroll.",409,origin);
+      return json({finance_posting:data},201,origin);
+    }
+    if(action==="erp-hr-post-payroll-finance"||action==="erp-hr-reconcile-payroll-finance"){
+      const postingId=safeText(body.posting_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(postingId))return fail("Finance posting ID tidak valid.",422,origin);
+      const {data:posting,error:postingError}=await admin.from("hr_payroll_finance_postings")
+        .select("id,tenant_id,branch_id,status").eq("id",postingId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(postingError)return fail("Finance posting belum dapat diverifikasi.",503,origin);
+      if(!posting)return fail("Finance posting tidak ditemukan pada tenant/cabang ini.",404,origin);
+      const rpc=action==="erp-hr-post-payroll-finance"?"hr_post_payroll_finance_posting":"hr_reconcile_payroll_finance_posting";
+      const {data,error}=await admin.rpc(rpc,{p_tenant_id:branch.tenant_id,p_posting_id:postingId,p_actor_user_id:actor.user.id});
+      if(error)return fail(action==="erp-hr-post-payroll-finance"?"Posting ditolak. Pastikan pembuat, submitter, dan approver berbeda dari poster serta jurnal masih draft.":"Rekonsiliasi ditolak. Pastikan jurnal sudah posted, total cocok, dan reconciler independen.",409,origin);
+      return json({finance_posting:data},200,origin);
     }
     if(action==="erp-hr-submit-payroll-run"||action==="erp-hr-approve-payroll-run"){
       const payrollId=safeText(body.payroll_run_id,64);
