@@ -40,7 +40,7 @@ const erpAuthorizationCoverage = () => {
       /admin\.rpc\("dlice_accept_tenant_invite_atomic"/.test(block) &&
       /p_actor_user_id:\s*actor\.user\.id/.test(block) &&
       /tokenHash/.test(block)) continue;
-    if (!/hasPerm\(|isOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
+    if (!/hasPerm\(|isOwner\b|isPlatformOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block)) {
       missing.push(action);
     }
   }
