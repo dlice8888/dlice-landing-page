@@ -1352,7 +1352,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
+  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription","erp-saas-list-offboarding","erp-saas-request-offboarding","erp-saas-approve-offboarding"]);
   if(saasActions.has(action)){
     if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
     if(action==="erp-saas-list-plan-versions"){
@@ -1383,6 +1383,30 @@ if (action === "admin-set-profile-role") {
       if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
       await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.trial_started",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,plan_version_id:planId,trial_days:days}});
       return json({subscription:data},201,origin);
+    }
+    if(action==="erp-saas-list-offboarding"){
+      const {data,error}=await admin.from("saas_tenant_offboarding_requests").select("id,status,reason,legal_hold,legal_hold_reference,requested_by,approved_by,approved_at,retention_until,created_at").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(20);
+      if(error)return fail("Offboarding belum tersedia. Terapkan migrasi SaaS pada batch final.",503,origin);
+      return json({requests:data||[]},200,origin);
+    }
+    if(action==="erp-saas-request-offboarding"){
+      const reason=safeText(body.reason,1000);
+      if(reason.length<8)return fail("Alasan offboarding minimal 8 karakter.",422,origin);
+      const {data,error}=await admin.from("saas_tenant_offboarding_requests").insert({tenant_id:tenantId,reason,requested_by:actor.user.id})
+       .select("id,status,reason,requested_by,created_at").single();
+      if(error)return fail("Permintaan offboarding gagal dibuat atau sudah ada permintaan terbuka.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.tenant.offboarding.requested",entity_type:"saas_tenant_offboarding_request",entity_id:data.id,metadata:{tenant_id:tenantId}});
+      return json({request:data},201,origin);
+    }
+    if(action==="erp-saas-approve-offboarding"){
+      const requestId=safeText(body.request_id,64),days=Number(body.retention_days??365),legalHold=body.legal_hold===true,reference=safeText(body.legal_hold_reference,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(requestId)||!Number.isInteger(days)||days<30||days>3650||(legalHold&&(!reference||reference.length<8)))return fail("Persetujuan offboarding atau retention/hold tidak valid.",422,origin);
+      const {data:request,error:requestError}=await admin.from("saas_tenant_offboarding_requests").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",requestId).maybeSingle();
+      if(requestError)return fail("Permintaan offboarding belum dapat diverifikasi.",503,origin);
+      if(!request)return fail("Permintaan offboarding tidak ditemukan.",404,origin);
+      const {data,error}=await admin.rpc("saas_approve_offboarding",{p_request_id:requestId,p_actor_user_id:actor.user.id,p_retention_days:days,p_legal_hold:legalHold,p_legal_hold_reference:reference});
+      if(error)return fail("Persetujuan offboarding ditolak. Pemohon tidak boleh menyetujui permintaannya sendiri.",409,origin);
+      return json({offboarding:data},200,origin);
     }
     if(action==="erp-saas-cancel-subscription"){
       const subscriptionId=safeText(body.subscription_id,64),reason=safeText(body.reason,500);
