@@ -23,6 +23,7 @@ import {
   calculateCampaignRoi,
 } from "./crm-campaign-delivery.mjs";
 import { reconcilePayrollPayment } from "./hr-payroll-payment-reconciliation.mjs";
+import { enforceTenantEntitlement } from "./saas-entitlement-enforcement.mjs";
 
 const fail = (code, message) => {
   const error = new Error(message);
@@ -569,5 +570,105 @@ export async function reconcileApprovedPayrollPayment(input, deps) {
       entityType: "payroll_payment_reconciliation", entityId: saved.reconciliationId,
       idempotencyKey: scope.idempotencyKey });
     return Object.freeze({ ...result, reconciliationId: saved.reconciliationId });
+  });
+}
+
+
+/**
+ * SaaS: enforce plan entitlements before an authoritative tenant operation.
+ * The subscription and usage rows must be locked/read in the same transaction
+ * as the protected business operation by the caller's repository adapter.
+ */
+export async function enforceSaasTenantEntitlement(input, deps) {
+  const scope = {
+    tenantId: required(input?.tenantId, "tenantId"),
+    branchId: input?.branchId == null ? null : required(input.branchId, "branchId"),
+    actorId: required(input?.actorId, "actorId"),
+    idempotencyKey: required(input?.idempotencyKey, "idempotencyKey"),
+    action: "saas.entitlement.enforce",
+  };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const tenant = await adapter(deps, "loadTenantForEntitlement")(tx, scope.tenantId);
+    if (!tenant || tenant.id !== scope.tenantId) fail("TENANT_NOT_FOUND", "Tenant must be resolved from trusted database scope");
+    const subscription = await adapter(deps, "loadActiveSubscriptionForUpdate")(tx, scope.tenantId);
+    const entitlement = await adapter(deps, "loadPlanEntitlementForUpdate")(tx, {
+      tenantId: scope.tenantId, entitlementKey: required(input.entitlementKey, "entitlementKey"),
+    });
+    const usage = await adapter(deps, "loadCommittedUsageForPeriod")(tx, {
+      tenantId: scope.tenantId, entitlementKey: input.entitlementKey,
+      periodStart: subscription?.currentPeriodStart, periodEnd: subscription?.currentPeriodEnd,
+    });
+    const decision = enforceTenantEntitlement({
+      tenant, subscription, entitlement, usage,
+      requested: input.quantity ?? 1, now: input.now ?? Date.now(),
+    });
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "saas.entitlement.allowed", entityType: "saas_entitlement",
+      entityId: entitlement.id, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ ...decision, subscriptionId: subscription.id, entitlementId: entitlement.id });
+  });
+}
+
+/**
+ * SaaS: issue a subscription invoice from the effective plan version and an
+ * approved tax decision. Tax is never guessed or calculated from a hard-coded
+ * statutory rate; the tax adapter must return a reviewed amount and reference.
+ */
+export async function issueSaasSubscriptionInvoice(input, deps) {
+  const scope = {
+    tenantId: required(input?.tenantId, "tenantId"),
+    branchId: null,
+    actorId: required(input?.actorId, "actorId"),
+    idempotencyKey: required(input?.idempotencyKey, "idempotencyKey"),
+    action: "saas.billing.invoice.issue",
+  };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const subscription = await adapter(deps, "loadSubscriptionForBillingUpdate")(tx, input.subscriptionId);
+    if (!subscription || subscription.tenantId !== scope.tenantId ||
+        !["active", "past_due", "trialing"].includes(subscription.status)) {
+      fail("BILLABLE_SUBSCRIPTION_REQUIRED", "A billable tenant subscription is required");
+    }
+    const plan = await adapter(deps, "loadEffectivePlanVersion")(tx, subscription.planVersionId);
+    if (!plan || plan.active !== true || plan.id !== subscription.planVersionId ||
+        !Number.isSafeInteger(plan.priceIdr) || plan.priceIdr < 0) {
+      fail("EFFECTIVE_PLAN_VERSION_REQUIRED", "An active, effective and immutable plan version is required");
+    }
+    const period = await adapter(deps, "resolveInvoicePeriod")(tx, {
+      subscription, periodStart: input.periodStart, periodEnd: input.periodEnd,
+    });
+    if (!period?.start || !period?.end || period.end < period.start) {
+      fail("SAAS_INVOICE_PERIOD_INVALID", "Invoice period must be valid and subscription-scoped");
+    }
+    const existing = await adapter(deps, "findSaasInvoiceByIdempotencyKey")(tx, scope.tenantId, scope.idempotencyKey);
+    if (existing) return Object.freeze({ status: "duplicate", invoiceId: existing.id, invoiceNumber: existing.invoiceNumber });
+    const tax = await adapter(deps, "loadApprovedSaasTaxDecision")(tx, {
+      tenantId: scope.tenantId, plan, period,
+    });
+    if (!tax || tax.status !== "approved" || !tax.reference ||
+        !Number.isSafeInteger(tax.taxIdr) || tax.taxIdr < 0) {
+      fail("APPROVED_SAAS_TAX_DECISION_REQUIRED", "Invoice tax must come from an approved tax decision, including an explicit zero-tax decision");
+    }
+    const invoice = await adapter(deps, "insertIssuedSaasInvoice")(tx, {
+      tenantId: scope.tenantId, subscription, plan, period,
+      subtotalIdr: plan.priceIdr, taxIdr: tax.taxIdr,
+      taxReference: tax.reference, idempotencyKey: scope.idempotencyKey,
+      actorId: scope.actorId,
+    });
+    if (!invoice?.id || invoice.status !== "issued" || !invoice.invoiceNumber ||
+        invoice.subtotalIdr !== plan.priceIdr || invoice.taxIdr !== tax.taxIdr) {
+      fail("SAAS_INVOICE_PERSISTENCE_FAILED", "Issued invoice must persist the exact approved plan and tax amounts");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: null, actorId: scope.actorId,
+      action: "saas.billing.invoice_issued", entityType: "saas_invoice",
+      entityId: invoice.id, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({
+      status: "issued", invoiceId: invoice.id, invoiceNumber: invoice.invoiceNumber,
+      subtotalIdr: invoice.subtotalIdr, taxIdr: invoice.taxIdr,
+      totalIdr: invoice.totalIdr, dueAt: invoice.dueAt,
+    });
   });
 }
