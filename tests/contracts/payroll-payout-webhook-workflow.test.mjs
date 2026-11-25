@@ -74,3 +74,17 @@ test("provider business ID mismatch is blocked after scoped payment reload", asy
   await assert.rejects(ingestXenditPayrollPayoutWebhook({ rawBody: "raw", callbackToken: "verified" }, repository),
     { code: "PAYROLL_WEBHOOK_PROVIDER_SCOPE_MISMATCH" });
 });
+
+test("authenticated provider reversal is persisted then quarantined in Finance", async () => {
+  let quarantined;
+  const repository = deps({ incoming: { ...evidence, providerStatus: "REVERSED", eventId: "reverse-fingerprint" } });
+  repository.quarantineReversedPayrollPaymentClearing = async (_tx, args) => {
+    quarantined = args;
+    return { status: "reversal_exception" };
+  };
+  const result = await ingestXenditPayrollPayoutWebhook({ rawBody: "raw", callbackToken: "verified" }, repository);
+  assert.equal(result.status, "reversed");
+  assert.equal(result.reversalException, "reversal_exception");
+  assert.equal(quarantined.paymentItemId, payment.id);
+  assert.equal(quarantined.providerEventId, "stored-event-a");
+});
