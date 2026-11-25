@@ -2343,6 +2343,25 @@ if (action === "admin-set-profile-role") {
   }
 
 
+  if (action === "erp-transition-delivery-dispatch") {
+    if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin perubahan status pengiriman tidak diizinkan.",403,origin);
+    const dispatchId=safeText(body.dispatch_id,64),next=safeText(body.next_status,30),note=safeText(body.note,500)||"";
+    if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["picked_up","in_transit","delivered","failed","cancelled"].includes(next))return fail("Perintah status pengiriman tidak valid.",422,origin);
+    const {data:dispatch,error:dispatchError}=await admin.from("delivery_dispatches").select("id,branch_id,status").eq("id",dispatchId).maybeSingle();
+    if(dispatchError)return fail("Pengiriman belum dapat diverifikasi.",503,origin);
+    if(!dispatch)return fail("Pengiriman tidak ditemukan.",404,origin);
+    if(!await branchAccess(dispatch.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const eventId=crypto.randomUUID(),payload=JSON.stringify({dispatch_id:dispatchId,next_status:next,note,actor_id:actor.user.id,event_id:eventId});
+    const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(payload));
+    const payloadHash=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    const {data,error}=await admin.rpc("delivery_transition_dispatch",{p_dispatch_id:dispatchId,p_next_status:next,p_event_id:eventId,p_payload_hash:payloadHash,p_actor_user_id:actor.user.id,p_note:note});
+    if(error){
+      const duplicate=error.code==="23505",pod=String(error.message||"").includes("DELIVERY_PROOF_REQUIRED");
+      return fail(duplicate?"Event pengiriman sudah pernah dicatat.":pod?"Proof of delivery wajib diverifikasi sebelum status delivered.":"Transisi status pengiriman tidak diizinkan.",duplicate||pod?409:422,origin);
+    }
+    return json({dispatch:data},200,origin);
+  }
+
   if (action === "erp-list-delivery-dispatches") {
     if(!hasPerm("orders")&&!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin delivery tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),orderId=safeText(body.order_id,80);
