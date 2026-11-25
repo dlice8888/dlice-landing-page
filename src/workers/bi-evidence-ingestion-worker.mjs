@@ -21,7 +21,7 @@ export async function runBiEvidenceIngestion({tenantId,actorId,periodStart,perio
     if(!collected||typeof collected!=="object")fail("BI_SOURCE_EVIDENCE_INVALID","Collector returned no evidence for "+sourceKey);
     const ingestionRunId=(runIdempotencyKey+":"+metric.id+":"+sourceKey).slice(0,160);
     const recorded=await adapter.recordSourceWatermark({tenantId,sourceKey,windowStart:collected.windowStart,windowEnd:collected.windowEnd,
-     maxSourceUpdatedAt:collected.maxSourceUpdatedAt,expectedCount:collected.expectedCount,observedCount:collected.observedCount,ingestionRunId});
+     maxSourceUpdatedAt:collected.maxSourceUpdatedAt,expectedCount:collected.expectedCount,observedCount:collected.observedCount,ingestionRunId,actorId});
     if(!recorded?.watermark_id)fail("BI_WATERMARK_NOT_PERSISTED","Watermark was not persisted for "+sourceKey);
     watermarks.push(recorded.watermark_id);evidence.push({sourceKey,collected,watermark:recorded});
    }
