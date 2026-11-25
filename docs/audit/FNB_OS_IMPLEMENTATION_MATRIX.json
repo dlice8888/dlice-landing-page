@@ -1713,14 +1713,14 @@
           "requirement": "Payroll calculation/integration",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Provider integration and payroll reconciliation missing.",
+          "evidence_or_gap": "Calculation kernel now exists; end-to-end persistence, source approval, statutory configuration, Finance journal batch/payment/reconciliation and runtime evidence remain open.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 196
           },
           "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "supabase/functions/dlice-orders/index.ts; erp.html; docs/implementation/sql/HR_WORKFORCE_SCHEMA_DRAFT.sql — employee listing, attendance, schedules, leave, timesheets, effective-dated hourly compensation and payroll approval. Overtime/tax/deductions/payment and actual Finance journal posting remain gaps.",
+          "implementation_evidence": "supabase/functions/dlice-orders/index.ts; erp.html; docs/implementation/sql/HR_WORKFORCE_SCHEMA_DRAFT.sql — employee listing, attendance, schedules, leave, timesheets, effective-dated hourly compensation and payroll approval. Overtime/tax/deductions/payment and actual Finance journal posting remain gaps. src/hr-payroll-calculation.mjs adds deterministic hourly/monthly payroll calculation, approved effective-dated component validation, overtime multiplier input, allowances/benefits/deductions and net-pay calculation; not yet wired to Edge/SQL payroll persistence or Finance posting. Rates/tax/proration are explicit inputs, not defaults.",
           "progress_pct": null
         },
         {
