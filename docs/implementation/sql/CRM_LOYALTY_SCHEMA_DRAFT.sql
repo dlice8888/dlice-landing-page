@@ -360,8 +360,18 @@ begin
    for update;
   if not found then raise exception using errcode='P0002', message='REWARD_NOT_ACTIVE'; end if;
 
-  if exists(select 1 from public.crm_reward_vouchers where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
-    raise exception using errcode='23505', message='DUPLICATE_REDEMPTION';
+  select * into v_voucher from public.crm_reward_vouchers
+   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key for update;
+  if found then
+    if v_voucher.customer_id<>p_customer_id or v_voucher.reward_id<>p_reward_id
+       or v_voucher.points_cost<>v_reward.points_cost then
+      raise exception using errcode='23505', message='REWARD_REDEMPTION_IDEMPOTENCY_COLLISION';
+    end if;
+    select coalesce(sum(points),0) into v_balance from public.crm_loyalty_ledger
+     where tenant_id=p_tenant_id and customer_id=p_customer_id;
+    return jsonb_build_object('voucher_id',v_voucher.id,'voucher_code',v_voucher.code,
+      'points_cost',v_voucher.points_cost,'expires_at',v_voucher.expires_at,
+      'balance_after',v_balance,'duplicate',true);
   end if;
 
   select coalesce(sum(points),0) into v_balance from public.crm_loyalty_ledger
