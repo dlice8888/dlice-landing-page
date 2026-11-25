@@ -946,6 +946,7 @@ if (action === "admin-set-profile-role") {
     "erp-crm-list-customers",
     "erp-crm-link-paid-transaction",
     "erp-crm-build-financial-close",
+    "erp-crm-reconcile-financial-close",
     "erp-crm-award-reconciled-close",
     "erp-crm-create-customer",
     "erp-crm-record-consent",
@@ -1044,7 +1045,21 @@ if (action === "admin-set-profile-role") {
           return fail("Financial close belum lolos rekonsiliasi settlement, refund, kas shift, dan jurnal Finance.",409,origin);
         return fail("Financial close tidak dapat dibentuk dari bukti transaksi sumber.",503,origin);
       }
-      return json({financial_close:projection},projection?.status==="reconciled"?201:200,origin);
+      return json({financial_close:projection},projection?.status==="pending_finance_review"?201:200,origin);
+    }
+
+  if (action === "erp-crm-reconcile-financial-close") {
+      const projectionId=safeText(body.projection_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(projectionId))return fail("Projection ID tidak valid.",422,origin);
+      const {data:projection,error:projectionError}=await admin.from("crm_financial_close_projections")
+        .select("id,tenant_id,branch_id,status,created_by").eq("id",projectionId).eq("tenant_id",tenantId).maybeSingle();
+      if(projectionError)return fail("Projection belum dapat diverifikasi.",503,origin);
+      if(!projection)return fail("Projection tidak ditemukan pada tenant ini.",404,origin);
+      const {data,error}=await admin.rpc("crm_reconcile_financial_close_projection",{
+        p_tenant_id:tenantId,p_projection_id:projectionId,p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Rekonsiliasi Finance ditolak. Pastikan reviewer independen dan jurnal sumber/refund sudah posted serta cocok.",409,origin);
+      return json({financial_close_reconciliation:data},200,origin);
     }
 
   if (action === "erp-crm-award-reconciled-close") {
