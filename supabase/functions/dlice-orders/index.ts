@@ -945,6 +945,7 @@ if (action === "admin-set-profile-role") {
   const crmActions = new Set([
     "erp-crm-list-customers",
     "erp-crm-link-paid-transaction",
+    "erp-crm-award-reconciled-close",
     "erp-crm-create-customer",
     "erp-crm-record-consent",
     "erp-crm-list-loyalty-ledger",
@@ -967,6 +968,32 @@ if (action === "admin-set-profile-role") {
     const { data: tenant, error: tenantError } = await admin.from("tenants").select("id,status").eq("id", tenantId).maybeSingle();
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
+
+  if (action === "erp-crm-award-reconciled-close") {
+      const branchId=safeText(body.branch_id,64);
+      const sourceType=safeText(body.source_type,30);
+      const sourceId=safeText(body.source_id,64);
+      if(!branchId||!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(sourceId)||
+        !["online_order","pos_sale"].includes(sourceType))
+        return fail("Referensi penutupan transaksi tidak valid.",422,origin);
+      const {data:branch,error:branchError}=await admin.from("branches")
+        .select("id,tenant_id").eq("id",branchId).eq("tenant_id",tenantId).maybeSingle();
+      if(branchError)return fail("Tenant/cabang penutupan belum dapat diverifikasi.",503,origin);
+      if(!branch)return fail("Cabang penutupan bukan milik tenant ini.",403,origin);
+      const {data:award,error:awardError}=await admin.rpc("crm_award_loyalty_for_reconciled_close",{
+        p_tenant_id:tenantId,p_branch_id:branchId,p_source_type:sourceType,
+        p_source_id:sourceId,p_actor_user_id:actor.user.id,
+      });
+      if(awardError){
+        const message=String(awardError.message||"");
+        if(message.includes("FINANCIAL_CLOSE_NOT_RECONCILED"))return fail("Penutupan Finance belum direkonsiliasi lengkap; poin belum dapat diberikan.",409,origin);
+        if(message.includes("FINANCIAL_CLOSE_EVIDENCE_INCOMPLETE")||message.includes("REFUND_EVIDENCE_INCOMPLETE"))return fail("Bukti shift, refund, settlement atau Finance belum lengkap.",409,origin);
+        if(message.includes("SOURCE_CUSTOMER_IDENTITY_UNRESOLVED"))return fail("Transaksi belum ditautkan ke pelanggan CRM.",409,origin);
+        if(message.includes("APPROVED_EARNING_RULE_REQUIRED"))return fail("Aturan perolehan poin yang disetujui belum tersedia.",409,origin);
+        return fail("Pemberian poin dari financial close gagal diverifikasi.",503,origin);
+      }
+      return json({ok:true,loyalty_award:award},award?.status==="awarded"?201:200,origin);
+    }
 
   if (action === "erp-crm-link-paid-transaction") {
       const sourceType=safeText(body.source_type,30),sourceId=safeText(body.source_id,64);
