@@ -342,7 +342,8 @@ begin
   return jsonb_build_object('status','duplicate','reconciliation_id',v_existing.id,'reconciliation_status',v_existing.status);
  end if;
  select * into v_journal from public.finance_journal_entries where id=p_finance_journal_entry_id
-  and branch_id=p_branch_id and source_type='delivery_dispatch' and source_id=p_dispatch_id and status='posted';
+  and branch_id=p_branch_id and source_type='delivery_dispatch' and source_id=p_dispatch_id and status='posted'
+  and amount_idr=p_provider_settlement_idr;
  v_journal_found:=found;
  v_status:=case when v_journal_found and p_cod_expected_idr=p_cod_collected_idr and p_cod_collected_idr=p_cod_remitted_idr
   and p_courier_cost_final_idr=p_customer_fee_idr+p_merchant_subsidy_idr
@@ -511,3 +512,28 @@ begin
 end; $$;
 revoke all on function public.delivery_reconcile_cost(uuid,uuid,uuid,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,uuid,text,uuid) from public,anon,authenticated;
 grant execute on function public.delivery_reconcile_cost(uuid,uuid,uuid,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,bigint,uuid,text,uuid) to service_role;
+
+
+create or replace function public.delivery_get_outbox_job_context(p_outbox_id uuid,p_worker_id text)
+returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v public.delivery_outbox%rowtype; d public.delivery_dispatches%rowtype;
+ q public.delivery_provider_quotes%rowtype; c public.delivery_provider_configs%rowtype; o public.orders%rowtype;
+begin
+ select * into v from public.delivery_outbox where id=p_outbox_id and status='claimed' and claimed_by=p_worker_id for update;
+ if not found then raise exception using errcode='42501',message='DELIVERY_OUTBOX_CLAIM_MISMATCH'; end if;
+ select * into d from public.delivery_dispatches where tenant_id=v.tenant_id and id=v.dispatch_id;
+ if not found then raise exception using errcode='P0002',message='DELIVERY_DISPATCH_NOT_FOUND'; end if;
+ select * into c from public.delivery_provider_configs where tenant_id=d.tenant_id and provider_key=d.provider
+  and status='active' and (branch_id is null or branch_id=d.branch_id) order by branch_id nulls last limit 1;
+ if not found then raise exception using errcode='42501',message='ACTIVE_DELIVERY_PROVIDER_CONFIG_NOT_FOUND'; end if;
+ select * into q from public.delivery_provider_quotes where tenant_id=d.tenant_id and id=d.quote_id;
+ select * into o from public.orders where id=d.order_id;
+ return jsonb_build_object('outbox',to_jsonb(v),'dispatch',to_jsonb(d),'quote',case when q.id is null then null else to_jsonb(q) end,
+  'provider_config',jsonb_build_object('id',c.id,'provider_key',c.provider_key,'display_name',c.display_name,
+   'credential_secret_reference',c.credential_secret_reference,'integration_mode',c.integration_mode),
+  'order',jsonb_build_object('id',o.id,'branch_id',o.branch_id,'delivery_address',o.delivery_address,
+   'customer_name',o.customer_name,'customer_whatsapp',o.customer_whatsapp,'payment_status',o.payment_status));
+end; $$;
+revoke all on function public.delivery_get_outbox_job_context(uuid,text) from public,anon,authenticated;
+grant execute on function public.delivery_get_outbox_job_context(uuid,text) to service_role;
