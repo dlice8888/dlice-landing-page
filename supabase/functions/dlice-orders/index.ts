@@ -1125,6 +1125,72 @@ if (action === "admin-set-profile-role") {
     }
   }
 
+  // HR attendance reads/writes are branch-scoped. The branch tenant is always
+  // derived from the database; no caller-supplied tenant_id is trusted.
+  const hrActions = new Set([
+    "erp-hr-list-employees",
+    "erp-hr-list-attendance",
+    "erp-hr-record-attendance",
+  ]);
+  if (hrActions.has(action)) {
+    if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
+    const branchId = safeText(body.branch_id, 64);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(branchId)) return fail("Cabang tidak valid.", 422, origin);
+    if (!(await actorCanAccessBranch(branchId))) return fail("Akses cabang tidak diizinkan.", 403, origin);
+    const { data: branch, error: branchError } = await admin.from("branches").select("id,tenant_id,status").eq("id", branchId).maybeSingle();
+    if (branchError) return fail("Cabang belum dapat diverifikasi.", 503, origin);
+    if (!branch || !branch.tenant_id) return fail("Cabang tidak ditemukan.", 404, origin);
+
+    if (action === "erp-hr-list-employees") {
+      const { data, error } = await admin.from("branch_assignments")
+        .select("user_id,job_position_id,starts_on,ends_on,employment_status,job_positions(title),admin_profiles(display_name,username,is_active)")
+        .eq("branch_id", branchId).eq("employment_status", "active").lte("starts_on", todayDate())
+        .or("ends_on.is.null,ends_on.gte."+todayDate()).order("starts_on", { ascending: false });
+      if (error) return fail("Daftar staf cabang belum dapat dimuat.", 503, origin);
+      const employees = (data || []).filter((row: any) => row.admin_profiles?.is_active === true).map((row: any) => ({
+        user_id: row.user_id, display_name: row.admin_profiles?.display_name || row.admin_profiles?.username || row.user_id,
+        username: row.admin_profiles?.username || null, job_position_id: row.job_position_id,
+        job_title: row.job_positions?.title || null, starts_on: row.starts_on,
+      }));
+      return json({ employees }, 200, origin);
+    }
+
+    if (action === "erp-hr-list-attendance") {
+      const { data, error } = await admin.from("hr_attendance_events")
+        .select("id,employee_user_id,event_type,occurred_at,source,notes,idempotency_key")
+        .eq("tenant_id", branch.tenant_id).eq("branch_id", branchId)
+        .order("occurred_at", { ascending: false }).limit(150);
+      if (error) return fail("Data absensi belum tersedia. Pastikan skema HR diterapkan pada batch migrasi final.", 503, origin);
+      return json({ attendance: data || [] }, 200, origin);
+    }
+
+    if (action === "erp-hr-record-attendance") {
+      const employeeUserId = safeText(body.employee_user_id, 64);
+      const eventType = safeText(body.event_type, 20);
+      const idempotencyKey = safeText(body.idempotency_key, 120);
+      const notes = safeText(body.notes, 500) || null;
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(employeeUserId) ||
+          !["clock_in","clock_out","break_start","break_end"].includes(eventType) || idempotencyKey.length < 8) {
+        return fail("Perintah absensi tidak valid.", 422, origin);
+      }
+      const { data: assignment, error: assignmentError } = await admin.from("branch_assignments")
+        .select("id,admin_profiles!inner(is_active)").eq("branch_id", branchId)
+        .eq("user_id", employeeUserId).eq("employment_status", "active")
+        .eq("admin_profiles.is_active", true).lte("starts_on", todayDate())
+        .or("ends_on.is.null,ends_on.gte."+todayDate()).limit(1).maybeSingle();
+      if (assignmentError) return fail("Penugasan staf belum dapat diverifikasi.", 503, origin);
+      if (!assignment) return fail("Staf tidak memiliki penugasan aktif pada cabang ini.", 403, origin);
+      const source = employeeUserId === actor.user.id ? "mobile" : "manager";
+      const { data, error } = await admin.from("hr_attendance_events").insert({
+        tenant_id: branch.tenant_id, branch_id: branchId, employee_user_id: employeeUserId,
+        event_type: eventType, occurred_at: new Date().toISOString(), source,
+        idempotency_key: idempotencyKey, notes, recorded_by: actor.user.id,
+      }).select("id,employee_user_id,event_type,occurred_at,source,notes").single();
+      if (error) return fail(error.code === "23505" ? "Perintah absensi sudah pernah dicatat." : "Absensi belum dapat disimpan.", error.code === "23505" ? 409 : 503, origin);
+      return json({ attendance_event: data }, 201, origin);
+    }
+  }
+
   if (action === "erp-list-tenants") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin tenant tidak diizinkan.",403,origin);
     const tenantIds=await tenantIdsForActor().catch(()=>[]);
