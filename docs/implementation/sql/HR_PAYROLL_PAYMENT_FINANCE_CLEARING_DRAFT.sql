@@ -610,4 +610,5 @@ create trigger hr_payroll_payment_clearing_identity_guard
  before update on public.hr_payroll_payment_finance_clearings
  for each row execute function public.hr_guard_payroll_payment_clearing_identity();
 
--- Disposable replay follow-up: immutable evidence trigger delimiter corrected; rerun full replay before considering this draft eligible for migration review.
+-- Disposable replay follow-up: immutable evidence trigger delimiter corrected; exact-head replay and pgTAP are mandatory before migration review.
+-- This file is intentionally replayed only in a disposable local PostgreSQL/Supabase stack.
