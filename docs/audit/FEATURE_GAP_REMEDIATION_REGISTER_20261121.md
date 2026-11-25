@@ -1010,3 +1010,8 @@ PR #148 adds a free GitHub-hosted PostgreSQL 17 custom-format dump/restore rehea
 ### 150-branch concurrency test started — PR #149
 
 PR #149 adds a free PostgreSQL 17 database-only read/isolation benchmark with 150 Tenant A branches, Tenant B isolation, 50 concurrent pgbench clients, zero-failure assertions and p95/p99 measurements. Workflow completion is not yet verified. It does not represent the complete D’Lice POS/ERP API workload, write contention, Storage/Edge Function latency or production SLO. Keep this feature PARTIAL/IN_PROGRESS until the exact-head run passes and broader workload coverage is implemented.
+
+
+### Backup/restore result — PR #148 exact head
+
+The local PostgreSQL 17.11 restore drill has now passed on exact head `2456f6587891349fa3f99134f45f847e0ef8a1c1` (workflow `45662909781`) and the quality workflow passed (`45662909991`). It restored 151 branches and 151 committed events with checksum parity; no pre-snapshot rows lost; the one intentional post-snapshot row was not restored; RLS returned on 2/2 tables; Tenant A and B saw only 150/150 and 1/1 records respectively; cross-tenant visible rows were zero. Local restore verification measured 439 ms. This does not certify Supabase managed backup/PITR, Auth/Storage recovery or production RPO/RTO. Those are still gaps.
