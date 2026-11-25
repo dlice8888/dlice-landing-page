@@ -960,6 +960,10 @@ if (action === "admin-set-profile-role") {
     "erp-crm-create-campaign",
     "erp-crm-approve-campaign",
     "erp-crm-prepare-campaign-audience",
+    "erp-crm-queue-campaign-outbox",
+    "erp-crm-list-campaign-provider-configs",
+    "erp-crm-request-campaign-provider-config",
+    "erp-crm-approve-campaign-provider-config",
   ]);
   if (crmActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul CRM hanya dapat dikelola Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -968,6 +972,54 @@ if (action === "admin-set-profile-role") {
     const { data: tenant, error: tenantError } = await admin.from("tenants").select("id,status").eq("id", tenantId).maybeSingle();
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
+
+  if (action === "erp-crm-list-campaign-provider-configs") {
+      const {data,error}=await admin.from("crm_campaign_provider_configs")
+        .select("id,tenant_id,provider_id,channel,credential_secret_reference,status,created_by,approved_by,approved_at,created_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Konfigurasi provider campaign belum tersedia. Terapkan schema pada batch final.",503,origin);
+      return json({provider_configs:data||[]},200,origin);
+    }
+
+    if (action === "erp-crm-request-campaign-provider-config") {
+      const providerId=safeText(body.provider_id,100),channel=safeText(body.channel,20),
+        secretRef=safeText(body.credential_secret_reference,120);
+      if(providerId.length<2||!["email","sms","whatsapp"].includes(channel)||
+        !/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))
+        return fail("Provider, channel, atau nama secret environment tidak valid.",422,origin);
+      if(!Deno.env.get(secretRef))return fail("Secret provider belum tersedia pada environment Function. Nilai secret tidak dibaca atau ditampilkan.",409,origin);
+      const {data,error}=await admin.from("crm_campaign_provider_configs").insert({
+        tenant_id:tenantId,provider_id:providerId,channel,credential_secret_reference:secretRef,
+        status:"pending",created_by:actor.user.id,
+      }).select("id,tenant_id,provider_id,channel,credential_secret_reference,status,created_at").single();
+      if(error)return fail("Konfigurasi provider gagal disimpan. Pastikan belum ada konfigurasi duplikat.",409,origin);
+      return json({provider_config:data,approval_required:true},201,origin);
+    }
+
+    if (action === "erp-crm-approve-campaign-provider-config") {
+      const configId=safeText(body.provider_config_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(configId))return fail("Provider config ID tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("crm_approve_campaign_provider_config",{
+        p_tenant_id:tenantId,p_config_id:configId,p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Approval provider ditolak. Approver wajib berbeda dari pembuat konfigurasi.",409,origin);
+      return json({provider_config:data},200,origin);
+    }
+
+    if (action === "erp-crm-queue-campaign-outbox") {
+      const campaignId=safeText(body.campaign_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(campaignId))return fail("Campaign ID tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("crm_queue_campaign_outbox",{
+        p_tenant_id:tenantId,p_campaign_id:campaignId,p_actor_user_id:actor.user.id,
+      });
+      if(error){
+        const message=String(error.message||"");
+        if(message.includes("APPROVED_CAMPAIGN_PROVIDER_REQUIRED"))return fail("Provider campaign belum disetujui untuk channel ini.",409,origin);
+        if(message.includes("CRM_CAMPAIGN_AUDIENCE_NOT_PREPARED"))return fail("Audience campaign belum disiapkan atau campaign belum disetujui.",409,origin);
+        return fail("Outbox campaign gagal disiapkan.",503,origin);
+      }
+      return json({campaign_outbox:data},201,origin);
+    }
 
   if (action === "erp-crm-award-reconciled-close") {
       const branchId=safeText(body.branch_id,64);
