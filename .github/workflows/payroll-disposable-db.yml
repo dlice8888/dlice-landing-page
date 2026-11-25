@@ -30,6 +30,11 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: 3.4.0
+      - name: Initialize local Supabase config when absent
+        run: |
+          if [ ! -f supabase/config.toml ] && [ ! -f supabase/config.json ] && [ ! -f supabase/config.jsonc ]; then
+            supabase init --force
+          fi
       - name: Start disposable local Supabase stack
         run: supabase start
       - name: Replay canonical repository migrations
