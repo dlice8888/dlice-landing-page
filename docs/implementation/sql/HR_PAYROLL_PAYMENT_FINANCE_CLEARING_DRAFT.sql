@@ -89,6 +89,38 @@ create index if not exists hr_payroll_payment_clearing_status_idx
 create index if not exists hr_payroll_bank_statement_unmatched_idx
  on public.hr_payroll_bank_statement_lines(tenant_id,branch_id,provider_payout_reference);
 
+create or replace function public.hr_approve_payroll_payment_finance_mapping(
+ p_tenant_id uuid,p_mapping_id uuid,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.hr_payroll_payment_finance_mappings%rowtype;
+begin
+ select * into v from public.hr_payroll_payment_finance_mappings
+  where tenant_id=p_tenant_id and id=p_mapping_id for update;
+ if not found or v.status<>'pending' then
+  raise exception using errcode='23514',message='PENDING_PAYROLL_PAYMENT_FINANCE_MAPPING_REQUIRED';
+ end if;
+ if p_actor_user_id in (v.created_by,
+   (select created_by from public.hr_payroll_payment_provider_configs
+    where tenant_id=p_tenant_id and id=v.provider_config_id),
+   (select approved_by from public.hr_payroll_payment_provider_configs
+    where tenant_id=p_tenant_id and id=v.provider_config_id)) then
+  raise exception using errcode='42501',message='INDEPENDENT_PAYMENT_FINANCE_MAPPING_APPROVER_REQUIRED';
+ end if;
+ update public.hr_payroll_payment_finance_mappings
+  set status='approved',approved_by=p_actor_user_id,approved_at=now(),updated_at=now()
+  where id=v.id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'hr.payroll.payment_finance_mapping_approved',
+  'hr_payroll_payment_finance_mappings',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',v.branch_id,
+   'provider_config_id',v.provider_config_id,'payout_clearing_account',v.payout_clearing_account,
+   'bank_cash_account',v.bank_cash_account));
+ return jsonb_build_object('mapping_id',v.id,'status',v.status);
+end $;
+revoke all on function public.hr_approve_payroll_payment_finance_mapping(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.hr_approve_payroll_payment_finance_mapping(uuid,uuid,uuid) to service_role;
+
 create or replace function public.hr_post_payroll_payment_finance_clearing(
  p_tenant_id uuid,p_payment_batch_id uuid,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
@@ -103,6 +135,7 @@ declare
  v_entry_code text;
  v_count integer:=0;
  v_total bigint:=0;
+ v_payout_period_id uuid;
 begin
  select * into v_batch from public.hr_payroll_payment_batches
   where tenant_id=p_tenant_id and id=p_payment_batch_id for update;
@@ -143,11 +176,18 @@ begin
     or v_event.amount_idr<>v_item.amount_idr then
    raise exception using errcode='23514',message='AUTHENTICATED_SETTLEMENT_EVENT_REQUIRED_FOR_CLEARING';
   end if;
+  select id into v_payout_period_id from public.fiscal_periods
+   where status='open' and starts_on<=(v_event.occurred_at at time zone 'UTC')::date
+    and ends_on>=(v_event.occurred_at at time zone 'UTC')::date
+   order by starts_on desc limit 1 for share;
+  if v_payout_period_id is null then
+   raise exception using errcode='23514',message='OPEN_PAYOUT_FISCAL_PERIOD_REQUIRED';
+  end if;
   v_entry_code:='PCL-'||replace(v_batch.id::text,'-','')||'-'||replace(v_item.id::text,'-','');
   insert into public.finance_journal_entries(
    entry_code,fiscal_period_id,branch_id,source_type,source_id,entry_date,
    debit_account,credit_account,amount_idr,description,status,created_by
-  ) values(v_entry_code,v_post.fiscal_period_id,v_batch.branch_id,
+  ) values(v_entry_code,v_payout_period_id,v_batch.branch_id,
    'hr_payroll_payment_clearing',v_item.id,
    (v_event.occurred_at at time zone 'UTC')::date,
    v_map.payroll_payable_account,v_map.payout_clearing_account,v_item.amount_idr,
@@ -160,13 +200,6 @@ begin
    v_item.provider_reference,v_item.amount_idr,v_entry_id,p_actor_user_id);
   v_count:=v_count+1; v_total:=v_total+v_item.amount_idr;
  end loop;
- if v_total + coalesce((select sum(amount_idr) from public.hr_payroll_payment_finance_clearings
-    where tenant_id=p_tenant_id and payment_batch_id=v_batch.id
-     and payout_journal_entry_id is not null),0) < v_batch.amount_idr then
-  -- The aggregate is checked below using the durable rows; this branch is only
-  -- an early guard and does not mark the batch reconciled.
-  null;
- end if;
  if (select count(*) from public.hr_payroll_payment_finance_clearings
      where tenant_id=p_tenant_id and payment_batch_id=v_batch.id)<>v_batch.item_count
    or (select coalesce(sum(amount_idr),0) from public.hr_payroll_payment_finance_clearings
@@ -240,6 +273,7 @@ declare
  b public.hr_payroll_payment_batches%rowtype;
  v_entry_id uuid;
  v_code text;
+ v_bank_period_id uuid;
 begin
  select * into v from public.hr_payroll_payment_finance_clearings
   where tenant_id=p_tenant_id and id=p_clearing_id for update;
@@ -262,18 +296,24 @@ begin
   where tenant_id=p_tenant_id and bank_statement_line_id=s.id) then
   raise exception using errcode='23505',message='BANK_STATEMENT_LINE_ALREADY_MATCHED';
  end if;
- if p_actor_user_id in (v.created_by,b.created_by,b.approved_by,b.reconciled_by) then
+ if p_actor_user_id in (v.created_by,b.created_by,b.approved_by,b.reconciled_by,s.imported_by,m.created_by,m.approved_by) then
   raise exception using errcode='42501',message='INDEPENDENT_BANK_STATEMENT_RECONCILER_REQUIRED';
+ end if;
+ select id into v_bank_period_id from public.fiscal_periods
+  where status='open' and starts_on<=(s.booked_at at time zone 'UTC')::date
+   and ends_on>=(s.booked_at at time zone 'UTC')::date
+  order by starts_on desc limit 1 for share;
+ if v_bank_period_id is null then
+  raise exception using errcode='23514',message='OPEN_BANK_STATEMENT_FISCAL_PERIOD_REQUIRED';
  end if;
  v_code:='PBM-'||replace(v.id::text,'-','');
  insert into public.finance_journal_entries(
   entry_code,fiscal_period_id,branch_id,source_type,source_id,entry_date,
   debit_account,credit_account,amount_idr,description,status,created_by
- ) select v_code,fp.id,b.branch_id,'hr_payroll_bank_statement',s.id,
+ ) select v_code,v_bank_period_id,b.branch_id,'hr_payroll_bank_statement',s.id,
    (s.booked_at at time zone 'UTC')::date,m.payout_clearing_account,m.bank_cash_account,
    s.amount_idr,'Payroll bank statement payout match '||s.id::text,'posted',p_actor_user_id
-   from public.hr_payroll_finance_postings fp where fp.tenant_id=p_tenant_id and fp.id=b.finance_posting_id
- returning id into v_entry_id;
+   returning id into v_entry_id;
  if v_entry_id is null then raise exception using errcode='23503',message='PAYROLL_FINANCE_POSTING_NOT_FOUND'; end if;
  update public.hr_payroll_payment_finance_clearings set status='bank_matched',
   bank_statement_line_id=s.id,bank_journal_entry_id=v_entry_id,
