@@ -291,8 +291,9 @@ authenticated UI/API wiring where noted, and provider-specific contracts:
    lifecycle, Finance posting adapter and payment provider settlement.
 8. Wire Executive ranking persistence, target-vs-actual views, KPI aggregation,
    hierarchy drill-down routes and alert escalation.
-9. Add UI controls for the new provider configuration lifecycle and the newly
-   added workflow operations.
+9. Wire provider quote selection, booking status and tracking into the Delivery UI;
+   add operational screens for the newly added workflow operations beyond the
+   provider-configuration request/approval controls.
 
 No tests, migration replay, pgTAP, Edge type-check, staging data writes,
 Production changes or merges were performed. These remain reserved for the
