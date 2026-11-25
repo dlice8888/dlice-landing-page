@@ -1781,7 +1781,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription","erp-saas-list-offboarding","erp-saas-request-offboarding","erp-saas-approve-offboarding"]);
+  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription","erp-saas-list-offboarding","erp-saas-request-offboarding","erp-saas-approve-offboarding","erp-saas-complete-offboarding","erp-saas-list-invoices","erp-saas-issue-invoice"]);
   if(saasActions.has(action)){
     if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
     if(action==="erp-saas-list-plan-versions"){
@@ -1802,15 +1802,8 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-saas-start-trial"){
       const planId=safeText(body.plan_version_id,64),days=Number(body.trial_days??14);
       if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(days)||days<1||days>60)return fail("Paket atau durasi trial tidak valid.",422,origin);
-      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now);
-      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active,billing_interval").eq("id",planId).maybeSingle();
-      if(planError)return fail("Paket belum dapat diverifikasi.",503,origin);
-      if(!plan||!plan.active||new Date(plan.effective_from)>now||(plan.effective_to&&new Date(plan.effective_to)<now))return fail("Versi paket tidak aktif pada tanggal mulai.",409,origin);
-      if(plan.billing_interval==="annual")periodEnd.setFullYear(periodEnd.getFullYear()+1);else periodEnd.setMonth(periodEnd.getMonth()+1);if(end>periodEnd)periodEnd.setTime(end.getTime());
-      const {data,error}=await admin.from("saas_tenant_subscriptions").insert({tenant_id:tenantId,plan_version_id:planId,status:"trialing",starts_at:now.toISOString(),current_period_start:now.toISOString(),current_period_end:periodEnd.toISOString(),trial_ends_at:end.toISOString(),created_by:actor.user.id})
-        .select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at").single();
-      if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.trial_started",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,plan_version_id:planId,trial_days:days}});
+      const {data,error}=await admin.rpc("saas_start_trial",{p_tenant_id:tenantId,p_plan_version_id:planId,p_trial_days:days,p_actor_user_id:actor.user.id});
+      if(error)return fail("Trial SaaS gagal dibuat. Periksa masa berlaku paket dan pastikan tenant belum memiliki subscription aktif.",409,origin);
       return json({subscription:data},201,origin);
     }
     if(action==="erp-saas-list-offboarding"){
@@ -1821,10 +1814,9 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-saas-request-offboarding"){
       const reason=safeText(body.reason,1000);
       if(reason.length<8)return fail("Alasan offboarding minimal 8 karakter.",422,origin);
-      const {data,error}=await admin.from("saas_tenant_offboarding_requests").insert({tenant_id:tenantId,reason,requested_by:actor.user.id})
-       .select("id,status,reason,requested_by,created_at").single();
+      const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+      const {data,error}=await admin.rpc("saas_request_offboarding",{p_tenant_id:tenantId,p_reason:reason,p_idempotency_key:idempotencyKey,p_actor_user_id:actor.user.id});
       if(error)return fail("Permintaan offboarding gagal dibuat atau sudah ada permintaan terbuka.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.tenant.offboarding.requested",entity_type:"saas_tenant_offboarding_request",entity_id:data.id,metadata:{tenant_id:tenantId}});
       return json({request:data},201,origin);
     }
     if(action==="erp-saas-approve-offboarding"){
@@ -1837,17 +1829,49 @@ if (action === "admin-set-profile-role") {
       if(error)return fail("Persetujuan offboarding ditolak. Pemohon tidak boleh menyetujui permintaannya sendiri.",409,origin);
       return json({offboarding:data},200,origin);
     }
+    if(action==="erp-saas-list-invoices"){
+      const {data,error}=await admin.from("saas_invoices").select("id,invoice_number,subscription_id,period_start,period_end,subtotal_idr,tax_idr,total_idr,status,issued_at,due_at,paid_at,saas_invoice_payments(id,provider,provider_reference,amount_idr,status,settled_at)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Invoice SaaS belum tersedia. Terapkan schema pada batch final.",503,origin);
+      return json({invoices:data||[]},200,origin);
+    }
+    if(action==="erp-saas-issue-invoice"){
+      const subscriptionId=safeText(body.subscription_id,64),periodStart=safeText(body.period_start,10),
+       periodEnd=safeText(body.period_end,10),dueAt=safeText(body.due_at,40),tax=Number(body.tax_idr||0);
+      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(periodStart)||
+       !/^\\d{4}-\\d{2}-\\d{2}$/.test(periodEnd)||periodEnd<periodStart||
+       !Number.isSafeInteger(tax)||tax<0||!Number.isFinite(Date.parse(dueAt)))
+       return fail("Data penerbitan invoice SaaS tidak valid.",422,origin);
+      const {data:subscription,error:subscriptionError}=await admin.from("saas_tenant_subscriptions").select("id").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
+      if(subscriptionError)return fail("Subscription invoice belum dapat diverifikasi.",503,origin);
+      if(!subscription)return fail("Subscription tidak ditemukan pada tenant ini.",404,origin);
+      const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+      const {data,error}=await admin.rpc("saas_issue_invoice",{p_tenant_id:tenantId,p_subscription_id:subscriptionId,
+       p_period_start:periodStart,p_period_end:periodEnd,p_tax_idr:tax,p_due_at:dueAt,
+       p_idempotency_key:idempotencyKey,p_actor_user_id:actor.user.id});
+      if(error)return fail("Invoice belum dapat diterbitkan. Periksa subscription dan periode billing.",409,origin);
+      return json({invoice:data},201,origin);
+    }
+    if(action==="erp-saas-complete-offboarding"){
+      const requestId=safeText(body.request_id,64),evidence=safeText(body.completion_evidence,1000);
+      if(!/^[0-9a-f-]{36}$/i.test(requestId)||evidence.length<8)return fail("Bukti penyelesaian offboarding wajib valid.",422,origin);
+      const {data:request,error:requestError}=await admin.from("saas_tenant_offboarding_requests").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",requestId).maybeSingle();
+      if(requestError)return fail("Permintaan offboarding belum dapat diverifikasi.",503,origin);
+      if(!request)return fail("Permintaan offboarding tidak ditemukan pada tenant ini.",404,origin);
+      const {data,error}=await admin.rpc("saas_complete_offboarding",{p_request_id:requestId,p_actor_user_id:actor.user.id,p_completion_evidence:evidence});
+      if(error)return fail("Offboarding belum dapat diselesaikan. Retention harus berakhir dan legal hold harus tidak aktif.",409,origin);
+      return json({offboarding:data},200,origin);
+    }
     if(action==="erp-saas-cancel-subscription"){
       const subscriptionId=safeText(body.subscription_id,64),reason=safeText(body.reason,500);
       if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||reason.length<8)return fail("ID subscription dan alasan pembatalan wajib valid.",422,origin);
-      const {data:old,error:oldError}=await admin.from("saas_tenant_subscriptions").select("id,status").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
-      if(oldError)return fail("Subscription belum dapat diverifikasi.",503,origin);
-      if(!old||!["trialing","active","past_due","suspended"].includes(old.status))return fail("Subscription tidak dapat dibatalkan dari status saat ini.",409,origin);
-      const {data,error}=await admin.from("saas_tenant_subscriptions").update({status:"cancelled",cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("tenant_id",tenantId).eq("id",subscriptionId).in("status",["trialing","active","past_due","suspended"]).select("id,status,cancelled_at").maybeSingle();
-      if(error||!data)return fail("Pembatalan gagal atau status berubah. Muat ulang.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.cancelled",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,reason}});
+      const {data:subscription,error:subscriptionError}=await admin.from("saas_tenant_subscriptions").select("id").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
+      if(subscriptionError)return fail("Subscription belum dapat diverifikasi.",503,origin);
+      if(!subscription)return fail("Subscription tidak ditemukan pada tenant ini.",404,origin);
+      const {data,error}=await admin.rpc("saas_cancel_subscription",{p_tenant_id:tenantId,p_subscription_id:subscriptionId,p_reason:reason,p_actor_user_id:actor.user.id});
+      if(error)return fail("Pembatalan subscription ditolak atau status sudah berubah.",409,origin);
       return json({subscription:data},200,origin);
     }
+   }
   }
 
   const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
