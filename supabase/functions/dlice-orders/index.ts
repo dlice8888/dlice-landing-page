@@ -1920,7 +1920,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement","erp-franchise-list-agreements","erp-franchise-create-agreement-draft","erp-franchise-approve-agreement-version","erp-franchise-submit-agreement-signature","erp-franchise-record-agreement-signature","erp-franchise-activate-signed-agreement"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-check","erp-franchise-review-application","erp-franchise-generate-royalty-statement","erp-franchise-list-agreements","erp-franchise-create-agreement-draft","erp-franchise-approve-agreement-version","erp-franchise-submit-agreement-signature","erp-franchise-record-agreement-signature","erp-franchise-activate-signed-agreement","erp-franchise-review-opening-gate"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     // Franchise applications are platform-owned before provisioning. Royalty
@@ -1937,7 +1937,7 @@ if (action === "admin-set-profile-role") {
     if(action==="erp-franchise-list-agreements"){
       const applicationId=safeText(body.application_id,64);
       if(applicationId&&!/^[0-9a-f-]{36}$/i.test(applicationId))return fail("Application ID tidak valid.",422,origin);
-      let q=admin.from("franchise_agreements").select("id,application_id,tenant_id,branch_id,agreement_status,current_version,signed_at,effective_from,effective_to,created_by,franchise_agreement_versions(id,version,royalty_rate_bps,marketing_fee_rate_bps,fixed_monthly_fee_idr,effective_from,effective_to,signed_document_reference,approved_by,approved_at)").order("created_at",{ascending:false}).limit(100);
+      let q=admin.from("franchise_agreements").select("id,application_id,tenant_id,branch_id,agreement_status,current_version,signed_at,effective_from,effective_to,created_by,franchise_agreement_versions(id,version,royalty_rate_bps,marketing_fee_rate_bps,fixed_monthly_fee_idr,effective_from,effective_to,signed_document_reference,approved_by,approved_at),franchise_opening_gates(id,gate_key,status,evidence_reference,verified_by,verified_at)").order("created_at",{ascending:false}).limit(100);
       if(applicationId)q=q.eq("application_id",applicationId);
       const {data,error}=await q;
       if(error)return fail("Agreement franchise belum tersedia. Terapkan schema pada batch final.",503,origin);
@@ -1948,8 +1948,8 @@ if (action === "admin-set-profile-role") {
         marketing=Number(body.marketing_fee_rate_bps||0),fixed=Number(body.fixed_monthly_fee_idr||0),
         effectiveFrom=safeText(body.effective_from,10),effectiveTo=safeText(body.effective_to,10)||null;
       if(!/^[0-9a-f-]{36}$/i.test(applicationId)||!Number.isInteger(royalty)||!Number.isInteger(marketing)||
-        !Number.isSafeInteger(fixed)||fixed<0||!/^d{4}-d{2}-d{2}$/.test(effectiveFrom)||
-        (effectiveTo&&!/^d{4}-d{2}-d{2}$/.test(effectiveTo)))
+        !Number.isSafeInteger(fixed)||fixed<0||!/^\\d{4}-\\d{2}-\\d{2}$/.test(effectiveFrom)||
+        (effectiveTo&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(effectiveTo)))
         return fail("Term agreement dan periode efektif tidak valid.",422,origin);
       const {data,error}=await admin.rpc("franchise_create_agreement_draft",{
         p_application_id:applicationId,p_royalty_rate_bps:royalty,p_marketing_fee_rate_bps:marketing,
@@ -1975,6 +1975,21 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.rpc("franchise_submit_agreement_for_signature",{p_agreement_id:agreementId,p_actor_user_id:actor.user.id});
       if(error)return fail("Agreement belum memenuhi syarat untuk dikirim ke proses tanda tangan; perlu versi efektif yang disetujui oleh pihak independen.",409,origin);
       return json({agreement:data},200,origin);
+    }
+    if(action==="erp-franchise-review-opening-gate"){
+      const agreementId=safeText(body.agreement_id,64),gateKey=safeText(body.gate_key,40),
+        gateStatus=safeText(body.status,20),evidence=safeText(body.evidence_reference,500),
+        notes=safeText(body.notes,1000)||null;
+      const allowedGates=["legal_signed","site_approved","permits","fitout","equipment","staffing","training","inventory","pos_ready","brand_audit"];
+      if(!/^[0-9a-f-]{36}$/i.test(agreementId)||!allowedGates.includes(gateKey)||
+        !["in_progress","passed","blocked"].includes(gateStatus)||(gateStatus==="passed"&&evidence.length<8))
+        return fail("Review opening gate memerlukan agreement, gate, status dan bukti yang valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_opening_gate",{
+        p_agreement_id:agreementId,p_gate_key:gateKey,p_status:gateStatus,
+        p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes,
+      });
+      if(error)return fail("Opening gate belum dapat diperbarui. Agreement harus sudah ditandatangani dan verifier harus independen.",409,origin);
+      return json({opening_gate:data},200,origin);
     }
     if(action==="erp-franchise-record-agreement-signature"){
       const agreementId=safeText(body.agreement_id,64),signedAt=safeText(body.signed_at,40),documentRef=safeText(body.signed_document_reference,500);
