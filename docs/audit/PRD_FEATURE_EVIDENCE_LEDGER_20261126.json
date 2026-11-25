@@ -5354,8 +5354,8 @@
       "requirement": "Unified customer profile across channels",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Customer/order identity fields and history foundations exist; deduplication not proven.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 includes paid POS/Order identity linking through crm_link_transaction_customer and paid-transaction database trigger. CRM loyalty expiry increment is in PR #145 head 2976387039d7eed1f4848be9c7d122d325d02ea4; all SQL remains draft and no runtime migration/E2E is claimed.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 162
@@ -5408,7 +5408,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5418,7 +5419,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Consent lifecycle, withdrawal and audit missing.",
+      "evidence_or_gap": "PR #145 includes append-only consent events, consent-filtered campaign audience, signed unsubscribe persistence and provider/tenant event dedupe. Provider webhook deployment and cross-channel consent E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 163
@@ -5471,7 +5472,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5526,7 +5528,8 @@
         "matched_prs": [],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5536,7 +5539,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Ledger, expiry, reversal and duplicate-event protection missing.",
+      "evidence_or_gap": "New PR #145 SQL draft adds points_validity_days with independent approval, expires_at on earn lots, FIFO redemption allocation, expiry RPC, and reversal of redemption allocations. Expiry is only a source draft/UI/Edge increment; no disposable replay, pgTAP or staging runtime proof yet.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 165
@@ -5589,7 +5592,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5599,7 +5603,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Issuance, eligibility, redemption and reversal missing.",
+      "evidence_or_gap": "PR #145 base CRM schema contains rewards/vouchers, atomic reward redemption and voucher consume/void paths. Expiry extension now allocates redeemed points to source lots; reward lifecycle E2E and staging persistence remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 166
@@ -5644,7 +5648,8 @@
         "matched_prs": [],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5699,7 +5704,8 @@
         "matched_prs": [],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5709,7 +5715,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Campaign lifecycle and attribution metrics missing.",
+      "evidence_or_gap": "PR #145 contains consent-gated campaign outbox, independent provider approval, worker claim, bounded retry/dead-letter finalization, signed provider receipt and ROI schema. No real provider delivery or signed callback runtime evidence exists.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 168
@@ -5762,7 +5768,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5817,7 +5824,8 @@
         "matched_prs": [],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
@@ -5872,7 +5880,8 @@
         "matched_prs": [],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [],
+        "latest_implementation_commit": "2976387039d7eed1f4848be9c7d122d325d02ea4"
       }
     },
     {
