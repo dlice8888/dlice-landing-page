@@ -12,8 +12,9 @@ const payment = { id: "payment-a", tenantId: "tenant-a", branchId: "branch-a",
 
 function deps({ incoming = evidence, duplicate = false } = {}) {
   let persistedDecision;
+  let persistedEventKind;
   return {
-    state: () => persistedDecision,
+    state: () => ({ decision: persistedDecision, eventKind: persistedEventKind }),
     verifyPayrollPayoutWebhook: async () => incoming,
     resolvePayrollPayoutWebhookScope: async () => ({
       tenantId: "tenant-a", branchId: "branch-a", actorId: "system-payout-webhook",
@@ -24,7 +25,12 @@ function deps({ incoming = evidence, duplicate = false } = {}) {
     loadPayrollPaymentForWebhookUpdate: async () => payment,
     persistPayrollPaymentWebhookEvidence: async (_tx, args) => {
       persistedDecision = args.decision;
+      persistedEventKind = args.eventKind;
       return { eventId: "stored-event-a", duplicate };
+    },
+    persistPayrollPaymentWebhookException: async (_tx, args) => {
+      persistedDecision = args.decision;
+      return { eventId: "stored-exception-a", duplicate };
     },
   };
 }
@@ -36,6 +42,7 @@ test("verified Xendit payout webhook is reloaded and persisted inside resolved t
   assert.equal(result.paymentId, "payment-a");
   assert.equal(result.matched, true);
   assert.equal(result.reconciliationRequired, true);
+  assert.equal(repository.state().eventKind, "settled");
 });
 
 test("webhook for mismatched amount persists as an exception, never as settlement", async () => {
@@ -43,7 +50,7 @@ test("webhook for mismatched amount persists as an exception, never as settlemen
   const result = await ingestXenditPayrollPayoutWebhook({ rawBody: "raw", callbackToken: "verified" }, repository);
   assert.equal(result.status, "exception");
   assert.equal(result.matched, false);
-  assert.deepEqual(repository.state().mismatches, ["amount"]);
+  assert.deepEqual(repository.state().decision.mismatches, ["amount"]);
 });
 
 test("duplicate webhook fingerprint is acknowledged without a second business transition", async () => {
