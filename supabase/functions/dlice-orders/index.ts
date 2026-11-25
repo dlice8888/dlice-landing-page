@@ -961,192 +961,6 @@ if (action === "admin-set-profile-role") {
     if (tenantError) return fail("Tenant belum dapat diverifikasi.", 503, origin);
     if (!tenant) return fail("Tenant tidak ditemukan.", 404, origin);
 
-    const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice"]);
-  if(procurementInvoiceActions.has(action)){
-    if(!hasPerm("procurement"))return fail("Izin invoice procurement tidak diizinkan.",403,origin);
-    const branchId=safeText(body.branch_id,64),invoiceId=safeText(body.invoice_id,64);
-    if(action==="erp-procurement-list-invoices"){
-      if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-      const {data,error}=await admin.from("procurement_supplier_invoices").select("id,supplier_id,purchase_order_id,supplier_invoice_number,invoice_date,due_date,subtotal_idr,tax_idr,total_idr,status,created_at,procurement_invoice_match_lines(id,match_status,quantity_variance,unit_cost_variance_idr)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
-      if(error)return fail("Invoice supplier belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({invoices:data||[]},200,origin);
-    }
-    if(!/^[0-9a-f-]{36}$/i.test(invoiceId)||!Array.isArray(body.lines)||body.lines.length<1||body.lines.length>100)
-      return fail("Invoice atau baris pencocokan tidak valid.",422,origin);
-    const lines=body.lines.map((x:any)=>({purchase_order_item_id:safeText(x.purchase_order_item_id,64),receipt_item_id:safeText(x.receipt_item_id,64),invoiced_quantity:Number(x.invoiced_quantity),invoiced_unit_cost_idr:Number(x.invoiced_unit_cost_idr)}));
-    if(lines.some((x:any)=>!/^[0-9a-f-]{36}$/i.test(x.purchase_order_item_id)||!/^[0-9a-f-]{36}$/i.test(x.receipt_item_id)||!Number.isFinite(x.invoiced_quantity)||x.invoiced_quantity<=0||!Number.isSafeInteger(x.invoiced_unit_cost_idr)||x.invoiced_unit_cost_idr<0))
-      return fail("Satu atau lebih baris invoice tidak valid.",422,origin);
-    const {data:invoice,error:invoiceError}=await admin.from("procurement_supplier_invoices").select("id,tenant_id,branch_id,status").eq("id",invoiceId).maybeSingle();
-    if(invoiceError)return fail("Invoice belum dapat diverifikasi.",503,origin);
-    if(!invoice)return fail("Invoice tidak ditemukan.",404,origin);
-    if(!await branchAccess(invoice.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
-    const tolerance=Number(body.tolerance_idr??0);
-    if(!Number.isSafeInteger(tolerance)||tolerance<0||tolerance>1000000)return fail("Toleransi harga tidak valid.",422,origin);
-    const {data,error}=await admin.rpc("procurement_match_supplier_invoice",{p_invoice_id:invoiceId,p_lines:lines,p_tolerance_idr:tolerance,p_actor_user_id:actor.user.id});
-    if(error)return fail("Three-way match gagal. Periksa PO, receipt yang diterima, supplier, jumlah, dan toleransi.",409,origin);
-    return json({match:data},200,origin);
-  }
-
-  const procurementLinkActions=new Set(["erp-procurement-list-supplier-links","erp-procurement-create-supplier-link","erp-procurement-approve-supplier-link"]);
-  if(procurementLinkActions.has(action)){
-    if(!isOwner)return fail("Pengelolaan kepemilikan supplier sementara hanya dapat diakses Platform Owner.",403,origin);
-    const tenantId=safeText(body.tenant_id,64);
-    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
-    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
-    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
-    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
-    if(action==="erp-procurement-list-supplier-links"){
-      const [links,suppliers]=await Promise.all([
-        admin.from("supplier_tenant_links").select("id,supplier_id,status,relationship_type,created_by,approved_by,approved_at,created_at").eq("tenant_id",tenantId).order("created_at",{ascending:false}),
-        admin.from("suppliers").select("id").eq("is_active",true).order("id").limit(500)
-      ]);
-      if(links.error||suppliers.error)return fail("Data supplier ownership belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({links:links.data||[],available_suppliers:suppliers.data||[]},200,origin);
-    }
-    if(action==="erp-procurement-create-supplier-link"){
-      const supplierId=safeText(body.supplier_id,64),relationship=safeText(body.relationship_type,20);
-      if(!/^[0-9a-f-]{36}$/i.test(supplierId)||!["exclusive","shared"].includes(relationship))return fail("Supplier atau jenis hubungan tidak valid.",422,origin);
-      const {data:supplier,error:supplierError}=await admin.from("suppliers").select("id").eq("id",supplierId).eq("is_active",true).maybeSingle();
-      if(supplierError)return fail("Supplier belum dapat diverifikasi.",503,origin);
-      if(!supplier)return fail("Supplier tidak aktif atau tidak ditemukan.",404,origin);
-      const {data,error}=await admin.from("supplier_tenant_links").insert({tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship,status:"pending",created_by:actor.user.id})
-        .select("id,supplier_id,status,relationship_type,created_at").single();
-      if(error)return fail(error.code==="23505"?"Supplier sudah memiliki relasi untuk tenant ini.":"Relasi supplier gagal dibuat.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"procurement.supplier_link.requested",entity_type:"supplier_tenant_link",entity_id:data.id,metadata:{tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship}});
-      return json({link:data},201,origin);
-    }
-    if(action==="erp-procurement-approve-supplier-link"){
-      const linkId=safeText(body.link_id,64);
-      if(!/^[0-9a-f-]{36}$/i.test(linkId))return fail("Relasi supplier tidak valid.",422,origin);
-      const {data:link,error:linkError}=await admin.from("supplier_tenant_links").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",linkId).maybeSingle();
-      if(linkError)return fail("Relasi supplier belum dapat diverifikasi.",503,origin);
-      if(!link)return fail("Relasi supplier tidak ditemukan.",404,origin);
-      const {data,error}=await admin.rpc("procurement_approve_supplier_link",{p_link_id:linkId,p_actor_user_id:actor.user.id});
-      if(error)return fail("Persetujuan ditolak. Approver harus berbeda dari pembuat permintaan.",409,origin);
-      return json({link:data},200,origin);
-    }
-  }
-
-  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
-  if(saasActions.has(action)){
-    if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
-    if(action==="erp-saas-list-plan-versions"){
-      const {data,error}=await admin.from("saas_plan_versions").select("id,plan_key,version,display_name,billing_interval,price_idr,currency,effective_from,effective_to,active,saas_plan_entitlements(entitlement_key,limit_value,enabled,unit)").eq("active",true).order("plan_key").order("version",{ascending:false});
-      if(error)return fail("Katalog paket SaaS belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({plans:data||[]},200,origin);
-    }
-    const tenantId=safeText(body.tenant_id,64);
-    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
-    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
-    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
-    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
-    if(action==="erp-saas-list-subscriptions"){
-      const {data,error}=await admin.from("saas_tenant_subscriptions").select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at,grace_ends_at,cancelled_at,saas_plan_versions(plan_key,version,display_name,billing_interval,price_idr)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(50);
-      if(error)return fail("Subscription tenant belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({subscriptions:data||[]},200,origin);
-    }
-    if(action==="erp-saas-start-trial"){
-      const planId=safeText(body.plan_version_id,64),days=Number(body.trial_days??14);
-      if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(days)||days<1||days>60)return fail("Paket atau durasi trial tidak valid.",422,origin);
-      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now);
-      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active,billing_interval").eq("id",planId).maybeSingle();
-      if(planError)return fail("Paket belum dapat diverifikasi.",503,origin);
-      if(!plan||!plan.active||new Date(plan.effective_from)>now||(plan.effective_to&&new Date(plan.effective_to)<now))return fail("Versi paket tidak aktif pada tanggal mulai.",409,origin);
-      if(plan.billing_interval==="annual")periodEnd.setFullYear(periodEnd.getFullYear()+1);else periodEnd.setMonth(periodEnd.getMonth()+1);
-      const {data,error}=await admin.from("saas_tenant_subscriptions").insert({tenant_id:tenantId,plan_version_id:planId,status:"trialing",starts_at:now.toISOString(),current_period_start:now.toISOString(),current_period_end:periodEnd.toISOString(),trial_ends_at:end.toISOString(),created_by:actor.user.id})
-        .select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at").single();
-      if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.trial_started",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,plan_version_id:planId,trial_days:days}});
-      return json({subscription:data},201,origin);
-    }
-    if(action==="erp-saas-cancel-subscription"){
-      const subscriptionId=safeText(body.subscription_id,64),reason=safeText(body.reason,500);
-      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||reason.length<8)return fail("ID subscription dan alasan pembatalan wajib valid.",422,origin);
-      const {data:old,error:oldError}=await admin.from("saas_tenant_subscriptions").select("id,status").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
-      if(oldError)return fail("Subscription belum dapat diverifikasi.",503,origin);
-      if(!old||!["trialing","active","past_due","suspended"].includes(old.status))return fail("Subscription tidak dapat dibatalkan dari status saat ini.",409,origin);
-      const {data,error}=await admin.from("saas_tenant_subscriptions").update({status:"cancelled",cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("tenant_id",tenantId).eq("id",subscriptionId).in("status",["trialing","active","past_due","suspended"]).select("id,status,cancelled_at").maybeSingle();
-      if(error||!data)return fail("Pembatalan gagal atau status berubah. Muat ulang.",409,origin);
-      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.cancelled",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,reason}});
-      return json({subscription:data},200,origin);
-    }
-  }
-
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
-  if(biExecutiveActions.has(action)){
-    if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
-    const tenantId=safeText(body.tenant_id,64);
-    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
-    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
-    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
-    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
-    if(action==="erp-bi-list-snapshots"){
-      const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").order("period_end",{ascending:false}).limit(200);
-      if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({snapshots:data||[]},200,origin);
-    }
-    if(action==="erp-executive-list-alerts"){
-      const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
-      if(error)return fail("Alert Executive belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({alerts:data||[]},200,origin);
-    }
-    if(action==="erp-executive-verify-alert"){
-      const alertId=safeText(body.alert_id,64),note=safeText(body.note,500),evidence=safeText(body.evidence_reference,500);
-      if(!/^[0-9a-f-]{36}$/i.test(alertId)||note.length<8||evidence.length<8)return fail("Catatan dan referensi bukti verifikasi wajib diisi.",422,origin);
-      const {data,error}=await admin.rpc("executive_verify_alert",{p_alert_id:alertId,p_actor_user_id:actor.user.id,p_note:note,p_evidence_reference:evidence});
-      if(error)return fail("Verifikasi alert ditolak. Verifikator harus berbeda dari petugas penyelesai.",409,origin);
-      return json({verification:data},200,origin);
-    }
-  }
-
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
-  if(franchiseActions.has(action)){
-    if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
-    if(action==="erp-franchise-list-applications"){
-      const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(check_key,status)").order("submitted_at",{ascending:false}).limit(100);
-      if(error)return fail("Data aplikasi franchise belum tersedia. Terapkan migrasi pada batch final.",503,origin);
-      return json({applications:data||[]},200,origin);
-    }
-    if(action==="erp-franchise-create-application"){
-      const name=safeText(body.applicant_name,160),email=safeText(body.applicant_email,254).toLowerCase(),phone=safeText(body.applicant_phone,40),
-        region=safeText(body.proposed_region,100),city=safeText(body.proposed_city,100),capacity=Number(body.investment_capacity_idr),
-        experience=safeText(body.experience_summary,2000)||null;
-      if(name.length<2||!/^\\S+@\\S+\\.\\S+$/.test(email)||phone.length<8||region.length<2||city.length<2||!Number.isSafeInteger(capacity)||capacity<0)
-        return fail("Data aplikasi franchise tidak valid.",422,origin);
-      const {data,error}=await admin.rpc("franchise_create_application",{p_applicant_name:name,p_applicant_email:email,p_applicant_phone:phone,p_proposed_region:region,p_proposed_city:city,p_investment_capacity_idr:capacity,p_experience_summary:experience,p_created_by:actor.user.id});
-      if(error)return fail("Aplikasi franchise dan checklist due diligence gagal disimpan.",503,origin);
-      return json({application:data,checklist:["identity","financial","legal","operational_experience","territory_conflict","reputation"]},201,origin);
-    }
-    if(action==="erp-franchise-add-site"){
-      const applicationId=safeText(body.application_id,64),address=safeText(body.proposed_address,500),city=safeText(body.city,100),province=safeText(body.province,100);
-      const latitude=body.latitude===null||body.latitude===""?null:Number(body.latitude),longitude=body.longitude===null||body.longitude===""?null:Number(body.longitude);
-      const area=body.floor_area_sqm===null||body.floor_area_sqm===""?null:Number(body.floor_area_sqm);
-      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||address.length<5||city.length<2||province.length<2||
-        ((latitude===null)!==(longitude===null))||(latitude!==null&&(!Number.isFinite(latitude)||latitude< -90||latitude>90))||
-        (longitude!==null&&(!Number.isFinite(longitude)||longitude< -180||longitude>180))||
-        (area!==null&&(!Number.isFinite(area)||area<=0)))return fail("Data lokasi franchise tidak valid.",422,origin);
-      const {data,error}=await admin.from("franchise_sites").insert({application_id:applicationId,proposed_address:address,city,province,latitude,longitude,floor_area_sqm:area})
-        .select("id,application_id,proposed_address,city,province,feasibility_status").single();
-      if(error)return fail("Lokasi franchise gagal disimpan.",503,origin);
-      return json({site:data},201,origin);
-    }
-    if(action==="erp-franchise-review-site"){
-      const siteId=safeText(body.site_id,64),decision=safeText(body.decision,30),evidence=safeText(body.evidence_reference,500),notes=safeText(body.notes,500)||null;
-      if(!/^[0-9a-f-]{36}$/i.test(siteId)||!["approved","rejected","assessing"].includes(decision)||(decision==="approved"&&evidence.length<8))
-        return fail("Review kelayakan lokasi memerlukan keputusan dan referensi bukti yang valid.",422,origin);
-      const {data,error}=await admin.rpc("franchise_review_site",{p_site_id:siteId,p_status:decision,p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes});
-      if(error)return fail("Review kelayakan lokasi gagal disimpan.",409,origin);
-      return json({site_review:data},200,origin);
-    }
-    if(action==="erp-franchise-review-application"){
-      const applicationId=safeText(body.application_id,64),decision=safeText(body.decision,30),notes=safeText(body.notes,500)||null;
-      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||!["screening","due_diligence","approved","rejected"].includes(decision))return fail("Keputusan review franchise tidak valid.",422,origin);
-      const {data,error}=await admin.rpc("franchise_review_application",{p_application_id:applicationId,p_decision:decision,p_actor_user_id:actor.user.id,p_notes:notes});
-      if(error)return fail("Keputusan belum dapat disimpan. Pastikan seluruh bukti due diligence dan kelayakan lokasi lengkap.",409,origin);
-      return json({review:data},200,origin);
-    }
-  }
-
   if (action === "erp-crm-list-customers") {
       const search = safeText(body.search, 80).replace(/[%,()]/g, " ");
       let query = admin.from("crm_customers")
@@ -1373,6 +1187,194 @@ if (action === "admin-set-profile-role") {
       }
       return json({ attendance_event: data }, 201, origin);
     }  }
+
+    const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice"]);
+  if(procurementInvoiceActions.has(action)){
+    if(!hasPerm("procurement"))return fail("Izin invoice procurement tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,64),invoiceId=safeText(body.invoice_id,64);
+    if(action==="erp-procurement-list-invoices"){
+      if(!branchId||!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+      const {data,error}=await admin.from("procurement_supplier_invoices").select("id,supplier_id,purchase_order_id,supplier_invoice_number,invoice_date,due_date,subtotal_idr,tax_idr,total_idr,status,created_at,procurement_invoice_match_lines(id,match_status,quantity_variance,unit_cost_variance_idr)").eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Invoice supplier belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({invoices:data||[]},200,origin);
+    }
+    if(!/^[0-9a-f-]{36}$/i.test(invoiceId)||!Array.isArray(body.lines)||body.lines.length<1||body.lines.length>100)
+      return fail("Invoice atau baris pencocokan tidak valid.",422,origin);
+    const lines=body.lines.map((x:any)=>({purchase_order_item_id:safeText(x.purchase_order_item_id,64),receipt_item_id:safeText(x.receipt_item_id,64),invoiced_quantity:Number(x.invoiced_quantity),invoiced_unit_cost_idr:Number(x.invoiced_unit_cost_idr)}));
+    if(lines.some((x:any)=>!/^[0-9a-f-]{36}$/i.test(x.purchase_order_item_id)||!/^[0-9a-f-]{36}$/i.test(x.receipt_item_id)||!Number.isFinite(x.invoiced_quantity)||x.invoiced_quantity<=0||!Number.isSafeInteger(x.invoiced_unit_cost_idr)||x.invoiced_unit_cost_idr<0))
+      return fail("Satu atau lebih baris invoice tidak valid.",422,origin);
+    const {data:invoice,error:invoiceError}=await admin.from("procurement_supplier_invoices").select("id,tenant_id,branch_id,status").eq("id",invoiceId).maybeSingle();
+    if(invoiceError)return fail("Invoice belum dapat diverifikasi.",503,origin);
+    if(!invoice)return fail("Invoice tidak ditemukan.",404,origin);
+    if(!await branchAccess(invoice.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const tolerance=Number(body.tolerance_idr??0);
+    if(!Number.isSafeInteger(tolerance)||tolerance<0||tolerance>1000000)return fail("Toleransi harga tidak valid.",422,origin);
+    const {data,error}=await admin.rpc("procurement_match_supplier_invoice",{p_invoice_id:invoiceId,p_lines:lines,p_tolerance_idr:tolerance,p_actor_user_id:actor.user.id});
+    if(error)return fail("Three-way match gagal. Periksa PO, receipt yang diterima, supplier, jumlah, dan toleransi.",409,origin);
+    return json({match:data},200,origin);
+  }
+
+  const procurementLinkActions=new Set(["erp-procurement-list-supplier-links","erp-procurement-create-supplier-link","erp-procurement-approve-supplier-link"]);
+  if(procurementLinkActions.has(action)){
+    if(!isOwner)return fail("Pengelolaan kepemilikan supplier sementara hanya dapat diakses Platform Owner.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-procurement-list-supplier-links"){
+      const [links,suppliers]=await Promise.all([
+        admin.from("supplier_tenant_links").select("id,supplier_id,status,relationship_type,created_by,approved_by,approved_at,created_at").eq("tenant_id",tenantId).order("created_at",{ascending:false}),
+        admin.from("suppliers").select("id").eq("is_active",true).order("id").limit(500)
+      ]);
+      if(links.error||suppliers.error)return fail("Data supplier ownership belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({links:links.data||[],available_suppliers:suppliers.data||[]},200,origin);
+    }
+    if(action==="erp-procurement-create-supplier-link"){
+      const supplierId=safeText(body.supplier_id,64),relationship=safeText(body.relationship_type,20);
+      if(!/^[0-9a-f-]{36}$/i.test(supplierId)||!["exclusive","shared"].includes(relationship))return fail("Supplier atau jenis hubungan tidak valid.",422,origin);
+      const {data:supplier,error:supplierError}=await admin.from("suppliers").select("id").eq("id",supplierId).eq("is_active",true).maybeSingle();
+      if(supplierError)return fail("Supplier belum dapat diverifikasi.",503,origin);
+      if(!supplier)return fail("Supplier tidak aktif atau tidak ditemukan.",404,origin);
+      const {data,error}=await admin.from("supplier_tenant_links").insert({tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship,status:"pending",created_by:actor.user.id})
+        .select("id,supplier_id,status,relationship_type,created_at").single();
+      if(error)return fail(error.code==="23505"?"Supplier sudah memiliki relasi untuk tenant ini.":"Relasi supplier gagal dibuat.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"procurement.supplier_link.requested",entity_type:"supplier_tenant_link",entity_id:data.id,metadata:{tenant_id:tenantId,supplier_id:supplierId,relationship_type:relationship}});
+      return json({link:data},201,origin);
+    }
+    if(action==="erp-procurement-approve-supplier-link"){
+      const linkId=safeText(body.link_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(linkId))return fail("Relasi supplier tidak valid.",422,origin);
+      const {data:link,error:linkError}=await admin.from("supplier_tenant_links").select("id,tenant_id").eq("tenant_id",tenantId).eq("id",linkId).maybeSingle();
+      if(linkError)return fail("Relasi supplier belum dapat diverifikasi.",503,origin);
+      if(!link)return fail("Relasi supplier tidak ditemukan.",404,origin);
+      const {data,error}=await admin.rpc("procurement_approve_supplier_link",{p_link_id:linkId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Persetujuan ditolak. Approver harus berbeda dari pembuat permintaan.",409,origin);
+      return json({link:data},200,origin);
+    }
+  }
+
+  const saasActions=new Set(["erp-saas-list-plan-versions","erp-saas-list-subscriptions","erp-saas-start-trial","erp-saas-cancel-subscription"]);
+  if(saasActions.has(action)){
+    if(!isOwner)return fail("Pengelolaan paket SaaS hanya dapat diakses Platform Owner.",403,origin);
+    if(action==="erp-saas-list-plan-versions"){
+      const {data,error}=await admin.from("saas_plan_versions").select("id,plan_key,version,display_name,billing_interval,price_idr,currency,effective_from,effective_to,active,saas_plan_entitlements(entitlement_key,limit_value,enabled,unit)").eq("active",true).order("plan_key").order("version",{ascending:false});
+      if(error)return fail("Katalog paket SaaS belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({plans:data||[]},200,origin);
+    }
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-saas-list-subscriptions"){
+      const {data,error}=await admin.from("saas_tenant_subscriptions").select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at,grace_ends_at,cancelled_at,saas_plan_versions(plan_key,version,display_name,billing_interval,price_idr)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(50);
+      if(error)return fail("Subscription tenant belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({subscriptions:data||[]},200,origin);
+    }
+    if(action==="erp-saas-start-trial"){
+      const planId=safeText(body.plan_version_id,64),days=Number(body.trial_days??14);
+      if(!/^[0-9a-f-]{36}$/i.test(planId)||!Number.isInteger(days)||days<1||days>60)return fail("Paket atau durasi trial tidak valid.",422,origin);
+      const now=new Date(),end=new Date(now.getTime()+days*86400000),periodEnd=new Date(now);
+      const {data:plan,error:planError}=await admin.from("saas_plan_versions").select("id,effective_from,effective_to,active,billing_interval").eq("id",planId).maybeSingle();
+      if(planError)return fail("Paket belum dapat diverifikasi.",503,origin);
+      if(!plan||!plan.active||new Date(plan.effective_from)>now||(plan.effective_to&&new Date(plan.effective_to)<now))return fail("Versi paket tidak aktif pada tanggal mulai.",409,origin);
+      if(plan.billing_interval==="annual")periodEnd.setFullYear(periodEnd.getFullYear()+1);else periodEnd.setMonth(periodEnd.getMonth()+1);
+      const {data,error}=await admin.from("saas_tenant_subscriptions").insert({tenant_id:tenantId,plan_version_id:planId,status:"trialing",starts_at:now.toISOString(),current_period_start:now.toISOString(),current_period_end:periodEnd.toISOString(),trial_ends_at:end.toISOString(),created_by:actor.user.id})
+        .select("id,tenant_id,plan_version_id,status,starts_at,current_period_start,current_period_end,trial_ends_at").single();
+      if(error)return fail(error.code==="23505"?"Tenant sudah memiliki subscription aktif atau trial.":"Trial SaaS gagal dibuat.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.trial_started",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,plan_version_id:planId,trial_days:days}});
+      return json({subscription:data},201,origin);
+    }
+    if(action==="erp-saas-cancel-subscription"){
+      const subscriptionId=safeText(body.subscription_id,64),reason=safeText(body.reason,500);
+      if(!/^[0-9a-f-]{36}$/i.test(subscriptionId)||reason.length<8)return fail("ID subscription dan alasan pembatalan wajib valid.",422,origin);
+      const {data:old,error:oldError}=await admin.from("saas_tenant_subscriptions").select("id,status").eq("tenant_id",tenantId).eq("id",subscriptionId).maybeSingle();
+      if(oldError)return fail("Subscription belum dapat diverifikasi.",503,origin);
+      if(!old||!["trialing","active","past_due","suspended"].includes(old.status))return fail("Subscription tidak dapat dibatalkan dari status saat ini.",409,origin);
+      const {data,error}=await admin.from("saas_tenant_subscriptions").update({status:"cancelled",cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("tenant_id",tenantId).eq("id",subscriptionId).in("status",["trialing","active","past_due","suspended"]).select("id,status,cancelled_at").maybeSingle();
+      if(error||!data)return fail("Pembatalan gagal atau status berubah. Muat ulang.",409,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"saas.subscription.cancelled",entity_type:"saas_tenant_subscription",entity_id:data.id,metadata:{tenant_id:tenantId,reason}});
+      return json({subscription:data},200,origin);
+    }
+  }
+
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert"]);
+  if(biExecutiveActions.has(action)){
+    if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
+    if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
+    if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-bi-list-snapshots"){
+      const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").order("period_end",{ascending:false}).limit(200);
+      if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({snapshots:data||[]},200,origin);
+    }
+    if(action==="erp-executive-list-alerts"){
+      const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
+      if(error)return fail("Alert Executive belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({alerts:data||[]},200,origin);
+    }
+    if(action==="erp-executive-verify-alert"){
+      const alertId=safeText(body.alert_id,64),note=safeText(body.note,500),evidence=safeText(body.evidence_reference,500);
+      if(!/^[0-9a-f-]{36}$/i.test(alertId)||note.length<8||evidence.length<8)return fail("Catatan dan referensi bukti verifikasi wajib diisi.",422,origin);
+      const {data,error}=await admin.rpc("executive_verify_alert",{p_alert_id:alertId,p_actor_user_id:actor.user.id,p_note:note,p_evidence_reference:evidence});
+      if(error)return fail("Verifikasi alert ditolak. Verifikator harus berbeda dari petugas penyelesai.",409,origin);
+      return json({verification:data},200,origin);
+    }
+  }
+
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
+  if(franchiseActions.has(action)){
+    if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
+    if(action==="erp-franchise-list-applications"){
+      const {data,error}=await admin.from("franchise_applications").select("id,applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,status,submitted_at,franchise_sites(id,proposed_address,feasibility_status),franchise_due_diligence_checks(check_key,status)").order("submitted_at",{ascending:false}).limit(100);
+      if(error)return fail("Data aplikasi franchise belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({applications:data||[]},200,origin);
+    }
+    if(action==="erp-franchise-create-application"){
+      const name=safeText(body.applicant_name,160),email=safeText(body.applicant_email,254).toLowerCase(),phone=safeText(body.applicant_phone,40),
+        region=safeText(body.proposed_region,100),city=safeText(body.proposed_city,100),capacity=Number(body.investment_capacity_idr),
+        experience=safeText(body.experience_summary,2000)||null;
+      if(name.length<2||!/^\\S+@\\S+\\.\\S+$/.test(email)||phone.length<8||region.length<2||city.length<2||!Number.isSafeInteger(capacity)||capacity<0)
+        return fail("Data aplikasi franchise tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_create_application",{p_applicant_name:name,p_applicant_email:email,p_applicant_phone:phone,p_proposed_region:region,p_proposed_city:city,p_investment_capacity_idr:capacity,p_experience_summary:experience,p_created_by:actor.user.id});
+      if(error)return fail("Aplikasi franchise dan checklist due diligence gagal disimpan.",503,origin);
+      return json({application:data,checklist:["identity","financial","legal","operational_experience","territory_conflict","reputation"]},201,origin);
+    }
+    if(action==="erp-franchise-add-site"){
+      const applicationId=safeText(body.application_id,64),address=safeText(body.proposed_address,500),city=safeText(body.city,100),province=safeText(body.province,100);
+      const latitude=body.latitude===null||body.latitude===""?null:Number(body.latitude),longitude=body.longitude===null||body.longitude===""?null:Number(body.longitude);
+      const area=body.floor_area_sqm===null||body.floor_area_sqm===""?null:Number(body.floor_area_sqm);
+      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||address.length<5||city.length<2||province.length<2||
+        ((latitude===null)!==(longitude===null))||(latitude!==null&&(!Number.isFinite(latitude)||latitude< -90||latitude>90))||
+        (longitude!==null&&(!Number.isFinite(longitude)||longitude< -180||longitude>180))||
+        (area!==null&&(!Number.isFinite(area)||area<=0)))return fail("Data lokasi franchise tidak valid.",422,origin);
+      const {data,error}=await admin.from("franchise_sites").insert({application_id:applicationId,proposed_address:address,city,province,latitude,longitude,floor_area_sqm:area})
+        .select("id,application_id,proposed_address,city,province,feasibility_status").single();
+      if(error)return fail("Lokasi franchise gagal disimpan.",503,origin);
+      return json({site:data},201,origin);
+    }
+    if(action==="erp-franchise-review-site"){
+      const siteId=safeText(body.site_id,64),decision=safeText(body.decision,30),evidence=safeText(body.evidence_reference,500),notes=safeText(body.notes,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(siteId)||!["approved","rejected","assessing"].includes(decision)||(decision==="approved"&&evidence.length<8))
+        return fail("Review kelayakan lokasi memerlukan keputusan dan referensi bukti yang valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_site",{p_site_id:siteId,p_status:decision,p_evidence_reference:evidence,p_actor_user_id:actor.user.id,p_notes:notes});
+      if(error)return fail("Review kelayakan lokasi gagal disimpan.",409,origin);
+      return json({site_review:data},200,origin);
+    }
+    if(action==="erp-franchise-review-application"){
+      const applicationId=safeText(body.application_id,64),decision=safeText(body.decision,30),notes=safeText(body.notes,500)||null;
+      if(!/^[0-9a-f-]{36}$/i.test(applicationId)||!["screening","due_diligence","approved","rejected"].includes(decision))return fail("Keputusan review franchise tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("franchise_review_application",{p_application_id:applicationId,p_decision:decision,p_actor_user_id:actor.user.id,p_notes:notes});
+      if(error)return fail("Keputusan belum dapat disimpan. Pastikan seluruh bukti due diligence dan kelayakan lokasi lengkap.",409,origin);
+      return json({review:data},200,origin);
+    }
+  }
+
+
 
   if (action === "erp-list-tenants") {
     if(!hasPerm("branches")&&!isOwner)return fail("Izin tenant tidak diizinkan.",403,origin);
