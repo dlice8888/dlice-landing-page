@@ -16,7 +16,7 @@ alter table public.delivery_cost_reconciliations alter column finance_source_rec
 alter table public.delivery_cost_reconciliations drop constraint if exists delivery_cost_reconciled_requires_finance_fk;
 alter table public.delivery_cost_reconciliations add constraint delivery_cost_reconciled_requires_finance_fk
  check(status<>'reconciled' or finance_source_reconciliation_id is not null);
-do $ begin
+do $$ begin
  if not exists(select 1 from pg_constraint where conname='delivery_cost_finance_journal_fk'
    and conrelid='public.delivery_cost_reconciliations'::regclass) then
   alter table public.delivery_cost_reconciliations add constraint delivery_cost_finance_journal_fk
