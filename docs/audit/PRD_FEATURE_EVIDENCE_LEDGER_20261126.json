@@ -72,7 +72,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -190,7 +191,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -253,7 +255,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -428,7 +431,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Official targets, scheduled reports, and exports not proven.",
+      "evidence_or_gap": "PR #145 adds tenant-scoped executive KPI targets, approval state and branch ranking publication requiring published BI snapshots plus approved targets for active branches. Full target-vs-actual report UX and reconciliation remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 39
@@ -469,11 +472,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 145,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -536,7 +549,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -546,7 +560,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Assignment and action-outcome workflow not proven.",
+      "evidence_or_gap": "PR #145 adds operational alert assignment/acknowledgement/investigation/resolution/reopen transitions, resolution evidence, append-only alert events and independent verification with audit logs. Automatic task dispatch and full outcome measurement remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 41
@@ -587,11 +601,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 145,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -3743,7 +3767,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Supplier master exists.",
+      "evidence_or_gap": "PR #145 adds explicit tenant-to-supplier relationship, pending/active/suspended/revoked lifecycle and independent approval. Supplier master and branch directory remain in existing base schema; price-list/contract history remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 122
@@ -3784,11 +3808,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 145,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -4137,7 +4171,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Invoice matching and tolerance/exception handling missing.",
+      "evidence_or_gap": "PR #145 adds procurement_match_supplier_invoice: tenant-scoped invoice-to-PO-to-accepted-GRN three-way matching, quantity/price variance classification, tolerance and audit evidence. Exact-head replay and invoice fixture E2E remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 129
@@ -4178,11 +4212,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          145
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 145,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -4245,7 +4289,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -4915,7 +4960,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -4980,7 +5025,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5045,7 +5090,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5110,7 +5155,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5175,7 +5220,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5240,7 +5285,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5305,7 +5350,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5370,7 +5415,7 @@
             "limitations": "Source and CI contracts wired but current Actions run not observed; SQL drafts not replayed; provider/Storage E2E and reconciliation remain unverified."
           }
         ],
-        "latest_implementation_commit": "5bf43d1736551ee65a8bff18a64b37ad10b4902b"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5434,7 +5479,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5498,7 +5543,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5618,7 +5663,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -5794,7 +5839,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6034,7 +6079,7 @@
       "source_status": "GATE",
       "audit_status": "BLOCKED",
       "work_status": "QUEUED",
-      "evidence_or_gap": "Full fee/variance reconciliation not proven.",
+      "evidence_or_gap": "PR #146 adds Xendit payout fee/settlement reconciliation and immutable bank-statement evidence for payroll clearing. This is a source implementation match only; provider credentials, real settlement fixture and exact-head disposable replay remain blocked.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 177
@@ -6075,11 +6120,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          146
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 146,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
       }
     },
     {
@@ -6203,7 +6258,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6272,7 +6328,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6565,7 +6622,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Payment/settlement concepts exist; end-to-end reconciliation is incomplete.",
+      "evidence_or_gap": "PR #143 records cash/non-cash split tender allocations separately from sale total and cash drawer delta; PR #146 adds payroll payout settlement and bank-statement reconciliation. Unified POS revenue-to-bank settlement reconciliation across payment providers remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 186
@@ -6606,11 +6663,28 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          143,
+          146
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 143,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          },
+          {
+            "pr": 146,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
       }
     },
     {
@@ -6680,7 +6754,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6750,7 +6824,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6820,7 +6894,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6890,7 +6964,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -6960,7 +7034,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "867a416045c04e26c53e8052c9bd1543018bf037"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7030,7 +7104,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7100,7 +7174,7 @@
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
         ],
-        "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7281,7 +7355,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7346,7 +7420,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7411,7 +7485,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7476,7 +7550,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7541,7 +7615,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7606,7 +7680,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7671,7 +7745,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7736,7 +7810,7 @@
             "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7807,7 +7881,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7878,7 +7952,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -7949,7 +8023,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -8020,7 +8094,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -8091,7 +8165,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -8162,7 +8236,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -8282,7 +8356,7 @@
             "limitations": "CI run not observed; SQL draft not replayed; source collectors and actual data reconciliation not implemented or tested."
           }
         ],
-        "latest_implementation_commit": "abbd97a3a5b31ec524193c18165e649ca5ad2b2f"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9005,7 +9079,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9151,7 +9226,7 @@
             "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9216,7 +9291,7 @@
             "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9281,7 +9356,7 @@
             "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9401,7 +9476,7 @@
             "limitations": "CI not observed; SQL draft not replayed; provider-signed payment webhook, API-wide entitlement enforcement and export/deletion E2E remain unverified."
           }
         ],
-        "latest_implementation_commit": "9f86d3efc583a021a027f6279a10c2ecf2fe9947"
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9409,9 +9484,9 @@
       "domain": "SaaS Tenant Management",
       "requirement": "Multiple companies sharing one platform safely",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "One D’Lice org with branch slots is not proof of multi-tenant SaaS.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #149 adds two-tenant A/B isolation and 150-branch concurrency probe; this is a multi-tenant scale/isolation implementation start, not full cross-company SaaS lifecycle or browser acceptance.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 251
@@ -9452,11 +9527,21 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          149
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 149,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702"
       }
     },
     {
@@ -9698,7 +9783,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -9836,7 +9922,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -10322,7 +10409,7 @@
       "domain": "Quality, Compliance & Security",
       "requirement": "Food safety, temperature, allergens, recall",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
+      "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
       "evidence_or_gap": "PR #150 adds tenant-configurable food-safety policy request/approval, lot registration from posted receipt/completed production/completed branch check, allergen/temperature inspection, quarantine, independent release/destruction and recall impact recording. No auto-link from stock/Order consumption or runtime proof yet.",
       "source": {
@@ -10386,7 +10473,7 @@
       "domain": "Quality, Compliance & Security",
       "requirement": "Supplier quality, quarantine, corrective actions",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
+      "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
       "evidence_or_gap": "PR #150 adds supplier quality policy, receipt inspection, quarantine, CAPA submission and independent verification/release. Source SQL and single-RPC adapter are draft; no disposable replay/pgTAP/staging E2E yet.",
       "source": {
@@ -10802,7 +10889,8 @@
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -10871,7 +10959,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -10995,7 +11084,8 @@
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
       }
     },
     {
@@ -11196,9 +11286,9 @@
       "domain": "Quality, Compliance & Security",
       "requirement": "Backup, recovery, scale and rollout",
       "source_status": "NOT DEMONSTRATED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Restore drill, measured RPO/RTO, concurrency test, branch pilot and rollback rehearsal.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #148 adds disposable PostgreSQL 17 backup/restore drill and PR #149 adds 150-branch tenant isolation/concurrency probe. Production RPO/RTO, Auth/Storage restore, rollout and rollback rehearsal remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 291
@@ -11239,11 +11329,28 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          148,
+          149
+        ],
         "audit_pr": 147,
         "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
+        "pr_evidence": [
+          {
+            "pr": 148,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          },
+          {
+            "pr": 149,
+            "kind": "feature_specific_implementation_or_acceptance_candidate",
+            "commit": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
+            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+          }
+        ],
+        "latest_implementation_commit": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702"
       }
     }
   ],
@@ -11302,8 +11409,8 @@
       150
     ],
     "feature_id_count": 189,
-    "matched_feature_ids": 73,
-    "unmatched_feature_ids": 116,
+    "matched_feature_ids": 82,
+    "unmatched_feature_ids": 107,
     "duplicate_rule": "Each feature ID counted once; multiple PRs remain attached to the same ID and do not increase feature count.",
     "evidence_boundary": "PR match is implementation/test/audit source evidence only. It does not automatically change source status or progress. Exact-head tests, database, authorization, E2E and reconciliation remain independently scored.",
     "non_feature_prs": {
@@ -11316,7 +11423,7 @@
       "118": "explicit staging mutation confirmation policy",
       "119": "scheduled staging mutation policy"
     },
-    "note": "All 24 open PRs visible in the repository listing were reviewed for file scope. The 123 unmatched IDs need historical PR/commit/source review; unmatched means no direct feature-level mapping in this open-PR set, not that the feature has no code.",
+    "note": "All 24 open PRs visible in the repository listing were reviewed. Additional direct feature matches were added for Procurement, Executive, Finance, SaaS multi-company isolation and combined backup/scale. Remaining unmatched IDs still require historical PR/commit/source review; unmatched means no direct feature-level mapping in the reviewed open-PR set, not that the feature has no code.",
     "crm_increment": {
       "pr": 145,
       "head": "e8858252242ed0e2f7525fee63f403ee8485d1f5",
@@ -11516,6 +11623,19 @@
       "scheduled_dunning": "NOT_WIRED",
       "data_export_deletion": "NOT_IMPLEMENTED",
       "staging_migration": "NOT_APPLIED"
+    },
+    "latest_pr_heads": {
+      "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
+      "145": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "146": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+      "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
+      "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
+      "150": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
     }
+  },
+  "current_audit_status_counts": {
+    "PARTIAL": 145,
+    "NOT VERIFIED": 39,
+    "BLOCKED": 5
   }
 }
