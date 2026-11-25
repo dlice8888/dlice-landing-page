@@ -532,7 +532,7 @@ begin
      or p_source_type not in ('online_order','pos_sale') then
     raise exception using errcode='22023', message='INVALID_CRM_TRANSACTION_LINK_COMMAND';
   end if;
-  if p_phone_e164 is not null and p_phone_e164 !~ '^\\+[1-9][0-9]{7,14}$' then
+  if p_phone_e164 is not null and p_phone_e164 !~ '^\+[1-9][0-9]{7,14}$' then
     raise exception using errcode='22023', message='INVALID_CUSTOMER_PHONE';
   end if;
   perform 1 from public.branches
