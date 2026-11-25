@@ -529,7 +529,6 @@ declare
   v_created boolean := false;
 begin
   if p_tenant_id is null or p_branch_id is null or p_source_id is null
-     or p_actor_user_id is null
      or p_source_type not in ('online_order','pos_sale') then
     raise exception using errcode='22023', message='INVALID_CRM_TRANSACTION_LINK_COMMAND';
   end if;
