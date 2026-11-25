@@ -298,3 +298,43 @@ authenticated UI/API wiring where noted, and provider-specific contracts:
 No tests, migration replay, pgTAP, Edge type-check, staging data writes,
 Production changes or merges were performed. These remain reserved for the
 final validation batch. Keep both release flags false.
+
+
+### CRM campaign outbox increment
+
+Added a provider configuration registry scoped by tenant and channel. The
+configuration stores only an environment secret reference, starts in
+`pending`, and can become active only after an independent approver confirms
+it. The Edge Function exposes Platform Owner-only list/request/approve routes.
+The ERP workspace now exposes provider configuration, independent approval,
+and a campaign action to materialize the outbox after consent-aware audience
+preparation.
+
+Added database worker primitives:
+
+- `crm_queue_campaign_outbox` materializes durable provider-neutral payloads
+  from prepared recipients and requires an active provider configuration.
+- `crm_claim_campaign_outbox` atomically claims due work with
+  `FOR UPDATE SKIP LOCKED`.
+- `crm_finalize_campaign_outbox` records provider acceptance or failure,
+  schedules bounded exponential retries, and dead-letters exhausted attempts.
+- `crm_apply_campaign_provider_receipt` atomically deduplicates signed
+  provider receipt events and updates outbox/recipient delivery state. Its
+  caller must verify provider signatures over raw bytes before invoking it.
+
+The actual send adapter and provider-specific signed webhook route are still
+blocked on an approved, known provider contract and its staging credentials.
+The new UI explicitly states that queuing is not sending.
+
+### HR schema integration conflict found
+
+The two HR SQL drafts currently describe overlapping but incompatible payroll
+models: `HR_WORKFORCE_SCHEMA_DRAFT.sql` creates `hr_payroll_runs` and
+`hr_payroll_lines`, while `HR_PAYROLL_FINANCE_SCHEMA_DRAFT.sql` attempts to
+create a second `hr_payroll_runs` shape and `hr_payroll_run_lines`. Because
+both use `CREATE TABLE IF NOT EXISTS`, applying them in sequence would not
+upgrade the first table to the columns expected by the second draft's
+functions. This is a real integration blocker, not something to paper over
+with another duplicate table. The canonical payroll schema and Finance posting
+adapter must be reconciled into one additive migration before the final batch.
+No migration was run.
