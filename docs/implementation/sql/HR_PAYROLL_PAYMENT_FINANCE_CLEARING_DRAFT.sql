@@ -545,10 +545,10 @@ create trigger hr_payroll_bank_statement_lines_append_only
 -- Immutable imported bank evidence and reconciliation outcomes.
 create or replace function public.hr_reject_payroll_finance_immutable_mutation()
 returns trigger language plpgsql security invoker set search_path=''
-as $
+as $$
 begin
  raise exception using errcode='55000',message='PAYROLL_FINANCE_EVIDENCE_IS_APPEND_ONLY';
-end $;
+end $$;
 revoke all on function public.hr_reject_payroll_finance_immutable_mutation() from public,anon,authenticated;
 drop trigger if exists hr_payroll_bank_reconciliation_append_only on public.hr_payroll_payment_bank_reconciliations;
 create trigger hr_payroll_bank_reconciliation_append_only
