@@ -357,3 +357,42 @@ end;
 $$;
 revoke all on function public.crm_append_loyalty_entry(uuid,uuid,text,bigint,text,text,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_append_loyalty_entry(uuid,uuid,text,bigint,text,text,uuid,uuid) to service_role;
+
+
+-- Independently approve the expiry policy used by financial-close awards.
+create or replace function public.crm_approve_loyalty_earning_rule(
+  p_tenant_id uuid,p_rule_id uuid,p_actor_user_id uuid
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $$
+declare
+  v_rule public.crm_loyalty_earning_rules%rowtype;
+begin
+  if p_tenant_id is null or p_rule_id is null or p_actor_user_id is null then
+    raise exception using errcode='22023',message='INVALID_EARNING_RULE_APPROVAL';
+  end if;
+  select * into v_rule from public.crm_loyalty_earning_rules
+   where tenant_id=p_tenant_id and id=p_rule_id for update;
+  if not found then raise exception using errcode='P0002',message='EARNING_RULE_NOT_FOUND'; end if;
+  if v_rule.status<>'draft' then raise exception using errcode='23514',message='EARNING_RULE_NOT_DRAFT'; end if;
+  if v_rule.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_EARNING_RULE_APPROVER_REQUIRED'; end if;
+  if v_rule.points_validity_days is null or v_rule.points_validity_days not between 1 and 3650
+     or v_rule.points_per_thousand_idr<0 then
+    raise exception using errcode='23514',message='EARNING_RULE_VALIDITY_POLICY_REQUIRED';
+  end if;
+  update public.crm_loyalty_earning_rules set status='retired'
+   where tenant_id=p_tenant_id and status='approved';
+  update public.crm_loyalty_earning_rules set status='approved',
+    approved_by=p_actor_user_id,approved_at=now()
+   where tenant_id=p_tenant_id and id=p_rule_id returning * into v_rule;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'crm.loyalty.earning_rule_approved','crm_loyalty_earning_rules',v_rule.id::text,
+    jsonb_build_object('tenant_id',p_tenant_id,'version',v_rule.version,
+      'points_per_thousand_idr',v_rule.points_per_thousand_idr,
+      'points_validity_days',v_rule.points_validity_days));
+  return jsonb_build_object('rule_id',v_rule.id,'status',v_rule.status,
+    'version',v_rule.version,'points_validity_days',v_rule.points_validity_days);
+end;
+$$;
+revoke all on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) to service_role;
