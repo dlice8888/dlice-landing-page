@@ -68,7 +68,7 @@ SELECT CASE WHEN current_user='authenticated' AND current_setting('app.tenant_id
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_B';
 SQL
 cat > "$LOG_DIR/tenant-b.sql" <<SQL
-SELECT CASE WHEN current_setting('role')='authenticated' AND current_setting('app.tenant_id')='$TENANT_B' AND count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
+SELECT CASE WHEN current_user='authenticated' AND current_setting('app.tenant_id')='$TENANT_B' AND count(*)=1 THEN 1 ELSE 1/0 END FROM public.branches;
 SELECT CASE WHEN count(*)=0 THEN 1 ELSE 1/0 END FROM public.branches WHERE tenant_id='$TENANT_A';
 SQL
 
