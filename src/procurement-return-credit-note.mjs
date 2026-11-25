@@ -8,7 +8,7 @@ export function buildSupplierReturnCreditNote({invoice,invoiceLine,receivedQuant
  if(!invoiceLine?.id||invoiceLine.invoiceId!==invoice.id)fail("INVOICE_LINE_SCOPE_MISMATCH","Return line must belong to invoice");
  for(const [k,v] of Object.entries({receivedQuantity,previouslyReturnedQuantity,returnQuantity}))if(!Number.isSafeInteger(v)||v<0)fail("RETURN_QUANTITY_INVALID",k);
  if(returnQuantity<=0||previouslyReturnedQuantity+returnQuantity>receivedQuantity)fail("RETURN_EXCEEDS_RECEIVED_QUANTITY","Return quantity exceeds net received quantity");
- if(!Number.isSafeInteger(unitPriceIdr)||unitPriceIdr<=0||typeof reason!=="string"||reason.trim().length<5)fail("RETURN_EVIDENCE_REQUIRED","Unit price and reason are required");
+ if(!Number.isSafeInteger(unitPriceIdr)||unitPriceIdr<=0||unitPriceIdr!==invoiceLine.unitPriceIdr||typeof reason!=="string"||reason.trim().length<5)fail("RETURN_EVIDENCE_REQUIRED","Unit price and reason are required");
  if(!approvedBy||approvedBy===receivedBy)fail("INDEPENDENT_RETURN_APPROVER_REQUIRED","Return approver must differ from receiver");
  const creditAmountIdr=returnQuantity*unitPriceIdr;
  if(!Number.isSafeInteger(creditAmountIdr)||creditAmountIdr<=0)fail("CREDIT_NOTE_AMOUNT_INVALID","Credit note amount is invalid");
