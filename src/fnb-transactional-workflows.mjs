@@ -128,10 +128,10 @@ export async function persistApprovedPayrollRun(input, deps) {
  * transaction; dedupe and apply the event under a tenant-scoped transaction.
  */
 export async function ingestSignedDeliveryWebhook(input, deps) {
+  const secret = await adapter(deps, "getProviderWebhookSecret")(input.providerId);
   const verified = await verifyDeliveryWebhook({
     rawBody: input.rawBody, signature: input.signature, timestamp: input.timestamp,
-    secret: adapter(deps, "getProviderWebhookSecret")(input.providerId),
-    nowMs: input.nowMs, maxSkewSeconds: input.maxSkewSeconds,
+    secret, nowMs: input.nowMs, maxSkewSeconds: input.maxSkewSeconds,
   });
   const scope = { tenantId: required(input.tenantId, "tenantId"),
     branchId: input.branchId == null ? null : required(input.branchId, "branchId"),
