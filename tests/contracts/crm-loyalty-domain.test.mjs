@@ -27,6 +27,7 @@ test('loyalty ledger rejects duplicate keys, invalid signs, and overspending', (
   assert.equal(earn.ok, true);
   assert.equal(appendLoyaltyEntry({ tenant_id: 't1', customer_tenant_id: 't1', customer_id: 'c1', entry_id: 'e2', kind: 'earn', points: 10, idempotency_key: 'k1', source_reference: 'order-2', existingEntries: [earn.entry] }).code, 'DUPLICATE_IDEMPOTENCY_KEY');
   assert.equal(appendLoyaltyEntry({ tenant_id: 't1', customer_tenant_id: 't1', customer_id: 'c1', entry_id: 'e2', kind: 'redeem', points: -101, idempotency_key: 'k2', source_reference: 'voucher-1', existingEntries: [earn.entry] }).code, 'INSUFFICIENT_POINTS');
+  assert.equal(appendLoyaltyEntry({ tenant_id: 't1', customer_tenant_id: 't1', customer_id: 'c1', entry_id: 'e3', kind: 'adjustment', points: -101, idempotency_key: 'k3', source_reference: 'manual-adjustment', existingEntries: [earn.entry] }).code, 'INSUFFICIENT_POINTS');
   assert.equal(appendLoyaltyEntry({ tenant_id: 't1', customer_tenant_id: 't2', customer_id: 'c1', entry_id: 'e2', kind: 'earn', points: 10, idempotency_key: 'k2', source_reference: 'order-2' }).code, 'TENANT_SCOPE_MISMATCH');
 });
 
