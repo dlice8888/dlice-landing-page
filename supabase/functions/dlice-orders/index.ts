@@ -2618,6 +2618,10 @@ if (action === "admin-set-profile-role") {
     let binary:string;try{binary=atob(encoded);}catch{return fail("Payload file tidak valid.",422,origin);}
     if(binary.length>5*1024*1024)return fail("Ukuran file melebihi 5 MB.",422,origin);
     const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    const isJpeg=bytes.length>=3&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
+    const isPng=bytes.length>=8&&bytes[0]===0x89&&bytes[1]===0x50&&bytes[2]===0x4e&&bytes[3]===0x47&&bytes[4]===0x0d&&bytes[5]===0x0a&&bytes[6]===0x1a&&bytes[7]===0x0a;
+    const isWebp=bytes.length>=12&&String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&String.fromCharCode(...bytes.slice(8,12))==="WEBP";
+    if((mime==="image/jpeg"&&!isJpeg)||(mime==="image/png"&&!isPng)||(mime==="image/webp"&&!isWebp))return fail("Isi file tidak sesuai dengan MIME yang dinyatakan.",422,origin);
     const ext=mime==="image/jpeg"?"jpg":mime==="image/png"?"png":"webp";
     const path=dispatch.tenant_id+"/"+dispatch.branch_id+"/"+dispatch.id+"/"+crypto.randomUUID()+"."+ext;
     const {data:uploaded,error:uploadError}=await admin.storage.from("delivery-proof").upload(path,bytes,{contentType:mime,upsert:false});
