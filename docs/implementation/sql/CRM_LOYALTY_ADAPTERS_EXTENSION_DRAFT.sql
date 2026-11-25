@@ -562,6 +562,7 @@ begin
   if not found then raise exception using errcode='P0002',message='PAID_POS_SALE_NOT_FOUND'; end if;
   select id,status into v_cash_id,v_cash_status from public.cash_reconciliations
    where branch_id=p_branch_id and shift_id=(select shift_id from public.pos_sales where id=p_source_id)
+     and status='approved' and reviewed_by is not null and reviewed_at is not null
    order by created_at desc limit 1 for share;
   if v_cash_id is null or v_cash_status<>'approved' then
    raise exception using errcode='23514',message='APPROVED_SHIFT_CASH_RECONCILIATION_REQUIRED';
@@ -595,11 +596,11 @@ begin
    from public.payment_settlement_items psi
    join public.payment_settlements ps on ps.id=psi.settlement_id
    where psi.pos_sale_id=p_source_id and ps.status='matched'
-     and ps.received_amount_idr=ps.net_amount_idr;
+     and ps.received_amount_idr=ps.net_amount_idr and ps.reconciled_by is not null and ps.reconciled_at is not null;
   if exists(select 1 from public.payment_settlement_items psi
     join public.payment_settlements ps on ps.id=psi.settlement_id
     where psi.pos_sale_id=p_source_id and
-      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr)) then
+      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr or ps.reconciled_by is null or ps.reconciled_at is null)) then
    raise exception using errcode='23514',message='POS_SETTLEMENT_BATCH_NOT_RECONCILED';
   end if;
  else
@@ -630,7 +631,7 @@ begin
   end if;
   select coalesce(sum(amount_idr),0),coalesce(array_agg(id order by id),'{}'::uuid[])
    into v_refunds,v_refund_ids from public.refund_records
-   where pos_sale_id=p_source_id and branch_id=p_branch_id and status='processed';
+   where pos_sale_id=p_source_id and branch_id=p_branch_id and status='processed' and processed_by is not null and processed_at is not null;
  else
   if exists(select 1 from public.refund_records r
     where (r.order_id=p_source_id or r.payment_record_id=any(v_payment_ids))
@@ -640,7 +641,7 @@ begin
   select coalesce(sum(amount_idr),0),coalesce(array_agg(id order by id),'{}'::uuid[])
    into v_refunds,v_refund_ids from public.refund_records
    where (order_id=p_source_id or payment_record_id=any(v_payment_ids))
-     and branch_id=p_branch_id and status='processed';
+     and branch_id=p_branch_id and status='processed' and processed_by is not null and processed_at is not null;
  end if;
  if v_refunds>v_gross-v_discount then
   raise exception using errcode='23514',message='PROCESSED_REFUNDS_EXCEED_PAID_SOURCE';
