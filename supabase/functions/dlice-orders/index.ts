@@ -2183,6 +2183,50 @@ if (action === "admin-set-profile-role") {
   }
 
 
+  if (action === "erp-list-delivery-dispatches") {
+    if(!hasPerm("orders")&&!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin delivery tidak diizinkan.",403,origin);
+    const branchId=safeText(body.branch_id,80),orderId=safeText(body.order_id,80);
+    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    let q=admin.from("delivery_dispatches").select("id,tenant_id,branch_id,order_id,provider,provider_service,tracking_number,tracking_url,delivery_fee_idr,cod_amount_idr,status,booked_at,delivered_at,failed_at,created_at,orders(order_number,customer_name,delivery_address)").order("created_at",{ascending:false}).limit(100);
+    if(branchId)q=q.eq("branch_id",branchId);
+    if(orderId)q=q.eq("order_id",orderId);
+    if(!branchId&&!orderId){const ids=await branchIdsForActor().catch(()=>[]);q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");}
+    const {data,error}=await q;
+    if(error)return fail("Data pengiriman belum tersedia. Pastikan migrasi Delivery diterapkan pada batch final.",503,origin);
+    return json({dispatches:data||[]},200,origin);
+  }
+
+  if (action === "erp-book-delivery-dispatch") {
+    if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin booking delivery tidak diizinkan.",403,origin);
+    const orderId=safeText(body.order_id,80),provider=safeText(body.provider,40);
+    const providerService=safeText(body.provider_service,80)||null;
+    const trackingNumber=safeText(body.tracking_number,120)||null;
+    const trackingUrl=safeText(body.tracking_url,500)||null;
+    const deliveryFee=Number(body.delivery_fee_idr),codAmount=Number(body.cod_amount_idr||0);
+    const idempotencyKey=safeText(body.idempotency_key,120);
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)||
+       provider.length<2||!Number.isSafeInteger(deliveryFee)||deliveryFee<0||
+       !Number.isSafeInteger(codAmount)||codAmount<0||idempotencyKey.length<8) {
+      return fail("Data booking pengiriman tidak valid.",422,origin);
+    }
+    if(trackingUrl){try{const u=new URL(trackingUrl);if(u.protocol!=="https:")return fail("Tracking URL wajib HTTPS.",422,origin);}catch{return fail("Tracking URL tidak valid.",422,origin);}}
+    const {data:order,error:orderError}=await admin.from("orders").select("id,branch_id,fulfillment_status,payment_status").eq("id",orderId).maybeSingle();
+    if(orderError)return fail("Pesanan belum dapat diverifikasi.",503,origin);
+    if(!order)return fail("Pesanan tidak ditemukan.",404,origin);
+    if(!order.branch_id||!await branchAccess(order.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.rpc("delivery_book_dispatch",{
+      p_order_id:orderId,p_provider:provider,p_provider_service:providerService,
+      p_tracking_number:trackingNumber,p_tracking_url:trackingUrl,p_delivery_fee_idr:deliveryFee,
+      p_cod_amount_idr:codAmount,p_idempotency_key:idempotencyKey,p_actor_user_id:actor.user.id
+    });
+    if(error){
+      const duplicate=error.code==="23505",notReady=String(error.message||"").includes("ORDER_NOT_READY"),
+        unpaid=String(error.message||"").includes("ORDER_PAYMENT_NOT_SETTLED");
+      return fail(duplicate?"Pengiriman aktif atau idempotency key sudah digunakan.":notReady?"Pesanan harus berstatus siap sebelum dikirim.":unpaid?"Pembayaran pesanan belum diselesaikan.":"Booking pengiriman ditolak.",duplicate||notReady||unpaid?409:422,origin);
+    }
+    return json({dispatch:data},201,origin);
+  }
+
   if (action === "erp-list-fulfillment-orders") {
     if(!hasPerm("orders")&&!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin fulfillment tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
