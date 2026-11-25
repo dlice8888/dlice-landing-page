@@ -1647,7 +1647,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -1669,6 +1669,31 @@ if (action === "admin-set-profile-role") {
       const branchIds=new Set((branches.data||[]).map((b:any)=>b.id));
       const branchSnapshots=(snapshots.data||[]).filter((x:any)=>branchIds.has(x.dimension_value));
       return json({branches:branches.data||[],snapshots:branchSnapshots},200,origin);
+    }
+    if(action==="erp-executive-publish-branch-ranking"){
+      const metricId=safeText(body.metric_id,64),start=safeText(body.period_start,10),end=safeText(body.period_end,10),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(metricId)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||
+        !/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start||idempotencyKey.length<8)
+        return fail("Metric, periode, atau idempotency key ranking tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_publish_branch_ranking",{
+        p_tenant_id:tenantId,p_metric_id:metricId,p_period_start:start,p_period_end:end,
+        p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey,
+      });
+      if(error){
+        const message=String(error.message||"");
+        if(message.includes("EXECUTIVE_ACTIVE_BRANCH_COUNT_OUT_OF_RANGE"))return fail("Ranking memerlukan 1–150 cabang aktif.",409,origin);
+        if(message.includes("EXECUTIVE_BRANCH_SNAPSHOT_OR_APPROVED_TARGET_MISSING"))return fail("Setiap cabang aktif wajib memiliki BI snapshot published dan target yang disetujui untuk periode ini.",409,origin);
+        return fail("Ranking cabang gagal dipublikasikan. Periksa snapshot BI, target, dan periode.",409,origin);
+      }
+      return json({ranking:data},201,origin);
+    }
+    if(action==="erp-executive-list-branch-rankings"){
+      const {data,error}=await admin.from("executive_branch_rankings")
+        .select("id,metric_id,period_start,period_end,branch_count,status,published_at,executive_branch_ranking_items(rank_position,branch_id,metric_value,target_value,variance,branches(code,name))")
+        .eq("tenant_id",tenantId).order("published_at",{ascending:false}).limit(50);
+      if(error)return fail("Ranking cabang belum tersedia. Terapkan schema pada batch final.",503,origin);
+      return json({rankings:data||[]},200,origin);
     }
     if(action==="erp-executive-list-alerts"){
       const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
