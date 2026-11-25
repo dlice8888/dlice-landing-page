@@ -49,9 +49,12 @@ create index if not exists food_lot_distributions_impact_idx on public.food_lot_
 create unique index if not exists supplier_quality_one_active_quarantine_uq
  on public.supplier_quality_quarantines(tenant_id,branch_id,receipt_item_id) where status in ('held','release_pending');
 
-alter table public.food_lot_quarantines
-  add constraint food_lot_quarantines_recall_fk
-  foreign key(tenant_id,recall_id) references public.food_recalls(tenant_id,id) on delete restrict;
+do $ begin
+ if not exists(select 1 from pg_constraint where conname='food_lot_quarantines_recall_fk' and conrelid='public.food_lot_quarantines'::regclass) then
+  alter table public.food_lot_quarantines add constraint food_lot_quarantines_recall_fk
+   foreign key(tenant_id,recall_id) references public.food_recalls(tenant_id,id) on delete restrict;
+ end if;
+end $;
 create unique index if not exists food_lot_one_active_quarantine_uq
   on public.food_lot_quarantines(tenant_id,branch_id,lot_code) where status in ('held','release_pending');
 
@@ -180,7 +183,7 @@ begin
   select null::uuid,1::numeric,cr.status into v_item,v_source_quantity,v_status
    from public.branch_operation_checklist_runs cr join public.branches b on b.id=cr.branch_id
    where cr.id=p_source_id and cr.branch_id=p_branch_id and b.tenant_id=p_tenant_id for update of cr;
-  if not found or v_status<>'completed' then
+  if not found or v_status<>'completed' or p_quantity>v_source_quantity then
    raise exception using errcode='23514',message='COMPLETED_BRANCH_CHECK_REQUIRED';
   end if;
  end if;
@@ -454,7 +457,7 @@ create or replace function public.quality_submit_supplier_capa(
 as $$
 declare v public.supplier_corrective_actions%rowtype; v_event_key text;
 begin
- v_event_key:='capa-submit:'||p_capa_id::text||':'||md5(coalesce(p_evidence_reference,''));
+ v_event_key:='capa-submit:'||p_capa_id::text||':'||md5(concat_ws('|',coalesce(p_root_cause,''),coalesce(p_corrective_action,''),coalesce(p_preventive_action,''),coalesce(p_evidence_reference,'')));
  if exists(select 1 from public.quality_compliance_events where tenant_id=p_tenant_id and idempotency_key=v_event_key) then
   return jsonb_build_object('status','duplicate','capa_id',p_capa_id);
  end if;
@@ -538,7 +541,7 @@ create or replace function public.quality_request_food_safety_policy(
  p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.food_safety_policies%rowtype; v_version integer;
+declare v public.food_safety_policies%rowtype; v_version integer; v_allergens text[];
 begin
  if length(btrim(coalesce(p_product_class,''))) not between 1 and 80
   or p_min_temp_c is null or p_max_temp_c is null or p_min_temp_c>p_max_temp_c
@@ -548,11 +551,12 @@ begin
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_FOOD_SAFETY_POLICY_REQUEST';
  end if;
+ select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) into v_allergens from unnest(p_required_allergens) a;
  perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_product_class,0));
  select * into v from public.food_safety_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
  if found then
   if v.branch_id<>p_branch_id or v.product_class<>p_product_class or v.min_temp_c<>p_min_temp_c
-   or v.max_temp_c<>p_max_temp_c or v.required_allergens<>p_required_allergens then
+   or v.max_temp_c<>p_max_temp_c or v.required_allergens<>v_allergens then
    raise exception using errcode='23505',message='FOOD_SAFETY_POLICY_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
@@ -565,7 +569,7 @@ begin
  insert into public.food_safety_policies(tenant_id,branch_id,policy_version,product_class,min_temp_c,max_temp_c,
   required_allergens,effective_from,effective_until,status,created_by,request_idempotency_key)
  values(p_tenant_id,p_branch_id,v_version,p_product_class,p_min_temp_c,p_max_temp_c,
-  (select coalesce(array_agg(distinct lower(btrim(a)) order by lower(btrim(a))),'{}'::text[]) from unnest(p_required_allergens) a),
+  v_allergens,
   p_effective_from,p_effective_until,'draft',p_actor_user_id,p_idempotency_key) returning * into v;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'food_safety_policy',v.id,'food_safety_policy.requested',p_actor_user_id,p_idempotency_key,
@@ -584,7 +588,7 @@ create or replace function public.quality_request_supplier_quality_policy(
  p_effective_from timestamptz,p_effective_until timestamptz,p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.supplier_quality_policies%rowtype; v_version integer;
+declare v public.supplier_quality_policies%rowtype; v_version integer; v_codes text[];
 begin
  if p_supplier_id is null or p_critical_finding_codes is null
   or exists(select 1 from unnest(p_critical_finding_codes) c where length(btrim(coalesce(c,'')))=0)
@@ -592,16 +596,17 @@ begin
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_SUPPLIER_QUALITY_POLICY_REQUEST';
  end if;
+ select coalesce(array_agg(distinct btrim(c) order by btrim(c)),'{}'::text[]) into v_codes from unnest(p_critical_finding_codes) c;
  perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text||':'||p_supplier_id::text,0));
  select * into v from public.supplier_quality_policies where tenant_id=p_tenant_id and request_idempotency_key=p_idempotency_key;
  if found then
-  if v.branch_id<>p_branch_id or v.supplier_id<>p_supplier_id or v.critical_finding_codes<>p_critical_finding_codes then
+  if v.branch_id<>p_branch_id or v.supplier_id<>p_supplier_id or v.critical_finding_codes<>v_codes then
    raise exception using errcode='23505',message='SUPPLIER_QUALITY_POLICY_IDEMPOTENCY_COLLISION';
   end if;
   return jsonb_build_object('status','duplicate','policy_id',v.id,'policy_version',v.policy_version);
  end if;
  if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id)
-  or not exists(select 1 from public.suppliers where id=p_supplier_id) then
+  or not exists(select 1 from public.suppliers where id=p_supplier_id and is_active=true) then
   raise exception using errcode='23503',message='SUPPLIER_QUALITY_POLICY_SCOPE_INVALID';
  end if;
  select coalesce(max(policy_version),0)+1 into v_version from public.supplier_quality_policies
@@ -609,7 +614,7 @@ begin
  insert into public.supplier_quality_policies(tenant_id,branch_id,supplier_id,policy_version,critical_finding_codes,
   effective_from,effective_until,status,created_by,request_idempotency_key)
  values(p_tenant_id,p_branch_id,p_supplier_id,v_version,
-  (select coalesce(array_agg(distinct btrim(c) order by btrim(c)),'{}'::text[]) from unnest(p_critical_finding_codes) c),
+  v_codes,
   p_effective_from,p_effective_until,'draft',p_actor_user_id,p_idempotency_key) returning * into v;
  insert into public.quality_compliance_events(tenant_id,branch_id,entity_type,entity_id,action,actor_user_id,idempotency_key,evidence)
  values(p_tenant_id,p_branch_id,'supplier_quality_policy',v.id,'supplier_quality_policy.requested',p_actor_user_id,p_idempotency_key,
