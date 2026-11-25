@@ -68,6 +68,36 @@ begin foreach t in array array['executive_kpi_targets','executive_operational_al
  execute format('revoke all on public.%I from anon,authenticated',t);
  execute format('grant select,insert,update,delete on public.%I to service_role',t);
 end loop; end $$;
+create or replace function public.executive_transition_alert(p_alert_id uuid,p_next_status text,p_actor_user_id uuid,p_note text,p_evidence_reference text)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.executive_operational_alerts%rowtype;
+begin
+ if p_next_status not in ('acknowledged','investigating','resolved','dismissed','open') then raise exception using errcode='22023',message='INVALID_EXECUTIVE_ALERT_STATUS'; end if;
+ select * into v from public.executive_operational_alerts where id=p_alert_id for update;
+ if not found then raise exception using errcode='P0002',message='EXECUTIVE_ALERT_NOT_FOUND'; end if;
+ if v.status in ('resolved','dismissed') and p_next_status<>'open' then raise exception using errcode='23514',message='EXECUTIVE_ALERT_TERMINAL'; end if;
+ if p_next_status='resolved' and (length(btrim(coalesce(p_note,'')))<8 or length(btrim(coalesce(p_evidence_reference,'')))<8) then
+  raise exception using errcode='22023',message='EXECUTIVE_RESOLUTION_EVIDENCE_REQUIRED';
+ end if;
+ if p_next_status='open' and v.status not in ('resolved','dismissed') then raise exception using errcode='23514',message='EXECUTIVE_ALERT_NOT_REOPENABLE'; end if;
+ update public.executive_operational_alerts set status=p_next_status,
+  assigned_to=case when p_next_status in ('acknowledged','investigating','resolved') then coalesce(assigned_to,p_actor_user_id) else assigned_to end,
+  resolved_by=case when p_next_status='resolved' then p_actor_user_id when p_next_status='open' then null else resolved_by end,
+  resolved_at=case when p_next_status='resolved' then now() when p_next_status='open' then null else resolved_at end,
+  resolution_note=case when p_next_status='resolved' then p_note when p_next_status='open' then null else resolution_note end,
+  verified_by=case when p_next_status='open' then null else verified_by end,
+  verified_at=case when p_next_status='open' then null else verified_at end,
+  updated_at=now() where id=p_alert_id returning * into v;
+ insert into public.executive_alert_events(tenant_id,alert_id,event_type,actor_user_id,note,evidence_reference)
+ values(v.tenant_id,v.id,case when p_next_status='open' then 'reopened' else p_next_status end,p_actor_user_id,p_note,p_evidence_reference);
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.alert.'||p_next_status,'executive_operational_alert',v.id::text,jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'evidence_reference',p_evidence_reference));
+ return jsonb_build_object('alert_id',v.id,'status',v.status,'resolved_by',v.resolved_by);
+end $;
+revoke all on function public.executive_transition_alert(uuid,text,uuid,text,text) from public,anon,authenticated;
+grant execute on function public.executive_transition_alert(uuid,text,uuid,text,text) to service_role;
+
 create or replace function public.executive_verify_alert(p_alert_id uuid,p_actor_user_id uuid,p_note text,p_evidence_reference text)
 returns jsonb language plpgsql security invoker set search_path=''
 as $$
