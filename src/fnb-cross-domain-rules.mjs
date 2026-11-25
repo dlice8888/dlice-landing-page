@@ -58,7 +58,9 @@ export function calculateFranchiseRoyalty({ tenant_id, contract_tenant_id, contr
   const day = Date.parse(business_date), start = Date.parse(effective_from), end = effective_until ? Date.parse(effective_until) : Number.POSITIVE_INFINITY;
   if (day < start || day > end) return fail("CONTRACT_NOT_EFFECTIVE");
   if (!integer(eligible_net_sales) || eligible_net_sales < 0 || !integer(rate_bps) || rate_bps < 0 || rate_bps > 10000 || !integer(minimum_amount) || minimum_amount < 0 || !text(currency)) return fail("INVALID_ROYALTY_INPUT");
-  const calculated = Math.floor((eligible_net_sales * rate_bps) / 10000);
+  const calculatedBig = (BigInt(eligible_net_sales) * BigInt(rate_bps)) / 10000n;
+  if (calculatedBig > BigInt(Number.MAX_SAFE_INTEGER)) return fail("ROYALTY_AMOUNT_OVERFLOW");
+  const calculated = Number(calculatedBig);
   return ok({ amount: Math.max(calculated, minimum_amount), calculated_amount: calculated, currency, contract_version });
 }
 
