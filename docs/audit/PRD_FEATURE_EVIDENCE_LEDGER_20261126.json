@@ -7220,7 +7220,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Branch master foundation exists; ownership policies not proven end-to-end.",
+      "evidence_or_gap": "Existing branch master provides tenant/branch ownership primitives, but franchise-specific owner/territory assignment and isolation policy are still not proven. PR #145 remains Platform Owner-gated; tenant release flags remain false.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 204
@@ -7276,10 +7276,12 @@
           },
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7289,7 +7291,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Application and due diligence workflow missing.",
+      "evidence_or_gap": "PR #145 has application creation, atomic seeding of six due-diligence checks, independent evidence-backed reviewer actions and approval gating. Applicant lifecycle E2E and communications remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 205
@@ -7339,10 +7341,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7352,7 +7356,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Site scorecard, financial forecast and approval missing.",
+      "evidence_or_gap": "PR #145 has site records and evidence-backed site review; agreement creation requires at least one approved site. Site scoring/forecasting, territory conflict automation and map/geospatial validation remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 206
@@ -7402,10 +7406,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7414,8 +7420,8 @@
       "requirement": "Opening project and readiness",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Branch setup/checklist foundations exist; full project workflow missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 now seeds ten opening gates per agreement, exposes evidence-backed independent gate review, and makes signed agreement activation call the atomic readiness assertion; activation rolls back unless all ten gates pass and current agreement version is effective.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 207
@@ -7465,10 +7471,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7478,7 +7486,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Document/version/renewal controls missing.",
+      "evidence_or_gap": "PR #145 includes versioned agreement drafts, independent version approval, signature submission, external signature evidence recording, append-only agreement event history and signed activation. Expiry/renewal automation and cryptographic e-signature verification remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 208
@@ -7528,10 +7536,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7541,7 +7551,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Contract-driven royalty ledger and settlement missing.",
+      "evidence_or_gap": "PR #145 royalty statement RPC reads only published branch net-sales BI snapshots covered by a passed reconciliation run and effective agreement version; it persists an idempotent draft statement. Review/approval, invoice, payment and Finance journal posting/reconciliation remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 209
@@ -7591,10 +7601,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7604,7 +7616,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Geographic scope and tenant/franchise isolation missing.",
+      "evidence_or_gap": "Franchise actions remain Platform Owner-only; activation checks tenant/branch pairing. Franchise territory-scoped operator roles and geography-based branch/territory restrictions are not yet implemented.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 210
@@ -7654,10 +7666,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -7667,7 +7681,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Audit, corrective action and partner reporting missing.",
+      "evidence_or_gap": "No franchisee performance dashboard, compliance inspection/CAPA or partner reporting integration is included in this increment; remain explicit gap.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 211
@@ -7717,10 +7731,12 @@
         "pr_evidence": [
           {
             "pr": 145,
-            "kind": "transactional_domain_orchestration_and_sql_drafts",
-            "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+            "kind": "franchise_opening_gate_seed_review_and_activation_guard",
+            "commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+            "limitations": "Contract tests wired but exact-head CI not observed; SQL draft not replayed; tenant provisioning and E2E remain unverified."
           }
-        ]
+        ],
+        "latest_implementation_commit": "a32ccd69b648691b3709d592ed2a7d967cd7b975"
       }
     },
     {
@@ -11379,6 +11395,33 @@
       "storage_e2e": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
       "tenant_release_flags": "UNCHANGED_FALSE"
+    },
+    "franchise_increment": {
+      "pr": 145,
+      "latest_head": "a32ccd69b648691b3709d592ed2a7d967cd7b975",
+      "feature_ids": [
+        "D13-F01",
+        "D13-F02",
+        "D13-F03",
+        "D13-F04",
+        "D13-F05",
+        "D13-F06",
+        "D13-F07",
+        "D13-F08"
+      ],
+      "changes": [
+        "seed_ten_opening_gates_in_agreement_transaction",
+        "independent_evidence_backed_gate_review_rpc",
+        "activation_requires_all_ten_gates_and_effective_version",
+        "Edge_action_and_ERP_gate_review_UI",
+        "fix_agreement_effective_date_regex"
+      ],
+      "contract_test": "tests/contracts/franchise-opening-gates-contract.test.mjs",
+      "exact_head_ci": "NOT_OBSERVED",
+      "disposable_replay": "NOT_RUN",
+      "pgTap": "NOT_RUN",
+      "staging_migration": "NOT_APPLIED",
+      "tenant_provisioning_e2e": "NOT_RUN"
     }
   }
 }
