@@ -215,6 +215,155 @@ $$;
 revoke all on function public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid) to service_role;
 
+
+-- Automatically link identifiable paid orders and paid POS sales to CRM.
+-- This does not award points; points require the separate reconciled-close RPC.
+create or replace function public.crm_auto_link_paid_transaction_customer()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_tenant_id uuid;
+  v_raw_phone text;
+  v_digits text;
+  v_phone text;
+  v_source_type text;
+  v_display_name text;
+begin
+  if tg_table_name='orders' then
+    if new.payment_status<>'paid' or new.branch_id is null then return new; end if;
+    v_source_type:='online_order';
+    v_raw_phone:=coalesce(new.customer_whatsapp,'');
+    v_display_name:=nullif(btrim(new.customer_name),'');
+  elsif tg_table_name='pos_sales' then
+    if new.payment_status<>'paid' then return new; end if;
+    v_source_type:='pos_sale';
+    v_raw_phone:=coalesce(new.customer_reference,'');
+    v_display_name:=null;
+  else
+    return new;
+  end if;
+
+  if v_raw_phone !~ '^[+0-9[:space:]()-]+
+returns trigger language plpgsql security invoker set search_path = ''
+as $$
+begin
+  raise exception using errcode='55000',message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
+    detail=tg_table_name||' is append-only; record a compensating event instead';
+end;
+$$;
+revoke all on function public.crm_reject_append_only_mutation() from public,anon,authenticated;
+drop trigger if exists crm_consent_events_append_only on public.crm_customer_consent_events;
+create trigger crm_consent_events_append_only before update or delete on public.crm_customer_consent_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_loyalty_ledger_append_only on public.crm_loyalty_ledger;
+create trigger crm_loyalty_ledger_append_only before update or delete on public.crm_loyalty_ledger
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_provider_events_append_only on public.crm_campaign_provider_events;
+create trigger crm_campaign_provider_events_append_only before update or delete on public.crm_campaign_provider_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_attributions_append_only on public.crm_campaign_attributions;
+create trigger crm_campaign_attributions_append_only before update or delete on public.crm_campaign_attributions
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_costs_append_only on public.crm_campaign_costs;
+create trigger crm_campaign_costs_append_only before update or delete on public.crm_campaign_costs
+for each row execute function public.crm_reject_append_only_mutation();
+
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'crm_loyalty_earning_rules',
+    'crm_financial_close_projections',
+    'crm_campaign_outbox',
+    'crm_campaign_provider_events',
+    'crm_campaign_attributions',
+    'crm_campaign_costs'
+  ] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('drop policy if exists service_role_only on public.%I',t);
+    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
+    execute format('revoke all on public.%I from anon, authenticated',t);
+    execute format('grant select,insert,update,delete on public.%I to service_role',t);
+  end loop;
+end $$;
+ then return new; end if;
+  v_digits:=regexp_replace(v_raw_phone,'[^0-9]','','g');
+  if v_digits='' then return new; end if;
+  if left(v_digits,1)='0' then
+    v_digits:='62'||substr(v_digits,2);
+  elsif left(v_digits,1)='8' then
+    v_digits:='62'||v_digits;
+  end if;
+  v_phone:='+'||v_digits;
+  if v_phone !~ '^\+[1-9][0-9]{7,14}
+returns trigger language plpgsql security invoker set search_path = ''
+as $$
+begin
+  raise exception using errcode='55000',message='CRM_APPEND_ONLY_RECORD_CANNOT_BE_CHANGED',
+    detail=tg_table_name||' is append-only; record a compensating event instead';
+end;
+$$;
+revoke all on function public.crm_reject_append_only_mutation() from public,anon,authenticated;
+drop trigger if exists crm_consent_events_append_only on public.crm_customer_consent_events;
+create trigger crm_consent_events_append_only before update or delete on public.crm_customer_consent_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_loyalty_ledger_append_only on public.crm_loyalty_ledger;
+create trigger crm_loyalty_ledger_append_only before update or delete on public.crm_loyalty_ledger
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_provider_events_append_only on public.crm_campaign_provider_events;
+create trigger crm_campaign_provider_events_append_only before update or delete on public.crm_campaign_provider_events
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_attributions_append_only on public.crm_campaign_attributions;
+create trigger crm_campaign_attributions_append_only before update or delete on public.crm_campaign_attributions
+for each row execute function public.crm_reject_append_only_mutation();
+drop trigger if exists crm_campaign_costs_append_only on public.crm_campaign_costs;
+create trigger crm_campaign_costs_append_only before update or delete on public.crm_campaign_costs
+for each row execute function public.crm_reject_append_only_mutation();
+
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'crm_loyalty_earning_rules',
+    'crm_financial_close_projections',
+    'crm_campaign_outbox',
+    'crm_campaign_provider_events',
+    'crm_campaign_attributions',
+    'crm_campaign_costs'
+  ] loop
+    execute format('alter table public.%I enable row level security',t);
+    execute format('drop policy if exists service_role_only on public.%I',t);
+    execute format('create policy service_role_only on public.%I for all to service_role using (true) with check (true)',t);
+    execute format('revoke all on public.%I from anon, authenticated',t);
+    execute format('grant select,insert,update,delete on public.%I to service_role',t);
+  end loop;
+end $$;
+ then return new; end if;
+
+  select tenant_id into v_tenant_id from public.branches where id=new.branch_id;
+  if v_tenant_id is null then
+    raise exception using errcode='23503',message='CRM_SOURCE_BRANCH_TENANT_NOT_FOUND';
+  end if;
+
+  perform public.crm_link_transaction_customer(
+    v_tenant_id,new.branch_id,v_source_type,new.id,null,v_display_name,v_phone,auth.uid()
+  );
+  return new;
+end;
+$;
+revoke all on function public.crm_auto_link_paid_transaction_customer() from public,anon,authenticated;
+drop trigger if exists crm_auto_link_paid_order on public.orders;
+create trigger crm_auto_link_paid_order
+after insert or update of payment_status,customer_whatsapp,branch_id on public.orders
+for each row execute function public.crm_auto_link_paid_transaction_customer();
+drop trigger if exists crm_auto_link_paid_pos_sale on public.pos_sales;
+create trigger crm_auto_link_paid_pos_sale
+after insert or update of payment_status,customer_reference,branch_id on public.pos_sales
+for each row execute function public.crm_auto_link_paid_transaction_customer();
+
 create or replace function public.crm_reject_append_only_mutation()
 returns trigger language plpgsql security invoker set search_path = ''
 as $$
