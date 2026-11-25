@@ -164,6 +164,85 @@ end $$;
 revoke all on function public.franchise_assert_opening_ready(uuid,date) from public,anon,authenticated;
 grant execute on function public.franchise_assert_opening_ready(uuid,date) to service_role;
 
+create or replace function public.franchise_create_application(
+ p_applicant_name text,p_applicant_email text,p_applicant_phone text,p_proposed_region text,
+ p_proposed_city text,p_investment_capacity_idr bigint,p_experience_summary text,p_created_by uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_app public.franchise_applications%rowtype;
+begin
+ if length(btrim(coalesce(p_applicant_name,''))) not between 2 and 160
+  or p_applicant_email !~ '^\\S+@\\S+\\.\\S+
+ p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_app public.franchise_applications%rowtype; v_checks integer; v_passed integer; v_site integer; v_previous_status text;
+begin
+ if p_decision not in ('screening','due_diligence','approved','rejected') then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_DECISION';
+ end if;
+ select * into v_app from public.franchise_applications where id=p_application_id for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_APPLICATION_NOT_FOUND'; end if;
+ v_previous_status:=v_app.status;
+ if v_app.status in ('approved','rejected','withdrawn') then raise exception using errcode='23514',message='FRANCHISE_APPLICATION_TERMINAL'; end if;
+ if p_decision='approved' then
+  if v_app.status<>'due_diligence' then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_REQUIRED'; end if;
+  select count(*),count(*) filter(where status in ('passed','waived')) into v_checks,v_passed
+   from public.franchise_due_diligence_checks where application_id=p_application_id;
+  if v_checks<>6 or v_passed<>6 then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_INCOMPLETE'; end if;
+  select count(*) into v_site from public.franchise_sites where application_id=p_application_id and feasibility_status='approved';
+  if v_site=0 then raise exception using errcode='23514',message='FRANCHISE_SITE_NOT_APPROVED'; end if;
+ end if;
+ update public.franchise_applications set status=p_decision,assigned_reviewer=coalesce(assigned_reviewer,p_actor_user_id),
+  reviewed_at=case when p_decision in ('approved','rejected') then now() else reviewed_at end,updated_at=now()
+ where id=p_application_id returning * into v_app;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.application.'||p_decision,'franchise_application',v_app.id::text,
+  jsonb_build_object('previous_status',v_previous_status,'notes',left(coalesce(p_notes,''),500)));
+ return jsonb_build_object('application_id',v_app.id,'status',v_app.status);
+end $;
+revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
+
+-- Royalty statement generation must consume reconciled net sales, never raw order totals.
+-- The caller supplies a signed-off reconciliation reference and the exact effective agreement version.
+
+  or length(btrim(coalesce(p_applicant_phone,'')))<8
+  or p_investment_capacity_idr<0 then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_APPLICATION';
+ end if;
+ insert into public.franchise_applications(applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,experience_summary,created_by)
+ values(btrim(p_applicant_name),lower(btrim(p_applicant_email)),btrim(p_applicant_phone),btrim(p_proposed_region),btrim(p_proposed_city),p_investment_capacity_idr,p_experience_summary,p_created_by)
+ returning * into v_app;
+ insert into public.franchise_due_diligence_checks(application_id,check_key)
+ select v_app.id,k from unnest(array['identity','financial','legal','operational_experience','territory_conflict','reputation']) k;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_created_by,'franchise.application.created','franchise_application',v_app.id::text,
+  jsonb_build_object('proposed_region',v_app.proposed_region,'proposed_city',v_app.proposed_city));
+ return jsonb_build_object('id',v_app.id,'applicant_name',v_app.applicant_name,'status',v_app.status,'submitted_at',v_app.submitted_at);
+end $;
+revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
+
+create or replace function public.franchise_review_site(
+ p_site_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v_site public.franchise_sites%rowtype;
+begin
+ if p_status not in ('approved','rejected','assessing') then raise exception using errcode='22023',message='INVALID_SITE_DECISION'; end if;
+ if p_status='approved' and length(btrim(coalesce(p_evidence_reference,'')))<8 then raise exception using errcode='22023',message='SITE_EVIDENCE_REQUIRED'; end if;
+ select * into v_site from public.franchise_sites where id=p_site_id for update;
+ if not found then raise exception using errcode='P0002',message='FRANCHISE_SITE_NOT_FOUND'; end if;
+ update public.franchise_sites set feasibility_status=p_status,evidence_reference=case when p_status='approved' then p_evidence_reference else evidence_reference end,
+  reviewed_by=p_actor_user_id,reviewed_at=now() where id=p_site_id returning * into v_site;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'franchise.site.'||p_status,'franchise_site',v_site.id::text,jsonb_build_object('application_id',v_site.application_id,'notes',left(coalesce(p_notes,''),500)));
+ return jsonb_build_object('site_id',v_site.id,'status',v_site.feasibility_status);
+end $;
+revoke all on function public.franchise_review_site(uuid,text,text,uuid,text) from public,anon,authenticated;
+grant execute on function public.franchise_review_site(uuid,text,text,uuid,text) to service_role;
+
 create or replace function public.franchise_review_application(
  p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
