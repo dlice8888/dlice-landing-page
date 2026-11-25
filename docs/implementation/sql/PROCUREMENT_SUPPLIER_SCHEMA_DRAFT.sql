@@ -83,6 +83,24 @@ begin foreach t in array array['supplier_tenant_links','procurement_supplier_inv
  execute format('revoke all on public.%I from anon,authenticated',t);
  execute format('grant select,insert,update,delete on public.%I to service_role',t);
 end loop; end $$;
+create or replace function public.procurement_approve_supplier_link(p_link_id uuid,p_actor_user_id uuid)
+returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.supplier_tenant_links%rowtype;
+begin
+ select * into v from public.supplier_tenant_links where id=p_link_id for update;
+ if not found then raise exception using errcode='P0002',message='SUPPLIER_LINK_NOT_FOUND'; end if;
+ if v.status<>'pending' then raise exception using errcode='23514',message='SUPPLIER_LINK_NOT_PENDING'; end if;
+ if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_SUPPLIER_APPROVER_REQUIRED'; end if;
+ update public.supplier_tenant_links set status='active',approved_by=p_actor_user_id,approved_at=now() where id=p_link_id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'procurement.supplier_link.approved','supplier_tenant_link',v.id::text,
+ jsonb_build_object('tenant_id',v.tenant_id,'supplier_id',v.supplier_id,'relationship_type',v.relationship_type,'created_by',v.created_by));
+ return jsonb_build_object('link_id',v.id,'status',v.status);
+end $;
+revoke all on function public.procurement_approve_supplier_link(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.procurement_approve_supplier_link(uuid,uuid) to service_role;
+
 -- Three-way matching must compare invoice lines to PO quantities/prices and accepted GRN lines.
 -- Posting must be a single balanced Finance AP journal transaction with invoice reference.
 -- Do not update suppliers directly from tenant-scoped endpoints until supplier_tenant_links is active.
