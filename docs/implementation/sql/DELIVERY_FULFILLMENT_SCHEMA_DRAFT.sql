@@ -125,7 +125,7 @@ create or replace function public.delivery_book_dispatch(
  p_idempotency_key text,p_actor_user_id uuid
 ) returns jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_order public.orders%rowtype; v_branch public.branches%rowtype; v_dispatch public.delivery_dispatches%rowtype;
 begin
  if length(btrim(coalesce(p_provider,''))) not between 2 and 40
@@ -167,14 +167,14 @@ begin
  return jsonb_build_object('dispatch_id',v_dispatch.id,'order_id',p_order_id,
   'status',v_dispatch.status,'tracking_number',v_dispatch.tracking_number,
   'delivery_fee_idr',v_dispatch.delivery_fee_idr);
-end $;
+end $$;
 revoke all on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) to service_role;
 
 create or replace function public.delivery_transition_dispatch(
  p_dispatch_id uuid,p_next_status text,p_event_id text,p_payload_hash text,p_actor_user_id uuid,p_note text
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.delivery_dispatches%rowtype; v_next_order_status text;
 begin
  if p_next_status not in ('picked_up','in_transit','delivered','failed','cancelled')
@@ -225,7 +225,7 @@ begin
  values(p_actor_user_id,'delivery.dispatch.'||p_next_status,'delivery_dispatch',v.id::text,
   jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'order_id',v.order_id,'event_id',p_event_id,'note',left(coalesce(p_note,''),500)));
  return jsonb_build_object('dispatch_id',v.id,'status',v.status,'order_id',v.order_id);
-end $;
+end $$;
 revoke all on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) to service_role;
 
@@ -235,7 +235,7 @@ create or replace function public.delivery_record_proof(
  p_dispatch_id uuid,p_proof_type text,p_storage_object_path text,p_recipient_name text,
  p_latitude numeric,p_longitude numeric,p_verification_reference text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v public.delivery_dispatches%rowtype; v_proof public.delivery_proof_of_delivery%rowtype;
  v_object public.storage.objects%rowtype; v_prefix text;
 begin
@@ -269,7 +269,7 @@ begin
  values(p_actor_user_id,'delivery.proof.recorded','delivery_proof_of_delivery',v_proof.id::text,
   jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'dispatch_id',v.id,'proof_type',p_proof_type,'storage_path',p_storage_object_path));
  return jsonb_build_object('proof_id',v_proof.id,'dispatch_id',v.id,'proof_type',v_proof.proof_type,'captured_at',v_proof.captured_at);
-end $;
+end $$;
 revoke all on function public.delivery_record_proof(uuid,text,text,text,numeric,numeric,text,uuid) from public,anon,authenticated;
 grant execute on function public.delivery_record_proof(uuid,text,text,text,numeric,numeric,text,uuid) to service_role;
 
