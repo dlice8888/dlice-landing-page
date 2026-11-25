@@ -952,6 +952,10 @@ if (action === "admin-set-profile-role") {
     "erp-crm-create-reward",
     "erp-crm-activate-reward",
     "erp-crm-redeem-reward",
+    "erp-crm-list-campaigns",
+    "erp-crm-create-campaign",
+    "erp-crm-approve-campaign",
+    "erp-crm-prepare-campaign-audience",
   ]);
   if (crmActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul CRM hanya dapat dikelola Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1103,6 +1107,31 @@ if (action === "admin-set-profile-role") {
         return fail(duplicate ? "Permintaan penukaran sudah pernah diproses." : insufficient ? "Saldo poin tidak mencukupi." : inactive ? "Reward tidak aktif atau sudah kedaluwarsa." : "Penukaran reward ditolak.", duplicate || insufficient || inactive ? 409 : 422, origin);
       }
       return json({ voucher: data }, 201, origin);
+    }
+
+    if(action==="erp-crm-list-campaigns"){
+      const {data,error}=await admin.from("crm_marketing_campaigns").select("id,name,channel,purpose,subject,status,scheduled_at,approved_by,approved_at,created_by,created_at,crm_campaign_recipients(id,status)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Campaign CRM belum tersedia. Terapkan migrasi pada batch final.",503,origin);
+      return json({campaigns:data||[]},200,origin);
+    }
+    if(action==="erp-crm-create-campaign"){
+      const name=safeText(body.name,120),channel=safeText(body.channel,20),subject=safeText(body.subject,200)||null,template=safeText(body.message_template,10000);
+      const purpose=channel==="email"?"marketing_email":channel==="sms"?"marketing_sms":channel==="whatsapp"?"marketing_whatsapp":"";
+      if(name.length<2||!purpose||template.length<1)return fail("Definisi campaign atau channel tidak valid.",422,origin);
+      const {data,error}=await admin.from("crm_marketing_campaigns").insert({tenant_id:tenantId,name,channel,purpose,subject,message_template:template,status:"draft",created_by:actor.user.id})
+       .select("id,name,channel,purpose,status,created_at").single();
+      if(error)return fail("Campaign CRM gagal disimpan.",503,origin);
+      await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"crm.campaign.created",entity_type:"crm_marketing_campaign",entity_id:data.id,metadata:{tenant_id:tenantId,channel,purpose}});
+      return json({campaign:data},201,origin);
+    }
+    if(action==="erp-crm-approve-campaign"||action==="erp-crm-prepare-campaign-audience"){
+      const campaignId=safeText(body.campaign_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(campaignId))return fail("Campaign tidak valid.",422,origin);
+      const rpc=action==="erp-crm-approve-campaign"?"crm_approve_campaign":"crm_prepare_campaign_audience";
+      const args=action==="erp-crm-approve-campaign"?{p_tenant_id:tenantId,p_campaign_id:campaignId,p_actor_user_id:actor.user.id}:{p_tenant_id:tenantId,p_campaign_id:campaignId,p_actor_user_id:actor.user.id};
+      const {data,error}=await admin.rpc(rpc,args);
+      if(error)return fail(action==="erp-crm-approve-campaign"?"Approval campaign ditolak. Pembuat tidak boleh menyetujui campaign sendiri.":"Audience belum dapat disiapkan. Campaign harus disetujui dan consent pelanggan masih aktif.",409,origin);
+      return json({campaign:data},200,origin);
     }
 
     if (action === "erp-crm-create-reward") {
@@ -1326,7 +1355,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-application"]);
+  const franchiseActions=new Set(["erp-franchise-list-applications","erp-franchise-create-application","erp-franchise-add-site","erp-franchise-review-site","erp-franchise-review-application"]);
   if(franchiseActions.has(action)){
     if(!isOwner)return fail("Workflow Franchise sementara hanya dapat dikelola Platform Owner.",403,origin);
     if(action==="erp-franchise-list-applications"){
