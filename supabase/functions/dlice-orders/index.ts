@@ -945,6 +945,7 @@ if (action === "admin-set-profile-role") {
   const crmActions = new Set([
     "erp-crm-list-customers",
     "erp-crm-link-paid-transaction",
+    "erp-crm-build-financial-close",
     "erp-crm-award-reconciled-close",
     "erp-crm-create-customer",
     "erp-crm-record-consent",
@@ -1019,6 +1020,31 @@ if (action === "admin-set-profile-role") {
         return fail("Outbox campaign gagal disiapkan.",503,origin);
       }
       return json({campaign_outbox:data},201,origin);
+    }
+
+  if (action === "erp-crm-build-financial-close") {
+      const branchId=safeText(body.branch_id,64);
+      const sourceType=safeText(body.source_type,30);
+      const sourceId=safeText(body.source_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(sourceId)||
+        !["online_order","pos_sale"].includes(sourceType))
+        return fail("Referensi financial close tidak valid.",422,origin);
+      const {data:branch,error:branchError}=await admin.from("branches")
+        .select("id,tenant_id").eq("id",branchId).eq("tenant_id",tenantId).maybeSingle();
+      if(branchError)return fail("Tenant/cabang financial close belum dapat diverifikasi.",503,origin);
+      if(!branch)return fail("Cabang financial close bukan milik tenant ini.",403,origin);
+      const {data:projection,error:projectionError}=await admin.rpc("crm_build_financial_close_projection",{
+        p_tenant_id:tenantId,p_branch_id:branchId,p_source_type:sourceType,
+        p_source_id:sourceId,p_actor_user_id:actor.user.id,
+      });
+      if(projectionError){
+        const message=String(projectionError.message||"");
+        if(message.includes("SETTLEMENT")||message.includes("REFUND")||message.includes("FINANCE")||
+          message.includes("CASH_RECONCILIATION")||message.includes("SHIFT_CASH"))
+          return fail("Financial close belum lolos rekonsiliasi settlement, refund, kas shift, dan jurnal Finance.",409,origin);
+        return fail("Financial close tidak dapat dibentuk dari bukti transaksi sumber.",503,origin);
+      }
+      return json({financial_close:projection},projection?.status==="reconciled"?201:200,origin);
     }
 
   if (action === "erp-crm-award-reconciled-close") {
