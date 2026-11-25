@@ -79,6 +79,11 @@ begin
  select * into v_invoice from public.procurement_supplier_invoices where id=p_invoice_id for update;
  if not found then raise exception using errcode='P0002',message='SUPPLIER_INVOICE_NOT_FOUND'; end if;
  if v_invoice.status not in ('received','matching') then raise exception using errcode='23514',message='SUPPLIER_INVOICE_NOT_MATCHABLE'; end if;
+ if not exists(select 1 from public.purchase_orders po join public.branches b on b.id=po.branch_id
+   where po.id=v_invoice.purchase_order_id and po.supplier_id=v_invoice.supplier_id
+    and po.branch_id=v_invoice.branch_id and b.tenant_id=v_invoice.tenant_id) then
+  raise exception using errcode='42501',message='PURCHASE_ORDER_TENANT_OR_SUPPLIER_MISMATCH';
+ end if;
  if not exists(select 1 from public.supplier_tenant_links l where l.tenant_id=v_invoice.tenant_id and l.supplier_id=v_invoice.supplier_id and l.status='active') then
   raise exception using errcode='42501',message='SUPPLIER_NOT_LINKED_TO_TENANT';
  end if;
@@ -89,7 +94,7 @@ begin
   select ri.* into v_receipt_item from public.purchase_receipt_items ri
    join public.purchase_receipts r on r.id=ri.receipt_id
    where ri.id=(v_line->>'receipt_item_id')::uuid and ri.purchase_order_item_id=v_po_item.id
-    and r.purchase_order_id=v_invoice.purchase_order_id and r.status in ('received','reconciled');
+    and r.purchase_order_id=v_invoice.purchase_order_id and r.branch_id=v_invoice.branch_id and r.status in ('received','reconciled');
   if not found then raise exception using errcode='23514',message='ACCEPTED_RECEIPT_ITEM_REQUIRED'; end if;
   v_invoice_qty:=(v_line->>'invoiced_quantity')::numeric;
   v_invoice_cost:=(v_line->>'invoiced_unit_cost_idr')::bigint;
