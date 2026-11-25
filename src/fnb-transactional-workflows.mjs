@@ -428,6 +428,62 @@ export async function ingestSignedCampaignReceipt(input, deps) {
   });
 }
 
+/** Signed campaign unsubscribe: append consent withdrawal and suppress future recipients atomically. */
+export async function ingestSignedCampaignUnsubscribe(input, deps) {
+  const verified = await adapter(deps, "verifyCampaignUnsubscribeSignature")({
+    providerId: input.providerId, rawBody: input.rawBody,
+    signature: input.signature, timestamp: input.timestamp,
+  });
+  if (verified?.verified !== true || !verified.event?.eventId ||
+      !verified.event?.occurredAt || !verified.bodySha256) {
+    fail("CAMPAIGN_UNSUBSCRIBE_SIGNATURE_INVALID", "Signed provider unsubscribe event is required");
+  }
+  const scope = {
+    tenantId: required(input.tenantId, "tenantId"),
+    branchId: input.branchId == null ? null : required(input.branchId, "branchId"),
+    actorId: "system:campaign-unsubscribe",
+    idempotencyKey: required(verified.event.eventId, "eventId"),
+    action: "crm.campaign.unsubscribe",
+  };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const context = await adapter(deps, "loadCampaignUnsubscribeContextForUpdate")(tx, {
+      providerId: input.providerId, providerEvent: verified.event,
+    });
+    assertScope(context?.customer, scope, "campaignUnsubscribeCustomer");
+    const existing = await adapter(deps, "findCampaignProviderEvent")(tx, verified.event.eventId);
+    if (existing) {
+      if (existing.bodySha256 !== verified.bodySha256) {
+        fail("CAMPAIGN_PROVIDER_EVENT_COLLISION", "Provider event id was reused with a different payload");
+      }
+      return Object.freeze({ status: "duplicate", eventId: verified.event.eventId });
+    }
+    const decision = applyCampaignUnsubscribe({
+      customer: context.customer, consent: context.consent,
+      providerEvent: verified.event, signatureVerified: true,
+    });
+    const saved = await adapter(deps, "persistCampaignUnsubscribeAndConsentEvent")(tx, {
+      decision, customer: context.customer, consent: context.consent,
+      outbox: context.outbox, providerId: input.providerId,
+      bodySha256: verified.bodySha256, actorId: scope.actorId,
+    });
+    if (!saved?.eventId || !saved?.consentEventId) {
+      fail("CAMPAIGN_UNSUBSCRIBE_PERSIST_FAILED", "Consent withdrawal and provider event must persist together");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId,
+      actorId: scope.actorId, action: "crm.campaign.consent_withdrawn",
+      entityType: "crm_customer_consent_event", entityId: saved.consentEventId,
+      idempotencyKey: verified.event.eventId,
+    });
+    return Object.freeze({
+      status: "unsubscribed", eventId: saved.eventId,
+      consentEventId: saved.consentEventId,
+      customerId: context.customer.id,
+      suppressedRecipients: saved.suppressedRecipients ?? null,
+    });
+  });
+}
+
 /** Campaign ROI is calculated only from attributed, Finance-reconciled eligible net sales. */
 export async function calculateReconciledCampaignRoi(input, deps) {
   const scope = { tenantId: required(input.tenantId, "tenantId"),
