@@ -42,8 +42,8 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 | Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% |
 | SaaS Tenant Management | 8 | 6 | 2 | 0 | 0 | 75.0% |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% |
-| Quality, Compliance & Security | 20 | 13 | 7 | 0 | 0 | 65.0% |
-| **TOTAL** | **189** | **140** | **44** | **5** | **0** | **74.1%** |
+| Quality, Compliance & Security | 20 | 14 | 6 | 0 | 0 | 70.0% |
+| **TOTAL** | **189** | **141** | **43** | **5** | **0** | **74.6%** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -985,9 +985,9 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 
 ## Superseding current audit — 25 November 2026
 
-The latest row-level PRD reconciliation is **189 total / 140 PARTIAL / 44 NOT VERIFIED / 5 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 45 implementation-start transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 45 transitions are: POS (5: four NOT VERIFIED and one BLOCKED), Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4), Quality/backup restore (1).
+The latest row-level PRD reconciliation is **189 total / 141 PARTIAL / 43 NOT VERIFIED / 5 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 46 implementation-start transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 46 transitions are: POS (5: four NOT VERIFIED and one BLOCKED), Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4), Quality/backup restore (1), Quality/150-branch concurrency (1).
 
-**Important scoring distinction:** partial coverage (140/189 = 74.1%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 137 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
+**Important scoring distinction:** partial coverage (141/189 = 74.6%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 137 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
 
 ### Live platform evidence checked 25 November
 - GitHub: PR #145 and #146 are OPEN Draft. PR #146 exact-head quality checks passed on 23e4b6c2a057b9b8bdeed68f71088c6e4c88d105; its database replay and provider/bank E2E remain unverified.
@@ -1006,3 +1006,7 @@ PR #143 is OPEN and not merged. Four previously NOT VERIFIED POS rows moved to P
 ### Backup/restore drill started — PR #148
 
 PR #148 adds a free GitHub-hosted PostgreSQL 17 custom-format dump/restore rehearsal with 150 Tenant A branches plus Tenant B, deterministic checksum parity, pre/post-snapshot boundary, restored RLS and cross-tenant read-denial assertions. The workflow has not yet returned a completed run, so the feature is PARTIAL/IN_PROGRESS only. It is not Supabase managed backup, Auth/Storage recovery, PITR, or platform RPO/RTO evidence. The remaining 7 Quality/Compliance/Security NOT VERIFIED rows are food safety/recall, supplier quality/CAPA, 150-branch load/concurrency, pilot/rollout/rollback, workflow acceptance, responsive UX/accessibility, and backup/recovery/scale/rollout.
+
+### 150-branch concurrency test started — PR #149
+
+PR #149 adds a free PostgreSQL 17 database-only read/isolation benchmark with 150 Tenant A branches, Tenant B isolation, 50 concurrent pgbench clients, zero-failure assertions and p95/p99 measurements. Workflow completion is not yet verified. It does not represent the complete D’Lice POS/ERP API workload, write contention, Storage/Edge Function latency or production SLO. Keep this feature PARTIAL/IN_PROGRESS until the exact-head run passes and broader workload coverage is implemented.
