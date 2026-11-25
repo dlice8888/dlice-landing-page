@@ -118,6 +118,59 @@ drop trigger if exists delivery_pod_audit_insert on public.delivery_proof_of_del
 create trigger delivery_pod_audit_insert after insert on public.delivery_proof_of_delivery
 for each row execute function public.delivery_audit_insert();
 
+-- Atomically create a dispatch and advance a ready, paid order to dispatched.
+create or replace function public.delivery_book_dispatch(
+ p_order_id uuid,p_provider text,p_provider_service text,p_tracking_number text,
+ p_tracking_url text,p_delivery_fee_idr bigint,p_cod_amount_idr bigint,
+ p_idempotency_key text,p_actor_user_id uuid
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare v_order public.orders%rowtype; v_branch public.branches%rowtype; v_dispatch public.delivery_dispatches%rowtype;
+begin
+ if length(btrim(coalesce(p_provider,''))) not between 2 and 40
+   or length(coalesce(p_idempotency_key,'')) not between 8 and 120
+   or p_delivery_fee_idr<0 or p_cod_amount_idr<0 then
+   raise exception using errcode='22023',message='INVALID_DELIVERY_BOOKING';
+ end if;
+ select * into v_order from public.orders where id=p_order_id for update;
+ if not found then raise exception using errcode='P0002',message='ORDER_NOT_FOUND'; end if;
+ select * into v_branch from public.branches where id=v_order.branch_id and status='active';
+ if not found then raise exception using errcode='23514',message='ORDER_BRANCH_NOT_ACTIVE'; end if;
+ if v_order.fulfillment_status<>'ready' then raise exception using errcode='23514',message='ORDER_NOT_READY'; end if;
+ if v_order.payment_status not in ('paid','verified','settled') then
+   raise exception using errcode='23514',message='ORDER_PAYMENT_NOT_SETTLED';
+ end if;
+ if exists(select 1 from public.delivery_dispatches where tenant_id=v_branch.tenant_id and idempotency_key=p_idempotency_key) then
+   raise exception using errcode='23505',message='DUPLICATE_DELIVERY_BOOKING';
+ end if;
+ if exists(select 1 from public.delivery_dispatches where tenant_id=v_branch.tenant_id and order_id=p_order_id and status not in ('failed','cancelled')) then
+   raise exception using errcode='23505',message='ACTIVE_DISPATCH_ALREADY_EXISTS';
+ end if;
+ insert into public.delivery_dispatches
+ (tenant_id,branch_id,order_id,provider,provider_service,tracking_number,tracking_url,
+  delivery_fee_idr,cod_amount_idr,status,idempotency_key,booked_at,created_by)
+ values(v_branch.tenant_id,v_branch.id,p_order_id,p_provider,p_provider_service,p_tracking_number,
+  p_tracking_url,p_delivery_fee_idr,p_cod_amount_idr,'booked',p_idempotency_key,now(),p_actor_user_id)
+ returning * into v_dispatch;
+
+ update public.orders set fulfillment_status='dispatched',updated_at=now()
+ where id=p_order_id and fulfillment_status='ready';
+ if not found then raise exception using errcode='40001',message='ORDER_FULFILLMENT_RACE'; end if;
+
+ insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
+ values(p_order_id,'operational','ready','dispatched','Delivery dispatch booked: '||p_provider);
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'delivery.dispatch.booked','delivery_dispatch',v_dispatch.id::text,
+  jsonb_build_object('tenant_id',v_branch.tenant_id,'branch_id',v_branch.id,'order_id',p_order_id,
+   'provider',p_provider,'delivery_fee_idr',p_delivery_fee_idr,'cod_amount_idr',p_cod_amount_idr));
+ return jsonb_build_object('dispatch_id',v_dispatch.id,'order_id',p_order_id,
+  'status',v_dispatch.status,'tracking_number',v_dispatch.tracking_number,
+  'delivery_fee_idr',v_dispatch.delivery_fee_idr);
+end $;
+revoke all on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) from public,anon,authenticated;
+grant execute on function public.delivery_book_dispatch(uuid,text,text,text,text,bigint,bigint,text,uuid) to service_role;
+
 -- Required before production use:
 -- 1) Dedicated provider webhook signature verification + raw-body hashing.
 -- 2) Atomic dispatch/status transition RPC that locks the order and dispatch.
