@@ -11,6 +11,7 @@ create table if not exists public.delivery_provider_configs (
   provider_key text not null check(length(btrim(provider_key)) between 2 and 60),
   display_name text not null check(length(btrim(display_name)) between 2 and 100),
   credential_secret_reference text not null check(length(btrim(credential_secret_reference)) between 3 and 120),
+  integration_mode text not null default 'manual' check(integration_mode in ('manual','api')),
   status text not null default 'pending' check(status in ('pending','active','suspended','revoked')),
   approved_by uuid null references auth.users(id) on delete restrict,
   approved_at timestamptz null,
