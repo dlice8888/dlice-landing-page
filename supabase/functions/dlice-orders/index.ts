@@ -952,6 +952,8 @@ if (action === "admin-set-profile-role") {
     "erp-crm-create-reward",
     "erp-crm-activate-reward",
     "erp-crm-redeem-reward",
+    "erp-crm-consume-voucher",
+    "erp-crm-void-voucher",
     "erp-crm-list-campaigns",
     "erp-crm-create-campaign",
     "erp-crm-approve-campaign",
@@ -1107,6 +1109,27 @@ if (action === "admin-set-profile-role") {
         return fail(duplicate ? "Permintaan penukaran sudah pernah diproses." : insufficient ? "Saldo poin tidak mencukupi." : inactive ? "Reward tidak aktif atau sudah kedaluwarsa." : "Penukaran reward ditolak.", duplicate || insufficient || inactive ? 409 : 422, origin);
       }
       return json({ voucher: data }, 201, origin);
+    }
+
+    if(action==="erp-crm-consume-voucher"){
+      const code=safeText(body.voucher_code,80),sourceType=safeText(body.source_type,20),sourceId=safeText(body.source_id,64),branchId=safeText(body.branch_id,64);
+      if(code.length<6||!["online_order","pos_sale"].includes(sourceType)||!/^[0-9a-f-]{36}$/i.test(sourceId)||!/^[0-9a-f-]{36}$/i.test(branchId))return fail("Referensi konsumsi voucher tidak valid.",422,origin);
+      const {data:branch,error:branchError}=await admin.from("branches").select("id,tenant_id").eq("id",branchId).eq("tenant_id",tenantId).maybeSingle();
+      if(branchError)return fail("Cabang transaksi belum dapat diverifikasi.",503,origin);
+      if(!branch||!await actorCanAccessBranch(branchId))return fail("Akses cabang transaksi tidak diizinkan.",403,origin);
+      const {data,error}=await admin.rpc("crm_consume_voucher",{p_tenant_id:tenantId,p_voucher_code:code,p_source_type:sourceType,p_source_id:sourceId,p_branch_id:branchId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Voucher tidak dapat dikonsumsi. Pastikan transaksi telah ditautkan ke pelanggan yang sama dan voucher masih aktif.",409,origin);
+      return json({consumption:data},200,origin);
+    }
+    if(action==="erp-crm-void-voucher"){
+      const voucherId=safeText(body.voucher_id,64),sourceType=safeText(body.source_type,20),sourceId=safeText(body.source_id,64),reason=safeText(body.reason,500);
+      if(!/^[0-9a-f-]{36}$/i.test(voucherId)||!["online_order","pos_sale"].includes(sourceType)||!/^[0-9a-f-]{36}$/i.test(sourceId)||reason.length<3)return fail("Referensi void voucher tidak valid.",422,origin);
+      const {data:consumption,error:consumptionError}=await admin.from("crm_voucher_consumptions").select("branch_id").eq("tenant_id",tenantId).eq("voucher_id",voucherId).eq("source_type",sourceType).eq("source_id",sourceId).maybeSingle();
+      if(consumptionError)return fail("Riwayat konsumsi voucher belum dapat diverifikasi.",503,origin);
+      if(!consumption||!await actorCanAccessBranch(consumption.branch_id))return fail("Akses transaksi untuk void voucher tidak diizinkan.",403,origin);
+      const {data,error}=await admin.rpc("crm_void_voucher",{p_tenant_id:tenantId,p_voucher_id:voucherId,p_source_type:sourceType,p_source_id:sourceId,p_reason:reason,p_actor_user_id:actor.user.id});
+      if(error)return fail("Void voucher ditolak. Periksa status konsumsi dan reversal ledger.",409,origin);
+      return json({void_result:data},200,origin);
     }
 
     if(action==="erp-crm-list-campaigns"){
