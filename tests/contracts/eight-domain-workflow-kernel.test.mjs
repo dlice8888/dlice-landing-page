@@ -39,3 +39,8 @@ test('tenant/branch scope mismatches and duplicate commands are rejected',()=>{
   assert.equal(validateWorkflowCommand({...base,context:{...base.context,branch_id:'A',resource_branch_id:'B'}}).code,'BRANCH_SCOPE_MISMATCH');
   assert.equal(validateWorkflowCommand({domain:'delivery',action:'book',currentState:'quoted',actorRoles:['branch_worker'],context:{customer_acceptance:true,idempotency_key:'k1',idempotency_key_reused:true}}).code,'DUPLICATE_COMMAND');
 });
+
+test('boolean prerequisites must be true, not merely present',()=>{
+  assert.equal(validateWorkflowCommand({domain:'saas',action:'provision',currentState:'provisioning',actorRoles:['platform_owner'],context:{tenant_identity:'t1',owner_membership:'u1',isolation_checks_passed:false}}).code,'MISSING_REQUIREMENTS');
+  assert.equal(validateWorkflowCommand({domain:'franchise',action:'operate',currentState:'opening',actorRoles:['owner'],context:{readiness_checklist_passed:false,tenant_scope_provisioned:true}}).code,'MISSING_REQUIREMENTS');
+});
