@@ -73,7 +73,7 @@ export function appendLoyaltyEntry({ tenant_id, customer_tenant_id, customer_id,
   } else if (reverses_entry_id) return fail("UNEXPECTED_REVERSAL_REFERENCE");
   const balance = existingEntries.filter((entry) => entry.tenant_id === tenant_id && entry.customer_id === customer_id)
     .reduce((sum, entry) => sum + entry.points, 0);
-  if (kind === "redeem" && balance + points < 0) return fail("INSUFFICIENT_POINTS", { balance, requested: -points });
+  if (balance + points < 0) return fail("INSUFFICIENT_POINTS", { balance, requested: -points });
   return ok({ entry: Object.freeze({
     tenant_id, customer_id, entry_id, kind, points, idempotency_key,
     source_reference, reverses_entry_id: reverses_entry_id ?? null,
