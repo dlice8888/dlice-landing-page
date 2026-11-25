@@ -2988,7 +2988,9 @@
         "state": "OPEN",
         "draft": false,
         "head_sha": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-        "quality": "Static/contract checks pass; overall quality workflow blocked by staging E2E Owner authorization preflight; disposable replay passes 14 pgTAP files / 375 assertions; staging POS business E2E blocked before mutation"
+        "quality": "Static/contract checks pass; full quality workflow reports staging E2E blocked by Owner authorization preflight",
+        "disposable_replay": "PASS: 14 pgTAP files / 375 assertions",
+        "staging_e2e": "BLOCKED before business mutation; Owner app_metadata.platform_owner absent/null; no QA sale created"
       }
     },
     "supabase": {
