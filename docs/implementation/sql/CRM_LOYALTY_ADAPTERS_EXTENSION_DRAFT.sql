@@ -690,7 +690,7 @@ begin
   'processed_refunds_idr',v_refunds,'paid_amount_idr',v_paid,'settled_amount_idr',v_settled,
   'cash_reconciliation_id',v_cash_id,'cash_reconciliation_status',v_cash_status,
   'refund_evidence',v_refund_evidence,'captured_at',now());
- v_hash:=encode(public.digest(convert_to(v_snapshot::text,'UTF8'),'sha256'),'hex');
+ v_hash:=encode(pg_catalog.sha256(convert_to(v_snapshot::text,'UTF8')),'hex');
 
  select * into v_existing from public.crm_financial_close_projections
   where tenant_id=p_tenant_id and source_type=p_source_type and source_id=p_source_id
