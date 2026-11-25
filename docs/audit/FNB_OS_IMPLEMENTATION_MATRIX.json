@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-25 20:00 WIB",
+  "snapshot_at": "2026-11-25",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "189 PRD features row-by-row; source implementation evidence checked against current feature branch, open PR #143, Supabase staging read-only catalog, and current Vercel Preview metadata. A feature is PARTIAL only after concrete implementation starts; PARTIAL coverage is not completion percentage.",
   "release_flags": {
@@ -3658,11 +3658,11 @@
       "NOT VERIFIED": 99,
       "BLOCKED": 9
     },
-    "current_feature_status_policy": "Retain prior per-feature audit_status until each individual requirement is revalidated against current source and acceptance evidence. Do not silently promote a row to PASS.",
+    "current_feature_status_policy": "Per-feature audit_status is advanced only when concrete implementation work begins; PARTIAL is not acceptance PASS. Current branch matrix totals are the source of truth for this snapshot.",
     "feature_status_counts_current": {
-      "PARTIAL": 95,
-      "NOT VERIFIED": 88,
-      "BLOCKED": 6,
+      "PARTIAL": 126,
+      "NOT VERIFIED": 59,
+      "BLOCKED": 4,
       "DONE": 0,
       "TOTAL": 189
     },
@@ -4272,9 +4272,9 @@
     "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
-    "PARTIAL": 95,
-    "NOT VERIFIED": 88,
-    "BLOCKED": 6,
+    "PARTIAL": 126,
+    "NOT VERIFIED": 59,
+    "BLOCKED": 4,
     "DONE": 0,
     "TOTAL": 189
   },
@@ -4327,8 +4327,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 120,
-    "status": "INCOMPLETE; two PARTIAL features have provisional weighted scores: tenant/member isolation 58% and tenant directory/onboarding 30%. 120 PARTIAL features remain unscored pending six-dimension decomposition."
+    "unscored_partial_features": 124,
+    "status": "INCOMPLETE; 2 PARTIAL features have provisional weighted scores and 124 PARTIAL features remain unscored pending six-dimension decomposition."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -6008,17 +6008,41 @@
         "requirement": "Export/offboarding and data deletion policy",
         "from": "NOT VERIFIED",
         "to": "PARTIAL"
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "requirement": "Cancel/retry/provider exception handling",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "requirement": "Territory and franchise-specific access",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Procurement & Supplier",
+        "requirement": "AP handoff and supplier payment",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Executive Command Center",
+        "requirement": "Company → region → branch → shift → transaction drill-down",
+        "from": "BLOCKED",
+        "to": "PARTIAL"
       }
     ],
     "totals": {
       "total": 189,
-      "partial": 122,
-      "not_verified": 62,
-      "blocked": 5,
+      "partial": 126,
+      "not_verified": 59,
+      "blocked": 4,
       "done": 0
     },
     "caveat": "The latest user-supplied summary (92 PARTIAL/91 NOT VERIFIED/6 BLOCKED) differs by three items from the latest merged feature-level matrix baseline (95/88/6), specifically in Admin & Access Control (user summary 6 PARTIAL vs matrix 8) and Quality, Compliance & Security (user summary 11 PARTIAL vs matrix 12). No feature identities were supplied for those three differences, so they are retained as a reconciliation gap rather than silently reassigned. This matrix applies only evidence-backed new work to the feature-level baseline.",
-    "progress": "Newly-started PARTIAL items remain UNSCORED until each of the six weighted evidence dimensions is mapped to a current artifact. Existing provisional scores remain tenant onboarding 30% and tenant/member isolation 58% pending re-score against current-head evidence."
+    "progress": "Four additional feature rows moved to PARTIAL because concrete domain kernels were added. PARTIAL denotes implementation started, not verified acceptance. No DONE promotions."
   },
   "current_feature_counts": {
     "total": 189,
