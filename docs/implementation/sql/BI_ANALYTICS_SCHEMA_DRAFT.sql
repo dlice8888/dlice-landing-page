@@ -103,7 +103,7 @@ begin
  select freshness_sla_minutes into v_sla from public.bi_metric_definitions where id=v.metric_id and active=true and formula_version=v.formula_version;
  if not found then raise exception using errcode='23514',message='BI_METRIC_VERSION_INACTIVE'; end if;
  if cardinality(v.source_watermark_ids)=0 or cardinality(v.reconciliation_run_ids)=0 then raise exception using errcode='23514',message='BI_EVIDENCE_REQUIRED'; end if;
- if exists(select 1 from unnest(v.source_watermark_ids) x(id) left join public.bi_source_watermarks w on w.id=x.id and w.tenant_id=v.tenant_id where w.id is null or w.status<>'complete' or w.source_window_end<v.period_end or w.ingested_at<now()-make_interval(mins=>v_sla)) then
+ if exists(select 1 from unnest(v.source_watermark_ids) x(id) left join public.bi_source_watermarks w on w.id=x.id and w.tenant_id=v.tenant_id where w.id is null or w.status<>'complete' or w.source_window_end<v.period_end or w.max_source_updated_at<now()-make_interval(mins=>v_sla)) then
   raise exception using errcode='23514',message='BI_SOURCE_STALE_OR_INCOMPLETE';
  end if;
  if exists(select 1 from unnest(v.reconciliation_run_ids) x(id) left join public.bi_reconciliation_runs r on r.id=x.id and r.tenant_id=v.tenant_id where r.id is null or r.status<>'passed' or r.period_start>v.period_start::date or r.period_end<v.period_end::date) then
