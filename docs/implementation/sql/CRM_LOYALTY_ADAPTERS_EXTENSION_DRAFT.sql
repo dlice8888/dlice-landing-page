@@ -550,3 +550,68 @@ drop policy if exists service_role_only on public.crm_campaign_provider_configs;
 create policy service_role_only on public.crm_campaign_provider_configs for all to service_role using(true) with check(true);
 revoke all on public.crm_campaign_provider_configs from anon,authenticated;
 grant select,insert,update,delete on public.crm_campaign_provider_configs to service_role;
+
+
+-- Apply a provider receipt only after a provider-specific Edge adapter has
+-- verified its signature over the exact raw request bytes and tenant mapping.
+-- Event insertion, outbox transition and recipient transition are atomic.
+create or replace function public.crm_apply_campaign_provider_receipt(
+ p_tenant_id uuid,p_provider_id text,p_provider_event_id text,
+ p_provider_message_id text,p_event_kind text,p_body_sha256 text,
+ p_occurred_at timestamptz,p_payload jsonb
+) returns jsonb language plpgsql security invoker set search_path=''
+as $$
+declare v_existing public.crm_campaign_provider_events%rowtype;
+ v_event public.crm_campaign_provider_events%rowtype;
+ v_outbox public.crm_campaign_outbox%rowtype;
+ v_next text;
+begin
+ if length(btrim(coalesce(p_provider_id,'')))<2 or
+    length(btrim(coalesce(p_provider_event_id,'')))<1 or
+    length(btrim(coalesce(p_provider_message_id,'')))<1 or
+    p_event_kind not in ('accepted','delivered','bounced','failed') or
+    p_body_sha256 !~ '^[0-9a-f]{64}$' or p_occurred_at is null or
+    jsonb_typeof(p_payload)<>'object' then
+  raise exception using errcode='22023',message='INVALID_CAMPAIGN_PROVIDER_RECEIPT';
+ end if;
+ select * into v_existing from public.crm_campaign_provider_events
+  where provider_id=p_provider_id and provider_event_id=p_provider_event_id for update;
+ if found then
+  if v_existing.tenant_id<>p_tenant_id or v_existing.body_sha256<>p_body_sha256 then
+   raise exception using errcode='23505',message='CAMPAIGN_PROVIDER_EVENT_COLLISION';
+  end if;
+  return jsonb_build_object('status','duplicate','event_id',v_existing.id);
+ end if;
+ select * into v_outbox from public.crm_campaign_outbox
+  where tenant_id=p_tenant_id and provider_id=p_provider_id
+   and provider_message_id=p_provider_message_id for update;
+ if not found then raise exception using errcode='P0002',message='CAMPAIGN_OUTBOX_MESSAGE_NOT_FOUND'; end if;
+ if v_outbox.status not in ('accepted','delivered','failed') then
+  raise exception using errcode='23514',message='CAMPAIGN_OUTBOX_NOT_ACCEPTED';
+ end if;
+ insert into public.crm_campaign_provider_events(
+  tenant_id,provider_id,provider_event_id,provider_message_id,event_kind,
+  body_sha256,occurred_at,payload
+ ) values(p_tenant_id,p_provider_id,p_provider_event_id,p_provider_message_id,
+  p_event_kind,p_body_sha256,p_occurred_at,p_payload)
+ returning * into v_event;
+ v_next:=case p_event_kind
+  when 'delivered' then 'delivered'
+  when 'bounced' then 'failed'
+  when 'failed' then 'failed'
+  else v_outbox.status end;
+ update public.crm_campaign_outbox set status=v_next,updated_at=now(),
+  last_error_code=case when p_event_kind in ('bounced','failed') then 'PROVIDER_'||upper(p_event_kind) else null end
+  where id=v_outbox.id;
+ update public.crm_campaign_recipients set
+  status=case when p_event_kind='delivered' then 'delivered'
+              when p_event_kind in ('bounced','failed') then 'failed'
+              else status end,
+  delivered_at=case when p_event_kind='delivered' then p_occurred_at else delivered_at end,
+  failure_reason=case when p_event_kind in ('bounced','failed') then 'PROVIDER_'||upper(p_event_kind) else failure_reason end
+  where tenant_id=p_tenant_id and id=v_outbox.recipient_id;
+ return jsonb_build_object('status','applied','event_id',v_event.id,
+  'outbox_id',v_outbox.id,'delivery_status',v_next);
+end $$;
+revoke all on function public.crm_apply_campaign_provider_receipt(uuid,text,text,text,text,text,timestamptz,jsonb) from public,anon,authenticated;
+grant execute on function public.crm_apply_campaign_provider_receipt(uuid,text,text,text,text,text,timestamptz,jsonb) to service_role;
