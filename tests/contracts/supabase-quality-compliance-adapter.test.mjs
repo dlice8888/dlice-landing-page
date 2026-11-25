@@ -14,15 +14,17 @@ test("each Quality workflow delegates to exactly one atomic RPC",async()=>{
  await adapter.recordFoodSafetyInspection({...base,sourceType:"receipt_item",sourceId:"receipt-item-a",lotCode:"LOT-A",policyId:"policy-a",measuredTempC:4,declaredAllergens:[]});
  await adapter.initiateFoodRecall({...base,lotCode:"LOT-A",reason:"contamination alert",severity:"high"});
  await adapter.recordSupplierQualityInspection({...base,receiptItemId:"receipt-item-a",policyId:"supplier-policy-a",findings:[{code:"PACKAGING",severity:"major"}]});
+ await adapter.requestFoodLotRelease({...base,quarantineId:"quarantine-a",reason:"Corrective evidence attached",evidenceReference:"evidence://release-request"});
+ await adapter.approveFoodLotRelease({...base,quarantineId:"quarantine-a",decision:"released",evidenceReference:"evidence://release-approval"});
  await adapter.submitSupplierCorrectiveAction({...base,capaId:"capa-a",rootCause:"Root cause",correctiveAction:"Correction",preventiveAction:"Prevention",evidenceReference:"evidence://capa"});
  await adapter.verifySupplierCorrectiveAction({...base,capaId:"capa-a",decision:"verified",evidenceReference:"evidence://verify",releaseQuarantine:true});
- assert.equal(calls.length,11);
+ assert.equal(calls.length,13);
  assert.deepEqual(calls.map(x=>x.name),[
   "quality_request_food_safety_policy","quality_approve_food_safety_policy",
   "quality_request_supplier_quality_policy","quality_approve_supplier_quality_policy",
   "quality_register_food_lot","quality_link_food_lot_distribution",
   "quality_record_food_safety_inspection","quality_initiate_food_recall",
-  "quality_record_supplier_quality_inspection","quality_submit_supplier_capa","quality_verify_supplier_capa"
+  "quality_record_supplier_quality_inspection","quality_request_food_lot_release","quality_approve_food_lot_release","quality_submit_supplier_capa","quality_verify_supplier_capa"
  ]);
  assert.equal(calls[10].args.p_release_quarantine,true);
 });
