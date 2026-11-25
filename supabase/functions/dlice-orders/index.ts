@@ -1363,6 +1363,8 @@ if (action === "admin-set-profile-role") {
     "erp-quality-link-lot-distribution",
     "erp-quality-record-food-inspection",
     "erp-quality-initiate-recall",
+    "erp-quality-request-lot-release",
+    "erp-quality-approve-lot-release",
     "erp-quality-record-supplier-inspection",
     "erp-quality-submit-capa",
     "erp-quality-verify-capa",
@@ -1444,6 +1446,21 @@ if (action === "admin-set-profile-role") {
         return fail("Data recall tidak valid.",422,origin);
       return await callQuality("quality_initiate_food_recall",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
         p_lot_code:safeText(body.lot_code,120),p_reason:safeText(body.reason,500),p_severity:severity,
+        p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-request-lot-release"){
+      if(!uuid(body.quarantine_id)||safeText(body.reason,500).length<3||safeText(body.evidence_reference,500).length<3||!idem)
+        return fail("Permintaan release karantina lot tidak valid.",422,origin);
+      return await callQuality("quality_request_food_lot_release",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_quarantine_id:body.quarantine_id,p_reason:safeText(body.reason,500),
+        p_evidence_reference:safeText(body.evidence_reference,500),p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-quality-approve-lot-release"){
+      const decision=safeText(body.decision,20);
+      if(!uuid(body.quarantine_id)||!["released","destroyed"].includes(decision)||safeText(body.evidence_reference,500).length<3||!idem)
+        return fail("Keputusan release/destruction lot tidak valid.",422,origin);
+      return await callQuality("quality_approve_food_lot_release",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_quarantine_id:body.quarantine_id,p_decision:decision,p_evidence_reference:safeText(body.evidence_reference,500),
         p_idempotency_key:idem,p_actor_user_id:actor.user.id});
     }
     if(action==="erp-quality-record-supplier-inspection"){
