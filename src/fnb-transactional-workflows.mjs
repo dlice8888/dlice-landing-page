@@ -24,6 +24,11 @@ import {
 } from "./crm-campaign-delivery.mjs";
 import { reconcilePayrollPayment } from "./hr-payroll-payment-reconciliation.mjs";
 import { enforceTenantEntitlement } from "./saas-entitlement-enforcement.mjs";
+import { buildSupplierInvoiceApJournal } from "./procurement-ap-journal.mjs";
+import { rankReconciledBranches } from "./executive-branch-ranking.mjs";
+import { calculateFranchiseRoyalty } from "./franchise-royalty-calculation.mjs";
+import { calculatePayrollLine } from "./hr-payroll-calculation.mjs";
+import { buildCrmFinancialCloseEvidence } from "./crm-financial-close.mjs";
 
 const fail = (code, message) => {
   const error = new Error(message);
@@ -574,6 +579,234 @@ export async function reconcileApprovedPayrollPayment(input, deps) {
 }
 
 
+
+
+/** CRM: build a close projection only from server-loaded reconciled source evidence. */
+export async function buildCrmFinancialCloseProjection(input, deps) {
+  const scope = { ...scopeOf(input), action: "crm.financial_close.project" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const source = await adapter(deps, "loadCrmFinancialCloseSourceForUpdate")(tx, {
+      sourceType: input.sourceType, sourceId: required(input.sourceId, "sourceId"),
+    });
+    assertScope(source, scope, "crmFinancialCloseSource");
+    const [refunds, settlement, shift, finance, financeExpectedIdr] = await Promise.all([
+      adapter(deps, "loadCrmSourceRefunds")(tx, source.id),
+      adapter(deps, "loadCrmSettlementReconciliation")(tx, source.id),
+      adapter(deps, "loadCrmApprovedShiftReconciliation")(tx, source.id),
+      adapter(deps, "loadCrmPostedFinanceSource")(tx, source.id),
+      adapter(deps, "loadCrmFinanceExpectedAmount")(tx, source.id),
+    ]);
+    const projection = buildCrmFinancialCloseEvidence({
+      financialCloseId: required(input.financialCloseId, "financialCloseId"),
+      source, refunds, settlement, shift, finance, financeExpectedIdr,
+    });
+    const saved = await adapter(deps, "insertImmutableCrmFinancialCloseProjection")(tx, {
+      projection, actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.projectionId || saved.status !== "reconciled") {
+      fail("CRM_FINANCIAL_CLOSE_PROJECTION_PERSIST_FAILED", "Immutable reconciled close projection must persist");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "crm.financial_close.projected", entityType: "crm_financial_close_projection",
+      entityId: saved.projectionId, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "reconciled", projectionId: saved.projectionId,
+      eligibleNetSalesIdr: projection.eligibleNetSalesIdr, sourceId: source.id });
+  });
+}
+
+/** HR: calculate immutable payroll lines from approved timesheets and effective compensation. */
+export async function calculateAndPersistPayrollRun(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.calculate" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const run = await adapter(deps, "loadPayrollRunForUpdate")(tx, input.payrollRunId);
+    assertScope(run, scope, "payrollRun");
+    if (run.status !== "draft") fail("PAYROLL_RUN_NOT_DRAFT", "Only a draft payroll run can be calculated");
+    const rows = await adapter(deps, "loadApprovedPayrollCalculationInputs")(tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId,
+      periodStart: run.periodStart, periodEnd: run.periodEnd,
+    });
+    if (!Array.isArray(rows) || rows.length === 0) {
+      fail("APPROVED_PAYROLL_INPUTS_REQUIRED", "Approved attendance/timesheet and compensation inputs are required");
+    }
+    const lines = rows.map((row) => {
+      if (!row.employee || row.employee.tenantId !== scope.tenantId ||
+          (scope.branchId && row.employee.branchId !== scope.branchId) ||
+          row.employee.status !== "active" || !row.approvedTime?.approved) {
+        fail("PAYROLL_EMPLOYEE_OR_TIME_NOT_ELIGIBLE", "Every payroll line needs an active scoped employee and approved time");
+      }
+      return {
+        ...calculatePayrollLine({
+          employeeId: row.employee.id, periodStart: run.periodStart, periodEnd: run.periodEnd,
+          compensation: row.compensation, approvedTime: row.approvedTime,
+          components: row.components, monthlyProration: row.monthlyProration ?? null,
+        }),
+        tenantId: scope.tenantId, branchId: row.employee.branchId,
+      };
+    });
+    const saved = await adapter(deps, "persistImmutableCalculatedPayrollLines")(tx, {
+      run, lines, actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.payrollRunId || saved.status !== "calculated" || saved.lineCount !== lines.length) {
+      fail("PAYROLL_CALCULATION_PERSIST_FAILED", "Complete immutable payroll line snapshot must persist");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "hr.payroll.calculated", entityType: "hr_payroll_run",
+      entityId: run.id, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "calculated", payrollRunId: run.id,
+      lineCount: lines.length, grossTotalIdr: lines.reduce((n, x) => n + x.grossAmountIdr, 0),
+      netTotalIdr: lines.reduce((n, x) => n + x.netAmountIdr, 0) });
+  });
+}
+
+/** Franchise: create royalty only from an effective signed agreement and reconciled close. */
+export async function createReconciledFranchiseRoyaltyStatement(input, deps) {
+  const scope = { ...scopeOf(input), action: "franchise.royalty.create" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const agreement = await adapter(deps, "loadEffectiveFranchiseAgreementForUpdate")(tx, input.agreementId);
+    assertScope(agreement, scope, "franchiseAgreement");
+    const close = await adapter(deps, "loadReconciledFranchiseFinancialClose")(tx, {
+      tenantId: scope.tenantId, franchiseId: agreement.franchiseId,
+      periodStart: input.periodStart, periodEnd: input.periodEnd,
+    });
+    const statement = calculateFranchiseRoyalty({
+      agreement, financialClose: close,
+      statementPeriodStart: input.periodStart, statementPeriodEnd: input.periodEnd,
+    });
+    const prior = await adapter(deps, "findFranchiseRoyaltyByIdempotencyKey")(tx, scope.tenantId, statement.idempotencyKey);
+    if (prior) return Object.freeze({ status: "duplicate", statementId: prior.id });
+    const saved = await adapter(deps, "persistFranchiseRoyaltyStatement")(tx, {
+      statement, actorId: scope.actorId, requestIdempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.statementId || saved.status !== "draft") {
+      fail("FRANCHISE_ROYALTY_PERSIST_FAILED", "Royalty statement must persist as draft before review and approval");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "franchise.royalty.statement_created", entityType: "franchise_royalty_statement",
+      entityId: saved.statementId, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "draft", statementId: saved.statementId,
+      netSalesIdr: statement.netSalesIdr, royaltyIdr: statement.royaltyIdr,
+      paymentStatus: "not_paid" });
+  });
+}
+
+/** Procurement: persist a balanced AP journal draft after a clean three-way match. */
+export async function postMatchedSupplierInvoiceToApJournal(input, deps) {
+  const scope = { ...scopeOf(input), action: "procurement.ap.post" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const invoice = await adapter(deps, "loadSupplierInvoiceForUpdate")(tx, input.invoiceId);
+    assertScope(invoice, scope, "supplierInvoice");
+    const lines = await adapter(deps, "loadMatchedSupplierInvoiceLines")(tx, invoice.id);
+    const accountMapping = await adapter(deps, "loadApprovedSupplierApAccountMapping")(tx, scope.tenantId, scope.branchId);
+    const approval = await adapter(deps, "loadIndependentSupplierInvoiceApproval")(tx, invoice.id);
+    if (!approval?.approvedBy || approval.approvedBy === invoice.receivedBy) {
+      fail("INDEPENDENT_SUPPLIER_INVOICE_APPROVAL_REQUIRED", "Invoice approval must be independent from invoice receiver");
+    }
+    const period = await adapter(deps, "loadOpenSupplierApFiscalPeriod")(tx, invoice.invoiceDate);
+    if (!period || period.status !== "open") fail("SUPPLIER_AP_FISCAL_PERIOD_NOT_OPEN", "An open Finance fiscal period is required");
+    const journal = buildSupplierInvoiceApJournal({
+      invoice, lines, accountMapping, idempotencyKey: scope.idempotencyKey,
+    });
+    const prior = await adapter(deps, "findSupplierApJournalByIdempotencyKey")(tx, scope.tenantId, scope.idempotencyKey);
+    if (prior) return Object.freeze({ status: "duplicate", journalBatchId: prior.batchId });
+    const saved = await adapter(deps, "persistSupplierApJournalDraft")(tx, {
+      invoice, journal, fiscalPeriod: period, actorId: scope.actorId,
+    });
+    if (!saved?.batchId || saved.status !== "draft" || saved.debitIdr !== saved.creditIdr) {
+      fail("SUPPLIER_AP_JOURNAL_PERSIST_FAILED", "Balanced AP journal must persist as a draft");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "procurement.ap_journal.draft_created", entityType: "finance_journal_batch",
+      entityId: saved.batchId, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "draft", journalBatchId: saved.batchId,
+      debitIdr: saved.debitIdr, creditIdr: saved.creditIdr,
+      requiresIndependentFinancePosting: true });
+  });
+}
+
+/** Executive: rank the complete authorized branch set, never a partial sample. */
+export async function publishExecutiveBranchRanking(input, deps) {
+  const scope = { ...scopeOf(input), action: "executive.branch_ranking.publish" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const expectedBranchIds = await adapter(deps, "loadAuthorizedActiveBranchIds")(tx, scope.tenantId);
+    if (!Array.isArray(expectedBranchIds) || expectedBranchIds.length < 1 || expectedBranchIds.length > 150) {
+      fail("EXECUTIVE_BRANCH_SCOPE_INVALID", "Authoritative active branch scope must contain 1–150 branches");
+    }
+    const [snapshots, targets] = await Promise.all([
+      adapter(deps, "loadReconciledBranchFinanceSnapshots")(tx, {
+        tenantId: scope.tenantId, periodStart: input.periodStart, periodEnd: input.periodEnd,
+      }),
+      adapter(deps, "loadApprovedBranchTargets")(tx, {
+        tenantId: scope.tenantId, periodStart: input.periodStart, periodEnd: input.periodEnd,
+      }),
+    ]);
+    const ranking = rankReconciledBranches({
+      tenantId: scope.tenantId, periodStart: input.periodStart, periodEnd: input.periodEnd,
+      branchSnapshots: snapshots, targets, expectedBranchIds, limit: 150,
+    });
+    const saved = await adapter(deps, "persistImmutableExecutiveBranchRanking")(tx, {
+      ranking, actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (!saved?.rankingId || saved.branchCount !== ranking.branchCount) {
+      fail("EXECUTIVE_RANKING_PERSIST_FAILED", "Complete branch ranking snapshot must persist");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: null, actorId: scope.actorId,
+      action: "executive.branch_ranking.published", entityType: "executive_branch_ranking",
+      entityId: saved.rankingId, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "published", rankingId: saved.rankingId,
+      branchCount: ranking.branchCount, ranking: ranking.ranking });
+  });
+}
+
+/** BI: scheduled ingestion runner; each metric result/error is durably accounted for. */
+export async function runScheduledBiKpiIngestion(input, deps) {
+  const scope = { ...scopeOf(input), action: "bi.ingestion.run" };
+  const definitions = await inTenantTransaction(deps, scope, async (tx) =>
+    adapter(deps, "loadActiveScheduledKpiDefinitions")(tx, scope.tenantId));
+  if (!Array.isArray(definitions) || definitions.length === 0) {
+    fail("BI_SCHEDULED_METRICS_NOT_CONFIGURED", "No active scheduled KPI definitions are configured");
+  }
+  const results = [];
+  for (const definition of definitions) {
+    const key = `${scope.idempotencyKey}:${definition.id}:${input.periodStart}:${input.periodEnd}`;
+    try {
+      const result = await ingestReconciledKpiSnapshot({
+        tenantId: scope.tenantId, branchId: input.branchId ?? null,
+        actorId: scope.actorId, idempotencyKey: key,
+        metricId: definition.id, formulaVersion: definition.formulaVersion,
+        periodStart: input.periodStart, periodEnd: input.periodEnd,
+      }, deps);
+      results.push({ metricId: definition.id, status: "ingested", snapshotId: result.snapshotId });
+    } catch (error) {
+      const failure = { metricId: definition.id, status: "failed",
+        errorCode: error?.code ?? "BI_INGESTION_FAILED" };
+      await inTenantTransaction(deps, scope, async (tx) => {
+        await adapter(deps, "persistBiIngestionFailure")(tx, {
+          tenantId: scope.tenantId, metricId: definition.id,
+          periodStart: input.periodStart, periodEnd: input.periodEnd,
+          runIdempotencyKey: key, errorCode: failure.errorCode,
+        });
+        await audit(deps, tx, {
+          tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+          action: "bi.kpi.ingestion_failed", entityType: "bi_metric_definition",
+          entityId: definition.id, idempotencyKey: key,
+        });
+      });
+      results.push(failure);
+    }
+  }
+  return Object.freeze({ status: results.every(x => x.status === "ingested") ? "complete" : "partial",
+    metricCount: definitions.length, results: Object.freeze(results.map(Object.freeze)) });
+}
 
 /**
  * Delivery: request quotes from explicitly approved providers. Provider calls
