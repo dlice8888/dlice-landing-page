@@ -38,6 +38,8 @@ jobs:
           if [ ! -f supabase/config.toml ] && [ ! -f supabase/config.json ] && [ ! -f supabase/config.jsonc ]; then
             supabase init --force
           fi
+      - name: Check payroll finance clearing SQL contract
+        run: node --test tests/contracts/payroll-finance-clearing-sql-contract.test.mjs
       - name: Start disposable local Supabase stack
         run: supabase start
       - name: Replay canonical repository migrations
