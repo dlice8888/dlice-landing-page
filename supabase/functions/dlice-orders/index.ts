@@ -1876,6 +1876,9 @@ if (action === "admin-set-profile-role") {
        if(!/^[0-9a-f-]{36}$/i.test(reconciliationId)||!["passed","failed","waived"].includes(decision)||
         (decision==="waived"&&(!waiverReason||waiverReason.length<10)))
         return fail("Keputusan review BI atau alasan waiver tidak valid.",422,origin);
+       const {data:reviewTarget,error:reviewTargetError}=await admin.from("bi_reconciliation_runs").select("id").eq("id",reconciliationId).eq("tenant_id",tenantId).maybeSingle();
+       if(reviewTargetError)return fail("Scope rekonsiliasi BI belum dapat diverifikasi.",503,origin);
+       if(!reviewTarget)return fail("Rekonsiliasi tidak ditemukan pada tenant ini.",404,origin);
        const {data,error}=await admin.rpc("bi_review_reconciliation_run",{
         p_reconciliation_id:reconciliationId,p_decision:decision,p_waiver_reason:waiverReason,p_actor_user_id:actor.user.id,
        });
@@ -1885,6 +1888,9 @@ if (action === "admin-set-profile-role") {
      if(action==="erp-bi-publish-snapshot"){
        const snapshotId=safeText(body.snapshot_id,64);
        if(!/^[0-9a-f-]{36}$/i.test(snapshotId))return fail("Snapshot ID tidak valid.",422,origin);
+       const {data:publishTarget,error:publishTargetError}=await admin.from("bi_metric_snapshots").select("id").eq("id",snapshotId).eq("tenant_id",tenantId).maybeSingle();
+       if(publishTargetError)return fail("Scope snapshot BI belum dapat diverifikasi.",503,origin);
+       if(!publishTarget)return fail("Snapshot tidak ditemukan pada tenant ini.",404,origin);
        const {data,error}=await admin.rpc("bi_publish_metric_snapshot",{p_snapshot_id:snapshotId,p_actor_user_id:actor.user.id});
        if(error)return fail("Snapshot belum dapat dipublikasikan. Periksa lineage, watermark freshness, completeness, rekonsiliasi dan independensi publisher.",409,origin);
        return json({snapshot:data},200,origin);
