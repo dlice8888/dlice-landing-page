@@ -354,6 +354,7 @@ declare
  v_item public.hr_payroll_payment_items%rowtype;
  v_event public.hr_payroll_provider_events%rowtype;
  v_clear public.hr_payroll_payment_finance_clearings%rowtype;
+ v_batch public.hr_payroll_payment_batches%rowtype;
  v_exception public.hr_payroll_payment_reversal_exceptions%rowtype;
  v_reason text;
 begin
@@ -366,7 +367,10 @@ begin
  if not found then raise exception using errcode='23514',message='AUTHENTICATED_PROVIDER_REVERSAL_REQUIRED'; end if;
  select * into v_clear from public.hr_payroll_payment_finance_clearings
   where tenant_id=p_tenant_id and payment_item_id=v_item.id for update;
- if p_actor_user_id in (v_item.created_by) then
+ select * into v_batch from public.hr_payroll_payment_batches
+  where tenant_id=p_tenant_id and id=(select payment_batch_id from public.hr_payroll_payment_items
+   where tenant_id=p_tenant_id and id=v_item.id) for share;
+ if p_actor_user_id in (v_batch.created_by,v_batch.approved_by,v_batch.reconciled_by) then
   raise exception using errcode='42501',message='INDEPENDENT_REVERSAL_EXCEPTION_REVIEWER_REQUIRED';
  end if;
  if found and v_clear.status='bank_matched' then
