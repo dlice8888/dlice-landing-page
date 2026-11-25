@@ -2526,6 +2526,24 @@ if (action === "admin-set-profile-role") {
   }
 
 
+  if (action === "erp-record-delivery-proof") {
+    if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin pencatatan proof of delivery tidak diizinkan.",403,origin);
+    const dispatchId=safeText(body.dispatch_id,64),proofType=safeText(body.proof_type,30);
+    const objectPath=safeText(body.storage_object_path,500)||null,recipient=safeText(body.recipient_name,120)||null;
+    const reference=safeText(body.verification_reference,160)||null;
+    const latitude=body.latitude===null||body.latitude===undefined?null:Number(body.latitude);
+    const longitude=body.longitude===null||body.longitude===undefined?null:Number(body.longitude);
+    if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["photo","signature","recipient_name","otp_verified","geo_check"].includes(proofType)||
+      ((latitude===null)!==(longitude===null))||(latitude!==null&&(!Number.isFinite(latitude)||latitude < -90||latitude>90||!Number.isFinite(longitude)||longitude < -180||longitude>180)))return fail("Data proof of delivery tidak valid.",422,origin);
+    const {data:dispatch,error:dispatchError}=await admin.from("delivery_dispatches").select("id,branch_id,tenant_id").eq("id",dispatchId).maybeSingle();
+    if(dispatchError)return fail("Pengiriman belum dapat diverifikasi.",503,origin);
+    if(!dispatch)return fail("Pengiriman tidak ditemukan.",404,origin);
+    if(!await branchAccess(dispatch.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data,error}=await admin.rpc("delivery_record_proof",{p_dispatch_id:dispatchId,p_proof_type:proofType,p_storage_object_path:objectPath,p_recipient_name:recipient,p_latitude:latitude,p_longitude:longitude,p_verification_reference:reference,p_actor_user_id:actor.user.id});
+    if(error)return fail("Proof of delivery ditolak. Pastikan bukti berada di bucket privat delivery-proof dengan path tenant/cabang/pengiriman dan tipe/ukuran file yang diizinkan.",422,origin);
+    return json({proof:data},201,origin);
+  }
+
   if (action === "erp-transition-delivery-dispatch") {
     if(!hasPerm("orders")&&!hasPerm("pos"))return fail("Izin perubahan status pengiriman tidak diizinkan.",403,origin);
     const dispatchId=safeText(body.dispatch_id,64),next=safeText(body.next_status,30),note=safeText(body.note,500)||"";
