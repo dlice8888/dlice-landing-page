@@ -1,7 +1,7 @@
 -- PGTAP DRAFT — run only after applying QUALITY_COMPLIANCE_SCHEMA_DRAFT.sql
 -- and QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql to a disposable local DB.
 begin;
-select plan(34);
+select plan(36);
 
 select ok(to_regclass('public.food_lot_registry') is not null,'food lot registry exists');
 select ok(to_regclass('public.food_lot_distributions') is not null,'food lot distribution trace exists');
@@ -23,6 +23,8 @@ select ok(to_regprocedure('public.quality_initiate_food_recall(uuid,uuid,text,te
 select ok(to_regprocedure('public.quality_record_supplier_quality_inspection(uuid,uuid,uuid,uuid,jsonb,text,uuid)') is not null,'supplier quality inspection RPC exists');
 select ok(to_regprocedure('public.quality_submit_supplier_capa(uuid,uuid,uuid,text,text,text,text,uuid)') is not null,'supplier CAPA submission RPC exists');
 select ok(to_regprocedure('public.quality_verify_supplier_capa(uuid,uuid,uuid,text,text,boolean,uuid)') is not null,'supplier CAPA verification RPC exists');
+select ok(to_regprocedure('public.quality_request_food_lot_release(uuid,uuid,uuid,text,text,text,uuid)') is not null,'food lot release request RPC exists');
+select ok(to_regprocedure('public.quality_approve_food_lot_release(uuid,uuid,uuid,text,text,text,uuid)') is not null,'food lot release approval RPC exists');
 
 select ok((select relrowsecurity from pg_class where oid='public.food_lot_registry'::regclass),'food lot registry has RLS enabled');
 select ok((select relrowsecurity from pg_class where oid='public.food_lot_distributions'::regclass),'food lot distributions have RLS enabled');
@@ -43,7 +45,7 @@ select ok(not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pron
  where n.nspname='public' and p.proname in ('quality_approve_food_safety_policy','quality_approve_supplier_quality_policy','quality_request_food_safety_policy','quality_request_supplier_quality_policy',
  'quality_register_food_lot','quality_link_food_lot_distribution','quality_record_food_safety_inspection',
  'quality_initiate_food_recall','quality_record_supplier_quality_inspection','quality_submit_supplier_capa',
- 'quality_verify_supplier_capa') and p.prosecdef),'all Quality RPCs are SECURITY INVOKER');
+ 'quality_verify_supplier_capa','quality_request_food_lot_release','quality_approve_food_lot_release') and p.prosecdef),'all Quality RPCs are SECURITY INVOKER');
 
 select ok(to_regclass('public.food_lot_one_active_quarantine_uq') is not null,'food lot active quarantine uniqueness index exists');
 select ok(to_regclass('public.supplier_quality_one_active_quarantine_uq') is not null,'supplier active quarantine uniqueness index exists');
