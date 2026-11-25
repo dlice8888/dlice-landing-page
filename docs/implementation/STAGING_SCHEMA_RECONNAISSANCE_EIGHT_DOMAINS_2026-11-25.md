@@ -170,3 +170,20 @@ The contract does not prove the existing staging schema currently stores one can
 ## Payroll journal balance correction (source-only, 2026-11-25)
 
 Reviewed `src/hr-payroll-finance-batch.mjs`: employer contribution expense now has an explicit matching payable credit, and line-level component totals are checked against deductions, earnings and employer contribution totals. Both expense and liability account mappings are required. The batch remains a draft-only projection, not a Finance posting. This change is source-only; no tests, migrations or database writes were run.
+
+
+## Eight-domain workflow continuation — source-level kernels (2026-11-25)
+
+The following additional domain-boundary modules were added on the active feature branch. They intentionally stop before claiming a persisted workflow or successful external operation:
+
+- `src/crm-campaign-delivery.mjs`: consent is checked for tenant/customer/channel/purpose and expiry before dispatch; dispatch requires an approved provider adapter and durable idempotent outbox claim; provider acceptance is recorded separately from delivery; retry is requested on provider failure; delivery receipts and unsubscribe callbacks require provider-specific signature verification and event collision protection. No provider is selected/configured, no webhook endpoint or durable receipt inbox has been deployed, and contribution-margin attribution is still needed for true ROI.
+- `src/hr-payroll-payment-reconciliation.mjs`: payment is reconciled only when an approved payroll run has an executed payment batch, unique final provider settlements exactly equal net pay, and the Finance batch is posted and source-reconciled. No payment rail or payment execution has been performed.
+- `src/delivery-financial-reconciliation.mjs`: delivered dispatch, order/tenant identity, final carrier settlement, customer charge, subsidy, COD and Finance amounts must reconcile exactly. No provider-specific fields or live settlement evidence were invented.
+- `src/franchise-contract-lifecycle.mjs`: contract versions form an immutable document-hash chain; signature evidence and independent reviewer are required; closure requires settled obligations, paid/reconciled final royalty, tenant export checksum, retention approval and independent approval. Signing and lifecycle persistence are not wired.
+- `src/bi-branch-performance.mjs`: target-vs-actual aggregation refuses incomplete populations; it requires exactly 150 active branches in the supplied tenant, one approved target and one reconciled exact-period fact per branch, then returns rankings and variance. This is not evidence that 150 live branches or facts currently exist.
+- `src/saas-entitlement-enforcement.mjs`: fail-closed tenant/subscription/entitlement/quota precondition and suspension eligibility requiring grace expiry, approval, invoice resolution and reconciled settlements. API-wide enforcement and atomic quota reservation remain open.
+- `src/procurement-payment-reconciliation.mjs`: supplier payment is reconciled only after executed payment, final unique settlements, exact invoice amount and posted/reconciled AP journal. No payment was initiated.
+- `src/executive-finance-kpi.mjs`: Executive KPI requires approved Finance metric/formula, posted facts and reviewed source reconciliations plus an approved target.
+- `src/crm-campaign-delivery.mjs` additionally enforces consent expiry and handles signed receipt/unsubscribe event contracts with duplicate collision protection and bounded retry/dead-letter decisions.
+
+The feature matrix evidence was refreshed for these workflows. Overall counts remain 126 PARTIAL / 59 NOT VERIFIED / 4 BLOCKED / 0 DONE out of 189; no feature was promoted to DONE. These are implementation starts, not E2E acceptance. Tests, merges, migrations and staging/production mutations remain deferred to the final batch as requested. CI may run automatically from source commits and is tracked separately.
