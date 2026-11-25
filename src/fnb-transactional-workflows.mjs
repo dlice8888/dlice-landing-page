@@ -822,6 +822,58 @@ export async function matchPayrollPaymentBankStatement(input, deps) {
   });
 }
 
+/**
+ * Finance close: require every provider-clearing item to match an independently
+ * imported bank statement line before the payout batch is considered bank-reconciled.
+ */
+export async function reconcilePayrollPaymentBankBatch(input, deps) {
+  const scope = { ...scopeOf(input), action: "hr.payroll.payment_bank_batch.reconcile" };
+  return inTenantTransaction(deps, scope, async (tx) => {
+    const evidence = await adapter(deps, "loadPayrollPaymentBankBatchEvidence")(tx, input.paymentBatchId);
+    assertScope(evidence?.batch, scope, "payrollPaymentBatch");
+    if (evidence.batch.status !== "reconciled" ||
+        !Array.isArray(evidence.clearings) ||
+        evidence.clearings.length !== evidence.batch.itemCount) {
+      fail("PAYROLL_BANK_CLEARING_BATCH_INCOMPLETE",
+        "Provider-reconciled batch and one clearing row per payroll item are required");
+    }
+    let amount = 0;
+    for (const clearing of evidence.clearings) {
+      assertScope(clearing, scope, "payrollPaymentFinanceClearing");
+      if (clearing.paymentBatchId !== evidence.batch.id || clearing.status !== "bank_matched" ||
+          !clearing.statementLineId || !clearing.bankJournalEntryId ||
+          clearing.statementCurrency !== "IDR" ||
+          clearing.statementAmountIdr !== clearing.amountIdr ||
+          clearing.statementProviderReference !== clearing.providerReference) {
+        fail("PAYROLL_BANK_CLEARING_EVIDENCE_MISMATCH",
+          "Every clearing item needs an exact bank statement line and posted bank journal");
+      }
+      amount += clearing.amountIdr;
+    }
+    if (!Number.isSafeInteger(amount) || amount !== evidence.batch.amountIdr) {
+      fail("PAYROLL_BANK_CLEARING_BATCH_TOTAL_MISMATCH",
+        "Bank-matched clearing total must equal the provider-settled payroll batch");
+    }
+    const saved = await adapter(deps, "reconcilePayrollPaymentBankBatch")(tx, {
+      tenantId: scope.tenantId, paymentBatchId: evidence.batch.id,
+      actorId: scope.actorId, idempotencyKey: scope.idempotencyKey,
+    });
+    if (saved?.status !== "bank_reconciled" || saved.amountIdr !== amount ||
+        saved.itemCount !== evidence.batch.itemCount || !saved.reconciliationId) {
+      fail("PAYROLL_BANK_BATCH_RECONCILIATION_PERSIST_FAILED",
+        "Immutable bank batch reconciliation evidence must persist for the exact amount and item count");
+    }
+    await audit(deps, tx, {
+      tenantId: scope.tenantId, branchId: scope.branchId, actorId: scope.actorId,
+      action: "hr.payroll.payment_bank_batch.reconciled",
+      entityType: "hr_payroll_payment_bank_reconciliation",
+      entityId: saved.reconciliationId, idempotencyKey: scope.idempotencyKey,
+    });
+    return Object.freeze({ status: "bank_reconciled", reconciliationId: saved.reconciliationId,
+      paymentBatchId: evidence.batch.id, itemCount: evidence.batch.itemCount, amountIdr: amount });
+  });
+}
+
 /** Preserve provider reversals as explicit Finance exceptions; never erase a posted success. */
 export async function quarantineReversedPayrollPaymentClearing(input, deps) {
   const scope = { ...scopeOf(input), action: "hr.payroll.payment_finance_clearing.reversal_exception" };
