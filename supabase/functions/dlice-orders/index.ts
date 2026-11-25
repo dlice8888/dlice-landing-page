@@ -1421,7 +1421,7 @@ if (action === "admin-set-profile-role") {
     }
   }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -1433,6 +1433,16 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").order("period_end",{ascending:false}).limit(200);
       if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
       return json({snapshots:data||[]},200,origin);
+    }
+    if(action==="erp-executive-branch-kpis"){
+      const [branches,snapshots]=await Promise.all([
+        admin.from("branches").select("id,code,name,status").eq("tenant_id",tenantId).order("code").limit(200),
+        admin.from("bi_metric_snapshots").select("id,metric_value,period_start,period_end,dimension_value,formula_version,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).eq("status","published").eq("dimension_key","branch_id").order("period_end",{ascending:false}).limit(3000)
+      ]);
+      if(branches.error||snapshots.error)return fail("KPI cabang belum tersedia. Pastikan snapshot BI sudah dipublikasikan.",503,origin);
+      const branchIds=new Set((branches.data||[]).map((b:any)=>b.id));
+      const branchSnapshots=(snapshots.data||[]).filter((x:any)=>branchIds.has(x.dimension_value));
+      return json({branches:branches.data||[],snapshots:branchSnapshots},200,origin);
     }
     if(action==="erp-executive-list-alerts"){
       const {data,error}=await admin.from("executive_operational_alerts").select("id,branch_id,alert_key,severity,source_domain,source_entity,source_entity_id,evidence_reference,summary,status,assigned_to,resolved_by,resolved_at,verified_by,verified_at,created_at,branches(code,name)").eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(200);
