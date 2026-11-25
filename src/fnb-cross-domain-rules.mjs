@@ -100,3 +100,54 @@ export function validateExecutiveAlertResolution({ tenant_id, alert_tenant_id, a
   if (measured_outcome === undefined || measured_outcome === null || measured_outcome === "") return fail("MEASURED_OUTCOME_REQUIRED");
   return ok({ status: "verified", alert_id, verified_by, measured_outcome });
 }
+
+
+export function validateDeliveryTransition({ current_status, next_status, payment_status, has_verified_pod = false, event_id, idempotency_seen = false } = {}) {
+  const transitions = {
+    booked: ["picked_up", "failed", "cancelled"],
+    picked_up: ["in_transit", "failed"],
+    in_transit: ["delivered", "failed"],
+    delivered: [], failed: [], cancelled: [],
+  };
+  if (!text(event_id)) return fail("DELIVERY_EVENT_REFERENCE_REQUIRED");
+  if (idempotency_seen) return fail("DUPLICATE_DELIVERY_EVENT");
+  if (!(transitions[current_status] || []).includes(next_status)) return fail("INVALID_DELIVERY_TRANSITION");
+  if (next_status === "delivered" && has_verified_pod !== true) return fail("DELIVERY_PROOF_REQUIRED");
+  if (next_status === "delivered" && !["paid", "verified", "settled"].includes(payment_status)) return fail("DELIVERY_PAYMENT_NOT_SETTLED");
+  return ok({ current_status, next_status, event_id });
+}
+
+export function validateSupplierTenantLink({ tenant_id, supplier_id, relationship_type, status, created_by, approved_by } = {}) {
+  if (![tenant_id, supplier_id, created_by].every(text)) return fail("SUPPLIER_LINK_SCOPE_REQUIRED");
+  if (!["exclusive", "shared"].includes(relationship_type)) return fail("INVALID_SUPPLIER_RELATIONSHIP");
+  if (status === "active" && (!text(approved_by) || approved_by === created_by)) return fail("INDEPENDENT_SUPPLIER_APPROVAL_REQUIRED");
+  if (!["pending", "active", "suspended", "revoked"].includes(status)) return fail("INVALID_SUPPLIER_LINK_STATUS");
+  return ok({ tenant_id, supplier_id, relationship_type, status });
+}
+
+export function validateBiSnapshotPublication({ tenant_id, snapshot_tenant_id, metric_version, active_metric_version, watermarks = [], reconciliations = [], now = Date.now(), freshness_sla_ms } = {}) {
+  if (!text(tenant_id) || tenant_id !== snapshot_tenant_id) return fail("TENANT_SCOPE_MISMATCH");
+  if (!integer(metric_version) || metric_version !== active_metric_version) return fail("BI_METRIC_VERSION_INACTIVE");
+  if (!Array.isArray(watermarks) || watermarks.length === 0 || !Array.isArray(reconciliations) || reconciliations.length === 0) return fail("BI_EVIDENCE_REQUIRED");
+  if (!integer(freshness_sla_ms) || freshness_sla_ms < 1) return fail("INVALID_BI_FRESHNESS_SLA");
+  if (watermarks.some(w => w.status !== "complete" || !date(w.max_source_updated_at) || now - Date.parse(w.max_source_updated_at) > freshness_sla_ms)) return fail("BI_SOURCE_STALE_OR_INCOMPLETE");
+  if (reconciliations.some(r => r.status !== "passed")) return fail("BI_RECONCILIATION_NOT_PASSED");
+  return ok({ status: "publishable" });
+}
+
+export function validateSaasSubscriptionChange({ tenant_id, subscription_tenant_id, current_status, next_status, billing_verified = false, reason } = {}) {
+  if (!text(tenant_id) || tenant_id !== subscription_tenant_id) return fail("TENANT_SCOPE_MISMATCH");
+  const allowed = { trialing: ["active", "cancelled", "expired"], active: ["past_due", "suspended", "cancelled"], past_due: ["active", "suspended", "cancelled"], suspended: ["active", "cancelled"], cancelled: [], expired: [] };
+  if (!(allowed[current_status] || []).includes(next_status)) return fail("INVALID_SUBSCRIPTION_TRANSITION");
+  if (next_status === "active" && current_status !== "trialing" && billing_verified !== true) return fail("BILLING_VERIFICATION_REQUIRED");
+  if (next_status === "cancelled" && !text(reason)) return fail("CANCELLATION_REASON_REQUIRED");
+  return ok({ tenant_id, next_status });
+}
+
+export function validateFranchiseApproval({ status, due_diligence_checks = [], approved_site_count = 0, reviewer_id, applicant_id } = {}) {
+  if (status !== "due_diligence") return fail("FRANCHISE_DUE_DILIGENCE_REQUIRED");
+  if (!Array.isArray(due_diligence_checks) || due_diligence_checks.length !== 6 || due_diligence_checks.some(x => !["passed", "waived"].includes(x.status) || !text(x.reviewer_id))) return fail("FRANCHISE_DUE_DILIGENCE_INCOMPLETE");
+  if (!integer(approved_site_count) || approved_site_count < 1) return fail("FRANCHISE_SITE_NOT_APPROVED");
+  if (!text(reviewer_id) || reviewer_id === applicant_id) return fail("FRANCHISE_INDEPENDENT_REVIEW_REQUIRED");
+  return ok({ status: "approved" });
+}
