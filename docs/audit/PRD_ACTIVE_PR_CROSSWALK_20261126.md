@@ -1,52 +1,60 @@
-# PRD 189 Feature ID — Active PR Crosswalk (2026-11-26)
+# PRD 189 Feature ID — Open PR Crosswalk (2026-11-26)
 
-## Scope and counting rules
+## Scope
+All **24 open pull requests** visible in the repository listing were inventoried and their patch/file scope reviewed. The ledger carries one row for each of the 189 stable feature IDs and attaches all directly relevant PR references without duplicating the feature denominator.
 
-This is a first-pass crosswalk for all 189 stable feature IDs in `PRD_FEATURE_EVIDENCE_LEDGER_20261126.json`. It reviewed active PRs #123, #127, and #143–#150. Every feature ID appears exactly once in the ledger. A feature touched by multiple PRs retains one feature ID and one denominator count; PR references are many-to-one.
+PR presence is not completion. No feature is promoted to DONE and no progress score is inferred from a PR title, commit, preview, or test-only change. Completion still requires exact-head code/UI, database, authorization, automated tests, E2E workflow, and transaction reconciliation evidence.
 
-A PR match means implementation/source evidence exists or is being added. It does **not** mean the feature is complete. No status is promoted to DONE and no progress percentage is inferred from PR existence. A final score still requires code/UI (20%), database (20%), authorization (15%), automated tests (15%), E2E (20%), and reconciliation/observability (10%).
-
-## PR inventory and evidence boundary
-
-| PR | Scope | Crosswalk interpretation |
+## Open PR inventory
+| PR | Scope reviewed | Feature crosswalk |
 |---|---|---|
-| #123 | Online checkout idempotency and order/reservation ledger | Direct to D03-F07 and D17-F05 |
-| #127 | Atomic customer payment proof and payment-attempt supersession | Direct to D03-F07 and D17-F05 |
-| #143 | POS modifiers, split tender, hold/resume, immutable receipt, offline replay | Direct to D02-F04/F07/F08/F10/F12; staging E2E is separate from browser/device acceptance |
-| #144 | Eight-domain workflow kernels and schema drafts | Domain baseline for selected HR and BI feature IDs; pure workflow code/schema drafts are not concrete adapter/runtime evidence |
-| #145 | Transactional orchestration across CRM, HR/Finance, Delivery, Franchise, BI, SaaS, Procurement and Executive | Main direct mapping for those workflow IDs; SQL remains draft and adapters/UI/runtime remain partial |
-| #146 | Payroll payout v3, webhook/reconciliation, Finance clearing | Direct to HR payroll and Finance/bank clearing features; current-head SQL corrected but replay/pgTAP not yet proven |
-| #147 | 189-feature evidence ledger | Audit artifact attached to all 189 IDs; not product implementation evidence |
-| #148 | Disposable PostgreSQL backup/restore rehearsal | Direct to D18-F08 only; not managed Supabase PITR/Auth/Storage or production RPO/RTO |
-| #149 | Disposable PostgreSQL tenant isolation/concurrency probe | Direct to D18-F10 and supplemental context for D16-F02; not app/API load proof |
-| #150 | Food safety, recall, supplier quality and CAPA | Direct to D18-F06/F07 and supplier GRN quality path D07-F07; adapter, Edge, UI, DB replay and staging E2E remain open |
+| #150 | Food safety, recall, supplier quality and CAPA workflows | D18-F06/F07; D07-F07 |
+| #149 | Disposable PostgreSQL tenant isolation/concurrency probe | D16-F02 (supplemental); D18-F10 |
+| #148 | Disposable PostgreSQL backup/restore rehearsal | D18-F08 only; managed Supabase recovery remains open |
+| #147 | PRD evidence ledger and audit reconciliation | Audit artifact attached to all 189 IDs; not product implementation |
+| #146 | Xendit payroll payout adapter, webhook and Finance clearing | D11-F02/F05/F06/F07; D12-F06/F07; D17-F02/F04/F05 |
+| #145 | Transactional orchestration for eight domains | CRM, HR, Delivery, Franchise, BI, SaaS, Procurement and Executive feature mappings recorded in JSON ledger |
+| #144 | Eight-domain workflow kernels and schema drafts | HR and BI domain baseline mappings recorded in JSON ledger |
+| #143 | POS split tender, hold/resume, immutable receipt and offline replay | D02-F04/F07/F08/F10/F12 |
+| #127 | Atomic customer payment proof and payment-attempt supersession | D03-F07; D17-F05 |
+| #123 | Online checkout idempotency and order/reservation ledger | D03-F07; D17-F05 |
+| #119 | Disable automatic staging mutations / scheduled policy audit | Safety/CI policy; no direct PRD feature ID |
+| #118 | Require explicit confirmation for staging mutation workflows | Safety/CI policy; no direct PRD feature ID |
+| #117 | OIDC session broker rebase | Baseline/security infrastructure; no direct feature-level increment assigned |
+| #116 | Backup/OIDC stacked before rebase | Baseline/security infrastructure; no direct feature-level increment assigned |
+| #115 | Staging baseline branch | Broad baseline snapshot, not counted as a feature increment |
+| #114 | Cross-module tenant boundary acceptance tests | D16-F02; D18-F01/F02/F04/F18 (test evidence only) |
+| #113 | Prevent scheduled staging E2E mutation bypass | Safety/CI policy; no direct PRD feature ID |
+| #112 | Boolean platform_owner metadata hardening | D18-F04 (security/auth test and migration evidence) |
+| #111 | GitHub OIDC staging tenant session broker | D16-F02; D18-F18 (test/security evidence) |
+| #109 | Same-tenant stock transfer enforcement | D06-F08; D18-F17 |
+| #108 | PR history and file-overlap inventory | Audit documentation; no product feature increment |
+| #107 | Environment-validated Supabase runtime configuration | Runtime/config infrastructure; no direct feature ID assigned |
+| #104 | Production CORS source and fail-closed contract | D18-F03 |
+| #71 | Staging tenant fixtures and tenant isolation | D16-F02; D18-F18 |
 
-## First-pass crosswalk by domain
-
-- Executive Command Center: D01-F01, D01-F03, D01-F04, D01-F09 → #145.
+## Domain mapping details
 - POS & Checkout: D02-F04, D02-F07, D02-F08, D02-F10, D02-F12 → #143.
-- Order Management: D03-F07 → #123, #127.
-- Procurement & Supplier: D07-F07 → #150; D07-F09 → #145.
-- Delivery & Fulfillment: D09-F01–F07 → #145.
-- CRM, Loyalty & Marketing: D10-F01, F02, F04, F07 → #145.
-- Finance & Accounting: D11-F02, F05, F06, F07 → #145, #146.
-- HR & Workforce: D12-F01–F07 → #144, #145, #146.
-- Franchise & Expansion: D13-F01–F08 → #144, #145.
-- BI & Analytics: D14-F01–F06, F08 → #144, #145.
-- SaaS Tenant Management: D16-F01, F03–F05, F07 → #145; D16-F02 → #149 (supplemental database concurrency evidence).
-- Integrations & Automation: D17-F02, F04–F06 → #123, #127, #145, #146.
-- Quality, Compliance & Security: D18-F06/F07 → #150; D18-F08 → #148; D18-F10 → #149.
-- Cross-domain process controls: D18-F13 → #143/#145; D18-F14 → #145/#146; D18-F16 → #145/#146.
+- Order Management / Integrations: D03-F07 and D17-F05 → #123/#127.
+- Inventory & Quality: D06-F08 and D18-F17 → #109; D07-F07 and D18-F06/F07 → #150.
+- CRM: D10-F01/F02/F04/F07 → #145.
+- Finance and HR: D11-F02/F05/F06/F07 and D12-F01–F07 → #144/#145/#146.
+- Delivery: D09-F01–F07 → #145.
+- Franchise: D13-F01–F08 → #145.
+- BI: D14-F01–F06/F08 → #144/#145.
+- SaaS: D16-F01/F03/F04/F05/F07 → #145; D16-F02 → #71/#111/#114/#149.
+- Executive: D01-F01/F03/F04/F09 → #145.
+- Security: D18-F01/F02/F03/F04/F18 → #71/#104/#111/#112/#114.
+- Quality recovery and scale: D18-F08 → #148; D18-F10 → #149.
 
-The ledger records all other IDs as `NO_DIRECT_ACTIVE_PR_MATCH` in this reviewed set. That is not a statement that no code exists anywhere; it means this first-pass active-PR review did not find a defensible direct feature-specific mapping. Older open PRs and the complete PR history still require a second pass before the crosswalk is canonical.
+The machine-readable ledger contains the full row-by-row mapping, including evidence kind and limitation. IDs with no direct mapping in this open-PR set remain explicitly unmatched; they must be reviewed against historical PRs, commits and the source register before the crosswalk is canonical.
 
-## Payroll disposable replay defect found
+## Payroll disposable replay — defect and correction
+Run `45659462961` checked out merge candidate `2731e09` (PR #146 commit `23e4b6c2...` merged into PR #145 base). It failed at line 551 of `HR_PAYROLL_PAYMENT_FINANCE_CLEARING_DRAFT.sql` because the immutable-trigger function had mismatched dollar delimiters (`as $` / `end $`). The current PR #146 head `34aa8992631c61abb4d3d7e8cc95779bdffc4ae4` has the corrected `as $$` / `end $$` delimiters. This is a source correction only; disposable replay and pgTAP remain NOT VERIFIED until a new exact-head run passes.
 
-Run `45659462961` checked out merge candidate `2731e09` (PR #146 commit `23e4b6c2...` merged into PR #145 base). Replay failed at line 551 of `HR_PAYROLL_PAYMENT_FINANCE_CLEARING_DRAFT.sql`: the immutable-trigger function used mismatched dollar delimiters (`as $` / `end $`). The current PR #146 head `34aa8992631c61abb4d3d7e8cc95779bdffc4ae4` now has the corrected `as $$` / `end $$` delimiters. This is a known fix, not a passing replay; rerun the disposable workflow on the current exact head before marking SQL replay or pgTAP PASS.
-
-## Next crosswalk pass
-
-1. Review remaining active PRs that touch shared files and older feature areas; map only when the patch directly supports a stable feature ID.
-2. Resolve duplicate/conflicting feature definitions between the owner-supplied opening matrix, checked-in source matrix and active PR descriptions.
-3. Recompute canonical status totals only after all 189 IDs have one resolved source-of-truth row.
-4. Score each PARTIAL feature from exact evidence, preserving BLOCKED where an external prerequisite remains.
+## Next work
+1. Review historical PRs/commits for the 123 IDs without a direct match in the open-PR set.
+2. Reconcile competing opening matrices and source register definitions before publishing canonical totals.
+3. Implement the next CRM and HR database adapters using one atomic RPC per business transaction; avoid multi-request pseudo-transactions.
+4. Add Quality RPC adapter and pgTAP contracts, then rerun payroll disposable replay at the corrected head.
+5. Keep each feature PARTIAL until its own weighted evidence is attached; keep DONE at zero until the full acceptance gate passes.
