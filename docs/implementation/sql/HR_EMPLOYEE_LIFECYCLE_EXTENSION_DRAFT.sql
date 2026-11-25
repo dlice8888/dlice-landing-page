@@ -97,12 +97,15 @@ begin
   if not exists(select 1 from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true) then
     raise exception using errcode='42501',message='HR_EMPLOYEE_CREATOR_NOT_ACTIVE';
   end if;
+  if p_actor_user_id=p_employee_user_id then raise exception using errcode='42501',message='INDEPENDENT_HR_EMPLOYEE_CREATOR_REQUIRED'; end if;
   perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_employee_user_id::text,0));
   select * into v_event from public.hr_employee_lifecycle_events
    where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
   if found then
     if v_event.employee_user_id<>p_employee_user_id or v_event.event_type<>'hire'
-       or v_event.branch_id<>p_branch_id or v_event.effective_on<>p_hired_on then
+       or v_event.branch_id<>p_branch_id or v_event.effective_on<>p_hired_on
+       or v_event.new_state->>'employee_number'<>p_employee_number
+       or v_event.new_state->>'job_position_id'<>p_job_position_id::text then
       raise exception using errcode='23505',message='HR_EMPLOYEE_CREATE_IDEMPOTENCY_COLLISION';
     end if;
     select * into v_record from public.hr_employee_records
