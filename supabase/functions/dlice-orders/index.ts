@@ -3093,12 +3093,12 @@ if (action === "admin-set-profile-role") {
       if(branchError)return fail("Cabang provider belum dapat diverifikasi.",503,origin);
       if(!branch)return fail("Cabang bukan milik tenant ini.",403,origin);
       if(mode==="api"&&!Deno.env.get(secretRef))return fail("Secret provider belum tersedia pada environment Function. Tidak ada nilai secret yang dibaca atau ditampilkan.",409,origin);
-      const {data,error}=await admin.from("delivery_provider_configs").insert({
-        tenant_id:tenantId,branch_id:branchId,provider_key:providerKey,display_name:displayName,
-        credential_secret_reference:secretRef,integration_mode:mode,status:"pending",created_by:actor.user.id,
-      }).select("id,tenant_id,branch_id,provider_key,display_name,credential_secret_reference,integration_mode,status,created_at").single();
-      if(error)return fail(error.code==="23505"?"Konfigurasi provider sudah ada untuk cabang ini.":"Permintaan konfigurasi provider gagal disimpan.",409,origin);
-      return json({provider_config:data,approval_required:true},201,origin);
+       const {data,error}=await admin.rpc("delivery_request_provider_config",{
+         p_tenant_id:tenantId,p_branch_id:branchId,p_provider_key:providerKey,p_display_name:displayName,
+         p_secret_reference:secretRef,p_integration_mode:mode,p_actor_user_id:actor.user.id,
+       });
+       if(error)return fail(error.code==="23505"?"Konfigurasi provider sudah ada untuk cabang ini.":"Permintaan konfigurasi provider gagal disimpan.",409,origin);
+       return json({provider_config:data,approval_required:true},201,origin);
     }
     const configId=safeText(body.provider_config_id,64);
     if(!/^[0-9a-f-]{36}$/i.test(configId))return fail("Provider config ID tidak valid.",422,origin);
@@ -3108,6 +3108,72 @@ if (action === "admin-set-profile-role") {
     const {data,error}=await admin.rpc("delivery_approve_provider_config",{p_config_id:configId,p_actor_user_id:actor.user.id});
     if(error)return fail("Approval provider ditolak. Approver harus berbeda dari pembuat permintaan.",409,origin);
     return json({provider_config:data},200,origin);
+  }
+
+  const deliveryAtomicActions=new Set([
+    "erp-delivery-create-provider-quote","erp-delivery-book-dispatch-from-quote",
+    "erp-delivery-confirm-provider-booking","erp-delivery-reconcile-cost",
+    "erp-delivery-claim-outbox","erp-delivery-finish-outbox",
+  ]);
+  if(deliveryAtomicActions.has(action)){
+    if(!isPlatformOwner)return fail("Workflow Delivery terkontrol hanya dapat dijalankan Platform Owner.",403,origin);
+    const branchId=safeText(body.branch_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(branchId))return fail("Cabang Delivery tidak valid.",422,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("id,tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError)return fail("Tenant cabang Delivery belum dapat diverifikasi.",503,origin);
+    if(!branch)return fail("Cabang Delivery tidak ditemukan.",404,origin);
+    const uuid=(v:any)=>typeof v==="string"&&/^[0-9a-f-]{36}$/i.test(v);
+    const idem=safeText(body.idempotency_key,120);
+    const call=async(name:string,args:Record<string,unknown>)=>{const {data,error}=await admin.rpc(name,args);if(error)return fail("Workflow Delivery ditolak atau belum tersedia: "+String(error.message||"database error").slice(0,160),409,origin);return json({delivery:data},200,origin);};
+    if(action==="erp-delivery-create-provider-quote"){
+      const cost=Number(body.quoted_cost_idr),expires=safeText(body.expires_at,40),hash=safeText(body.payload_sha256,64);
+      if(!uuid(body.order_id)||!uuid(body.provider_config_id)||!safeText(body.provider_quote_id,160)||!safeText(body.service_level,80)||
+        !Number.isSafeInteger(cost)||cost<0||!expires||!/^[0-9a-f]{64}$/.test(hash)||!idem)return fail("Data quote Delivery tidak valid.",422,origin);
+      return await call("delivery_create_provider_quote",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_order_id:body.order_id,
+        p_provider_config_id:body.provider_config_id,p_provider_quote_id:safeText(body.provider_quote_id,160),
+        p_service_level:safeText(body.service_level,80),p_quoted_cost_idr:cost,p_cod_supported:body.cod_supported===true,
+        p_expires_at:expires,p_payload_sha256:hash,p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-delivery-book-dispatch-from-quote"){
+      const cod=Number(body.cod_amount_idr||0);
+      if(!uuid(body.quote_id)||!Number.isSafeInteger(cod)||cod<0||!idem)return fail("Perintah booking Delivery tidak valid.",422,origin);
+      return await call("delivery_book_dispatch_from_quote",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,
+        p_quote_id:body.quote_id,p_cod_amount_idr:cod,p_idempotency_key:idem,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-delivery-confirm-provider-booking"){
+      if(!uuid(body.dispatch_id)||typeof body.succeeded!=="boolean")return fail("Hasil booking provider tidak valid.",422,origin);
+      return await call("delivery_confirm_provider_booking",{p_tenant_id:branch.tenant_id,p_dispatch_id:body.dispatch_id,
+        p_provider_booking_reference:safeText(body.booking_reference,160)||null,p_tracking_number:safeText(body.tracking_number,120)||null,
+        p_tracking_url:safeText(body.tracking_url,500)||null,p_succeeded:body.succeeded,p_error_code:safeText(body.error_code,500)||null,
+        p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-delivery-reconcile-cost"){
+      const fields=["customer_fee_idr","merchant_subsidy_idr","cod_expected_idr","cod_collected_idr","cod_remitted_idr",
+        "courier_cost_expected_idr","courier_cost_final_idr","provider_settlement_idr","provider_fee_idr"];
+      const values=Object.fromEntries(fields.map(k=>[k,Number(body[k])]));
+      const hash=safeText(body.evidence_sha256,64);
+      if(!uuid(body.dispatch_id)||fields.some(k=>!Number.isSafeInteger(values[k])||values[k]<0)||!/^[0-9a-f]{64}$/.test(hash))
+        return fail("Data rekonsiliasi Delivery tidak valid.",422,origin);
+      return await call("delivery_reconcile_cost",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_dispatch_id:body.dispatch_id,
+        p_customer_fee_idr:values.customer_fee_idr,p_merchant_subsidy_idr:values.merchant_subsidy_idr,
+        p_cod_expected_idr:values.cod_expected_idr,p_cod_collected_idr:values.cod_collected_idr,p_cod_remitted_idr:values.cod_remitted_idr,
+        p_courier_cost_expected_idr:values.courier_cost_expected_idr,p_courier_cost_final_idr:values.courier_cost_final_idr,
+        p_provider_settlement_idr:values.provider_settlement_idr,p_provider_fee_idr:values.provider_fee_idr,
+        p_finance_journal_entry_id:uuid(body.finance_journal_entry_id)?body.finance_journal_entry_id:null,
+        p_evidence_sha256:hash,p_actor_user_id:actor.user.id});
+    }
+    if(action==="erp-delivery-claim-outbox"){
+      const workerId=safeText(body.worker_id,120),limit=Number(body.limit||10);
+      if(workerId.length<3||!Number.isInteger(limit)||limit<1||limit>50)return fail("Parameter worker Delivery tidak valid.",422,origin);
+      return await call("delivery_claim_outbox_batch",{p_worker_id:workerId,p_limit:limit});
+    }
+    if(action==="erp-delivery-finish-outbox"){
+      const workerId=safeText(body.worker_id,120),retry=Number(body.retry_after_seconds||60);
+      if(!uuid(body.outbox_id)||workerId.length<3||typeof body.succeeded!=="boolean"||!Number.isInteger(retry))
+        return fail("Hasil worker Delivery tidak valid.",422,origin);
+      return await call("delivery_finish_outbox",{p_outbox_id:body.outbox_id,p_worker_id:workerId,
+        p_succeeded:body.succeeded,p_error_code:safeText(body.error_code,120)||null,p_retry_after_seconds:retry});
+    }
   }
 
   if (action === "erp-upload-delivery-proof") {
