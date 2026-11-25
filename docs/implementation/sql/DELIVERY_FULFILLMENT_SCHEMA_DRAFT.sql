@@ -229,6 +229,50 @@ end $;
 revoke all on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) from public,anon,authenticated;
 grant execute on function public.delivery_transition_dispatch(uuid,text,text,text,uuid,text) to service_role;
 
+-- POD is accepted only after the exact object exists in the private delivery-proof bucket.
+-- The client cannot mark an order delivered by merely supplying a path.
+create or replace function public.delivery_record_proof(
+ p_dispatch_id uuid,p_proof_type text,p_storage_object_path text,p_recipient_name text,
+ p_latitude numeric,p_longitude numeric,p_verification_reference text,p_actor_user_id uuid
+) returns jsonb language plpgsql security invoker set search_path=''
+as $
+declare v public.delivery_dispatches%rowtype; v_proof public.delivery_proof_of_delivery%rowtype;
+ v_object public.storage.objects%rowtype; v_prefix text;
+begin
+ select * into v from public.delivery_dispatches where id=p_dispatch_id for update;
+ if not found then raise exception using errcode='P0002',message='DELIVERY_DISPATCH_NOT_FOUND'; end if;
+ if v.status not in ('booked','picked_up','in_transit') then raise exception using errcode='23514',message='DISPATCH_NOT_ACCEPTING_POD'; end if;
+ if p_proof_type not in ('photo','signature','recipient_name','otp_verified','geo_check') then raise exception using errcode='22023',message='INVALID_POD_TYPE'; end if;
+ if p_latitude is not null and (p_latitude not between -90 and 90 or p_longitude is null or p_longitude not between -180 and 180) then raise exception using errcode='22023',message='INVALID_POD_COORDINATES'; end if;
+ if p_proof_type in ('photo','signature') then
+  v_prefix:=v.tenant_id::text||'/'||v.branch_id::text||'/'||v.id::text||'/';
+  if p_storage_object_path is null or left(p_storage_object_path,length(v_prefix))<>v_prefix then
+   raise exception using errcode='42501',message='POD_OBJECT_PATH_SCOPE_INVALID';
+  end if;
+  select * into v_object from public.storage.objects where bucket_id='delivery-proof' and name=p_storage_object_path;
+  if not found then raise exception using errcode='23514',message='POD_STORAGE_OBJECT_NOT_FOUND'; end if;
+  if coalesce(v_object.metadata->>'mimetype','') not in ('image/jpeg','image/png','image/webp','application/pdf') then
+   raise exception using errcode='23514',message='POD_MIME_TYPE_NOT_ALLOWED';
+  end if;
+  if coalesce((v_object.metadata->>'size')::bigint,0)<=0 or (v_object.metadata->>'size')::bigint>10485760 then
+   raise exception using errcode='23514',message='POD_FILE_SIZE_INVALID';
+  end if;
+ elsif p_proof_type='recipient_name' and length(btrim(coalesce(p_recipient_name,'')))<2 then
+  raise exception using errcode='22023',message='POD_RECIPIENT_REQUIRED';
+ elsif p_proof_type='otp_verified' and length(btrim(coalesce(p_verification_reference,'')))<8 then
+  raise exception using errcode='22023',message='POD_OTP_REFERENCE_REQUIRED';
+ end if;
+ insert into public.delivery_proof_of_delivery(tenant_id,dispatch_id,proof_type,storage_object_path,recipient_name,latitude,longitude,verification_reference,captured_at,captured_by)
+ values(v.tenant_id,v.id,p_proof_type,p_storage_object_path,p_recipient_name,p_latitude,p_longitude,p_verification_reference,now(),p_actor_user_id)
+ returning * into v_proof;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'delivery.proof.recorded','delivery_proof_of_delivery',v_proof.id::text,
+  jsonb_build_object('tenant_id',v.tenant_id,'branch_id',v.branch_id,'dispatch_id',v.id,'proof_type',p_proof_type,'storage_path',p_storage_object_path));
+ return jsonb_build_object('proof_id',v_proof.id,'dispatch_id',v.id,'proof_type',v_proof.proof_type,'captured_at',v_proof.captured_at);
+end $;
+revoke all on function public.delivery_record_proof(uuid,text,text,text,numeric,numeric,text,uuid) from public,anon,authenticated;
+grant execute on function public.delivery_record_proof(uuid,text,text,text,numeric,numeric,text,uuid) to service_role;
+
 -- Required before production use:
 -- 1) Dedicated provider webhook signature verification + raw-body hashing.
 -- 2) Atomic dispatch/status transition RPC that locks the order and dispatch.
