@@ -1275,6 +1275,7 @@ if (action === "admin-set-profile-role") {
     "erp-hr-generate-payroll-run",
     "erp-hr-submit-payroll-run",
     "erp-hr-approve-payroll-run",
+    "erp-hr-queue-payroll-finance",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1368,6 +1369,16 @@ if (action === "admin-set-profile-role") {
       const {data,error}=await admin.rpc("hr_generate_payroll_run",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_period_start:start,p_period_end:end,p_actor_user_id:actor.user.id,p_idempotency_key:key});
       if(error)return fail("Payroll belum dapat dihitung. Pastikan timesheet telah approved dan rate efektif mencakup seluruh periode.",409,origin);
       return json({payroll_run:data},201,origin);
+    }
+    if(action==="erp-hr-queue-payroll-finance"){
+      const payrollId=safeText(body.payroll_run_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(payrollId))return fail("Payroll run tidak valid.",422,origin);
+      const {data:run,error:runError}=await admin.from("hr_payroll_runs").select("id,tenant_id,branch_id,status").eq("id",payrollId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(runError)return fail("Payroll belum dapat diverifikasi untuk antrean Finance.",503,origin);
+      if(!run||run.status!=="approved")return fail("Hanya payroll approved pada tenant/cabang ini yang dapat disiapkan untuk Finance.",409,origin);
+      const {data,error}=await admin.rpc("hr_queue_payroll_finance_posting",{p_payroll_run_id:payrollId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Payroll tidak dapat masuk antrean Finance. Periksa approval independen, timesheet, rate efektif, dan rekonsiliasi total.",409,origin);
+      return json({finance_outbox:data},201,origin);
     }
     if(action==="erp-hr-submit-payroll-run"||action==="erp-hr-approve-payroll-run"){
       const payrollId=safeText(body.payroll_run_id,64);
