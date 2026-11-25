@@ -64,3 +64,30 @@
 ## Release decision
 
 This is reconnaissance only. No DDL, DML, RPC, Auth Admin, Edge Function deployment, Vercel deployment, or Production operation was performed. SQL migration authoring and all merge/migration/runtime validation remain deferred to the agreed final batch. The schema inventory is not a completion claim.
+
+
+## Follow-up read-only finance/source reconciliation inspection (2026-11-25)
+
+A second read-only inspection of staging project `higoadrzxnhzbbwhdbmh` queried `information_schema.columns` and PostgreSQL constraints for POS, orders, refunds, settlements, cash reconciliation and journal entries. No business rows were read or changed.
+
+### Confirmed source fields and lifecycle constraints
+
+- `pos_sales`: `id`, `branch_id`, `shift_id`, `subtotal_idr`, `discount_idr`, `total_idr`, `payment_method`, `payment_status`, `created_at`; payment status is constrained to `paid|pending|refunded|voided`. A POS sale is branch- and shift-linked, but the inspected schema does not itself expose a customer UUID or a dedicated reconciled-net-sales field.
+- `pos_sale_items`: item snapshots, quantity, unit price and line total are available, but item-level refund allocation was not established by this inspection.
+- `orders`: separate `payment_status` and `operational_status`, nullable `branch_id`, `product_subtotal_idr`; payment status includes `refunded`. Orders can be unassigned, so CRM attribution must continue to reject missing branch/tenant attribution.
+- `refund_records`: supports POS sale, order or payment-record references; amount and status are present. Status is constrained to `requested|approved|rejected|processed|failed`. A production earning calculation must subtract only authoritative processed refunds and must guard against duplicate/multiple source references and refund totals exceeding captured value.
+- `payment_settlements`: contains gross, fee, nullable net and received amounts, plus status `pending|matched|disputed|reversed`; settlement items can point to either a payment record or POS sale. `matched` is not the same as a formally reconciled/approved sales close.
+- `cash_reconciliations`: is keyed by branch, business date and shift; status is `draft|submitted|approved|exception`, with reviewer metadata. It can support a POS shift close gate, but the schema inspection alone does not prove the row's amount composition or that each sale is included exactly once.
+- `finance_journal_entries`: exposes `source_type`, nullable `source_id`, `branch_id`, `entry_date`, debit/credit account labels, positive `amount_idr`, and status `draft|posted|reversed`. This is a single-sided journal-entry shape in the inspected table; no balanced journal-batch or source-reconciliation relation was established. Do not infer that a `posted` row alone proves net sales are reconciled.
+
+### CRM automatic earning decision
+
+Automatic earning remains **BLOCKED pending source-of-truth mapping**, not because the operational tables are absent. Before implementing the award RPC, map and verify the authoritative POS/online sale financial close: source amount, discount treatment, refund allocation, settlement inclusion, cash/shift reconciliation status, journal posting/reversal lineage, and idempotent source identity. The candidate sources above are not sufficient to calculate a trustworthy eligible net-sales basis by themselves. In particular, never award points merely from `payment_status='paid'`, `pos_sales.total_idr`, or a `payment_settlements.status='matched'` row.
+
+### Campaign delivery decision
+
+The current CRM draft can approve campaigns and prepare a consent-filtered recipient queue. No approved email/SMS/WhatsApp delivery provider, credentials, callback signing contract, webhook secret, delivery receipt semantics or retry/idempotency contract was established in this read-only schema pass. Keep recipients queued; do not mark them sent or build a fake provider success path. The provider adapter and signed callback ingress must be added only after a real provider and its contract are selected and verified.
+
+### Security and release boundary
+
+This inspection was read-only. No migrations, SQL writes, Auth Admin changes, Edge deployments, staging data mutations, production operations, tests, merges or release-flag changes were performed. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain mandatory.
