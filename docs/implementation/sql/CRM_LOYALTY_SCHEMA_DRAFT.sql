@@ -105,6 +105,7 @@ create table if not exists public.crm_reward_vouchers (
   status text not null default 'reserved' check (status in ('reserved','redeemed','cancelled','expired')),
   expires_at timestamptz not null,
   redeemed_at timestamptz null,
+  created_by uuid null references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   unique (tenant_id,id),
   unique (tenant_id,code),
@@ -183,7 +184,10 @@ drop trigger if exists crm_consent_audit_insert on public.crm_customer_consent_e
 create trigger crm_consent_audit_insert after insert on public.crm_customer_consent_events
 for each row execute function public.crm_audit_insert_row();
 drop trigger if exists crm_rewards_audit_insert on public.crm_rewards;
-create trigger crm_rewards_audit_insert after insert on public.crm_rewards
+create trigger crm_rewards_audit_insert after insert or update on public.crm_rewards
+for each row execute function public.crm_audit_insert_row();
+drop trigger if exists crm_vouchers_audit_insert on public.crm_reward_vouchers;
+create trigger crm_vouchers_audit_insert after insert on public.crm_reward_vouchers
 for each row execute function public.crm_audit_insert_row();
 
 -- Append-only ledger RPC. EXECUTE is granted only to service_role; callers
@@ -259,6 +263,73 @@ end;
 $$;
 revoke all on function public.crm_append_loyalty_entry(uuid,uuid,text,bigint,text,text,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_append_loyalty_entry(uuid,uuid,text,bigint,text,text,uuid,uuid) to service_role;
+
+-- Atomic reward redemption: voucher reservation and points debit share one transaction.
+create or replace function public.crm_redeem_reward(
+  p_tenant_id uuid,
+  p_customer_id uuid,
+  p_reward_id uuid,
+  p_idempotency_key text,
+  p_actor_user_id uuid
+) returns jsonb
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_reward public.crm_rewards%rowtype;
+  v_voucher public.crm_reward_vouchers%rowtype;
+  v_balance bigint;
+begin
+  if length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
+    raise exception using errcode='22023', message='INVALID_IDEMPOTENCY_KEY';
+  end if;
+
+  perform 1 from public.crm_customers
+   where tenant_id=p_tenant_id and id=p_customer_id and status='active'
+   for update;
+  if not found then raise exception using errcode='P0002', message='ACTIVE_CUSTOMER_NOT_FOUND'; end if;
+
+  select * into v_reward from public.crm_rewards
+   where tenant_id=p_tenant_id and id=p_reward_id and status='active'
+     and starts_at<=now() and expires_at>now()
+   for update;
+  if not found then raise exception using errcode='P0002', message='REWARD_NOT_ACTIVE'; end if;
+
+  if exists(select 1 from public.crm_reward_vouchers where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key) then
+    raise exception using errcode='23505', message='DUPLICATE_REDEMPTION';
+  end if;
+
+  select coalesce(sum(points),0) into v_balance from public.crm_loyalty_ledger
+   where tenant_id=p_tenant_id and customer_id=p_customer_id;
+  if v_balance<v_reward.points_cost then
+    raise exception using errcode='22023', message='INSUFFICIENT_POINTS';
+  end if;
+
+  insert into public.crm_reward_vouchers
+    (tenant_id,customer_id,reward_id,code,idempotency_key,points_cost,status,expires_at,created_by)
+  values
+    (p_tenant_id,p_customer_id,p_reward_id,
+     upper(substr(replace(gen_random_uuid()::text,'-',''),1,12)),
+     p_idempotency_key,v_reward.points_cost,'reserved',v_reward.expires_at,p_actor_user_id)
+  returning * into v_voucher;
+
+  insert into public.crm_loyalty_ledger
+    (tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,created_by)
+  values
+    (p_tenant_id,p_customer_id,'redeem',-v_reward.points_cost,p_idempotency_key,
+     'voucher:'||v_voucher.id::text,p_actor_user_id);
+
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values (p_actor_user_id,'crm.loyalty.redeem','crm_loyalty_ledger',v_voucher.id::text,
+    jsonb_build_object('tenant_id',p_tenant_id,'customer_id',p_customer_id,'reward_id',p_reward_id,'points',-v_reward.points_cost));
+
+  return jsonb_build_object('voucher_id',v_voucher.id,'voucher_code',v_voucher.code,
+    'points_cost',v_voucher.points_cost,'expires_at',v_voucher.expires_at,'balance_after',v_balance-v_voucher.points_cost);
+end;
+$;
+revoke all on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) from public,anon,authenticated;
+grant execute on function public.crm_redeem_reward(uuid,uuid,uuid,text,uuid) to service_role;
 
 -- NOTE: transaction links must be created only after the Edge Function verifies
 -- that source_id belongs to branch_id and branch_id belongs to p_tenant_id.
