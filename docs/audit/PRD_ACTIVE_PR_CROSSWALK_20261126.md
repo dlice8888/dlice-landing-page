@@ -1,7 +1,7 @@
 # PRD 189 Feature ID — Open PR Crosswalk (2026-11-26)
 
 ## Scope
-All **24 open pull requests** visible in the repository listing were inventoried and their patch/file scope reviewed. The ledger carries one row for each of the 189 stable feature IDs and attaches all directly relevant PR references without duplicating the feature denominator.
+The open pull requests visible in the repository listing were inventoried and their patch/file scope reviewed. The ledger carries one row for each of the 189 stable feature IDs and attaches all directly relevant PR references without duplicating the feature denominator.
 
 PR presence is not completion. No feature is promoted to DONE and no progress score is inferred from a PR title, commit, preview, or test-only change. Completion still requires exact-head code/UI, database, authorization, automated tests, E2E workflow, and transaction reconciliation evidence.
 
@@ -58,3 +58,11 @@ Run `45659462961` checked out merge candidate `2731e09` (PR #146 commit `23e4b6c
 3. Implement the next CRM and HR database adapters using one atomic RPC per business transaction; avoid multi-request pseudo-transactions.
 4. Add Quality RPC adapter and pgTAP contracts, then rerun payroll disposable replay at the corrected head.
 5. Keep each feature PARTIAL until its own weighted evidence is attached; keep DONE at zero until the full acceptance gate passes.
+
+
+## Live audit delta — 2026-11-27
+
+- PR #152 exact head `66c982c5ea7c147e14627dcc166ed3fc99c90b51` passes Free quality checks. The latest disposable replay was still pending at the audit checkpoint after two prior replay failures exposed a malformed Franchise function splice and an eager `%ROWTYPE` dependency on BI tables created by a later migration. Both source and official migration were corrected; the new exact-head replay must pass before this migration set can be considered replayable.
+- PR #143 checkout disposable replay passes, but exact-head quality checks fail and authenticated positive staging E2E has not run.
+- Current matrix/evidence ledger counts are 145 PARTIAL / 39 NOT VERIFIED / 5 BLOCKED / 0 DONE. The matrix and evidence ledger are now synchronized to all 189 feature IDs. No PARTIAL has a numeric weighted score yet.
+- Live staging has 6 POS sales but zero POS tenders, immutable receipts, cash reconciliations, settlements and Finance journals; 6 KDS tickets and 26 stock movements exist. This is not full POS reconciliation.
