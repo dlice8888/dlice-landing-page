@@ -580,3 +580,6 @@ begin
 end $$;
 revoke all on function public.franchise_approve_agreement_version(uuid,integer,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_approve_agreement_version(uuid,integer,uuid) to service_role;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.franchise_reject_agreement_event_mutation() to service_role;
