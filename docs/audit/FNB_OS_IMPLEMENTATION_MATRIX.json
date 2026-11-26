@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live platform audit + 189-feature evidence-ledger reconciliation)",
+  "snapshot_at": "2026-11-27 (latest exact-head checks and live Supabase/Vercel audit)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -14565,16 +14565,18 @@
     "domain_migrations": {
       "official_migrations_pr": 152,
       "branch": "feat/eight-domain-official-migrations-20261127",
-      "exact_head": "66c982c5ea7c147e14627dcc166ed3fc99c90b51",
+      "exact_head": "01d2cb790403d276b161a4cd4c945b048e6c8ff6",
       "quality_checks": "PASS",
       "disposable_replay": "IN_PROGRESS_AT_SNAPSHOT",
-      "shared_staging_applied": false
+      "shared_staging_applied": false,
+      "vercel_preview": "READY_ON_EXACT_HEAD"
     },
     "pos_pr": {
       "pr": 143,
-      "disposable_checkout_replay": "PASS",
-      "quality_checks": "FAIL",
-      "positive_staging_pos_e2e": "NOT_RUN_AUTH_PREFLIGHT_BLOCKED"
+      "static_quality_checks": "PASS",
+      "checkout_disposable_replay": "PASS",
+      "positive_staging_e2e": "FAIL_AUTHORIZATION_BLOCKED",
+      "blocker": "E2E preflight config passed, but test owner did not satisfy both strict boolean app_metadata.platform_owner=true and DLICE_PLATFORM_OWNER_USER_IDS allowlist."
     },
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
@@ -14585,6 +14587,17 @@
       "latest_preview_ready": true,
       "latest_preview_commit": "f1ba43cdf831c8d79f1172dc732e5e2115c69ada",
       "current_branch_head_preview": "NOT_YET_VERIFIED"
-    }
+    },
+    "public_schema": {
+      "public_tables": 68,
+      "rls_enabled": 68,
+      "rls_disabled": 0
+    },
+    "supabase_advisors": {
+      "security": "auth_leaked_password_protection WARN/DISABLED",
+      "performance": "82 unused-index findings; no index drops authorized without workload/query-plan evidence",
+      "health": "no health lints"
+    },
+    "applied_migrations": 63
   }
 }
