@@ -11452,11 +11452,23 @@
       ],
       "sql_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
-      "exact_head_ci": "WORKFLOW_RUN_FAILED_NO_JOBS_EXPOSED_45728738736",
+      "exact_head_ci": [
+        {
+          "run_id": 45729144920,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        {
+          "run_id": 45729139283,
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
       "staging_e2e": "NOT_RUN",
-      "latest_head": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
+      "latest_head": "5fc3ed12920d508b6cad0ec2ded8a6191cccc5b1",
       "latest_fix": "earn_reversal allocation is now counted in expiry, redemption availability and reversal checks; test asserts all three lot-balance aggregations include it",
-      "test_status": "NOT_VERIFIED_EXACT_HEAD"
+      "test_status": "NOT_VERIFIED_EXACT_HEAD",
+      "known_regression_fix": "Earn reversal allocations now count in expiry, redemption and reversal balance calculations; contract test covers all three aggregate sites."
     },
     "hr_increment": {
       "pr": 145,
@@ -11675,7 +11687,7 @@
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
+      "145": "5fc3ed12920d508b6cad0ec2ded8a6191cccc5b1",
       "146": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
       "147": "a47485c96d15967dadab54494b673d4eb7c2c6a0",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
