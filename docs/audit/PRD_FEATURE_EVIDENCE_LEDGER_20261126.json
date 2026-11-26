@@ -11450,8 +11450,11 @@
       ],
       "sql_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
-      "exact_head_ci": "NOT_OBSERVED",
-      "staging_e2e": "NOT_RUN"
+      "exact_head_ci": "WORKFLOW_RUN_FAILED_NO_JOBS_EXPOSED_45728738736",
+      "staging_e2e": "NOT_RUN",
+      "latest_head": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
+      "latest_fix": "earn_reversal allocation is now counted in expiry, redemption availability and reversal checks; test asserts all three lot-balance aggregations include it",
+      "test_status": "NOT_VERIFIED_EXACT_HEAD"
     },
     "hr_increment": {
       "pr": 145,
@@ -11488,22 +11491,43 @@
       "pgTap_execution": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
       "staging_e2e": "NOT_RUN",
-      "known_gap": "Lot distribution links are explicit, not yet automatically sourced from procurement, stock transfer, production consumption, POS/Order fulfillment."
+      "known_gap": "Lot distribution links are explicit, not yet automatically sourced from procurement, stock transfer, production consumption, POS/Order fulfillment.",
+      "ci_status": {
+        "run_id": 45688899170,
+        "conclusion": "success"
+      },
+      "pgTap": "DRAFT_46_ASSERTIONS_NOT_EXECUTED"
     },
     "payroll_increment": {
       "pr": 146,
-      "latest_head": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+      "latest_head": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
       "old_failed_run": 45659462961,
       "old_candidate_merge_sha": "2731e0946f50af0f19d5179ed2bd6b10e9288a9c",
       "old_failure": "SQL syntax at immutable Finance evidence trigger delimiter in earlier merge candidate",
       "current_delimiters_balanced": true,
       "static_contract_added": true,
-      "exact_head_replay": "NOT_OBSERVED",
-      "pgTap": "NOT_RUN",
+      "exact_head_replay": {
+        "run_id": 45728526171,
+        "job_id": 139604405945,
+        "conclusion": "success",
+        "steps": [
+          "canonical repository migrations replayed on local disposable Supabase",
+          "HR workforce and payroll dependencies replayed in dependency order",
+          "payroll finance security pgTAP suite passed",
+          "disposable local stack stopped with --no-backup"
+        ],
+        "hosted_staging": "NOT_TOUCHED"
+      },
+      "pgTap": "PASS_ON_DISPOSABLE_LOCAL_DB",
       "provider_webhook": "BLOCKED_NO_XENDIT_CREDENTIALS_OR_FIXTURES",
       "bank_statement_e2e": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
-      "live_payout": "NOT_ENABLED"
+      "live_payout": "NOT_ENABLED",
+      "quality_checks": {
+        "run_id": 45728526111,
+        "conclusion": "success"
+      },
+      "webhook": "CONTRACT_TESTS_PASS_NO_PROVIDER_CREDENTIALS_OR_LIVE_WEBHOOK"
     },
     "delivery_increment": {
       "pr": 145,
@@ -11599,7 +11623,7 @@
     },
     "saas_increment": {
       "pr": 145,
-      "latest_head": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
+      "latest_head": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
       "feature_ids": [
         "D16-F03",
         "D16-F04",
@@ -11626,7 +11650,7 @@
         "offboarding_retention_completion"
       ],
       "contract_test": "tests/contracts/saas-billing-metering-contract.test.mjs",
-      "exact_head_ci": "NOT_OBSERVED",
+      "exact_head_ci": "NOT_VERIFIED_WORKFLOW_RUN_FAILED_NO_JOBS",
       "disposable_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
       "payment_webhook": "NOT_IMPLEMENTED_PROVIDER_SPECIFIC",
@@ -11649,8 +11673,8 @@
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
-      "146": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+      "145": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
+      "146": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
       "147": "a47485c96d15967dadab54494b673d4eb7c2c6a0",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
       "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
