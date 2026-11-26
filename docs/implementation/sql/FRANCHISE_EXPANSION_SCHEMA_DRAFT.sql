@@ -174,6 +174,24 @@ declare v_app public.franchise_applications%rowtype;
 begin
  if length(btrim(coalesce(p_applicant_name,''))) not between 2 and 160
   or p_applicant_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
+  or length(btrim(coalesce(p_applicant_phone,'')))<8
+  or p_investment_capacity_idr<0 then
+  raise exception using errcode='22023',message='INVALID_FRANCHISE_APPLICATION';
+ end if;
+ insert into public.franchise_applications(applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,experience_summary,created_by)
+ values(btrim(p_applicant_name),lower(btrim(p_applicant_email)),btrim(p_applicant_phone),btrim(p_proposed_region),btrim(p_proposed_city),p_investment_capacity_idr,p_experience_summary,p_created_by)
+ returning * into v_app;
+ insert into public.franchise_due_diligence_checks(application_id,check_key)
+ select v_app.id,k from unnest(array['identity','financial','legal','operational_experience','territory_conflict','reputation']) k;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_created_by,'franchise.application.created','franchise_application',v_app.id::text,
+  jsonb_build_object('proposed_region',v_app.proposed_region,'proposed_city',v_app.proposed_city));
+ return jsonb_build_object('id',v_app.id,'applicant_name',v_app.applicant_name,'status',v_app.status,'submitted_at',v_app.submitted_at);
+end $$;
+revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
+grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
+
+create or replace function public.franchise_review_application(
  p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
@@ -252,23 +270,6 @@ grant execute on function public.franchise_generate_royalty_statement(uuid,uuid,
 
 -- Royalty statement generation must consume reconciled net sales, never raw order totals.
 -- The caller supplies a signed-off reconciliation reference and the exact effective agreement version.
-
-  or length(btrim(coalesce(p_applicant_phone,'')))<8
-  or p_investment_capacity_idr<0 then
-  raise exception using errcode='22023',message='INVALID_FRANCHISE_APPLICATION';
- end if;
- insert into public.franchise_applications(applicant_name,applicant_email,applicant_phone,proposed_region,proposed_city,investment_capacity_idr,experience_summary,created_by)
- values(btrim(p_applicant_name),lower(btrim(p_applicant_email)),btrim(p_applicant_phone),btrim(p_proposed_region),btrim(p_proposed_city),p_investment_capacity_idr,p_experience_summary,p_created_by)
- returning * into v_app;
- insert into public.franchise_due_diligence_checks(application_id,check_key)
- select v_app.id,k from unnest(array['identity','financial','legal','operational_experience','territory_conflict','reputation']) k;
- insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
- values(p_created_by,'franchise.application.created','franchise_application',v_app.id::text,
-  jsonb_build_object('proposed_region',v_app.proposed_region,'proposed_city',v_app.proposed_city));
- return jsonb_build_object('id',v_app.id,'applicant_name',v_app.applicant_name,'status',v_app.status,'submitted_at',v_app.submitted_at);
-end $$;
-revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
-grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
 
 create or replace function public.franchise_review_due_diligence_check(
  p_check_id uuid,p_status text,p_evidence_reference text,p_actor_user_id uuid,p_notes text
