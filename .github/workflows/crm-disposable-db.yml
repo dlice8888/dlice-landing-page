@@ -40,7 +40,7 @@ jobs:
             supabase init --force
           fi
       - name: Start disposable local Supabase stack
-        run: supabase start
+        run: supabase start --exclude inbucket
       - name: Replay canonical repository migrations
         run: supabase db reset
       - name: Replay CRM identity, Finance close, loyalty and campaign dependencies
