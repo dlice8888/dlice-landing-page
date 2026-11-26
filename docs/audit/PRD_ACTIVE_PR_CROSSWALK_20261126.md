@@ -8,6 +8,7 @@ PR presence is not completion. No feature is promoted to DONE and no progress sc
 ## Open PR inventory
 | PR | Scope reviewed | Feature crosswalk |
 |---|---|---|
+| #151 | Fix CRM financial-close review SQL syntax | D10-F01/F02/F04/F07; SQL syntax/replay correction, exact-head quality + CRM disposable replay PASS |
 | #150 | Food safety, recall, supplier quality and CAPA workflows | D18-F06/F07; D07-F07 |
 | #149 | Disposable PostgreSQL tenant isolation/concurrency probe | D16-F02 (supplemental); D18-F10 |
 | #148 | Disposable PostgreSQL backup/restore rehearsal | D18-F08 only; managed Supabase recovery remains open |
