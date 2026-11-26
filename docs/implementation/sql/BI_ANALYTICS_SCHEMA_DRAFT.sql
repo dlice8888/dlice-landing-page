@@ -236,7 +236,7 @@ create or replace function public.bi_register_metric_source_lineage(
  p_join_rule text,p_aggregation_rule text,p_transformation_reference text,p_actor_user_id uuid
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v public.bi_metric_definitions%rowtype; l public.bi_metric_source_lineage%rowtype;
+declare v public.bi_metric_definitions%rowtype; l record;
 begin
  select * into v from public.bi_metric_definitions where id=p_metric_id for share;
  if not found or not v.active or v.formula_version<>p_formula_version then
