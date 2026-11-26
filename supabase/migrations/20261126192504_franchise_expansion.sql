@@ -173,7 +173,7 @@ as $$
 declare v_app public.franchise_applications%rowtype;
 begin
  if length(btrim(coalesce(p_applicant_name,''))) not between 2 and 160
-  or p_applicant_email !~ '^\\S+@\\S+\\.\\S+
+  or p_applicant_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
  p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$

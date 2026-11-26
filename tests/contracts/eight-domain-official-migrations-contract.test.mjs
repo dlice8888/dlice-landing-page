@@ -53,6 +53,8 @@ test("each official domain migration retains server-only RLS and ACL boundaries"
     assert.match(sql, /grant select,insert,update,delete on public\\.%I to service_role/i, `${name}: service_role grant missing`);
     assert.doesNotMatch(sql, /DESIGN DRAFT ONLY|NOT A MIGRATION/i, `${name}: draft-only SQL marker remains`);
     assert.doesNotMatch(sql, /public\\.storage\\.objects/i, `${name}: storage schema must not be qualified through public`);
+    const unmatchedRegexQuote = sql.split(/\r?\n/).filter((line) => /!~/.test(line) && ((line.match(/'/g) ?? []).length % 2) === 1);
+    assert.deepEqual(unmatchedRegexQuote, [], `${name}: regex literal has an unmatched quote`);
   }
 });
 
