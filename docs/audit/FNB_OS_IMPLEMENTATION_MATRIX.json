@@ -9510,8 +9510,8 @@
           },
           "progress_status": "SCORED_PROVISIONAL",
           "feature_id": "D16-F01",
-          "progress_pct": null,
-          "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+          "progress_pct": 30,
+          "scoring_status": "SCORED_PROVISIONAL",
           "evidence_dimensions": {
             "code_ui": {
               "weight": 20,
@@ -9625,8 +9625,8 @@
             "session_cleanup": "HTTP 204 for both"
           },
           "feature_id": "D16-F02",
-          "progress_pct": null,
-          "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+          "progress_pct": 58,
+          "scoring_status": "SCORED_PROVISIONAL",
           "evidence_dimensions": {
             "code_ui": {
               "weight": 20,
