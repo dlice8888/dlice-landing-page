@@ -157,21 +157,6 @@ end $$;
 revoke all on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) from public,anon,authenticated;
 grant execute on function public.saas_check_entitlement(uuid,text,bigint,timestamptz) to service_role;
 
-create or replace function public.saas_record_usage(p_tenant_id uuid,p_entitlement_key text,p_quantity bigint,p_source_entity text,p_source_id text,p_idempotency_key text,p_metadata jsonb,p_at timestamptz)
-returns jsonb language plpgsql security invoker set search_path=''
-as $$
-declare v_check jsonb; v_event public.saas_usage_events%rowtype;
-begin
- perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_entitlement_key,0));
- v_check:=public.saas_check_entitlement(p_tenant_id,p_entitlement_key,p_quantity,p_at);
- if coalesce((v_check->>'allowed')::boolean,false)=false then raise exception using errcode='23514',message=coalesce(v_check->>'reason','ENTITLEMENT_DENIED'); end if;
- insert into public.saas_usage_events(tenant_id,entitlement_key,quantity,occurred_at,source_entity,source_id,idempotency_key,metadata)
- values(p_tenant_id,p_entitlement_key,p_quantity,p_at,p_source_entity,p_source_id,p_idempotency_key,coalesce(p_metadata,'{}')) returning * into v_event;
- return jsonb_build_object('usage_event_id',v_event.id,'quantity',v_event.quantity,'entitlement_key',v_event.entitlement_key);
-end $$;
-revoke all on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) from public,anon,authenticated;
-grant execute on function public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz) to service_role;
-
 create or replace function public.saas_approve_offboarding(p_request_id uuid,p_actor_user_id uuid,p_retention_days integer,p_legal_hold boolean,p_legal_hold_reference text)
 returns jsonb language plpgsql security invoker set search_path=''
 as $$
