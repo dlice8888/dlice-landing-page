@@ -33,6 +33,8 @@ PR presence is not completion. No feature is promoted to DONE and no progress sc
 | #104 | Production CORS source and fail-closed contract | D18-F03 |
 | #71 | Staging tenant fixtures and tenant isolation | D16-F02; D18-F18 |
 
+| #152 | Convert eight-domain schema drafts into official migrations; recover POS source migrations, promote CRM and 994 RLS/ACL assertions | D10/D11/D09/D13/D07/D14/D16/D01; migration conversion only, exact disposable replay pending |
+
 ## Domain mapping details
 - POS & Checkout: D02-F04, D02-F07, D02-F08, D02-F10, D02-F12 → #143.
 - Order Management / Integrations: D03-F07 and D17-F05 → #123/#127.
