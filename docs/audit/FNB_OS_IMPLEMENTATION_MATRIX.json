@@ -2553,13 +2553,19 @@
         {
           "requirement": "Multiple companies sharing one platform safely",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "One D’Lice org with branch slots is not proof of multi-tenant SaaS.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 251
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            149
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #149 adds exact-head synthetic 150-branch concurrent tenant isolation read probes; 50 concurrent clients and 4 workers passed on disposable evidence. This does not prove full application/API load or staging E2E.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -2786,24 +2792,36 @@
         {
           "requirement": "Food safety, temperature, allergens, recall",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Operational compliance records and recall traceability missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 274
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            150
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #150 adds food safety policy, lot traceability, allergen/temperature inspection, quarantine, independent release/destruction and recall workflow code/contracts. SQL replay and staging E2E not yet run.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Supplier quality, quarantine, corrective actions",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Inspection, quarantine and CAPA lifecycle missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 275
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            150
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #150 adds supplier inspection, quarantine, nonconformance and CAPA workflow code/contracts. Receipt/lot automatic integration and staging E2E remain unproven.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Backup and restore drill / RPO / RTO",
@@ -2959,13 +2977,20 @@
         {
           "requirement": "Backup, recovery, scale and rollout",
           "source_status": "NOT DEMONSTRATED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Restore drill, measured RPO/RTO, concurrency test, branch pilot and rollback rehearsal.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 291
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "active_prs": [
+            148,
+            149
+          ],
+          "work_started_at": "2026-11-25",
+          "work_evidence": "PR #148 passes local disposable PostgreSQL restore/checksum/RLS/tenant isolation drill; PR #149 passes synthetic 150-branch concurrent tenant read probe. Managed Supabase PITR, production RPO/RTO and full rollout/rollback remain unproven.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
@@ -3949,8 +3974,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 93,
-    "status": "INCOMPLETE; two PARTIAL features have provisional weighted scores: tenant/member isolation 58% and tenant directory/onboarding 30%. 93 PARTIAL features remain unscored pending six-dimension decomposition."
+    "unscored_partial_features": 143,
+    "status": "INCOMPLETE; 2 PARTIAL features have provisional weighted scores; 143 PARTIAL features remain unscored pending six-dimension decomposition. 39 features have not yet had implementation work started and remain queued for remediation."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
