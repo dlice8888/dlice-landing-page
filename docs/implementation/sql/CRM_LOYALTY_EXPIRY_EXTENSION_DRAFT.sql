@@ -260,7 +260,7 @@ begin
      order by expires_at nulls last,created_at,id for update
   loop
     select coalesce(sum(case
-      when allocation_kind='redemption' or allocation_kind='expiry' then points_allocated
+      when allocation_kind in ('redemption','earn_reversal','expiry') then points_allocated
       when allocation_kind='redemption_reversal' then -points_allocated
       else 0 end),0)
       into v_allocated from public.crm_loyalty_point_allocations
@@ -326,7 +326,7 @@ begin
     end if;
     if v_original.entry_kind='earn' then
       select coalesce(sum(case
-        when allocation_kind in ('redemption','expiry') then points_allocated
+        when allocation_kind in ('redemption','earn_reversal','expiry') then points_allocated
         when allocation_kind='redemption_reversal' then -points_allocated else 0 end),0)
         into v_allocated from public.crm_loyalty_point_allocations
        where tenant_id=p_tenant_id and point_lot_entry_id=v_original.id;
