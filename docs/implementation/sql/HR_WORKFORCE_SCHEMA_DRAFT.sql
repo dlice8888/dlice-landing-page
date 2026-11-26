@@ -620,3 +620,6 @@ grant execute on function public.hr_approve_payroll_run(uuid,uuid) to service_ro
 -- Finance posting is owned by HR_PAYROLL_FINANCE_SCHEMA_DRAFT.sql.
 -- No second payroll-finance outbox is created here; use the canonical
 -- hr_payroll_finance_postings -> finance_journal_entries workflow.
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.hr_audit_row_change() to service_role;
