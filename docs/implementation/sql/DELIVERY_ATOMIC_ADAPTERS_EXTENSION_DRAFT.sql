@@ -209,7 +209,7 @@ declare v public.delivery_dispatches%rowtype; v_event public.delivery_provider_e
 begin
  if not p_signature_verified or length(btrim(coalesce(p_provider_event_id,''))) not between 8 and 160
   or p_next_status not in ('picked_up','in_transit','delivered','failed','cancelled')
-  or p_payload_sha256 !~ '^[0-9a-f]{64}
+  or p_payload_sha256 !~ '^[0-9a-f]{64}$'
   raise exception using errcode='22023',message='INVALID_OR_UNVERIFIED_DELIVERY_WEBHOOK';
  end if;
  select * into v from public.delivery_dispatches where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_dispatch_id for update;

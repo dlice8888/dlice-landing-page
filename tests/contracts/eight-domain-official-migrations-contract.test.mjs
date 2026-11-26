@@ -64,6 +64,14 @@ test("every new domain table has an executable pgTAP RLS/ACL assertion", () => {
   for (const name of tables) assert.ok(sql.includes(`public.${name}`), `${name}: no ACL test`);
 });
 
+test("all SQL draft regex predicates have balanced string literals", () => {
+  for (const name of draftFiles) {
+    const sql = readFileSync(new URL(name, drafts), "utf8");
+    const unmatched = sql.split(/\\r?\\n/).filter((line) => /!~/.test(line) && ((line.match(/'/g) ?? []).length % 2) === 1);
+    assert.deepEqual(unmatched, [], `${name}: regex literal has an unmatched quote`);
+  }
+});
+
 test("CRM identity, loyalty and campaign acceptance remains in canonical pgTAP", () => {
   const sql = readFileSync(new URL("crm_loyalty.test.sql", testDir), "utf8");
   assert.match(sql, /select plan\\(44\\)/i);

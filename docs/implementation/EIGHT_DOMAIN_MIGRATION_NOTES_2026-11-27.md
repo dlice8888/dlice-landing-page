@@ -36,3 +36,5 @@ The source set declares 71 distinct new tables across the eight domains. The mig
 Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. Do not apply this migration set until the disposable replay, pgTAP, independent review, source/history parity review and exact-head P01–P09 checks pass. Any eventual staging application requires explicit staging approval and one-migration-at-a-time evidence. Never apply these migrations to Production.
 
 These are additive schema/workflow changes. No automatic DROP-based rollback is supplied; if a later staging application fails, stop the rollout, preserve evidence and use a reviewed forward-fix or a verified staging restore plan.
+
+The malformed Delivery SHA-256 predicate was in the atomic-adapter extension draft (not the base fulfillment draft); that source has now been corrected as well. The new static contract scans every source draft and official migration for unmatched regex string quotes.
