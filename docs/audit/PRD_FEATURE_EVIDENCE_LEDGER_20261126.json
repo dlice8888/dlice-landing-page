@@ -11775,19 +11775,30 @@
       "admin_audit_logs": 273
     },
     "pr143": {
+      "static_quality_checks": "PASS",
       "checkout_disposable_replay": "PASS",
-      "quality_checks": "FAIL",
-      "positive_staging_e2e": "NOT_RUN_AUTH_PREFLIGHT_BLOCKED"
+      "positive_staging_e2e": "FAIL_AUTHORIZATION_BLOCKED"
     },
     "pr152": {
       "official_migrations_branch": "feat/eight-domain-official-migrations-20261127",
-      "latest_head": "66c982c5ea7c147e14627dcc166ed3fc99c90b51",
+      "latest_head": "01d2cb790403d276b161a4cd4c945b048e6c8ff6",
       "quality_checks": "PASS",
-      "latest_disposable_replay": "PENDING"
+      "latest_disposable_replay": "IN_PROGRESS"
     },
     "release_flags": {
       "TENANT_ISOLATION_RELEASED": false,
       "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "public_schema": {
+      "public_tables": 68,
+      "rls_enabled": 68,
+      "rls_disabled": 0
+    },
+    "applied_migrations": 63,
+    "supabase_advisors": {
+      "security": "auth_leaked_password_protection WARN/DISABLED",
+      "performance": "82 unused-index findings; no index drops without workload evidence",
+      "health": "no health lints"
     }
   }
 }
