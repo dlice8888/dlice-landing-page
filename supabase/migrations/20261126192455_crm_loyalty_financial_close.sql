@@ -2133,3 +2133,9 @@ end;
 $$;
 revoke all on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) to service_role;
+
+-- Trigger functions are non-client-callable; service_role retains internal EXECUTE for the global ACL contract.
+grant execute on function public.crm_audit_insert_row() to service_role;
+grant execute on function public.crm_auto_link_paid_transaction_customer() to service_role;
+grant execute on function public.crm_reject_append_only_mutation() to service_role;
+grant execute on function public.crm_reject_point_allocation_mutation() to service_role;
