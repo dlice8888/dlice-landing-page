@@ -18,8 +18,8 @@
       "requirement": "Company overview / owner dashboard",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Basic ERP overview and funnel metrics exist; authoritative rollups need reconciliation.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds snapshot, branch KPI and executive alert primitives. Owner-level live consolidated overview is not end-to-end proven; source collectors and staging E2E remain missing.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 32
@@ -65,7 +65,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -138,7 +138,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No verified 150-branch ranking/cohort output.",
+      "evidence_or_gap": "PR #145 adds branch KPI snapshots and cohort/benchmarking metadata. Comparable cohort data population and live 150-branch reconciliation remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 34
@@ -184,7 +184,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -201,8 +201,8 @@
       "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Some source tables/metrics exist; KPI dictionary and totals reconciled to transaction fixtures are missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds formula-versioned metric definitions and reconciliation-gated snapshot publishing. POS/Order/Finance gross-to-net source collectors and margin evidence remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 35
@@ -248,7 +248,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -431,7 +431,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds tenant-scoped executive KPI targets, approval state and branch ranking publication requiring published BI snapshots plus approved targets for active branches. Full target-vs-actual report UX and reconciliation remain unverified.",
+      "evidence_or_gap": "PR #145 adds draft snapshot review and publish guards tied to source lineage, freshness and reconciliation. Target/actual goals and full executive reporting remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 39
@@ -477,7 +477,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -495,8 +495,8 @@
       "requirement": "Company → region → branch → shift → transaction drill-down",
       "source_status": "GATE",
       "audit_status": "BLOCKED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Role-aware drill-down and row-level consistency need browser and API tests.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds tenant/branch-scoped executive drill-down data path and UI primitives; shift-to-transaction evidence and runtime authorization E2E remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 40
@@ -542,7 +542,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -560,7 +560,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds operational alert assignment/acknowledgement/investigation/resolution/reopen transitions, resolution evidence, append-only alert events and independent verification with audit logs. Automatic task dispatch and full outcome measurement remain unverified.",
+      "evidence_or_gap": "PR #145 adds executive alert evidence and action state foundations. Complete assign→resolve→measured-outcome workflow is not yet proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 41
@@ -606,7 +606,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -4107,7 +4107,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #150 adds supplier quality policy request/independent approval, receipt-item inspection, nonconforming quantity quarantine, CAPA creation, independent verification and quarantine release. SQL/adapter are draft only; no migration, UI, procurement receiving E2E or inventory reconciliation yet.",
+      "evidence_or_gap": "PR #150 adds lot/source traceability, supplier inspection and quarantine/release controls; actual receipt-to-lot automatic integration and DB replay remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 128
@@ -4153,7 +4153,7 @@
           150
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 150,
@@ -4171,7 +4171,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds procurement_match_supplier_invoice: tenant-scoped invoice-to-PO-to-accepted-GRN three-way matching, quantity/price variance classification, tolerance and audit evidence. Exact-head replay and invoice fixture E2E remain unverified.",
+      "evidence_or_gap": "PR #145 includes supplier invoice/AP matching workflow primitives. End-to-end PO/receipt/invoice three-way match and Finance reconciliation are not yet proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 129
@@ -4217,7 +4217,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -4236,7 +4236,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Procurement-to-AP-to-payment reconciliation missing.",
+      "evidence_or_gap": "PR #145 adds supplier settlement/AP handoff contracts. Provider execution and reconciled supplier payment runtime evidence remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 130
@@ -4282,7 +4282,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -4905,7 +4905,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds atomic quote selection and dispatch creation from a paid/verified/settled order in ready state; locks order/quote, creates dispatch and outbox together, and transitions order to dispatched. Existing ERP queue/UI remains; runtime UI/E2E is not proven.",
+      "evidence_or_gap": "PR #145 adds atomic delivery dispatch lifecycle and outbox adapter/worker with tenant-scoped actions; provider sandbox and staging E2E remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 150
@@ -4951,7 +4951,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -4970,7 +4970,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds provider quote persistence, IDR validation, two-hour expiry bound, branch/tenant scoping and idempotency collision detection. Address geocoding/normalization and real carrier quote sandbox remain unverified.",
+      "evidence_or_gap": "PR #145 adds address/quote and delivery workflow adapter contracts. Real provider quote validation remains blocked on credentials/fixtures.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 151
@@ -5016,7 +5016,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5035,7 +5035,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds pending provider config plus independent approval, API/manual mode, secret-reference-only storage, injected carrier adapter and booking outbox worker. No Biteship/carrier credentials or sandbox call are available; provider integration remains blocked.",
+      "evidence_or_gap": "PR #145 adds provider-neutral courier booking workflow; Biteship provider credentials and sandbox E2E are not supplied and not enabled.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 152
@@ -5081,7 +5081,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5100,7 +5100,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds provider booking reference/tracking updates, verified provider-event RPC, event dedupe, state transition checks and outbox retry/dead-letter. Hosted worker scheduling and webhook signature E2E remain unverified.",
+      "evidence_or_gap": "PR #145 adds dispatch and tracking event ingestion/outbox path. Provider-signed runtime tracking and reconciliation are not proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 153
@@ -5146,7 +5146,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5165,7 +5165,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds proof-required delivery transition and private-storage evidence metadata schema. Actual private Storage bucket policy, upload/download, file hash and signed-link E2E are not verified.",
+      "evidence_or_gap": "PR #145 adds delivery proof evidence model and atomic status path; private Storage upload and browser E2E are not run.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 154
@@ -5211,7 +5211,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5230,7 +5230,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds SKIP LOCKED outbox claim, retry delay, attempt cap, dead-letter handling and final dispatch failure. Compensation/cancel worker and fault-injection against a real provider remain unverified.",
+      "evidence_or_gap": "PR #145 adds idempotent retry/exception/outbox state handling; dead-letter operations and real provider failure simulation remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 155
@@ -5276,7 +5276,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5295,7 +5295,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds immutable delivery cost reconciliation against a posted Finance journal source/branch/amount and checks COD collection/remittance, subsidy, courier cost, provider fee and settlement. Finance journal integration and reconciliation transaction fixtures are not yet replayed.",
+      "evidence_or_gap": "PR #145 models customer fee/subsidy and provider cost separation; actual invoice/settlement reconciliation remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 156
@@ -5341,7 +5341,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5359,8 +5359,8 @@
       "requirement": "Delivery completion notification",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Customer completion notification is still a gap: no end-to-end delivery-completed notification outbox/template/provider receipt is included in this increment.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 includes delivery completion event/notification path; channel delivery and customer receipt evidence remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 157
@@ -5406,7 +5406,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5425,7 +5425,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 includes paid POS/Order identity linking through crm_link_transaction_customer and paid-transaction database trigger. CRM loyalty expiry increment is in PR #145 head 2976387039d7eed1f4848be9c7d122d325d02ea4; all SQL remains draft and no runtime migration/E2E is claimed.",
+      "evidence_or_gap": "PR #145 links paid POS/Order transactions to tenant customer identity through a single RPC/trigger. Cross-channel merge/deduplication and runtime proof remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 162
@@ -5471,7 +5471,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5489,7 +5489,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 includes append-only consent events, consent-filtered campaign audience, signed unsubscribe persistence and provider/tenant event dedupe. Provider webhook deployment and cross-channel consent E2E remain open. Existing PR #145 source also includes append-only consent, signed unsubscribe and campaign suppression; provider E2E remains unrun.",
+      "evidence_or_gap": "PR #145 includes consent preferences and signed campaign receipt/unsubscribe workflow; channel provider callback and consent enforcement across all dispatchers remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 163
@@ -5535,7 +5535,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5609,7 +5609,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "New PR #145 SQL draft adds points_validity_days with independent approval, expires_at on earn lots, FIFO redemption allocation, expiry RPC, and reversal of redemption allocations. Expiry is only a source draft/UI/Edge increment; no disposable replay, pgTAP or staging runtime proof yet. Current increment adds configurable validity, deterministic expiry from reconciled-close timestamp, FIFO lot allocation, expiry RPC, redemption reversal allocation and Owner UI; all draft-only/unexecuted.",
+      "evidence_or_gap": "PR #145 adds reconciled-close-only point earning, expiry lots, FIFO redemption allocations and reversal conservation. SQL remains draft; database replay and POS/Order/Finance E2E not run.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 165
@@ -5655,7 +5655,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -5785,7 +5785,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 contains consent-gated campaign outbox, independent provider approval, worker claim, bounded retry/dead-letter finalization, signed provider receipt and ROI schema. No real provider delivery or signed callback runtime evidence exists.",
+      "evidence_or_gap": "PR #145 adds campaign approval, provider config approval, audience preparation, outbox dispatch and signed receipt/ROI evidence. Provider delivery and ROI reconciliation remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 168
@@ -5831,7 +5831,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -6015,8 +6015,8 @@
       "requirement": "Cash/bank, settlement creation and matching",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Settlement and cash reconciliation structures/RPCs exist; source-to-bank positive E2E pending.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #146 adds payroll payout settlement/reconciliation primitives; bank statement ingestion and live settlement matching remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 176
@@ -6062,7 +6062,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 146,
@@ -6078,8 +6078,8 @@
       "requirement": "Payment provider fee and settlement variance",
       "source_status": "GATE",
       "audit_status": "BLOCKED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "PR #146 adds Xendit payout fee/settlement reconciliation and immutable bank-statement evidence for payroll clearing. This is a source implementation match only; provider credentials, real settlement fixture and exact-head disposable replay remain blocked.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 177
@@ -6125,7 +6125,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 146,
@@ -6198,8 +6198,8 @@
       "requirement": "Chart of accounts and general ledger",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Journal-entry table exists; full COA/posted balanced journal lifecycle not proven.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145/#146 extend Finance journal and payroll clearing source references. Full GL posting, period close and chart-of-accounts runtime are not proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 179
@@ -6246,7 +6246,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -6269,7 +6269,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Source mapping and balanced journal posting missing.",
+      "evidence_or_gap": "PR #145/#146 add payroll-to-Finance clearing and source-backed journal handoff contracts. Disposable SQL replay and transaction-level reconciliation remain pending.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 180
@@ -6316,7 +6316,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -6338,8 +6338,8 @@
       "requirement": "Bank reconciliation",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Cash/bank reconciliation foundations exist; statement import and independent matching not proven.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #146 adds bank/payout reconciliation model and contracts; no real bank statement fixture or provider E2E is available.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 181
@@ -6385,7 +6385,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 146,
@@ -6621,8 +6621,8 @@
       "requirement": "Revenue vs cash received/settlement distinction",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "PR #143 records cash/non-cash split tender allocations separately from sale total and cash drawer delta; PR #146 adds payroll payout settlement and bank-statement reconciliation. Unified POS revenue-to-bank settlement reconciliation across payment providers remains unproven.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #143/#146 preserve revenue, tender and payout settlement distinctions; full POS-to-bank statement reconciliation remains incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 186
@@ -6669,7 +6669,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 143,
@@ -6694,7 +6694,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 existing HR workforce draft reuses admin_profiles/tenant_memberships/branch_assignments; new employee lifecycle extension adds tenant-scoped employee records and append-only lifecycle events. Auth users are not created or globally disabled by this workflow.",
+      "evidence_or_gap": "PR #144/#145 add employee lifecycle and HR UI/schema contracts; actual recruitment/onboarding/offboarding integration and staging E2E remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 191
@@ -6741,7 +6741,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -6764,7 +6764,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "New HR lifecycle RPC supports hire record, transfer, position change, leave start/end, offboarding request, termination and reactivation. Transfer/termination close assignments and cancel future rosters; termination revokes only the selected tenant membership. SQL/Edge/UI are draft/source evidence only.",
+      "evidence_or_gap": "PR #144/#145 add organization/position lifecycle data and UI contracts; complete branch/role permission E2E remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 192
@@ -6811,7 +6811,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -6834,7 +6834,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Existing HR draft supports shift scheduling and overlap checks. Lifecycle extension cancels scheduled/confirmed shifts affected by transfer, leave and termination; no staging runtime evidence yet.",
+      "evidence_or_gap": "PR #144/#145 add attendance/timesheet workflows; device/punch source integration and approved payroll reconciliation remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 193
@@ -6881,7 +6881,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -6904,7 +6904,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Existing HR draft supports server-timestamp attendance and append-only attendance events. Active assignment status is synchronized on leave/offboarding/termination; pgTAP and E2E remain unrun.",
+      "evidence_or_gap": "PR #144/#145 add shift schedule and replacement workflow contracts; real shift coverage/attendance E2E remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 194
@@ -6951,7 +6951,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -6974,7 +6974,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Existing HR draft supports leave request, coverage confirmation and independent review. Lifecycle start/end requires approved leave ID and updates assignment status atomically; pending leave blocks termination.",
+      "evidence_or_gap": "PR #144/#145 add leave/overtime workflow contracts; approval/payroll accrual reconciliation remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 195
@@ -7021,7 +7021,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -7044,7 +7044,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Provider integration and payroll reconciliation missing. PR #146 contains per-employee Xendit payout, signed webhook, payroll-to-Finance clearing and immutable bank statement reconciliation source/SQL drafts. Disposable run 45659462961 failed on an older merge candidate at a dollar-quote syntax error; current head bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8 has balanced delimiters, but exact-head replay/pgTAP is not yet visible. Provider credentials and webhook/bank fixtures are absent.",
+      "evidence_or_gap": "PR #145/#146 connect payroll run to payout batch, per-employee Xendit adapter, webhook and Finance clearing RPC. Disposable DB replay pending; live provider E2E intentionally disabled.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 196
@@ -7091,7 +7091,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7114,7 +7114,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Approved payroll-to-branch allocation missing. PR #146 contains per-employee Xendit payout, signed webhook, payroll-to-Finance clearing and immutable bank statement reconciliation source/SQL drafts. Disposable run 45659462961 failed on an older merge candidate at a dollar-quote syntax error; current head bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8 has balanced delimiters, but exact-head replay/pgTAP is not yet visible. Provider credentials and webhook/bank fixtures are absent.",
+      "evidence_or_gap": "PR #145/#146 add payroll labor-cost and Finance clearing evidence paths; reconciled branch P&L and bank settlement E2E remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 197
@@ -7161,7 +7161,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7293,8 +7293,8 @@
       "requirement": "Branch ownership model",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Existing branch master provides tenant/branch ownership primitives, but franchise-specific owner/territory assignment and isolation policy are still not proven. PR #145 remains Platform Owner-gated; tenant release flags remain false.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #144/#145 extend branch ownership and franchise tenant-scope model; full production tenant-provisioning E2E is not run.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 204
@@ -7341,7 +7341,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -7365,7 +7365,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 has application creation, atomic seeding of six due-diligence checks, independent evidence-backed reviewer actions and approval gating. Applicant lifecycle E2E and communications remain unverified.",
+      "evidence_or_gap": "PR #145 adds franchise application and agreement workflow; legal document and applicant conversion E2E remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 205
@@ -7411,7 +7411,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7430,7 +7430,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 has site records and evidence-backed site review; agreement creation requires at least one approved site. Site scoring/forecasting, territory conflict automation and map/geospatial validation remain gaps.",
+      "evidence_or_gap": "PR #145 adds site feasibility and evidence-backed review primitives; geospatial/site scoring data integration remains a gap.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 206
@@ -7476,7 +7476,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7495,7 +7495,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 now seeds ten opening gates per agreement, exposes evidence-backed independent gate review, and makes signed agreement activation call the atomic readiness assertion; activation rolls back unless all ten gates pass and current agreement version is effective.",
+      "evidence_or_gap": "PR #145 adds ten opening gates and independent review; provisioning and opening-to-first-sale E2E remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 207
@@ -7541,7 +7541,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7560,7 +7560,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 includes versioned agreement drafts, independent version approval, signature submission, external signature evidence recording, append-only agreement event history and signed activation. Expiry/renewal automation and cryptographic e-signature verification remain unverified.",
+      "evidence_or_gap": "PR #145 adds effective-dated agreement/version controls; contract document storage and expiry notification worker remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 208
@@ -7606,7 +7606,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7625,7 +7625,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 royalty statement RPC reads only published branch net-sales BI snapshots covered by a passed reconciliation run and effective agreement version; it persists an idempotent draft statement. Review/approval, invoice, payment and Finance journal posting/reconciliation remain gaps.",
+      "evidence_or_gap": "PR #145 adds royalty calculation/reconciliation workflow; POS net-sales source and Finance settlement integration remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 209
@@ -7671,7 +7671,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7690,7 +7690,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Franchise actions remain Platform Owner-only; activation checks tenant/branch pairing. Franchise territory-scoped operator roles and geography-based branch/territory restrictions are not yet implemented.",
+      "evidence_or_gap": "PR #145 adds franchise territory/access gate contracts; full RLS/API cross-tenant negative tests for franchise roles remain pending.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 210
@@ -7736,7 +7736,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7755,7 +7755,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No franchisee performance dashboard, compliance inspection/CAPA or partner reporting integration is included in this increment; remain explicit gap.",
+      "evidence_or_gap": "PR #145 adds compliance/opening readiness gate evidence; recurring compliance inspection and performance scoring remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 211
@@ -7801,7 +7801,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -7820,7 +7820,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 extends the BI screen to show draft/published tenant snapshots and review state; executive branch KPI view still consumes published snapshots only. No complete owner dashboard/portfolio KPI E2E yet.",
+      "evidence_or_gap": "PR #144/#145 add KPI snapshot, funnel/branch views and publish controls; live source collectors and scheduled reporting remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 216
@@ -7867,7 +7867,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -7891,7 +7891,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds metric dictionary fields for formula version, owner domain, unit, aggregation, source entities and freshness SLA, plus independently approved source-field lineage RPC. Timezone policy, complete metric catalogue and lineage population remain gaps.",
+      "evidence_or_gap": "PR #144/#145 add metric dictionary, formula version, unit, owner domain and source lineage approval; complete catalogue approval remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 217
@@ -7938,7 +7938,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -7962,7 +7962,7 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds evidence-first ingestion, source watermarks, pending reconciliation and draft snapshots. Canonical POS/Order/Finance net-sales source collectors and actual reconciled totals are not yet wired or proven.",
+      "evidence_or_gap": "PR #144/#145 add net-sales/AOV/gross-margin metric definitions and reconciliation gates; authoritative POS/Order/Finance source collectors remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 218
@@ -8009,7 +8009,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -8033,7 +8033,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No approved formulas/source collectors yet for food cost, labor cost or waste percentage. Generic ingestion primitives exist but these metrics remain unproven.",
+      "evidence_or_gap": "PR #144/#145 add food-cost/labor/waste KPI definition and lineage structures; actual stock/recipe/payroll data ingestion is not wired.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 219
@@ -8080,7 +8080,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -8103,8 +8103,8 @@
       "requirement": "Stock variance and fulfillment/cancellation rates",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Generic source watermark and reconciliation primitives are added, but stock variance, fulfillment and cancellation source adapters/formulas are not implemented.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #144/#145 add stock variance/fulfillment/cancellation metric framework; source collectors and reconciled operational totals remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 220
@@ -8151,7 +8151,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -8175,7 +8175,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No branch cohort definition by format, region or opening hours; comparable-cohort benchmarking remains a gap.",
+      "evidence_or_gap": "PR #144/#145 add branch cohort metadata and benchmarking structures; populated comparable cohorts and accuracy evidence remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 221
@@ -8222,7 +8222,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 144,
@@ -8301,7 +8301,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds tenant-scoped source freshness/completeness watermarks, variance/tolerance reconciliation, independent review and publish blocking for stale/incomplete evidence. Anomaly detection and alert lifecycle are not implemented.",
+      "evidence_or_gap": "PR #145 adds freshness/completeness watermarks, variance reconciliation and publish blocking; anomaly detection and alert lifecycle remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 223
@@ -8347,7 +8347,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9171,7 +9171,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 now has plan-version/entitlement tables, tenant-locked server-side quota checks, trial/grace-aware entitlement decisions, idempotent usage RPC and committed-event metering worker. Entitlement checks are not yet enforced on every API/Edge mutation; plan upgrades/downgrades and 150-branch quota E2E remain unverified.",
+      "evidence_or_gap": "PR #145 adds plan version, subscription, trial conversion, entitlement and quota RPCs; database replay and API-wide enforcement remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 246
@@ -9217,7 +9217,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9236,7 +9236,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds audited usage metering, atomic invoice issuance, invoice payment status/partial settlement RPC and an invoice issuance worker/UI. Provider-signed webhook, gateway adapter, tax treatment, proration, dunning and Finance settlement reconciliation remain gaps.",
+      "evidence_or_gap": "PR #145 adds invoice issuance, payment-state/partial settlement RPC and usage metering worker. Provider-signed payment webhook and Finance reconciliation remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 247
@@ -9282,7 +9282,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9301,7 +9301,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds trial expiry handling during invoice issuance, grace-window entitlement checks, past_due transition, subscription cancellation and payment-based reactivation. Scheduled grace expiry/suspension, retry/dunning and service restoration E2E are not yet wired.",
+      "evidence_or_gap": "PR #145 adds cancel/suspend and grace-period billing lifecycle; complete suspend/reactivate enforcement across all tenant APIs remains unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 248
@@ -9347,7 +9347,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9421,7 +9421,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds idempotent offboarding request, independent approval, legal-hold blocking, retention window, subscription suspension when approved and independent completion evidence. Export generation, object/data deletion policy and deletion execution are intentionally not implemented.",
+      "evidence_or_gap": "PR #145 adds independent offboarding approval, retention/legal-hold guard and completion evidence; export and deletion execution are intentionally not implemented.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 250
@@ -9467,7 +9467,7 @@
           145
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9606,7 +9606,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "No verified live provider webhook evidence.",
+      "evidence_or_gap": "PR #146 adds Xendit callback signature/token verification and normalized payout event handling; real provider webhook fixture and sandbox E2E remain blocked.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 257
@@ -9652,7 +9652,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 146,
@@ -9723,8 +9723,8 @@
       "requirement": "Webhooks and event log",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Notification logs/retry actions exist; durable event delivery contract missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145/#146 add CRM/delivery/payroll event outbox and webhook handling contracts; provider receipt runtime and end-to-end retry evidence remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 259
@@ -9771,7 +9771,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -9793,8 +9793,8 @@
       "requirement": "Idempotency and replay protection",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "PR #123 adds online checkout idempotency and atomic order/reservation ledger; PR #127 adds idempotent proof upload and payment-attempt supersession. Exact-head contracts and disposable replays pass; browser concurrency, Storage orphan recovery and live transaction reconciliation remain NOT RUN.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #123/#127/#146 add idempotency and replay guards for checkout/payment/payout paths; complete provider event replay E2E remains pending.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 260
@@ -9842,7 +9842,7 @@
           146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 123,
@@ -9868,8 +9868,8 @@
       "requirement": "Retry/backoff/dead-letter queue",
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Notification retry foundation exists; durable retry/dead-letter behavior missing.",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #145 adds delivery outbox retry/worker and PR #146 adds payout exception workflow; scheduled production worker and dead-letter operations remain unproven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 261
@@ -9912,15 +9912,22 @@
       "crosswalk": {
         "status": "MATCHED_ACTIVE_PR",
         "matched_prs": [
-          145
+          145,
+          146
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 145,
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+          },
+          {
+            "pr": 146,
+            "kind": "active_pr_feature_crosswalk",
+            "commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+            "limitation": "Implementation/source evidence only; exact-head CI and hosted runtime integration not verified."
           }
         ],
         "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
@@ -10411,7 +10418,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #150 adds tenant-configurable food-safety policy request/approval, lot registration from posted receipt/completed production/completed branch check, allergen/temperature inspection, quarantine, independent release/destruction and recall impact recording. No auto-link from stock/Order consumption or runtime proof yet.",
+      "evidence_or_gap": "PR #150 adds food safety policy, lot traceability, allergen/temperature inspection, quarantine, independent release/destruction and recall evidence; replay/E2E remain pending.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 274
@@ -10457,7 +10464,7 @@
           150
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 150,
@@ -10475,7 +10482,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #150 adds supplier quality policy, receipt inspection, quarantine, CAPA submission and independent verification/release. Source SQL and single-RPC adapter are draft; no disposable replay/pgTAP/staging E2E yet.",
+      "evidence_or_gap": "PR #150 adds supplier quality inspection, nonconformance, quarantine and CAPA workflow contracts; receipt/lot automatic linkage and staging E2E remain gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 275
@@ -10521,7 +10528,7 @@
           150
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. Verify exact changed code, DB, auth, tests, E2E and reconciliation before scoring.",
+        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
         "pr_evidence": [
           {
             "pr": 150,
@@ -11423,24 +11430,28 @@
       "118": "explicit staging mutation confirmation policy",
       "119": "scheduled staging mutation policy"
     },
-    "note": "All 24 open PRs visible in the repository listing were reviewed. Additional direct feature matches were added for Procurement, Executive, Finance, SaaS multi-company isolation and combined backup/scale. Remaining unmatched IDs still require historical PR/commit/source review; unmatched means no direct feature-level mapping in the reviewed open-PR set, not that the feature has no code.",
+    "note": "Open-PR feature crosswalk is maintained per stable feature ID. Multiple PRs are attached without double counting. PR mapping and code presence do not constitute verified completion; scores remain null until all six evidence dimensions are proven.",
     "crm_increment": {
       "pr": 145,
-      "head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
-      "files": [
-        "docs/implementation/sql/CRM_LOYALTY_EXPIRY_EXTENSION_DRAFT.sql",
-        "supabase/functions/dlice-orders/index.ts",
-        "erp.html",
-        "tests/contracts/crm-loyalty-expiry-sql-contract.test.mjs",
-        "tests/contracts/crm-loyalty-expiry-ui-contract.test.mjs"
+      "head": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
+      "changes": [
+        "paid POS/Order customer identity link RPC",
+        "consent preferences and signed campaign receipt/unsubscribe",
+        "reconciled POS/Order/Finance close projection before points award",
+        "approved earning rule with expiry",
+        "FIFO redemption allocations",
+        "idempotent point expiry",
+        "append-only reversal allocation conservation"
       ],
-      "new_edge_actions": 4,
-      "edge_action_inventory": 206,
-      "ci_status": "NOT_OBSERVED",
-      "vercel_status": "FAILURE_BUILD_RATE_LIMIT",
-      "staging_migration": "NOT_APPLIED",
-      "staging_e2e": "NOT_RUN",
-      "done_features": 0
+      "new_fix": "earn reversal now consumes its source point lot through earn_reversal allocation, preventing later expiry from debiting the same points a second time",
+      "tests": [
+        "crm-loyalty-expiry-sql-contract",
+        "crm-loyalty-expiry-ui-contract"
+      ],
+      "sql_replay": "NOT_RUN",
+      "pgTap": "NOT_RUN",
+      "exact_head_ci": "NOT_OBSERVED",
+      "staging_e2e": "NOT_RUN"
     },
     "hr_increment": {
       "pr": 145,
@@ -11461,7 +11472,7 @@
     },
     "quality_increment": {
       "pr": 150,
-      "latest_head": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276",
+      "latest_head": "e82a1598b1b1a84d3e46ff75b922882d6960bab8",
       "files": [
         "docs/implementation/sql/QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql",
         "docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql",
@@ -11588,7 +11599,7 @@
     },
     "saas_increment": {
       "pr": 145,
-      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "latest_head": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
       "feature_ids": [
         "D16-F03",
         "D16-F04",
@@ -11622,15 +11633,28 @@
       "api_wide_entitlement_enforcement": "NOT_COMPLETE",
       "scheduled_dunning": "NOT_WIRED",
       "data_export_deletion": "NOT_IMPLEMENTED",
-      "staging_migration": "NOT_APPLIED"
+      "staging_migration": "NOT_APPLIED",
+      "lifecycle": {
+        "atomic_trial": true,
+        "invoice_issuance": true,
+        "payment_state_rpc": true,
+        "partial_settlement": true,
+        "usage_metering_worker": true,
+        "offboarding_approval_retention": true,
+        "provider_signed_payment_webhook": false,
+        "api_wide_entitlement_enforcement": false,
+        "finance_reconciliation": false,
+        "disposable_replay": false
+      }
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "145": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
       "146": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
+      "147": "a47485c96d15967dadab54494b673d4eb7c2c6a0",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
       "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
-      "150": "9a75020c0156aca1e8bd1b136bec3bd6a4b6a276"
+      "150": "e82a1598b1b1a84d3e46ff75b922882d6960bab8"
     },
     "pr143_increment": {
       "pr": 143,
