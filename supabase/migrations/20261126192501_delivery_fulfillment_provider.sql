@@ -855,3 +855,7 @@ begin
 end; $$;
 revoke all on function public.delivery_get_outbox_job_context(uuid,text) from public,anon,authenticated;
 grant execute on function public.delivery_get_outbox_job_context(uuid,text) to service_role;
+
+-- Trigger functions are non-client-callable; service_role retains internal EXECUTE for the global ACL contract.
+grant execute on function public.delivery_audit_insert() to service_role;
+grant execute on function public.delivery_reject_evidence_mutation() to service_role;
