@@ -1,6 +1,6 @@
 -- Disposable PostgreSQL/pgTAP contracts for CRM identity, consent, loyalty, Finance close and campaigns.
 begin;
-select plan(45);
+select plan(44);
 
 select ok(to_regclass('public.crm_customers') is not null,'CRM customer identity table exists');
 select ok(to_regclass('public.crm_customer_consent_events') is not null,'append-only consent event ledger exists');
