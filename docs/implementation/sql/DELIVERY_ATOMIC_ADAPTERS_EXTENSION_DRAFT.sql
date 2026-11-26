@@ -209,7 +209,8 @@ declare v public.delivery_dispatches%rowtype; v_event public.delivery_provider_e
 begin
  if not p_signature_verified or length(btrim(coalesce(p_provider_event_id,''))) not between 8 and 160
   or p_next_status not in ('picked_up','in_transit','delivered','failed','cancelled')
-  or p_payload_sha256 !~ '^[0-9a-f]{64}
+  or p_payload_sha256 !~ '^[0-9a-f]{64}$' then
+  raise exception using errcode='22023',message='INVALID_OR_UNVERIFIED_DELIVERY_WEBHOOK';
  end if;
  select * into v from public.delivery_dispatches where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_dispatch_id for update;
  if not found or v.provider_booking_status<>'confirmed' then raise exception using errcode='23514',message='CONFIRMED_DISPATCH_REQUIRED'; end if;
@@ -390,61 +391,6 @@ begin
 end; $$;
 revoke all on function public.delivery_get_outbox_job_context(uuid,text) from public,anon,authenticated;
 grant execute on function public.delivery_get_outbox_job_context(uuid,text) to service_role;
- then
-  raise exception using errcode='22023',message='INVALID_OR_UNVERIFIED_DELIVERY_WEBHOOK';
- end if;
- select * into v from public.delivery_dispatches where tenant_id=p_tenant_id and branch_id=p_branch_id and id=p_dispatch_id for update;
- if not found or v.provider_booking_status<>'confirmed' then raise exception using errcode='23514',message='CONFIRMED_DISPATCH_REQUIRED'; end if;
- if not exists(select 1 from public.delivery_provider_configs c where c.tenant_id=p_tenant_id and c.provider_key=v.provider
-  and c.status='active' and (c.branch_id is null or c.branch_id=p_branch_id)) then
-  raise exception using errcode='42501',message='ACTIVE_PROVIDER_CONFIG_REQUIRED';
- end if;
- select * into v_event from public.delivery_provider_events where tenant_id=p_tenant_id and provider=v.provider and provider_event_id=p_provider_event_id;
- if found then
-  if v_event.payload_hash<>p_payload_sha256 or v_event.dispatch_id<>p_dispatch_id then
-   raise exception using errcode='23505',message='DELIVERY_PROVIDER_EVENT_IDEMPOTENCY_COLLISION';
-  end if;
-  return jsonb_build_object('status','duplicate','dispatch_id',v.id,'event_id',v_event.id);
- end if;
- if not ((v.status='booked' and p_next_status in ('picked_up','failed','cancelled')) or
-  (v.status='picked_up' and p_next_status in ('in_transit','failed')) or
-  (v.status='in_transit' and p_next_status in ('delivered','failed'))) then
-  raise exception using errcode='23514',message='INVALID_DELIVERY_TRANSITION';
- end if;
- if p_next_status='delivered' and not exists(select 1 from public.delivery_proof_of_delivery where tenant_id=p_tenant_id and dispatch_id=v.id) then
-  raise exception using errcode='23514',message='DELIVERY_PROOF_REQUIRED';
- end if;
- insert into public.delivery_provider_events(tenant_id,dispatch_id,provider,provider_event_id,event_type,provider_status,
-  occurred_at,payload_hash,processed_at,processing_status,processing_note,signature_verified_at,signature_key_version)
- values(p_tenant_id,v.id,v.provider,p_provider_event_id,'provider_webhook',p_next_status,p_occurred_at,p_payload_sha256,
-  now(),'processed',left(coalesce(p_note,''),500),now(),p_signature_key_version) returning * into v_event;
- update public.delivery_dispatches set status=p_next_status,
-  delivered_at=case when p_next_status='delivered' then now() else delivered_at end,
-  failed_at=case when p_next_status='failed' then now() else failed_at end,
-  failure_reason=case when p_next_status='failed' then left(coalesce(p_note,''),500) else failure_reason end,
-  updated_by=p_actor_user_id,updated_at=now() where tenant_id=p_tenant_id and id=v.id returning * into v;
- if p_next_status='delivered' then
-  update public.orders set fulfillment_status='fulfilled',fulfilled_at=now(),updated_at=now()
-   where id=v.order_id and fulfillment_status='dispatched';
-  if not found then raise exception using errcode='40001',message='ORDER_FULFILLMENT_STATE_MISMATCH'; end if;
-  insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
-   values(v.order_id,'operational','dispatched','fulfilled','Provider webhook confirmed delivery with proof');
- elsif p_next_status='failed' then
-  update public.orders set fulfillment_status='failed',updated_at=now() where id=v.order_id and fulfillment_status='dispatched';
-  if found then insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
-   values(v.order_id,'operational','dispatched','failed','Provider webhook: '||left(coalesce(p_note,''),300)); end if;
- elsif p_next_status='cancelled' then
-  update public.orders set fulfillment_status='ready',updated_at=now() where id=v.order_id and fulfillment_status='dispatched';
-  if found then insert into public.order_status_history(order_id,status_type,old_status,new_status,note)
-   values(v.order_id,'operational','dispatched','ready','Provider dispatch cancelled'); end if;
- end if;
- insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
- values(p_actor_user_id,'delivery.provider_webhook.'||p_next_status,'delivery_dispatch',v.id::text,
-  jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'event_id',p_provider_event_id,'payload_sha256',p_payload_sha256));
- return jsonb_build_object('status','processed','dispatch_id',v.id,'event_id',v_event.id,'dispatch_status',v.status);
-end; $$;
-revoke all on function public.delivery_ingest_verified_provider_event(uuid,uuid,uuid,text,text,timestamptz,text,text,boolean,uuid,text) from public,anon,authenticated;
-grant execute on function public.delivery_ingest_verified_provider_event(uuid,uuid,uuid,text,text,timestamptz,text,text,boolean,uuid,text) to service_role;
 
 create or replace function public.delivery_claim_outbox_batch(p_worker_id text,p_limit integer)
 returns setof public.delivery_outbox language plpgsql security invoker set search_path=''
