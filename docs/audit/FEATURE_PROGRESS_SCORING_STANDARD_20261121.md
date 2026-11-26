@@ -164,3 +164,14 @@ PR #149 starts the load/concurrency feature with a free PostgreSQL 17 fixture of
 ### Backup/restore drill — exact-head pass
 
 PR #148 workflow `45662909781` passed on PostgreSQL 17.11 and quality workflow `45662909991` passed. Verified 151 branches and events, checksum parity, no pre-snapshot loss, RLS 2/2, Tenant A/B read isolation, zero cross-tenant visibility, and 439 ms local restore verification. Managed Supabase backup/PITR, Auth/Storage restore and production RPO/RTO remain unproven. Do not mark DONE.
+
+
+## Live weighted-score reconciliation — 2026-11-27
+
+The current row-level ledger has **189 features: 145 PARTIAL, 39 NOT VERIFIED, 5 BLOCKED, 0 DONE**. The domain matrix has been reconciled to those 189 stable IDs. PARTIAL coverage is 76.7% (145/189), which measures implementation-start coverage only and is not a weighted completion score.
+
+**Numeric PARTIAL progress:** 0/145 features currently have a defensible weighted numeric score. The feature rows preserve `progress_pct: null` and `scoring_status: NOT_SCORED_FEATURE_LEVEL` until each evidence dimension has an exact artifact. This is intentional: assigning 0% to an implemented foundation or assigning arbitrary 30/50/70% based on a PR would misrepresent progress. The next audit increment must populate each feature's six evidence dimensions and calculate the weighted score from verified artifacts.
+
+**Priority by remaining NOT VERIFIED count:** Branch Operations (5); Menu/Recipe, Procurement, CRM, BI, Integrations and Quality (3 each); Executive, Order, Kitchen, Inventory, Finance, HR and Admin (2 each); POS and SaaS (1 each); Delivery and Franchise (0 each). The five BLOCKED features remain separate release/acceptance gates and are not hidden inside PARTIAL.
+
+Current live blockers: strict Owner app_metadata boolean claim is absent in staging; positive POS staging E2E is not run; POS tender/receipt/cash/settlement/Finance reconciliation tables have zero rows; eight-domain migration replay remains under repair/verification. Both release flags remain false.
