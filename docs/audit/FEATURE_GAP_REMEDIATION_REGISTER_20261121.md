@@ -1053,3 +1053,57 @@ The 189 stable feature IDs now reconcile to the evidence ledger and the implemen
 
 
 Additional live platform evidence (2026-11-27): **68/68 public tables have RLS enabled; 0 have RLS disabled.** Supabase Health Advisor returned no lints. Security Advisor still warns that native leaked-password protection is disabled. Performance Advisor reports 82 unused-index findings; do not drop indexes without representative workload and query-plan evidence. The exact PR #152 Vercel Preview is READY on commit `01d2cb790403d276b161a4cd4c945b048e6c8ff6`; this is a build result only.
+
+
+## Exact remaining unproven and blocked feature gaps — 2026-11-27
+
+The following **39 NOT VERIFIED** features remain queued, and **5 BLOCKED** features remain explicit gates. The table preserves stable PRD IDs so implementation work can be traced to code, database, authorization, tests, runtime and reconciliation evidence. NOT VERIFIED is not silently converted to PARTIAL; a concrete vertical slice must exist first.
+
+| Feature ID | Domain | Status | Requirement | Current gap / evidence needed |
+|---|---|---|---|---|
+| D01-F05 | Executive Command Center | NOT VERIFIED | Critical stock, expiry, waste alerts | Lot/expiry/waste alert workflow not proven. |
+| D01-F06 | Executive Command Center | NOT VERIFIED | Sales-drop / food-cost anomaly detection | No verified anomaly rule, assignment, acknowledgement, or closure. |
+| D01-F09 | Executive Command Center | BLOCKED | Company → region → branch → shift → transaction drill-down | PR #145 adds tenant/branch-scoped executive drill-down data path and UI primitives; shift-to-transaction evidence and runtime authorization E2E remain unproven. |
+| D02-F05 | POS & Checkout | NOT VERIFIED | Discounts, coupons, vouchers, special pricing | Rule engine, approvals, and audit evidence missing. |
+| D03-F02 | Order Management | NOT VERIFIED | WhatsApp, marketplace, additional channels | Provider integrations and contract tests missing. |
+| D03-F08 | Order Management | NOT VERIFIED | Preparation ETA and exception escalation | SLA prediction and escalation workflow missing. |
+| D04-F02 | Kitchen & Production | NOT VERIFIED | Station routing (hot/cold/beverage/packing) | No verified station configuration and routing. |
+| D04-F08 | Kitchen & Production | NOT VERIFIED | QC, temperature, shelf life and spoilage | Food safety checks and corrective actions not proven. |
+| D04-F10 | Kitchen & Production | BLOCKED | Theoretical vs actual usage / waste variance | No verified variance report reconciled against stock ledger. |
+| D05-F05 | Menu, Recipe & Product Engineering | NOT VERIFIED | Nested BOM, unit conversions, yield and prep loss | Nested sub-recipes and conversion engine not proven. |
+| D05-F07 | Menu, Recipe & Product Engineering | NOT VERIFIED | Cost per serving and contribution margin | Costing engine and reconciled margin outputs missing. |
+| D05-F08 | Menu, Recipe & Product Engineering | NOT VERIFIED | Allergens and regulated product information | Structured allergen/product compliance flow missing. |
+| D05-F11 | Menu, Recipe & Product Engineering | BLOCKED | POS/production uses the same approved recipe version | Cross-module version parity needs E2E proof. |
+| D06-F05 | Inventory & Warehouse | NOT VERIFIED | FIFO/FEFO, lot/batch and expiry | Lot traceability and expiry allocation missing. |
+| D06-F10 | Inventory & Warehouse | NOT VERIFIED | Stock valuation | Valuation method and historical valuation reports not proven. |
+| D07-F02 | Procurement & Supplier | NOT VERIFIED | Supplier price lists, contracts and price history | No verified contract/effective price lifecycle. |
+| D07-F04 | Procurement & Supplier | NOT VERIFIED | Consolidated demand across branches | Multi-branch buying/consolidation missing. |
+| D07-F10 | Procurement & Supplier | NOT VERIFIED | Supplier return and supplier performance | Return and scorecard workflows missing. |
+| D08-F03 | Branch Operations | BLOCKED | Opening readiness changes branch operating status | Real branch lifecycle integration not proven. |
+| D08-F04 | Branch Operations | NOT VERIFIED | Daily tasks, due dates and escalation | Task assignment/scheduling/notification workflow missing. |
+| D08-F07 | Branch Operations | NOT VERIFIED | Photo evidence | Evidence upload/storage/retention workflow missing. |
+| D08-F08 | Branch Operations | NOT VERIFIED | Incidents and corrective actions | Incident severity, assignment, escalation and closure missing. |
+| D08-F09 | Branch Operations | NOT VERIFIED | Equipment maintenance | Work orders, preventive maintenance and downtime records missing. |
+| D08-F10 | Branch Operations | NOT VERIFIED | Branch audit and compliance score | Audit scoring and executive roll-up missing. |
+| D10-F06 | CRM, Loyalty & Marketing | NOT VERIFIED | Referral program | Attribution and fraud controls missing. |
+| D10-F08 | CRM, Loyalty & Marketing | NOT VERIFIED | Feedback/reviews/support cases | Ticketing, SLA and escalation missing. |
+| D10-F09 | CRM, Loyalty & Marketing | NOT VERIFIED | Repeat purchase and customer lifetime analysis | Canonical customer identity and verified BI metrics missing. |
+| D11-F03 | Finance & Accounting | BLOCKED | Payment provider fee and settlement variance | PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked. |
+| D11-F09 | Finance & Accounting | NOT VERIFIED | Budgets and branch P&L | Budget-vs-actual and branch P&L not reconciled. |
+| D11-F10 | Finance & Accounting | NOT VERIFIED | Consolidated financial statements | Group consolidation missing. |
+| D12-F08 | HR & Workforce | NOT VERIFIED | Training/certification and performance reviews | Course, certificate expiry and review workflow missing. |
+| D12-F09 | HR & Workforce | NOT VERIFIED | Recruitment/onboarding/offboarding | Onboarding checklist and access revocation missing. |
+| D14-F07 | BI & Analytics | NOT VERIFIED | Demand forecasting and accuracy monitoring | Forecast pipeline, evaluation and override audit missing. |
+| D14-F09 | BI & Analytics | NOT VERIFIED | Export and scheduled executive reports | Controlled exports and schedules missing. |
+| D14-F10 | BI & Analytics | NOT VERIFIED | Alert → action → measured outcome | Closed-loop workflow missing. |
+| D15-F06 | Admin, Identity & Access Control | NOT VERIFIED | Sessions/devices and access reviews | Session inventory, revocation and periodic review missing. |
+| D15-F07 | Admin, Identity & Access Control | NOT VERIFIED | Recovery and offboarding | Safe account recovery and immediate access revocation not proven. |
+| D16-F06 | SaaS Tenant Management | NOT VERIFIED | Support access with approval/audit | Just-in-time scoped support access missing. |
+| D17-F03 | Integrations & Automation | NOT VERIFIED | Delivery/e-commerce/WhatsApp/accounting connectors | Provider-specific integrations not proven. |
+| D17-F07 | Integrations & Automation | NOT VERIFIED | Integration health and alerting | Health dashboards, lag/error alerts and recovery runbooks missing. |
+| D17-F09 | Integrations & Automation | NOT VERIFIED | Import/export and catalog synchronization | Validated imports, conflict resolution and scheduled sync missing. |
+| D18-F11 | Quality, Compliance & Security | NOT VERIFIED | Pilot, rollout and rollback | No signed-off pilot operating-day reconciliation or tested rollback evidence. |
+| D18-F12 | Quality, Compliance & Security | NOT VERIFIED | Workflow | Exit criteria |
+| D18-F19 | Quality, Compliance & Security | NOT VERIFIED | Responsive UX and accessibility | Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks. |
+
+**Work rule:** for each row, create a real vertical slice (migration/schema + RLS/grants + server-side action + UI path + positive/negative tests) before moving it to PARTIAL. Then score the six evidence dimensions (20/20/15/15/20/10) from artifacts. DONE remains 0 until every required workflow and reconciliation passes.
