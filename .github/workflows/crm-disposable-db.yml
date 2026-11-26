@@ -39,13 +39,46 @@ jobs:
           if [ ! -f supabase/config.toml ] && [ ! -f supabase/config.json ] && [ ! -f supabase/config.jsonc ]; then
             supabase init --force
           fi
+      - name: Configure isolated disposable Supabase ports
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_port="$(python3 - <<'PY'
+          import os, socket
+          seed = 30000 + (int(os.environ["GITHUB_RUN_ID"]) % 500) * 5
+          for offset in range(0, 2500, 5):
+              base = 30000 + ((seed - 30000 + offset) % 2500)
+              sockets = []
+              try:
+                  for port in range(base, base + 5):
+                      sock = socket.socket()
+                      sock.bind(("0.0.0.0", port))
+                      sockets.append(sock)
+                  print(base)
+                  break
+              except OSError:
+                  pass
+              finally:
+                  for sock in sockets:
+                      sock.close()
+          else:
+              raise SystemExit("No available isolated port block")
+          PY
+          )"
+          sed -i \
+            -e "s/^project_id = .*/project_id = \"dlice-crm-${GITHUB_RUN_ID}\"/" \
+            -e "s/^port = 54321$/port = $((base_port + 1))/" \
+            -e "s/^port = 54322$/port = $((base_port + 2))/" \
+            -e "s/^shadow_port = 54320$/shadow_port = ${base_port}/" \
+            -e "s/^port = 54323$/port = $((base_port + 3))/" \
+            -e "s/^port = 54324$/port = $((base_port + 4))/" \
+            supabase/config.toml
+          echo "LOCAL_DB_URL=postgresql://postgres:postgres@127.0.0.1:$((base_port + 2))/postgres" >> "$GITHUB_ENV"
       - name: Start disposable local Supabase stack
         run: supabase start --exclude inbucket
       - name: Replay canonical repository migrations
         run: supabase db reset
       - name: Replay CRM identity, Finance close, loyalty and campaign dependencies
-        env:
-          LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: |
           set -euo pipefail
           psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql
