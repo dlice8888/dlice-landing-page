@@ -40,7 +40,7 @@ test("generic ledger RPC cannot bypass source-backed earn/redeem and reversal re
   assert.match(sql, /REDEMPTION_REVERSAL_AFTER_EXPIRY_BLOCKED/);
   assert.match(sql, /earn_reversal/);
   assert.match(sql, /v_entry\.id,v_original\.id,\x27earn_reversal\x27,v_original\.points/);
-  assert.equal((sql.match(/when allocation_kind in \\\(\\x27redemption\\x27,\\x27earn_reversal\\x27,\\x27expiry\\x27\\) then points_allocated/g)||[]).length,3);
+  assert.equal(sql.split("when allocation_kind in ('redemption','earn_reversal','expiry') then points_allocated").length-1,3);
   assert.match(sql, /entry_kind='adjustment' and points>0/);
 });
 
