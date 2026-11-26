@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DOMAIN_WORKFLOWS,validateWorkflowCommand,assertWorkflowDefinitionIntegrity} from '../src/fnb-domain-workflows.mjs';
+import {DOMAIN_WORKFLOWS,validateWorkflowCommand,assertWorkflowDefinitionIntegrity} from '../../src/fnb-domain-workflows.mjs';
 
 test('eight priority domains expose valid workflows and invariants',()=>{
   assert.deepEqual(Object.keys(DOMAIN_WORKFLOWS).sort(),['bi','crm','delivery','executive','franchise','hr','procurement','saas']);
