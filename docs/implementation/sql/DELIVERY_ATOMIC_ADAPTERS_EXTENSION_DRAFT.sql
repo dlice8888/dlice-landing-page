@@ -78,7 +78,7 @@ begin
  if length(btrim(coalesce(p_provider_quote_id,''))) not between 1 and 160
   or length(btrim(coalesce(p_service_level,''))) not between 1 and 80 or p_quoted_cost_idr<0
   or p_expires_at<=now() or p_expires_at>now()+interval '2 hours'
-  or p_payload_sha256 !~ '^[0-9a-f]{64}$'
+  or p_payload_sha256 !~ '^[0-9a-f]{64}$' then
   or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_DELIVERY_PROVIDER_QUOTE';
  end if;

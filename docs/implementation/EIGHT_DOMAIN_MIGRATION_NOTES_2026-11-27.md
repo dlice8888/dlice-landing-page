@@ -38,3 +38,6 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 These are additive schema/workflow changes. No automatic DROP-based rollback is supplied; if a later staging application fails, stop the rollout, preserve evidence and use a reviewed forward-fix or a verified staging restore plan.
 
 The malformed Delivery SHA-256 predicate was in the atomic-adapter extension draft (not the base fulfillment draft); that source has now been corrected as well. The new static contract scans every source draft and official migration for unmatched regex string quotes.
+
+
+The Delivery provider webhook predicate also lacked its terminating PL/pgSQL `THEN`; this is now present in both the official migration and source draft. The contract suite explicitly checks the Delivery hash and Franchise email validation predicates.

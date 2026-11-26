@@ -58,6 +58,51 @@ test("each official domain migration retains server-only RLS and ACL boundaries"
   }
 });
 
+test("Delivery webhook and Franchise applicant validators are complete SQL predicates", () => {
+  const delivery = readFileSync(new URL(domainMigrations[2], migrationDir), "utf8");
+  assert.ok(delivery.includes("or p_payload_sha256 !~ '^[0-9a-f]{64}
+  const sql = readFileSync(new URL("eight_domain_rls_acl.test.sql", testDir), "utf8");
+  assert.match(sql, /select plan\\(994\\)/);
+  for (const name of tables) assert.ok(sql.includes(`public.${name}`), `${name}: no ACL test`);
+});
+
+test("all SQL draft regex predicates have balanced string literals", () => {
+  for (const name of draftFiles) {
+    const sql = readFileSync(new URL(name, drafts), "utf8");
+    const unmatched = sql.split(/\\r?\\n/).filter((line) => /!~/.test(line) && ((line.match(/'/g) ?? []).length % 2) === 1);
+    assert.deepEqual(unmatched, [], `${name}: regex literal has an unmatched quote`);
+  }
+});
+
+test("CRM identity, loyalty and campaign acceptance remains in canonical pgTAP", () => {
+  const sql = readFileSync(new URL("crm_loyalty.test.sql", testDir), "utf8");
+  assert.match(sql, /select plan\\(44\\)/i);
+  assert.match(sql, /select \\* from finish\\(\\)/i);
+});
+ then"));
+  const franchise = readFileSync(new URL(domainMigrations[3], migrationDir), "utf8");
+  assert.ok(franchise.includes("or p_applicant_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+
+  const sql = readFileSync(new URL("eight_domain_rls_acl.test.sql", testDir), "utf8");
+  assert.match(sql, /select plan\\(994\\)/);
+  for (const name of tables) assert.ok(sql.includes(`public.${name}`), `${name}: no ACL test`);
+});
+
+test("all SQL draft regex predicates have balanced string literals", () => {
+  for (const name of draftFiles) {
+    const sql = readFileSync(new URL(name, drafts), "utf8");
+    const unmatched = sql.split(/\\r?\\n/).filter((line) => /!~/.test(line) && ((line.match(/'/g) ?? []).length % 2) === 1);
+    assert.deepEqual(unmatched, [], `${name}: regex literal has an unmatched quote`);
+  }
+});
+
+test("CRM identity, loyalty and campaign acceptance remains in canonical pgTAP", () => {
+  const sql = readFileSync(new URL("crm_loyalty.test.sql", testDir), "utf8");
+  assert.match(sql, /select plan\\(44\\)/i);
+  assert.match(sql, /select \\* from finish\\(\\)/i);
+});
+ then"));
+});
+
 test("every new domain table has an executable pgTAP RLS/ACL assertion", () => {
   const sql = readFileSync(new URL("eight_domain_rls_acl.test.sql", testDir), "utf8");
   assert.match(sql, /select plan\\(994\\)/);
