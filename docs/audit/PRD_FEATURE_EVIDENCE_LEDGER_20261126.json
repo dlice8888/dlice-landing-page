@@ -11914,6 +11914,27 @@
       "security": "auth_leaked_password_protection WARN/DISABLED",
       "performance": "82 unused-index findings; no index drops without workload evidence",
       "health": "no health lints"
+    },
+    "domain_migrations": {
+      "official_migrations_pr": 152,
+      "branch": "feat/eight-domain-official-migrations-20261127",
+      "exact_head": "315972e0a858937bc890f69ee7fbddc37a7720a2",
+      "quality_checks": "PASS",
+      "canonical_migration_replay": "PASS_ON_PREVIOUS_EXACT_HEAD_43963f943dcb20681bcc49b5fc6c4237377c9312",
+      "crm_schema_verification": "FIXED_TEST_HARNESS_RERUN_IN_PROGRESS",
+      "crm_pgtap": "NOT_YET_RUN_ON_CURRENT_HEAD",
+      "shared_staging_applied": false,
+      "vercel_preview": "READY_ON_EXACT_HEAD"
+    },
+    "audit_matrix": {
+      "feature_total": 189,
+      "partial": 145,
+      "not_verified": 39,
+      "blocked": 5,
+      "done": 0,
+      "provisional_scores": 7,
+      "unscored_partial": 138,
+      "feature_ledger_contract": "PASS"
     }
   }
 }
