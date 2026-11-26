@@ -191,39 +191,6 @@ end $$;
 revoke all on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_create_application(text,text,text,text,text,bigint,text,uuid) to service_role;
 
-create or replace function public.franchise_review_application(
- p_application_id uuid,p_decision text,p_actor_user_id uuid,p_notes text
-) returns jsonb language plpgsql security invoker set search_path=''
-as $$
-declare v_app public.franchise_applications%rowtype; v_checks integer; v_passed integer; v_site integer; v_previous_status text;
-begin
- if p_decision not in ('screening','due_diligence','approved','rejected') then
-  raise exception using errcode='22023',message='INVALID_FRANCHISE_DECISION';
- end if;
- select * into v_app from public.franchise_applications where id=p_application_id for update;
- if not found then raise exception using errcode='P0002',message='FRANCHISE_APPLICATION_NOT_FOUND'; end if;
- v_previous_status:=v_app.status;
- if v_app.status in ('approved','rejected','withdrawn') then raise exception using errcode='23514',message='FRANCHISE_APPLICATION_TERMINAL'; end if;
- if p_decision='approved' and v_app.created_by=p_actor_user_id then raise exception using errcode='42501',message='INDEPENDENT_FRANCHISE_APPROVER_REQUIRED'; end if;
- if p_decision='approved' then
-  if v_app.status<>'due_diligence' then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_REQUIRED'; end if;
-  select count(*),count(*) filter(where status in ('passed','waived')) into v_checks,v_passed
-   from public.franchise_due_diligence_checks where application_id=p_application_id;
-  if v_checks<>6 or v_passed<>6 then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_INCOMPLETE'; end if;
-  select count(*) into v_site from public.franchise_sites where application_id=p_application_id and feasibility_status='approved';
-  if v_site=0 then raise exception using errcode='23514',message='FRANCHISE_SITE_NOT_APPROVED'; end if;
- end if;
- update public.franchise_applications set status=p_decision,assigned_reviewer=coalesce(assigned_reviewer,p_actor_user_id),
-  reviewed_at=case when p_decision in ('approved','rejected') then now() else reviewed_at end,updated_at=now()
- where id=p_application_id returning * into v_app;
- insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
- values(p_actor_user_id,'franchise.application.'||p_decision,'franchise_application',v_app.id::text,
-  jsonb_build_object('previous_status',v_previous_status,'notes',left(coalesce(p_notes,''),500)));
- return jsonb_build_object('application_id',v_app.id,'status',v_app.status);
-end $$;
-revoke all on function public.franchise_review_application(uuid,text,uuid,text) from public,anon,authenticated;
-grant execute on function public.franchise_review_application(uuid,text,uuid,text) to service_role;
-
 create or replace function public.franchise_generate_royalty_statement(
  p_tenant_id uuid,p_branch_id uuid,p_agreement_id uuid,p_period_start date,p_period_end date,
  p_reconciliation_run_id uuid,p_idempotency_key text,p_actor_user_id uuid
@@ -327,6 +294,9 @@ begin
  if not found then raise exception using errcode='P0002',message='FRANCHISE_APPLICATION_NOT_FOUND'; end if;
  v_previous_status:=v_app.status;
  if v_app.status in ('approved','rejected','withdrawn') then raise exception using errcode='23514',message='FRANCHISE_APPLICATION_TERMINAL'; end if;
+ if p_decision='approved' and v_app.created_by=p_actor_user_id then
+  raise exception using errcode='42501',message='INDEPENDENT_FRANCHISE_APPROVER_REQUIRED';
+ end if;
  if p_decision='approved' then
   if v_app.status<>'due_diligence' then raise exception using errcode='23514',message='FRANCHISE_DUE_DILIGENCE_REQUIRED'; end if;
   select count(*),count(*) filter(where status in ('passed','waived')) into v_checks,v_passed
@@ -396,51 +366,6 @@ begin
 end $$;
 revoke all on function public.franchise_submit_agreement_for_signature(uuid,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_submit_agreement_for_signature(uuid,uuid) to service_role;
-
-create or replace function public.franchise_record_agreement_signature(
- p_agreement_id uuid,p_actor_user_id uuid,p_signed_at timestamptz,
- p_signed_document_reference text
-) returns jsonb language plpgsql security invoker set search_path=''
-as $$
-declare v public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
-begin
- select * into v from public.franchise_agreements where id=p_agreement_id for update;
- if not found then raise exception using errcode='P0002',message='FRANCHISE_AGREEMENT_NOT_FOUND'; end if;
- if v.agreement_status<>'pending_signature' then raise exception using errcode='23514',message='FRANCHISE_AGREEMENT_NOT_PENDING_SIGNATURE'; end if;
- if p_signed_at is null or p_signed_at>now()+interval '5 minutes' or length(btrim(coalesce(p_signed_document_reference,'')))<8 then
-  raise exception using errcode='22023',message='SIGNED_DOCUMENT_EVIDENCE_REQUIRED';
- end if;
- select * into v_version from public.franchise_agreement_versions
-  where agreement_id=v.id and version=v.current_version for update;
- if not found or p_actor_user_id in (v.created_by,v_version.approved_by) then
-  raise exception using errcode='42501',message='INDEPENDENT_SIGNATURE_REVIEWER_REQUIRED';
- end if;
- if v.tenant_id is null or v.branch_id is null or
-    not exists(select 1 from public.branches where id=v.branch_id and tenant_id=v.tenant_id) then
-  raise exception using errcode='23514',message='FRANCHISE_TENANT_BRANCH_PROVISIONING_REQUIRED';
- end if;
- if p_signed_at::date<v_version.effective_from or
-    (v_version.effective_to is not null and p_signed_at::date>v_version.effective_to) then
-  raise exception using errcode='23514',message='AGREEMENT_VERSION_NOT_EFFECTIVE_AT_SIGNATURE';
- end if;
- update public.franchise_agreement_versions set signed_document_reference=p_signed_document_reference
-  where id=v_version.id;
- update public.franchise_agreements set agreement_status='active',signed_at=p_signed_at,
-  effective_from=v_version.effective_from,effective_to=v_version.effective_to where id=v.id;
- insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
- values(v.id,'signature_recorded',p_actor_user_id,p_signed_document_reference,
-  jsonb_build_object('version',v.current_version,'signed_at',p_signed_at));
- insert into public.franchise_agreement_events(agreement_id,event_type,actor_user_id,document_reference,metadata)
- values(v.id,'activated',p_actor_user_id,p_signed_document_reference,
-  jsonb_build_object('version',v.current_version,'tenant_id',v.tenant_id,'branch_id',v.branch_id));
- insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
- values(p_actor_user_id,'franchise.agreement.activated','franchise_agreement',v.id::text,
-  jsonb_build_object('version',v.current_version,'tenant_id',v.tenant_id,'branch_id',v.branch_id));
- return jsonb_build_object('agreement_id',v.id,'status','active','version',v.current_version,
-  'signed_at',p_signed_at,'document_reference',p_signed_document_reference);
-end $$;
-revoke all on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) from public,anon,authenticated;
-grant execute on function public.franchise_record_agreement_signature(uuid,uuid,timestamptz,text) to service_role;
 
 create or replace function public.franchise_reject_agreement_event_mutation()
 returns trigger language plpgsql security invoker set search_path=''
