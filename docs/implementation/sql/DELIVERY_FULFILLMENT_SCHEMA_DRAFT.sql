@@ -278,3 +278,6 @@ grant execute on function public.delivery_record_proof(uuid,text,text,text,numer
 -- 2) Atomic dispatch/status transition RPC that locks the order and dispatch.
 -- 3) POD storage object existence, MIME, size and ownership verification.
 -- 4) Reconciliation of provider fee, customer charge, COD and settlement to Finance.
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.delivery_audit_insert() to service_role;
