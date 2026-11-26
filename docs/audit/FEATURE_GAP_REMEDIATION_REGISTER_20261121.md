@@ -1110,3 +1110,12 @@ The following **39 NOT VERIFIED** features remain queued, and **5 BLOCKED** feat
 
 
 POS feature-level provisional scores from PR #143 evidence: D02-F04 modifiers 60%; D02-F07 split tender 65%; D02-F08 hold/resume 70%; D02-F10 immutable receipt 70%; D02-F12 offline resynchronization 70%. Each score includes code/UI, database, authorization and automated-test evidence; E2E (20%) and reconciliation/observability (10%) remain 0 until staging positive-path and transaction reconciliation pass. D02-F04 and D02-F07 have additional code/UI scope gaps, so their code/UI dimension is partial.
+
+
+## Latest exact-head implementation and validation delta — 2026-11-27
+
+- PR #152 commit `43963f943dcb20681bcc49b5fc6c4237377c9312` successfully completed `supabase db reset` and applied all eight official domain migrations in the isolated disposable stack. The subsequent CRM table-verification step failed because the shell heredoc contained a malformed `DO $` delimiter; this was a workflow test-harness defect, not a migration failure.
+- Corrected the verification step to query all 17 expected CRM tables without dollar-quoted PL/pgSQL. Current PR #152 head is `315972e0a858937bc890f69ee7fbddc37a7720a2`; exact-head Free quality checks PASS, and the CRM disposable replay rerun is in progress. CRM pgTAP must still pass before the full migration gate is accepted.
+- Vercel Preview for PR #152 is READY on exact head `315972e0a858937bc890f69ee7fbddc37a7720a2`. This is preview build evidence only.
+- PR #147 feature-matrix/ledger parity quality check passes on its latest checked head. The matrix and ledger agree on all 189 IDs and seven provisional progress scores.
+- No shared staging migration, Edge Function deployment, Auth metadata mutation, production change or merge was performed.
