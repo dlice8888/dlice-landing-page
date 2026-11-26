@@ -1024,7 +1024,7 @@ The 189 stable feature IDs now reconcile to the evidence ledger and the implemen
 | Domain | Total | P | BT | B | S | Partial coverage | Scored partial |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
-| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% | 0/12 |
+| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% | 5/12 |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% | 0/7 |
@@ -1041,9 +1041,9 @@ The 189 stable feature IDs now reconcile to the evidence ledger and the implemen
 | SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87.5% | 2/7 |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
 | Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85.0% | 0/17 |
-| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **2/145** |
+| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **7/145** |
 
-**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **2/145 currently have provisional numeric weighted scores** in the ledger. The progress_pct field is populated only for the two existing provisional scores (D16-F01 30%, D16-F02 58%); the remaining 143 remain null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
+**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **7/145 currently have provisional numeric weighted scores** in the ledger. The progress_pct field is populated only for the two existing provisional scores (D16-F01 30%, D16-F02 58%); the remaining 143 remain null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
 
 **Live staging findings:** one active Owner profile is present but zero active Owner profiles have the strict JSON boolean app_metadata.platform_owner=true; dlice-orders is ACTIVE v73 with verify_jwt=false and custom authorization in source; native leaked-password protection is WARN/DISABLED. POS source data: 6 sales, 6 items, 6 payment records, 6 KDS tickets, 6 KDS items, 26 stock movements and 273 audit logs; zero tenders, receipts, cash reconciliations, settlement rows, refund rows and Finance journal rows. This does not pass transaction reconciliation.
 
@@ -1107,3 +1107,6 @@ The following **39 NOT VERIFIED** features remain queued, and **5 BLOCKED** feat
 | D18-F19 | Quality, Compliance & Security | NOT VERIFIED | Responsive UX and accessibility | Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks. |
 
 **Work rule:** for each row, create a real vertical slice (migration/schema + RLS/grants + server-side action + UI path + positive/negative tests) before moving it to PARTIAL. Then score the six evidence dimensions (20/20/15/15/20/10) from artifacts. DONE remains 0 until every required workflow and reconciliation passes.
+
+
+POS feature-level provisional scores from PR #143 evidence: D02-F04 modifiers 60%; D02-F07 split tender 65%; D02-F08 hold/resume 70%; D02-F10 immutable receipt 70%; D02-F12 offline resynchronization 70%. Each score includes code/UI, database, authorization and automated-test evidence; E2E (20%) and reconciliation/observability (10%) remain 0 until staging positive-path and transaction reconciliation pass. D02-F04 and D02-F07 have additional code/UI scope gaps, so their code/UI dimension is partial.
