@@ -351,3 +351,6 @@ end;
 $$;
 revoke all on function public.hr_apply_employee_lifecycle_event(uuid,uuid,text,date,uuid,uuid,uuid,text,text,uuid) from public,anon,authenticated;
 grant execute on function public.hr_apply_employee_lifecycle_event(uuid,uuid,text,date,uuid,uuid,uuid,text,text,uuid) to service_role;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.hr_reject_employee_lifecycle_event_mutation() to service_role;
