@@ -25,25 +25,25 @@ Two SaaS Tenant Management features moved from NOT VERIFIED to PARTIAL after con
 
 | Domain | Features | PARTIAL | NOT VERIFIED | BLOCKED | DONE | Partial coverage* |
 |---|---:|---:|---:|---:|---:|---:|
-| Executive Command Center | 10 | 4 | 5 | 1 | 0 | 40.0% |
-| POS & Checkout | 13 | 7 | 5 | 1 | 0 | 53.8% |
+| Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% |
+| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% |
 | Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% |
-| Procurement & Supplier | 10 | 5 | 5 | 0 | 0 | 50.0% |
+| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70.0% |
 | Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% |
-| Delivery & Fulfillment | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| CRM, Loyalty & Marketing | 9 | 1 | 8 | 0 | 0 | 11.1% |
-| Finance & Accounting | 12 | 7 | 4 | 1 | 0 | 58.3% |
-| HR & Workforce | 9 | 1 | 8 | 0 | 0 | 11.1% |
-| Franchise & Expansion | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| BI & Analytics | 10 | 3 | 7 | 0 | 0 | 30.0% |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100.0% |
+| CRM, Loyalty & Marketing | 9 | 6 | 3 | 0 | 0 | 66.7% |
+| Finance & Accounting | 12 | 9 | 2 | 1 | 0 | 75.0% |
+| HR & Workforce | 9 | 7 | 2 | 0 | 0 | 77.8% |
+| Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100.0% |
+| BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70.0% |
 | Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% |
-| SaaS Tenant Management | 8 | 2 | 6 | 0 | 0 | 25.0% |
-| Integrations & Automation | 9 | 5 | 4 | 0 | 0 | 55.6% |
-| Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60.0% |
-| **TOTAL** | 189 | 95 | 88 | 6 | 0 | 50.3% |
+| SaaS Tenant Management | 8 | 6 | 2 | 0 | 0 | 75.0% |
+| Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% |
+| Quality, Compliance & Security | 20 | 14 | 6 | 0 | 0 | 70.0% |
+| **TOTAL** | **189** | **141** | **43** | **5** | **0** | **74.6%** |
 
 The five additional PARTIAL classifications are evidence-based:
 - Kitchen & Production: KDS tickets and kitchen queue priority (tables, dispatch/transition RPCs, priority field, and six staging tickets/items exist).
@@ -982,3 +982,140 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 - 18-domain counts remain 95 PARTIAL / 88 NOT VERIFIED / 6 BLOCKED / 0 DONE. Partial coverage is 95/189 = 50.3%; this is the share of features with implementation started, not weighted completion.
 - Only two PARTIAL features have evidence-based weighted scores: tenant/member isolation 58% provisional and tenant directory/onboarding 30% provisional. The other 93 PARTIAL features remain unscored until six-dimension criteria are decomposed; do not invent percentages.
 - Vercel Preview for exact staging head is READY: [deployment](https://vercel.com/dlice8888-7332/dlice-landing-page/D9NVHeXQ9tBx1f37h6t6kMf6wcHV). Preview is not production release or business workflow acceptance.
+
+## Superseding current audit — 25 November 2026
+
+The latest row-level PRD reconciliation is **189 total / 141 PARTIAL / 43 NOT VERIFIED / 5 BLOCKED / 0 DONE**. This supersedes the 24-November 95/88/6 snapshot above. The 46 implementation-start transitions are work-start classifications linked to concrete source implementation in Draft PR #145 and Draft PR #146; they are not staging acceptance or DONE. Both PRs remain unmerged. The 46 transitions are: POS (5: four NOT VERIFIED and one BLOCKED), Executive (3), CRM (5), Delivery (6), Finance (2), HR (6), Franchise (6), BI (4), Procurement (2), Integrations (1), SaaS (4), Quality/backup restore (1), Quality/150-branch concurrency (1).
+
+**Important scoring distinction:** partial coverage (141/189 = 74.6%) means the number of PRD rows with implementation started, not the weighted completion of those features. Keep the 137 features with no feature-level evidence breakdown unscored; do not invent percentages. The only previously defensible weighted scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% until the current exact criteria are rescored.
+
+### Live platform evidence checked 25 November
+- GitHub: PR #145 and #146 are OPEN Draft. PR #146 exact-head quality checks passed on 23e4b6c2a057b9b8bdeed68f71088c6e4c88d105; its database replay and provider/bank E2E remain unverified.
+- Supabase staging higoadrzxnhzbbwhdbmh: ACTIVE_HEALTHY, PostgreSQL 17.11.0.003; 63 applied migrations through 20261124134222; 67 public tables and 67/67 have RLS enabled; dlice-orders ACTIVE v73 with verify_jwt=false and custom handler authorization; Security Advisor 1 WARN (leaked-password protection disabled); Performance Advisor 83 informational unused-index suggestions; Health Advisor 0 findings.
+- Live table counts show no positive business lifecycle evidence yet for purchase orders/receipts, production batches/consumptions, settlements, refunds, cash reconciliation, fiscal periods, finance journals, stock transfers/counts, procurement requisitions, POS tenders/receipts, or new HR/CRM/Delivery/Franchise/BI draft extensions. Existing schema rows do not prove complete workflows.
+- Vercel Hobby: staging Preview READY on aed9353d2d2daac57462a108beb43d983ec54946; PR #146 Preview READY on 4406c31250378dc9eaf13d6fa6d88726ef8fd6dd, which is behind PR #146 head; Production is READY on main commit cca72d336426688d8d7f6e01b819613ddc82fa6c. These were read-only inspections; no deploy was made.
+- Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
+
+### Highest priority remaining NOT VERIFIED counts
+Quality & Security 8; Branch Ops 5; CRM 3; BI 3; Procurement 3; Integrations 3; Menu 3; POS 1; HR 2; Executive 2; Finance 2; SaaS 2; Order 2; Kitchen 2; Delivery 0; Franchise 0. Prioritize by unverified count, then dependency and risk. Six BLOCKED items remain separate gates and are not silently reclassified.
+
+### POS lifecycle evidence incorporated from PR #143
+
+PR #143 is OPEN and not merged. Four previously NOT VERIFIED POS rows moved to PARTIAL and the digital receipt row moved from BLOCKED to PARTIAL because a digital receipt snapshot now exists. The current POS count is 12 PARTIAL / 1 NOT VERIFIED / 0 BLOCKED. Remaining gaps: discount/coupon engine, partial/unpaid balance collection, physical printer/browser-device acceptance, cashier browser acceptance and true network-loss/offline-client fault injection. PR #143 exact-head static/contract checks pass and disposable replay passed 14 pgTAP files / 375 assertions, but the staging POS E2E is BLOCKED before business mutation because Owner app_metadata.platform_owner is missing/null; no QA sale was created. Vercel Preview is READY on exact PR #143 head 0e3539b, which does not replace staging E2E.
+
+### Backup/restore drill started — PR #148
+
+PR #148 adds a free GitHub-hosted PostgreSQL 17 custom-format dump/restore rehearsal with 150 Tenant A branches plus Tenant B, deterministic checksum parity, pre/post-snapshot boundary, restored RLS and cross-tenant read-denial assertions. The workflow has not yet returned a completed run, so the feature is PARTIAL/IN_PROGRESS only. It is not Supabase managed backup, Auth/Storage recovery, PITR, or platform RPO/RTO evidence. The remaining 7 Quality/Compliance/Security NOT VERIFIED rows are food safety/recall, supplier quality/CAPA, 150-branch load/concurrency, pilot/rollout/rollback, workflow acceptance, responsive UX/accessibility, and backup/recovery/scale/rollout.
+
+### 150-branch concurrency test started — PR #149
+
+PR #149 adds a free PostgreSQL 17 database-only read/isolation benchmark with 150 Tenant A branches, Tenant B isolation, 50 concurrent pgbench clients, zero-failure assertions and p95/p99 measurements. Workflow completion is not yet verified. It does not represent the complete D’Lice POS/ERP API workload, write contention, Storage/Edge Function latency or production SLO. Keep this feature PARTIAL/IN_PROGRESS until the exact-head run passes and broader workload coverage is implemented.
+
+
+### Backup/restore result — PR #148 exact head
+
+The local PostgreSQL 17.11 restore drill has now passed on exact head `2456f6587891349fa3f99134f45f847e0ef8a1c1` (workflow `45662909781`) and the quality workflow passed (`45662909991`). It restored 151 branches and 151 committed events with checksum parity; no pre-snapshot rows lost; the one intentional post-snapshot row was not restored; RLS returned on 2/2 tables; Tenant A and B saw only 150/150 and 1/1 records respectively; cross-tenant visible rows were zero. Local restore verification measured 439 ms. This does not certify Supabase managed backup/PITR, Auth/Storage recovery or production RPO/RTO. Those are still gaps.
+
+
+## Live audit reconciliation — 2026-11-27 (supersedes prior count snapshots)
+
+The 189 stable feature IDs now reconcile to the evidence ledger and the implementation matrix. The latest evidence-ledger count is **145 PARTIAL + 39 NOT VERIFIED + 5 BLOCKED + 0 DONE = 189**. This supersedes the earlier 95/88/6 and 141/43/5 snapshots. The user-provided table's 139/45/5 differs by six classifications; the row-level ledger is used as the current candidate because it records implementation-start evidence and specific gaps for each stable feature ID.
+
+| Domain | Total | P | BT | B | S | Partial coverage | Scored partial |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
+| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% | 5/12 |
+| Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
+| Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% | 0/7 |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% | 0/10 |
+| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70.0% | 0/7 |
+| Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% | 0/4 |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100.0% | 0/8 |
+| CRM, Loyalty & Marketing | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
+| Finance & Accounting | 12 | 9 | 2 | 1 | 0 | 75.0% | 0/9 |
+| HR & Workforce | 9 | 7 | 2 | 0 | 0 | 77.8% | 0/7 |
+| Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100.0% | 0/8 |
+| BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70.0% | 0/7 |
+| Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
+| SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87.5% | 2/7 |
+| Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
+| Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85.0% | 0/17 |
+| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **7/145** |
+
+**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **7/145 currently have provisional numeric weighted scores** in the ledger. The progress_pct field is populated only for the two existing provisional scores (D16-F01 30%, D16-F02 58%); the remaining 143 remain null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
+
+**Live staging findings:** one active Owner profile is present but zero active Owner profiles have the strict JSON boolean app_metadata.platform_owner=true; dlice-orders is ACTIVE v73 with verify_jwt=false and custom authorization in source; native leaked-password protection is WARN/DISABLED. POS source data: 6 sales, 6 items, 6 payment records, 6 KDS tickets, 6 KDS items, 26 stock movements and 273 audit logs; zero tenders, receipts, cash reconciliations, settlement rows, refund rows and Finance journal rows. This does not pass transaction reconciliation.
+
+**PR #152:** official eight-domain migration conversion is a Draft stacked PR. Quality checks passed at commit 08730d3fe0c2494e2156cb2cf330b88a491c3f3c, but disposable replay failed on a Franchise dependency because the function referenced bi_reconciliation_runs%ROWTYPE before the BI migration. The source and migration were corrected to use a deferred record reference; exact-head replay is pending at the latest commit. No shared staging migration or production change was made.
+
+**PR #143:** POS checkout disposable replay passed; quality checks failed; positive staging POS E2E failed after environment/credential preflight passed: the Owner account did not satisfy the strict JSON boolean app_metadata.platform_owner=true plus UUID allowlist requirement. Both release flags remain false.
+
+
+Additional live platform evidence (2026-11-27): **68/68 public tables have RLS enabled; 0 have RLS disabled.** Supabase Health Advisor returned no lints. Security Advisor still warns that native leaked-password protection is disabled. Performance Advisor reports 82 unused-index findings; do not drop indexes without representative workload and query-plan evidence. The exact PR #152 Vercel Preview is READY on commit `01d2cb790403d276b161a4cd4c945b048e6c8ff6`; this is a build result only.
+
+
+## Exact remaining unproven and blocked feature gaps — 2026-11-27
+
+The following **39 NOT VERIFIED** features remain queued, and **5 BLOCKED** features remain explicit gates. The table preserves stable PRD IDs so implementation work can be traced to code, database, authorization, tests, runtime and reconciliation evidence. NOT VERIFIED is not silently converted to PARTIAL; a concrete vertical slice must exist first.
+
+| Feature ID | Domain | Status | Requirement | Current gap / evidence needed |
+|---|---|---|---|---|
+| D01-F05 | Executive Command Center | NOT VERIFIED | Critical stock, expiry, waste alerts | Lot/expiry/waste alert workflow not proven. |
+| D01-F06 | Executive Command Center | NOT VERIFIED | Sales-drop / food-cost anomaly detection | No verified anomaly rule, assignment, acknowledgement, or closure. |
+| D01-F09 | Executive Command Center | BLOCKED | Company → region → branch → shift → transaction drill-down | PR #145 adds tenant/branch-scoped executive drill-down data path and UI primitives; shift-to-transaction evidence and runtime authorization E2E remain unproven. |
+| D02-F05 | POS & Checkout | NOT VERIFIED | Discounts, coupons, vouchers, special pricing | Rule engine, approvals, and audit evidence missing. |
+| D03-F02 | Order Management | NOT VERIFIED | WhatsApp, marketplace, additional channels | Provider integrations and contract tests missing. |
+| D03-F08 | Order Management | NOT VERIFIED | Preparation ETA and exception escalation | SLA prediction and escalation workflow missing. |
+| D04-F02 | Kitchen & Production | NOT VERIFIED | Station routing (hot/cold/beverage/packing) | No verified station configuration and routing. |
+| D04-F08 | Kitchen & Production | NOT VERIFIED | QC, temperature, shelf life and spoilage | Food safety checks and corrective actions not proven. |
+| D04-F10 | Kitchen & Production | BLOCKED | Theoretical vs actual usage / waste variance | No verified variance report reconciled against stock ledger. |
+| D05-F05 | Menu, Recipe & Product Engineering | NOT VERIFIED | Nested BOM, unit conversions, yield and prep loss | Nested sub-recipes and conversion engine not proven. |
+| D05-F07 | Menu, Recipe & Product Engineering | NOT VERIFIED | Cost per serving and contribution margin | Costing engine and reconciled margin outputs missing. |
+| D05-F08 | Menu, Recipe & Product Engineering | NOT VERIFIED | Allergens and regulated product information | Structured allergen/product compliance flow missing. |
+| D05-F11 | Menu, Recipe & Product Engineering | BLOCKED | POS/production uses the same approved recipe version | Cross-module version parity needs E2E proof. |
+| D06-F05 | Inventory & Warehouse | NOT VERIFIED | FIFO/FEFO, lot/batch and expiry | Lot traceability and expiry allocation missing. |
+| D06-F10 | Inventory & Warehouse | NOT VERIFIED | Stock valuation | Valuation method and historical valuation reports not proven. |
+| D07-F02 | Procurement & Supplier | NOT VERIFIED | Supplier price lists, contracts and price history | No verified contract/effective price lifecycle. |
+| D07-F04 | Procurement & Supplier | NOT VERIFIED | Consolidated demand across branches | Multi-branch buying/consolidation missing. |
+| D07-F10 | Procurement & Supplier | NOT VERIFIED | Supplier return and supplier performance | Return and scorecard workflows missing. |
+| D08-F03 | Branch Operations | BLOCKED | Opening readiness changes branch operating status | Real branch lifecycle integration not proven. |
+| D08-F04 | Branch Operations | NOT VERIFIED | Daily tasks, due dates and escalation | Task assignment/scheduling/notification workflow missing. |
+| D08-F07 | Branch Operations | NOT VERIFIED | Photo evidence | Evidence upload/storage/retention workflow missing. |
+| D08-F08 | Branch Operations | NOT VERIFIED | Incidents and corrective actions | Incident severity, assignment, escalation and closure missing. |
+| D08-F09 | Branch Operations | NOT VERIFIED | Equipment maintenance | Work orders, preventive maintenance and downtime records missing. |
+| D08-F10 | Branch Operations | NOT VERIFIED | Branch audit and compliance score | Audit scoring and executive roll-up missing. |
+| D10-F06 | CRM, Loyalty & Marketing | NOT VERIFIED | Referral program | Attribution and fraud controls missing. |
+| D10-F08 | CRM, Loyalty & Marketing | NOT VERIFIED | Feedback/reviews/support cases | Ticketing, SLA and escalation missing. |
+| D10-F09 | CRM, Loyalty & Marketing | NOT VERIFIED | Repeat purchase and customer lifetime analysis | Canonical customer identity and verified BI metrics missing. |
+| D11-F03 | Finance & Accounting | BLOCKED | Payment provider fee and settlement variance | PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked. |
+| D11-F09 | Finance & Accounting | NOT VERIFIED | Budgets and branch P&L | Budget-vs-actual and branch P&L not reconciled. |
+| D11-F10 | Finance & Accounting | NOT VERIFIED | Consolidated financial statements | Group consolidation missing. |
+| D12-F08 | HR & Workforce | NOT VERIFIED | Training/certification and performance reviews | Course, certificate expiry and review workflow missing. |
+| D12-F09 | HR & Workforce | NOT VERIFIED | Recruitment/onboarding/offboarding | Onboarding checklist and access revocation missing. |
+| D14-F07 | BI & Analytics | NOT VERIFIED | Demand forecasting and accuracy monitoring | Forecast pipeline, evaluation and override audit missing. |
+| D14-F09 | BI & Analytics | NOT VERIFIED | Export and scheduled executive reports | Controlled exports and schedules missing. |
+| D14-F10 | BI & Analytics | NOT VERIFIED | Alert → action → measured outcome | Closed-loop workflow missing. |
+| D15-F06 | Admin, Identity & Access Control | NOT VERIFIED | Sessions/devices and access reviews | Session inventory, revocation and periodic review missing. |
+| D15-F07 | Admin, Identity & Access Control | NOT VERIFIED | Recovery and offboarding | Safe account recovery and immediate access revocation not proven. |
+| D16-F06 | SaaS Tenant Management | NOT VERIFIED | Support access with approval/audit | Just-in-time scoped support access missing. |
+| D17-F03 | Integrations & Automation | NOT VERIFIED | Delivery/e-commerce/WhatsApp/accounting connectors | Provider-specific integrations not proven. |
+| D17-F07 | Integrations & Automation | NOT VERIFIED | Integration health and alerting | Health dashboards, lag/error alerts and recovery runbooks missing. |
+| D17-F09 | Integrations & Automation | NOT VERIFIED | Import/export and catalog synchronization | Validated imports, conflict resolution and scheduled sync missing. |
+| D18-F11 | Quality, Compliance & Security | NOT VERIFIED | Pilot, rollout and rollback | No signed-off pilot operating-day reconciliation or tested rollback evidence. |
+| D18-F12 | Quality, Compliance & Security | NOT VERIFIED | Workflow | Exit criteria |
+| D18-F19 | Quality, Compliance & Security | NOT VERIFIED | Responsive UX and accessibility | Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks. |
+
+**Work rule:** for each row, create a real vertical slice (migration/schema + RLS/grants + server-side action + UI path + positive/negative tests) before moving it to PARTIAL. Then score the six evidence dimensions (20/20/15/15/20/10) from artifacts. DONE remains 0 until every required workflow and reconciliation passes.
+
+
+POS feature-level provisional scores from PR #143 evidence: D02-F04 modifiers 60%; D02-F07 split tender 65%; D02-F08 hold/resume 70%; D02-F10 immutable receipt 70%; D02-F12 offline resynchronization 70%. Each score includes code/UI, database, authorization and automated-test evidence; E2E (20%) and reconciliation/observability (10%) remain 0 until staging positive-path and transaction reconciliation pass. D02-F04 and D02-F07 have additional code/UI scope gaps, so their code/UI dimension is partial.
+
+
+## Latest exact-head implementation and validation delta — 2026-11-27
+
+- PR #152 commit `43963f943dcb20681bcc49b5fc6c4237377c9312` successfully completed `supabase db reset` and applied all eight official domain migrations in the isolated disposable stack. The subsequent CRM table-verification step failed because the shell heredoc contained a malformed `DO $` delimiter; this was a workflow test-harness defect, not a migration failure.
+- Corrected the verification step to query all 17 expected CRM tables without dollar-quoted PL/pgSQL. Current PR #152 head is `315972e0a858937bc890f69ee7fbddc37a7720a2`; exact-head Free quality checks PASS, and the CRM disposable replay rerun is in progress. CRM pgTAP must still pass before the full migration gate is accepted.
+- Vercel Preview for PR #152 is READY on exact head `315972e0a858937bc890f69ee7fbddc37a7720a2`. This is preview build evidence only.
+- PR #147 feature-matrix/ledger parity quality check passes on its latest checked head. The matrix and ledger agree on all 189 IDs and seven provisional progress scores.
+- No shared staging migration, Edge Function deployment, Auth metadata mutation, production change or merge was performed.

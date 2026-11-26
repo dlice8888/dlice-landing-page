@@ -135,3 +135,46 @@ Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false
 - PR #136 merged 24 FK covering indexes for 26 constraints; exact-head disposable replay applied all 58 source migrations and passed 11 pgTAP files / 234 tests. Shared Supabase staging still has 49 applied versions and 9 source-only migrations; no shared DB migration was applied.
 - Feature counts: 189 total, 95 PARTIAL, 88 NOT VERIFIED, 6 BLOCKED, 0 DONE. Two PARTIAL scores remain 58% and 30%; 93 PARTIAL features remain unscored. Domain partial-coverage ratios are published in the remediation register but are not weighted completion scores.
 - Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+## Superseding audit — 25 November 2026
+
+Current row-level distribution: **189 total / 141 PARTIAL / 43 NOT VERIFIED / 5 BLOCKED / 0 DONE**. The 46 new PARTIAL classifications are implementation-start evidence linked to Draft PRs #145/#146; they do not mean deployed, database-replayed, E2E accepted, or complete. PR #145 and #146 remain OPEN Draft.
+
+Current partial coverage = 141/189 = **74.6%**. This is a count of features with implementation started, not the weighted progress of PARTIAL features. Feature weighted percentages are awarded only when the six acceptance dimensions have evidence-backed criteria. Keep unscored partials explicitly unscored; do not substitute a generic percent. Existing defensible scores remain tenant/member isolation 58% provisional and tenant directory/onboarding 30% pending criterion-level rescore.
+
+Live evidence snapshot 25-Nov: Supabase staging 63 applied migrations, 67/67 public tables with RLS, dlice-orders ACTIVE v73 with verify_jwt=false (custom auth guard required), Security Advisor 1 WARN (leaked-password protection disabled), Performance Advisor 83 INFO unused-index suggestions, Health Advisor 0. Vercel Hobby staging Preview READY at commit aed9353; PR #146 Preview READY at stale commit 4406c31, behind current PR head 23e4b6c; Production READY at cca72d3 and was only inspected read-only. PR #146 exact-head quality passed; disposable replay and provider/bank E2E remain open.
+
+### Additional feature starts mapped from PR #145 — 25 November
+
+HR schema and Edge command inventory now include employee listing, attendance events, timesheets, shift schedules, leave requests and branch-scoped payroll; these moved the corresponding five HR features into PARTIAL/IN_PROGRESS, with remaining employee lifecycle, overtime policy, training and recruitment still open. Franchise draft schema includes applications, site/due-diligence reviews, agreement versions, royalty statements and opening gates. CRM adds reward/voucher issuance/redemption/void contracts. Procurement adds supplier invoice and PO/receipt matching contracts. Finance adds AP evidence and payroll journal paths. Executive adds operational alert events. BI adds metric definitions, source watermarks and reconciliation runs. SaaS adds entitlement, usage, invoice and offboarding contracts. These are source implementation starts only; SQL replay, RLS/ACL and positive runtime workflows remain required.
+
+Current weighted progress remains intentionally unscored for these newly-started feature slices until the six dimensions are decomposed and proven. Do not treat a Draft PR, schema draft or contract test as DB/runtime acceptance.
+### POS lifecycle scoring delta — PR #143
+
+Four NOT VERIFIED POS requirements (modifier flow, split tender, hold/resume, offline replay) and one BLOCKED digital receipt requirement now have concrete implementation in PR #143. The five are PARTIAL/IN_PROGRESS, not DONE. The digital receipt is immutable and retrievable, but physical printer/device acceptance remains open. POS now has 12 PARTIAL, 1 NOT VERIFIED (discount/coupon rule engine), 0 BLOCKED. Exact-head disposable replay passed 14 pgTAP files / 375 assertions; staging E2E remains BLOCKED before mutation because the existing Owner Auth app_metadata.platform_owner claim is missing/null. No QA sale was created.
+
+Current total 139 PARTIAL / 45 NOT VERIFIED / 5 BLOCKED / 0 DONE. Of the 44 newly-started features, 43 moved from NOT VERIFIED and one (digital receipt) moved from BLOCKED. The 137 PARTIAL features without a defensible six-dimension numeric score remain explicitly unscored; do not invent percentages.
+### Backup/restore rehearsal progress — PR #148
+
+PR #148 starts one Quality/Compliance/Security feature with a local PostgreSQL 17 dump/restore rehearsal. It verifies committed pre-snapshot data parity, checksum, restored RLS, Tenant A/B isolation and an intentional post-snapshot record boundary using a free GitHub runner. Its workflow is pending; no numeric weighted score is awarded until exact-head CI completes and the criteria are mapped. This does not certify Supabase managed backup/PITR, Auth/Storage recovery or platform RPO/RTO.
+### 150-branch concurrency progress — PR #149
+
+PR #149 starts the load/concurrency feature with a free PostgreSQL 17 fixture of 150 Tenant A branches and Tenant B, 50 concurrent clients, tenant-scoped RLS reads, cross-tenant zero-row checks, and p95/p99 measurements. No completed run is visible yet; no pass or SLO is claimed. This is a database read workload only and must be expanded to API/POS/ERP writes, stock locks, kitchen, Finance and realistic network/data volume before release acceptance.
+
+### Backup/restore drill — exact-head pass
+
+PR #148 workflow `45662909781` passed on PostgreSQL 17.11 and quality workflow `45662909991` passed. Verified 151 branches and events, checksum parity, no pre-snapshot loss, RLS 2/2, Tenant A/B read isolation, zero cross-tenant visibility, and 439 ms local restore verification. Managed Supabase backup/PITR, Auth/Storage restore and production RPO/RTO remain unproven. Do not mark DONE.
+
+
+## Live weighted-score reconciliation — 2026-11-27
+
+The current row-level ledger has **189 features: 145 PARTIAL, 39 NOT VERIFIED, 5 BLOCKED, 0 DONE**. The domain matrix has been reconciled to those 189 stable IDs. PARTIAL coverage is 76.7% (145/189), which measures implementation-start coverage only and is not a weighted completion score.
+
+**Numeric PARTIAL progress:** 2/145 features currently have a defensible weighted numeric score. The feature rows preserve `progress_pct: null` and `scoring_status: NOT_SCORED_FEATURE_LEVEL` until each evidence dimension has an exact artifact. This is intentional: assigning 0% to an implemented foundation or assigning arbitrary 30/50/70% based on a PR would misrepresent progress. The next audit increment must populate each feature's six evidence dimensions and calculate the weighted score from verified artifacts.
+
+**Priority by remaining NOT VERIFIED count:** Branch Operations (5); Menu/Recipe, Procurement, CRM, BI, Integrations and Quality (3 each); Executive, Order, Kitchen, Inventory, Finance, HR and Admin (2 each); POS and SaaS (1 each); Delivery and Franchise (0 each). The five BLOCKED features remain separate release/acceptance gates and are not hidden inside PARTIAL.
+
+Current live blockers: strict Owner app_metadata boolean claim is absent in staging; positive POS staging E2E is not run; POS tender/receipt/cash/settlement/Finance reconciliation tables have zero rows; eight-domain migration replay remains under repair/verification. Both release flags remain false.
+
+
+Score detail: D16-F01 Tenant directory/onboarding = 30% provisional; D16-F02 Tenant/member isolation = 58% provisional. All other 138 PARTIAL features remain unscored pending explicit six-dimension evidence decomposition. These provisional scores are not DONE or release acceptance.
