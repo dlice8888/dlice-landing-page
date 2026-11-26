@@ -11454,7 +11454,7 @@
       "pgTap": "44_ASSERTIONS_PENDING_DISPOSABLE_REPLAY",
       "exact_head_ci": {
         "run_id": 45730055269,
-        "status": "in_progress"
+        "conclusion": "success"
       },
       "staging_e2e": "NOT_RUN",
       "latest_head": "a8ffb2f5f18e11d5cdf63f3abc24234315610f12",
