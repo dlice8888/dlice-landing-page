@@ -165,7 +165,7 @@ begin
  return jsonb_build_object('status','recorded','watermark_id',v.id,'watermark_status',v.status);
 end $$;
 revoke all on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text,uuid) from public,anon,authenticated;
-grant execute on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text) to service_role;
+grant execute on function public.bi_record_source_watermark(uuid,text,timestamptz,timestamptz,timestamptz,bigint,bigint,text,uuid) to service_role;
 
 create or replace function public.bi_create_reconciliation_run(
  p_tenant_id uuid,p_period_start date,p_period_end date,p_source_domain text,p_source_reference text,
