@@ -641,3 +641,6 @@ begin
     execute format('grant select,insert,update,delete on public.%I to service_role',t);
   end loop;
 end $$;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.crm_audit_insert_row() to service_role;
