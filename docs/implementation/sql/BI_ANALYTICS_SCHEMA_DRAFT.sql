@@ -419,3 +419,7 @@ end $$;
 drop trigger if exists bi_snapshot_lineage_guard on public.bi_metric_snapshots;
 create trigger bi_snapshot_lineage_guard before insert or update of status,metric_id,formula_version
  on public.bi_metric_snapshots for each row execute function public.bi_enforce_snapshot_lineage();
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+revoke all on function public.bi_enforce_snapshot_lineage() from public,anon,authenticated;
+grant execute on function public.bi_enforce_snapshot_lineage() to service_role;
