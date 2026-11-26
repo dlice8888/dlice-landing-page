@@ -52,6 +52,7 @@ test("each official domain migration retains server-only RLS and ACL boundaries"
     assert.match(sql, /revoke all on public\\.%I from anon,authenticated/i, `${name}: client revoke missing`);
     assert.match(sql, /grant select,insert,update,delete on public\\.%I to service_role/i, `${name}: service_role grant missing`);
     assert.doesNotMatch(sql, /DESIGN DRAFT ONLY|NOT A MIGRATION/i, `${name}: draft-only SQL marker remains`);
+    assert.doesNotMatch(sql, /public\\.storage\\.objects/i, `${name}: storage schema must not be qualified through public`);
   }
 });
 

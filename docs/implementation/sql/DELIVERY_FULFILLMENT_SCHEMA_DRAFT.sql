@@ -237,7 +237,7 @@ create or replace function public.delivery_record_proof(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v public.delivery_dispatches%rowtype; v_proof public.delivery_proof_of_delivery%rowtype;
- v_object public.storage.objects%rowtype; v_prefix text;
+ v_object storage.objects%rowtype; v_prefix text;
 begin
  select * into v from public.delivery_dispatches where id=p_dispatch_id for update;
  if not found then raise exception using errcode='P0002',message='DELIVERY_DISPATCH_NOT_FOUND'; end if;
@@ -249,7 +249,7 @@ begin
   if p_storage_object_path is null or left(p_storage_object_path,length(v_prefix))<>v_prefix then
    raise exception using errcode='42501',message='POD_OBJECT_PATH_SCOPE_INVALID';
   end if;
-  select * into v_object from public.storage.objects where bucket_id='delivery-proof' and name=p_storage_object_path;
+  select * into v_object from storage.objects where bucket_id='delivery-proof' and name=p_storage_object_path;
   if not found then raise exception using errcode='23514',message='POD_STORAGE_OBJECT_NOT_FOUND'; end if;
   if coalesce(v_object.metadata->>'mimetype','') not in ('image/jpeg','image/png','image/webp','application/pdf') then
    raise exception using errcode='23514',message='POD_MIME_TYPE_NOT_ALLOWED';
