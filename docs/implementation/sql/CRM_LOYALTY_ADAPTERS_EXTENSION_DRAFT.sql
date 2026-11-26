@@ -744,3 +744,7 @@ end;
 $$;
 revoke all on function public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid) to service_role;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.crm_auto_link_paid_transaction_customer() to service_role;
+grant execute on function public.crm_reject_append_only_mutation() to service_role;
