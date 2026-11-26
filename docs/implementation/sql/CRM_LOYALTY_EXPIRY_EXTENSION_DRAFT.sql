@@ -20,7 +20,7 @@ create table if not exists public.crm_loyalty_point_allocations (
   customer_id uuid not null,
   source_entry_id uuid not null,
   point_lot_entry_id uuid not null,
-  allocation_kind text not null check(allocation_kind in ('redemption','redemption_reversal','expiry')),
+  allocation_kind text not null check(allocation_kind in ('redemption','redemption_reversal','earn_reversal','expiry')),
   points_allocated bigint not null check(points_allocated>0),
   created_at timestamptz not null default now(),
   unique(tenant_id,id),
@@ -175,7 +175,7 @@ begin
      order by expires_at,id for update
   loop
     select coalesce(sum(case
-      when allocation_kind='redemption' or allocation_kind='expiry' then points_allocated
+      when allocation_kind in ('redemption','earn_reversal','expiry') then points_allocated
       when allocation_kind='redemption_reversal' then -points_allocated
       else 0 end),0)
       into v_allocated
@@ -342,6 +342,12 @@ begin
     (tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,reverses_entry_id,created_by)
   values(p_tenant_id,p_customer_id,p_entry_kind,p_points,p_idempotency_key,p_source_reference,p_reverses_entry_id,p_actor_user_id)
   returning * into v_entry;
+
+  if p_entry_kind='reversal' and v_original.entry_kind='earn' then
+    insert into public.crm_loyalty_point_allocations
+      (tenant_id,customer_id,source_entry_id,point_lot_entry_id,allocation_kind,points_allocated)
+    values(p_tenant_id,p_customer_id,v_entry.id,v_original.id,'earn_reversal',v_original.points);
+  end if;
 
   if p_entry_kind='reversal' and v_original.entry_kind='redeem' then
     if exists(
