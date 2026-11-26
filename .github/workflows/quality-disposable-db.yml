@@ -1,0 +1,61 @@
+name: Free Quality disposable database replay
+on:
+  push:
+    branches:
+      - "feat/quality-food-safety-supplier-capa-20261126"
+  pull_request:
+    paths:
+      - "supabase/**"
+      - "docs/implementation/sql/QUALITY_COMPLIANCE_SCHEMA_DRAFT.sql"
+      - "docs/implementation/sql/QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql"
+      - "docs/implementation/sql/QUALITY_SOURCE_TRACEABILITY_EXTENSION_DRAFT.sql"
+      - "docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql"
+      - ".github/workflows/quality-disposable-db.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-disposable-db-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  replay-and-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.4.0
+      - name: Initialize local Supabase config when absent
+        run: |
+          if [ ! -f supabase/config.toml ] && [ ! -f supabase/config.json ] && [ ! -f supabase/config.jsonc ]; then
+            supabase init --force
+          fi
+      - name: Start disposable local Supabase stack
+        run: supabase start
+      - name: Replay canonical repository migrations
+        run: supabase db reset
+      - name: Replay Quality schema and atomic adapters in dependency order
+        env:
+          LOCAL_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: |
+          set -euo pipefail
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f docs/implementation/sql/QUALITY_COMPLIANCE_SCHEMA_DRAFT.sql
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f docs/implementation/sql/QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql
+          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 -f docs/implementation/sql/QUALITY_SOURCE_TRACEABILITY_EXTENSION_DRAFT.sql
+      - name: Run Quality pgTAP security and workflow contracts
+        run: |
+          set -euo pipefail
+          mkdir -p supabase/tests
+          cp docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql supabase/tests/quality_compliance.test.sql
+          supabase test db
+      - name: Stop and discard disposable database
+        if: always()
+        run: supabase stop --no-backup
