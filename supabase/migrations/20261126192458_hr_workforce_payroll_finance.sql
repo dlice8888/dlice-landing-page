@@ -1710,3 +1710,8 @@ end $$;
 
 -- External provider dispatch and raw-body signature verification remain disabled
 -- until an exact provider contract and staging credentials are approved.
+
+-- Trigger functions are non-client-callable; service_role retains internal EXECUTE for the global ACL contract.
+grant execute on function public.hr_audit_row_change() to service_role;
+grant execute on function public.hr_reject_employee_lifecycle_event_mutation() to service_role;
+grant execute on function public.hr_reject_payroll_provider_event_mutation() to service_role;
