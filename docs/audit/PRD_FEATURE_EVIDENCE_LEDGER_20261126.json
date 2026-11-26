@@ -797,38 +797,61 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 49
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 60,
+      "scoring_status": "SCORED_PROVISIONAL",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "score": 10,
+          "evidence": [
+            "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: modifier min/max group semantics"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 migration 20261124134101_pos_checkout_lifecycle.sql",
+            "58 pgTAP assertions in pos_checkout_lifecycle.test.sql",
+            "Disposable POS checkout replay run 45410017447 PASS"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "POS Edge action contracts assert hasPerm('pos') and branchAccess(branchId)",
+            "58 pgTAP assertions verify RLS, anon/authenticated table denial, service_role-only RPC execution and immutable receipt ACL"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "Exact-head static quality job 138500956830 PASS",
+            "POS Checkout Lifecycle Disposable Replay run 45410017447 PASS",
+            "KDS offline contract run 45410017695 PASS"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Staging POS E2E run 45410017709 failed before business mutations: STAGING_AUTH_BLOCKED because Owner boolean app_metadata claim and allowlist were not both satisfied."
+          ]
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Live staging query: 6 POS sales, 0 tender rows, 0 receipt rows, 0 cash reconciliations, 0 settlement rows and 0 Finance journal entries."
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -970,38 +993,61 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 52
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 65,
+      "scoring_status": "SCORED_PROVISIONAL",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "score": 15,
+          "evidence": [
+            "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: feature-specific browser/device acceptance remains open"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 migration 20261124134101_pos_checkout_lifecycle.sql",
+            "58 pgTAP assertions in pos_checkout_lifecycle.test.sql",
+            "Disposable POS checkout replay run 45410017447 PASS"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "POS Edge action contracts assert hasPerm('pos') and branchAccess(branchId)",
+            "58 pgTAP assertions verify RLS, anon/authenticated table denial, service_role-only RPC execution and immutable receipt ACL"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "Exact-head static quality job 138500956830 PASS",
+            "POS Checkout Lifecycle Disposable Replay run 45410017447 PASS",
+            "KDS offline contract run 45410017695 PASS"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Staging POS E2E run 45410017709 failed before business mutations: STAGING_AUTH_BLOCKED because Owner boolean app_metadata claim and allowlist were not both satisfied."
+          ]
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Live staging query: 6 POS sales, 0 tender rows, 0 receipt rows, 0 cash reconciliations, 0 settlement rows and 0 Finance journal entries."
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -1033,38 +1079,61 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 53
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 70,
+      "scoring_status": "SCORED_PROVISIONAL",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: feature-specific browser/device acceptance remains open"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 migration 20261124134101_pos_checkout_lifecycle.sql",
+            "58 pgTAP assertions in pos_checkout_lifecycle.test.sql",
+            "Disposable POS checkout replay run 45410017447 PASS"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "POS Edge action contracts assert hasPerm('pos') and branchAccess(branchId)",
+            "58 pgTAP assertions verify RLS, anon/authenticated table denial, service_role-only RPC execution and immutable receipt ACL"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "Exact-head static quality job 138500956830 PASS",
+            "POS Checkout Lifecycle Disposable Replay run 45410017447 PASS",
+            "KDS offline contract run 45410017695 PASS"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Staging POS E2E run 45410017709 failed before business mutations: STAGING_AUTH_BLOCKED because Owner boolean app_metadata claim and allowlist were not both satisfied."
+          ]
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Live staging query: 6 POS sales, 0 tender rows, 0 receipt rows, 0 cash reconciliations, 0 settlement rows and 0 Finance journal entries."
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -1151,38 +1220,61 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 55
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 70,
+      "scoring_status": "SCORED_PROVISIONAL",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: feature-specific browser/device acceptance remains open"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 migration 20261124134101_pos_checkout_lifecycle.sql",
+            "58 pgTAP assertions in pos_checkout_lifecycle.test.sql",
+            "Disposable POS checkout replay run 45410017447 PASS"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "POS Edge action contracts assert hasPerm('pos') and branchAccess(branchId)",
+            "58 pgTAP assertions verify RLS, anon/authenticated table denial, service_role-only RPC execution and immutable receipt ACL"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "Exact-head static quality job 138500956830 PASS",
+            "POS Checkout Lifecycle Disposable Replay run 45410017447 PASS",
+            "KDS offline contract run 45410017695 PASS"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Staging POS E2E run 45410017709 failed before business mutations: STAGING_AUTH_BLOCKED because Owner boolean app_metadata claim and allowlist were not both satisfied."
+          ]
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Live staging query: 6 POS sales, 0 tender rows, 0 receipt rows, 0 cash reconciliations, 0 settlement rows and 0 Finance journal entries."
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -1269,38 +1361,61 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 57
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 70,
+      "scoring_status": "SCORED_PROVISIONAL",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: feature-specific browser/device acceptance remains open"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 20,
+          "evidence": [
+            "PR #143 migration 20261124134101_pos_checkout_lifecycle.sql",
+            "58 pgTAP assertions in pos_checkout_lifecycle.test.sql",
+            "Disposable POS checkout replay run 45410017447 PASS"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "POS Edge action contracts assert hasPerm('pos') and branchAccess(branchId)",
+            "58 pgTAP assertions verify RLS, anon/authenticated table denial, service_role-only RPC execution and immutable receipt ACL"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "score": 15,
+          "evidence": [
+            "Exact-head static quality job 138500956830 PASS",
+            "POS Checkout Lifecycle Disposable Replay run 45410017447 PASS",
+            "KDS offline contract run 45410017695 PASS"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Staging POS E2E run 45410017709 failed before business mutations: STAGING_AUTH_BLOCKED because Owner boolean app_metadata claim and allowlist were not both satisfied."
+          ]
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            "Live staging query: 6 POS sales, 0 tender rows, 0 receipt rows, 0 cash reconciliations, 0 settlement rows and 0 Finance journal entries."
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
