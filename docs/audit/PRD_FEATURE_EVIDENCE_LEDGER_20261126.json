@@ -2,13 +2,15 @@
   "schema_version": "1.0.0",
   "generated_at": "2026-11-26",
   "repository": "dlice8888/dlice-landing-page",
-  "source_matrix_commit": "35f7f816bf0155be112aab8634830960b22e229c",
+  "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b",
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 141,
-    "NOT VERIFIED": 43,
-    "BLOCKED": 5
+    "PARTIAL": 145,
+    "NOT VERIFIED": 39,
+    "BLOCKED": 5,
+    "DONE": 0,
+    "TOTAL": 189
   },
   "status_semantics": "Preserve source matrix classifications. Cross-walk active PRs by stable feature_id before reclassification; count each feature once. Score PARTIAL features only from evidence dimensions weighted 20/20/15/15/20/10. DONE requires 100%, exact-head code/database/auth/workflow/E2E/reconciliation evidence, with no blocked or skipped acceptance.",
   "feature_rows": [
@@ -11430,7 +11432,7 @@
       "118": "explicit staging mutation confirmation policy",
       "119": "scheduled staging mutation policy"
     },
-    "note": "Open-PR feature crosswalk is maintained per stable feature ID. Multiple PRs are attached without double counting. PR mapping and code presence do not constitute verified completion; scores remain null until all six evidence dimensions are proven.",
+    "note": "Current matrix and stable feature ledger agree at 145 PARTIAL / 39 NOT VERIFIED / 5 BLOCKED / 0 DONE. Newly started PR work moves a feature from NOT VERIFIED to PARTIAL, but progress remains unscored until six evidence dimensions are proven. Multiple PRs do not double-count feature IDs.",
     "crm_increment": {
       "pr": 145,
       "head": "dd2a17ace765b954c5dbb86666fe750a24f32ac4",
@@ -11713,11 +11715,13 @@
       },
       "ci_status": "PR148_AND_PR149_EVIDENCE_REVIEWED_SEPARATELY",
       "limitations": "Disposable restore and synthetic 150-branch concurrency do not prove managed Supabase PITR, production RPO/RTO or full browser/API scale."
-    }
+    },
+    "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
     "PARTIAL": 145,
     "NOT VERIFIED": 39,
-    "BLOCKED": 5
+    "BLOCKED": 5,
+    "DONE": 0
   }
 }
