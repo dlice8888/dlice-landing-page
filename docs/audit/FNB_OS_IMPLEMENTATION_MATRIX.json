@@ -28,7 +28,8 @@
             "line": 32
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F01"
         },
         {
           "requirement": "Live sales monitor (day/week/month)",
@@ -40,7 +41,8 @@
             "line": 33
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F02"
         },
         {
           "requirement": "Branch ranking, region/format comparison",
@@ -57,7 +59,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F03"
         },
         {
           "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
@@ -69,7 +72,8 @@
             "line": 35
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F04"
         },
         {
           "requirement": "Critical stock, expiry, waste alerts",
@@ -80,7 +84,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 36
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D01-F05"
         },
         {
           "requirement": "Sales-drop / food-cost anomaly detection",
@@ -91,7 +96,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 37
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D01-F06"
         },
         {
           "requirement": "Approval center and pending approvals",
@@ -103,7 +109,8 @@
             "line": 38
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F07"
         },
         {
           "requirement": "Target vs actual and executive reports",
@@ -120,7 +127,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F08"
         },
         {
           "requirement": "Company → region → branch → shift → transaction drill-down",
@@ -131,7 +139,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D01-F09"
         },
         {
           "requirement": "Alert → assign task → resolve → audit result",
@@ -148,7 +157,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds executive operational alert records and event transitions alongside Owner ranking and target publishing. Assignment/closure UI, alert rule accuracy and runtime proof remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D01-F10"
         }
       ],
       "status": "PARTIAL",
@@ -182,7 +192,8 @@
             "line": 46
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F01"
         },
         {
           "requirement": "Cart, product selection, quantity updates",
@@ -194,7 +205,8 @@
             "line": 47
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F02"
         },
         {
           "requirement": "Dine-in, takeaway, pickup, delivery parity",
@@ -206,7 +218,8 @@
             "line": 48
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F03"
         },
         {
           "requirement": "Variants, toppings, special instructions",
@@ -223,7 +236,8 @@
           ],
           "work_started_at": "2026-11-24",
           "work_evidence": "POS cashier UI now loads active modifier groups, renders required/optional selectors, recalculates estimated price, and submits selected modifier codes. Server remains authoritative; staging E2E asserts modifier price snapshot is propagated into the KDS ticket. Full browser/device acceptance and modifier min/max group semantics remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F04"
         },
         {
           "requirement": "Discounts, coupons, vouchers, special pricing",
@@ -234,7 +248,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 50
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D02-F05"
         },
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
@@ -246,7 +261,8 @@
             "line": 51
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F06"
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
@@ -263,7 +279,8 @@
           ],
           "work_started_at": "2026-11-24",
           "work_evidence": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F07"
         },
         {
           "requirement": "Hold/resume order",
@@ -280,7 +297,8 @@
           ],
           "work_started_at": "2026-11-24",
           "work_evidence": "POS UI can hold a cart and list/resume only the current cashier's active branch holds. Server persists payload fingerprints, enforces shift/actor/branch scope, expiry and stable sale idempotency. Browser lifecycle acceptance remains to run.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F08"
         },
         {
           "requirement": "Void, refund, return with reason and approval",
@@ -292,7 +310,8 @@
             "line": 54
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F09"
         },
         {
           "requirement": "Receipt printing/digital receipt",
@@ -309,7 +328,8 @@
           ],
           "work_started_at": "2026-11-24",
           "work_evidence": "POS sales history exposes a print action; server persists one immutable receipt snapshot per paid sale with item, modifier, substitution and tender details. Browser printer/device and customer delivery acceptance remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F10"
         },
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
@@ -321,7 +341,8 @@
             "line": 56
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F11"
         },
         {
           "requirement": "Offline sales queue and safe resynchronization",
@@ -338,7 +359,8 @@
           ],
           "work_started_at": "2026-11-24",
           "work_evidence": "POS UI uses IndexedDB queue and existing online/offline recovery; offline replay now supports modifier and split tender operations with a shared idempotency key and receipt ledger. Staging E2E covers direct/offline duplicate replay and changed-payload rejection; browser network-loss fault injection remains open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F12"
         },
         {
           "requirement": "Separate order, payment, fulfillment statuses",
@@ -350,7 +372,8 @@
             "line": 58
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D02-F13"
         }
       ],
       "status": "PARTIAL",
@@ -384,7 +407,8 @@
             "line": 63
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F01"
         },
         {
           "requirement": "WhatsApp, marketplace, additional channels",
@@ -395,7 +419,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 64
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D03-F02"
         },
         {
           "requirement": "Hours, cutoff, menu availability, branch capacity",
@@ -407,7 +432,8 @@
             "line": 65
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F03"
         },
         {
           "requirement": "Branch assignment by area/capacity",
@@ -419,7 +445,8 @@
             "line": 66
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F04"
         },
         {
           "requirement": "Unique business order number",
@@ -431,7 +458,8 @@
             "line": 67
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F05"
         },
         {
           "requirement": "Consistent status/timeline across channels",
@@ -443,7 +471,8 @@
             "line": 68
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F06"
         },
         {
           "requirement": "Duplicate orders, delayed payment, failed order handling",
@@ -460,7 +489,8 @@
           ],
           "work_started_at": "2026-11-21",
           "work_evidence": "PR #123 adds stable 256-bit checkout idempotency, canonical request fingerprint, advisory-lock replay protection, and pgTAP/Node contract tests. Delayed-payment expiry, rejection compensation, browser fault-injection, and concurrent runtime tests remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F07"
         },
         {
           "requirement": "Preparation ETA and exception escalation",
@@ -471,7 +501,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 70
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D03-F08"
         },
         {
           "requirement": "Cancellation/refund and customer order history",
@@ -483,7 +514,8 @@
             "line": 71
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F09"
         },
         {
           "requirement": "Customer notifications on each state",
@@ -495,7 +527,8 @@
             "line": 72
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D03-F10"
         }
       ],
       "status": "PARTIAL",
@@ -531,7 +564,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
           "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F01"
         },
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
@@ -542,7 +576,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 78
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D04-F02"
         },
         {
           "requirement": "Queue priority and prep SLA",
@@ -556,7 +591,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
           "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F03"
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
@@ -568,7 +604,8 @@
             "line": 80
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F04"
         },
         {
           "requirement": "Recipes, portion/yield and waste tolerance",
@@ -580,7 +617,8 @@
             "line": 81
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F05"
         },
         {
           "requirement": "Prep lists and batch planning",
@@ -592,7 +630,8 @@
             "line": 82
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F06"
         },
         {
           "requirement": "Actual material consumption",
@@ -604,7 +643,8 @@
             "line": 83
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F07"
         },
         {
           "requirement": "QC, temperature, shelf life and spoilage",
@@ -615,7 +655,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 84
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D04-F08"
         },
         {
           "requirement": "Made-to-order vs batch production separation",
@@ -627,7 +668,8 @@
             "line": 85
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D04-F09"
         },
         {
           "requirement": "Theoretical vs actual usage / waste variance",
@@ -638,7 +680,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 86
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D04-F10"
         }
       ],
       "status": "PARTIAL",
@@ -672,7 +715,8 @@
             "line": 91
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F01"
         },
         {
           "requirement": "Per-branch availability",
@@ -684,7 +728,8 @@
             "line": 92
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F02"
         },
         {
           "requirement": "Central, regional and branch-specific pricing",
@@ -698,7 +743,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
           "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F03"
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
@@ -710,7 +756,8 @@
             "line": 94
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F04"
         },
         {
           "requirement": "Nested BOM, unit conversions, yield and prep loss",
@@ -721,7 +768,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 95
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D05-F05"
         },
         {
           "requirement": "Recipe versions and effective dates",
@@ -733,7 +781,8 @@
             "line": 96
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F06"
         },
         {
           "requirement": "Cost per serving and contribution margin",
@@ -744,7 +793,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 97
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D05-F07"
         },
         {
           "requirement": "Allergens and regulated product information",
@@ -755,7 +805,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 98
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D05-F08"
         },
         {
           "requirement": "Availability by schedule and stock",
@@ -767,7 +818,8 @@
             "line": 99
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F09"
         },
         {
           "requirement": "Recipe change request → costing → approval → rollout",
@@ -779,7 +831,8 @@
             "line": 100
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D05-F10"
         },
         {
           "requirement": "POS/production uses the same approved recipe version",
@@ -790,7 +843,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 101
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D05-F11"
         }
       ],
       "status": "PARTIAL",
@@ -824,7 +878,8 @@
             "line": 106
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F01"
         },
         {
           "requirement": "Stock movement ledger",
@@ -836,7 +891,8 @@
             "line": 107
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F02"
         },
         {
           "requirement": "Warehouse/storage/bin hierarchy",
@@ -850,7 +906,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
           "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F03"
         },
         {
           "requirement": "Purchase/use units and conversions",
@@ -862,7 +919,8 @@
             "line": 109
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F04"
         },
         {
           "requirement": "FIFO/FEFO, lot/batch and expiry",
@@ -873,7 +931,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 110
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D06-F05"
         },
         {
           "requirement": "Available/reserved/in-transit/blocked balances",
@@ -885,7 +944,8 @@
             "line": 111
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F06"
         },
         {
           "requirement": "Min/max, safety stock and reorder point",
@@ -899,7 +959,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_percent": null,
           "progress_note": "Implementation foundation verified; weighted acceptance score remains unscored pending decomposition and workflow evidence.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F07"
         },
         {
           "requirement": "Transfer lifecycle draft → approve → pick → ship → receive → reconcile",
@@ -911,7 +972,8 @@
             "line": 113
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F08"
         },
         {
           "requirement": "Stock count/cycle count and variance adjustment",
@@ -923,7 +985,8 @@
             "line": 114
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F09"
         },
         {
           "requirement": "Stock valuation",
@@ -934,7 +997,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 115
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D06-F10"
         },
         {
           "requirement": "Adjustments with reasons/approvals/audit",
@@ -946,7 +1010,8 @@
             "line": 116
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F11"
         },
         {
           "requirement": "PO receipt → stock ledger → balance reconciliation",
@@ -958,7 +1023,8 @@
             "line": 117
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D06-F12"
         }
       ],
       "status": "PARTIAL",
@@ -992,7 +1058,8 @@
             "line": 122
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F01"
         },
         {
           "requirement": "Supplier price lists, contracts and price history",
@@ -1003,7 +1070,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 123
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D07-F02"
         },
         {
           "requirement": "Purchase requisition from branch/warehouse/central kitchen",
@@ -1015,7 +1083,8 @@
             "line": 124
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F03"
         },
         {
           "requirement": "Consolidated demand across branches",
@@ -1026,7 +1095,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 125
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D07-F04"
         },
         {
           "requirement": "Purchase order draft, submit, approval, ordered",
@@ -1038,7 +1108,8 @@
             "line": 126
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F05"
         },
         {
           "requirement": "Approval limits by value/category",
@@ -1050,7 +1121,8 @@
             "line": 127
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F06"
         },
         {
           "requirement": "Goods received note and quantity/quality inspection",
@@ -1062,7 +1134,8 @@
             "line": 128
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F07"
         },
         {
           "requirement": "Three-way match: PO, receipt, supplier invoice",
@@ -1079,7 +1152,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds supplier invoice evidence and PO/receipt invoice-match RPC contracts. Tolerance policy, full three-way match E2E and AP posting remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F08"
         },
         {
           "requirement": "AP handoff and supplier payment",
@@ -1096,7 +1170,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D07-F09"
         },
         {
           "requirement": "Supplier return and supplier performance",
@@ -1107,7 +1182,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 131
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D07-F10"
         }
       ],
       "status": "PARTIAL",
@@ -1141,7 +1217,8 @@
             "line": 136
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D08-F01"
         },
         {
           "requirement": "Opening and closing checklists",
@@ -1153,7 +1230,8 @@
             "line": 137
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D08-F02"
         },
         {
           "requirement": "Opening readiness changes branch operating status",
@@ -1164,7 +1242,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 138
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F03"
         },
         {
           "requirement": "Daily tasks, due dates and escalation",
@@ -1175,7 +1254,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 139
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F04"
         },
         {
           "requirement": "SOP and work instructions",
@@ -1187,7 +1267,8 @@
             "line": 140
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D08-F05"
         },
         {
           "requirement": "Cleanliness, equipment and safety checks",
@@ -1199,7 +1280,8 @@
             "line": 141
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D08-F06"
         },
         {
           "requirement": "Photo evidence",
@@ -1210,7 +1292,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 142
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F07"
         },
         {
           "requirement": "Incidents and corrective actions",
@@ -1221,7 +1304,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 143
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F08"
         },
         {
           "requirement": "Equipment maintenance",
@@ -1232,7 +1316,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 144
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F09"
         },
         {
           "requirement": "Branch audit and compliance score",
@@ -1243,7 +1328,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 145
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D08-F10"
         }
       ],
       "status": "PARTIAL",
@@ -1277,7 +1363,8 @@
             "line": 150
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F01"
         },
         {
           "requirement": "Address validation and delivery quote",
@@ -1294,7 +1381,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F02"
         },
         {
           "requirement": "Courier booking / Biteship integration",
@@ -1311,7 +1399,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F03"
         },
         {
           "requirement": "Dispatch and shipment tracking",
@@ -1328,7 +1417,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F04"
         },
         {
           "requirement": "Proof of delivery",
@@ -1345,7 +1435,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F05"
         },
         {
           "requirement": "Cancel/retry/provider exception handling",
@@ -1362,7 +1453,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F06"
         },
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
@@ -1379,7 +1471,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F07"
         },
         {
           "requirement": "Delivery completion notification",
@@ -1391,7 +1484,8 @@
             "line": 157
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D09-F08"
         }
       ],
       "status": "PARTIAL",
@@ -1425,7 +1519,8 @@
             "line": 162
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F01"
         },
         {
           "requirement": "Consent and communication preferences",
@@ -1442,7 +1537,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F02"
         },
         {
           "requirement": "Customer segments",
@@ -1459,7 +1555,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F03"
         },
         {
           "requirement": "Loyalty points and tiers",
@@ -1476,7 +1573,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F04"
         },
         {
           "requirement": "Rewards and vouchers/coupons",
@@ -1493,7 +1591,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds reward/voucher entities and eligibility, redemption, consume/void RPC contracts. Provider delivery, staging replay and redemption workflow remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F05"
         },
         {
           "requirement": "Referral program",
@@ -1504,7 +1603,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 167
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D10-F06"
         },
         {
           "requirement": "Campaign management and ROI",
@@ -1521,7 +1621,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D10-F07"
         },
         {
           "requirement": "Feedback/reviews/support cases",
@@ -1532,7 +1633,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 169
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D10-F08"
         },
         {
           "requirement": "Repeat purchase and customer lifetime analysis",
@@ -1543,7 +1645,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 170
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D10-F09"
         }
       ],
       "status": "PARTIAL",
@@ -1577,7 +1680,8 @@
             "line": 175
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F01"
         },
         {
           "requirement": "Cash/bank, settlement creation and matching",
@@ -1589,7 +1693,8 @@
             "line": 176
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F02"
         },
         {
           "requirement": "Payment provider fee and settlement variance",
@@ -1600,7 +1705,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 177
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D11-F03"
         },
         {
           "requirement": "AR/AP subledgers and aging",
@@ -1617,7 +1723,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds supplier invoice/AP evidence and payment-intent orchestration. Full AR/AP subledger and aging reports remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F04"
         },
         {
           "requirement": "Chart of accounts and general ledger",
@@ -1629,7 +1736,8 @@
             "line": 179
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F05"
         },
         {
           "requirement": "Automated journals from POS/procurement/payroll",
@@ -1646,7 +1754,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F06"
         },
         {
           "requirement": "Bank reconciliation",
@@ -1658,7 +1767,8 @@
             "line": 181
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F07"
         },
         {
           "requirement": "Tax and invoicing",
@@ -1670,7 +1780,8 @@
             "line": 182
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F08"
         },
         {
           "requirement": "Budgets and branch P&L",
@@ -1681,7 +1792,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 183
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D11-F09"
         },
         {
           "requirement": "Consolidated financial statements",
@@ -1692,7 +1804,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 184
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D11-F10"
         },
         {
           "requirement": "Period close/reopen and backdated-posting controls",
@@ -1704,7 +1817,8 @@
             "line": 185
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F11"
         },
         {
           "requirement": "Revenue vs cash received/settlement distinction",
@@ -1716,7 +1830,8 @@
             "line": 186
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D11-F12"
         }
       ],
       "status": "PARTIAL",
@@ -1755,7 +1870,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F01"
         },
         {
           "requirement": "Organization hierarchy and job positions",
@@ -1767,7 +1883,8 @@
             "line": 192
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F02"
         },
         {
           "requirement": "Attendance and timesheets",
@@ -1784,7 +1901,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F03"
         },
         {
           "requirement": "Shift scheduling and replacement",
@@ -1801,7 +1919,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F04"
         },
         {
           "requirement": "Leave and overtime",
@@ -1818,7 +1937,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F05"
         },
         {
           "requirement": "Payroll calculation/integration",
@@ -1835,7 +1955,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F06"
         },
         {
           "requirement": "Labor cost by branch",
@@ -1852,7 +1973,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D12-F07"
         },
         {
           "requirement": "Training/certification and performance reviews",
@@ -1863,7 +1985,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 198
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D12-F08"
         },
         {
           "requirement": "Recruitment/onboarding/offboarding",
@@ -1874,7 +1997,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 199
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D12-F09"
         }
       ],
       "status": "PARTIAL",
@@ -1908,7 +2032,8 @@
             "line": 204
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F01"
         },
         {
           "requirement": "Franchise directory/application",
@@ -1925,7 +2050,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F02"
         },
         {
           "requirement": "Site selection and feasibility",
@@ -1942,7 +2068,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds franchise site/application/due-diligence records and review RPCs, plus independently checked opening gates. Site scorecard/forecast and ongoing compliance performance remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F03"
         },
         {
           "requirement": "Opening project and readiness",
@@ -1954,7 +2081,8 @@
             "line": 207
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F04"
         },
         {
           "requirement": "Agreements and contract expiry",
@@ -1971,7 +2099,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F05"
         },
         {
           "requirement": "Royalty calculation and reconciliation",
@@ -1988,7 +2117,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F06"
         },
         {
           "requirement": "Territory and franchise-specific access",
@@ -2005,7 +2135,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F07"
         },
         {
           "requirement": "Franchise compliance and performance",
@@ -2022,7 +2153,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds franchise site/application/due-diligence records and review RPCs, plus independently checked opening gates. Site scorecard/forecast and ongoing compliance performance remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D13-F08"
         }
       ],
       "status": "PARTIAL",
@@ -2056,7 +2188,8 @@
             "line": 216
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F01"
         },
         {
           "requirement": "Official KPI dictionary and versioning",
@@ -2073,7 +2206,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F02"
         },
         {
           "requirement": "Net sales/AOV/gross margin",
@@ -2085,7 +2219,8 @@
             "line": 218
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F03"
         },
         {
           "requirement": "Food cost %, labor cost %, waste %",
@@ -2102,7 +2237,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F04"
         },
         {
           "requirement": "Stock variance and fulfillment/cancellation rates",
@@ -2114,7 +2250,8 @@
             "line": 220
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F05"
         },
         {
           "requirement": "Branch benchmarking by comparable cohorts",
@@ -2131,7 +2268,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F06"
         },
         {
           "requirement": "Demand forecasting and accuracy monitoring",
@@ -2142,7 +2280,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 222
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D14-F07"
         },
         {
           "requirement": "Data quality monitoring and anomaly detection",
@@ -2159,7 +2298,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds versioned metric definitions, source watermarks, reconciliation runs, source lineage and immutable snapshots. Data-quality anomaly rules and alert closure remain incomplete.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D14-F08"
         },
         {
           "requirement": "Export and scheduled executive reports",
@@ -2170,7 +2310,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 224
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D14-F09"
         },
         {
           "requirement": "Alert → action → measured outcome",
@@ -2181,7 +2322,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 225
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D14-F10"
         }
       ],
       "status": "PARTIAL",
@@ -2215,7 +2357,8 @@
             "line": 230
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F01"
         },
         {
           "requirement": "Branch assignments and scope enforcement",
@@ -2227,7 +2370,8 @@
             "line": 231
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F02"
         },
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
@@ -2240,7 +2384,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete.",
+          "feature_id": "D15-F03"
         },
         {
           "requirement": "Audit logs for sensitive actions",
@@ -2252,7 +2397,8 @@
             "line": 233
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F04"
         },
         {
           "requirement": "Delegated approval policies and separation of duties",
@@ -2264,7 +2410,8 @@
             "line": 234
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F05"
         },
         {
           "requirement": "Sessions/devices and access reviews",
@@ -2275,7 +2422,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 235
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D15-F06"
         },
         {
           "requirement": "Recovery and offboarding",
@@ -2286,7 +2434,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 236
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D15-F07"
         },
         {
           "requirement": "API/database deny-by-default and direct-table protection",
@@ -2298,7 +2447,8 @@
             "line": 237
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F08"
         },
         {
           "requirement": "Cross-tenant isolation",
@@ -2320,7 +2470,8 @@
             "supplemental_rls_rpc": "6/6",
             "auth_actions": "230/230",
             "session_cleanup": "HTTP 204 for both"
-          }
+          },
+          "feature_id": "D15-F09"
         },
         {
           "requirement": "Permission changes themselves audited",
@@ -2334,7 +2485,8 @@
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_reference": "https://github.com/dlice8888/dlice-landing-page/pull/120",
           "work_note": "Atomic audited RPC, Edge Function fail-closed path, pgTAP and source-contract coverage, and disposable migration replay pass; shared staging runtime acceptance remains pending.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D15-F10"
         }
       ],
       "status": "PARTIAL",
@@ -2408,7 +2560,8 @@
             "earned_total": 30,
             "scoring_note": "Implementation/test progress only; no invitation acceptance, default branch provisioning, plan lifecycle, browser/API E2E or live Auth acceptance."
           },
-          "progress_status": "SCORED_PROVISIONAL"
+          "progress_status": "SCORED_PROVISIONAL",
+          "feature_id": "D16-F01"
         },
         {
           "requirement": "Tenant/member isolation in database and APIs",
@@ -2469,7 +2622,8 @@
             "supplemental_rls_rpc": "6/6",
             "auth_actions": "230/230",
             "session_cleanup": "HTTP 204 for both"
-          }
+          },
+          "feature_id": "D16-F02"
         },
         {
           "requirement": "Plans, subscriptions, entitlements and quotas",
@@ -2486,7 +2640,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D16-F03"
         },
         {
           "requirement": "Billing, invoices and usage metering",
@@ -2503,7 +2658,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D16-F04"
         },
         {
           "requirement": "Tenant settings and suspension",
@@ -2520,7 +2676,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds subscription/entitlement checks, usage events, invoices/payments, and offboarding request/approval contracts. API-wide enforcement, billing provider settlement and deletion/export E2E remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D16-F05"
         },
         {
           "requirement": "Support access with approval/audit",
@@ -2531,7 +2688,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 249
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D16-F06"
         },
         {
           "requirement": "Export/offboarding and data deletion policy",
@@ -2548,7 +2706,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds subscription/entitlement checks, usage events, invoices/payments, and offboarding request/approval contracts. API-wide enforcement, billing provider settlement and deletion/export E2E remain open.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D16-F07"
         },
         {
           "requirement": "Multiple companies sharing one platform safely",
@@ -2565,7 +2724,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #149 adds exact-head synthetic 150-branch concurrent tenant isolation read probes; 50 concurrent clients and 4 workers passed on disposable evidence. This does not prove full application/API load or staging E2E.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D16-F08"
         }
       ],
       "status": "PARTIAL",
@@ -2599,7 +2759,8 @@
             "line": 256
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F01"
         },
         {
           "requirement": "Payment provider callback signature and status validation",
@@ -2616,7 +2777,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #146 adds Xendit Payout v3 adapter, signed webhook verification, item-level payroll payout dispatch, Finance clearing, bank statement matching and reconciliation contracts. Exact-head quality passed on 23e4b6c; disposable database replay and provider/bank runtime E2E remain unverified.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F02"
         },
         {
           "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
@@ -2627,7 +2789,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 258
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D17-F03"
         },
         {
           "requirement": "Webhooks and event log",
@@ -2639,7 +2802,8 @@
             "line": 259
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F04"
         },
         {
           "requirement": "Idempotency and replay protection",
@@ -2651,7 +2815,8 @@
             "line": 260
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F05"
         },
         {
           "requirement": "Retry/backoff/dead-letter queue",
@@ -2663,7 +2828,8 @@
             "line": 261
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F06"
         },
         {
           "requirement": "Integration health and alerting",
@@ -2674,7 +2840,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 262
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D17-F07"
         },
         {
           "requirement": "Secret storage/rotation",
@@ -2686,7 +2853,8 @@
             "line": 263
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D17-F08"
         },
         {
           "requirement": "Import/export and catalog synchronization",
@@ -2697,7 +2865,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 264
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D17-F09"
         }
       ],
       "status": "PARTIAL",
@@ -2731,7 +2900,8 @@
             "line": 269
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F01"
         },
         {
           "requirement": "Direct access to internal stock/procurement/audit data",
@@ -2743,7 +2913,8 @@
             "line": 270
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F02"
         },
         {
           "requirement": "Exact-origin CORS",
@@ -2756,7 +2927,8 @@
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete."
+          "reclassification_reason": "Moved from NOT VERIFIED to PARTIAL because concrete implementation/test evidence exists; runtime acceptance remains incomplete.",
+          "feature_id": "D18-F03"
         },
         {
           "requirement": "Custom auth/permission checks on shared endpoint",
@@ -2768,7 +2940,8 @@
             "line": 272
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F04"
         },
         {
           "requirement": "Leaked-password protection",
@@ -2787,7 +2960,8 @@
           "work_started_at": "2026-11-21",
           "work_evidence": "PR #124 adds a free k-anonymity breached-password check to the official Owner bootstrap/staff create/staff reset flows. Supabase-native protection remains disabled; direct Auth API bypass and complete password mutation coverage remain external acceptance blockers.",
           "external_action_required": true,
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F05"
         },
         {
           "requirement": "Food safety, temperature, allergens, recall",
@@ -2804,7 +2978,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #150 adds food safety policy, lot traceability, allergen/temperature inspection, quarantine, independent release/destruction and recall workflow code/contracts. SQL replay and staging E2E not yet run.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F06"
         },
         {
           "requirement": "Supplier quality, quarantine, corrective actions",
@@ -2821,7 +2996,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #150 adds supplier inspection, quarantine, nonconformance and CAPA workflow code/contracts. Receipt/lot automatic integration and staging E2E remain unproven.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F07"
         },
         {
           "requirement": "Backup and restore drill / RPO / RTO",
@@ -2838,7 +3014,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #148 exact-head 2456f6587891349fa3f99134f45f847e0ef8a1c1: workflow 45662909781 PASS on PostgreSQL 17.11 and quality workflow 45662909991 PASS. Restored 151 branches/151 pre-snapshot events; checksum 60dc0250940fe4093cb9ec65b4265ff9 matched; zero pre-snapshot committed rows lost; one intentional post-snapshot row excluded; RLS restored on 2/2 tables; Tenant A sees 150/150 and Tenant B 1/1; cross-tenant visible rows 0; local restore verification 439ms. Remaining gap: managed Supabase backup/PITR and Auth/Storage restore evidence, approved RPO/RTO, restore of representative app schema, runbook and repeatability.",
-          "progress_status": "PARTIAL_LOCAL_REHEARSAL_PASS_MANAGED_BACKUP_GAP"
+          "progress_status": "PARTIAL_LOCAL_REHEARSAL_PASS_MANAGED_BACKUP_GAP",
+          "feature_id": "D18-F08"
         },
         {
           "requirement": "Monitoring, system health and incident runbooks",
@@ -2850,7 +3027,8 @@
             "line": 277
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F09"
         },
         {
           "requirement": "Load/concurrency test for 150 branches",
@@ -2867,7 +3045,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #149 adds a free PostgreSQL 17 local fixture with Tenant A 150 branches and Tenant B one branch, RLS-scoped authenticated reads, 50 concurrent pgbench clients, cross-tenant zero-row assertions and p95/p99 measurements. Workflow result is not yet verified; it is a database read probe, not a full application/API load test.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F10"
         },
         {
           "requirement": "Pilot, rollout and rollback",
@@ -2878,7 +3057,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 279
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D18-F11"
         },
         {
           "requirement": "Workflow",
@@ -2889,7 +3069,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 282
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D18-F12"
         },
         {
           "requirement": "Order-to-Cash",
@@ -2901,7 +3082,8 @@
             "line": 284
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F13"
         },
         {
           "requirement": "Procure-to-Pay",
@@ -2913,7 +3095,8 @@
             "line": 285
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F14"
         },
         {
           "requirement": "Forecast-to-Production",
@@ -2925,7 +3108,8 @@
             "line": 286
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F15"
         },
         {
           "requirement": "Record-to-Report",
@@ -2937,7 +3121,8 @@
             "line": 287
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F16"
         },
         {
           "requirement": "Stock transfer and count",
@@ -2949,7 +3134,8 @@
             "line": 288
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F17"
         },
         {
           "requirement": "Authentication and permissions",
@@ -2961,7 +3147,8 @@
             "line": 289
           },
           "work_status": "GAP_REMEDIATION_REQUIRED",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F18"
         },
         {
           "requirement": "Responsive UX and accessibility",
@@ -2972,7 +3159,8 @@
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 290
           },
-          "work_status": "QUEUED"
+          "work_status": "QUEUED",
+          "feature_id": "D18-F19"
         },
         {
           "requirement": "Backup, recovery, scale and rollout",
@@ -2990,7 +3178,8 @@
           ],
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #148 passes local disposable PostgreSQL restore/checksum/RLS/tenant isolation drill; PR #149 passes synthetic 150-branch concurrent tenant read probe. Managed Supabase PITR, production RPO/RTO and full rollout/rollback remain unproven.",
-          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "feature_id": "D18-F20"
         }
       ],
       "status": "PARTIAL",
@@ -5498,5 +5687,12 @@
     "not_verified": 43,
     "blocked": 5,
     "done": 0
+  },
+  "crosswalk_ledger": {
+    "path": "docs/audit/PRD_FEATURE_EVIDENCE_LEDGER_20261126.json",
+    "blob_sha": "188dfc17d94551dd9196a3ff0497dcd44454f62f",
+    "feature_count": 189,
+    "stable_id_scheme": "D{domain_number_2_digits}-F{feature_number_2_digits}",
+    "validation": "All 189 matrix rows matched exactly one ledger row by domain and requirement; feature IDs are unique; audit_status values match. Statuses remain PARTIAL/NOT VERIFIED/BLOCKED; no feature promoted to DONE."
   }
 }
