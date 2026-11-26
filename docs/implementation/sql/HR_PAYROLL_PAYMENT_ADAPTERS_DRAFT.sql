@@ -447,3 +447,6 @@ end $$;
 
 -- External provider dispatch and raw-body signature verification remain disabled
 -- until an exact provider contract and staging credentials are approved.
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.hr_reject_payroll_provider_event_mutation() to service_role;
