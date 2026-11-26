@@ -36,10 +36,13 @@ jobs:
           version: 3.4.0
       - name: Initialize local Supabase config when absent
         run: |
-          if [ ! -f supabase/config.toml ]; then
+          if [ ! -f supabase/config.toml ] && [ ! -f supabase/config.jsonc ] && [ ! -f supabase/config.json ]; then
             supabase init --force
           fi
-          test -f supabase/config.toml || { echo "Supabase CLI did not create supabase/config.toml"; exit 1; }
+          if [ ! -f supabase/config.toml ]; then
+            supabase config convert --to toml
+          fi
+          test -f supabase/config.toml || { echo "Supabase CLI did not produce supabase/config.toml"; exit 1; }
       - name: Configure isolated disposable Supabase ports
         shell: bash
         run: |
