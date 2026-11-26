@@ -1,8 +1,8 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-25",
-  "baseline_commit": "staging branch snapshot; implementation deltas cite active PR #145/#146 and remain pre-merge",
+  "snapshot_at": "2026-11-27 02:11 WIB",
+  "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "PRD feature register row-by-row, then current read-only GitHub/Supabase/Vercel evidence. Historical percentages are not current completion percentages.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
@@ -5694,5 +5694,13 @@
     "feature_count": 189,
     "stable_id_scheme": "D{domain_number_2_digits}-F{feature_number_2_digits}",
     "validation": "All 189 matrix rows matched exactly one ledger row by domain and requirement; feature IDs are unique; audit_status values match. Statuses remain PARTIAL/NOT VERIFIED/BLOCKED; no feature promoted to DONE."
-  }
+  },
+  "status_counts": {
+    "PARTIAL": 145,
+    "NOT VERIFIED": 39,
+    "BLOCKED": 5,
+    "DONE": 0,
+    "TOTAL": 189
+  },
+  "reconciliation_note": "Candidate crosswalk snapshot. All 189 feature IDs are stable and matched one-to-one to PRD_FEATURE_EVIDENCE_LEDGER_20261126.json by domain and requirement. Counts reflect the candidate ledger, not an acceptance release; PARTIAL means implementation started but acceptance evidence is incomplete. NOT VERIFIED and BLOCKED remain open. No feature is DONE. Promotion to the staging source of truth requires independent review and acceptance of this PR."
 }
