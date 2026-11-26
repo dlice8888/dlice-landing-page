@@ -415,3 +415,6 @@ end;
 $$;
 revoke all on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_approve_loyalty_earning_rule(uuid,uuid,uuid) to service_role;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.crm_reject_point_allocation_mutation() to service_role;
