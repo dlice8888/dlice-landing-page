@@ -11450,25 +11450,22 @@
         "crm-loyalty-expiry-sql-contract",
         "crm-loyalty-expiry-ui-contract"
       ],
-      "sql_replay": "NOT_RUN",
-      "pgTap": "NOT_RUN",
-      "exact_head_ci": [
-        {
-          "run_id": 45729144920,
-          "status": "in_progress",
-          "conclusion": null
-        },
-        {
-          "run_id": 45729139283,
-          "status": "completed",
-          "conclusion": "failure"
-        }
-      ],
+      "sql_replay": "IN_PROGRESS_ON_OLDER_HEAD_04D76AACE28ACAAC198D32E414D62CFD519D2294",
+      "pgTap": "DRAFT_45_ASSERTIONS_NOT_YET_EXECUTED_ON_CURRENT_HEAD",
+      "exact_head_ci": {
+        "run_id": 45729694838,
+        "conclusion": "success"
+      },
       "staging_e2e": "NOT_RUN",
-      "latest_head": "5fc3ed12920d508b6cad0ec2ded8a6191cccc5b1",
+      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "latest_fix": "earn_reversal allocation is now counted in expiry, redemption availability and reversal checks; test asserts all three lot-balance aggregations include it",
       "test_status": "NOT_VERIFIED_EXACT_HEAD",
-      "known_regression_fix": "Earn reversal allocations now count in expiry, redemption and reversal balance calculations; contract test covers all three aggregate sites."
+      "known_regression_fix": "earn_reversal allocation included in expiry, redemption availability and reversal checks; contract tests pass on exact PR #145 head.",
+      "new_files": [
+        "docs/implementation/sql/CRM_LOYALTY_PGTAP_DRAFT.sql",
+        ".github/workflows/crm-disposable-db.yml"
+      ],
+      "finance_close_sql_fix": "Closed malformed finance_reconciliation_sha256 CHECK constraint; replay dependency order is schema -> adapters -> financial close review -> expiry."
     },
     "hr_increment": {
       "pr": 145,
@@ -11489,7 +11486,7 @@
     },
     "quality_increment": {
       "pr": 150,
-      "latest_head": "e82a1598b1b1a84d3e46ff75b922882d6960bab8",
+      "latest_head": "1814db492b21fc9c8eee06d258fedbc4d9a0f8d4",
       "files": [
         "docs/implementation/sql/QUALITY_COMPLIANCE_ADAPTERS_EXTENSION_DRAFT.sql",
         "docs/implementation/sql/QUALITY_COMPLIANCE_PGTAP_DRAFT.sql",
@@ -11501,16 +11498,24 @@
       "new_quality_edge_actions": 13,
       "edge_action_inventory": 215,
       "pgTap_assertions_draft": 46,
-      "sql_replay": "NOT_RUN",
+      "sql_replay": {
+        "run_id": 45729423123,
+        "job_id": 139607419203,
+        "conclusion": "success"
+      },
       "pgTap_execution": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
       "staging_e2e": "NOT_RUN",
       "known_gap": "Lot distribution links are explicit, not yet automatically sourced from procurement, stock transfer, production consumption, POS/Order fulfillment.",
       "ci_status": {
-        "run_id": 45688899170,
+        "run_id": 45729422993,
         "conclusion": "success"
       },
-      "pgTap": "DRAFT_46_ASSERTIONS_NOT_EXECUTED"
+      "pgTap": {
+        "status": "PASS",
+        "assertions": 46,
+        "scope": "local disposable Supabase only"
+      }
     },
     "payroll_increment": {
       "pr": 146,
@@ -11524,12 +11529,7 @@
         "run_id": 45728526171,
         "job_id": 139604405945,
         "conclusion": "success",
-        "steps": [
-          "canonical repository migrations replayed on local disposable Supabase",
-          "HR workforce and payroll dependencies replayed in dependency order",
-          "payroll finance security pgTAP suite passed",
-          "disposable local stack stopped with --no-backup"
-        ],
+        "pgTap": "PASS",
         "hosted_staging": "NOT_TOUCHED"
       },
       "pgTap": "PASS_ON_DISPOSABLE_LOCAL_DB",
@@ -11545,7 +11545,7 @@
     },
     "delivery_increment": {
       "pr": 145,
-      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "feature_ids": [
         "D09-F01",
         "D09-F02",
@@ -11566,7 +11566,7 @@
         "tests/contracts/delivery-sql-contract.test.mjs",
         "tests/contracts/eight-domain-sql-delimiter-contract.test.mjs"
       ],
-      "exact_head_ci": "NOT_OBSERVED",
+      "exact_head_ci": "PASS_45729694838",
       "disposable_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
       "provider_sandbox": "BLOCKED_NO_CREDENTIALS_OR_FIXTURES",
@@ -11576,7 +11576,7 @@
     },
     "franchise_increment": {
       "pr": 145,
-      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "feature_ids": [
         "D13-F01",
         "D13-F02",
@@ -11595,7 +11595,7 @@
         "fix_agreement_effective_date_regex"
       ],
       "contract_test": "tests/contracts/franchise-opening-gates-contract.test.mjs",
-      "exact_head_ci": "NOT_OBSERVED",
+      "exact_head_ci": "PASS_45729694838",
       "disposable_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
@@ -11603,7 +11603,7 @@
     },
     "bi_increment": {
       "pr": 145,
-      "latest_head": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3",
+      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "feature_ids": [
         "D14-F01",
         "D14-F02",
@@ -11628,7 +11628,7 @@
         "publish_guard"
       ],
       "contract_test": "tests/contracts/bi-evidence-ingestion-contract.test.mjs",
-      "exact_head_ci": "NOT_OBSERVED",
+      "exact_head_ci": "PASS_45729694838",
       "disposable_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
       "source_collectors": "NOT_IMPLEMENTED",
@@ -11637,7 +11637,7 @@
     },
     "saas_increment": {
       "pr": 145,
-      "latest_head": "f93fd37d8ad01ed7c974d0e484e9a8ef6af8efee",
+      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "feature_ids": [
         "D16-F03",
         "D16-F04",
@@ -11664,7 +11664,7 @@
         "offboarding_retention_completion"
       ],
       "contract_test": "tests/contracts/saas-billing-metering-contract.test.mjs",
-      "exact_head_ci": "NOT_VERIFIED_WORKFLOW_RUN_FAILED_NO_JOBS",
+      "exact_head_ci": "PASS_45729694838",
       "disposable_replay": "NOT_RUN",
       "pgTap": "NOT_RUN",
       "payment_webhook": "NOT_IMPLEMENTED_PROVIDER_SPECIFIC",
@@ -11687,12 +11687,12 @@
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "5fc3ed12920d508b6cad0ec2ded8a6191cccc5b1",
+      "145": "805b539b7816d7fd97456e9269ae951ebbf896d7",
       "146": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
-      "147": "a47485c96d15967dadab54494b673d4eb7c2c6a0",
+      "147": "782796c17cc77e1f8e648ae6e0c51311a9b4c9bd",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
       "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
-      "150": "e82a1598b1b1a84d3e46ff75b922882d6960bab8"
+      "150": "1814db492b21fc9c8eee06d258fedbc4d9a0f8d4"
     },
     "pr143_increment": {
       "pr": 143,
