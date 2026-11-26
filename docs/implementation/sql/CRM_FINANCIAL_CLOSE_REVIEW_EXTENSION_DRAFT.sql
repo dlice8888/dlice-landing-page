@@ -5,7 +5,7 @@ alter table public.crm_financial_close_projections
  add column if not exists created_by uuid references auth.users(id) on delete restrict,
  add column if not exists reviewed_by uuid references auth.users(id) on delete restrict,
  add column if not exists reviewed_at timestamptz,
- add column if not exists finance_reconciliation_sha256 text check(finance_reconciliation_sha256 is null or finance_reconciliation_sha256 ~ '^[0-9a-f]{64}
+ add column if not exists finance_reconciliation_sha256 text check(finance_reconciliation_sha256 is null or finance_reconciliation_sha256 ~ '^[0-9a-f]{64}$');
 alter table public.crm_financial_close_projections
  drop constraint if exists crm_financial_close_projections_finance_source_reconciliation_status_check;
 alter table public.crm_financial_close_projections
