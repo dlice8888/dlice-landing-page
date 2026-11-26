@@ -68,3 +68,9 @@ Run `45659462961` checked out merge candidate `2731e09` (PR #146 commit `23e4b6c
 - PR #143 checkout disposable replay passes, but exact-head quality checks fail and authenticated positive staging E2E has not run.
 - Current matrix/evidence ledger counts are 145 PARTIAL / 39 NOT VERIFIED / 5 BLOCKED / 0 DONE. The matrix and evidence ledger are now synchronized to all 189 feature IDs. No PARTIAL has a numeric weighted score yet.
 - Live staging has 6 POS sales but zero POS tenders, immutable receipts, cash reconciliations, settlements and Finance journals; 6 KDS tickets and 26 stock movements exist. This is not full POS reconciliation.
+
+
+## PR #152 exact-head replay update — 2026-11-27
+
+- Eight official migrations completed `supabase db reset` successfully on commit `43963f943dcb20681bcc49b5fc6c4237377c9312`; a post-replay CRM table-verification script then failed due to a malformed shell heredoc dollar delimiter.
+- The workflow check was corrected to use a `psql` missing-table query. Current head `315972e0a858937bc890f69ee7fbddc37a7720a2` has Free quality checks PASS; CRM disposable replay is running. CRM pgTAP is still pending.
