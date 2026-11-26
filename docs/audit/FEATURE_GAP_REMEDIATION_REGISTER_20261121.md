@@ -1038,12 +1038,12 @@ The 189 stable feature IDs now reconcile to the evidence ledger and the implemen
 | Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100.0% | 0/8 |
 | BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70.0% | 0/7 |
 | Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
-| SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87.5% | 0/7 |
+| SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87.5% | 2/7 |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
 | Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85.0% | 0/17 |
-| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **0/145** |
+| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **2/145** |
 
-**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **0/145 currently have a defensible numeric weighted score** in the ledger. The progress_pct field remains null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
+**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **2/145 currently have provisional numeric weighted scores** in the ledger. The progress_pct field is populated only for the two existing provisional scores (D16-F01 30%, D16-F02 58%); the remaining 143 remain null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
 
 **Live staging findings:** one active Owner profile is present but zero active Owner profiles have the strict JSON boolean app_metadata.platform_owner=true; dlice-orders is ACTIVE v73 with verify_jwt=false and custom authorization in source; native leaked-password protection is WARN/DISABLED. POS source data: 6 sales, 6 items, 6 payment records, 6 KDS tickets, 6 KDS items, 26 stock movements and 273 audit logs; zero tenders, receipts, cash reconciliations, settlement rows, refund rows and Finance journal rows. This does not pass transaction reconciliation.
 
