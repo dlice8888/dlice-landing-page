@@ -655,3 +655,6 @@ begin
 end $$;
 revoke all on function public.franchise_approve_agreement_version(uuid,integer,uuid) from public,anon,authenticated;
 grant execute on function public.franchise_approve_agreement_version(uuid,integer,uuid) to service_role;
+
+-- Trigger functions are non-client-callable; service_role retains internal EXECUTE for the global ACL contract.
+grant execute on function public.franchise_reject_agreement_event_mutation() to service_role;
