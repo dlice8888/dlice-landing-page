@@ -337,7 +337,6 @@ end;
 $$;
 revoke all on function public.crm_reconcile_financial_close_projection(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.crm_reconcile_financial_close_projection(uuid,uuid,uuid) to service_role;
-);
 alter table public.crm_financial_close_projections
  drop constraint if exists crm_financial_close_projections_finance_source_reconciliation_status_check;
 alter table public.crm_financial_close_projections
