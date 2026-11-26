@@ -11451,13 +11451,13 @@
         "crm-loyalty-expiry-ui-contract"
       ],
       "sql_replay": "IN_PROGRESS_ON_OLDER_HEAD_04D76AACE28ACAAC198D32E414D62CFD519D2294",
-      "pgTap": "DRAFT_45_ASSERTIONS_NOT_YET_EXECUTED_ON_CURRENT_HEAD",
+      "pgTap": "45_ASSERTIONS_QUEUED_NOT_RUN",
       "exact_head_ci": {
-        "run_id": 45729694838,
+        "run_id": 45729867274,
         "conclusion": "success"
       },
       "staging_e2e": "NOT_RUN",
-      "latest_head": "805b539b7816d7fd97456e9269ae951ebbf896d7",
+      "latest_head": "b7f21a09aa22d1e6ea659c6bc0be95a2b39410d3",
       "latest_fix": "earn_reversal allocation is now counted in expiry, redemption availability and reversal checks; test asserts all three lot-balance aggregations include it",
       "test_status": "NOT_VERIFIED_EXACT_HEAD",
       "known_regression_fix": "earn_reversal allocation included in expiry, redemption availability and reversal checks; contract tests pass on exact PR #145 head.",
@@ -11465,7 +11465,17 @@
         "docs/implementation/sql/CRM_LOYALTY_PGTAP_DRAFT.sql",
         ".github/workflows/crm-disposable-db.yml"
       ],
-      "finance_close_sql_fix": "Closed malformed finance_reconciliation_sha256 CHECK constraint; replay dependency order is schema -> adapters -> financial close review -> expiry."
+      "finance_close_sql_fix": "Closed malformed finance_reconciliation_sha256 CHECK constraint; replay dependency order is schema -> adapters -> financial close review -> expiry.",
+      "disposable_replay": {
+        "run_id": 45729867270,
+        "status": "queued",
+        "previous_attempt": {
+          "run_id": 45729633428,
+          "conclusion": "failure",
+          "reason": "Supabase local Inbucket port 54324 collision after image registry rate-limit retries"
+        },
+        "mitigation": "exclude unused Inbucket service from next disposable replay"
+      }
     },
     "hr_increment": {
       "pr": 145,
@@ -11500,8 +11510,8 @@
       "pgTap_assertions_draft": 46,
       "sql_replay": {
         "run_id": 45729423123,
-        "job_id": 139607419203,
-        "conclusion": "success"
+        "conclusion": "success",
+        "pgTap_assertions": 46
       },
       "pgTap_execution": "NOT_RUN",
       "staging_migration": "NOT_APPLIED",
@@ -11687,9 +11697,9 @@
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "805b539b7816d7fd97456e9269ae951ebbf896d7",
+      "145": "b7f21a09aa22d1e6ea659c6bc0be95a2b39410d3",
       "146": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
-      "147": "782796c17cc77e1f8e648ae6e0c51311a9b4c9bd",
+      "147": "71adcdde4de3b5bef408e6020da7112870c217aa",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
       "149": "8994c2ef3576c1982b83d9b6bd87ee35e2aad702",
       "150": "1814db492b21fc9c8eee06d258fedbc4d9a0f8d4"
