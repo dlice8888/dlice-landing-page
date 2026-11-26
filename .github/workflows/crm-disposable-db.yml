@@ -92,7 +92,7 @@ jobs:
             exit 1
           fi
           echo "Verified all 17 canonical CRM tables."
-      - name: Run CRM pgTAP identity, consent, loyalty and campaign contracts
+      - name: Run CRM, HR payroll and Finance integration pgTAP contracts
         run: supabase test db
       - name: Stop and discard disposable database
         if: always()
