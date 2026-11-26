@@ -1021,7 +1021,7 @@
           "requirement": "Split bill, partial payment, final settlement",
           "source_status": "PARTIAL",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
+          "evidence_or_gap": "PR #143 POS UI exposes split tender inputs; the atomic RPC enforces 2–5 tenders, at least two distinct methods, exact allocation-to-sale total, idempotency and cash-only drawer delta. Offline queue replay routes split tenders through the same RPC, and POS reconciliation returns cash/noncash allocation totals. Partial/unpaid balance collection remains out of scope.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 52
@@ -1042,7 +1042,7 @@
               "status": "PARTIAL",
               "score": 15,
               "evidence": [
-                "PR #143 ERP POS UI and dlice-orders action implementation; current feature gap retained: feature-specific browser/device acceptance remains open"
+                "PR #143 split tender UI and atomic RPC are implemented; collection of a remaining unpaid balance is not implemented."
               ]
             },
             "database": {
