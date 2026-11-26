@@ -41,6 +41,6 @@ test("Franchise Edge action and ERP UI expose the opening gate workflow",()=>{
 });
 
 test("Franchise agreement date validation uses real YYYY-MM-DD digit patterns",()=>{
- assert.match(edge,/!\/^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\//);
+ assert.match(edge,/!\/\^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\//);
  assert.doesNotMatch(edge,/\^d\{4\}-d\{2\}-d\{2\}\$/);
 });
