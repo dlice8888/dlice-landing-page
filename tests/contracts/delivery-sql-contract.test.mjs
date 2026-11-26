@@ -33,7 +33,7 @@ test("Delivery provider evidence is append-only and privileged RPCs are not expo
 });
 test("Delivery Edge actions authenticate Platform Owner and authorize selected branch before RPC",()=>{
  const start=edge.indexOf('const deliveryProviderConfigActions=new Set(');
- const end=edge.indexOf('const qualityActions = new Set([',start);
+ const end=edge.indexOf('if (action === "erp-upload-delivery-proof")',start);
  assert.ok(start>=0&&end>start);
  const block=edge.slice(start,end);
  assert.match(block,/if\(!isPlatformOwner\)/);
