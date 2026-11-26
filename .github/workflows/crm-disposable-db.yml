@@ -83,28 +83,15 @@ jobs:
       - name: Replay canonical repository migrations
         run: supabase db reset
       - name: Verify canonical CRM schema after migration replay
+        shell: bash
         run: |
           set -euo pipefail
-          psql "$LOCAL_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          do $
-          declare missing text[];
-          begin
-            select array_agg(required.name order by required.name)
-              into missing
-            from unnest(array[
-              'crm_customers','crm_customer_consent_events','crm_loyalty_ledger',
-              'crm_rewards','crm_reward_vouchers','crm_transaction_links',
-              'crm_marketing_campaigns','crm_campaign_recipients','crm_voucher_consumptions',
-              'crm_loyalty_earning_rules','crm_financial_close_projections',
-              'crm_campaign_outbox','crm_campaign_provider_events','crm_campaign_attributions',
-              'crm_campaign_costs','crm_campaign_provider_configs','crm_loyalty_point_allocations'
-            ]) as required(name)
-            where to_regclass('public.' || required.name) is null;
-            if missing is not null then
-              raise exception 'CRM_CANONICAL_MIGRATION_MISSING_TABLES: %', missing;
-            end if;
-          end $;
-          SQL
+          missing="$(psql "$LOCAL_DB_URL" -tA -v ON_ERROR_STOP=1 -c "select coalesce(string_agg(required.name, ',' order by required.name), '') from unnest(array['crm_customers','crm_customer_consent_events','crm_loyalty_ledger','crm_rewards','crm_reward_vouchers','crm_transaction_links','crm_marketing_campaigns','crm_campaign_recipients','crm_voucher_consumptions','crm_loyalty_earning_rules','crm_financial_close_projections','crm_campaign_outbox','crm_campaign_provider_events','crm_campaign_attributions','crm_campaign_costs','crm_campaign_provider_configs','crm_loyalty_point_allocations']) as required(name) where to_regclass('public.' || required.name) is null;")"
+          if [ -n "$missing" ]; then
+            echo "::error title=CRM schema incomplete::Missing canonical CRM tables: $missing"
+            exit 1
+          fi
+          echo "Verified all 17 canonical CRM tables."
       - name: Run CRM pgTAP identity, consent, loyalty and campaign contracts
         run: supabase test db
       - name: Stop and discard disposable database
