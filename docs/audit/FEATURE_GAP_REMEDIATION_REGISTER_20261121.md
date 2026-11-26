@@ -1049,4 +1049,7 @@ The 189 stable feature IDs now reconcile to the evidence ledger and the implemen
 
 **PR #152:** official eight-domain migration conversion is a Draft stacked PR. Quality checks passed at commit 08730d3fe0c2494e2156cb2cf330b88a491c3f3c, but disposable replay failed on a Franchise dependency because the function referenced bi_reconciliation_runs%ROWTYPE before the BI migration. The source and migration were corrected to use a deferred record reference; exact-head replay is pending at the latest commit. No shared staging migration or production change was made.
 
-**PR #143:** POS checkout disposable replay passed; quality checks failed; positive staging POS E2E remains unrun because authenticated staging preflight is not satisfied. Both release flags remain false.
+**PR #143:** POS checkout disposable replay passed; quality checks failed; positive staging POS E2E failed after environment/credential preflight passed: the Owner account did not satisfy the strict JSON boolean app_metadata.platform_owner=true plus UUID allowlist requirement. Both release flags remain false.
+
+
+Additional live platform evidence (2026-11-27): **68/68 public tables have RLS enabled; 0 have RLS disabled.** Supabase Health Advisor returned no lints. Security Advisor still warns that native leaked-password protection is disabled. Performance Advisor reports 82 unused-index findings; do not drop indexes without representative workload and query-plan evidence. The exact PR #152 Vercel Preview is READY on commit `01d2cb790403d276b161a4cd4c945b048e6c8ff6`; this is a build result only.
