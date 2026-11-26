@@ -32,13 +32,15 @@ test("Delivery provider evidence is append-only and privileged RPCs are not expo
  assert.doesNotMatch(atomic,/security definer/i);
 });
 test("Delivery Edge actions authenticate Platform Owner and authorize selected branch before RPC",()=>{
- const start=edge.indexOf('const deliveryActions = new Set([');
+ const start=edge.indexOf('const deliveryProviderConfigActions=new Set(');
  const end=edge.indexOf('const qualityActions = new Set([',start);
  assert.ok(start>=0&&end>start);
  const block=edge.slice(start,end);
  assert.match(block,/if\(!isPlatformOwner\)/);
- assert.match(block,/actorCanAccessBranch\(branchId\)/);
+ assert.match(block,/const deliveryAtomicActions=new Set\(/);
  assert.match(block,/admin\.from\("branches"\)/);
  assert.match(block,/branch\.tenant_id/);
  assert.match(block,/admin\.rpc\(name,args\)/);
+ assert.match(block,/delivery_approve_provider_config/);
+ assert.match(block,/delivery_reconcile_cost/);
 });
