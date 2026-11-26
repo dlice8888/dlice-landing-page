@@ -11451,13 +11451,13 @@
         "crm-loyalty-expiry-ui-contract"
       ],
       "sql_replay": "IN_PROGRESS_ON_OLDER_HEAD_04D76AACE28ACAAC198D32E414D62CFD519D2294",
-      "pgTap": "45_ASSERTIONS_QUEUED_NOT_RUN",
+      "pgTap": "44_ASSERTIONS_PENDING_DISPOSABLE_REPLAY",
       "exact_head_ci": {
-        "run_id": 45729867274,
-        "conclusion": "success"
+        "run_id": 45730055269,
+        "status": "in_progress"
       },
       "staging_e2e": "NOT_RUN",
-      "latest_head": "b7f21a09aa22d1e6ea659c6bc0be95a2b39410d3",
+      "latest_head": "a8ffb2f5f18e11d5cdf63f3abc24234315610f12",
       "latest_fix": "earn_reversal allocation is now counted in expiry, redemption availability and reversal checks; test asserts all three lot-balance aggregations include it",
       "test_status": "NOT_VERIFIED_EXACT_HEAD",
       "known_regression_fix": "earn_reversal allocation included in expiry, redemption availability and reversal checks; contract tests pass on exact PR #145 head.",
@@ -11468,14 +11468,11 @@
       "finance_close_sql_fix": "Closed malformed finance_reconciliation_sha256 CHECK constraint; replay dependency order is schema -> adapters -> financial close review -> expiry.",
       "disposable_replay": {
         "run_id": 45729867270,
-        "status": "queued",
-        "previous_attempt": {
-          "run_id": 45729633428,
-          "conclusion": "failure",
-          "reason": "Supabase local Inbucket port 54324 collision after image registry rate-limit retries"
-        },
-        "mitigation": "exclude unused Inbucket service from next disposable replay"
-      }
+        "status": "in_progress_on_b7f21a09aa22d1e6ea659c6bc0be95a2b39410d3",
+        "queued_current_head_run": 45730055327,
+        "mitigation": "Supabase local Inbucket excluded to avoid unused port 54324 collision"
+      },
+      "pgtap_file": "docs/implementation/sql/CRM_LOYALTY_PGTAP_DRAFT.sql"
     },
     "hr_increment": {
       "pr": 145,
@@ -11697,7 +11694,7 @@
     },
     "latest_pr_heads": {
       "143": "0e3539b02c65a6411ccca0d37bb3ee94d912c740",
-      "145": "b7f21a09aa22d1e6ea659c6bc0be95a2b39410d3",
+      "145": "a8ffb2f5f18e11d5cdf63f3abc24234315610f12",
       "146": "f0a9678a01cb619e8e996b8810ba15c60c45b8ab",
       "147": "71adcdde4de3b5bef408e6020da7112870c217aa",
       "148": "2456f6587891349fa3f99134f45f847e0ef8a1c1",
