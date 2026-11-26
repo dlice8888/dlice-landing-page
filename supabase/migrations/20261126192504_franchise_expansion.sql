@@ -230,7 +230,7 @@ create or replace function public.franchise_generate_royalty_statement(
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
 declare v_agreement public.franchise_agreements%rowtype; v_version public.franchise_agreement_versions%rowtype;
- v_metric_id uuid; v_sales numeric; v_recon public.bi_reconciliation_runs%rowtype; v_statement public.franchise_royalty_statements%rowtype;
+ v_metric_id uuid; v_sales numeric; v_recon record; v_statement public.franchise_royalty_statements%rowtype;
 begin
  if p_period_end<p_period_start or length(coalesce(p_idempotency_key,'')) not between 8 and 120 then
   raise exception using errcode='22023',message='INVALID_ROYALTY_PERIOD_OR_IDEMPOTENCY';
