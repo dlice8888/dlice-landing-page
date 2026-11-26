@@ -44,3 +44,14 @@ test("Delivery Edge actions authenticate Platform Owner and authorize selected b
  assert.match(block,/delivery_approve_provider_config/);
  assert.match(block,/delivery_reconcile_cost/);
 });
+
+test("Verified delivery webhook validation has a complete PL/pgSQL IF predicate in draft and official migration",()=>{
+ const migration=read("../../supabase/migrations/20261126192501_delivery_fulfillment_provider.sql");
+ for(const sql of [atomic,migration]){
+  const start=sql.indexOf("create or replace function public.delivery_ingest_verified_provider_event");
+  const end=sql.indexOf("create or replace function public.delivery_claim_outbox_batch",start);
+  assert.ok(start>=0&&end>start,"verified webhook function must exist");
+  const fn=sql.slice(start,end);
+  assert.match(fn,/or p_payload_sha256 !~ '\^\[0-9a-f\]\{64\}\$'\s+then\s+raise exception using errcode='22023',message='INVALID_OR_UNVERIFIED_DELIVERY_WEBHOOK'/);
+ }
+});
