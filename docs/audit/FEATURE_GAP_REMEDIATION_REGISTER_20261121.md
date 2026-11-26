@@ -1015,3 +1015,38 @@ PR #149 adds a free PostgreSQL 17 database-only read/isolation benchmark with 15
 ### Backup/restore result — PR #148 exact head
 
 The local PostgreSQL 17.11 restore drill has now passed on exact head `2456f6587891349fa3f99134f45f847e0ef8a1c1` (workflow `45662909781`) and the quality workflow passed (`45662909991`). It restored 151 branches and 151 committed events with checksum parity; no pre-snapshot rows lost; the one intentional post-snapshot row was not restored; RLS returned on 2/2 tables; Tenant A and B saw only 150/150 and 1/1 records respectively; cross-tenant visible rows were zero. Local restore verification measured 439 ms. This does not certify Supabase managed backup/PITR, Auth/Storage recovery or production RPO/RTO. Those are still gaps.
+
+
+## Live audit reconciliation — 2026-11-27 (supersedes prior count snapshots)
+
+The 189 stable feature IDs now reconcile to the evidence ledger and the implementation matrix. The latest evidence-ledger count is **145 PARTIAL + 39 NOT VERIFIED + 5 BLOCKED + 0 DONE = 189**. This supersedes the earlier 95/88/6 and 141/43/5 snapshots. The user-provided table's 139/45/5 differs by six classifications; the row-level ledger is used as the current candidate because it records implementation-start evidence and specific gaps for each stable feature ID.
+
+| Domain | Total | P | BT | B | S | Partial coverage | Scored partial |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
+| POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92.3% | 0/12 |
+| Order Management | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
+| Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70.0% | 0/7 |
+| Menu, Recipe & Product Engineering | 11 | 7 | 3 | 1 | 0 | 63.6% | 0/7 |
+| Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83.3% | 0/10 |
+| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70.0% | 0/7 |
+| Branch Operations | 10 | 4 | 5 | 1 | 0 | 40.0% | 0/4 |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100.0% | 0/8 |
+| CRM, Loyalty & Marketing | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
+| Finance & Accounting | 12 | 9 | 2 | 1 | 0 | 75.0% | 0/9 |
+| HR & Workforce | 9 | 7 | 2 | 0 | 0 | 77.8% | 0/7 |
+| Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100.0% | 0/8 |
+| BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70.0% | 0/7 |
+| Admin, Identity & Access Control | 10 | 8 | 2 | 0 | 0 | 80.0% | 0/8 |
+| SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87.5% | 0/7 |
+| Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66.7% | 0/6 |
+| Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85.0% | 0/17 |
+| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76.7%** | **0/145** |
+
+**Progress scoring:** 145 PARTIAL features have implementation-start evidence, but **0/145 currently have a defensible numeric weighted score** in the ledger. The progress_pct field remains null rather than inventing percentages. The six evidence dimensions (code/UI 20%, database 20%, authorization 15%, automated tests 15%, E2E 20%, reconciliation/observability 10%) must be populated from exact artifacts. A preview, PR title, draft migration, or static-only test cannot earn E2E/reconciliation weight.
+
+**Live staging findings:** one active Owner profile is present but zero active Owner profiles have the strict JSON boolean app_metadata.platform_owner=true; dlice-orders is ACTIVE v73 with verify_jwt=false and custom authorization in source; native leaked-password protection is WARN/DISABLED. POS source data: 6 sales, 6 items, 6 payment records, 6 KDS tickets, 6 KDS items, 26 stock movements and 273 audit logs; zero tenders, receipts, cash reconciliations, settlement rows, refund rows and Finance journal rows. This does not pass transaction reconciliation.
+
+**PR #152:** official eight-domain migration conversion is a Draft stacked PR. Quality checks passed at commit 08730d3fe0c2494e2156cb2cf330b88a491c3f3c, but disposable replay failed on a Franchise dependency because the function referenced bi_reconciliation_runs%ROWTYPE before the BI migration. The source and migration were corrected to use a deferred record reference; exact-head replay is pending at the latest commit. No shared staging migration or production change was made.
+
+**PR #143:** POS checkout disposable replay passed; quality checks failed; positive staging POS E2E remains unrun because authenticated staging preflight is not satisfied. Both release flags remain false.
