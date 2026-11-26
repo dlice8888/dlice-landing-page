@@ -21,7 +21,7 @@ test("bank statement and reconciliation evidence is immutable and service-role-o
 });
 
 test("finance clearing functions use invoker security and append exact reconciliation evidence",()=>{
- assert.match(sql,/hr_reconcile_payroll_payment_bank_statement/);
+ assert.match(sql,/hr_reconcile_payroll_payment_bank_batch/);
  assert.match(sql,/hr_post_payroll_payment_finance_clearing/);
  assert.match(sql,/security invoker/);
  assert.doesNotMatch(sql,/security definer/i);
