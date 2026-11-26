@@ -177,4 +177,4 @@ The current row-level ledger has **189 features: 145 PARTIAL, 39 NOT VERIFIED, 5
 Current live blockers: strict Owner app_metadata boolean claim is absent in staging; positive POS staging E2E is not run; POS tender/receipt/cash/settlement/Finance reconciliation tables have zero rows; eight-domain migration replay remains under repair/verification. Both release flags remain false.
 
 
-Score detail: D16-F01 Tenant directory/onboarding = 30% provisional; D16-F02 Tenant/member isolation = 58% provisional. All other 143 PARTIAL features remain unscored pending explicit six-dimension evidence decomposition. These provisional scores are not DONE or release acceptance.
+Score detail: D16-F01 Tenant directory/onboarding = 30% provisional; D16-F02 Tenant/member isolation = 58% provisional. All other 138 PARTIAL features remain unscored pending explicit six-dimension evidence decomposition. These provisional scores are not DONE or release acceptance.
