@@ -420,3 +420,7 @@ end $$;
 drop trigger if exists bi_snapshot_lineage_guard on public.bi_metric_snapshots;
 create trigger bi_snapshot_lineage_guard before insert or update of status,metric_id,formula_version
  on public.bi_metric_snapshots for each row execute function public.bi_enforce_snapshot_lineage();
+
+-- Trigger functions are non-client-callable; service_role retains internal EXECUTE for the global ACL contract.
+revoke all on function public.bi_enforce_snapshot_lineage() from public,anon,authenticated;
+grant execute on function public.bi_enforce_snapshot_lineage() to service_role;
