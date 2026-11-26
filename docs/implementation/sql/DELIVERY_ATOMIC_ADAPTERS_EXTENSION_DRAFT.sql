@@ -518,3 +518,6 @@ begin
 end; $$;
 revoke all on function public.delivery_get_outbox_job_context(uuid,text) from public,anon,authenticated;
 grant execute on function public.delivery_get_outbox_job_context(uuid,text) to service_role;
+
+-- Keep trigger helpers unavailable to client roles; service_role retains internal EXECUTE.
+grant execute on function public.delivery_reject_evidence_mutation() to service_role;
