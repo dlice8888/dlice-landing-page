@@ -51,7 +51,7 @@ test("consolidated statement rejects incomplete branch close and unbalanced jour
   {code:"FINANCE_JOURNAL_UNBALANCED"});
 });
 test("consolidated statement rejects unbalanced intercompany elimination groups",()=>{
- const broken=entries.filter(x=>x.id!=="b4");
+ const broken=entries.map(x=>x.id==="b4"?{...x,eliminationGroup:"ic-2"}:x);
  assert.throws(()=>buildConsolidatedFinancialStatement({tenantId:"tenant-a",period:"2026-11",branches,entries:broken}),
   {code:"FINANCE_INTERCOMPANY_ELIMINATION_INVALID"});
 });
