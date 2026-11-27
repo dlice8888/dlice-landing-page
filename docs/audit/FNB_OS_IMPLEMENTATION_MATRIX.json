@@ -45,13 +45,16 @@
         {
           "requirement": "Branch ranking, region/format comparison",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "No verified 150-branch ranking/cohort output.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/executive-branch-ranking.mjs and the executive_publish_branch_ranking Edge/RPC path now implement tenant-scoped ranking from BI snapshots and approved targets. Remaining: complete 150-branch source coverage, cohort definitions, persisted runtime and browser acceptance.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 34
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "src/executive-branch-ranking.mjs and the executive_publish_branch_ranking Edge/RPC path now implement tenant-scoped ranking from BI snapshots and approved targets. Remaining: complete 150-branch source coverage, cohort definitions, persisted runtime and browser acceptance.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Gross/net sales, discounts, refunds, margin, AOV, item counts",
@@ -102,28 +105,32 @@
         {
           "requirement": "Target vs actual and executive reports",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Official targets, scheduled reports, and exports not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/executive-finance-kpi.mjs and src/bi-branch-performance.mjs establish Finance-backed KPI and target-vs-actual calculation contracts. Remaining: approved source reconciliation, scheduled report/export workflow and browser/runtime evidence.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 39
           },
           "work_status": "IN_PROGRESS",
-          "evidence": "src/executive-finance-kpi.mjs requires approved Finance-sourced metric/formula, posted facts and source reconciliations plus approved target; src/bi-branch-performance.mjs aggregates all 150 active branches. Trusted source aggregation, region/format cohort, report scheduling and browser E2E remain open."
+          "evidence": "src/executive-finance-kpi.mjs requires approved Finance-sourced metric/formula, posted facts and source reconciliations plus approved target; src/bi-branch-performance.mjs aggregates all 150 active branches. Trusted source aggregation, region/format cohort, report scheduling and browser E2E remain open.",
+          "implementation_evidence": "src/executive-finance-kpi.mjs and src/bi-branch-performance.mjs establish Finance-backed KPI and target-vs-actual calculation contracts. Remaining: approved source reconciliation, scheduled report/export workflow and browser/runtime evidence.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Company → region → branch → shift → transaction drill-down",
           "source_status": "GATE",
-          "audit_status": "PARTIAL",
-          "evidence_or_gap": "Trusted ancestry resolver, UI integration, target-vs-actual and runtime evidence remain open.",
+          "audit_status": "BLOCKED",
+          "evidence_or_gap": "src/executive-drilldown-authorization.mjs supplies fail-closed ancestry checks, but live staging authorization is not satisfied: read-only auth.users aggregate shows 0 users with raw_app_meta_data.platform_owner=true and 0 with the claim present. The dlice-orders source requires both this JSON boolean and DLICE_PLATFORM_OWNER_USER_IDS. Official Auth Admin update and allowlist match must be verified before Owner drill-down E2E.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 40
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "EXTERNAL_ACTION_REQUIRED",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
-          "implementation_evidence": "Moved from BLOCKED to PARTIAL because src/executive-drilldown-authorization.mjs adds fail-closed tenant/parent-chain/branch-scope checks for company-to-transaction ancestry; source query adapters, authorization at each persisted level and Finance KPI tie-out/browser E2E remain missing. src/executive-drilldown-authorization.mjs: Fail-closed hierarchy authorization requires complete ancestry, tenant match and authorization at each level; finance source reconciliation required at transaction level.",
-          "evidence": "src/executive-drilldown-authorization.mjs validates tenant ancestry and branch scope; source query adapters and per-level persisted authorization remain open."
+          "implementation_evidence": "src/executive-drilldown-authorization.mjs supplies fail-closed ancestry checks, but live staging authorization is not satisfied: read-only auth.users aggregate shows 0 users with raw_app_meta_data.platform_owner=true and 0 with the claim present. The dlice-orders source requires both this JSON boolean and DLICE_PLATFORM_OWNER_USER_IDS. Official Auth Admin update and allowlist match must be verified before Owner drill-down E2E.",
+          "evidence": "src/executive-drilldown-authorization.mjs validates tenant ancestry and branch scope; source query adapters and per-level persisted authorization remain open.",
+          "progress_pct": null
         },
         {
           "requirement": "Alert → assign task → resolve → audit result",
@@ -144,12 +151,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 6,
-        "not_verified": 4,
-        "blocked": 0,
+        "partial": 7,
+        "not_verified": 2,
+        "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 60,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1250,24 +1257,30 @@
         {
           "requirement": "Address validation and delivery quote",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Live quote provider and validation missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Delivery quote schema/RPCs and src/supabase-delivery-adapter.mjs implement provider-config-scoped quote creation and quote-to-booking flow. Remaining: real address validation, approved provider quote contract, provider response persistence and runtime tests.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 151
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "Delivery quote schema/RPCs and src/supabase-delivery-adapter.mjs implement provider-config-scoped quote creation and quote-to-booking flow. Remaining: real address validation, approved provider quote contract, provider response persistence and runtime tests.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Courier booking / Biteship integration",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "No provider credentials, contract tests or live integration evidence.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Edge actions delivery_book_dispatch, delivery_book_dispatch_from_quote and delivery_confirm_provider_booking plus provider configuration and outbox code start the booking workflow. No Biteship credentials/provider-specific contract or live booking has been verified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 152
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "Edge actions delivery_book_dispatch, delivery_book_dispatch_from_quote and delivery_confirm_provider_booking plus provider configuration and outbox code start the booking workflow. No Biteship credentials/provider-specific contract or live booking has been verified.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Dispatch and shipment tracking",
@@ -1314,14 +1327,17 @@
         {
           "requirement": "Customer fee, subsidy and actual courier cost separation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Cost model and reconciliation report missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/delivery-financial-reconciliation.mjs and delivery_reconcile_cost define the delivered-dispatch, provider-settlement and Finance-posting match. Remaining: provider-confirmed settlement, persisted Finance posting and end-to-end cost reconciliation.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 156
           },
           "work_status": "IN_PROGRESS",
-          "evidence": "src/delivery-financial-reconciliation.mjs requires provider-confirmed delivered dispatch, final carrier settlement, COD/source checks and matching posted/reconciled Finance fee, customer charge and subsidy values. Dispatch/provider fee/COD fields, persisted reconciliation and actual provider adapter remain unverified."
+          "evidence": "src/delivery-financial-reconciliation.mjs requires provider-confirmed delivered dispatch, final carrier settlement, COD/source checks and matching posted/reconciled Finance fee, customer charge and subsidy values. Dispatch/provider fee/COD fields, persisted reconciliation and actual provider adapter remain unverified.",
+          "implementation_evidence": "src/delivery-financial-reconciliation.mjs and delivery_reconcile_cost define the delivered-dispatch, provider-settlement and Finance-posting match. Remaining: provider-confirmed settlement, persisted Finance posting and end-to-end cost reconciliation.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Delivery completion notification",
@@ -1340,12 +1356,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 5,
-        "not_verified": 3,
+        "partial": 8,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 62.5,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1386,13 +1402,16 @@
         {
           "requirement": "Customer segments",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Segment rules and refresh jobs missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/crm-loyalty-domain.mjs evaluateCampaignAudience and crm_prepare_campaign_audience implement consent-aware campaign audience evaluation. Remaining: reusable persisted segment definitions, refresh scheduling, segment membership history and runtime validation.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 164
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "src/crm-loyalty-domain.mjs evaluateCampaignAudience and crm_prepare_campaign_audience implement consent-aware campaign audience evaluation. Remaining: reusable persisted segment definitions, refresh scheduling, segment membership history and runtime validation.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Loyalty points and tiers",
@@ -1476,12 +1495,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 5,
-        "not_verified": 4,
+        "partial": 6,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 55.6,
+      "partial_coverage_percent": 66.7,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1531,13 +1550,16 @@
         {
           "requirement": "AR/AP subledgers and aging",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Complete AR/AP workflows and control-account tie-out missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "procurement_supplier_invoices, invoice matching and src/procurement-ap-journal.mjs begin the AP subledger-to-journal handoff. AR subledger, aging snapshots, control-account tie-out and persisted posting/payment reconciliation remain missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 178
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "procurement_supplier_invoices, invoice matching and src/procurement-ap-journal.mjs begin the AP subledger-to-journal handoff. AR subledger, aging snapshots, control-account tie-out and persisted posting/payment reconciliation remain missing.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Chart of accounts and general ledger",
@@ -1554,13 +1576,16 @@
         {
           "requirement": "Automated journals from POS/procurement/payroll",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Source mapping and balanced journal posting missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/hr-payroll-finance-batch.mjs, src/procurement-ap-journal.mjs and CRM financial-close projection code establish source-specific balanced journal preparation. Remaining: live posting, independent approval, period controls, POS/procurement/payroll E2E and ledger reconciliation.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 180
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "src/hr-payroll-finance-batch.mjs, src/procurement-ap-journal.mjs and CRM financial-close projection code establish source-specific balanced journal preparation. Remaining: live posting, independent approval, period controls, POS/procurement/payroll E2E and ledger reconciliation.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Bank reconciliation",
@@ -1637,12 +1662,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 7,
-        "not_verified": 4,
+        "partial": 9,
+        "not_verified": 2,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 58.3,
+      "partial_coverage_percent": 75,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1762,25 +1787,28 @@
         {
           "requirement": "Recruitment/onboarding/offboarding",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Onboarding checklist and access revocation missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "HR_EMPLOYEE_LIFECYCLE_EXTENSION_DRAFT.sql adds hr_employee_records, append-only lifecycle events, hire/transfer/termination/reactivation RPCs and Edge/UI routes. Recruitment applicant pipeline, onboarding checklists, scheduled effective-date worker and runtime acceptance remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 199
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "HR_EMPLOYEE_LIFECYCLE_EXTENSION_DRAFT.sql adds hr_employee_records, append-only lifecycle events, hire/transfer/termination/reactivation RPCs and Edge/UI routes. Recruitment applicant pipeline, onboarding checklists, scheduled effective-date worker and runtime acceptance remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 6,
-        "not_verified": 3,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 66.7,
+      "partial_coverage_percent": 77.8,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1891,25 +1919,28 @@
         {
           "requirement": "Franchise compliance and performance",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Audit, corrective action and partner reporting missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Franchise due-diligence checks, independently verified opening gates, signed agreement lifecycle and Finance-reconciled royalty statements establish compliance/performance foundations. Ongoing compliance audits, corrective actions, partner scorecards and reporting remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 211
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "Franchise due-diligence checks, independently verified opening gates, signed agreement lifecycle and Finance-reconciled royalty statements establish compliance/performance foundations. Ongoing compliance audits, corrective actions, partner scorecards and reporting remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 7,
-        "not_verified": 1,
+        "partial": 8,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 87.5,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -1963,13 +1994,16 @@
         {
           "requirement": "Food cost %, labor cost %, waste %",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Actual vs theoretical cost data and formula definitions missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "bi_metric_definitions, source lineage, freshness watermarks and reconciliation/publication gates establish versioned KPI foundations. Validated recipe theoretical cost, approved payroll actuals, waste source ingestion and reconciled formulas remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 219
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "bi_metric_definitions, source lineage, freshness watermarks and reconciliation/publication gates establish versioned KPI foundations. Validated recipe theoretical cost, approved payroll actuals, waste source ingestion and reconciled formulas remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Stock variance and fulfillment/cancellation rates",
@@ -1986,14 +2020,17 @@
         {
           "requirement": "Branch benchmarking by comparable cohorts",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Format/region/hours cohort definitions missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/bi-branch-performance.mjs and executive branch-ranking code implement tenant-scoped target-vs-actual ranking contracts. Complete 150-branch source facts, approved region/format cohorts and published runtime snapshots remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 221
           },
           "work_status": "IN_PROGRESS",
-          "evidence": "src/bi-branch-performance.mjs requires complete active tenant-scoped 150-branch population, exact period, approved targets and one source-reconciled fact per branch; computes ranking and target variance. Source ingestion, cohort definitions and persisted KPI runtime remain open."
+          "evidence": "src/bi-branch-performance.mjs requires complete active tenant-scoped 150-branch population, exact period, approved targets and one source-reconciled fact per branch; computes ranking and target variance. Source ingestion, cohort definitions and persisted KPI runtime remain open.",
+          "implementation_evidence": "src/bi-branch-performance.mjs and executive branch-ranking code implement tenant-scoped target-vs-actual ranking contracts. Complete 150-branch source facts, approved region/format cohorts and published runtime snapshots remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Demand forecasting and accuracy monitoring",
@@ -2047,12 +2084,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 5,
-        "not_verified": 5,
+        "partial": 7,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 50,
+      "partial_coverage_percent": 70,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2362,14 +2399,17 @@
         {
           "requirement": "Tenant settings and suspension",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Lifecycle and grace/suspension behavior missing.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "src/saas-entitlement-enforcement.mjs and the SaaS subscription/offboarding RPCs establish grace-period, invoice and settlement preconditions for suspension. Route-wide entitlement enforcement, payment settlement, reactivation and runtime proof remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 248
           },
           "work_status": "IN_PROGRESS",
-          "evidence": "src/saas-entitlement-enforcement.mjs requires expired grace period, authorized approval, resolved invoices and reconciled billing settlements before suspension eligibility. State transition RPC and reactivation/export/retention evidence remain open."
+          "evidence": "src/saas-entitlement-enforcement.mjs requires expired grace period, authorized approval, resolved invoices and reconciled billing settlements before suspension eligibility. State transition RPC and reactivation/export/retention evidence remain open.",
+          "implementation_evidence": "src/saas-entitlement-enforcement.mjs and the SaaS subscription/offboarding RPCs establish grace-period, invoice and settlement preconditions for suspension. Route-wide entitlement enforcement, payment settlement, reactivation and runtime proof remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Support access with approval/audit",
@@ -2412,12 +2452,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 8,
-        "partial": 5,
-        "not_verified": 3,
+        "partial": 6,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 62.5,
+      "partial_coverage_percent": 75,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -2455,13 +2495,16 @@
         {
           "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Provider-specific integrations not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "Delivery provider quote/booking adapter, CRM campaign provider configuration/outbox and procurement AP journal adapters establish connector foundations. Provider-specific credentials, signed live callbacks, retries and end-to-end provider reconciliation remain.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 258
           },
-          "work_status": "QUEUED"
+          "work_status": "IN_PROGRESS",
+          "implementation_evidence": "Delivery provider quote/booking adapter, CRM campaign provider configuration/outbox and procurement AP journal adapters establish connector foundations. Provider-specific credentials, signed live callbacks, retries and end-to-end provider reconciliation remain.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
+          "progress_pct": null
         },
         {
           "requirement": "Webhooks and event log",
@@ -2538,12 +2581,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 5,
-        "not_verified": 4,
+        "partial": 6,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 55.6,
+      "partial_coverage_percent": 66.7,
       "partial_coverage_definition": "PARTIAL count / domain total; this is implementation-start coverage, not weighted completion of PARTIAL features."
     },
     {
@@ -4286,9 +4329,9 @@
     "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
-    "PARTIAL": 126,
-    "NOT VERIFIED": 59,
-    "BLOCKED": 4,
+    "PARTIAL": 139,
+    "NOT VERIFIED": 45,
+    "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
   },
@@ -4341,8 +4384,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 2,
-    "unscored_partial_features": 124,
-    "status": "INCOMPLETE; 2 PARTIAL features have provisional weighted scores and 124 PARTIAL features remain unscored pending six-dimension decomposition."
+    "unscored_partial_features": 137,
+    "status": "INCOMPLETE; 2 PARTIAL features have provisional weighted scores and 137 PARTIAL features remain unscored pending six-dimension decomposition."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -5859,210 +5902,168 @@
     "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
   },
   "latest_audit_delta": {
-    "date": "2026-11-25",
+    "date": "2026-11-27",
     "feature_status_changes": [
       {
         "domain": "Executive Command Center",
-        "requirement": "Alert → assign task → resolve → audit result",
+        "requirement": "Branch ranking, region/format comparison",
         "from": "NOT VERIFIED",
         "to": "PARTIAL"
       },
       {
-        "domain": "POS & Checkout",
-        "requirement": "Variants, toppings, special instructions",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "POS & Checkout",
-        "requirement": "Split bill, partial payment, final settlement",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "POS & Checkout",
-        "requirement": "Hold/resume order",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "POS & Checkout",
-        "requirement": "Receipt printing/digital receipt",
-        "from": "BLOCKED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "POS & Checkout",
-        "requirement": "Offline sales queue and safe resynchronization",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Procurement & Supplier",
-        "requirement": "Three-way match: PO, receipt, supplier invoice",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Delivery & Fulfillment",
-        "requirement": "Dispatch and shipment tracking",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Delivery & Fulfillment",
-        "requirement": "Proof of delivery",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "CRM, Loyalty & Marketing",
-        "requirement": "Consent and communication preferences",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "CRM, Loyalty & Marketing",
-        "requirement": "Loyalty points and tiers",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "CRM, Loyalty & Marketing",
-        "requirement": "Rewards and vouchers/coupons",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "CRM, Loyalty & Marketing",
-        "requirement": "Campaign management and ROI",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "HR & Workforce",
-        "requirement": "Employee directory and lifecycle",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "HR & Workforce",
-        "requirement": "Attendance and timesheets",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "HR & Workforce",
-        "requirement": "Shift scheduling and replacement",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "HR & Workforce",
-        "requirement": "Leave and overtime",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "HR & Workforce",
-        "requirement": "Payroll calculation/integration",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Franchise & Expansion",
-        "requirement": "Franchise directory/application",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Franchise & Expansion",
-        "requirement": "Site selection and feasibility",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Franchise & Expansion",
-        "requirement": "Agreements and contract expiry",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Franchise & Expansion",
-        "requirement": "Royalty calculation and reconciliation",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "BI & Analytics",
-        "requirement": "Official KPI dictionary and versioning",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "BI & Analytics",
-        "requirement": "Data quality monitoring and anomaly detection",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "SaaS Tenant Management",
-        "requirement": "Plans, subscriptions, entitlements and quotas",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "SaaS Tenant Management",
-        "requirement": "Billing, invoices and usage metering",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "SaaS Tenant Management",
-        "requirement": "Export/offboarding and data deletion policy",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Delivery & Fulfillment",
-        "requirement": "Cancel/retry/provider exception handling",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Franchise & Expansion",
-        "requirement": "Territory and franchise-specific access",
-        "from": "NOT VERIFIED",
-        "to": "PARTIAL"
-      },
-      {
-        "domain": "Procurement & Supplier",
-        "requirement": "AP handoff and supplier payment",
+        "domain": "Executive Command Center",
+        "requirement": "Target vs actual and executive reports",
         "from": "NOT VERIFIED",
         "to": "PARTIAL"
       },
       {
         "domain": "Executive Command Center",
         "requirement": "Company → region → branch → shift → transaction drill-down",
-        "from": "BLOCKED",
+        "from": "PARTIAL",
+        "to": "BLOCKED"
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "requirement": "Address validation and delivery quote",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "requirement": "Courier booking / Biteship integration",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Delivery & Fulfillment",
+        "requirement": "Customer fee, subsidy and actual courier cost separation",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "CRM, Loyalty & Marketing",
+        "requirement": "Customer segments",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Finance & Accounting",
+        "requirement": "AR/AP subledgers and aging",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Finance & Accounting",
+        "requirement": "Automated journals from POS/procurement/payroll",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "HR & Workforce",
+        "requirement": "Recruitment/onboarding/offboarding",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Franchise & Expansion",
+        "requirement": "Franchise compliance and performance",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "BI & Analytics",
+        "requirement": "Food cost %, labor cost %, waste %",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "BI & Analytics",
+        "requirement": "Branch benchmarking by comparable cohorts",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "SaaS Tenant Management",
+        "requirement": "Tenant settings and suspension",
+        "from": "NOT VERIFIED",
+        "to": "PARTIAL"
+      },
+      {
+        "domain": "Integrations & Automation",
+        "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
+        "from": "NOT VERIFIED",
         "to": "PARTIAL"
       }
     ],
     "totals": {
       "total": 189,
-      "partial": 126,
-      "not_verified": 59,
-      "blocked": 4,
+      "partial": 139,
+      "not_verified": 45,
+      "blocked": 5,
       "done": 0
     },
-    "caveat": "The latest user-supplied summary (92 PARTIAL/91 NOT VERIFIED/6 BLOCKED) differs by three items from the latest merged feature-level matrix baseline (95/88/6), specifically in Admin & Access Control (user summary 6 PARTIAL vs matrix 8) and Quality, Compliance & Security (user summary 11 PARTIAL vs matrix 12). No feature identities were supplied for those three differences, so they are retained as a reconciliation gap rather than silently reassigned. This matrix applies only evidence-backed new work to the feature-level baseline.",
-    "progress": "Four additional feature rows moved to PARTIAL because concrete domain kernels were added. PARTIAL denotes implementation started, not verified acceptance. No DONE promotions."
+    "caveat": "The 14 NOT VERIFIED→PARTIAL changes are based on concrete candidate-branch code, Edge/RPC, UI or SQL implementation artifacts; they remain unaccepted until disposable migration replay, pgTAP, exact-head CI, authorization, runtime E2E and operational reconciliation pass. The Executive drill-down moved PARTIAL→BLOCKED because current live staging Auth evidence shows the required platform_owner JSON boolean claim is absent. No feature is DONE.",
+    "progress": "139 features have implementation work started (73.5% coverage), 45 remain NOT VERIFIED, 5 are BLOCKED, and 0 are DONE. PARTIAL coverage is not weighted completion. Only two features have previously defensible numeric scores (38% and 30%); 137 PARTIAL rows remain unscored pending six-dimension evidence decomposition."
   },
   "current_feature_counts": {
     "total": 189,
-    "partial": 126,
-    "not_verified": 59,
-    "blocked": 4,
+    "partial": 139,
+    "not_verified": 45,
+    "blocked": 5,
     "done": 0
+  },
+  "latest_live_audit_2026_11_27": {
+    "as_of": "2026-11-27 07:16 WIB",
+    "repository": "dlice8888/dlice-landing-page",
+    "candidate_branch": "feat/eight-domain-official-migrations-20261127",
+    "candidate_head": "e82ad0297877642020a13f3a5fab2366ba93a3f2",
+    "candidate_pr_status": "No exact-head GitHub Actions workflow run returned; combined status shows Vercel Preview success only. Eight-domain SQL and contract suites remain unverified at exact head.",
+    "supabase_staging": {
+      "project": "dlice-staging",
+      "project_id": "higoadrzxnhzbbwhdbmh",
+      "status": "ACTIVE_HEALTHY",
+      "applied_migration_versions": 63,
+      "edge_function": {
+        "slug": "dlice-orders",
+        "status": "ACTIVE",
+        "version": 73,
+        "verify_jwt": false
+      },
+      "auth_platform_owner_true_count": 0,
+      "auth_platform_owner_claim_present_count": 0,
+      "owner_authorization": "NOT VERIFIED; dlice-orders requires raw_app_meta_data.platform_owner JSON boolean true and matching DLICE_PLATFORM_OWNER_USER_IDS allowlist UUID.",
+      "pos_reconciliation": {
+        "sales": 6,
+        "sales_total_idr": 600,
+        "sale_items": 6,
+        "sale_item_total_idr": 600,
+        "tender_rows": 0,
+        "tender_total_idr": 0,
+        "receipt_rows": 0,
+        "kds_tickets": 6,
+        "stock_movement_rows": 26,
+        "stock_transfer_rows": 0
+      },
+      "cash_drawer": {
+        "closed_shifts": 7,
+        "expected_cash_idr": 600,
+        "counted_cash_idr": 600,
+        "variance_idr": 0
+      },
+      "pos_acceptance": "NOT PASSED: item totals match sale totals, but tender allocation and immutable receipts are absent; KDS lifecycle, stock linkage and audit-event reconciliation remain unproven."
+    },
+    "vercel_preview": {
+      "project": "dlice-landing-page",
+      "deployment_id": "dpl_E1VS8QDQZwhSsvXMLXqBMZj6ukbL",
+      "state": "READY",
+      "branch": "feat/eight-domain-official-migrations-20261127",
+      "commit": "e82ad0297877642020a13f3a5fab2366ba93a3f2",
+      "production_changed": false
+    },
+    "release_flags": {
+      "TENANT_ISOLATION_RELEASED": false,
+      "PUBLIC_TENANT_ROUTING_RELEASED": false
+    },
+    "safety": "Read-only audit only; no staging schema/data/Auth/secret/Edge Function mutation and no Production mutation."
   }
 }
