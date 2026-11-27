@@ -71,7 +71,7 @@ export async function recordBranchIncident(input, deps) {
   const description = required(input.description, "description");
   const severity = input.severity;
   if (!["low", "medium", "high", "critical"].includes(severity)) fail("BRANCH_INCIDENT_SEVERITY_INVALID", "Unsupported incident severity");
-  const evidenceReferences = Array.isArray(input.evidenceReferences) ? [...new Set(input.evidenceReferences.map((v) => required(v, "evidenceReference"))] : [];
+  const evidenceReferences = Array.isArray(input.evidenceReferences) ? [...new Set(input.evidenceReferences.map((v) => required(v, "evidenceReference"))) ] : [];
   return inBranchTransaction(deps, scope, async (tx) => {
     const prior = await adapter(deps, "findBranchIncidentByIdempotencyKey")(tx, scope);
     if (prior) return Object.freeze({ status: "duplicate", incidentId: prior.id, escalationTaskId: prior.escalationTaskId ?? null });
