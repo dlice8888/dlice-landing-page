@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 155,
-    "NOT VERIFIED": 29,
+    "PARTIAL": 158,
+    "NOT VERIFIED": 26,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -6075,9 +6075,9 @@
       "domain": "CRM, Loyalty & Marketing",
       "requirement": "Referral program",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Attribution and fraud controls missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Attribution and fraud controls missing. Implementation started in PR #153; database, runtime integration and reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 167
@@ -6087,8 +6087,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/crm-referral-support-ltv-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -6097,13 +6099,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -6113,18 +6119,35 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": [],
+        "notes": "Implementation-start evidence only; not DONE until database, consent, authorization, E2E and POS/Finance/BI reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "referral_support_sla_and_customer_ltv_workflows",
+            "commit": "e08c843098c3de584961117d3a22c4c853f3bcd5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; canonical DB, adapters, UI, fraud controls, workers and staging acceptance remain open."
+          }
+        ],
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
-      }
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D10-F07",
@@ -6195,9 +6218,9 @@
       "domain": "CRM, Loyalty & Marketing",
       "requirement": "Feedback/reviews/support cases",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Ticketing, SLA and escalation missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Ticketing, SLA and escalation missing. Implementation started in PR #153; database, runtime integration and reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 169
@@ -6207,8 +6230,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/crm-referral-support-ltv-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -6217,13 +6242,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -6233,27 +6262,44 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": [],
+        "notes": "Implementation-start evidence only; not DONE until database, consent, authorization, E2E and POS/Finance/BI reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "referral_support_sla_and_customer_ltv_workflows",
+            "commit": "e08c843098c3de584961117d3a22c4c853f3bcd5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; canonical DB, adapters, UI, fraud controls, workers and staging acceptance remain open."
+          }
+        ],
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
-      }
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D10-F09",
       "domain": "CRM, Loyalty & Marketing",
       "requirement": "Repeat purchase and customer lifetime analysis",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Canonical customer identity and verified BI metrics missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Canonical customer identity and verified BI metrics missing. Implementation started in PR #153; database, runtime integration and reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 170
@@ -6263,8 +6309,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/crm-referral-support-ltv-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -6273,13 +6321,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -6289,18 +6341,35 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": [],
+        "notes": "Implementation-start evidence only; not DONE until database, consent, authorization, E2E and POS/Finance/BI reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "referral_support_sla_and_customer_ltv_workflows",
+            "commit": "e08c843098c3de584961117d3a22c4c853f3bcd5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; canonical DB, adapters, UI, fraud controls, workers and staging acceptance remain open."
+          }
+        ],
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
-      }
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D11-F01",
@@ -12084,8 +12153,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 155,
-    "NOT VERIFIED": 29,
+    "PARTIAL": 158,
+    "NOT VERIFIED": 26,
     "BLOCKED": 5,
     "DONE": 0
   },
