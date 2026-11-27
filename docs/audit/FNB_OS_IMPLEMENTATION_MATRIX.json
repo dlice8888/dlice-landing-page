@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality and Inventory implementation-start evidence)",
+  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality, Inventory and POS promotion implementation-start evidence)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -913,13 +913,13 @@
         {
           "requirement": "Discounts, coupons, vouchers, special pricing",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Rule engine, approvals, and audit evidence missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 50
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D02-F05",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -956,12 +956,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; DB, POS UI, refund and E2E acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: approved promotion calculations and atomic voucher redemption source with contract tests. DB/RLS, adapter, Edge route, POS UI, refund reversal and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
@@ -1548,12 +1556,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 13,
-        "partial": 12,
-        "not_verified": 1,
+        "partial": 13,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 92.3,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -13292,8 +13300,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 162,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 162 PARTIAL features remain unscored pending six-dimension evidence decomposition. 15 features remain NOT VERIFIED and 5 remain BLOCKED."
+    "unscored_partial_features": 163,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 163 PARTIAL features remain unscored pending six-dimension evidence decomposition. 14 features remain NOT VERIFIED and 5 remain BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
