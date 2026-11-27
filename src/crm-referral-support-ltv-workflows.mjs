@@ -50,6 +50,7 @@ export async function awardQualifiedReferral(input,deps){
   await adapter(deps,"appendAudit")(tx,{...s,action:"crm.referral.reward_awarded",entityType:"crm_referral_reward",entityId:saved.id,
    metadata:{sourceSaleId:decision.sourceSaleId,netSaleIdr:decision.netSaleIdr}});
   return Object.freeze({status:"awarded",rewardId:saved.id,sourceSaleId:decision.sourceSaleId});
+ });
 }
 
 /** Create a support case using a server-verified customer identity and SLA policy. */
