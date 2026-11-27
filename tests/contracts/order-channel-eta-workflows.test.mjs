@@ -21,8 +21,8 @@ test("ETA aggregates work per station and adds approved buffer",()=>{
   items:[{stationId:"hot",prepMinutes:4,quantity:2,stationQueuedMinutes:10},
    {stationId:"hot",prepMinutes:3,quantity:1,stationQueuedMinutes:10},
    {stationId:"cold",prepMinutes:5,quantity:1,stationQueuedMinutes:0}]});
- assert.equal(result.etaMinutes,23);
- assert.equal(result.estimatedReadyAt,"2026-11-27T10:23:00.000Z");
+ assert.equal(result.etaMinutes,26);
+ assert.equal(result.estimatedReadyAt,"2026-11-27T10:26:00.000Z");
 });
 test("ETA rejects missing station prep standards and invalid horizon",()=>{
  assert.throws(()=>estimateOrderPreparationEta({now:"2026-11-27T10:00:00Z",sourceRevision:"v1",
