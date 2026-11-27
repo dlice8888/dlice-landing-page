@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(10);
+SELECT plan(11);
 
 SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_journal_period()', 'EXECUTE'),
   'anon cannot execute journal-period trigger function');
@@ -30,13 +30,23 @@ SELECT ok(NOT EXISTS (
     AND has_function_privilege('authenticated', p.oid, 'EXECUTE')
 ), 'authenticated cannot execute any public-schema RPC');
 
+-- Trigger-returning functions are invoked by PostgreSQL through their trigger
+-- bindings, not directly by service_role/PostgREST. Keep their EXECUTE ACL
+-- revoked; require service_role EXECUTE only for callable public RPCs.
 SELECT ok(NOT EXISTS (
   SELECT 1
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
+    AND p.prorettype <> 'trigger'::regtype
     AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
-), 'service_role retains EXECUTE on all public-schema functions');
+), 'service_role retains EXECUTE on all callable public-schema RPCs');
+
+SELECT ok(
+  NOT has_function_privilege('service_role', 'public.prevent_pos_sale_receipt_mutation()', 'EXECUTE')
+  AND NOT has_function_privilege('anon', 'public.prevent_pos_sale_receipt_mutation()', 'EXECUTE')
+  AND NOT has_function_privilege('authenticated', 'public.prevent_pos_sale_receipt_mutation()', 'EXECUTE'),
+  'immutable receipt trigger function is not directly executable by API roles');
 
 SELECT ok(NOT EXISTS (
   SELECT 1
