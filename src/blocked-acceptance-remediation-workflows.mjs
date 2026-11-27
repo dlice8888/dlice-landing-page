@@ -81,7 +81,7 @@ export function reconcileProviderSettlement(input){
  const tenantId=req(input?.tenantId,"tenantId"),branchId=req(input?.branchId,"branchId");
  const settlement=input.settlement,schedule=input.feeSchedule,bank=input.bankStatement;
  if(!settlement||!schedule||!bank||settlement.tenantId!==tenantId||settlement.branchId!==branchId||
-  bank.tenantId!==tenantId||bank.branchId!==branchId)fail("SETTLEMENT_RECONCILIATION_SCOPE_INVALID","Settlement, fee schedule and bank facts must match tenant/branch");
+  bank.tenantId!==tenantId||bank.branchId!==branchId||schedule.tenantId!==tenantId||schedule.branchId!==branchId)fail("SETTLEMENT_RECONCILIATION_SCOPE_INVALID","Settlement, fee schedule and bank facts must match tenant/branch");
  if(schedule.status!=="approved"||schedule.provider!==settlement.provider||schedule.currency!=="IDR")
   fail("SETTLEMENT_FEE_SCHEDULE_NOT_APPROVED","Approved provider fee schedule is required");
  if(settlement.status!=="settled"||settlement.reconciliationStatus!=="RECONCILED"||
