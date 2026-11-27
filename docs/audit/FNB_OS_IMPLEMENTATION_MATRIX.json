@@ -13180,8 +13180,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 138,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 138 PARTIAL features remain unscored pending six-dimension evidence decomposition. 39 features remain NOT VERIFIED and 5 remain BLOCKED."
+    "unscored_partial_features": 148,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 148 PARTIAL features remain unscored pending six-dimension evidence decomposition. 29 features remain NOT VERIFIED and 5 remain BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
