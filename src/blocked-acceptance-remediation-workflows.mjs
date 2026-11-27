@@ -56,7 +56,7 @@ export function assertApprovedRecipeVersionParity(input){
   fail("RECIPE_VERSION_PARITY_SCOPE_MISMATCH","Sale and production batch must match tenant, branch and product");
  if(sale.recipeStatus!=="approved"||batch.recipeStatus!=="approved"||
   !sale.recipeVersion||sale.recipeVersion!==batch.recipeVersion||
-  sale.recipeSnapshotHash!==batch.recipeSnapshotHash)
+  typeof sale.recipeSnapshotHash!=="string"||sale.recipeSnapshotHash.length<8||sale.recipeSnapshotHash!==batch.recipeSnapshotHash)
   fail("RECIPE_VERSION_PARITY_FAILED","POS and production must use the same approved recipe version and immutable snapshot hash");
  const soldAt=Date.parse(sale.soldAt),effectiveFrom=Date.parse(sale.recipeEffectiveFrom);
  if(!Number.isFinite(soldAt)||!Number.isFinite(effectiveFrom)||effectiveFrom>soldAt)
