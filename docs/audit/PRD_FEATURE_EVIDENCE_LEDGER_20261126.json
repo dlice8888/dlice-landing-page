@@ -273,46 +273,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 36
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/executive-stock-waste-anomaly-alerts.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope and reconciled-source requirements; Owner dual gate runtime not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "alerts require reconciled source data; persisted alert-to-transaction lineage not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -333,11 +340,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open.",
+      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D01-F06",
@@ -351,46 +359,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 37
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/executive-stock-waste-anomaly-alerts.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope and reconciled-source requirements; Owner dual gate runtime not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "alerts require reconciled source data; persisted alert-to-transaction lineage not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -411,11 +426,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open.",
+      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D01-F07",
@@ -929,46 +945,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 50
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/pos-promotion-voucher-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch/customer scope and in-transaction authorization port; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/pos-promotion-voucher-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/pos-promotion-voucher-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "idempotent voucher consumption and audit adapter contract; refund/Finance reconciliation not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -989,11 +1012,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved effective-dated promotion calculation, branch/customer eligibility, min-spend/max-cap rules and transactional voucher redemption with locked balance/idempotency/audit contracts. Commit 0a08c60; canonical DB/RLS, Supabase adapter, authenticated Edge route, POS UI, refund reversal and staging concurrency E2E remain open.",
+      "work_evidence": "PR #153 adds approved effective-dated promotion calculation, branch/customer eligibility, min-spend/max-cap rules and transactional voucher redemption with locked balance/idempotency/audit contracts. Commit 0a08c60; canonical DB/RLS, Supabase adapter, authenticated Edge route, POS UI, refund reversal and staging concurrency E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D02-F06",
@@ -1626,46 +1650,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 64
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/order-channel-eta-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, verified event and approved mapping contract; runtime policies unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "SLA escalation and canonical source reference contract; external provider/Finance reconciliation not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -1686,11 +1717,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open.",
+      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D03-F03",
@@ -1993,46 +2025,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 70
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/order-channel-eta-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, verified event and approved mapping contract; runtime policies unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "SLA escalation and canonical source reference contract; external provider/Finance reconciliation not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -2053,11 +2092,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open.",
+      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D03-F09",
@@ -2236,46 +2276,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 78
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/kitchen-routing-food-safety-allergens.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch policy and ingredient scope validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "quarantine disposition and KDS/Inventory linkage contract; persisted stock evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -2296,11 +2343,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open.",
+      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D04-F03",
@@ -2589,46 +2637,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 84
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/kitchen-routing-food-safety-allergens.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch policy and ingredient scope validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "quarantine disposition and KDS/Inventory linkage contract; persisted stock evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -2649,11 +2704,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open.",
+      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D04-F09",
@@ -2722,46 +2778,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 86
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/blocked-acceptance-remediation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -2782,11 +2845,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D05-F01",
@@ -3020,44 +3084,51 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 95
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/recipe-bom-unit-economics.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "same-tenant recipe/ingredient validation; runtime RLS and authorization not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -3078,11 +3149,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D05-F06",
@@ -3151,44 +3223,51 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 97
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/recipe-bom-unit-economics.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "same-tenant recipe/ingredient validation; runtime RLS and authorization not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -3209,11 +3288,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D05-F08",
@@ -3227,46 +3307,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 98
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/kitchen-routing-food-safety-allergens.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch policy and ingredient scope validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/kitchen-routing-food-safety-allergens.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "quarantine disposition and KDS/Inventory linkage contract; persisted stock evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -3287,11 +3374,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open.",
+      "work_evidence": "PR #153 adds approved station routing/capacity, policy-driven food-safety temperature/shelf-life/allergen quarantine and recipe-ingredient allergen validation with contract tests. Commit bba5f7d; canonical DB/RLS, KDS integration, private Storage, adapters, UI and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D05-F09",
@@ -3415,46 +3503,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 101
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/blocked-acceptance-remediation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -3475,11 +3570,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D06-F01",
@@ -3713,46 +3809,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 110
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/inventory-lot-valuation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch/item validation and in-transaction authorization port; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "valuation snapshot requires approved policy and historical lot layers; Finance GL reconciliation not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -3773,11 +3876,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open.",
+      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D06-F06",
@@ -4019,46 +4123,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 115
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/inventory-lot-valuation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch/item validation and in-transaction authorization port; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "valuation snapshot requires approved policy and historical lot layers; Finance GL reconciliation not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -4079,11 +4190,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open.",
+      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D06-F11",
@@ -4272,46 +4384,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 123
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/procurement-supplier-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "stock movement and AP journal posting adapter contract; no persisted evidence yet"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -4332,11 +4451,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D07-F03",
@@ -4405,46 +4525,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 125
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/procurement-supplier-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "stock movement and AP journal posting adapter contract; no persisted evidence yet"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -4465,11 +4592,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D07-F05",
@@ -4786,46 +4914,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 131
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/procurement-supplier-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "stock movement and AP journal posting adapter contract; no persisted evidence yet"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -4846,11 +4981,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F01",
@@ -4974,46 +5110,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 138
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/blocked-acceptance-remediation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5034,11 +5177,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F04",
@@ -5052,8 +5196,8 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 139
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
@@ -5061,38 +5205,45 @@
           "evidence": [
             "src/branch-operations-workflows.mjs",
             "tests/contracts/branch-operations-workflows.test.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending"
-          ]
+            "Contract tests authored; exact-head CI result pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "Append-audit adapter contract; persisted audit evidence not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5113,11 +5264,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F05",
@@ -5241,8 +5393,8 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 142
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
@@ -5250,38 +5402,45 @@
           "evidence": [
             "src/branch-operations-workflows.mjs",
             "tests/contracts/branch-operations-workflows.test.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending"
-          ]
+            "Contract tests authored; exact-head CI result pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "Append-audit adapter contract; persisted audit evidence not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5302,11 +5461,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F08",
@@ -5320,8 +5480,8 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 143
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
@@ -5329,38 +5489,45 @@
           "evidence": [
             "src/branch-operations-workflows.mjs",
             "tests/contracts/branch-operations-workflows.test.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending"
-          ]
+            "Contract tests authored; exact-head CI result pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "Append-audit adapter contract; persisted audit evidence not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5381,11 +5548,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F09",
@@ -5399,8 +5567,8 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 144
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
@@ -5408,38 +5576,45 @@
           "evidence": [
             "src/branch-operations-workflows.mjs",
             "tests/contracts/branch-operations-workflows.test.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending"
-          ]
+            "Contract tests authored; exact-head CI result pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "Append-audit adapter contract; persisted audit evidence not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5460,11 +5635,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D08-F10",
@@ -5478,8 +5654,8 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 145
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
@@ -5487,38 +5663,45 @@
           "evidence": [
             "src/branch-operations-workflows.mjs",
             "tests/contracts/branch-operations-workflows.test.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending"
-          ]
+            "Contract tests authored; exact-head CI result pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "Append-audit adapter contract; persisted audit evidence not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -5539,11 +5722,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D09-F01",
@@ -6381,46 +6565,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 167
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/crm-referral-support-ltv-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -6442,11 +6633,12 @@
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D10-F07",
@@ -6524,46 +6716,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 169
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/crm-referral-support-ltv-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -6585,11 +6784,12 @@
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D10-F09",
@@ -6603,46 +6803,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 170
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 33,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/crm-referral-support-ltv-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant identity validation, consent gate and in-transaction authorization port; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/crm-referral-support-ltv-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
           "evidence": [
             "reconciled POS sale required for referral and LTV; persisted CRM/Finance reconciliation not yet verified"
-          ]
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -6664,11 +6871,12 @@
         "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open.",
+      "work_evidence": "PR #153 adds referral qualification and reward orchestration, consent-gated SLA support cases, and LTV from deduplicated reconciled paid net sales with contract tests. Commit e08c843; canonical schema/RLS, Supabase adapters, Edge Function, UI, fraud/compensation, support SLA workers and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D11-F01",
@@ -6800,46 +7008,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 177
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/blocked-acceptance-remediation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -6861,11 +7076,12 @@
         "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D11-F04",
@@ -7192,46 +7408,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 183
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/finance-budget-consolidation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope and approved budget/closed-period gates; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "balanced journal and intercompany elimination contracts; persisted GL close reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -7252,11 +7475,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D11-F10",
@@ -7270,46 +7494,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 184
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/finance-budget-consolidation-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope and approved budget/closed-period gates; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "balanced journal and intercompany elimination contracts; persisted GL close reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -7330,11 +7561,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D11-F11",
@@ -7965,46 +8197,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 198
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/hr-recruitment-training-performance-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch checks, independent reviewer/approver contracts and session revocation port; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/hr-recruitment-training-performance-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/hr-recruitment-training-performance-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "offboarding asset-return and performance metrics reconciliation adapter contracts; payroll close not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -8025,11 +8264,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds governed recruitment transitions/onboarding, independent offboarding with session revocation and asset-return checks, verified training/certification and performance reviews from reconciled metrics. Commit 4ac066a; canonical schema/RLS, adapters, Edge routes, UI, payroll final settlement and staging E2E remain open.",
+      "work_evidence": "PR #153 adds governed recruitment transitions/onboarding, independent offboarding with session revocation and asset-return checks, verified training/certification and performance reviews from reconciled metrics. Commit 4ac066a; canonical schema/RLS, adapters, Edge routes, UI, payroll final settlement and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D12-F09",
@@ -8043,46 +8283,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 199
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/hr-recruitment-training-performance-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch checks, independent reviewer/approver contracts and session revocation port; runtime RLS unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/hr-recruitment-training-performance-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/hr-recruitment-training-performance-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "offboarding asset-return and performance metrics reconciliation adapter contracts; payroll close not verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -8103,11 +8350,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds governed recruitment transitions/onboarding, independent offboarding with session revocation and asset-return checks, verified training/certification and performance reviews from reconciled metrics. Commit 4ac066a; canonical schema/RLS, adapters, Edge routes, UI, payroll final settlement and staging E2E remain open.",
+      "work_evidence": "PR #153 adds governed recruitment transitions/onboarding, independent offboarding with session revocation and asset-return checks, verified training/certification and performance reviews from reconciled metrics. Commit 4ac066a; canonical schema/RLS, adapters, Edge routes, UI, payroll final settlement and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D13-F01",
@@ -9073,46 +9321,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 222
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/bi-forecast-report-alert-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -9133,11 +9388,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D14-F08",
@@ -9216,46 +9472,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 224
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/bi-forecast-report-alert-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -9276,11 +9539,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D14-F10",
@@ -9294,46 +9558,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 225
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/bi-forecast-report-alert-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -9354,11 +9625,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D15-F01",
@@ -9647,46 +9919,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 235
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/admin-access-review-recovery-support-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "independent reviewer/approver, tenant-owner approval and read-only JIT scope contracts; runtime RLS/Auth unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "session revocation and audit adapter contracts; actual Auth session evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -9707,11 +9986,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open.",
+      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D15-F07",
@@ -9725,46 +10005,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 236
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/admin-access-review-recovery-support-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "independent reviewer/approver, tenant-owner approval and read-only JIT scope contracts; runtime RLS/Auth unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "session revocation and audit adapter contracts; actual Auth session evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -9785,11 +10072,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open.",
+      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D15-F08",
@@ -10308,46 +10596,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 249
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/admin-access-review-recovery-support-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "independent reviewer/approver, tenant-owner approval and read-only JIT scope contracts; runtime RLS/Auth unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/admin-access-review-recovery-support-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "session revocation and audit adapter contracts; actual Auth session evidence not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -10368,11 +10663,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open.",
+      "work_evidence": "PR #153 adds independent device/session access reviews, official-Auth-proof-gated account recovery with factor rotation and session revocation, and tenant-owner-approved read-only JIT support access limited to 30 minutes. Commit 2723e31; actual Supabase Auth Admin integration, DB/RLS, UI, persisted session revocation and staging E2E remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D16-F07",
@@ -10634,46 +10930,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 258
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/integration-connector-health-sync-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -10694,11 +10997,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D17-F04",
@@ -10928,46 +11232,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 262
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/integration-connector-health-sync-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -10988,11 +11299,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D17-F08",
@@ -11061,46 +11373,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 264
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/integration-connector-health-sync-workflows.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -11121,11 +11440,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D18-F01",
@@ -11761,46 +12081,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 279
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/quality-release-accessibility-gates.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -11821,11 +12148,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D18-F12",
@@ -11839,46 +12167,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 282
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/quality-release-accessibility-gates.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -11899,11 +12234,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D18-F13",
@@ -12320,46 +12656,53 @@
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 290
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 38,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
           "status": "PARTIAL",
           "evidence": [
             "src/quality-release-accessibility-gates.mjs"
-          ]
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "authorization": {
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
             "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
-          ]
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
+          "status": "PASS",
           "evidence": [
-            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
-          ]
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending",
+            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "PARTIAL",
           "evidence": [
             "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
-          ]
+          ],
+          "score": 5
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -12380,11 +12723,12 @@
         ]
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
       "active_prs": [
         153
       ],
-      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
+      "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
     },
     {
       "feature_id": "D18-F20",
@@ -12917,5 +13261,10 @@
       "unscored_partial": 138,
       "feature_ledger_contract": "PASS"
     }
+  },
+  "progress_scoring": {
+    "scored_partial_features": 50,
+    "unscored_partial_features": 138,
+    "status": "50 PARTIAL features have evidence-weighted progress scores (including 43 newly started features); 138 PARTIAL features remain unscored because their six-dimension evidence has not been decomposed. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero."
   }
 }
