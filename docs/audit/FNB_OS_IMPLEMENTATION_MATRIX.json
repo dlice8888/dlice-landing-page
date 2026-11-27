@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Operations, Menu/Recipe, Procurement and CRM implementation-start evidence)",
+  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM and BI implementation-start evidence)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -8862,13 +8862,13 @@
         {
           "requirement": "Demand forecasting and accuracy monitoring",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Forecast pipeline, evaluation and override audit missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 222
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D14-F07",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -8905,12 +8905,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; data lineage, DB, secure export, E2E and reconciliation remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: reconciled-data demand forecasting, approved scheduled reporting and independent KPI alert verification source with contract tests. DB/RLS, source adapters, secure export, scheduler, UI and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Data quality monitoring and anomaly detection",
@@ -8984,13 +8992,13 @@
         {
           "requirement": "Export and scheduled executive reports",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Controlled exports and schedules missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 224
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D14-F09",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -9027,23 +9035,31 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; data lineage, DB, secure export, E2E and reconciliation remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: reconciled-data demand forecasting, approved scheduled reporting and independent KPI alert verification source with contract tests. DB/RLS, source adapters, secure export, scheduler, UI and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Alert → action → measured outcome",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Closed-loop workflow missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 225
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D14-F10",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -9080,24 +9096,32 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; data lineage, DB, secure export, E2E and reconciliation remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: reconciled-data demand forecasting, approved scheduled reporting and independent KPI alert verification source with contract tests. DB/RLS, source adapters, secure export, scheduler, UI and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 7,
-        "not_verified": 3,
+        "partial": 10,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 70,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -13204,8 +13228,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 151,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 151 PARTIAL features remain unscored pending six-dimension evidence decomposition. 26 features remain NOT VERIFIED and 5 remain BLOCKED."
+    "unscored_partial_features": 154,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 154 PARTIAL features remain unscored pending six-dimension evidence decomposition. 23 features remain NOT VERIFIED and 5 remain BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
