@@ -30,6 +30,17 @@ SELECT ok(NOT EXISTS (
     AND has_function_privilege('authenticated', p.oid, 'EXECUTE')
 ), 'authenticated cannot execute any public-schema RPC');
 
+-- Emit the exact callable functions missing the service-role grant when the
+-- aggregate assertion fails; this keeps ACL failures actionable without weakening it.
+SELECT diag('Callable public functions missing service_role EXECUTE: ' || coalesce((
+  SELECT string_agg(p.oid::regprocedure::text, ', ' ORDER BY p.oid::regprocedure::text)
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+  WHERE n.nspname = 'public'
+    AND p.prorettype <> 'trigger'::regtype
+    AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
+), '(none)'));
+
 -- Trigger-returning functions are invoked by PostgreSQL through their trigger
 -- bindings, not directly by service_role/PostgREST. Keep their EXECUTE ACL
 -- revoked; require service_role EXECUTE only for callable public RPCs.
