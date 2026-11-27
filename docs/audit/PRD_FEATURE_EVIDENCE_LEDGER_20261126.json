@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 161,
-    "NOT VERIFIED": 23,
+    "PARTIAL": 164,
+    "NOT VERIFIED": 20,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -10153,9 +10153,9 @@
       "domain": "Integrations & Automation",
       "requirement": "Delivery/e-commerce/WhatsApp/accounting connectors",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Provider-specific integrations not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Provider-specific integrations not proven. Implementation started in PR #153; provider adapters and production/staging runtime remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 258
@@ -10165,8 +10165,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/integration-connector-health-sync-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -10175,13 +10177,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -10190,18 +10196,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no provider is considered connected and no DONE until signed provider contracts, DB, retry, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "approved_connectors_health_monitoring_and_atomic_catalog_sync",
+            "commit": "40b71706d66010e587c437d3e911f57a859be696",
+            "limitations": "Source orchestration and contract tests only; concrete providers, vault, adapters, UI, webhook signatures and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D17-F04",
@@ -10424,9 +10447,9 @@
       "domain": "Integrations & Automation",
       "requirement": "Integration health and alerting",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Health dashboards, lag/error alerts and recovery runbooks missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Health dashboards, lag/error alerts and recovery runbooks missing. Implementation started in PR #153; provider adapters and production/staging runtime remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 262
@@ -10436,8 +10459,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/integration-connector-health-sync-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -10446,13 +10471,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -10461,18 +10490,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no provider is considered connected and no DONE until signed provider contracts, DB, retry, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "approved_connectors_health_monitoring_and_atomic_catalog_sync",
+            "commit": "40b71706d66010e587c437d3e911f57a859be696",
+            "limitations": "Source orchestration and contract tests only; concrete providers, vault, adapters, UI, webhook signatures and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D17-F08",
@@ -10534,9 +10580,9 @@
       "domain": "Integrations & Automation",
       "requirement": "Import/export and catalog synchronization",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Validated imports, conflict resolution and scheduled sync missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Validated imports, conflict resolution and scheduled sync missing. Implementation started in PR #153; provider adapters and production/staging runtime remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 264
@@ -10546,8 +10592,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/integration-connector-health-sync-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -10556,13 +10604,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant scope, approved capability allowlist and secret-reference non-disclosure contracts; runtime policies unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/integration-connector-health-sync-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -10571,18 +10623,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "health telemetry and source checkpoints require persisted source data; staging provider reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no provider is considered connected and no DONE until signed provider contracts, DB, retry, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "approved_connectors_health_monitoring_and_atomic_catalog_sync",
+            "commit": "40b71706d66010e587c437d3e911f57a859be696",
+            "limitations": "Source orchestration and contract tests only; concrete providers, vault, adapters, UI, webhook signatures and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds approved connector/capability resolution with vault-reference non-disclosure, health classification from persisted telemetry and durable alerts, and verified atomic catalog import/sync contracts. Commit 40b7170; provider-specific adapters, signed webhooks, vault integration, retry/outbox, UI and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D18-F01",
@@ -12222,8 +12291,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 161,
-    "NOT VERIFIED": 23,
+    "PARTIAL": 164,
+    "NOT VERIFIED": 20,
     "BLOCKED": 5,
     "DONE": 0
   },
