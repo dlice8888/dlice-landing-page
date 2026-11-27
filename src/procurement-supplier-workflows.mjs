@@ -71,10 +71,16 @@ export function consolidateBranchDemand(input) {
     current.branches.push(Object.freeze({ branchId: row.branchId, purchaseQuantity: net }));
     grouped.set(key, current);
   }
-  return Object.freeze([...grouped.values()].map((row) => Object.freeze({
-    ...row, branches: Object.freeze(row.branches),
-    consolidatedPurchaseQuantity: Number(row.consolidatedPurchaseQuantity.toFixed(6)),
-  })));
+  return Object.freeze([...grouped.values()].map((row) => {
+    const byBranch = new Map();
+    for (const branch of row.branches) {
+      byBranch.set(branch.branchId, (byBranch.get(branch.branchId) ?? 0) + branch.purchaseQuantity);
+    }
+    const branches = [...byBranch.entries()].map(([branchId, purchaseQuantity]) =>
+      Object.freeze({ branchId, purchaseQuantity: Number(purchaseQuantity.toFixed(6)) }));
+    return Object.freeze({ ...row, branchCount: branches.length, branches: Object.freeze(branches),
+      consolidatedPurchaseQuantity: Number(row.consolidatedPurchaseQuantity.toFixed(6)) });
+  }));
 }
 
 /** Request a supplier return against received, not-yet-returned receipt quantity. */
