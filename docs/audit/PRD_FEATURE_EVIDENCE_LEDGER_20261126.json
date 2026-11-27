@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 145,
-    "NOT VERIFIED": 39,
+    "PARTIAL": 150,
+    "NOT VERIFIED": 34,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -4635,9 +4635,9 @@
       "domain": "Branch Operations",
       "requirement": "Daily tasks, due dates and escalation",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Task assignment/scheduling/notification workflow missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Task assignment/scheduling/notification workflow missing. Implementation started in PR #153; see remaining acceptance gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 139
@@ -4647,8 +4647,11 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/branch-operations-workflows.mjs",
+            "tests/contracts/branch-operations-workflows.test.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4657,13 +4660,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Contract tests authored; exact-head CI result pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4673,17 +4680,34 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Append-audit adapter contract; persisted audit evidence not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
+            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
+            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F05",
@@ -4800,9 +4824,9 @@
       "domain": "Branch Operations",
       "requirement": "Photo evidence",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Evidence upload/storage/retention workflow missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Evidence upload/storage/retention workflow missing. Implementation started in PR #153; see remaining acceptance gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 142
@@ -4812,8 +4836,11 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/branch-operations-workflows.mjs",
+            "tests/contracts/branch-operations-workflows.test.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4822,13 +4849,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Contract tests authored; exact-head CI result pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4838,26 +4869,43 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Append-audit adapter contract; persisted audit evidence not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
+            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
+            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F08",
       "domain": "Branch Operations",
       "requirement": "Incidents and corrective actions",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Incident severity, assignment, escalation and closure missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Incident severity, assignment, escalation and closure missing. Implementation started in PR #153; see remaining acceptance gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 143
@@ -4867,8 +4915,11 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/branch-operations-workflows.mjs",
+            "tests/contracts/branch-operations-workflows.test.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4877,13 +4928,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Contract tests authored; exact-head CI result pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4893,26 +4948,43 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Append-audit adapter contract; persisted audit evidence not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
+            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
+            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F09",
       "domain": "Branch Operations",
       "requirement": "Equipment maintenance",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Work orders, preventive maintenance and downtime records missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Work orders, preventive maintenance and downtime records missing. Implementation started in PR #153; see remaining acceptance gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 144
@@ -4922,8 +4994,11 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/branch-operations-workflows.mjs",
+            "tests/contracts/branch-operations-workflows.test.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4932,13 +5007,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Contract tests authored; exact-head CI result pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4948,26 +5027,43 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Append-audit adapter contract; persisted audit evidence not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
+            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
+            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F10",
       "domain": "Branch Operations",
       "requirement": "Branch audit and compliance score",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Audit scoring and executive roll-up missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Audit scoring and executive roll-up missing. Implementation started in PR #153; see remaining acceptance gaps.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 145
@@ -4977,8 +5073,11 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/branch-operations-workflows.mjs",
+            "tests/contracts/branch-operations-workflows.test.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4987,13 +5086,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Contract tests authored; exact-head CI result pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -5003,17 +5106,34 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Append-audit adapter contract; persisted audit evidence not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
+            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
+            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D09-F01",
@@ -11853,8 +11973,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 145,
-    "NOT VERIFIED": 39,
+    "PARTIAL": 150,
+    "NOT VERIFIED": 34,
     "BLOCKED": 5,
     "DONE": 0
   },
