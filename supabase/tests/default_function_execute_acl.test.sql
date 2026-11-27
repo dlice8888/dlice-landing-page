@@ -38,6 +38,8 @@ SELECT diag('Callable public functions missing service_role EXECUTE: ' || coales
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
     AND p.prorettype <> 'trigger'::regtype
+    -- The legacy no-actor overload is deliberately disabled; only the audited overload is callable.
+    AND p.oid <> to_regprocedure('public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)')
     AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
 ), '(none)'));
 
@@ -52,6 +54,13 @@ SELECT ok(NOT EXISTS (
     AND p.prorettype <> 'trigger'::regtype
     AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
 ), 'service_role retains EXECUTE on all callable public-schema RPCs');
+
+SELECT ok(
+  NOT has_function_privilege('service_role', 'public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)', 'EXECUTE')
+  AND NOT has_function_privilege('anon', 'public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)', 'EXECUTE')
+  AND NOT has_function_privilege('authenticated', 'public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)', 'EXECUTE'),
+  'legacy SaaS usage RPC without actor/audit context is disabled for every API role'
+);
 
 SELECT ok(
   NOT has_function_privilege('service_role', 'public.prevent_pos_sale_receipt_mutation()', 'EXECUTE')
