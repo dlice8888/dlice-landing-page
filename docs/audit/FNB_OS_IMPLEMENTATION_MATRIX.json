@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-25",
+  "snapshot_at": "2026-11-27",
   "baseline_commit": "78f929dac2b05f436aaa7f50005310166f8a4779",
   "method": "189 PRD features row-by-row; source implementation evidence checked against current feature branch, open PR #143, Supabase staging read-only catalog, and current Vercel Preview metadata. A feature is PARTIAL only after concrete implementation starts; PARTIAL coverage is not completion percentage.",
   "release_flags": {
