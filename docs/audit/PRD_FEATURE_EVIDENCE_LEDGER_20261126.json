@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 178,
-    "NOT VERIFIED": 6,
+    "PARTIAL": 180,
+    "NOT VERIFIED": 4,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -1573,9 +1573,9 @@
       "domain": "Order Management",
       "requirement": "WhatsApp, marketplace, additional channels",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Provider integrations and contract tests missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Provider integrations and contract tests missing. Implementation started in PR #153; provider integration, DB, UI and staging E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 64
@@ -1585,8 +1585,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/order-channel-eta-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -1595,13 +1597,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, verified event and approved mapping contract; runtime policies unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -1610,18 +1616,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "SLA escalation and canonical source reference contract; external provider/Finance reconciliation not verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no provider marked connected and no DONE until signed provider tests, DB/RLS, KDS/Delivery E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "verified_external_order_channel_ingestion_and_prep_eta_sla",
+            "commit": "90b6ce6911619579b436b211caabfb291eaea6a1",
+            "limitations": "Source orchestration and contract tests only; actual provider adapters, DB/RLS, UI, notifications and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D03-F03",
@@ -1917,9 +1940,9 @@
       "domain": "Order Management",
       "requirement": "Preparation ETA and exception escalation",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "SLA prediction and escalation workflow missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "SLA prediction and escalation workflow missing. Implementation started in PR #153; provider integration, DB, UI and staging E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 70
@@ -1929,8 +1952,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/order-channel-eta-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -1939,13 +1964,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, verified event and approved mapping contract; runtime policies unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/order-channel-eta-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -1954,18 +1983,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "SLA escalation and canonical source reference contract; external provider/Finance reconciliation not verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no provider marked connected and no DONE until signed provider tests, DB/RLS, KDS/Delivery E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "verified_external_order_channel_ingestion_and_prep_eta_sla",
+            "commit": "90b6ce6911619579b436b211caabfb291eaea6a1",
+            "limitations": "Source orchestration and contract tests only; actual provider adapters, DB/RLS, UI, notifications and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds signed/replay-verified external order normalization and idempotent channel ingestion, station-based preparation ETA and SLA escalation with contract tests. Commit 90b6ce6; provider-specific credentials, adapters, canonical schema/RLS, UI, notifications and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D03-F09",
@@ -12613,8 +12659,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 178,
-    "NOT VERIFIED": 6,
+    "PARTIAL": 180,
+    "NOT VERIFIED": 4,
     "BLOCKED": 5,
     "DONE": 0
   },
