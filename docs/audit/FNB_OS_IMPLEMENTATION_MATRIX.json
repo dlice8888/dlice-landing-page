@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated: all 39 baseline NOT VERIFIED features moved to PARTIAL with concrete PR #153 implementation-start artifacts)",
+  "snapshot_at": "2026-11-27 (live audit: 188 PARTIAL, zero NOT VERIFIED, one Owner drill-down BLOCKED)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -2692,13 +2692,13 @@
         {
           "requirement": "Theoretical vs actual usage / waste variance",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No verified variance report reconciled against stock ledger.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 86
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D04-F10",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -2735,24 +2735,32 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Remediation code started; external/runtime acceptance remains open.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: production usage variance, immutable recipe version parity, evidence-gated branch opening and provider settlement fee reconciliation logic/tests. DB/RLS, live adapters, approvals, provider sandbox and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 9,
+        "partial": 10,
         "not_verified": 0,
-        "blocked": 1,
+        "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 90,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -3330,13 +3338,13 @@
         {
           "requirement": "POS/production uses the same approved recipe version",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Cross-module version parity needs E2E proof.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 101
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D05-F11",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -3373,24 +3381,32 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Remediation code started; external/runtime acceptance remains open.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: production usage variance, immutable recipe version parity, evidence-gated branch opening and provider settlement fee reconciliation logic/tests. DB/RLS, live adapters, approvals, provider sandbox and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 11,
-        "partial": 10,
+        "partial": 11,
         "not_verified": 0,
-        "blocked": 1,
+        "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 90.9,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -4849,13 +4865,13 @@
         {
           "requirement": "Opening readiness changes branch operating status",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Real branch lifecycle integration not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 138
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D08-F03",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -4892,12 +4908,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Remediation code started; external/runtime acceptance remains open.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: production usage variance, immutable recipe version parity, evidence-gated branch opening and provider settlement fee reconciliation logic/tests. DB/RLS, live adapters, approvals, provider sandbox and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Daily tasks, due dates and escalation",
@@ -5317,12 +5341,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 9,
+        "partial": 10,
         "not_verified": 0,
-        "blocked": 1,
+        "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 90,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -6618,7 +6642,7 @@
         {
           "requirement": "Payment provider fee and settlement variance",
           "source_status": "GATE",
-          "audit_status": "BLOCKED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -6663,10 +6687,10 @@
           "crosswalk": {
             "status": "MATCHED_ACTIVE_PR",
             "matched_prs": [
-              146
+              153
             ],
             "audit_pr": 147,
-            "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
+            "notes": "Remediation code started; external/runtime acceptance remains open.",
             "pr_evidence": [
               {
                 "pr": 146,
@@ -6678,8 +6702,11 @@
             "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
           },
           "active_prs": [
-            146
-          ]
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: production usage variance, immutable recipe version parity, evidence-gated branch opening and provider settlement fee reconciliation logic/tests. DB/RLS, live adapters, approvals, provider sandbox and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "AR/AP subledgers and aging",
@@ -7260,12 +7287,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 11,
+        "partial": 12,
         "not_verified": 0,
-        "blocked": 1,
+        "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 91.7,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -13412,8 +13439,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 177,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 177 PARTIAL features remain unscored pending six-dimension evidence decomposition. All 39 baseline NOT VERIFIED features have implementation-start evidence and are now PARTIAL. 5 features remain BLOCKED."
+    "unscored_partial_features": 181,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 181 PARTIAL features remain unscored pending six-dimension evidence decomposition. All 39 baseline NOT VERIFIED features and 4 of 5 formerly BLOCKED features now have active implementation evidence and are PARTIAL. D01-F09 remains BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
