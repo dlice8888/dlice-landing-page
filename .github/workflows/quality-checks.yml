@@ -69,6 +69,8 @@ jobs:
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
       - name: Run Branch Operations evidence workflow contracts
         run: node --test tests/contracts/branch-operations-workflows.test.mjs
+      - name: Check CRM referral support and LTV module syntax
+        run: node --check src/crm-referral-support-ltv-workflows.mjs
       - name: Run CRM referral support and LTV workflow contracts
         run: node --test tests/contracts/crm-referral-support-ltv-workflows.test.mjs
       - name: Run BI forecasting reporting and KPI alert workflow contracts
