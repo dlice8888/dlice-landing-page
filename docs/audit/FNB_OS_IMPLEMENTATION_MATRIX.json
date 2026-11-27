@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality, Inventory, POS promotions, HR, Admin/SaaS access, Kitchen and allergen implementation-start evidence)",
+  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality, Inventory, POS promotions, HR, Admin/SaaS access, Kitchen, allergens and Order implementation-start evidence)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -1630,13 +1630,13 @@
         {
           "requirement": "WhatsApp, marketplace, additional channels",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Provider integrations and contract tests missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 64
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D03-F02",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -1673,12 +1673,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; provider integration, DB and staging workflow acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: verified external order ingestion, station-based preparation ETA and SLA escalation source with contract tests. Providers, DB/RLS, UI, notifications and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Hours, cutoff, menu availability, branch capacity",
@@ -1973,13 +1981,13 @@
         {
           "requirement": "Preparation ETA and exception escalation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "SLA prediction and escalation workflow missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 70
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D03-F08",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -2016,12 +2024,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; provider integration, DB and staging workflow acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: verified external order ingestion, station-based preparation ETA and SLA escalation source with contract tests. Providers, DB/RLS, UI, notifications and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Cancellation/refund and customer order history",
@@ -2136,12 +2152,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 8,
-        "not_verified": 2,
+        "partial": 10,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 80,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -13364,8 +13380,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 171,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 171 PARTIAL features remain unscored pending six-dimension evidence decomposition. 6 features remain NOT VERIFIED and 5 remain BLOCKED."
+    "unscored_partial_features": 173,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 173 PARTIAL features remain unscored pending six-dimension evidence decomposition. 4 features remain NOT VERIFIED and 5 remain BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
