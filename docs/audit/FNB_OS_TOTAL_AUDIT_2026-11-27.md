@@ -4,7 +4,7 @@
 **PRD:** 189 fitur / 18 domain  
 **Repository:** `dlice8888/dlice-landing-page`  
 **Candidate branch:** `feat/branch-ops-evidence-workflows-20261127`  
-**Candidate head saat pembaruan:** `bc15af3e9aa0d4b445bf4ca342999cd3ac8c74e9`  
+**Candidate branch:** `feat/branch-ops-evidence-workflows-20261127` (head dipantau melalui PR #153)  
 **Feature matrix:** `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json`  
 **Supabase staging:** `dlice-staging` / `higoadrzxnhzbbwhdbmh`
 
@@ -12,14 +12,14 @@
 
 | Status | Jumlah | Makna |
 |---|---:|---|
-| PARTIAL | 184 | Seluruh baseline belum terbukti kini memiliki pekerjaan implementasi konkret; belum berarti workflow diterima |
+| PARTIAL | 188 | Seluruh 39 baseline belum terbukti dan 4 dari 5 blocked kini memiliki pekerjaan remediation konkret; belum berarti workflow diterima |
 | NOT VERIFIED | 0 | Seluruh 39 baseline fitur sudah mulai dikerjakan |
 
-| BLOCKED | 5 | Memiliki penghalang acceptance yang harus diselesaikan |
+| BLOCKED | 1 | Owner drill-down menunggu verifikasi resmi Auth Admin dan allowlist |
 | DONE | 0 | Belum ada fitur yang lulus seluruh acceptance criteria |
 | **TOTAL** | **189** | **18 domain** |
 
-Cakupan implementasi yang sudah dimulai: **184/189 = 97,4%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh baseline 39 NOT VERIFIED telah dipindahkan ke PARTIAL berdasarkan artefak kerja nyata; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
+Cakupan implementasi yang sudah dimulai: **188/189 = 99,5%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh baseline 39 NOT VERIFIED telah dipindahkan ke PARTIAL dan empat dari lima fitur BLOCKED juga sudah memiliki remediation konkret dan dipindahkan ke PARTIAL; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
 
 Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%. Jika bukti belum tersedia, skor harus tetap null/UNSCORED; jangan mengubah jumlah fitur PARTIAL menjadi klaim bahwa seluruhnya sudah selesai. DONE memerlukan skor 100% dan seluruh gate lulus.
 
@@ -30,14 +30,14 @@ Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Datab
 | Executive Command Center | 10 | 9 | 0 | 1 | 0 | 90% |
 | POS & Checkout | 13 | 13 | 0 | 0 | 0 | 100% |
 | Order Management | 10 | 10 | 0 | 0 | 0 | 100% |
-| Kitchen & Production | 10 | 9 | 0 | 1 | 0 | 90% |
-| Menu & Recipe | 11 | 10 | 0 | 1 | 0 | 90,9% |
+| Kitchen & Production | 10 | 10 | 0 | 0 | 0 | 100% |
+| Menu & Recipe | 11 | 11 | 0 | 0 | 0 | 100% |
 | Inventory & Warehouse | 12 | 12 | 0 | 0 | 0 | 100% |
 | Procurement & Supplier | 10 | 10 | 0 | 0 | 0 | 100% |
-| Branch Operations | 10 | 9 | 0 | 1 | 0 | 90% |
+| Branch Operations | 10 | 10 | 0 | 0 | 0 | 100% |
 | Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100% |
 | CRM & Loyalty | 9 | 9 | 0 | 0 | 0 | 100% |
-| Finance & Accounting | 12 | 11 | 0 | 1 | 0 | 91,7% |
+| Finance & Accounting | 12 | 12 | 0 | 0 | 0 | 100% |
 | HR & Workforce | 9 | 9 | 0 | 0 | 0 | 100% |
 | Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100% |
 | BI & Analytics | 10 | 10 | 0 | 0 | 0 | 100% |
@@ -45,13 +45,13 @@ Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Datab
 | SaaS Tenant Management | 8 | 8 | 0 | 0 | 0 | 100% |
 | Integrations & Automation | 9 | 9 | 0 | 0 | 0 | 100% |
 | Quality, Compliance & Security | 20 | 20 | 0 | 0 | 0 | 100% |
-| **TOTAL** | **189** | **184** | **0** | **5** | **0** | **97,4%** |
+| **TOTAL** | **189** | **188** | **0** | **1** | **0** | **99,5%** |
 
 Keterangan: P = PARTIAL; BT = belum terbukti; B = BLOCKED; S = DONE. Cakupan Partial adalah jumlah fitur yang sudah mulai dikerjakan dibagi total domain, bukan persentase penyelesaian masing-masing fitur.
 
 ### Perubahan status pada batch implementasi 27 November
 
-Seluruh **39 Feature ID** yang sebelumnya NOT VERIFIED kini memiliki artefak implementasi konkret, contract tests dan dokumentasi gap. Statusnya berubah menjadi PARTIAL. Ini bukan DONE dan tidak menyatakan workflow sudah terintegrasi atau runtime accepted.
+Seluruh **39 Feature ID** yang sebelumnya NOT VERIFIED kini memiliki artefak implementasi konkret, contract tests dan dokumentasi gap. Selain itu, empat fitur BLOCKED sudah memiliki remediation code/tests dan dipindahkan ke PARTIAL. Hanya Owner drill-down yang masih BLOCKED. Ini bukan DONE dan tidak menyatakan workflow sudah terintegrasi atau runtime accepted.
 
 | Domain | Feature ID yang mulai dikerjakan |
 |---|---|
@@ -74,12 +74,10 @@ Seluruh **39 Feature ID** yang sebelumnya NOT VERIFIED kini memiliki artefak imp
 
 PR #153 masih Draft dan belum merged. Semua 39 fitur tetap memerlukan canonical database migration, RLS/Storage, concrete repository adapters, authenticated Edge Function, UI, staging E2E dan cross-domain reconciliation sebelum dapat dinilai 100%.
 
-Lima fitur tetap BLOCKED dan ditangani terpisah:
-- D01-F09 — Owner drill-down company→region→branch→shift→transaction.
-- D04-F10 — Theoretical versus actual usage/waste variance.
-- D05-F11 — POS/production recipe-version parity.
-- D08-F03 — Opening readiness mengubah branch operating status.
-- D11-F03 — Payment provider fee dan settlement variance.
+Satu fitur tetap BLOCKED:
+- D01-F09 — Owner drill-down company→region→branch→shift→transaction. Masih menunggu verifikasi resmi Auth Admin `app_metadata.platform_owner" dan kecocokan Owner UUID pada allowlist. Tidak boleh diedit melalui SQL atau dilewati dengan service-role bypass.
+
+Empat blocker lainnya sudah dipindahkan ke PARTIAL setelah remediation code/test dimulai: D04-F10, D05-F11, D08-F03 dan D11-F03. Provider sandbox dan staging runtime tetap menjadi acceptance gap.
 
 
 ## 3. Bukti aktual GitHub, Supabase dan Vercel
@@ -89,7 +87,7 @@ Lima fitur tetap BLOCKED dan ditangani terpisah:
 - Candidate branch `feat/eight-domain-official-migrations-20261127` dibandingkan dengan `staging`: **525 commits ahead, 0 behind**, dengan 105 file berubah.
 - Candidate berisi delapan official migration files yang dibangkitkan melalui Supabase CLI dari draft yang direview, plus pgTAP/contract test files.
 - Candidate mencakup CRM/Loyalty, HR/Payroll/Finance, Delivery, Franchise, Procurement, BI, SaaS dan Executive. Migration set mengklaim 71 tabel baru lintas delapan domain.
-- PR #152 exact head `3dda8d1...`: disposable migration replay PASS, seluruh 17 tabel CRM terverifikasi, pgTAP 17 file / 1.547 assertion PASS. Akar masalah ACL selesai pada test contract: legacy overload `saas_record_usage` sengaja direvoke dari semua API role, dikecualikan dari global service_role allowlist dan diuji eksplisit tidak dapat dieksekusi; plan count menjadi 12. Disposable database dihentikan dan dibuang.
+- PR #152 exact head `3dda8d1...`: disposable migration replay PASS, seluruh 17 tabel CRM terverifikasi, pgTAP 17 file / 1.547 assertion PASS. Legacy overload `saas_record_usage` tetap direvoke dari semua API role, dikecualikan dari global service_role allowlist dan diuji eksplisit tidak dapat dieksekusi; plan count 12. Disposable database dihentikan dan dibuang.
 - PR #143 tetap OPEN dan belum merge; PR #145 adalah Draft/orchestration candidate; PR #146 adalah payroll payout continuation. Tidak ada merge yang dilakukan dalam audit ini.
 
 ### Supabase staging
