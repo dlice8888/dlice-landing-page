@@ -12,7 +12,7 @@ const common=(overrides={})=>({
  appendAudit:async(_tx,e)=>{assert.ok(e.action.startsWith("integrations."));},
  ...overrides,
 });
-const verifiedBatch={tenantId:"tenant-a",source:"catalog-provider-a",sourceRevision:"rev-42",conflictPolicy:"reject",
+const verifiedBatch={tenantId:"tenant-a",branchId:"branch-a",source:"catalog-provider-a",sourceRevision:"rev-42",conflictPolicy:"reject",
  records:[{tenantId:"tenant-a",externalId:"sku-1",name:"Flour",sku:"FLR-1",priceIdr:12000}]};
 
 test("connector resolution requires approved capabilities and a vault secret reference without returning it",async()=>{
