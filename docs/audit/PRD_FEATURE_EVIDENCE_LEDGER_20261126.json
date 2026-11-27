@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 158,
-    "NOT VERIFIED": 26,
+    "PARTIAL": 161,
+    "NOT VERIFIED": 23,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -8661,9 +8661,9 @@
       "domain": "BI & Analytics",
       "requirement": "Demand forecasting and accuracy monitoring",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Forecast pipeline, evaluation and override audit missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Forecast pipeline, evaluation and override audit missing. Implementation started in PR #153; canonical data lineage, secure delivery and staging acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 222
@@ -8673,8 +8673,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/bi-forecast-report-alert-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -8683,13 +8685,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -8698,18 +8704,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until source adapters, DB/RLS, secure export, workflow E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "demand_forecasting_scheduled_reports_and_closed_loop_kpi_alerts",
+            "commit": "a8985b7beabde8d6ca6da3efb9071b3f520fa8e5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; database, adapters, secure exports, scheduler, UI and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D14-F08",
@@ -8781,9 +8804,9 @@
       "domain": "BI & Analytics",
       "requirement": "Export and scheduled executive reports",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Controlled exports and schedules missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Controlled exports and schedules missing. Implementation started in PR #153; canonical data lineage, secure delivery and staging acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 224
@@ -8793,8 +8816,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/bi-forecast-report-alert-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -8803,13 +8828,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -8818,27 +8847,44 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until source adapters, DB/RLS, secure export, workflow E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "demand_forecasting_scheduled_reports_and_closed_loop_kpi_alerts",
+            "commit": "a8985b7beabde8d6ca6da3efb9071b3f520fa8e5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; database, adapters, secure exports, scheduler, UI and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D14-F10",
       "domain": "BI & Analytics",
       "requirement": "Alert → action → measured outcome",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Closed-loop workflow missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Closed-loop workflow missing. Implementation started in PR #153; canonical data lineage, secure delivery and staging acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 225
@@ -8848,8 +8894,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/bi-forecast-report-alert-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -8858,13 +8906,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks, approved report definition and same-tenant recipient validation; runtime RLS not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/bi-forecast-report-alert-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -8873,18 +8925,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "forecast inputs and alert verification require reconciled actuals; persisted source lineage remains unverified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until source adapters, DB/RLS, secure export, workflow E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "demand_forecasting_scheduled_reports_and_closed_loop_kpi_alerts",
+            "commit": "a8985b7beabde8d6ca6da3efb9071b3f520fa8e5",
+            "limitations": "Pure-domain workflow orchestration and contract tests only; database, adapters, secure exports, scheduler, UI and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds reconciled-data demand forecasting and WAPE evaluation, approved-definition scheduled reporting, and independently verified KPI alert closure with contract tests. Commit a8985b7; canonical DB/RLS, POS/Inventory/Finance source adapters, secure exports, UI, scheduler and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D15-F01",
@@ -12153,8 +12222,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 158,
-    "NOT VERIFIED": 26,
+    "PARTIAL": 161,
+    "NOT VERIFIED": 23,
     "BLOCKED": 5,
     "DONE": 0
   },
