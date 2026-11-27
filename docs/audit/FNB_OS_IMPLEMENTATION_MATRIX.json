@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality, Inventory, POS promotions, HR and Admin/SaaS access implementation-start evidence)",
+  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Ops, Menu/Recipe, Procurement, CRM, BI, Integrations, Quality, Inventory, POS promotions, HR, Admin/SaaS access, Kitchen and allergen implementation-start evidence)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -2212,13 +2212,13 @@
         {
           "requirement": "Station routing (hot/cold/beverage/packing)",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No verified station configuration and routing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 78
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D04-F02",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -2255,12 +2255,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; DB, KDS, Inventory, private evidence and staging E2E remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: approved station routing, policy-driven food-safety quarantine and recipe ingredient allergen validation with contract tests. DB/RLS, KDS/Inventory integration, private Storage, adapters and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Queue priority and prep SLA",
@@ -2537,13 +2545,13 @@
         {
           "requirement": "QC, temperature, shelf life and spoilage",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Food safety checks and corrective actions not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 84
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D04-F08",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -2580,12 +2588,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; DB, KDS, Inventory, private evidence and staging E2E remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: approved station routing, policy-driven food-safety quarantine and recipe ingredient allergen validation with contract tests. DB/RLS, KDS/Inventory integration, private Storage, adapters and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Made-to-order vs batch production separation",
@@ -2699,12 +2715,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 7,
-        "not_verified": 2,
+        "partial": 9,
+        "not_verified": 0,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 70,
+      "partial_coverage_percent": 90,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -3113,13 +3129,13 @@
         {
           "requirement": "Allergens and regulated product information",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Structured allergen/product compliance flow missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 98
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D05-F08",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -3156,12 +3172,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; DB, KDS, Inventory, private evidence and staging E2E remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: approved station routing, policy-driven food-safety quarantine and recipe ingredient allergen validation with contract tests. DB/RLS, KDS/Inventory integration, private Storage, adapters and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Availability by schedule and stock",
@@ -3329,12 +3353,12 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 11,
-        "partial": 9,
-        "not_verified": 1,
+        "partial": 10,
+        "not_verified": 0,
         "blocked": 1,
         "done": 0
       },
-      "partial_coverage_percent": 81.8,
+      "partial_coverage_percent": 90.9,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
@@ -13340,8 +13364,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 7,
-    "unscored_partial_features": 168,
-    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 168 PARTIAL features remain unscored pending six-dimension evidence decomposition. 9 features remain NOT VERIFIED and 5 remain BLOCKED."
+    "unscored_partial_features": 171,
+    "status": "INCOMPLETE; 7 PARTIAL features have provisional weighted scores; 171 PARTIAL features remain unscored pending six-dimension evidence decomposition. 6 features remain NOT VERIFIED and 5 remain BLOCKED."
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
