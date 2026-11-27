@@ -43,7 +43,7 @@ test("provider settlement reconciles approved fee schedule, net payout and match
   settlement:{tenantId:"tenant-a",branchId:"branch-a",provider:"provider-a",status:"settled",reconciliationStatus:"RECONCILED",
    grossIdr:100000,feeIdr:2500,netIdr:97500},
   feeSchedule:{tenantId:"tenant-a",branchId:"branch-a",status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
-  bank:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97500}});
+  bankStatement:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97500}});
  assert.equal(result.status,"matched");assert.equal(result.expectedFeeIdr,2500);
 });
 test("provider settlement reports fee variance and rejects unapproved fee schedule",()=>{
@@ -51,7 +51,7 @@ test("provider settlement reports fee variance and rejects unapproved fee schedu
   settlement:{tenantId:"tenant-a",branchId:"branch-a",provider:"provider-a",status:"settled",reconciliationStatus:"RECONCILED",
    grossIdr:100000,feeIdr:3000,netIdr:97000},
   feeSchedule:{tenantId:"tenant-a",branchId:"branch-a",status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
-  bank:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97000}};
+  bankStatement:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97000}};
  assert.equal(reconcileProviderSettlement(facts).status,"variance");
  assert.throws(()=>reconcileProviderSettlement({...facts,feeSchedule:{...facts.feeSchedule,status:"draft"}}),
   {code:"SETTLEMENT_FEE_SCHEDULE_NOT_APPROVED"});
