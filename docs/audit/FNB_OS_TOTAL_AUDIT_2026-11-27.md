@@ -20,7 +20,7 @@
 
 Cakupan implementasi yang sudah dimulai: **139/189 = 73,5%**. Ini bukan weighted completion dan bukan persentase penerimaan produksi.
 
-Dari 139 fitur PARTIAL, dua fitur mempunyai skor weighted provisional terdahulu (Tenant/member isolation 38% dan Tenant directory/onboarding 30%). **137 PARTIAL lainnya belum mempunyai skor enam dimensi yang defensible**. Angka tidak akan ditebak; setiap fitur perlu breakdown Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%.
+Dari 139 fitur PARTIAL, dua fitur mempunyai skor weighted provisional terdahulu (Tenant/member isolation 58% dan Tenant directory/onboarding 30%). **137 PARTIAL lainnya belum mempunyai skor enam dimensi yang defensible**. Angka tidak akan ditebak; setiap fitur perlu breakdown Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%.
 
 ## 2. Matriks 18 domain — setelah audit
 
