@@ -466,4 +466,9 @@ GRANT EXECUTE ON FUNCTION public.erp_hold_pos_order(uuid,uuid,uuid,text,jsonb) T
 GRANT EXECUTE ON FUNCTION public.erp_resume_pos_order(uuid,uuid,uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.erp_get_pos_receipt(uuid,uuid,uuid) TO service_role;
 
+-- Trigger-only immutable-receipt guard is invoked by PostgreSQL's trigger
+-- binding, not through PostgREST RPC; service_role must not call it directly.
+REVOKE EXECUTE ON FUNCTION public.prevent_pos_sale_receipt_mutation()
+  FROM PUBLIC, anon, authenticated, service_role;
+
 COMMIT;
