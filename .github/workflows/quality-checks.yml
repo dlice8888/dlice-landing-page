@@ -67,6 +67,15 @@ jobs:
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Check new domain workflow module syntax
+        run: >-
+          node --check src/branch-operations-workflows.mjs
+          && node --check src/recipe-bom-unit-economics.mjs
+          && node --check src/procurement-supplier-workflows.mjs
+          && node --check src/crm-referral-support-ltv-workflows.mjs
+          && node --check src/bi-forecast-report-alert-workflows.mjs
+          && node --check src/integration-connector-health-sync-workflows.mjs
+          && node --check src/quality-release-accessibility-gates.mjs
       - name: Run Branch Operations evidence workflow contracts
         run: node --test tests/contracts/branch-operations-workflows.test.mjs
       - name: Check CRM referral support and LTV module syntax
