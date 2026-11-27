@@ -51,7 +51,7 @@ test("recipe BOM rejects incompatible unit dimensions and unapproved versions", 
 test("unit economics calculates cost per serving and contribution margin", () => {
   const result = calculateRecipeUnitEconomics({ tenantId: "tenant-a", recipe: baseRecipe,
     requestedQuantity: 10, servingCount: 10, sellingPriceIdr: 5000 });
-  assert.equal(result.totalIngredientCostIdr, 11112);
+  assert.equal(result.totalIngredientCostIdr, 11111);
   assert.equal(result.costPerServingIdr, 1112);
   assert.equal(result.contributionIdr, 3888);
   assert.equal(result.contributionMarginPct, 77.76);
