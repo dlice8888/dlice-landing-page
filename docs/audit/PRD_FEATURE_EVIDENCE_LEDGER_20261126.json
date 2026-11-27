@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 152,
-    "NOT VERIFIED": 32,
+    "PARTIAL": 155,
+    "NOT VERIFIED": 29,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -3989,9 +3989,9 @@
       "domain": "Procurement & Supplier",
       "requirement": "Supplier price lists, contracts and price history",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "No verified contract/effective price lifecycle.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "No verified contract/effective price lifecycle. Implementation started in PR #153; database and integrated workflow acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 123
@@ -4001,8 +4001,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/procurement-supplier-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4011,13 +4013,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4027,17 +4033,34 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "stock movement and AP journal posting adapter contract; no persisted evidence yet"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until DB/RLS, adapters, integration, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "supplier_contract_pricing_branch_demand_consolidation_and_return_workflows",
+            "commit": "8e19f21b45df4ccaca7d59566c8b62f6c0a0d237",
+            "limitations": "Source orchestration and contract tests only; canonical database, adapters, UI, supplier scorecard and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D07-F03",
@@ -4099,9 +4122,9 @@
       "domain": "Procurement & Supplier",
       "requirement": "Consolidated demand across branches",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Multi-branch buying/consolidation missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Multi-branch buying/consolidation missing. Implementation started in PR #153; database and integrated workflow acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 125
@@ -4111,8 +4134,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/procurement-supplier-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4121,13 +4146,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4137,17 +4166,34 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "stock movement and AP journal posting adapter contract; no persisted evidence yet"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until DB/RLS, adapters, integration, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "supplier_contract_pricing_branch_demand_consolidation_and_return_workflows",
+            "commit": "8e19f21b45df4ccaca7d59566c8b62f6c0a0d237",
+            "limitations": "Source orchestration and contract tests only; canonical database, adapters, UI, supplier scorecard and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D07-F05",
@@ -4457,9 +4503,9 @@
       "domain": "Procurement & Supplier",
       "requirement": "Supplier return and supplier performance",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Return and scorecard workflows missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Return and scorecard workflows missing. Implementation started in PR #153; database and integrated workflow acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 131
@@ -4469,8 +4515,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/procurement-supplier-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4479,13 +4527,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope checks and independent approver contract; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/procurement-supplier-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4495,17 +4547,34 @@
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "stock movement and AP journal posting adapter contract; no persisted evidence yet"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until DB/RLS, adapters, integration, E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "supplier_contract_pricing_branch_demand_consolidation_and_return_workflows",
+            "commit": "8e19f21b45df4ccaca7d59566c8b62f6c0a0d237",
+            "limitations": "Source orchestration and contract tests only; canonical database, adapters, UI, supplier scorecard and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds effective supplier contract price selection, branch demand consolidation, GRN-bounded supplier returns and independent approval with atomic stock/AP posting source contracts and tests. Commit 8e19f21; canonical DB/RLS, adapters, UI, scorecard, provider integration and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F01",
@@ -12015,8 +12084,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 152,
-    "NOT VERIFIED": 32,
+    "PARTIAL": 155,
+    "NOT VERIFIED": 29,
     "BLOCKED": 5,
     "DONE": 0
   },
