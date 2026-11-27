@@ -6,9 +6,9 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 184,
+    "PARTIAL": 188,
     "NOT VERIFIED": 0,
-    "BLOCKED": 5,
+    "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
   },
@@ -2715,9 +2715,9 @@
       "domain": "Kitchen & Production",
       "requirement": "Theoretical vs actual usage / waste variance",
       "source_status": "GATE",
-      "audit_status": "BLOCKED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "No verified variance report reconciled against stock ledger.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "No verified variance report reconciled against stock ledger. Blocker remediation implementation started in PR #153; runtime and external evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 86
@@ -2727,8 +2727,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/blocked-acceptance-remediation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -2737,13 +2739,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -2752,18 +2758,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Moved from BLOCKED to PARTIAL because concrete remediation code/tests now exist; external/runtime acceptance remains incomplete.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "production_variance_recipe_version_parity_branch_opening_and_provider_fee_reconciliation",
+            "commit": "cbc0db88e2a02ec9b09e36a321d36c7a320904ec",
+            "limitations": "Domain logic and contract tests only; canonical DB, live adapters, approvals, provider sandbox and staging reconciliation remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D05-F01",
@@ -3385,9 +3408,9 @@
       "domain": "Menu, Recipe & Product Engineering",
       "requirement": "POS/production uses the same approved recipe version",
       "source_status": "GATE",
-      "audit_status": "BLOCKED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Cross-module version parity needs E2E proof.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Cross-module version parity needs E2E proof. Blocker remediation implementation started in PR #153; runtime and external evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 101
@@ -3397,8 +3420,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/blocked-acceptance-remediation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -3407,13 +3432,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -3422,18 +3451,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Moved from BLOCKED to PARTIAL because concrete remediation code/tests now exist; external/runtime acceptance remains incomplete.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "production_variance_recipe_version_parity_branch_opening_and_provider_fee_reconciliation",
+            "commit": "cbc0db88e2a02ec9b09e36a321d36c7a320904ec",
+            "limitations": "Domain logic and contract tests only; canonical DB, live adapters, approvals, provider sandbox and staging reconciliation remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D06-F01",
@@ -4921,9 +4967,9 @@
       "domain": "Branch Operations",
       "requirement": "Opening readiness changes branch operating status",
       "source_status": "GATE",
-      "audit_status": "BLOCKED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Real branch lifecycle integration not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Real branch lifecycle integration not proven. Blocker remediation implementation started in PR #153; runtime and external evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 138
@@ -4933,8 +4979,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/blocked-acceptance-remediation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -4943,13 +4991,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -4958,18 +5010,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Moved from BLOCKED to PARTIAL because concrete remediation code/tests now exist; external/runtime acceptance remains incomplete.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "production_variance_recipe_version_parity_branch_opening_and_provider_fee_reconciliation",
+            "commit": "cbc0db88e2a02ec9b09e36a321d36c7a320904ec",
+            "limitations": "Domain logic and contract tests only; canonical DB, live adapters, approvals, provider sandbox and staging reconciliation remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D08-F04",
@@ -6724,9 +6793,9 @@
       "domain": "Finance & Accounting",
       "requirement": "Payment provider fee and settlement variance",
       "source_status": "GATE",
-      "audit_status": "BLOCKED",
+      "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked.",
+      "evidence_or_gap": "PR #146 adds provider payout reconciliation and fee/variance evidence model; provider sandbox and bank statement E2E remain blocked. Blocker remediation implementation started in PR #153; runtime and external evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 177
@@ -6736,8 +6805,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/blocked-acceptance-remediation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -6746,13 +6817,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope, approved recipe/fee schedule, mandatory evidence and manager authorization ports; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/blocked-acceptance-remediation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -6761,28 +6836,36 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "stock usage, branch opening evidence and provider/bank reconciliation contract; runtime ledger reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
         "status": "MATCHED_ACTIVE_PR",
         "matched_prs": [
-          146
+          153
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
+        "notes": "Moved from BLOCKED to PARTIAL because concrete remediation code/tests now exist; external/runtime acceptance remains incomplete.",
         "pr_evidence": [
           {
-            "pr": 146,
-            "kind": "feature_specific_implementation_or_acceptance_candidate",
-            "commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8",
-            "limitations": "PR source/test presence is implementation-start evidence only; exact-head test, database, authorization, E2E and reconciliation evidence remain independently required."
+            "pr": 153,
+            "kind": "production_variance_recipe_version_parity_branch_opening_and_provider_fee_reconciliation",
+            "commit": "cbc0db88e2a02ec9b09e36a321d36c7a320904ec",
+            "limitations": "Domain logic and contract tests only; canonical DB, live adapters, approvals, provider sandbox and staging reconciliation remain open."
           }
         ],
         "latest_implementation_commit": "bd1298ba2492f9fb49bc0f5e4d6ba95b099b8ea8"
-      }
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds theoretical-vs-actual production usage variance, immutable POS/production recipe-version parity, evidence-gated branch opening transition, and approved provider fee/net/bank reconciliation contracts. Commit cbc0db8; canonical DB/RLS, live POS/KDS/stock/branch/provider adapters, manager approvals, provider sandbox and staging E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D11-F04",
@@ -12751,9 +12834,9 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 184,
+    "PARTIAL": 188,
     "NOT VERIFIED": 0,
-    "BLOCKED": 5,
+    "BLOCKED": 1,
     "DONE": 0
   },
   "latest_platform_audit": {
