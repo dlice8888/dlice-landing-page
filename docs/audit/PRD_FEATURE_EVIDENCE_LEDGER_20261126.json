@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 167,
-    "NOT VERIFIED": 17,
+    "PARTIAL": 169,
+    "NOT VERIFIED": 15,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -3476,9 +3476,9 @@
       "domain": "Inventory & Warehouse",
       "requirement": "FIFO/FEFO, lot/batch and expiry",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Lot traceability and expiry allocation missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Lot traceability and expiry allocation missing. Implementation started in PR #153; canonical lot database, runtime and Finance valuation reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 110
@@ -3488,8 +3488,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/inventory-lot-valuation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -3498,13 +3500,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch/item validation and in-transaction authorization port; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -3513,18 +3519,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "valuation snapshot requires approved policy and historical lot layers; Finance GL reconciliation not verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until canonical lot schema/RLS, runtime allocation, E2E and GL reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "fifo_fefo_lot_allocation_and_historical_valuation",
+            "commit": "7e6cb1ccecc3e22674b1999e24c7ff8453276fcf",
+            "limitations": "Pure-domain allocation/valuation and contract tests only; database, adapters, expiry/quarantine lifecycle and Finance evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D06-F06",
@@ -3759,9 +3782,9 @@
       "domain": "Inventory & Warehouse",
       "requirement": "Stock valuation",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Valuation method and historical valuation reports not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Valuation method and historical valuation reports not proven. Implementation started in PR #153; canonical lot database, runtime and Finance valuation reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 115
@@ -3771,8 +3794,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/inventory-lot-valuation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -3781,13 +3806,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch/item validation and in-transaction authorization port; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/inventory-lot-valuation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -3796,18 +3825,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "valuation snapshot requires approved policy and historical lot layers; Finance GL reconciliation not verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until canonical lot schema/RLS, runtime allocation, E2E and GL reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "fifo_fefo_lot_allocation_and_historical_valuation",
+            "commit": "7e6cb1ccecc3e22674b1999e24c7ff8453276fcf",
+            "limitations": "Pure-domain allocation/valuation and contract tests only; database, adapters, expiry/quarantine lifecycle and Finance evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds deterministic FIFO/FEFO lot allocation, expiry cutoff, cross-tenant/branch/item checks and historical inventory valuation from approved policy with contract tests. Commit 7e6cb1c; canonical DB/RLS, repository adapters, Edge Function, expiry/quarantine/recall lifecycle and Finance GL reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D06-F11",
@@ -12360,8 +12406,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 167,
-    "NOT VERIFIED": 17,
+    "PARTIAL": 169,
+    "NOT VERIFIED": 15,
     "BLOCKED": 5,
     "DONE": 0
   },
