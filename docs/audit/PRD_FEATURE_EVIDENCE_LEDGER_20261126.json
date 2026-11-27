@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 180,
-    "NOT VERIFIED": 4,
+    "PARTIAL": 182,
+    "NOT VERIFIED": 2,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -266,9 +266,9 @@
       "domain": "Executive Command Center",
       "requirement": "Critical stock, expiry, waste alerts",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Lot/expiry/waste alert workflow not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Lot/expiry/waste alert workflow not proven. Implementation started in PR #153; canonical DB, source adapters, drill-down authorization and runtime acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 36
@@ -278,8 +278,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/executive-stock-waste-anomaly-alerts.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -288,13 +290,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope and reconciled-source requirements; Owner dual gate runtime not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -303,27 +309,44 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "alerts require reconciled source data; persisted alert-to-transaction lineage not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until persisted source adapters, Owner authorization, alert lifecycle and 150-branch E2E pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "reconciled_stock_expiry_waste_and_sales_food_cost_anomaly_rules",
+            "commit": "7009eb0f97098c14c14970304fed138be0051ced",
+            "limitations": "Pure-domain evaluators and contract tests only; DB, source adapters, Owner drilldown, alert lifecycle and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D01-F06",
       "domain": "Executive Command Center",
       "requirement": "Sales-drop / food-cost anomaly detection",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "No verified anomaly rule, assignment, acknowledgement, or closure.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "No verified anomaly rule, assignment, acknowledgement, or closure. Implementation started in PR #153; canonical DB, source adapters, drill-down authorization and runtime acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 37
@@ -333,8 +356,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/executive-stock-waste-anomaly-alerts.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -343,13 +368,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope and reconciled-source requirements; Owner dual gate runtime not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -358,18 +387,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "alerts require reconciled source data; persisted alert-to-transaction lineage not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until persisted source adapters, Owner authorization, alert lifecycle and 150-branch E2E pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "reconciled_stock_expiry_waste_and_sales_food_cost_anomaly_rules",
+            "commit": "7009eb0f97098c14c14970304fed138be0051ced",
+            "limitations": "Pure-domain evaluators and contract tests only; DB, source adapters, Owner drilldown, alert lifecycle and staging evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds reconciled stock/expiry/waste risk and sales-drop/food-cost anomaly evaluators with contract tests. Commit 7009eb0; canonical DB/RLS, POS/Inventory/Finance adapters, company/region rollup, Owner dual gate, alert action UI and staging 150-branch E2E remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D01-F07",
@@ -12659,8 +12705,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 180,
-    "NOT VERIFIED": 4,
+    "PARTIAL": 182,
+    "NOT VERIFIED": 2,
     "BLOCKED": 5,
     "DONE": 0
   },
