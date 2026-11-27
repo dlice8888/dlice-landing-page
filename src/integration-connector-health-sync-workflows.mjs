@@ -27,7 +27,7 @@ export async function resolveApprovedConnector(input,deps){
   const resolved=await adapter(deps,"resolveVaultSecretReference")(tx,{tenantId:s.tenantId,secretReference:config.credentialSecretReference});
   if(!resolved?.available)fail("INTEGRATION_SECRET_UNAVAILABLE","Approved secret reference is unavailable");
   return Object.freeze({connectorId:config.id,providerKey,capabilities:Object.freeze(requested),
-   credentialAvailable:true,credentialSecretReference:config.credentialSecretReference});
+   credentialAvailable:true});
  });
 }
 
@@ -51,9 +51,11 @@ export async function recordIntegrationHealth(input,deps){
  const s=scope(input,"integrations.health.record"),connectorId=req(input.connectorId,"connectorId");
  return txScope(deps,s,async tx=>{
   const connector=await adapter(deps,"loadConnectorForUpdate")(tx,{...s,connectorId});assertTenant(connector,s,"connector");
-  const health=evaluateIntegrationHealth(input.telemetry);
+  const telemetry=await adapter(deps,"loadAuthoritativeIntegrationHealthTelemetry")(tx,{...s,connectorId});
+  if(!telemetry||telemetry.tenantId!==s.tenantId)fail("INTEGRATION_HEALTH_TELEMETRY_SCOPE_INVALID","Health telemetry must be loaded from tenant-scoped persisted observations");
+  const health=evaluateIntegrationHealth(telemetry);
   const saved=await adapter(deps,"persistIntegrationHealthObservation")(tx,{...s,connectorId,...health,
-   checkedAt:req(input.telemetry.now,"telemetry.now")});
+   checkedAt:req(telemetry.now,"telemetry.now")});
   if(!saved?.id)fail("INTEGRATION_HEALTH_PERSIST_FAILED","Health observation was not persisted");
   let alertId=null;
   if(health.alertRequired){
@@ -87,11 +89,14 @@ export function prepareCatalogSyncBatch(input){
 
 /** Apply catalog sync atomically, with a durable checkpoint and no silent conflicts. */
 export async function applyCatalogSyncBatch(input,deps){
- const s=scope(input,"integrations.catalog_sync.apply"),batch=prepareCatalogSyncBatch(input);
- if(!["reject","update_if_newer"].includes(batch.conflictPolicy))fail("INTEGRATION_CONFLICT_POLICY_INVALID","Unsupported conflict policy");
+ const s=scope(input,"integrations.catalog_sync.apply"),importBatchId=req(input.importBatchId,"importBatchId");
  return txScope(deps,s,async tx=>{
   const prior=await adapter(deps,"findCatalogSyncByIdempotencyKey")(tx,s);
   if(prior)return Object.freeze({status:"duplicate",syncId:prior.id});
+  const verified=await adapter(deps,"loadVerifiedCatalogImportBatch")(tx,{...s,importBatchId});
+  assertTenant(verified,s,"verifiedImportBatch");
+  const batch=prepareCatalogSyncBatch(verified);
+  if(!["reject","update_if_newer"].includes(batch.conflictPolicy))fail("INTEGRATION_CONFLICT_POLICY_INVALID","Unsupported conflict policy");
   const source=await adapter(deps,"loadApprovedCatalogSource")(tx,{...s,source:batch.source});
   assertTenant(source,s,"catalogSource");
   if(source.status!=="approved"||source.enabled!==true)fail("INTEGRATION_CATALOG_SOURCE_NOT_APPROVED","Catalog source must be approved");
