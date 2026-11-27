@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 182,
-    "NOT VERIFIED": 2,
+    "PARTIAL": 184,
+    "NOT VERIFIED": 0,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -7102,9 +7102,9 @@
       "domain": "Finance & Accounting",
       "requirement": "Budgets and branch P&L",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Budget-vs-actual and branch P&L not reconciled.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Budget-vs-actual and branch P&L not reconciled. Implementation started in PR #153; canonical schema, source adapters and branch close E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 183
@@ -7114,8 +7114,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/finance-budget-consolidation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -7124,13 +7126,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope and approved budget/closed-period gates; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -7139,27 +7145,44 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "balanced journal and intercompany elimination contracts; persisted GL close reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until canonical DB/RLS, all GL source adapters, fiscal close, FX/tax and staging reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "branch_budget_variance_and_consolidated_financial_statements",
+            "commit": "d0328404efe4369edde81474ab3d0051c759d747",
+            "limitations": "Pure-domain calculators and contract tests only; database, adapters, FX/tax, UI and staging close evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D11-F10",
       "domain": "Finance & Accounting",
       "requirement": "Consolidated financial statements",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Group consolidation missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Group consolidation missing. Implementation started in PR #153; canonical schema, source adapters and branch close E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 184
@@ -7169,8 +7192,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/finance-budget-consolidation-workflows.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -7179,13 +7204,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "tenant/branch scope and approved budget/closed-period gates; runtime RLS unverified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/finance-budget-consolidation-workflows.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -7194,18 +7223,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "balanced journal and intercompany elimination contracts; persisted GL close reconciliation not yet verified"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start evidence only; no DONE until canonical DB/RLS, all GL source adapters, fiscal close, FX/tax and staging reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "branch_budget_variance_and_consolidated_financial_statements",
+            "commit": "d0328404efe4369edde81474ab3d0051c759d747",
+            "limitations": "Pure-domain calculators and contract tests only; database, adapters, FX/tax, UI and staging close evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds branch budget/actual variance from approved budgets and reconciled GL actuals, plus consolidated statements requiring closed branches, balanced journals and balanced intercompany eliminations. Commit d032840; canonical schema/RLS, Finance adapters, FX/tax, UI and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D11-F11",
@@ -12705,8 +12751,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 182,
-    "NOT VERIFIED": 2,
+    "PARTIAL": 184,
+    "NOT VERIFIED": 0,
     "BLOCKED": 5,
     "DONE": 0
   },
