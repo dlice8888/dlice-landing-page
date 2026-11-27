@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 164,
-    "NOT VERIFIED": 20,
+    "PARTIAL": 167,
+    "NOT VERIFIED": 17,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -11280,9 +11280,9 @@
       "domain": "Quality, Compliance & Security",
       "requirement": "Pilot, rollout and rollback",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "No signed-off pilot operating-day reconciliation or tested rollback evidence.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "No signed-off pilot operating-day reconciliation or tested rollback evidence. Implementation started in PR #153; runtime pilot, actual rollback and device accessibility evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 279
@@ -11292,8 +11292,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/quality-release-accessibility-gates.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -11302,13 +11304,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -11317,27 +11323,44 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start gate logic only; no DONE until signed staging evidence, persisted audit, rollback E2E and device/assistive-tech tests pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "pilot_rollback_release_exit_and_responsive_accessibility_gates",
+            "commit": "0ddfd2f485eb12bde7b0f6ac7b788af0b9848c37",
+            "limitations": "Gate evaluators and contract tests only; actual pilot artifacts, DB/RLS, deployment rollback and browser/device accessibility runtime evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D18-F12",
       "domain": "Quality, Compliance & Security",
       "requirement": "Workflow",
       "source_status": "Current state",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Exit criteria",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Exit criteria Implementation started in PR #153; runtime pilot, actual rollback and device accessibility evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 282
@@ -11347,8 +11370,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/quality-release-accessibility-gates.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -11357,13 +11382,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -11372,18 +11401,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start gate logic only; no DONE until signed staging evidence, persisted audit, rollback E2E and device/assistive-tech tests pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "pilot_rollback_release_exit_and_responsive_accessibility_gates",
+            "commit": "0ddfd2f485eb12bde7b0f6ac7b788af0b9848c37",
+            "limitations": "Gate evaluators and contract tests only; actual pilot artifacts, DB/RLS, deployment rollback and browser/device accessibility runtime evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D18-F13",
@@ -11793,9 +11839,9 @@
       "domain": "Quality, Compliance & Security",
       "requirement": "Responsive UX and accessibility",
       "source_status": "UNVERIFIED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Accepted screenshots and interactions on mobile/tablet/desktop; keyboard/focus, reduced motion, contrast, labels, validation and screen-reader checks. Implementation started in PR #153; runtime pilot, actual rollback and device accessibility evidence remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 290
@@ -11805,8 +11851,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/quality-release-accessibility-gates.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -11815,13 +11863,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "staging-only guard and independent rollback approval contract; persisted auth policies not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/quality-release-accessibility-gates.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -11830,18 +11882,35 @@
         },
         "reconciliation_observability": {
           "weight": 10,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "pilot evaluator requires reconciled evidence; actual signed operating-day evidence not yet present"
+          ]
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "Implementation-start gate logic only; no DONE until signed staging evidence, persisted audit, rollback E2E and device/assistive-tech tests pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "pilot_rollback_release_exit_and_responsive_accessibility_gates",
+            "commit": "0ddfd2f485eb12bde7b0f6ac7b788af0b9848c37",
+            "limitations": "Gate evaluators and contract tests only; actual pilot artifacts, DB/RLS, deployment rollback and browser/device accessibility runtime evidence remain open."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds fail-closed pilot acceptance, staging-only rollback authorization, 18-domain/189-feature/150-branch release exit evaluation and mobile/tablet/desktop accessibility evidence gates with contract tests. Commit 0ddfd2f; real signed pilot artifacts, persisted DB gates, rollback execution, browser/device screenshots and assistive-technology runtime tests remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D18-F20",
@@ -12291,8 +12360,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 164,
-    "NOT VERIFIED": 20,
+    "PARTIAL": 167,
+    "NOT VERIFIED": 17,
     "BLOCKED": 5,
     "DONE": 0
   },
