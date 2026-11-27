@@ -1,10 +1,10 @@
 # D’Lice FnB OS — Total PRD Audit & Gap Register
 
-**Tanggal audit:** 27 November 2026, 07:16 WIB  
+**Tanggal audit:** 27 November 2026, 23:18 WIB  
 **PRD:** 189 fitur / 18 domain  
 **Repository:** `dlice8888/dlice-landing-page`  
 **Candidate branch:** `feat/eight-domain-official-migrations-20261127`  
-**Candidate head:** `e82ad0297877642020a13f3a5fab2366ba93a3f2`  
+**Candidate head saat pembaruan:** `d332d6ba9e7d9b3e8c94a71d8fce46cccf0cc020`  
 **Feature matrix:** `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json`  
 **Supabase staging:** `dlice-staging` / `higoadrzxnhzbbwhdbmh`
 
@@ -12,19 +12,19 @@
 
 | Status | Jumlah | Makna |
 |---|---:|---|
-| PARTIAL | 139 | Ada implementasi konkret yang sudah dimulai; belum berarti workflow diterima |
-| NOT VERIFIED | 45 | Belum ada implementasi yang cukup untuk dipindahkan ke PARTIAL |
-| BLOCKED | 5 | Ada prasyarat eksternal/otorisasi yang menghalangi acceptance |
+| PARTIAL | 145 | Sudah ada pekerjaan implementasi konkret; belum berarti workflow diterima |
+| NOT VERIFIED | 39 | Belum ada bukti implementasi yang cukup |
+| BLOCKED | 5 | Memiliki penghalang acceptance yang harus diselesaikan |
 | DONE | 0 | Belum ada fitur yang lulus seluruh acceptance criteria |
 | **TOTAL** | **189** | **18 domain** |
 
-Cakupan implementasi yang sudah dimulai: **139/189 = 73,5%**. Ini bukan weighted completion dan bukan persentase penerimaan produksi.
+Cakupan implementasi yang sudah dimulai: **145/189 = 76,7%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh 39 NOT VERIFIED tetap menjadi prioritas; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
 
-Dari 139 fitur PARTIAL, dua fitur mempunyai skor weighted provisional terdahulu (Tenant/member isolation 58% dan Tenant directory/onboarding 30%). **137 PARTIAL lainnya belum mempunyai skor enam dimensi yang defensible**. Angka tidak akan ditebak; setiap fitur perlu breakdown Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%.
+Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%. Jika bukti belum tersedia, skor harus tetap null/UNSCORED; jangan mengubah jumlah fitur PARTIAL menjadi klaim bahwa seluruhnya sudah selesai. DONE memerlukan skor 100% dan seluruh gate lulus.
 
 ## 2. Matriks 18 domain — setelah audit
 
-| Domain | Total | P | BT | B | S | Partial |
+| Domain | Total | P | BT | B | S | Coverage Partial |
 |---|---:|---:|---:|---:|---:|---:|
 | Executive Command Center | 10 | 7 | 2 | 1 | 0 | 70% |
 | POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92,3% |
@@ -41,10 +41,10 @@ Dari 139 fitur PARTIAL, dua fitur mempunyai skor weighted provisional terdahulu 
 | Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100% |
 | BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70% |
 | Admin & Access Control | 10 | 8 | 2 | 0 | 0 | 80% |
-| SaaS Tenant Management | 8 | 6 | 2 | 0 | 0 | 75% |
+| SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87,5% |
 | Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66,7% |
-| Quality, Compliance & Security | 20 | 12 | 8 | 0 | 0 | 60% |
-| **TOTAL** | **189** | **139** | **45** | **5** | **0** | **73,5%** |
+| Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85% |
+| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76,7%** |
 
 Keterangan: P = PARTIAL; BT = belum terbukti; B = BLOCKED; S = DONE. Cakupan Partial adalah jumlah fitur yang sudah mulai dikerjakan dibagi total domain, bukan persentase penyelesaian masing-masing fitur.
 
@@ -73,7 +73,7 @@ Executive company→region→branch→shift→transaction drill-down sekarang BL
 - Candidate branch `feat/eight-domain-official-migrations-20261127` dibandingkan dengan `staging`: **525 commits ahead, 0 behind**, dengan 105 file berubah.
 - Candidate berisi delapan official migration files yang dibangkitkan melalui Supabase CLI dari draft yang direview, plus pgTAP/contract test files.
 - Candidate mencakup CRM/Loyalty, HR/Payroll/Finance, Delivery, Franchise, Procurement, BI, SaaS dan Executive. Migration set mengklaim 71 tabel baru lintas delapan domain.
-- Candidate head `e82ad029...` belum memiliki GitHub Actions workflow run yang dapat diverifikasi pada exact head. Combined status yang terlihat hanya Vercel success.
+- PR #152 exact head sebelumnya `93f9d49...` memiliki Free quality checks PASS tetapi CRM disposable replay FAIL pada 2 dari 1.546 pgTAP assertions: service_role EXECUTE pada seluruh callable public RPC dan direct EXECUTE pada trigger immutable receipt. Perbaikan sumber ditambahkan pada head `d332d6b...`: revoke service_role pada trigger receipt dan diagnostic nama RPC yang gagal; validasi ulang exact-head masih menunggu hasil workflow baru.
 - PR #143 tetap OPEN dan belum merge; PR #145 adalah Draft/orchestration candidate; PR #146 adalah payroll payout continuation. Tidak ada merge yang dilakukan dalam audit ini.
 
 ### Supabase staging
@@ -81,14 +81,14 @@ Executive company→region→branch→shift→transaction drill-down sekarang BL
 - Project `higoadrzxnhzbbwhdbmh` berstatus `ACTIVE_HEALTHY`.
 - Database mencatat **63 applied migration versions**.
 - `dlice-orders` ACTIVE versi 73; `verify_jwt=false`. Handler tetap harus memvalidasi bearer token, user, profile, tenant membership, branch scope dan Owner dual gate.
-- Ada 68 public base tables; seluruh tabel yang diperiksa memiliki RLS enabled.
+- Ada 68 public base tables; seluruh tabel yang diperiksa memiliki RLS enabled. Database mencatat 63 applied migration versions, terbaru `20261124134222_pos_checkout_fk_supporting_indexes`.
 - Read-only schema query menemukan **0 tabel** dengan prefix `crm_`, `hr_`, `delivery_`, `franchise_`, `bi_`, `saas_`, atau `executive_`; tabel extension `supplier_tenant_links` dan `procurement_supplier_invoices` juga belum ada. Jadi migration kandidat delapan domain belum diterapkan ke staging.
 - Ada satu active Owner profile, tetapi aggregate Auth query menunjukkan `raw_app_meta_data.platform_owner=true` berjumlah **0** dan jumlah user yang memiliki claim tersebut juga **0**. Secret allowlist `DLICE_PLATFORM_OWNER_USER_IDS` tidak dapat dibaca dari konektor ini. Owner authorization belum terverifikasi.
 
 ### Vercel
 
 - Project `dlice-landing-page`.
-- Preview terbaru yang terlihat READY pada candidate branch dan commit `e82ad029...`.
+- Preview terverifikasi READY pada branch kandidat untuk commit `93f9d49...`; setelah perubahan ACL ke `d332d6b...`, deployment exact-head baru belum dikonfirmasi.
 - READY hanya membuktikan build/deployment Preview, bukan business workflow acceptance.
 - Tidak ada Production deployment, promotion atau perubahan konfigurasi Production.
 
