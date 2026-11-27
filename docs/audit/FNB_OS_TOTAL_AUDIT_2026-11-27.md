@@ -4,7 +4,7 @@
 **PRD:** 189 fitur / 18 domain  
 **Repository:** `dlice8888/dlice-landing-page`  
 **Candidate branch:** `feat/branch-ops-evidence-workflows-20261127`  
-**Candidate head saat pembaruan:** `5f87808b0d6b5fe38ce6d3bc41b5d58f2c17f2f1`  
+**Candidate head saat pembaruan:** `bc15af3e9aa0d4b445bf4ca342999cd3ac8c74e9`  
 **Feature matrix:** `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json`  
 **Supabase staging:** `dlice-staging` / `higoadrzxnhzbbwhdbmh`
 
@@ -89,7 +89,7 @@ Lima fitur tetap BLOCKED dan ditangani terpisah:
 - Candidate branch `feat/eight-domain-official-migrations-20261127` dibandingkan dengan `staging`: **525 commits ahead, 0 behind**, dengan 105 file berubah.
 - Candidate berisi delapan official migration files yang dibangkitkan melalui Supabase CLI dari draft yang direview, plus pgTAP/contract test files.
 - Candidate mencakup CRM/Loyalty, HR/Payroll/Finance, Delivery, Franchise, Procurement, BI, SaaS dan Executive. Migration set mengklaim 71 tabel baru lintas delapan domain.
-- PR #152 replay sebelumnya berhasil menerapkan semua migration dan memverifikasi 17 tabel CRM, tetapi pgTAP mengungkap dua masalah pada test ACL: overload lama `saas_record_usage` sengaja direvoke tetapi masih dimasukkan ke assertion global, dan plan count test tidak sesuai jumlah assertion. Test diperbaiki pada exact head `3dda8d1...`/`5b4adaf...`: overload legacy dikecualikan dari allowlist dan secara eksplisit diuji tidak dapat dieksekusi oleh service_role/anon/authenticated; plan disesuaikan menjadi 12. Disposable replay exact-head baru masih berjalan.
+- PR #152 exact head `3dda8d1...`: disposable migration replay PASS, seluruh 17 tabel CRM terverifikasi, pgTAP 17 file / 1.547 assertion PASS. Akar masalah ACL selesai pada test contract: legacy overload `saas_record_usage` sengaja direvoke dari semua API role, dikecualikan dari global service_role allowlist dan diuji eksplisit tidak dapat dieksekusi; plan count menjadi 12. Disposable database dihentikan dan dibuang.
 - PR #143 tetap OPEN dan belum merge; PR #145 adalah Draft/orchestration candidate; PR #146 adalah payroll payout continuation. Tidak ada merge yang dilakukan dalam audit ini.
 
 ### Supabase staging
@@ -104,6 +104,8 @@ Lima fitur tetap BLOCKED dan ditangani terpisah:
 ### Vercel
 
 - Project `dlice-landing-page`.
+- Free quality checks PR #153 exact head `bc15af3...`: PASS, termasuk seluruh contract suite baru untuk 39 fitur.
+- Disposable migration replay PR #153 exact head: sedang berjalan; PR #152 base replay sudah PASS.
 - Vercel Preview untuk exact head terbaru terkena Free build rate limit (`build-rate-limit`); ini bukan hasil build aplikasi. Preview lama READY hanya membuktikan build saat itu, bukan workflow bisnis.
 - READY hanya membuktikan build/deployment Preview, bukan business workflow acceptance.
 - Tidak ada Production deployment, promotion atau perubahan konfigurasi Production.
