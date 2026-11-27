@@ -100,6 +100,8 @@ jobs:
         run: node --test tests/contracts/kitchen-routing-food-safety-allergens.test.mjs
       - name: Run Order external channel ETA and SLA contracts
         run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
+      - name: Run Executive stock waste and anomaly alert contracts
+        run: node --test tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs
       - name: Run Menu Recipe nested BOM and unit economics contracts
         run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
       - name: Run Procurement supplier pricing demand and return contracts
