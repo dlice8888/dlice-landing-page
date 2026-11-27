@@ -3,8 +3,8 @@
 **Tanggal audit:** 27 November 2026, 23:18 WIB  
 **PRD:** 189 fitur / 18 domain  
 **Repository:** `dlice8888/dlice-landing-page`  
-**Candidate branch:** `feat/eight-domain-official-migrations-20261127`  
-**Candidate head saat pembaruan:** `d332d6ba9e7d9b3e8c94a71d8fce46cccf0cc020`  
+**Candidate branch:** `feat/branch-ops-evidence-workflows-20261127`  
+**Candidate head saat pembaruan:** `7095a0681aaa5a4f92e1d396f91b081e21f17579`  
 **Feature matrix:** `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json`  
 **Supabase staging:** `dlice-staging` / `higoadrzxnhzbbwhdbmh`
 
@@ -12,13 +12,13 @@
 
 | Status | Jumlah | Makna |
 |---|---:|---|
-| PARTIAL | 145 | Sudah ada pekerjaan implementasi konkret; belum berarti workflow diterima |
-| NOT VERIFIED | 39 | Belum ada bukti implementasi yang cukup |
+| PARTIAL | 167 | Sudah ada pekerjaan implementasi konkret; belum berarti workflow diterima |
+| NOT VERIFIED | 17 | Belum ada bukti implementasi yang cukup |
 | BLOCKED | 5 | Memiliki penghalang acceptance yang harus diselesaikan |
 | DONE | 0 | Belum ada fitur yang lulus seluruh acceptance criteria |
 | **TOTAL** | **189** | **18 domain** |
 
-Cakupan implementasi yang sudah dimulai: **145/189 = 76,7%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh 39 NOT VERIFIED tetap menjadi prioritas; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
+Cakupan implementasi yang sudah dimulai: **167/189 = 88,4%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh 17 NOT VERIFIED tetap menjadi prioritas; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
 
 Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%. Jika bukti belum tersedia, skor harus tetap null/UNSCORED; jangan mengubah jumlah fitur PARTIAL menjadi klaim bahwa seluruhnya sudah selesai. DONE memerlukan skor 100% dan seluruh gate lulus.
 
@@ -30,41 +30,40 @@ Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Datab
 | POS & Checkout | 13 | 12 | 1 | 0 | 0 | 92,3% |
 | Order Management | 10 | 8 | 2 | 0 | 0 | 80% |
 | Kitchen & Production | 10 | 7 | 2 | 1 | 0 | 70% |
-| Menu & Recipe | 11 | 7 | 3 | 1 | 0 | 63,6% |
+| Menu & Recipe | 11 | 9 | 1 | 1 | 0 | 81,8% |
 | Inventory & Warehouse | 12 | 10 | 2 | 0 | 0 | 83,3% |
-| Procurement & Supplier | 10 | 7 | 3 | 0 | 0 | 70% |
-| Branch Operations | 10 | 4 | 5 | 1 | 0 | 40% |
+| Procurement & Supplier | 10 | 10 | 0 | 0 | 0 | 100% |
+| Branch Operations | 10 | 9 | 0 | 1 | 0 | 90% |
 | Delivery & Fulfillment | 8 | 8 | 0 | 0 | 0 | 100% |
-| CRM & Loyalty | 9 | 6 | 3 | 0 | 0 | 66,7% |
+| CRM & Loyalty | 9 | 9 | 0 | 0 | 0 | 100% |
 | Finance & Accounting | 12 | 9 | 2 | 1 | 0 | 75% |
 | HR & Workforce | 9 | 7 | 2 | 0 | 0 | 77,8% |
 | Franchise & Expansion | 8 | 8 | 0 | 0 | 0 | 100% |
-| BI & Analytics | 10 | 7 | 3 | 0 | 0 | 70% |
+| BI & Analytics | 10 | 10 | 0 | 0 | 0 | 100% |
 | Admin & Access Control | 10 | 8 | 2 | 0 | 0 | 80% |
 | SaaS Tenant Management | 8 | 7 | 1 | 0 | 0 | 87,5% |
-| Integrations & Automation | 9 | 6 | 3 | 0 | 0 | 66,7% |
-| Quality, Compliance & Security | 20 | 17 | 3 | 0 | 0 | 85% |
-| **TOTAL** | **189** | **145** | **39** | **5** | **0** | **76,7%** |
+| Integrations & Automation | 9 | 9 | 0 | 0 | 0 | 100% |
+| Quality, Compliance & Security | 20 | 20 | 0 | 0 | 0 | 100% |
+| **TOTAL** | **189** | **167** | **17** | **5** | **0** | **88,4%** |
 
 Keterangan: P = PARTIAL; BT = belum terbukti; B = BLOCKED; S = DONE. Cakupan Partial adalah jumlah fitur yang sudah mulai dikerjakan dibagi total domain, bukan persentase penyelesaian masing-masing fitur.
 
-### Perubahan status pada audit 27 November
+### Perubahan status pada batch implementasi 27 November
 
-14 fitur dipindahkan dari NOT VERIFIED menjadi PARTIAL karena sudah memiliki modul, UI/Edge action, RPC atau SQL implementation artifact. Satu fitur Executive drill-down dipindahkan dari PARTIAL menjadi BLOCKED karena prasyarat Owner Auth tidak terbukti pada staging.
+**22 Feature ID** dipindahkan dari NOT VERIFIED menjadi PARTIAL karena sekarang memiliki modul implementasi, contract tests, dan bukti perubahan source yang dapat ditelusuri. Perubahan ini hanya menandakan implementasi dimulai, bukan workflow selesai.
 
-| Domain | Fitur yang mulai dikerjakan dan dipindahkan ke PARTIAL |
+| Domain | Feature ID yang mulai dikerjakan |
 |---|---|
-| Executive | Branch ranking; target vs actual dan executive reports |
-| Delivery | Address validation/quote; courier booking; pemisahan customer fee, subsidy dan courier cost |
-| CRM | Customer segments |
-| Finance | AR/AP subledger; automated journals dari POS/procurement/payroll |
-| HR | Recruitment/onboarding/offboarding |
-| Franchise | Compliance dan performance |
-| BI | Food cost/labor cost/waste metrics; branch benchmarking |
-| SaaS | Tenant settings dan suspension |
-| Integrations | Delivery/e-commerce/WhatsApp/accounting connector foundations |
+| Branch Operations | D08-F04, D08-F07, D08-F08, D08-F09, D08-F10 |
+| Menu & Recipe | D05-F05, D05-F07 |
+| Procurement & Supplier | D07-F02, D07-F04, D07-F10 |
+| CRM & Loyalty | D10-F06, D10-F08, D10-F09 |
+| BI & Analytics | D14-F07, D14-F09, D14-F10 |
+| Integrations & Automation | D17-F03, D17-F07, D17-F09 |
+| Quality, Compliance & Security | D18-F11, D18-F12, D18-F19 |
 
-Executive company→region→branch→shift→transaction drill-down sekarang BLOCKED sampai Owner Auth metadata dan allowlist cocok. Perubahan ini tidak mengubah status fitur lain tanpa bukti.
+PR #153 adalah Draft dan belum merged. Implementasi batch ini menyediakan orchestration/pure-domain contracts dan tests. Seluruh fitur tersebut masih membutuhkan canonical database migration, RLS/Storage, concrete repository adapters, authenticated Edge Function, UI, staging E2E dan cross-domain reconciliation sebelum bisa mendapat weighted score atau DONE.
+
 
 ## 3. Bukti aktual GitHub, Supabase dan Vercel
 
@@ -73,7 +72,7 @@ Executive company→region→branch→shift→transaction drill-down sekarang BL
 - Candidate branch `feat/eight-domain-official-migrations-20261127` dibandingkan dengan `staging`: **525 commits ahead, 0 behind**, dengan 105 file berubah.
 - Candidate berisi delapan official migration files yang dibangkitkan melalui Supabase CLI dari draft yang direview, plus pgTAP/contract test files.
 - Candidate mencakup CRM/Loyalty, HR/Payroll/Finance, Delivery, Franchise, Procurement, BI, SaaS dan Executive. Migration set mengklaim 71 tabel baru lintas delapan domain.
-- PR #152 exact head sebelumnya `93f9d49...` memiliki Free quality checks PASS tetapi CRM disposable replay FAIL pada 2 dari 1.546 pgTAP assertions: service_role EXECUTE pada seluruh callable public RPC dan direct EXECUTE pada trigger immutable receipt. Perbaikan sumber ditambahkan pada head `d332d6b...`: revoke service_role pada trigger receipt dan diagnostic nama RPC yang gagal; validasi ulang exact-head masih menunggu hasil workflow baru.
+- PR #152 exact replay `93f9d49...` berhasil mereplay seluruh migration dan memverifikasi 17 tabel CRM. PgTAP 1.545/1.546 PASS; satu assertion gagal karena legacy overload `saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)` sengaja direvoke dari semua role, tetapi test global masih menuntut service_role EXECUTE untuk semua callable functions. Test diperbaiki pada `d12b31b...` dan `7095a06...`: legacy overload dikecualikan dari global allowlist dan diuji eksplisit tidak dapat dieksekusi oleh service_role/anon/authenticated. Disposable replay exact-head baru sedang berjalan; belum dinyatakan PASS.
 - PR #143 tetap OPEN dan belum merge; PR #145 adalah Draft/orchestration candidate; PR #146 adalah payroll payout continuation. Tidak ada merge yang dilakukan dalam audit ini.
 
 ### Supabase staging
@@ -88,7 +87,7 @@ Executive company→region→branch→shift→transaction drill-down sekarang BL
 ### Vercel
 
 - Project `dlice-landing-page`.
-- Preview terverifikasi READY pada branch kandidat untuk commit `93f9d49...`; setelah perubahan ACL ke `d332d6b...`, deployment exact-head baru belum dikonfirmasi.
+- Vercel Preview READY pada exact head PR #153 `3f68a98...`; Preview bukan bukti workflow bisnis lulus.
 - READY hanya membuktikan build/deployment Preview, bukan business workflow acceptance.
 - Tidak ada Production deployment, promotion atau perubahan konfigurasi Production.
 
