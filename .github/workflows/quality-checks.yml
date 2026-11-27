@@ -73,6 +73,8 @@ jobs:
         run: node --test tests/contracts/crm-referral-support-ltv-workflows.test.mjs
       - name: Run BI forecasting reporting and KPI alert workflow contracts
         run: node --test tests/contracts/bi-forecast-report-alert-workflows.test.mjs
+      - name: Run Integration connector health and catalog sync contracts
+        run: node --test tests/contracts/integration-connector-health-sync-workflows.test.mjs
       - name: Run Menu Recipe nested BOM and unit economics contracts
         run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
       - name: Run Procurement supplier pricing demand and return contracts
