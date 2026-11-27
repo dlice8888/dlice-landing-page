@@ -1,5 +1,5 @@
 BEGIN;
-SELECT plan(11);
+SELECT plan(12);
 
 SELECT ok(NOT has_function_privilege('anon', 'public.erp_guard_journal_period()', 'EXECUTE'),
   'anon cannot execute journal-period trigger function');
@@ -52,6 +52,8 @@ SELECT ok(NOT EXISTS (
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'public'
     AND p.prorettype <> 'trigger'::regtype
+    -- The legacy no-actor overload is intentionally disabled and tested below.
+    AND p.oid <> to_regprocedure('public.saas_record_usage(uuid,text,bigint,text,text,text,jsonb,timestamptz)')
     AND NOT has_function_privilege('service_role', p.oid, 'EXECUTE')
 ), 'service_role retains EXECUTE on all callable public-schema RPCs');
 
