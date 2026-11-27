@@ -34,7 +34,7 @@ test("lot allocation rejects cross-tenant branch or item records",()=>{
 test("historical valuation uses only layers received by the cutoff and reports IDR value",()=>{
  const result=calculateInventoryValuation({tenantId:"tenant-a",branchId:"branch-a",itemId:"flour",
   method:"WEIGHTED_AVERAGE",asOf:"2026-11-03T00:00:00Z",lots:[...lots,{...lots[1],id:"future-lot",receivedAt:"2026-11-04T00:00:00Z"}]});
- assert.equal(result.quantity,5);assert.equal(result.valueIdr,5000);assert.equal(result.layerCount,1);
+ assert.equal(result.quantity,15);assert.equal(result.valueIdr,14000);assert.equal(result.layerCount,2);
 });
 test("valuation rejects unsupported method and cross-tenant layers",()=>{
  assert.throws(()=>calculateInventoryValuation({tenantId:"tenant-a",branchId:"branch-a",itemId:"flour",
