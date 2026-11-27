@@ -4151,43 +4151,43 @@
       "active_prs": [
         126
       ],
-      "progress_percent": 38,
+      "progress_percent": 58,
       "progress_breakdown": {
         "code_ui": {
           "weight": 20,
           "earned": 3,
-          "evidence": "PR #126 extracts resolveTenantScopedBranchIds and wires actorBranchIds to active membership + branch assignment resolution; tenant-aware UI and full route coverage are not yet certified."
+          "evidence": "Tenant-aware server-side branch resolution and narrow pre-release API routes exist; full tenant-aware UI and all route coverage remain unverified."
         },
         "database": {
           "weight": 20,
           "earned": 15,
-          "evidence": "35 pgTAP RLS policy assertions passed in latest exact-head disposable replay; all repository migrations applied cleanly."
+          "evidence": "64/64 public tables have RLS; 35 pgTAP assertions cover 17 sensitive tables; P01-P09 cross-tenant write postconditions verify zero persisted transfer, item and stock-movement rows. Full storage/cache/job scope and every tenant-owned entity remain to be proven."
         },
         "authorization": {
           "weight": 15,
-          "earned": 5,
-          "evidence": "Owner/admin tenant-wide scope and ordinary member assigned-branch scope now resolve only within active tenant memberships; cross-tenant/inactive membership cases are covered by Deno unit tests. Real API A/B runtime remains untested."
+          "earned": 10,
+          "evidence": "P01-P09 proves two existing identities, own-scope reads and cross-tenant read/write denials; supplemental direct RLS/RPC probes 6/6 pass; 230/230 missing/invalid credential action probes pass. Coverage is not yet exhaustive across all mutation routes, Storage, cache and jobs."
         },
         "automated_tests": {
           "weight": 15,
           "earned": 15,
-          "evidence": "Latest exact-head disposable replay passed 119 pgTAP assertions across six files; latest quality checks and branch-scope unit/contract tests passed."
+          "evidence": "Exact-head quality checks, 35 RLS pgTAP assertions, tenant permission/branch unit-contract coverage and 230 auth action probes pass."
         },
-        "browser_api_e2e": {
+        "workflow_e2e": {
           "weight": 20,
-          "earned": 0,
-          "evidence": "No real Tenant A/B own-read/write and cross-tenant negative API E2E."
+          "earned": 10,
+          "evidence": "Live staging P01-P09 API acceptance 9/9 passes on 666f2a4; this is not full browser workflow coverage or positive business E2E."
         },
-        "operational_reconciliation": {
+        "reconciliation_observability": {
           "weight": 10,
-          "earned": 0,
-          "evidence": "No tenant A/B operational reconciliation, Storage/cache/job evidence."
+          "earned": 5,
+          "evidence": "Cross-tenant denied-write postconditions verify zero transfer/item/stock-movement rows and temporary sessions revoke HTTP 204; storage/cache/job and 150-branch operational reconciliation remain untested."
         },
         "total_weight": 100,
-        "earned_total": 38,
-        "scoring_note": "Implementation/test progress only. No real staging Tenant A/B runtime proof, browser/API end-to-end coverage or operational reconciliation; release flag remains false."
+        "earned_total": 58,
+        "scoring_note": "Provisional implementation progress only. Tenant isolation release remains disabled until complete API/Storage/cache/job scope, full route negative tests, multi-branch concurrency, broader E2E and operational reconciliation pass."
       },
-      "note": "Exact-head disposable replay now passes; 35 RLS pgTAP assertions and Deno scope tests pass. Real tenant A/B runtime still pending."
+      "note": "Current feature-row weighted score is 58%; release remains disabled pending complete route, Storage/cache/job, broader E2E and operational reconciliation."
     },
     {
       "domain": "SaaS Tenant Management",
