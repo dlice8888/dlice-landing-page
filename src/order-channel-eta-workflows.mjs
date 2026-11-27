@@ -35,13 +35,17 @@ export function normalizeVerifiedExternalOrder(input){
 export function estimateOrderPreparationEta(input){
  const now=Date.parse(req(input.now,"now"));
  if(!Number.isFinite(now)||!Array.isArray(input.items)||!input.items.length)fail("ORDER_ETA_INPUT_INVALID","Now and order items are required");
- let workloadMinutes=0;
+ const stationWork=new Map();
  for(const item of input.items){
-  const standard=Number(item.prepMinutes),quantity=Number(item.quantity),queued=Number(item.stationQueuedMinutes??0);
+  const stationId=req(item.stationId,"stationId"),standard=Number(item.prepMinutes),quantity=Number(item.quantity),queued=Number(item.stationQueuedMinutes??0);
   if(!Number.isFinite(standard)||standard<0||!Number.isFinite(quantity)||quantity<=0||!Number.isFinite(queued)||queued<0)
    fail("ORDER_ETA_STANDARD_INVALID","Prep standards and queue minutes must be non-negative");
-  workloadMinutes=Math.max(workloadMinutes,queued+standard*quantity);
+  const current=stationWork.get(stationId)??{queued,prep:0};
+  current.queued=Math.max(current.queued,queued);
+  current.prep+=standard*quantity;
+  stationWork.set(stationId,current);
  }
+ const workloadMinutes=Math.max(...[...stationWork.values()].map(x=>x.queued+x.prep));
  const buffer=Number(input.approvedBufferMinutes??0);
  if(!Number.isFinite(buffer)||buffer<0)fail("ORDER_ETA_BUFFER_INVALID","Approved buffer must be non-negative");
  const etaMinutes=Math.ceil(workloadMinutes+buffer);
