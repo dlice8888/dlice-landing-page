@@ -67,6 +67,12 @@ jobs:
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Run Branch Operations evidence workflow contracts
+        run: node --test tests/contracts/branch-operations-workflows.test.mjs
+      - name: Run Menu Recipe nested BOM and unit economics contracts
+        run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
+      - name: Run Procurement supplier pricing demand and return contracts
+        run: node --test tests/contracts/procurement-supplier-workflows.test.mjs
       - name: Run atomic admin permission audit contract tests
         run: node --test tests/contracts/admin-permission-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
