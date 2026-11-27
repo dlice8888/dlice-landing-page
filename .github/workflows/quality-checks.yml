@@ -76,6 +76,14 @@ jobs:
           && node --check src/bi-forecast-report-alert-workflows.mjs
           && node --check src/integration-connector-health-sync-workflows.mjs
           && node --check src/quality-release-accessibility-gates.mjs
+          && node --check src/inventory-lot-valuation-workflows.mjs
+          && node --check src/pos-promotion-voucher-workflows.mjs
+          && node --check src/hr-recruitment-training-performance-workflows.mjs
+          && node --check src/admin-access-review-recovery-support-workflows.mjs
+          && node --check src/kitchen-routing-food-safety-allergens.mjs
+          && node --check src/order-channel-eta-workflows.mjs
+          && node --check src/executive-stock-waste-anomaly-alerts.mjs
+          && node --check src/finance-budget-consolidation-workflows.mjs
       - name: Run Branch Operations evidence workflow contracts
         run: node --test tests/contracts/branch-operations-workflows.test.mjs
       - name: Check CRM referral support and LTV module syntax
