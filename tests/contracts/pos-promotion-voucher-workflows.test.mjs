@@ -14,7 +14,7 @@ test("promotion calculates percentage discount with maximum cap",()=>{
  assert.equal(result.discountIdr,8000);assert.equal(result.netSubtotalIdr,92000);
 });
 test("promotion supports fixed discount and rejects invalid scope, period and eligibility",()=>{
- const fixed=calculatePromotionDiscount({tenantId:"tenant-a",promotion:{...promotion,discountType:"fixed",discountValue:15000},sale,at:"2026-11-27T10:00:00Z"});
+ const fixed=calculatePromotionDiscount({tenantId:"tenant-a",promotion:{...promotion,discountType:"fixed",discountValue:15000,maximumDiscountIdr:20000},sale,at:"2026-11-27T10:00:00Z"});
  assert.equal(fixed.discountIdr,15000);
  assert.throws(()=>calculatePromotionDiscount({tenantId:"tenant-a",promotion:{...promotion,branchIds:["branch-b"]},sale,at:"2026-11-27T10:00:00Z"}),
   {code:"POS_PROMOTION_BRANCH_NOT_ALLOWED"});
