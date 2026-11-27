@@ -42,7 +42,7 @@ test("provider settlement reconciles approved fee schedule, net payout and match
  const result=reconcileProviderSettlement({tenantId:"tenant-a",branchId:"branch-a",
   settlement:{tenantId:"tenant-a",branchId:"branch-a",provider:"provider-a",status:"settled",reconciliationStatus:"RECONCILED",
    grossIdr:100000,feeIdr:2500,netIdr:97500},
-  feeSchedule:{status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
+  feeSchedule:{tenantId:"tenant-a",branchId:"branch-a",status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
   bank:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97500}});
  assert.equal(result.status,"matched");assert.equal(result.expectedFeeIdr,2500);
 });
