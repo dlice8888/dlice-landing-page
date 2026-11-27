@@ -92,6 +92,8 @@ jobs:
         run: node --test tests/contracts/inventory-lot-valuation-workflows.test.mjs
       - name: Run POS promotion and voucher workflow contracts
         run: node --test tests/contracts/pos-promotion-voucher-workflows.test.mjs
+      - name: Run HR recruitment training and performance contracts
+        run: node --test tests/contracts/hr-recruitment-training-performance-workflows.test.mjs
       - name: Run Menu Recipe nested BOM and unit economics contracts
         run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
       - name: Run Procurement supplier pricing demand and return contracts
