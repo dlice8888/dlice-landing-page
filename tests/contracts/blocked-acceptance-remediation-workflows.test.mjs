@@ -50,7 +50,7 @@ test("provider settlement reports fee variance and rejects unapproved fee schedu
  const facts={tenantId:"tenant-a",branchId:"branch-a",
   settlement:{tenantId:"tenant-a",branchId:"branch-a",provider:"provider-a",status:"settled",reconciliationStatus:"RECONCILED",
    grossIdr:100000,feeIdr:3000,netIdr:97000},
-  feeSchedule:{status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
+  feeSchedule:{tenantId:"tenant-a",branchId:"branch-a",status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
   bank:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97000}};
  assert.equal(reconcileProviderSettlement(facts).status,"variance");
  assert.throws(()=>reconcileProviderSettlement({...facts,feeSchedule:{...facts.feeSchedule,status:"draft"}}),
@@ -73,7 +73,7 @@ test("provider settlement reconciliation persists authoritative variance and aud
   loadProviderSettlementReconciliationFacts:async()=>({tenantId:"tenant-a",branchId:"branch-a",
    settlement:{tenantId:"tenant-a",branchId:"branch-a",provider:"provider-a",status:"settled",reconciliationStatus:"RECONCILED",
     grossIdr:100000,feeIdr:2500,netIdr:97500},
-   feeSchedule:{status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
+   feeSchedule:{tenantId:"tenant-a",branchId:"branch-a",status:"approved",provider:"provider-a",currency:"IDR",feeBasisPoints:250,fixedFeeIdr:0,toleranceIdr:100},
    bankStatement:{tenantId:"tenant-a",branchId:"branch-a",status:"matched",reconciliationStatus:"RECONCILED",amountIdr:97500}}),
   persistProviderSettlementReconciliation:async()=>({id:"reconciliation-a"}),appendAudit:async()=>{},
  };
