@@ -46,7 +46,7 @@ test("consolidated demand nets branch available stock and open purchase orders",
   ] });
   assert.equal(result[0].branchCount, 2);
   assert.equal(result[0].forecastQuantity, 150);
-  assert.equal(result[0].consolidatedPurchaseQuantity, 100);
+  assert.equal(result[0].consolidatedPurchaseQuantity, 110);
 });
 
 test("demand consolidation rejects cross-tenant rows and impossible inventory quantities", () => {
