@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Operations and Menu/Recipe implementation-start evidence)",
+  "snapshot_at": "2026-11-27 (live audit updated with PR #153 Branch Operations, Menu/Recipe and Procurement implementation-start evidence)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -4091,13 +4091,13 @@
         {
           "requirement": "Supplier price lists, contracts and price history",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "No verified contract/effective price lifecycle.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 123
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D07-F02",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -4134,12 +4134,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; database, integration and E2E acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: effective supplier pricing, consolidated branch demand and supplier return/independent approval source plus contract tests. DB/RLS, adapters, UI, supplier scorecard and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Purchase requisition from branch/warehouse/central kitchen",
@@ -4198,13 +4206,13 @@
         {
           "requirement": "Consolidated demand across branches",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Multi-branch buying/consolidation missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 125
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D07-F04",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -4241,12 +4249,20 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; database, integration and E2E acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: effective supplier pricing, consolidated branch demand and supplier return/independent approval source plus contract tests. DB/RLS, adapters, UI, supplier scorecard and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         },
         {
           "requirement": "Purchase order draft, submit, approval, ordered",
@@ -4562,13 +4578,13 @@
         {
           "requirement": "Supplier return and supplier performance",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "NOT VERIFIED",
+          "audit_status": "PARTIAL",
           "evidence_or_gap": "Return and scorecard workflows missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 131
           },
-          "work_status": "QUEUED",
+          "work_status": "IN_PROGRESS",
           "feature_id": "D07-F10",
           "progress_pct": null,
           "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
@@ -4605,24 +4621,32 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              153
+            ],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "Implementation-start evidence only; database, integration and E2E acceptance remain.",
             "pr_evidence": []
-          }
+          },
+          "active_prs": [
+            153
+          ],
+          "work_started_at": "2026-11-27",
+          "work_evidence": "PR #153: effective supplier pricing, consolidated branch demand and supplier return/independent approval source plus contract tests. DB/RLS, adapters, UI, supplier scorecard and staging E2E remain open.",
+          "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
         }
       ],
       "status": "PARTIAL",
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 7,
-        "not_verified": 3,
+        "partial": 10,
+        "not_verified": 0,
         "blocked": 0,
         "done": 0
       },
-      "partial_coverage_percent": 70,
+      "partial_coverage_percent": 100,
       "partial_coverage_definition": "PARTIAL count / domain total; implementation-start coverage only, not weighted completion of PARTIAL features."
     },
     {
