@@ -75,7 +75,8 @@ export async function redeemPosVoucher(input,deps){
   if(prior)return Object.freeze({status:"duplicate",consumptionId:prior.id});
   const voucher=await adapter(deps,"loadVoucherForUpdate")(tx,{...s,voucherCode});
   assertScope(voucher,s,"voucher");
-  if(voucher.status!=="active"||Date.parse(voucher.expiresAt)<=Date.now())fail("POS_VOUCHER_NOT_ACTIVE","Voucher is expired or inactive");
+  const at=Date.parse(req(input.at,"at")),expiresAt=Date.parse(voucher.expiresAt);
+  if(voucher.status!=="active"||!Number.isFinite(at)||!Number.isFinite(expiresAt)||expiresAt<=at)fail("POS_VOUCHER_NOT_ACTIVE","Voucher is expired or inactive");
   const sale=await adapter(deps,"loadPosSaleForPromotionUpdate")(tx,{...s,saleId});assertScope(sale,s,"sale");
   if(sale.status!=="open"||sale.paymentStatus!=="unpaid")fail("POS_VOUCHER_SALE_NOT_OPEN","Voucher can only be redeemed on an unpaid open sale");
   if(voucher.customerId&&voucher.customerId!==sale.customerId)fail("POS_VOUCHER_CUSTOMER_MISMATCH","Voucher belongs to another customer");
