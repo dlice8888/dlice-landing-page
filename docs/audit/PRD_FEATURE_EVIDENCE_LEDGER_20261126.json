@@ -6,8 +6,8 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 150,
-    "NOT VERIFIED": 34,
+    "PARTIAL": 152,
+    "NOT VERIFIED": 32,
     "BLOCKED": 5,
     "DONE": 0,
     "TOTAL": 189
@@ -2829,9 +2829,9 @@
       "domain": "Menu, Recipe & Product Engineering",
       "requirement": "Nested BOM, unit conversions, yield and prep loss",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Nested sub-recipes and conversion engine not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Nested sub-recipes and conversion engine not proven. Implementation started in PR #153; canonical recipe schema and staging workflow acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 95
@@ -2841,8 +2841,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/recipe-bom-unit-economics.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -2851,13 +2853,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "same-tenant recipe/ingredient validation; runtime RLS and authorization not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -2872,12 +2878,27 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 is implementation-start evidence only. No DONE or weighted percentage until authoritative DB, authorization, tests, E2E and POS/KDS/Inventory/Finance reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "nested_recipe_bom_unit_conversion_yield_loss_and_unit_economics",
+            "commit": "f97e59fa2bc3b8dd64e4a47b69f5f38810111171",
+            "limitations": "Pure-domain module and contract tests only; database, adapter, UI, approval and runtime reconciliation are pending."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D05-F06",
@@ -2939,9 +2960,9 @@
       "domain": "Menu, Recipe & Product Engineering",
       "requirement": "Cost per serving and contribution margin",
       "source_status": "NOT EVIDENCED",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "QUEUED",
-      "evidence_or_gap": "Costing engine and reconciled margin outputs missing.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "Costing engine and reconciled margin outputs missing. Implementation started in PR #153; canonical recipe schema and staging workflow acceptance remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 97
@@ -2951,8 +2972,10 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "src/recipe-bom-unit-economics.mjs"
+          ]
         },
         "database": {
           "weight": 20,
@@ -2961,13 +2984,17 @@
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "same-tenant recipe/ingredient validation; runtime RLS and authorization not verified"
+          ]
         },
         "automated_tests": {
           "weight": 15,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "tests/contracts/recipe-bom-unit-economics.test.mjs authored; exact-head CI pending"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -2982,12 +3009,27 @@
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          153
+        ],
         "audit_pr": 147,
-        "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
-        "pr_evidence": []
-      }
+        "notes": "PR #153 is implementation-start evidence only. No DONE or weighted percentage until authoritative DB, authorization, tests, E2E and POS/KDS/Inventory/Finance reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 153,
+            "kind": "nested_recipe_bom_unit_conversion_yield_loss_and_unit_economics",
+            "commit": "f97e59fa2bc3b8dd64e4a47b69f5f38810111171",
+            "limitations": "Pure-domain module and contract tests only; database, adapter, UI, approval and runtime reconciliation are pending."
+          }
+        ]
+      },
+      "work_started_at": "2026-11-27",
+      "work_evidence": "PR #153 adds recursive approved-recipe BOM expansion, compatible UOM conversion, yield/prep-loss gross-up and IDR unit economics with dependency-free contract tests. Source commit f97e59f; database, authoritative cost adapter, approval UI, POS/KDS/Inventory integration and staging reconciliation remain open.",
+      "active_prs": [
+        153
+      ],
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D05-F08",
@@ -11973,8 +12015,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 150,
-    "NOT VERIFIED": 34,
+    "PARTIAL": 152,
+    "NOT VERIFIED": 32,
     "BLOCKED": 5,
     "DONE": 0
   },
