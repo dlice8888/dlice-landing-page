@@ -21,7 +21,7 @@
 
 Cakupan implementasi yang sudah dimulai: **188/189 = 99,5%**. Ini adalah coverage status PARTIAL, bukan weighted completion dan bukan persentase penerimaan produksi. Seluruh baseline 39 NOT VERIFIED telah dipindahkan ke PARTIAL dan empat dari lima fitur BLOCKED juga sudah memiliki remediation konkret dan dipindahkan ke PARTIAL; setiap fitur baru boleh dipindahkan ke PARTIAL setelah ada artefak kerja nyata yang dapat ditelusuri.
 
-Skor penyelesaian per fitur harus dihitung dari enam dimensi: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%. Jika bukti belum tersedia, skor harus tetap null/UNSCORED; jangan mengubah jumlah fitur PARTIAL menjadi klaim bahwa seluruhnya sudah selesai. DONE memerlukan skor 100% dan seluruh gate lulus.
+Skor penyelesaian per fitur dihitung dari enam dimensi: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%. Rubrik: PASS = 100% bobot dimensi, PARTIAL = 50% bobot, UNVERIFIED = 0%. **50 fitur Partial sudah memiliki skor berbobot; 43 fitur batch baru berada pada 33–38%. Sebanyak 138 fitur Partial masih UNSCORED** karena bukti enam dimensinya belum cukup. DONE memerlukan skor 100% dan seluruh gate lulus.
 
 ## 2. Matriks 18 domain — setelah audit
 
@@ -75,7 +75,7 @@ Seluruh **39 Feature ID** yang sebelumnya NOT VERIFIED kini memiliki artefak imp
 PR #153 masih Draft dan belum merged. Semua 39 fitur tetap memerlukan canonical database migration, RLS/Storage, concrete repository adapters, authenticated Edge Function, UI, staging E2E dan cross-domain reconciliation sebelum dapat dinilai 100%.
 
 Satu fitur tetap BLOCKED:
-- D01-F09 — Owner drill-down company→region→branch→shift→transaction. Masih menunggu verifikasi resmi Auth Admin `app_metadata.platform_owner" dan kecocokan Owner UUID pada allowlist. Tidak boleh diedit melalui SQL atau dilewati dengan service-role bypass.
+- D01-F09 — Owner drill-down company→region→branch→shift→transaction. Masih menunggu verifikasi resmi Supabase Auth Admin untuk `app_metadata.platform_owner` dan kecocokan Owner UUID pada allowlist. Tidak boleh diedit melalui SQL atau dilewati dengan service-role bypass.
 
 Empat blocker lainnya sudah dipindahkan ke PARTIAL setelah remediation code/test dimulai: D04-F10, D05-F11, D08-F03 dan D11-F03. Provider sandbox dan staging runtime tetap menjadi acceptance gap.
 
@@ -102,7 +102,7 @@ Empat blocker lainnya sudah dipindahkan ke PARTIAL setelah remediation code/test
 ### Vercel
 
 - Project `dlice-landing-page`.
-- Free quality checks PR #153 exact head `bc15af3...`: PASS, termasuk seluruh contract suite baru untuk 39 fitur.
+- Free quality checks PR #153 exact head `be7ae30...`: PASS, termasuk seluruh contract suite tambahan dan remediation empat blocker. 43 fitur batch baru mendapat skor 33–38% dari rubrik berbobot.
 - Disposable migration replay PR #153 exact head: sedang berjalan; PR #152 base replay sudah PASS.
 - Vercel Preview untuk exact head terbaru terkena Free build rate limit (`build-rate-limit`); ini bukan hasil build aplikasi. Preview lama READY hanya membuktikan build saat itu, bukan workflow bisnis.
 - READY hanya membuktikan build/deployment Preview, bukan business workflow acceptance.
