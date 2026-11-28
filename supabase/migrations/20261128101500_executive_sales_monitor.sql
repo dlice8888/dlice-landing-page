@@ -179,6 +179,21 @@ begin
    'refund_idr',v_refund,'net_sales_idr',v_net,'matched_settlement_idr',v_settlement,'transaction_count',v_count),
   'daily',v_daily,'transactions',v_rows,'payment_reconciliation',v_payment,'finance_reconciliation',v_finance);
 end $$;
+create or replace function public.get_branch_business_day_cutoff(
+ p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[]
+) returns jsonb language plpgsql security definer set search_path=''
+as $ declare v_role text;v_branch public.branches%rowtype;v_cutoff time;v_version integer;begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
+ select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
+ if v_role is null then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
+ select * into v_branch from public.branches where tenant_id=p_tenant_id and id=p_branch_id;
+ if not found then raise exception using errcode='42501',message='EXECUTIVE_BRANCH_SCOPE_DENIED';end if;
+ if v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
+  raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_READ_DENIED';end if;
+ select cutoff_time,policy_version into v_cutoff,v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id;
+ return jsonb_build_object('branch_id',p_branch_id,'timezone',v_branch.timezone,'cutoff_time',coalesce(v_cutoff,time '00:00'),'policy_version',coalesce(v_version,0));
+end $;
+
 create or replace function public.set_branch_business_day_cutoff(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[],p_cutoff_time time without time zone,p_expected_version integer
 ) returns jsonb language plpgsql security definer set search_path=''
@@ -206,4 +221,6 @@ revoke all on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],
 grant execute on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) to service_role;
 revoke all on function public.set_branch_business_day_cutoff(uuid,uuid,uuid,uuid[],time,integer) from public,anon,authenticated;
 grant execute on function public.set_branch_business_day_cutoff(uuid,uuid,uuid,uuid[],time,integer) to service_role;
+revoke all on function public.get_branch_business_day_cutoff(uuid,uuid,uuid,uuid[]) from public,anon,authenticated;
+grant execute on function public.get_branch_business_day_cutoff(uuid,uuid,uuid,uuid[]) to service_role;
 commit;
