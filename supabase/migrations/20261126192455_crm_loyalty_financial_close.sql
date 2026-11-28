@@ -1518,7 +1518,7 @@ begin
       'eligible_points',v_points,'eligible_net_sales_idr',v_net,'idempotency_key',v_adjustment_key);
   end if;
 
-  v_key:='crm-earn:'||p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_rule.version;
+  v_key:='crm-earn:'||md5(p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_rule.version);
   v_expires_at:=v_close.reconciled_at+make_interval(days=>v_rule.points_validity_days);
   if v_points=0 then return jsonb_build_object('status','zero_award','points',0,'idempotency_key',v_key,'eligible_net_sales_idr',v_net); end if;
   insert into public.crm_loyalty_ledger
