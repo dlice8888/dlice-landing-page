@@ -2007,12 +2007,48 @@ if (action === "admin-set-profile-role") {
 
   const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval","erp-executive-list-delegations","erp-executive-create-delegation","erp-executive-revoke-delegation","erp-executive-enqueue-approval","erp-executive-decide-approval"]);
   if(biExecutiveActions.has(action)){
-    if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
+    const isBiAction=action.startsWith("erp-bi-");
+    if(isBiAction&&!isOwner)return fail("BI Analytics sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
     if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
     const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
     if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
     if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    let executiveMembership:any=null;
+    let executiveBranchIds:string[]=[];
+    if(!isBiAction&&!isOwner){
+      const {data:membership,error:membershipError}=await admin.from("tenant_memberships")
+        .select("role,permissions,status").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
+      if(membershipError)return fail("Membership Executive gagal diverifikasi.",503,origin);
+      if(!membership)return fail("Akses Executive memerlukan membership aktif pada tenant.",403,origin);
+      executiveMembership=membership;
+      const permissions=Array.isArray(membership.permissions)?membership.permissions:[];
+      const tenantAdmin=["tenant_owner","tenant_admin"].includes(String(membership.role));
+      const requiredPermission:Record<string,string>={
+        "erp-executive-sales-monitor":"executive.command_center.read",
+        "erp-executive-list-approvals":"executive.approvals.claim",
+        "erp-executive-claim-approval":"executive.approvals.claim",
+        "erp-executive-list-delegations":"executive.approvals.delegate",
+        "erp-executive-create-delegation":"executive.approvals.delegate",
+        "erp-executive-revoke-delegation":"executive.approvals.delegate",
+      };
+      const required=requiredPermission[action];
+      if(required&&!tenantAdmin&&!permissions.includes(required))
+        return fail("Izin Executive tidak mencukupi untuk tindakan ini.",403,origin);
+      if(action==="erp-executive-enqueue-approval"){
+        const domain=safeText(body.source_domain,32);
+        if(!tenantAdmin&&!permissions.includes(domain))return fail("Izin domain sumber tidak mencukupi untuk mengajukan approval.",403,origin);
+      }
+      const {data:assignments,error:assignmentError}=await admin.from("branch_assignments").select("branch_id")
+        .eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate())
+        .or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
+      if(assignmentError)return fail("Penugasan cabang Executive gagal dimuat.",503,origin);
+      const assignedIds=(assignments||[]).map((x:any)=>x.branch_id);
+      const {data:tenantBranches,error:branchError}=await admin.from("branches").select("id")
+        .eq("tenant_id",tenantId).in("id",assignedIds.length?assignedIds:["00000000-0000-0000-0000-000000000000"]);
+      if(branchError)return fail("Cakupan cabang Executive gagal dimuat.",503,origin);
+      executiveBranchIds=(tenantBranches||[]).map((x:any)=>x.id);
+    }
     if(action==="erp-executive-sales-monitor"){
       const from=safeText(body.from_date,10),through=safeText(body.through_date,10);
       if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(through)||through<from)
@@ -2125,9 +2161,14 @@ if (action === "admin-set-profile-role") {
       return json({delegation:data},200,origin);
     }
     if(action==="erp-executive-list-approvals"){
-      const {data,error}=await admin.from("executive_approval_items")
+      let query=admin.from("executive_approval_items")
         .select("id,branch_id,source_domain,source_entity,source_entity_id,source_version,requested_action,status,claimed_by,claim_expires_at,expires_at,version,created_at")
-        .eq("tenant_id",tenantId).in("status",["pending","claimed"]).order("created_at",{ascending:false}).limit(200);
+        .eq("tenant_id",tenantId).in("status",["pending","claimed"]);
+      if(!isOwner&&!["tenant_owner","tenant_admin"].includes(String(executiveMembership?.role))){
+        if(!executiveBranchIds.length)return json({approvals:[]},200,origin);
+        query=query.in("branch_id",executiveBranchIds);
+      }
+      const {data,error}=await query.order("created_at",{ascending:false}).limit(200);
       if(error)return fail("Approval inbox belum tersedia. Terapkan migration Executive di disposable DB terlebih dahulu.",503,origin);
       return json({approvals:data||[]},200,origin);
     }
