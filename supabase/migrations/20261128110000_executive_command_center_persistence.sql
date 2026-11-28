@@ -39,6 +39,9 @@ begin
     new.paid_at_source := 'payment_transition';
     new.business_date := (new.paid_at at time zone v_timezone)::date;
   elsif tg_op = 'UPDATE' and old.payment_status in ('paid','refunded') then
+    if new.branch_id is distinct from old.branch_id then
+      raise exception using errcode='42501', message='POS_SALE_PAID_BRANCH_IMMUTABLE';
+    end if;
     if new.paid_at is distinct from old.paid_at or new.paid_at_source is distinct from old.paid_at_source then
       raise exception using errcode='42501', message='POS_SALE_PAYMENT_RECOGNITION_IMMUTABLE';
     end if;
