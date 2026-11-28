@@ -1,6 +1,6 @@
 -- Disposable PostgreSQL/pgTAP contracts for CRM identity, consent, loyalty, Finance close and campaigns.
 begin;
-select plan(46);
+select plan(48);
 
 select ok(to_regclass('public.crm_customers') is not null,'CRM customer identity table exists');
 select ok(to_regclass('public.crm_customer_consent_events') is not null,'append-only consent event ledger exists');
@@ -19,6 +19,14 @@ select ok(to_regclass('public.crm_campaign_attributions') is not null,'campaign 
 select ok(to_regclass('public.crm_campaign_costs') is not null,'campaign cost ledger exists');
 select ok(to_regclass('public.crm_campaign_provider_configs') is not null,'campaign provider configuration exists');
 select ok(to_regclass('public.crm_loyalty_point_allocations') is not null,'FIFO loyalty point allocation table exists');
+select ok(exists(select 1 from information_schema.columns where table_schema='public'
+  and table_name='crm_loyalty_ledger' and column_name='earning_rule_version'),
+  'earned points retain the earning rule version used at first award');
+select ok(position('refund-adjustment:' in pg_get_functiondef('public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid)'::regprocedure))>0
+  and position('spent_points_debt' in pg_get_functiondef('public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid)'::regprocedure))>0
+  and position('earn_reversal' in pg_get_functiondef('public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid)'::regprocedure))>0,
+  'processed refunds reverse unspent loyalty lots and record debt for already spent points');
+
 
 select ok(to_regprocedure('public.crm_link_transaction_customer(uuid,uuid,text,uuid,uuid,text,text,uuid)') is not null,'transaction customer linking RPC exists');
 select ok(to_regprocedure('public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid)') is not null,'Finance close projection RPC exists');
