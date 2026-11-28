@@ -311,3 +311,13 @@ Candidate branch `feat/branch-ops-evidence-workflows-20261127`, PR #153, now inc
 - Disposable CRM migration replay run `46089862887` was still pending at the latest check. It is a disposable replay of the existing official candidate migration set; it does not apply the new Branch Operations SQL draft and does not mutate staging.
 - Matrix automated-test evidence for D08-F04/F07/F08/F09/F10 now references the exact-head run. Weighted scores remain unchanged because database migration, live authorization, E2E and reconciliation dimensions remain unverified.
 - Matrix refresh itself creates a newer documentation-only head and will need its own CI run before the refreshed exact head is considered fully validated.
+
+
+## 13. Evidence access and lifecycle extension
+
+- Added scoped evidence metadata lookup in the server repository and a signed-download action in the Edge Function. It creates a **60-second signed URL** only after the requester's Auth/tenant/branch authorization and a matching, unexpired evidence metadata row.
+- Incident UI now exposes links to its evidence assets without making the bucket public or exposing a service-role key.
+- Added approver-only equipment registration and compliance review/publication gates; assignees can advance their own tasks/work orders while other transitions require an approver. Incident state transitions require approver authority.
+- Latest candidate commit before this documentation refresh: `02a072bb99ffdba131e0aa1e3384c17e19316dbc`. Free quality-check steps 1–58, including Branch Ops adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check, all reported PASS; the final post-job cleanup was still running when checked.
+- CRM disposable replay run `46090021604` was still pending. It does not apply Branch Operations draft SQL or modify staging.
+- Branch Ops remains PARTIAL, not DONE: official CLI migration, replay of the new SQL, staging deployment, authenticated tenant A/B/Storage E2E and browser/device acceptance remain outstanding. Progress scores unchanged.
