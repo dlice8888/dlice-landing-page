@@ -18,7 +18,7 @@ export async function createPosOrderWithFulfillment(input,deps){
   customerReference:input.customerReference??null,notes:input.notes??null,tenders:input.tenders??null,
   fulfillment:normalizePosOrderType(input),items:input.items??[]};
  if(!Array.isArray(payload.items)||payload.items.length<1)fail("POS_ORDER_TYPE_ITEMS_REQUIRED","At least one sale item is required");
- if(!["cash","bank_transfer","qris","split"].includes(payload.paymentMethod))fail("POS_ORDER_TYPE_PAYMENT_METHOD_INVALID","Unsupported POS payment method");
+ if(!["cash","bank_transfer","qris","card","split"].includes(payload.paymentMethod))fail("POS_ORDER_TYPE_PAYMENT_METHOD_INVALID","Unsupported POS payment method");
  if(payload.paymentMethod==="split"&&(!Array.isArray(payload.tenders)||payload.tenders.length<2||payload.tenders.length>5))
   fail("POS_ORDER_TYPE_TENDERS_INVALID","Split payment requires 2–5 tender allocations");
  if(payload.paymentMethod!=="split"&&Array.isArray(payload.tenders)&&payload.tenders.length)
