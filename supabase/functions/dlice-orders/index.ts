@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval","erp-executive-list-delegations","erp-executive-create-delegation","erp-executive-revoke-delegation"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -2034,6 +2034,38 @@ if (action === "admin-set-profile-role") {
       });
       if(error)return fail("Sales monitor gagal dimuat. Periksa hak akses, paid_at, dan rekonsiliasi settlement.",error.code==="42501"?403:409,origin);
       return json({sales_monitor:data},200,origin);
+    }
+    if(action==="erp-executive-list-delegations"){
+      const {data,error}=await admin.from("executive_approval_delegations")
+        .select("id,delegator_user_id,delegate_user_id,source_domains,valid_from,valid_until,revoked_at,created_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Daftar delegasi belum tersedia. Terapkan migration Executive di disposable DB terlebih dahulu.",503,origin);
+      return json({delegations:data||[]},200,origin);
+    }
+    if(action==="erp-executive-create-delegation"){
+      const delegator=safeText(body.delegator_user_id,64),delegate=safeText(body.delegate_user_id,64),
+        domains=Array.isArray(body.source_domains)?body.source_domains:[],
+        validFrom=safeText(body.valid_from,40),validUntil=safeText(body.valid_until,40),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(delegator)||!/^[0-9a-f-]{36}$/i.test(delegate)||delegator===delegate||
+        !domains.length||domains.some((x:any)=>!["pos","orders","inventory","procurement","finance","hr","franchise"].includes(x))||
+        !Number.isFinite(Date.parse(validFrom))||!Number.isFinite(Date.parse(validUntil))||idempotencyKey.length<8)
+        return fail("Data delegasi approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_create_approval_delegation",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_delegator_user_id:delegator,p_delegate_user_id:delegate,
+        p_source_domains:domains,p_valid_from:validFrom,p_valid_until:validUntil,p_idempotency_key:idempotencyKey,
+      });
+      if(error)return fail("Delegasi approval ditolak. Periksa membership, izin, periode dan domain.",error.code==="42501"?403:409,origin);
+      return json({delegation:data},200,origin);
+    }
+    if(action==="erp-executive-revoke-delegation"){
+      const delegationId=safeText(body.delegation_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(delegationId))return fail("ID delegasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_revoke_approval_delegation",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_delegation_id:delegationId,
+      });
+      if(error)return fail("Pencabutan delegasi ditolak.",error.code==="42501"?403:409,origin);
+      return json({delegation:data},200,origin);
     }
     if(action==="erp-executive-list-approvals"){
       const {data,error}=await admin.from("executive_approval_items")
