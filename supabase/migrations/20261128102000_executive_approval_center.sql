@@ -92,10 +92,13 @@ end $$;
 
 create or replace function public.trg_enqueue_purchase_requisition_approval()
 returns trigger language plpgsql security definer set search_path=''
-as $$ begin
+as $ declare v_tenant_id uuid;begin
  if new.status='submitted' and (tg_op='INSERT' or old.status is distinct from new.status) then
-  perform public.enqueue_executive_approval(new.tenant_id,'procurement','purchase_requisition',new.id,new.branch_id,new.requested_by,new.estimated_total_idr,new.purpose);
- end if;return new;end $$;
+  select tenant_id into v_tenant_id from public.branches where id=new.branch_id;
+  if v_tenant_id is not null then
+   perform public.enqueue_executive_approval(v_tenant_id,'procurement','purchase_requisition',new.id,new.branch_id,new.requested_by,new.estimated_total_idr,new.purpose);
+  end if;
+ end if;return new;end $;
 drop trigger if exists enqueue_purchase_requisition_approval on public.purchase_requisitions;
 create trigger enqueue_purchase_requisition_approval after insert or update of status on public.purchase_requisitions
 for each row execute function public.trg_enqueue_purchase_requisition_approval();
