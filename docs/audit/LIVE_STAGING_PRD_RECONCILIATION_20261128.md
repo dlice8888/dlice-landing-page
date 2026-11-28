@@ -65,6 +65,10 @@ The live Auth read-only query found 4 Auth users, 4 admin profiles, 3 active ten
 
 This is not a positive POS reconciliation. The six sales cannot be called reconciled to tenders, immutable receipts, cash drawer, Finance or inventory based on these counts.
 
+## 4. Migration source/ledger drift discovered after PR #154
+
+PR #154 recorded a parity checkpoint of 72 source migration files / 72 applied versions. A fresh live Supabase read on 2026-11-28 now returns **73 applied migration versions**. The additional ledger entry is version `20261128083515`, name `revoke_service_role_receipt_trigger_execute`. The corresponding migration source is part of open PR #156, which is still unmerged, and the file is not present on the `staging` branch. The live ACL query confirms that `prevent_pos_sale_receipt_mutation()` is non-executable by anon, authenticated and service_role, so the live privilege result is hardened; however, source-to-database migration parity is currently **72 source files vs 73 applied versions** until the exact migration is merged/reconciled. Do not reapply the DDL or create a duplicate migration. Resolve the source-history mismatch in a forward-only, reviewed source change and re-check the exact version/name mapping.
+
 ## 4. Vercel evidence
 
 The latest staging Preview deployment is READY at commit `5893589d22cce9a891ad065c808867db2f6a7e37` (message: migration filename alignment). READY establishes build/deployment success only; it does not establish runtime workflow acceptance. No production deployment or release action is authorized by this audit.
