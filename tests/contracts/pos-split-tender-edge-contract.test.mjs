@@ -15,3 +15,7 @@ test("split tender Edge action scopes branch and delegates atomic checkout to th
  assert.match(action,/\["cash","bank_transfer","qris"\]/);
  assert.doesNotMatch(action,/body\.tenant_id|body\.payment_status|from\(["']pos_sales["']\)\.insert/);
 });
+
+test("split tender action is included in central POS permission map",()=>{
+ assert.match(edge,/"erp-create-pos-sale-split-tender": "pos"/);
+});
