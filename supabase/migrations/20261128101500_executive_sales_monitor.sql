@@ -48,7 +48,7 @@ create table if not exists public.executive_sales_monitor_snapshot_rows (
  snapshot_id uuid not null references public.executive_sales_monitor_snapshots(id) on delete cascade,
  tenant_id uuid not null references public.tenants(id) on delete restrict,
  sale_id uuid not null references public.pos_sales(id) on delete restrict,
- branch_id uuid not null,
+ branch_id uuid not null,shift_id uuid not null,branch_code text not null,
  transaction_code text not null,business_date date not null,timezone text not null,cutoff_time time without time zone not null,
  gross_idr bigint not null,discount_idr bigint not null,processed_refund_idr bigint not null,net_sales_idr bigint not null,
  tender_allocated_idr bigint not null,matched_settlement_idr bigint not null,finance_journal_entry_count integer not null,
