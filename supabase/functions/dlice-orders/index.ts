@@ -588,6 +588,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-list-pending-approvals": "reports",
     "erp-claim-approval": "reports",
     "erp-decide-approval": "reports",
+    "erp-create-approval-delegation": "reports",
+    "erp-revoke-approval-delegation": "reports",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
@@ -600,7 +602,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval"].includes(action);
+  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval","erp-create-approval-delegation","erp-revoke-approval-delegation"].includes(action);
   if (requiredPermission && !approvalAction && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
@@ -2540,6 +2542,26 @@ if(action==="erp-executive-branch-kpis"){
     if(!Array.isArray(allowedBranchIds)||!allowedBranchIds.length)return fail("Tidak ada cakupan cabang aktif untuk approval.",403,origin);
     const requestedBranchId=safeText(body.branch_id,80);
     if(requestedBranchId&&!allowedBranchIds.includes(requestedBranchId))return fail("Akses cabang approval tidak diizinkan.",403,origin);
+    if(action==="erp-create-approval-delegation"){
+      const delegateUserId=safeText(body.delegate_user_id,80),domain=safeText(body.domain,40),branchId=safeText(body.branch_id,80);
+      const category=safeText(body.category,60),maxAmount=Number(body.max_amount_idr);
+      const startsAt=safeText(body.starts_at,40),expiresAt=safeText(body.expires_at,40);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(delegateUserId)
+        ||!["procurement","finance","hr","branch_ops"].includes(domain)
+        ||!branchId||!Number.isSafeInteger(maxAmount)||maxAmount<0
+        ||!Number.isFinite(Date.parse(startsAt))||!Number.isFinite(Date.parse(expiresAt)))
+        return fail("Delegasi approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("create_approval_delegation",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_delegate_user_id:delegateUserId,p_domain:domain,p_branch_id:branchId,p_category:category||null,p_max_amount_idr:maxAmount,p_starts_at:startsAt,p_expires_at:expiresAt});
+      if(error)return fail("Delegasi tidak dapat dibuat. Periksa role, cabang, pengguna, dan masa berlaku.",409,origin);
+      return json({ok:true,delegation:data},200,origin);
+    }
+    if(action==="erp-revoke-approval-delegation"){
+      const delegationId=safeText(body.delegation_id,80);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(delegationId))return fail("Referensi delegasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("revoke_approval_delegation",{p_delegation_id:delegationId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds});
+      if(error)return fail("Delegasi tidak dapat dicabut.",409,origin);
+      return json({ok:true,delegation:data},200,origin);
+    }
     if(action==="erp-list-pending-approvals"){
       const domain=safeText(body.domain,40),category=safeText(body.category,60);
       if(domain&&!["procurement","finance","hr","branch_ops"].includes(domain))return fail("Domain approval tidak valid.",422,origin);
