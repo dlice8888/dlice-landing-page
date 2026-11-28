@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-27 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED; 43 newly started features scored after exact-head quality PASS)",
+  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; 50 PARTIAL scored, 138 PARTIAL unscored; Branch Ops evidence-ownership guard added, exact-head contract execution pending)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
   "release_flags": {
@@ -15759,5 +15759,7 @@
       "unscored_partial": 138,
       "feature_ledger_contract": "PASS"
     }
-  }
+  },
+  "latest_audit_report": "docs/audit/FNB_OS_TOTAL_AUDIT_2026-11-28.md",
+  "latest_reviewed_source_head": "c4c4825934aa52ca898a5ec2efcfc5e24c63c7c2"
 }
