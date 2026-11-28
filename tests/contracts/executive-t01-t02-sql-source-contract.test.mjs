@@ -39,7 +39,7 @@ test("T02 RPCs lock inbox rows and enforce optimistic version, branch scope and 
   assert.match(sql, /a\.branch_id=any\(coalesce\(p_allowed_branch_ids/i);
   assert.match(sql, /APPROVAL_SELF_APPROVAL_FORBIDDEN/);
   assert.match(sql, /APPROVAL_AMOUNT_LIMIT_EXCEEDED/);
-  assert.match(sql, /APPROVAL_SOURCE_STALE_OR_ALREADY_TRANSITIONED/);
+  assert.match(sql, /APPROVAL_SOURCE_STALE_OR_ALREADY_TRANSITIONED/);\n  assert.match(sql, /approval_source_is_current/);\n  assert.match(sql, /APPROVAL_SOURCE_STALE/);\n  assert.match(sql, /allowed_categories/);
   assert.match(sql, /executive\.approval\.'\|\|p_decision/);
 });
 
