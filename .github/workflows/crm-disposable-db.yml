@@ -43,17 +43,6 @@ jobs:
             supabase config convert --to toml
           fi
           test -f supabase/config.toml || { echo "Supabase CLI did not produce supabase/config.toml"; exit 1; }
-      - name: Generate Branch Operations migration from reviewed draft
-        shell: bash
-        run: |
-          set -euo pipefail
-          supabase migration --help >/dev/null
-          supabase migration new branch_operations_persistence
-          migration="$(find supabase/migrations -maxdepth 1 -type f -name '*_branch_operations_persistence.sql' -print | sort | tail -n 1)"
-          test -n "$migration"
-          test -s docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql
-          cp docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql "$migration"
-          echo "Generated and queued $migration for disposable replay."
       - name: Configure isolated disposable Supabase ports
         shell: bash
         run: |
