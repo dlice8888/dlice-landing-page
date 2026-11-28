@@ -19,69 +19,44 @@ function safeObject(value) {
 }
 
 async function readAuthUser(response, operation) {
-  if (!response.ok) {
-    // Do not include response bodies: they may contain identity or sensitive data.
-    fail("OWNER_AUTH_ADMIN_HTTP_ERROR", `${operation} failed (HTTP ${response.status})`);
-  }
+  if (!response.ok) fail("OWNER_AUTH_ADMIN_HTTP_ERROR", `${operation} failed (HTTP ${response.status})`);
   const payload = await response.json();
   const user = payload?.user ?? payload;
-  if (!user || typeof user.id !== "string") {
-    fail("OWNER_AUTH_ADMIN_RESPONSE_INVALID", `${operation} returned no Auth user`);
-  }
+  if (!user || typeof user.id !== "string") fail("OWNER_AUTH_ADMIN_RESPONSE_INVALID", `${operation} returned no Auth user`);
   return user;
 }
 
-export async function setStagingPlatformOwnerClaim({
-  supabaseUrl,
-  serviceRoleKey,
-  ownerUserId,
-  fetchImpl = globalThis.fetch,
-}) {
-  if (!supabaseUrl || !serviceRoleKey || typeof fetchImpl !== "function") {
-    fail("OWNER_AUTH_ADMIN_CONFIG_REQUIRED", "Staging URL, service-role key and fetch are required");
-  }
-  if (!UUID_RE.test(ownerUserId ?? "")) {
-    fail("OWNER_AUTH_ADMIN_UUID_INVALID", "A verified existing Owner UUID is required");
-  }
+export async function setStagingPlatformOwnerClaim({ supabaseUrl, serviceRoleKey, ownerUserId, fetchImpl = globalThis.fetch }) {
+  if (!supabaseUrl || !serviceRoleKey || typeof fetchImpl !== "function") fail("OWNER_AUTH_ADMIN_CONFIG_REQUIRED", "Staging URL, service-role key and fetch are required");
+  if (!UUID_RE.test(ownerUserId ?? "")) fail("OWNER_AUTH_ADMIN_UUID_INVALID", "A verified existing Owner UUID is required");
 
   let url;
-  try { url = new URL(supabaseUrl); } catch {
-    fail("OWNER_AUTH_ADMIN_URL_INVALID", "Staging Supabase URL is invalid");
-  }
+  try { url = new URL(supabaseUrl); } catch { fail("OWNER_AUTH_ADMIN_URL_INVALID", "Staging Supabase URL is invalid"); }
   if (url.protocol !== "https:" || url.hostname !== `${STAGING_PROJECT_REF}.supabase.co` || url.pathname !== "/") {
     fail("OWNER_AUTH_ADMIN_STAGING_ONLY", "Refusing to modify any project other than the approved D'Lice staging project");
   }
 
   const endpoint = `${url.origin}/auth/v1/admin/users/${encodeURIComponent(ownerUserId)}`;
-  const headers = {
-    apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
-    "Content-Type": "application/json",
-  };
-
+  const headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" };
   const before = await readAuthUser(await fetchImpl(endpoint, { method: "GET", headers }), "Owner lookup");
   if (before.id !== ownerUserId) fail("OWNER_AUTH_ADMIN_IDENTITY_MISMATCH", "Auth user UUID did not match the verified Owner UUID");
-  if (before.banned_until && Date.parse(before.banned_until) > Date.now()) {
-    fail("OWNER_AUTH_ADMIN_USER_BANNED", "Existing Owner Auth user is currently banned; no change was made");
-  }
+  if (before.banned_until && Date.parse(before.banned_until) > Date.now()) fail("OWNER_AUTH_ADMIN_USER_BANNED", "Existing Owner Auth user is currently banned; no change was made");
 
   const previousMetadata = safeObject(before.app_metadata);
   const nextMetadata = { ...previousMetadata, platform_owner: true };
-  const updateResponse = await fetchImpl(endpoint, {
-    method: "PUT",
-    headers,
-    body: JSON.stringify({ app_metadata: nextMetadata }),
-  });
-  const updated = await readAuthUser(updateResponse, "Owner metadata update");
-  if (updated.id !== ownerUserId || updated.app_metadata?.platform_owner !== true) {
+  const updateResponse = await fetchImpl(endpoint, { method: "PUT", headers, body: JSON.stringify({ app_metadata: nextMetadata }) });
+  await readAuthUser(updateResponse, "Owner metadata update");
+
+  // Independently GET the persisted value; do not trust only the PUT response.
+  const verified = await readAuthUser(await fetchImpl(endpoint, { method: "GET", headers }), "Owner metadata verification");
+  if (verified.id !== ownerUserId || verified.app_metadata?.platform_owner !== true) {
     fail("OWNER_AUTH_ADMIN_VERIFY_FAILED", "Owner metadata did not verify after update");
   }
 
-  // Return only non-sensitive verification facts; never expose metadata or credentials.
   return Object.freeze({
     projectRef: STAGING_PROJECT_REF,
     userId: ownerUserId,
-    platformOwnerBoolean: updated.app_metadata.platform_owner === true,
+    platformOwnerBoolean: true,
     preservedMetadataKeys: Object.keys(previousMetadata).sort(),
     updated: true,
   });
@@ -89,9 +64,8 @@ export async function setStagingPlatformOwnerClaim({
 
 async function main() {
   const args = process.argv.slice(2);
-  const flagIndex = args.indexOf("--confirm-staging-owner-uuid");
-  const ownerUserId = flagIndex >= 0 ? args[flagIndex + 1] : null;
-  if (!ownerUserId || args.length !== 2 || flagIndex !== 0) {
+  const ownerUserId = args[0] === "--confirm-staging-owner-uuid" ? args[1] : null;
+  if (!ownerUserId || args.length !== 2) {
     console.error("Usage: STAGING_SUPABASE_URL=... STAGING_SUPABASE_SERVICE_ROLE_KEY=... node scripts/set-staging-platform-owner.mjs --confirm-staging-owner-uuid <verified-existing-owner-uuid>");
     process.exitCode = 2;
     return;
@@ -109,6 +83,4 @@ async function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
-}
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();
