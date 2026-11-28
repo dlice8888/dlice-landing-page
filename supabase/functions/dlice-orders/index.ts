@@ -1435,6 +1435,17 @@ if (action === "admin-set-profile-role") {
     "erp-hr-queue-payroll-finance",
     "erp-hr-post-payroll-finance",
     "erp-hr-reconcile-payroll-finance",
+    "erp-hr-list-payroll-payment-provider-configs",
+    "erp-hr-request-payroll-payment-provider",
+    "erp-hr-approve-payroll-payment-provider",
+    "erp-hr-list-payroll-beneficiaries",
+    "erp-hr-request-payroll-beneficiary",
+    "erp-hr-approve-payroll-beneficiary",
+    "erp-hr-list-payroll-payment-batches",
+    "erp-hr-prepare-payroll-payment-batch",
+    "erp-hr-approve-payroll-payment-batch",
+    "erp-hr-list-payroll-payment-items",
+    "erp-hr-reconcile-payroll-payment-batch",
   ]);
   if (hrActions.has(action)) {
     if (!isPlatformOwner) return fail("Modul HR sementara dibatasi untuk Platform Owner sampai validasi isolasi tenant selesai.", 423, origin);
@@ -1701,7 +1712,123 @@ if (action === "admin-set-profile-role") {
         return fail(duplicate ? "Perintah absensi sudah pernah dicatat." : forbidden ? "Staf tidak memiliki penugasan aktif pada tenant/cabang ini." : invalidState ? "Urutan event absensi tidak sesuai. Periksa clock-in, istirahat, dan clock-out terakhir." : "Absensi belum dapat disimpan.", duplicate || invalidState ? 409 : forbidden ? 403 : 422, origin);
       }
       return json({ attendance_event: data }, 201, origin);
-    }  }
+    }
+
+    if(action==="erp-hr-list-payroll-payment-provider-configs"){
+      const {data,error}=await admin.from("hr_payroll_payment_provider_configs")
+        .select("id,provider_id,credential_secret_reference,status,created_by,approved_by,approved_at,created_at")
+        .eq("tenant_id",branch.tenant_id).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Konfigurasi provider payroll belum tersedia.",503,origin);
+      return json({provider_configs:data||[]},200,origin);
+    }
+    if(action==="erp-hr-request-payroll-payment-provider"){
+      const providerId=safeText(body.provider_id,100),secretRef=safeText(body.credential_secret_reference,120);
+      if(!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(providerId)||!/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))
+        return fail("Provider ID atau secret reference tidak valid.",422,origin);
+      const providerSecret=Deno.env.get(secretRef);
+      if(!providerSecret||providerSecret.length<32)return fail("Secret provider belum terpasang atau terlalu pendek di Edge Function Secrets.",409,origin);
+      const {data,error}=await admin.from("hr_payroll_payment_provider_configs")
+        .insert({tenant_id:branch.tenant_id,provider_id:providerId,credential_secret_reference:secretRef,status:"pending",created_by:actor.user.id})
+        .select("id,provider_id,status,credential_secret_reference,created_by").single();
+      if(error)return fail("Konfigurasi provider tidak dapat diajukan.",409,origin);
+      return json({provider_config:data},201,origin);
+    }
+    if(action==="erp-hr-approve-payroll-payment-provider"){
+      const providerId=safeText(body.provider_config_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(providerId))return fail("Provider config ID tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_approve_payroll_payment_provider",{p_tenant_id:branch.tenant_id,p_provider_config_id:providerId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Approval provider ditolak; approver harus berbeda dari pembuat.",409,origin);
+      return json({provider_config:data},200,origin);
+    }
+    if(action==="erp-hr-list-payroll-beneficiaries"){
+      const {data,error}=await admin.from("hr_payroll_beneficiary_profiles")
+        .select("id,employee_user_id,beneficiary_secret_reference,beneficiary_fingerprint_sha256,status,created_by,approved_by,approved_at,created_at")
+        .eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(200);
+      if(error)return fail("Beneficiary payroll belum tersedia.",503,origin);
+      return json({beneficiaries:data||[]},200,origin);
+    }
+    if(action==="erp-hr-request-payroll-beneficiary"){
+      const employeeId=safeText(body.employee_user_id,64),secretRef=safeText(body.beneficiary_secret_reference,120);
+      if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))
+        return fail("Karyawan atau secret reference beneficiary tidak valid.",422,origin);
+      const {data:assignment,error:assignmentError}=await admin.from("branch_assignments").select("id")
+        .eq("branch_id",branchId).eq("user_id",employeeId).eq("employment_status","active").maybeSingle();
+      if(assignmentError||!assignment)return fail("Beneficiary hanya dapat dibuat untuk karyawan dengan assignment aktif pada cabang ini.",403,origin);
+      const beneficiaryRaw=Deno.env.get(secretRef);
+      if(!beneficiaryRaw)return fail("Secret beneficiary belum tersedia di Edge Function Secrets.",409,origin);
+      let beneficiary:any;
+      try{beneficiary=JSON.parse(beneficiaryRaw)}catch{return fail("Secret beneficiary harus berupa JSON terstruktur.",422,origin)}
+      const bankCode=safeText(beneficiary.bank_code,40).toUpperCase();
+      const accountNumber=safeText(beneficiary.account_number,80).replace(/\s+/g,"");
+      const accountName=safeText(beneficiary.account_name,160).normalize("NFKC").toUpperCase();
+      if(!bankCode||!/^\d{6,40}$/.test(accountNumber)||!accountName)return fail("Secret beneficiary harus memuat bank_code, account_number dan account_name yang valid.",422,origin);
+      const fingerprintInput=[bankCode,accountNumber,accountName].join("|");
+      const fingerprintBytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(fingerprintInput));
+      const fingerprint=[...new Uint8Array(fingerprintBytes)].map(x=>x.toString(16).padStart(2,"0")).join("");
+      const {data,error}=await admin.from("hr_payroll_beneficiary_profiles")
+        .insert({tenant_id:branch.tenant_id,branch_id:branchId,employee_user_id:employeeId,beneficiary_secret_reference:secretRef,beneficiary_fingerprint_sha256:fingerprint,status:"pending",created_by:actor.user.id})
+        .select("id,employee_user_id,beneficiary_secret_reference,beneficiary_fingerprint_sha256,status,created_by").single();
+      if(error)return fail("Profil rekening beneficiary tidak dapat diajukan.",409,origin);
+      return json({beneficiary:data},201,origin);
+    }
+    if(action==="erp-hr-approve-payroll-beneficiary"){
+      const profileId=safeText(body.beneficiary_profile_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(profileId))return fail("Beneficiary profile ID tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_approve_payroll_beneficiary_profile",{p_tenant_id:branch.tenant_id,p_profile_id:profileId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Approval beneficiary ditolak; approver harus independen dari pembuat dan karyawan.",409,origin);
+      return json({beneficiary:data},200,origin);
+    }
+    if(action==="erp-hr-list-payroll-payment-batches"){
+      const {data,error}=await admin.from("hr_payroll_payment_batches")
+        .select("id,payroll_run_id,finance_posting_id,provider_config_id,status,amount_idr,item_count,created_by,approved_by,approved_at,reconciled_by,reconciled_at,reconciliation_sha256,created_at")
+        .eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Payment batch payroll belum tersedia.",503,origin);
+      return json({payment_batches:data||[]},200,origin);
+    }
+    if(action==="erp-hr-prepare-payroll-payment-batch"){
+      const payrollId=safeText(body.payroll_run_id,64),providerId=safeText(body.provider_config_id,64),key=safeText(body.idempotency_key,160);
+      if(!/^[0-9a-f-]{36}$/i.test(payrollId)||!/^[0-9a-f-]{36}$/i.test(providerId)||key.length<8)
+        return fail("Referensi payroll/provider atau idempotency key tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("hr_prepare_payroll_payment_batch",{
+        p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_payroll_run_id:payrollId,
+        p_provider_config_id:providerId,p_idempotency_key:key,p_actor_user_id:actor.user.id,
+      });
+      if(error)return fail("Payment batch hanya dapat disiapkan dari payroll dan Finance posting yang sudah reconciled, provider approved, serta semua beneficiary aktif.",409,origin);
+      return json({payment_batch:data},201,origin);
+    }
+    if(action==="erp-hr-approve-payroll-payment-batch"){
+      const batchId=safeText(body.payment_batch_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(batchId))return fail("Payment batch ID tidak valid.",422,origin);
+      const {data:batch,error:batchError}=await admin.from("hr_payroll_payment_batches")
+        .select("id,tenant_id,branch_id").eq("id",batchId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(batchError||!batch)return fail("Payment batch tidak ditemukan pada tenant/cabang ini.",404,origin);
+      const {data,error}=await admin.rpc("hr_approve_payroll_payment_batch",{p_tenant_id:branch.tenant_id,p_payment_batch_id:batchId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Approval payment batch ditolak; approver harus independen dari payroll, Finance posting, provider dan beneficiary maintenance.",409,origin);
+      return json({payment_batch:data},200,origin);
+    }
+    if(action==="erp-hr-list-payroll-payment-items"){
+      const batchId=safeText(body.payment_batch_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(batchId))return fail("Payment batch ID tidak valid.",422,origin);
+      const {data:batch,error:batchError}=await admin.from("hr_payroll_payment_batches").select("id")
+        .eq("id",batchId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(batchError||!batch)return fail("Payment batch tidak ditemukan pada tenant/cabang ini.",404,origin);
+      const {data,error}=await admin.from("hr_payroll_payment_items")
+        .select("id,payroll_line_id,beneficiary_fingerprint_sha256,amount_idr,status,provider_reference,settled_at")
+        .eq("tenant_id",branch.tenant_id).eq("payment_batch_id",batchId).order("created_at",{ascending:true}).limit(500);
+      if(error)return fail("Payment items belum tersedia.",503,origin);
+      return json({payment_items:data||[]},200,origin);
+    }
+    if(action==="erp-hr-reconcile-payroll-payment-batch"){
+      const batchId=safeText(body.payment_batch_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(batchId))return fail("Payment batch ID tidak valid.",422,origin);
+      const {data:batch,error:batchError}=await admin.from("hr_payroll_payment_batches").select("id")
+        .eq("id",batchId).eq("tenant_id",branch.tenant_id).eq("branch_id",branchId).maybeSingle();
+      if(batchError||!batch)return fail("Payment batch tidak ditemukan pada tenant/cabang ini.",404,origin);
+      const {data,error}=await admin.rpc("hr_reconcile_payroll_payment_batch",{p_tenant_id:branch.tenant_id,p_payment_batch_id:batchId,p_actor_user_id:actor.user.id});
+      if(error)return fail("Rekonsiliasi payroll ditolak. Setiap item harus settled, event provider bertanda tangan harus cocok, dan reconciler harus independen.",409,origin);
+      return json({payment_reconciliation:data},200,origin);
+    }
+  }  }
 
     const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice","erp-procurement-approve-invoice"]);
   if(procurementInvoiceActions.has(action)){
