@@ -68,6 +68,7 @@ export function createBranchOperationsRepository(
       p_scheduled_at: required(v.scheduledAt, "scheduledAt"),
       p_description: required(v.description, "description"),
       p_assigned_to: v.assignedTo ?? null,
+      p_evidence_asset_ids: Array.isArray(v.evidenceAssetIds) ? [...new Set(v.evidenceAssetIds)] : [],
     }, "createMaintenanceOrder"),
     async getEvidenceAsset(evidenceAssetId: string) {
       const { data, error } = await serviceClient.from("branch_ops_evidence_assets")
