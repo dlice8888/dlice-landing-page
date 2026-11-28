@@ -69,6 +69,19 @@ export function createBranchOperationsRepository(
       p_description: required(v.description, "description"),
       p_assigned_to: v.assignedTo ?? null,
     }, "createMaintenanceOrder"),
+    async getEvidenceAsset(evidenceAssetId: string) {
+      const { data, error } = await serviceClient.from("branch_ops_evidence_assets")
+        .select("id,tenant_id,branch_id,object_path,purpose,retention_until,bucket_id")
+        .eq("id", required(evidenceAssetId, "evidenceAssetId"))
+        .eq("tenant_id", tenantId)
+        .eq("branch_id", branchId)
+        .eq("bucket_id", "branch-ops-evidence")
+        .gt("retention_until", new Date().toISOString())
+        .maybeSingle();
+      if (error) throw Object.assign(new Error("Evidence metadata lookup failed"), { code: error.code ?? "BRANCH_EVIDENCE_LOOKUP_FAILED" });
+      if (!data) throw Object.assign(new Error("Evidence not found or retention expired"), { code: "P0002" });
+      return data;
+    },
     registerEvidenceAsset: (v: any) => call("branch_ops_register_evidence_asset", {
       p_object_path: required(v.objectPath, "objectPath"),
       p_purpose: required(v.purpose, "purpose"),
