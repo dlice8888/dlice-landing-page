@@ -376,6 +376,34 @@ drop trigger if exists approval_enqueue_hr_timesheets on public.hr_timesheets;
 create trigger approval_enqueue_hr_timesheets after insert or update of status on public.hr_timesheets
 for each row execute function public.enqueue_approval_source();
 
+-- Backfill currently pending source entities into the read model without changing source status.
+insert into public.approval_inbox_items(
+ tenant_id,branch_id,domain,category,source_entity_type,source_entity_id,source_version,
+ policy_id,policy_version,amount_idr,created_by,expires_at,evidence
+)
+select src.tenant_id,src.branch_id,src.domain,src.category,src.entity_type,src.entity_id,src.source_version,
+ p.id,p.policy_version,src.amount_idr,src.created_by,now()+make_interval(hours=>p.approval_ttl_hours),
+ jsonb_build_array(jsonb_build_object('source_table',src.source_table,'source_id',src.entity_id))
+from (
+ select b.tenant_id,r.branch_id,'procurement'::text as domain,coalesce(r.purpose,'purchase') as category,
+  'purchase_requisition'::text as entity_type,r.id as entity_id,r.updated_at as source_version,
+  r.estimated_total_idr as amount_idr,r.requested_by as created_by,'purchase_requisitions'::text as source_table
+ from public.purchase_requisitions r join public.branches b on b.id=r.branch_id where r.status='submitted'
+ union all
+ select b.tenant_id,o.branch_id,'procurement','purchase_order','purchase_order',o.id,o.updated_at,
+  o.subtotal_idr,o.requested_by,'purchase_orders'
+ from public.purchase_orders o join public.branches b on b.id=o.branch_id where o.status='submitted'
+ union all
+ select b.tenant_id,e.branch_id,'finance',coalesce(e.category,'expense'),'branch_expense',e.id,e.created_at,
+  e.amount_idr,e.created_by,'branch_expenses'
+ from public.branch_expenses e join public.branches b on b.id=e.branch_id where e.status='pending_approval'
+ union all
+ select t.tenant_id,t.branch_id,'hr','timesheet','hr_timesheet',t.id,t.updated_at,0::bigint,t.created_by,'hr_timesheets'
+ from public.hr_timesheets t where t.status='submitted'
+) src
+join public.approval_policies p on p.tenant_id=src.tenant_id and p.source_entity_type=src.entity_type and p.active
+on conflict(tenant_id,source_entity_type,source_entity_id,source_version) do nothing;
+
 -- RPCs are service-role-only and called by the authenticated Edge Function, which
 -- derives actor identity and branch scope from the verified JWT. No client scope is trusted.
 create or replace function public.list_pending_approvals(
