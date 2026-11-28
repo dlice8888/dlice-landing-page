@@ -60,6 +60,7 @@ create table if not exists public.crm_loyalty_ledger (
   source_reference text not null check (length(btrim(source_reference)) between 1 and 160),
   reverses_entry_id uuid null,
   created_by uuid null references auth.users(id) on delete set null,
+  earning_rule_version text null,
   created_at timestamptz not null default now(),
   unique (tenant_id,id),
   unique (tenant_id,idempotency_key),
@@ -70,6 +71,10 @@ create table if not exists public.crm_loyalty_ledger (
       or (entry_kind='adjustment' and reverses_entry_id is null)
       or (entry_kind='reversal' and reverses_entry_id is not null))
 );
+alter table public.crm_loyalty_ledger add column if not exists earning_rule_version text null;
+create index if not exists crm_loyalty_source_earn_idx
+  on public.crm_loyalty_ledger(tenant_id,source_reference) where entry_kind='earn';
+
 create unique index if not exists crm_loyalty_one_reversal_per_entry_uq
   on public.crm_loyalty_ledger(tenant_id,reverses_entry_id) where reverses_entry_id is not null;
 create index if not exists crm_loyalty_customer_ledger_idx
@@ -1381,8 +1386,17 @@ declare
   v_key text;
   v_existing public.crm_loyalty_ledger%rowtype;
   v_entry public.crm_loyalty_ledger%rowtype;
+  v_adjustment_entry public.crm_loyalty_ledger%rowtype;
   v_refund_sum bigint;
   v_expires_at timestamptz;
+  v_expired bigint:=0;
+  v_prior_reversed bigint:=0;
+  v_allocated bigint:=0;
+  v_available bigint:=0;
+  v_adjustment bigint:=0;
+  v_allocate bigint:=0;
+  v_adjustment_key text;
+  v_adjustment_reference text;
 begin
   if p_tenant_id is null or p_branch_id is null or p_source_id is null
      or p_actor_user_id is null or p_source_type not in ('pos_sale','online_order') then
@@ -1412,12 +1426,7 @@ begin
   end if;
   v_net:=v_close.subtotal_idr-v_close.discount_idr-v_close.processed_refunds_idr;
   if v_net<0 then raise exception using errcode='23514',message='NEGATIVE_ELIGIBLE_NET_SALES'; end if;
-  select * into v_rule from public.crm_loyalty_earning_rules
-   where tenant_id=p_tenant_id and status='approved'
-   order by approved_at desc limit 1 for share;
-  if not found or v_rule.points_validity_days is null then
-    raise exception using errcode='23514',message='APPROVED_EARNING_RULE_WITH_VALIDITY_REQUIRED';
-  end if;
+
   select customer_id into v_customer_id from public.crm_transaction_links
    where tenant_id=p_tenant_id and branch_id=p_branch_id
      and source_type=p_source_type and source_id=p_source_id;
@@ -1425,25 +1434,94 @@ begin
   perform 1 from public.crm_customers
    where tenant_id=p_tenant_id and id=v_customer_id and status='active' for update;
   if not found then raise exception using errcode='P0002',message='ACTIVE_CUSTOMER_NOT_FOUND'; end if;
-  v_points:=floor(v_net/1000.0)::bigint*v_rule.points_per_thousand_idr;
-  v_key:='crm-earn:'||p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_rule.version;
-  if v_close.reconciled_at is null then raise exception using errcode='23514',message='FINANCIAL_CLOSE_RECONCILIATION_TIMESTAMP_REQUIRED'; end if;
-  v_expires_at:=v_close.reconciled_at+make_interval(days=>v_rule.points_validity_days);
+
+  select * into v_rule from public.crm_loyalty_earning_rules
+   where tenant_id=p_tenant_id and status='approved'
+   order by approved_at desc limit 1 for share;
+  if not found or v_rule.points_validity_days is null then
+    raise exception using errcode='23514',message='APPROVED_EARNING_RULE_WITH_VALIDITY_REQUIRED';
+  end if;
   select * into v_existing from public.crm_loyalty_ledger
-   where tenant_id=p_tenant_id and idempotency_key=v_key;
+   where tenant_id=p_tenant_id and entry_kind='earn'
+     and source_reference like p_source_type||':'||p_source_id::text||':close:%'
+   order by created_at asc limit 1 for update;
+
+  if found and v_existing.earning_rule_version is not null then
+    select * into v_rule from public.crm_loyalty_earning_rules
+     where tenant_id=p_tenant_id and version=v_existing.earning_rule_version;
+    if not found or v_rule.points_validity_days is null then
+      raise exception using errcode='23514',message='ORIGINAL_EARNING_RULE_VERSION_NOT_FOUND';
+    end if;
+  end if;
+  v_points:=floor(v_net/1000.0)::bigint*v_rule.points_per_thousand_idr;
+  if v_close.reconciled_at is null then raise exception using errcode='23514',message='FINANCIAL_CLOSE_RECONCILIATION_TIMESTAMP_REQUIRED'; end if;
+
   if found then
-    if v_existing.customer_id<>v_customer_id or v_existing.points<>v_points
-       or v_existing.entry_kind<>'earn' or v_existing.expires_at is distinct from v_expires_at then
+    if v_existing.customer_id<>v_customer_id or v_existing.entry_kind<>'earn' then
       raise exception using errcode='23505',message='LOYALTY_IDEMPOTENCY_COLLISION';
     end if;
-    return jsonb_build_object('status','duplicate','entry_id',v_existing.id,
-      'points',v_existing.points,'expires_at',v_existing.expires_at,'idempotency_key',v_key);
+    v_key:=v_existing.idempotency_key;
+    v_expires_at:=v_existing.expires_at;
+    if v_points>v_existing.points then
+      raise exception using errcode='23505',message='LOYALTY_ELIGIBLE_NET_SALES_INCREASE_REQUIRES_REVIEW';
+    end if;
+    if v_points=v_existing.points then
+      return jsonb_build_object('status','duplicate','entry_id',v_existing.id,
+        'points',v_existing.points,'expires_at',v_existing.expires_at,'idempotency_key',v_key);
+    end if;
+
+    select coalesce(sum(points_allocated),0) into v_expired
+      from public.crm_loyalty_point_allocations
+     where tenant_id=p_tenant_id and point_lot_entry_id=v_existing.id and allocation_kind='expiry';
+    select coalesce(sum(-points),0) into v_prior_reversed
+      from public.crm_loyalty_ledger
+     where tenant_id=p_tenant_id and customer_id=v_customer_id and points<0
+       and ((entry_kind='reversal' and reverses_entry_id=v_existing.id)
+         or (entry_kind='adjustment' and source_reference like
+           'refund-adjustment:'||p_source_type||':'||p_source_id::text||':'||v_existing.id::text||':%'));
+    v_adjustment:=greatest(v_existing.points-v_points-v_expired-v_prior_reversed,0);
+    if v_adjustment=0 then
+      return jsonb_build_object('status','duplicate','entry_id',v_existing.id,
+        'points',v_existing.points,'eligible_points',v_points,'idempotency_key',v_key);
+    end if;
+    v_adjustment_key:='crm-refund:'||md5(p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_close.id::text||':'||v_existing.id::text);
+    v_adjustment_reference:='refund-adjustment:'||p_source_type||':'||p_source_id::text||':'||v_existing.id::text||':'||v_close.id::text;
+    insert into public.crm_loyalty_ledger
+      (tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,created_by)
+    values(p_tenant_id,v_customer_id,'adjustment',-v_adjustment,v_adjustment_key,v_adjustment_reference,p_actor_user_id)
+    returning * into v_adjustment_entry;
+
+    select coalesce(sum(case when allocation_kind='redemption_reversal' then -points_allocated else points_allocated end),0)
+      into v_allocated from public.crm_loyalty_point_allocations
+     where tenant_id=p_tenant_id and point_lot_entry_id=v_existing.id;
+    v_available:=greatest(v_existing.points-v_allocated,0);
+    v_allocate:=least(v_adjustment,v_available);
+    if v_allocate>0 then
+      insert into public.crm_loyalty_point_allocations
+        (tenant_id,customer_id,source_entry_id,point_lot_entry_id,allocation_kind,points_allocated)
+      values(p_tenant_id,v_customer_id,v_adjustment_entry.id,v_existing.id,'earn_reversal',v_allocate);
+    end if;
+    insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+    values(p_actor_user_id,'crm.loyalty.refund_points_adjusted','crm_loyalty_ledger',v_adjustment_entry.id::text,
+      jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'financial_close_id',v_close.id,
+        'source_type',p_source_type,'source_id',p_source_id,'customer_id',v_customer_id,
+        'original_earn_entry_id',v_existing.id,'eligible_net_sales_idr',v_net,
+        'previous_points',v_existing.points,'eligible_points',v_points,'points_reversed',v_adjustment,
+        'unspent_points_reversed',v_allocate,'spent_points_debt',v_adjustment-v_allocate,
+        'earning_rule_version',v_rule.version));
+    return jsonb_build_object('status','refund_adjusted','entry_id',v_adjustment_entry.id,
+      'original_earn_entry_id',v_existing.id,'points',-v_adjustment,'points_reversed',v_adjustment,
+      'unspent_points_reversed',v_allocate,'spent_points_debt',v_adjustment-v_allocate,
+      'eligible_points',v_points,'eligible_net_sales_idr',v_net,'idempotency_key',v_adjustment_key);
   end if;
+
+  v_key:='crm-earn:'||p_tenant_id::text||':'||p_source_type||':'||p_source_id::text||':'||v_rule.version;
+  v_expires_at:=v_close.reconciled_at+make_interval(days=>v_rule.points_validity_days);
   if v_points=0 then return jsonb_build_object('status','zero_award','points',0,'idempotency_key',v_key,'eligible_net_sales_idr',v_net); end if;
   insert into public.crm_loyalty_ledger
-    (tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,created_by,expires_at)
+    (tenant_id,customer_id,entry_kind,points,idempotency_key,source_reference,created_by,expires_at,earning_rule_version)
   values(p_tenant_id,v_customer_id,'earn',v_points,v_key,
-    p_source_type||':'||p_source_id::text||':close:'||v_close.id::text,p_actor_user_id,v_expires_at)
+    p_source_type||':'||p_source_id::text||':close:'||v_close.id::text,p_actor_user_id,v_expires_at,v_rule.version)
   returning * into v_entry;
   insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
   values(p_actor_user_id,'crm.loyalty.financial_close_awarded','crm_loyalty_ledger',v_entry.id::text,
