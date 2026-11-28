@@ -1,6 +1,12 @@
 /** Reconcile batch consumption to immutable stock movements and waste. */
 export function reconcileProductionConsumption({batchId,recipeVersionId,plannedByIngredient,actualByIngredient,movements,wasteByIngredient={},varianceTolerance=0}){
  if(!batchId||!recipeVersionId||!Number.isFinite(varianceTolerance)||varianceTolerance<0)throw new Error("PRODUCTION_RECONCILIATION_CONTEXT_INVALID");
+ const movementIds=new Set();
+ for(const movement of movements||[]){
+  if(!movement?.id||movementIds.has(movement.id))throw new Error("PRODUCTION_MOVEMENT_DUPLICATE");
+  movementIds.add(movement.id);
+  if(movement.batch_id!==batchId||(movement.recipe_version_id&&movement.recipe_version_id!==recipeVersionId))throw new Error("PRODUCTION_MOVEMENT_SOURCE_MISMATCH");
+ }
  const keys=new Set([...Object.keys(plannedByIngredient||{}),...Object.keys(actualByIngredient||{})]);
  const rows=[...keys].sort().map(id=>{
   const planned=Number(plannedByIngredient?.[id]||0),actual=Number(actualByIngredient?.[id]||0),waste=Number(wasteByIngredient?.[id]||0);
