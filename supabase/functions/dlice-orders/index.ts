@@ -2594,10 +2594,35 @@ if(action==="erp-executive-branch-kpis"){
       const sourceSales=refundSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at,paid_at,business_date").in("id",refundSaleIds)): [];
       const salesById=new Map([...periodSales,...sourceSales].map((s:any)=>[s.id,s]));
       const allRefunds=refundSaleIds.length?await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("pos_sale_id",refundSaleIds).eq("status","processed")):periodRefunds;
-      const settlementItems=periodSales.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("pos_sale_id",periodSales.map((s:any)=>s.id))):[];
-      const settlementIds=[...new Set(settlementItems.map((x:any)=>x.settlement_id))];
+      const matchedSettlementItems=periodSales.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("pos_sale_id",periodSales.map((s:any)=>s.id))):[];
+      const settlementIds=[...new Set(matchedSettlementItems.map((x:any)=>x.settlement_id))];
+      // Load every allocation in each touched settlement before allocating net proceeds.
+      const settlementItems=settlementIds.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("settlement_id",settlementIds)): [];
       const settlements=settlementIds.length?await readAll(()=>admin.from("payment_settlements").select("id,status,provider_reference,net_amount_idr,gross_amount_idr,fee_amount_idr,settlement_date,created_at").in("id",settlementIds)): [];
       const settlementById=new Map(settlements.map((s:any)=>[s.id,s]));
+      const settlementNetAllocationByItem=new Map<string,number>();
+      const settlementAllocationCompleteById=new Map<string,boolean>();
+      for(const settlement of settlements){
+        const rows=settlementItems.filter((item:any)=>item.settlement_id===settlement.id).sort((a:any,b:any)=>String(a.id).localeCompare(String(b.id)));
+        const gross=Number(settlement.gross_amount_idr),net=Number(settlement.net_amount_idr);
+        const allocatedGross=rows.reduce((sum:number,item:any)=>sum+Number(item.amount_idr||0),0);
+        const valid=settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&allocatedGross===gross&&rows.length>0;
+        settlementAllocationCompleteById.set(settlement.id,valid);
+        if(!valid)continue;
+        let allocatedNet=0;
+        const bases=rows.map((item:any)=>{
+          const value=Number((BigInt(item.amount_idr)*BigInt(net))/BigInt(gross));
+          allocatedNet+=value;
+          return {id:item.id,value};
+        });
+        let remainder=net-allocatedNet;
+        for(const base of bases){
+          const allocation=base.value+(remainder>0?1:0);
+          if(remainder>0)remainder-=1;
+          settlementNetAllocationByItem.set(base.id,allocation);
+        }
+        if(remainder!==0)throw new Error("settlement_net_allocation_rounding_mismatch");
+      }
       const financeJournals=periodSales.length?await readAll(()=>admin.from("finance_journal_entries").select("id,source_id,source_type,entry_date,amount_idr,status,branch_id").in("source_id",periodSales.map((s:any)=>s.id)).in("branch_id",branches.map((b:any)=>b.id)).eq("status","posted")):[];
       const branchSummaries=branchWindows.map(({branch,window}:any)=>{
         const scopedSales=[...salesById.values()].filter((s:any)=>s.branch_id===branch.id);
@@ -2607,19 +2632,11 @@ if(action==="erp-executive-branch-kpis"){
         const branchSettlementItems=settlementItems.filter((i:any)=>ids.has(i.pos_sale_id));
         const reconciledItems=branchSettlementItems.filter((i:any)=>settlementById.get(i.settlement_id)?.status==="reconciled");
         const allocated=reconciledItems.reduce((sum:number,i:any)=>sum+Number(i.amount_idr||0),0);
-        const netAllocation=reconciledItems.reduce((sum:number,i:any)=>{
-          const settlement=settlementById.get(i.settlement_id);
-          const gross=Number(settlement?.gross_amount_idr||0),net=Number(settlement?.net_amount_idr);
-          if(!Number.isSafeInteger(gross)||gross<=0||settlement?.net_amount_idr==null||!Number.isSafeInteger(net)||net<0)return sum;
-          return sum+Math.round(Number(i.amount_idr||0)*net/gross);
-        },0);
-        const completeSettlementNet=branchSettlementItems.length>0&&branchSettlementItems.every((i:any)=>{
-          const settlement=settlementById.get(i.settlement_id);
-          return settlement?.status==="reconciled"&&Number.isSafeInteger(Number(settlement?.gross_amount_idr))&&Number(settlement.gross_amount_idr)>0&&settlement?.net_amount_idr!=null&&Number.isSafeInteger(Number(settlement.net_amount_idr));
-        });
+        const netAllocation=branchSettlementItems.reduce((sum:number,i:any)=>sum+(settlementNetAllocationByItem.get(i.id)||0),0);
+        const completeSettlementNet=branchSettlementItems.length>0&&branchSettlementItems.every((i:any)=>settlementAllocationCompleteById.get(i.settlement_id)===true);
         const branchJournals=financeJournals.filter((j:any)=>ids.has(j.source_id));
         const journalTotal=branchJournals.reduce((sum:number,j:any)=>sum+Number(j.amount_idr||0),0);
-        return {branch:{id:branch.id,tenant_id:branch.tenant_id,code:branch.code,name:branch.name,timezone:branch.timezone},window,totals:{...result.totals,settlement_net_received_idr:completeSettlementNet?netAllocation:null,settlement_vs_net_sales_idr:completeSettlementNet?netAllocation-result.totals.net_sales_idr:null,reconciled_settlement_allocations_idr:allocated,posted_finance_journal_total_idr:journalTotal,posted_finance_journal_entries:branchJournals.length},sources:{...result.sources,sale_items:saleItems.filter((item:any)=>ids.has(item.sale_id)),settlements:branchSettlementItems.map((i:any)=>({id:i.id,pos_sale_id:i.pos_sale_id,settlement_id:i.settlement_id,amount_idr:i.amount_idr,status:settlementById.get(i.settlement_id)?.status||"unknown",provider_reference:settlementById.get(i.settlement_id)?.provider_reference||null,allocated_net_idr:(()=>{const settlement=settlementById.get(i.settlement_id);const gross=Number(settlement?.gross_amount_idr||0),net=Number(settlement?.net_amount_idr);return settlement?.status==="reconciled"&&settlement?.net_amount_idr!=null&&gross>0&&Number.isSafeInteger(net)?Math.round(Number(i.amount_idr||0)*net/gross):null;})()})),finance_journals:branchJournals}};
+        return {branch:{id:branch.id,tenant_id:branch.tenant_id,code:branch.code,name:branch.name,timezone:branch.timezone},window,totals:{...result.totals,settlement_net_received_idr:completeSettlementNet?netAllocation:null,settlement_vs_net_sales_idr:completeSettlementNet?netAllocation-result.totals.net_sales_idr:null,reconciled_settlement_allocations_idr:allocated,posted_finance_journal_total_idr:journalTotal,posted_finance_journal_entries:branchJournals.length},sources:{...result.sources,sale_items:saleItems.filter((item:any)=>ids.has(item.sale_id)),settlements:branchSettlementItems.map((i:any)=>({id:i.id,pos_sale_id:i.pos_sale_id,settlement_id:i.settlement_id,amount_idr:i.amount_idr,status:settlementById.get(i.settlement_id)?.status||"unknown",provider_reference:settlementById.get(i.settlement_id)?.provider_reference||null,allocated_net_idr:settlementNetAllocationByItem.get(i.id)??null})),finance_journals:branchJournals}};
       });
       const sum=(key:string)=>branchSummaries.reduce((n:number,b:any)=>n+Number(b.totals[key]||0),0);
       return json({ok:true,kpi_definition_version:"sales-monitor.v2",sales_recognition_policy:"business_date_then_paid_at_then_legacy_created_at_proxy",sales_business_date_certified:branchSummaries.every((b:any)=>b.totals.paid_transactions===0||b.sources.sales.every((s:any)=>s.recognition_field==="business_date"||s.recognition_field==="paid_at")),period,anchor_date:anchorDate,branches:branchSummaries,totals:{gross_sales_idr:sum("gross_sales_idr"),discounts_idr:sum("discounts_idr"),refunds_idr:sum("refunds_idr"),net_sales_idr:sum("net_sales_idr"),paid_transactions:sum("paid_transactions"),settlement_net_received_idr:branchSummaries.every((b:any)=>b.totals.settlement_net_received_idr!==null)?sum("settlement_net_received_idr"):null,reconciled_settlement_allocations_idr:sum("reconciled_settlement_allocations_idr"),posted_finance_journal_total_idr:sum("posted_finance_journal_total_idr"),posted_finance_journal_entries:sum("posted_finance_journal_entries")},source_row_counts:{sales:branchSummaries.reduce((n:number,b:any)=>n+b.sources.sales.length,0),refunds:branchSummaries.reduce((n:number,b:any)=>n+b.sources.refunds.length,0),settlement_items:settlementItems.length,finance_journals:financeJournals.length}},200,origin);
