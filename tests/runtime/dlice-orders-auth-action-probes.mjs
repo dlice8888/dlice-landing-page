@@ -50,11 +50,11 @@ const actions = [...new Set(
     .map((match) => match[1])
     .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")),
 )].sort();
-if (actions.length !== 239) {
+if (actions.length !== 241) {
   console.error(JSON.stringify({
     probe: "EDGE_ACTION_AUTH_INVENTORY",
     status: "FAIL",
-    expectedActions: 239,
+    expectedActions: 241,
     actualActions: actions.length,
     valuesPrinted: false,
   }));
