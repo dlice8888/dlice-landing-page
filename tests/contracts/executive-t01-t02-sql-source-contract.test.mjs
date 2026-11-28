@@ -119,3 +119,7 @@ test("T02 history and delegation list RPCs are scoped to authorized branches", (
   assert.match(sql, /a\.branch_id=any\(coalesce\(p_allowed_branch_ids/i);
   assert.match(sql, /d\.branch_id=any\(coalesce\(p_allowed_branch_ids/i);
 });
+
+test("T01 settlement allocation rejects net proceeds greater than gross", () => {
+  assert.match(sql, /ps\.net_amount_idr<=ps\.gross_amount_idr/i);
+});
