@@ -108,6 +108,21 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
         item.object_path.startsWith(`${scope.tenantId}/${scope.branchId}/${scope.actorId}/`)
       );
     },
+    async submitComplianceCheck(input) {
+      return rpc("branch_ops_submit_compliance_check", {
+        p_check_key: required(input.checkKey, "checkKey"),
+        p_title: required(input.title, "title"),
+        p_weight: Number(input.weight),
+        p_business_date: required(input.businessDate, "businessDate"),
+        p_evidence_asset_id: required(input.evidenceAssetId, "evidenceAssetId"),
+      }, "submitComplianceCheck");
+    },
+    async reviewComplianceCheck(input) {
+      return rpc("branch_ops_review_compliance_check", {
+        p_check_id: required(input.checkId, "checkId"),
+        p_result: required(input.result, "result"),
+      }, "reviewComplianceCheck");
+    },
     async publishComplianceSnapshot(input) {
       return rpc("branch_ops_publish_compliance_snapshot", {
         p_period_start: required(input.periodStart, "periodStart"),
@@ -130,6 +145,14 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
       let query = scopedQuery("branch_ops_work_orders").order("scheduled_at", { ascending: true }).limit(Math.min(Math.max(Number(limit) || 100, 1), 200));
       if (status) query = query.eq("status", status);
       return unwrap(await query, "listMaintenanceOrders") ?? [];
+    },
+    async listEquipment({ limit = 200 } = {}) {
+      const query = scopedQuery("branch_ops_equipment").order("name", { ascending: true }).limit(Math.min(Math.max(Number(limit) || 200, 1), 300));
+      return unwrap(await query, "listEquipment") ?? [];
+    },
+    async listComplianceChecks({ limit = 200 } = {}) {
+      const query = scopedQuery("branch_ops_compliance_checks").order("business_date", { ascending: false }).limit(Math.min(Math.max(Number(limit) || 200, 1), 300));
+      return unwrap(await query, "listComplianceChecks") ?? [];
     },
     async listComplianceSnapshots({ limit = 24 } = {}) {
       const query = scopedQuery("branch_ops_compliance_snapshots")
