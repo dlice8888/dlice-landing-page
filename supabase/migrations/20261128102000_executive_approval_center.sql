@@ -446,6 +446,7 @@ as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;be
  if v_role is distinct from 'tenant_owner' then raise exception using errcode='42501',message='APPROVAL_DELEGATION_OWNER_REQUIRED';end if;
  select * into v_row from public.executive_approval_delegations where id=p_delegation_id and tenant_id=p_tenant_id for update;
  if not found or v_row.revoked_at is not null or v_row.ends_at<=now() then raise exception using errcode='P0002',message='APPROVAL_DELEGATION_NOT_ACTIVE';end if;
+ if v_row.delegator_user_id=p_actor_user_id then raise exception using errcode='42501',message='APPROVAL_DELEGATION_SELF_APPROVAL_DENIED';end if;
  if v_row.branch_id is not null and not (v_row.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_DELEGATION_BRANCH_DENIED';end if;
  update public.executive_approval_delegations set approved_by=p_actor_user_id,approved_at=now() where id=p_delegation_id returning * into v_row;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
