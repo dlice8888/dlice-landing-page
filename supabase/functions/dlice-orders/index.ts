@@ -2973,8 +2973,18 @@ if(action==="erp-executive-branch-kpis"){
     }));
     if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
     const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
-    const {data,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey});
-    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":"Transaksi POS gagal. Periksa shift, resep, stok, dan item.",409,origin);
+    let data:any,error:any;
+    if(method==="split"){
+      const rawTenders=Array.isArray(body.tenders)?body.tenders:[];
+      const cleanTenders=rawTenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)}));
+      if(cleanTenders.length<2||cleanTenders.length>5||cleanTenders.some((t:any)=>!["cash","qris","bank_transfer"].includes(t.payment_method)||!Number.isSafeInteger(t.amount_idr)||t.amount_idr<=0||t.amount_idr>1000000000)||new Set(cleanTenders.map((t:any)=>t.payment_method)).size<2)return fail("Split tender harus berisi 2–5 alokasi valid dengan minimal dua metode berbeda.",422,origin);
+      const response=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey,p_tenders:cleanTenders});
+      data=response.data;error=response.error;
+    }else{
+      const response=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey});
+      data=response.data;error=response.error;
+    }
+    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":error.message.includes("split_tender_total_mismatch")?"Jumlah alokasi split tender harus sama persis dengan total transaksi.":"Transaksi POS gagal. Periksa shift, resep, stok, metode dan alokasi pembayaran.",409,origin);
     return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
   }
 
@@ -3019,9 +3029,19 @@ if(action==="erp-executive-branch-kpis"){
     }
     const items=Array.isArray(operation.items)?(operation.items as any[]).map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers:[],substitutions:Array.isArray(x?.substitutions)?x.substitutions:[]})): [];
     if(!items.length||items.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000))return fail("Item transaksi offline tidak valid.",422,origin);
-    const key=operationId;
-    const {data:result,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:safeText(operation.payment_method,20),p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key});
-    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
+    const key=operationId,method=safeText(operation.payment_method,20);
+    let result:any,error:any;
+    if(method==="split"){
+      const rawTenders=Array.isArray(operation.tenders)?operation.tenders:[];
+      const tenders=rawTenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)}));
+      if(tenders.length<2||tenders.length>5||tenders.some((t:any)=>!["cash","qris","bank_transfer"].includes(t.payment_method)||!Number.isSafeInteger(t.amount_idr)||t.amount_idr<=0||t.amount_idr>1000000000)||new Set(tenders.map((t:any)=>t.payment_method)).size<2)return fail("Alokasi split tender offline tidak valid.",422,origin);
+      const response=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key,p_tenders:tenders});
+      result=response.data;error=response.error;
+    }else{
+      const response=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:method,p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key});
+      result=response.data;error=response.error;
+    }
+    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":error.message.includes("split_tender_total_mismatch")?"Alokasi split tender offline tidak sama dengan total transaksi.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
     const {data:receipt,error:receiptError}=await admin.from("offline_sync_receipts").insert({branch_id:branchId,actor_user_id:actor.user.id,device_id:deviceId,client_operation_id:operationId,operation_type:"pos-sale",payload_fingerprint:fingerprint,result}).select("id,client_operation_id,synced_at").single();
     if(receiptError){
       const {data:retry}=await admin.from("offline_sync_receipts").select("actor_user_id,branch_id,payload_fingerprint,result").eq("device_id",deviceId).eq("client_operation_id",operationId).maybeSingle();
