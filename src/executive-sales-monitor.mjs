@@ -103,7 +103,7 @@ export async function getExecutiveSalesMonitor(input,deps){
   // Keep them visible for reconciliation, but never treat them as fully proven:
   // the snapshot's legacy_paid_at_count forces reconciliation_incomplete.
   if(!Number.isSafeInteger(policyVersion)||policyVersion<0||
-     (legacyBackfill&&policyVersion!==0)||(!legacyBackfill&&policyVersion<1))
+     (!legacyBackfill&&policyVersion<1))
    fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","A valid branch cutoff policy version or explicit legacy backfill provenance is required");
   if(row.business_date!==computedBusinessDate)
    fail("EXEC_SALES_BUSINESS_DATE_MISMATCH","Stored business date differs from branch timezone/cutoff calculation");
