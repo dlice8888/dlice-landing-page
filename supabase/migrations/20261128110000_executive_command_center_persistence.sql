@@ -566,6 +566,7 @@ revoke all on function public.executive_enqueue_approval(uuid,uuid,uuid,text,tex
 grant execute on function public.executive_enqueue_approval(uuid,uuid,uuid,text,text,text,text,jsonb,text,timestamptz) to service_role;
 
 -- T02: approve/reject and source mutation are committed in one PostgreSQL transaction.
+-- Verified source adapters: Procurement requisitions, HR leave requests, and same-tenant stock transfers.
 create or replace function public.executive_decide_approval(
  p_tenant_id uuid,p_actor_user_id uuid,p_approval_id uuid,p_expected_version bigint,
  p_idempotency_key text,p_decision text,p_reason text
