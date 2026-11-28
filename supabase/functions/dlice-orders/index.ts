@@ -6,7 +6,7 @@ import {
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 import { checkPwnedPassword } from "./password-security.ts";
-import { aggregateSalesMonitor, resolveBusinessWindow } from "../../../src/executive-sales-monitor.mjs";
+import { aggregateSalesMonitor, resolveBusinessWindow } from "../_shared/executive-sales-monitor.mjs";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -2565,10 +2565,10 @@ if(action==="erp-executive-branch-kpis"){
         const result=aggregateSalesMonitor({sales:scopedSales,refunds:scopedRefunds,window,branchIds:[branch.id]});
         const ids=new Set(result.sources.sales.map((s:any)=>s.id));
         const allocated=settlementItems.filter((i:any)=>ids.has(i.pos_sale_id)&&settlementById.get(i.settlement_id)?.status==="reconciled").reduce((sum:number,i:any)=>sum+Number(i.amount_idr||0),0);
-        return {branch:{id:branch.id,tenant_id:branch.tenant_id,code:branch.code,name:branch.name,timezone:branch.timezone},window,totals:{...result.totals,reconciled_settlement_allocations_idr:allocated},sources:{...result.sources,settlements:settlementItems.filter((i:any)=>ids.has(i.pos_sale_id)).map((i:any)=>({id:i.id,pos_sale_id:i.pos_sale_id,settlement_id:i.settlement_id,amount_idr:i.amount_idr,status:settlementById.get(i.settlement_id)?.status||"unknown",provider_reference:settlementById.get(i.settlement_id)?.provider_reference||null})),finance_journals:financeJournals.filter((j:any)=>ids.has(j.source_id))}};
+        return {branch:{id:branch.id,tenant_id:branch.tenant_id,code:branch.code,name:branch.name,timezone:branch.timezone},window,totals:{...result.totals,settlement_net_received_idr:null,settlement_vs_net_sales_idr:null,reconciled_settlement_allocations_idr:allocated},sources:{...result.sources,settlements:settlementItems.filter((i:any)=>ids.has(i.pos_sale_id)).map((i:any)=>({id:i.id,pos_sale_id:i.pos_sale_id,settlement_id:i.settlement_id,amount_idr:i.amount_idr,status:settlementById.get(i.settlement_id)?.status||"unknown",provider_reference:settlementById.get(i.settlement_id)?.provider_reference||null})),finance_journals:financeJournals.filter((j:any)=>ids.has(j.source_id))}};
       });
       const sum=(key:string)=>branchSummaries.reduce((n:number,b:any)=>n+Number(b.totals[key]||0),0);
-      return json({ok:true,kpi_definition_version:"sales-monitor.v1",period,anchor_date:anchorDate,branches:branchSummaries,totals:{gross_sales_idr:sum("gross_sales_idr"),discounts_idr:sum("discounts_idr"),refunds_idr:sum("refunds_idr"),net_sales_idr:sum("net_sales_idr"),paid_transactions:sum("paid_transactions"),settlement_net_received_idr:sum("settlement_net_received_idr"),reconciled_settlement_allocations_idr:sum("reconciled_settlement_allocations_idr")},source_row_counts:{sales:branchSummaries.reduce((n:number,b:any)=>n+b.sources.sales.length,0),refunds:branchSummaries.reduce((n:number,b:any)=>n+b.sources.refunds.length,0),settlement_items:settlementItems.length,finance_journals:financeJournals.length}},200,origin);
+      return json({ok:true,kpi_definition_version:"sales-monitor.v1",period,anchor_date:anchorDate,branches:branchSummaries,totals:{gross_sales_idr:sum("gross_sales_idr"),discounts_idr:sum("discounts_idr"),refunds_idr:sum("refunds_idr"),net_sales_idr:sum("net_sales_idr"),paid_transactions:sum("paid_transactions"),settlement_net_received_idr:null,reconciled_settlement_allocations_idr:sum("reconciled_settlement_allocations_idr")},source_row_counts:{sales:branchSummaries.reduce((n:number,b:any)=>n+b.sources.sales.length,0),refunds:branchSummaries.reduce((n:number,b:any)=>n+b.sources.refunds.length,0),settlement_items:settlementItems.length,finance_journals:financeJournals.length}},200,origin);
     } catch(error) {
       return fail(error instanceof Error&&error.message==="executive_report_row_limit"?"Data laporan melebihi batas; persempit rentang atau pilih cabang.":"Rekonsiliasi penjualan gagal; sumber transaksi perlu diperiksa.",409,origin);
     }
