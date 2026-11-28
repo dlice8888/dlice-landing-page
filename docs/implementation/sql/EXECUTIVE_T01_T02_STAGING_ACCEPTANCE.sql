@@ -2,9 +2,10 @@
 -- Never run these against production. They do not mutate records.
 
 -- T01-A: new paid rows must carry a server-recognized timestamp and branch timezone snapshot.
-select count(*) as paid_rows_missing_paid_at_or_business_date
-from public.pos_sales
-where payment_status='paid' and (paid_at is null or business_date is null or business_timezone is null);
+select
+ count(*) filter(where payment_status='paid' and paid_at is null) as legacy_paid_rows_without_verified_paid_time,
+ count(*) filter(where payment_status='paid' and paid_at is not null and (business_date is null or business_timezone is null)) as newly_stamped_paid_rows_missing_business_date
+from public.pos_sales;
 
 -- T01-B: every stamped business date must equal the branch-local date at paid_at.
 select count(*) as paid_date_timezone_mismatches
@@ -25,7 +26,7 @@ join public.branches b on b.id=s.branch_id
 left join lateral (
   select sum(rr.amount_idr)::bigint as refund_total_idr
   from public.refund_records rr
-  where rr.pos_sale_id=s.id and rr.branch_id=s.branch_id and rr.status='processed'
+  where rr.pos_sale_id=s.id and rr.branch_id=s.branch_id and rr.status='processed'\n    and (rr.processed_at at time zone b.timezone)::date=s.business_date
 ) r on true
 where s.payment_status='paid' and s.business_date is not null
 group by b.tenant_id,s.branch_id,s.business_date,b.timezone
