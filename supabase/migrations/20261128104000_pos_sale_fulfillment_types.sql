@@ -109,6 +109,11 @@ begin
  v_delivery_area_id:=nullif(left(btrim(coalesce(p_fulfillment->>'delivery_area_id','')),80),'');
  if nullif(p_fulfillment->>'pickup_at_local','') is not null then
   v_pickup_at:=(p_fulfillment->>'pickup_at_local')::timestamp without time zone at time zone v_branch.timezone;
+ elsif nullif(p_fulfillment->>'pickup_at','') is not null then
+  v_pickup_at:=(p_fulfillment->>'pickup_at')::timestamptz;
+ end if;
+ if v_pickup_at is not null and v_pickup_at<now() then
+  raise exception using errcode='22023',message='POS_PICKUP_TIME_IN_PAST';
  end if;
  if (v_type='dine_in' and v_table_code is null) or (v_type<>'dine_in' and v_table_code is not null)
   or (v_type='pickup' and v_pickup_at is null) or (v_type<>'pickup' and v_pickup_at is not null)
