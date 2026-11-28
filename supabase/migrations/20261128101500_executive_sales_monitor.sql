@@ -110,7 +110,7 @@ create table if not exists public.executive_sales_monitor_snapshots (
  matched_settlement_idr bigint not null,transaction_count integer not null,
  finance_sale_count integer not null,finance_sale_without_journal_count integer not null,
  finance_linked_journal_entry_count integer not null,finance_sale_journal_amount_idr bigint not null,
- finance_refund_journal_amount_idr bigint not null,finance_refunds_without_journal_count integer not null,
+ finance_refund_journal_amount_idr bigint not null,finance_sale_journal_mismatch_count integer not null default 0,finance_refund_journal_mismatch_count integer not null default 0,finance_refunds_without_journal_count integer not null,
  created_at timestamptz not null default now(),
  foreign key(formula_key,formula_version) references public.executive_kpi_formula_versions(formula_key,formula_version),
  check(period_end>=period_start),check(gross_idr>=0 and discount_idr>=0 and refund_idr>=0 and net_sales_idr>=0 and matched_settlement_idr>=0)
@@ -126,7 +126,7 @@ create table if not exists public.executive_sales_monitor_snapshot_rows (
  timezone text not null,cutoff_time time without time zone not null,business_day_policy_version integer not null,
  gross_idr bigint not null,discount_idr bigint not null,sale_total_idr bigint not null,processed_refund_idr bigint not null,net_sales_idr bigint not null,
  tender_allocated_idr bigint not null,matched_settlement_idr bigint not null,finance_journal_entry_count integer not null,
- finance_journal_amount_idr bigint not null,finance_refund_journal_entry_count integer not null,finance_refund_journal_amount_idr bigint not null,
+ finance_journal_amount_idr bigint not null,finance_refund_journal_entry_count integer not null,finance_refund_journal_amount_idr bigint not null,finance_sale_journal_mismatch_count integer not null default 0,finance_refund_journal_mismatch_count integer not null default 0,
  primary key(snapshot_id,sale_id),
  foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict
 );
@@ -158,7 +158,7 @@ declare
  v_snapshot public.executive_sales_monitor_snapshots%rowtype;
  v_rows jsonb;v_daily jsonb;v_finance jsonb;v_payment jsonb;v_branch_count integer;v_tender_mismatch integer;v_refund_overrun integer;
  v_gross bigint;v_discount bigint;v_refund bigint;v_net bigint;v_settlement bigint;v_count integer;
- v_finance_count integer;v_missing_journal integer;v_journal_count integer;
+ v_finance_count integer;v_missing_journal integer;v_journal_count integer;v_finance_sale_mismatch integer;v_finance_refund_mismatch integer;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then
   raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';
@@ -228,26 +228,35 @@ begin
   coalesce(sum(finance_journal_entry_count),0)::integer
  into v_gross,v_discount,v_refund,v_net,v_settlement,v_count,v_finance_count,v_missing_journal,v_journal_count
  from _exec_sales_rows;
+ select count(*) filter(where finance_journal_entry_count>0 and finance_journal_amount_idr<>sale_total_idr)::integer,
+  count(*) filter(where processed_refund_idr>0 and finance_refund_journal_entry_count>0
+   and finance_refund_journal_amount_idr<>processed_refund_idr)::integer
+ into v_finance_sale_mismatch,v_finance_refund_mismatch from _exec_sales_rows;
 
  insert into public.executive_sales_monitor_snapshots(tenant_id,actor_user_id,period_type,period_start,period_end,
   formula_key,formula_version,branch_ids,gross_idr,discount_idr,refund_idr,net_sales_idr,matched_settlement_idr,
   transaction_count,finance_sale_count,finance_sale_without_journal_count,finance_linked_journal_entry_count,
-  finance_sale_journal_amount_idr,finance_refund_journal_amount_idr,finance_refunds_without_journal_count)
+  finance_sale_journal_amount_idr,finance_refund_journal_amount_idr,finance_refunds_without_journal_count,
+  finance_sale_journal_mismatch_count,finance_refund_journal_mismatch_count)
  values(p_tenant_id,p_actor_user_id,p_period_type,p_period_start,p_period_end,'sales_net','sales-net-v1',p_branch_ids,
   v_gross,v_discount,v_refund,v_net,v_settlement,v_count,v_finance_count,v_missing_journal,v_journal_count,
   (select coalesce(sum(finance_journal_amount_idr),0) from _exec_sales_rows),
   (select coalesce(sum(finance_refund_journal_amount_idr),0) from _exec_sales_rows),
-  (select count(*) from _exec_sales_rows where processed_refund_idr>0 and finance_refund_journal_entry_count=0))
+  (select count(*) from _exec_sales_rows where processed_refund_idr>0 and finance_refund_journal_entry_count=0),
+  v_finance_sale_mismatch,v_finance_refund_mismatch)
  returning * into v_snapshot;
 
  insert into public.executive_sales_monitor_snapshot_rows(snapshot_id,tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,
   paid_at,paid_at_source,business_date,timezone,cutoff_time,business_day_policy_version,gross_idr,discount_idr,sale_total_idr,
   processed_refund_idr,net_sales_idr,tender_allocated_idr,matched_settlement_idr,finance_journal_entry_count,
-  finance_journal_amount_idr,finance_refund_journal_entry_count,finance_refund_journal_amount_idr)
+  finance_journal_amount_idr,finance_refund_journal_entry_count,finance_refund_journal_amount_idr,
+  finance_sale_journal_mismatch_count,finance_refund_journal_mismatch_count)
  select v_snapshot.id,p_tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,paid_at,paid_at_source,business_date,timezone,
   cutoff_time,business_day_policy_version,gross_idr,discount_idr,sale_total_idr,processed_refund_idr,net_sales_idr,
   tender_allocated_idr,matched_settlement_idr,finance_journal_entry_count,finance_journal_amount_idr,
-  finance_refund_journal_entry_count,finance_refund_journal_amount_idr
+  finance_refund_journal_entry_count,finance_refund_journal_amount_idr,
+  case when finance_journal_entry_count>0 and finance_journal_amount_idr<>sale_total_idr then 1 else 0 end,
+  case when processed_refund_idr>0 and finance_refund_journal_entry_count>0 and finance_refund_journal_amount_idr<>processed_refund_idr then 1 else 0 end
  from _exec_sales_rows;
 
  select coalesce(jsonb_agg(jsonb_build_object('business_date',d.business_date,'gross_idr',d.gross_idr,
@@ -272,8 +281,11 @@ begin
   'sale_journal_amount_idr',(select coalesce(sum(finance_journal_amount_idr),0) from _exec_sales_rows),
   'refund_journal_amount_idr',(select coalesce(sum(finance_refund_journal_amount_idr),0) from _exec_sales_rows),
   'refunds_without_journal_count',(select count(*) from _exec_sales_rows where processed_refund_idr>0 and finance_refund_journal_entry_count=0),
-  'status',case when v_missing_journal=0 and not exists(select 1 from _exec_sales_rows where processed_refund_idr>0 and finance_refund_journal_entry_count=0)
-    then 'journal_links_present' else 'journal_links_incomplete' end);
+  'sale_journal_mismatch_count',v_finance_sale_mismatch,'refund_journal_mismatch_count',v_finance_refund_mismatch,
+  'status',case when v_missing_journal=0
+    and not exists(select 1 from _exec_sales_rows where processed_refund_idr>0 and finance_refund_journal_entry_count=0)
+    and v_finance_sale_mismatch=0 and v_finance_refund_mismatch=0
+    then 'reconciled' else 'incomplete' end);
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.sales_monitor.snapshot','executive_sales_monitor_snapshots',v_snapshot.id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'period_type',p_period_type,'period_start',p_period_start,'period_end',p_period_end,
