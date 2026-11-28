@@ -17,6 +17,7 @@ export async function decidePosRefund(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
   refundId:req(input?.refundId,"refundId"),decision:input.decision,reason:req(input.reason,"reason"),expectedVersion:input.expectedVersion};
  if(!["approve","reject"].includes(payload.decision))fail("POS_REFUND_DECISION_INVALID","Decision must be approve or reject");
+ if(payload.reason.length<8)fail("POS_REFUND_INPUT_REQUIRED","Decision reason must contain at least eight characters");
  if(!Number.isSafeInteger(payload.expectedVersion)||payload.expectedVersion<0)fail("POS_REFUND_VERSION_REQUIRED","Expected version required");
  const result=await fn(deps,"decideRefundAtomically")(payload);
  if(!result?.refundId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
