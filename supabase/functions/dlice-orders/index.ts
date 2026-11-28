@@ -2141,7 +2141,7 @@ if (action === "admin-set-profile-role") {
         validFrom=safeText(body.valid_from,40),validUntil=safeText(body.valid_until,40),
         idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
       if(!/^[0-9a-f-]{36}$/i.test(delegator)||!/^[0-9a-f-]{36}$/i.test(delegate)||delegator===delegate||
-        !domains.length||domains.some((x:any)=>!["pos","orders","inventory","procurement","finance","hr","franchise"].includes(x))||
+        !domains.length||domains.some((x:any)=>!["procurement","hr"].includes(x))||
         !Number.isFinite(Date.parse(validFrom))||!Number.isFinite(Date.parse(validUntil))||idempotencyKey.length<8)
         return fail("Data delegasi approval tidak valid.",422,origin);
       const {data,error}=await admin.rpc("executive_create_approval_delegation",{
