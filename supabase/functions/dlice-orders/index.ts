@@ -584,6 +584,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
     "erp-create-pos-sale": "pos",
+    "erp-create-pos-sale-split-tender": "pos",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
