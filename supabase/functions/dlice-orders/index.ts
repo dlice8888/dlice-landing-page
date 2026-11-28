@@ -3054,25 +3054,51 @@ if(action==="erp-executive-branch-kpis"){
     const branchId=safeText(body.branch_id,80),cash=Number(body.opening_cash_idr||0);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(!Number.isFinite(cash)||cash<0||cash>1000000000)return fail("Saldo awal kas tidak valid.",422,origin);
-    const {data,error}=await admin.from("pos_shifts").insert({branch_id:branchId,opened_by:actor.user.id,opening_cash_idr:Math.round(cash),expected_cash_idr:Math.round(cash),status:"open"}).select("*").single();
-    if(error||!data)return fail("Shift gagal dibuka. Pastikan cabang aktif dan tidak ada shift terbuka milik Anda.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_opened",entity_type:"pos_shift",entity_id:data.id,metadata:{branch_id:branchId,opening_cash_idr:cash}});
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_open_shift_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,p_opening_cash_idr:Math.round(cash)});
+    if(error||!data)return fail("Shift gagal dibuka. Periksa akses cabang dan shift terbuka.",409,origin);
     return json({ok:true,shift:data},201,origin);
   }
 
   if (action === "erp-close-shift") {
     const shiftId=safeText(body.shift_id,80),counted=Number(body.counted_cash_idr),note=safeText(body.notes,500);
     if(!Number.isFinite(counted)||counted<0||counted>1000000000)return fail("Kas hasil hitung tidak valid.",422,origin);
-    const {data:old,error:oldError}=await admin.from("pos_shifts").select("*").eq("id",shiftId).maybeSingle();
+    const {data:old,error:oldError}=await admin.from("pos_shifts").select("id,branch_id,status").eq("id",shiftId).maybeSingle();
     if(oldError||!old)return fail("Shift tidak ditemukan.",404,origin);
-    if(!isOwner&&old.opened_by!==actor.user.id&&!hasPerm("branches"))return fail("Hanya pembuka shift atau Owner yang dapat menutup shift ini.",403,origin);
     if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.status!=="open")return fail("Shift sudah ditutup.",409,origin);
-    const variance=Math.round(counted)-Number(old.expected_cash_idr);
-    const {data,error}=await admin.from("pos_shifts").update({status:"closed",counted_cash_idr:Math.round(counted),cash_variance_idr:variance,closed_by:actor.user.id,closed_at:new Date().toISOString(),notes:note}).eq("id",shiftId).eq("status","open").select("*").maybeSingle();
-    if(error||!data)return fail("Shift berubah saat proses berlangsung; muat ulang.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_closed",entity_type:"pos_shift",entity_id:shiftId,metadata:{expected_cash_idr:old.expected_cash_idr,counted_cash_idr:counted,cash_variance_idr:variance}});
-    return json({ok:true,shift:data},200,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(branchError||!branch)return fail("Cabang shift tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_close_shift_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:old.branch_id,p_actor_user_id:actor.user.id,p_shift_id:shiftId,p_counted_cash_idr:Math.round(counted),p_reason:note||"Shift close"});
+    if(error||!data)return fail("Shift tidak dapat ditutup. Periksa pembayaran pending, variance, dan otorisasi.",409,origin);
+    return json({ok:true,...data},200,origin);
+  }
+
+  if (action === "erp-record-cash-movement") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),type=safeText(body.movement_type,20);
+    const amount=Number(body.amount_idr),reason=safeText(body.reason,500),key=safeText(body.idempotency_key,120);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!["cash_in","cash_out"].includes(type)||!Number.isSafeInteger(amount)||amount<=0||reason.length<3||key.length<8)
+      return fail("Data pergerakan kas tidak valid.",422,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_record_cash_movement_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,
+      p_shift_id:shiftId,p_idempotency_key:key,p_movement_type:type,p_amount_idr:amount,p_reason:reason});
+    if(error||!data)return fail("Pergerakan kas ditolak. Periksa shift, saldo, alasan, dan scope.",409,origin);
+    return json({movement:data},200,origin);
+  }
+
+  if (action === "erp-reconcile-cash-drawer") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),counted=Number(body.counted_cash_idr),reason=safeText(body.reason,500);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!Number.isSafeInteger(counted)||counted<0||reason.length<3)return fail("Data rekonsiliasi kas tidak valid.",422,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_reconcile_cash_drawer_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,
+      p_shift_id:shiftId,p_counted_cash_idr:counted,p_reason:reason});
+    if(error||!data)return fail("Rekonsiliasi kas ditolak. Periksa pending payment, variance, dan scope.",409,origin);
+    return json({reconciliation:data},200,origin);
   }
 
   if (action === "erp-create-pos-sale") {
