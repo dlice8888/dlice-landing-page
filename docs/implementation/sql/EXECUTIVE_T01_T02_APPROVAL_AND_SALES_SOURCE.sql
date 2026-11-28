@@ -693,7 +693,7 @@ create or replace function public.create_approval_delegation(
  p_starts_at timestamptz,p_expires_at timestamptz
 ) returns jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_role text;v_active boolean;v_tenant_id uuid;v_policy public.approval_policies%rowtype;v_delegation public.approval_delegations%rowtype;
 begin
  if p_delegate_user_id is null or p_delegate_user_id=p_actor_user_id
@@ -743,13 +743,13 @@ begin
  return jsonb_build_object('id',v_delegation.id,'tenant_id',v_tenant_id,'branch_id',p_branch_id,
    'delegate_user_id',p_delegate_user_id,'domain',p_domain,'expires_at',p_expires_at);
 end;
-$;
+$$;
 
 create or replace function public.revoke_approval_delegation(
  p_delegation_id uuid,p_actor_user_id uuid,p_allowed_branch_ids uuid[]
 ) returns jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare d public.approval_delegations%rowtype;
 begin
  select * into d from public.approval_delegations where id=p_delegation_id for update;
@@ -766,7 +766,7 @@ begin
  end if;
  return jsonb_build_object('id',d.id,'revoked',true);
 end;
-$;
+$$;
 
 revoke all on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) from public,anon,authenticated;
 revoke all on function public.claim_approval(uuid,uuid,uuid[],integer) from public,anon,authenticated;
