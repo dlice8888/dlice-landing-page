@@ -8,7 +8,26 @@ export function createSupabasePosWorkflowAdapter(client,options={}){
  return Object.freeze({
   openShiftAtomically:i=>call("pos_open_shift_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_opening_cash_idr:i.openingCashIdr},"POS_SHIFT_OPEN_RPC_FAILED"),
   closeShiftAtomically:i=>call("pos_close_shift_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_shift_id:required(i.shiftId,"shiftId"),p_counted_cash_idr:i.countedCashIdr,p_reason:required(i.reason,"reason")},"POS_SHIFT_CLOSE_RPC_FAILED"),
-  checkoutPosCartAtomically:i=>call("pos_checkout_cart_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_shift_id:required(i.shiftId,"shiftId"),p_items:i.items,p_discount_idr:i.discountIdr,p_idempotency_key:required(i.idempotencyKey,"idempotencyKey")},"POS_CART_CHECKOUT_RPC_FAILED"),
+  checkoutPosCartAtomically:async i=>{
+   const tenantId=required(i.tenantId,"tenantId"),branchId=required(i.branchId,"branchId"),actorId=required(i.actorId,"actorId");
+   const shiftId=required(i.shiftId,"shiftId"),idempotencyKey=required(i.idempotencyKey,"idempotencyKey");
+   const {data:branch,error:branchError}=await db.from("branches").select("id").eq("id",branchId).eq("tenant_id",tenantId).maybeSingle();
+   if(branchError||!branch)throw Object.assign(new Error("POS branch is outside tenant scope"),{code:"POS_BRANCH_SCOPE_DENIED"});
+   const pItems=i.items.map(x=>({slug:x.slug,quantity:String(x.quantity),modifiers:x.modifiers,substitutions:x.substitutions}));
+   const sale=i.tenders?.length
+    ? await call("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:pItems,p_discount_idr:i.discountIdr,p_customer_reference:i.customerReference,p_notes:i.notes,p_actor_user_id:actorId,p_idempotency_key:idempotencyKey,p_tenders:i.tenders},"POS_CART_CHECKOUT_RPC_FAILED")
+    : await call("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:pItems,p_payment_method:i.paymentMethod,p_discount_idr:i.discountIdr,p_customer_reference:i.customerReference,p_notes:i.notes,p_actor_user_id:actorId,p_idempotency_key:idempotencyKey},"POS_CART_CHECKOUT_RPC_FAILED");
+   const saleId=required(sale?.sale_id??sale?.saleId,"sale_id");
+   const {data:row,error:readError}=await db.from("pos_sales").select("id,branch_id,total_idr,payment_status").eq("id",saleId).eq("branch_id",branchId).maybeSingle();
+   if(readError||!row)throw Object.assign(new Error("Created sale could not be verified in branch scope"),{code:"POS_CART_SALE_READBACK_FAILED"});
+   let receiptId=null,receiptImmutable=false;
+   if(row.payment_status==="paid"){
+    const receipt=await call("erp_get_pos_receipt",{p_branch_id:branchId,p_sale_id:saleId,p_actor_user_id:actorId},"POS_CART_RECEIPT_RPC_FAILED");
+    receiptId=receipt?.receipt_id??null;receiptImmutable=Boolean(receiptId&&receipt?.snapshot&&receipt?.receipt_version);
+   }
+   return {tenantId,branchId,saleId,totalIdr:Number(row.total_idr),paymentStatus:row.payment_status,
+    receiptId,receiptImmutable,transactionCode:sale?.transaction_code??null,idempotentReplay:sale?.idempotent_replay===true};
+  },
   createPosOrderAtomically:i=>call("pos_create_order_with_fulfillment_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_fulfillment:i.fulfillment,p_items:i.items},"POS_ORDER_CREATE_RPC_FAILED"),
   createPaymentIntentAtomically:i=>call("pos_create_payment_intent_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_sale_id:required(i.saleId,"saleId"),p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_payment_method:i.paymentMethod,p_provider_id:i.providerId},"POS_PAYMENT_INTENT_RPC_FAILED"),
   recordTenderAtomically:i=>call("pos_record_tender_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_sale_id:required(i.saleId,"saleId"),p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_payment_method:i.paymentMethod,p_amount_idr:i.amountIdr,p_provider_event_id:i.verifiedProviderEventId,p_reference:i.reference},"POS_TENDER_RPC_FAILED"),
