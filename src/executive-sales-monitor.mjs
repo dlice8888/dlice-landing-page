@@ -6,7 +6,7 @@
  * Client-supplied tenant or branch identifiers are never an authorization input.
  */
 
-export const KPI_DEFINITION_VERSION = "sales-monitor.v1";
+export const KPI_DEFINITION_VERSION = "sales-monitor.v2";
 export const SUPPORTED_BRANCH_TIMEZONES = Object.freeze([
   "Asia/Jakarta",
   "Asia/Makassar",
@@ -140,11 +140,10 @@ function insideWindow(timestamp, window) {
 }
 
 /**
- * Reconcile source transactions using the fields currently present in staging.
- * IMPORTANT: pos_sales has created_at + payment_status but no paid_at/business_date.
- * Therefore this is a created_at-attributed paid-sales proxy, not a certified
- * paid-time business-date ledger. Refunds use processed_at. Settlement remains
- * a separate cash-reconciliation measure and is never substituted for revenue.
+ * Reconcile source transactions using the authoritative fields introduced by
+ * the T01 migration. business_date is preferred, then paid_at in branch timezone.
+ * Legacy rows without either field fall back to created_at and remain explicitly
+ * uncertified. Refunds use processed_at; settlement remains a separate cash measure.
  */
 export function aggregateSalesMonitor({ sales, refunds, settlements = [], window, branchIds }) {
   if (!window?.starts_at || !window?.ends_at) throw new TypeError("window is required");
