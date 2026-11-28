@@ -54,3 +54,23 @@ test("T02 mutates only explicit source tables and keeps client roles denied", ()
   assert.match(sql, /grant execute on function public\.decide_approval[\s\S]*?to service_role/i);
   assert.match(sql, /alter table public\.purchase_orders add constraint purchase_orders_status_check/i);
 });
+
+test("T01 preserves paid recognition fields and allocates settlement net deterministically", () => {
+  assert.match(sql, /PAID_POS_SALE_STATUS_IMMUTABLE/);
+  assert.match(sql, /settlement_allocation_base as/i);
+  assert.match(sql, /row_number\(\) over\(partition by i\.settlement_id order by i\.id\)/i);
+  assert.match(sql, /st\.tenant_count=1/i);
+  assert.match(sql, /st\.allocated_gross_idr=ps\.gross_amount_idr/i);
+});
+
+test("T02 uses the verified owner role and blocks creator delegation", () => {
+  assert.match(sql, /array\['owner'\]::text\[\]/i);
+  assert.match(sql, /d\.delegator_user_id<>a\.created_by/i);
+  assert.match(sql, /a\.amount_idr<=p\.max_amount_idr/i);
+  assert.match(sql, /updated_at=a\.source_version/i);
+});
+
+test("SQL function bodies use valid dollar quoting", () => {
+  assert.doesNotMatch(sql, /as \$(?:\s|begin)/i);
+  assert.doesNotMatch(sql, /\n\$;\n/);
+});
