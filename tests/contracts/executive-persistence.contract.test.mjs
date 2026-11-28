@@ -65,3 +65,12 @@ test("delegation lifecycle adapters bind tenant and actor",async()=>{
  assert.equal(calls[1].name,"executive_revoke_approval_delegation");
  assert.equal(calls[1].args.p_actor_user_id,"user-a");
 });
+
+test("enqueue adapter accepts only verified inventory transfer source",async()=>{
+ const calls=[];
+ const repo=createExecutivePersistenceRepository({tenantId:"tenant-a",actorId:"user-a",serviceClient:{rpc:async(name,args)=>{calls.push({name,args});return {data:{id:"approval-stock"},error:null};}}});
+ await repo.enqueueApproval({branchId:"branch-a",sourceDomain:"inventory",sourceEntity:"stock_transfers",sourceEntityId:"transfer-a",idempotencyKey:"stock-enqueue-key-01"});
+ assert.equal(calls[0].name,"executive_enqueue_approval");
+ assert.equal(calls[0].args.p_source_domain,"inventory");
+ assert.equal(calls[0].args.p_source_entity,"stock_transfers");
+});
