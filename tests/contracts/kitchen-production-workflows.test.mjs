@@ -46,6 +46,8 @@ test("production consumption must reconcile to posted stock movement ledger",()=
  const result=reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:4.5},movements:[{batch_id:"batch1",ingredient_id:"flour",quantity_base:4.5,status:"posted"}],wasteByIngredient:{flour:0.5},varianceTolerance:1});
  assert.equal(result.reconciled,true);
  assert.throws(()=>reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:5},movements:[{batch_id:"batch1",ingredient_id:"flour",quantity_base:4,status:"posted"}]}),/LEDGER_MISMATCH/);
+ const duplicate={id:"m1",batch_id:"batch1",ingredient_id:"flour",quantity_base:4.5,status:"posted"};
+ assert.throws(()=>reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:9},movements:[duplicate,duplicate]}),/MOVEMENT_DUPLICATE/);
 });
 
 test("production mode keeps batch and made-to-order routes distinct with explicit fallback",()=>{
