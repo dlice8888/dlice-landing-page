@@ -204,7 +204,9 @@ Deno.serve(async (req: Request) => {
     return fail("Aksi tidak dikenal.", 400, origin);
   } catch (error) {
     const code = (error as any)?.code;
-    const status = code === "42501" ? 403 : code === "23505" ? 409 : 422;
+    const status = code === "BRANCH_OPS_TABLE_NOT_DEPLOYED" || code === "BRANCH_OPS_RPC_NOT_DEPLOYED" || code === "BRANCH_OPS_SCHEMA_CHECK_FAILED"
+      ? 503
+      : code === "42501" ? 403 : code === "23505" ? 409 : 422;
     return fail(safe((error as Error)?.message, 200) || "Workflow gagal diproses.", status, origin);
   }
 });
