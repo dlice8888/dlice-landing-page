@@ -64,9 +64,11 @@ do $$ declare t text; begin
   execute format('drop policy if exists service_role_only on public.%I',t);
   execute format('create policy service_role_only on public.%I for all to service_role using(true) with check(true)',t);
   execute format('revoke all on public.%I from public,anon,authenticated',t);
-  execute format('grant select,insert,update on public.%I to service_role',t);
  end loop;
-end $$;
+end $;
+grant select,insert,update on public.pos_shift_cash_movements to service_role;
+grant select,insert on public.pos_cash_reconciliation_snapshots to service_role;
+grant select,insert on public.pos_shift_close_snapshots to service_role;
 
 create or replace function public.pos_actor_can_access_branch(p_actor uuid,p_tenant uuid,p_branch uuid)
 returns boolean language sql security invoker set search_path=''
