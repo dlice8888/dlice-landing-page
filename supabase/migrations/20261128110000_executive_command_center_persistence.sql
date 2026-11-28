@@ -45,6 +45,11 @@ begin
       new.paid_at_source := 'payment_transition';
     end if;
     new.business_date := (new.paid_at at time zone v_timezone)::date;
+  elsif tg_op = 'UPDATE' and old.payment_status in ('paid','refunded') and new.payment_status = 'refunded' then
+    -- Refund is a separate contra-revenue event; preserve the original paid recognition date.
+    new.paid_at := old.paid_at;
+    new.paid_at_source := old.paid_at_source;
+    new.business_date := case when old.paid_at is null then null else (old.paid_at at time zone v_timezone)::date end;
   else
     new.paid_at := null;
     new.business_date := null;
@@ -202,13 +207,15 @@ begin
   ) and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true then
     raise exception using errcode='42501',message='EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED';
   end if;
-  if p_period_start is null or p_period_end<p_period_start or p_as_of is null
-     or p_formula_version<1 or p_expected_branch_count not between 1 and 150
-     or p_active_branch_count not between 0 and 150
-     or p_reconciled_branch_count not between 0 and p_active_branch_count
-     or p_status not in ('partial','complete')
-     or jsonb_typeof(p_totals)<>'object' or jsonb_typeof(p_branch_facts)<>'array'
-     or jsonb_typeof(p_source_gaps)<>'array'
+  if p_period_start is null or p_period_end is null or p_period_end<p_period_start or p_as_of is null
+     or p_formula_version is null or p_formula_version<1
+     or p_expected_branch_count is null or p_expected_branch_count not between 1 and 150
+     or p_active_branch_count is null or p_active_branch_count not between 0 and 150
+     or p_reconciled_branch_count is null or p_reconciled_branch_count not between 0 and p_active_branch_count
+     or p_status is null or p_status not in ('partial','complete')
+     or p_totals is null or jsonb_typeof(p_totals)<>'object'
+     or p_branch_facts is null or jsonb_typeof(p_branch_facts)<>'array'
+     or p_source_gaps is null or jsonb_typeof(p_source_gaps)<>'array'
      or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
     raise exception using errcode='22023',message='EXECUTIVE_SNAPSHOT_INPUT_INVALID';
   end if;
