@@ -118,6 +118,10 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
     try {
       await handler(new FormData(form));
       form.reset();
+      if (form === taskForm) taskForm.querySelector('[name="priority"]').value = "normal";
+      if (form === incidentForm) incidentForm.querySelector('[name="severity"]').value = "medium";
+      if (form === maintenanceForm) maintenanceForm.querySelector('[name="maintenance_type"]').value = "preventive";
+      if (form === complianceCheckForm) complianceCheckForm.querySelector('[name="weight"]').value = "1";
       notice.textContent = "Perubahan tersimpan.";
       await refresh();
     } catch (error) {
