@@ -435,6 +435,9 @@ begin
      and not exists(select 1 from public.branch_assignments ba where ba.branch_id=v.branch_id and ba.user_id=p_actor_user_id and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)) then
     raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_BRANCH_SCOPE_DENIED';
   end if;
+  if not exists(select 1 from public.branches b where b.id=v.branch_id and b.tenant_id=p_tenant_id and b.status='active') then
+    raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_BRANCH_INACTIVE_OR_OUT_OF_SCOPE';
+  end if;
   if v.status not in ('pending','claimed') or (v.expires_at is not null and v.expires_at<=now()) then
     raise exception using errcode='23514',message='EXECUTIVE_APPROVAL_NOT_CLAIMABLE';
   end if;
@@ -709,6 +712,8 @@ begin
   select d.id into v_delegation_id from public.executive_approval_delegations d
    where d.tenant_id=p_tenant_id and d.delegate_user_id=p_actor_user_id and d.revoked_at is null
     and d.valid_from<=now() and d.valid_until>now() and d.source_domains @> array[v.source_domain]
+    and exists(select 1 from public.tenant_memberships dm where dm.tenant_id=d.tenant_id
+      and dm.user_id=d.delegator_user_id and dm.status='active')
    order by d.valid_from desc limit 1;
   if v_delegation_id is null then raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_DELEGATION_REQUIRED'; end if;
  end if;
