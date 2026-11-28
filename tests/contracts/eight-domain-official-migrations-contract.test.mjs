@@ -68,6 +68,6 @@ test("all SQL draft regex predicates have balanced string literals",()=>{
 });
 test("CRM identity, loyalty and campaign acceptance remains in canonical pgTAP",()=>{
  const sql=readFileSync(new URL("crm_loyalty.test.sql",testDir),"utf8");
- assert.match(sql,/select plan\(44\)/i);
+ assert.match(sql,/select plan\(48\)/i);
  assert.match(sql,/select \* from finish\(\)/i);
 });
