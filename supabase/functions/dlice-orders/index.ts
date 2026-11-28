@@ -3156,21 +3156,25 @@ if(action==="erp-executive-branch-kpis"){
     if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
     const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
     let data:any=null,error:any=null;
+    const fulfillmentInput=body.fulfillment&&typeof body.fulfillment==="object"?body.fulfillment:{};
+    const fulfillment={order_type:safeText(fulfillmentInput.order_type,20)||"takeaway",
+      table_code:safeText(fulfillmentInput.table_code,40),pickup_at_local:safeText(fulfillmentInput.pickup_at_local,40),
+      pickup_at:safeText(fulfillmentInput.pickup_at,50),delivery_address:safeText(fulfillmentInput.delivery_address,500),
+      delivery_area_id:safeText(fulfillmentInput.delivery_area_id,80)};
+    let tenders:any[]|null=null;
     if(Array.isArray(body.tenders)&&body.tenders.length>0){
       if(body.tenders.length<2||body.tenders.length>5)return fail("Split tender harus terdiri dari 2–5 alokasi.",422,origin);
-      const tenders=body.tenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)}));
+      tenders=body.tenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)}));
       if(tenders.some((t:any)=>!["cash","bank_transfer","qris"].includes(t.payment_method)||!Number.isSafeInteger(t.amount_idr)||t.amount_idr<=0||t.amount_idr>1000000000)||
         new Set(tenders.map((t:any)=>t.payment_method)).size<2)return fail("Metode dan nominal split tender tidak valid.",422,origin);
-      ({data,error}=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,
-        p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),
-        p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey,p_tenders:tenders}));
-    }else{
-      if(!["cash","bank_transfer","qris"].includes(method))return fail("Metode pembayaran tidak valid.",422,origin);
-      ({data,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,
-        p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),
-        p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey}));
-    }
-    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":error.message.includes("split_tender_total_mismatch")?"Total alokasi tender harus sama persis dengan total transaksi.":"Transaksi POS gagal. Periksa shift, resep, stok, dan item.",409,origin);
+    }else if(!["cash","bank_transfer","qris"].includes(method))return fail("Metode pembayaran tidak valid.",422,origin);
+    ({data,error}=await admin.rpc("pos_create_order_with_fulfillment_atomic",{
+      p_tenant_id:tenantId,p_branch_id:branchId,p_actor_user_id:actor.user.id,p_shift_id:shiftId,
+      p_idempotency_key:idempotencyKey,p_items:cleanItems,p_payment_method:tenders?"split":method,
+      p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),
+      p_notes:safeText(body.notes,500),p_tenders:tenders,p_fulfillment:fulfillment
+    }));
+    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")||error.message.includes("POS_FULFILLMENT_IDEMPOTENCY_PAYLOAD_MISMATCH")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":error.message.includes("split_tender_total_mismatch")?"Total alokasi tender harus sama persis dengan total transaksi.":error.message.includes("POS_ORDER_TYPE_DETAILS_INVALID")?"Detail meja, pickup, atau delivery belum lengkap.":"Transaksi POS gagal. Periksa shift, jenis order, resep, stok, dan item.",409,origin);
     return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
   }
 
