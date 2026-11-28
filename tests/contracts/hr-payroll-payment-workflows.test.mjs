@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const migration = readFileSync(new URL("../../supabase/migrations/20261126192458_hr_workforce_payroll_finance.sql", import.meta.url), "utf8");
+const migration = readFileSync(new URL("../../supabase/migrations/20261128030011_20261126192458_hr_workforce_payroll_finance.sql", import.meta.url), "utf8");
 const api = readFileSync(new URL("../../supabase/functions/dlice-orders/index.ts", import.meta.url), "utf8");
 const webhook = readFileSync(new URL("../../supabase/functions/hr-payroll-provider-webhook/index.ts", import.meta.url), "utf8");
 const erp = readFileSync(new URL("../../erp.html", import.meta.url), "utf8");
