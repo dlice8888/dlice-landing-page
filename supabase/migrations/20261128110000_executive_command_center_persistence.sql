@@ -347,12 +347,12 @@ begin
   -- Allocate only the source item amount to a branch. Provider-level fee/net/
   -- received totals are calculated once per distinct settlement below.
   select s.branch_id,coalesce(sum(psi.amount_idr),0)::bigint settlement_gross_idr,
-   count(distinct ps.id)::integer reconciled_settlements
+   count(distinct ps.id)::integer matched_settlements
   from public.payment_settlement_items psi
   join public.pos_sales s on s.id=psi.pos_sale_id
   join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
   join public.payment_settlements ps on ps.id=psi.settlement_id
-  where s.branch_id=any(p_branch_ids) and ps.status='reconciled'
+  where s.branch_id=any(p_branch_ids) and ps.status='matched'
     and ps.settlement_date between p_from_date and p_through_date
   group by s.branch_id
  ), settlement_totals as (
@@ -362,7 +362,7 @@ begin
    coalesce(sum(ps.received_amount_idr),0)::bigint received_idr,
    count(*)::integer settlement_count
   from public.payment_settlements ps
-  where ps.status='reconciled' and ps.settlement_date between p_from_date and p_through_date
+  where ps.status='matched' and ps.settlement_date between p_from_date and p_through_date
    and exists(select 1 from public.payment_settlement_items psi
     join public.pos_sales s on s.id=psi.pos_sale_id
     join public.branches b on b.id=s.branch_id
@@ -386,13 +386,13 @@ begin
   'settlement_net_idr',(select net_idr from settlement_totals),
   'settlement_received_idr',(select received_idr from settlement_totals),
   'settlement_gross_idr',(select gross_idr from settlement_totals),
-  'reconciled_settlements',(select settlement_count from settlement_totals),
+  'matched_settlements',(select settlement_count from settlement_totals),
   'branches',coalesce(jsonb_agg(jsonb_build_object(
     'branch_id',bs.branch_id,'code',bs.code,'name',bs.name,'timezone',bs.timezone,
     'gross_sales_idr',bs.gross_sales_idr,'discount_idr',bs.discount_idr,
     'refund_idr',coalesce(br.refund_idr,0),'net_sales_idr',bs.net_before_refund_idr-coalesce(br.refund_idr,0),
     'paid_transactions',bs.paid_transactions,'legacy_paid_at_count',bs.legacy_paid_at_count,'settlement_item_gross_idr',coalesce(bt.settlement_gross_idr,0),
-    'reconciled_settlements',coalesce(bt.reconciled_settlements,0)
+    'matched_settlements',coalesce(bt.matched_settlements,0)
   ) order by bs.code),'[]'::jsonb)
  ) into v_result
  from branch_sales bs left join branch_refunds br on br.branch_id=bs.branch_id
