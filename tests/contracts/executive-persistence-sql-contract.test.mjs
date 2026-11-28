@@ -66,6 +66,9 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
 
 test("T02 enqueue and decision mutate supported HR/procurement sources atomically",()=>{
  assert.match(migration,/executive_enqueue_approval/i);
+ assert.equal((migration.match(/create or replace function public\.executive_get_sales_monitor/g)||[]).length,1);
+ assert.match(migration,/end \$enqueue\$;[\s\S]*?grant execute on function public\.executive_enqueue_approval/i);
+ assert.match(migration,/end \$decision\$;[\s\S]*?grant execute on function public\.executive_decide_approval/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_NOT_SUBMITTED/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_ENQUEUE_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/executive_decide_approval/i);
