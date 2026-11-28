@@ -2032,18 +2032,20 @@ if (action === "admin-set-profile-role") {
   if(executiveSalesActions.has(action)){
     if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
       return fail("Izin Executive tidak diizinkan.",403,origin);
-    if(action==="erp-executive-sales-monitor"&&!hasPerm("reports")&&!hasPerm("finance"))
+    if(action==="erp-executive-sales-monitor"&&!isPlatformOwner&&!hasPerm("reports")&&!hasPerm("finance"))
       return fail("Izin laporan penjualan tidak diizinkan.",403,origin);
-    if(action!=="erp-executive-sales-monitor"&&!["procurement","finance","hr","branches"].some(hasPerm))
+    if(action!=="erp-executive-sales-monitor"&&!isPlatformOwner&&!["procurement","finance","hr","branches"].some(hasPerm))
       return fail("Izin approval domain tidak diizinkan.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
     if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
     const {data:membership,error:membershipError}=await admin.from("tenant_memberships")
       .select("tenant_id,role").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
     if(membershipError)return fail("Keanggotaan tenant belum dapat diverifikasi.",503,origin);
-    if(!membership)return fail("Akses tenant ditolak.",403,origin);
-    const actorBranches=await branchIdsForActor().catch(()=>[]);
-    const tenantBranches=await admin.from("branches").select("id").eq("tenant_id",tenantId).in("id",actorBranches);
+    const ownerReadAction=["erp-executive-sales-monitor","erp-executive-get-business-day-cutoff","erp-executive-set-business-day-cutoff"].includes(action);
+    if(!membership&&!(isPlatformOwner&&ownerReadAction))return fail("Akses tenant ditolak.",403,origin);
+    const tenantBranches=isPlatformOwner&&ownerReadAction
+      ? await admin.from("branches").select("id").eq("tenant_id",tenantId)
+      : await admin.from("branches").select("id").eq("tenant_id",tenantId).in("id",await branchIdsForActor().catch(()=>[]));
     if(tenantBranches.error)return fail("Scope cabang belum dapat diverifikasi.",503,origin);
     const allowedBranchIds=(tenantBranches.data||[]).map((x:any)=>x.id);
     const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"):null;
