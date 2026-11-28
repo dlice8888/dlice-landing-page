@@ -3076,8 +3076,10 @@ if(action==="erp-executive-branch-kpis"){
     if(auditError)return fail("Audit trail rekonsiliasi tidak tersedia.",503,origin);
     const {data:balances,error:balanceError}=await admin.from("branch_inventory").select("inventory_item_id,on_hand,updated_at").eq("branch_id",branchId);
     if(balanceError)return fail("Saldo stok rekonsiliasi tidak tersedia.",503,origin);
-    const tenderTotal=(tendersResult.data||[]).reduce((sum:any,t:any)=>sum+Number(t.amount_idr||0),0);
-    return json({ok:true,sale,items:itemsResult.data||[],tenders:tendersResult.data||[],tender_total_idr:tenderTotal,tender_matches_sale_total:tenderTotal===Number(sale.total_idr),receipt:receiptResult.data||null,finance_journal_entries:journalResult.data||[],shift_snapshot:shiftResult.data||null,cash_reconciliations:cashResult.data||[],kitchen_ticket:ticketResult.data||null,stock_movements:movementsResult.data||[],stock_balances:balances||[],audit_events:audit||[]},200,origin);
+    const tenderRows=tendersResult.data||[];
+    const tenderTotal=tenderRows.length?tenderRows.reduce((sum:any,t:any)=>sum+Number(t.amount_idr||0),0):(sale.payment_method==="split"?0:Number(sale.total_idr));
+    const tenderSource=tenderRows.length?"pos_sale_tenders":sale.payment_method==="split"?"missing_split_tender_rows":"pos_sales_single_method";
+    return json({ok:true,sale,items:itemsResult.data||[],tenders:tenderRows,tender_total_idr:tenderTotal,tender_source:tenderSource,tender_matches_sale_total:tenderTotal===Number(sale.total_idr),receipt:receiptResult.data||null,finance_journal_entries:journalResult.data||[],shift_snapshot:shiftResult.data||null,cash_reconciliations:cashResult.data||[],kitchen_ticket:ticketResult.data||null,stock_movements:movementsResult.data||[],stock_balances:balances||[],audit_events:audit||[]},200,origin);
   }
 
   if (action === "erp-list-sales") {
