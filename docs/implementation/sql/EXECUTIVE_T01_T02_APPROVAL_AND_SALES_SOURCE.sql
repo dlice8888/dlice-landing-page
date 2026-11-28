@@ -40,6 +40,9 @@ begin
      (old.branch_id is distinct from new.branch_id) then
     raise exception using errcode='23514', message='PAID_POS_SALE_BRANCH_IMMUTABLE';
   end if;
+  if tg_op = 'UPDATE' and old.payment_status = 'paid' and new.payment_status <> 'paid' then
+    raise exception using errcode='23514', message='PAID_POS_SALE_STATUS_IMMUTABLE';
+  end if;
 
   if v_newly_paid then
     new.paid_at := now();
