@@ -4039,9 +4039,24 @@ if(action==="erp-executive-branch-kpis"){
     if(old.requested_by===actor.user.id)return fail("Pemisahan tugas: pembuat refund tidak boleh menyetujui sendiri.",403,origin);
     if(old.branch_id&&!await hasFinanceHQ()&&!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.status!=="requested")return fail("Refund bukan lagi menunggu keputusan.",409,origin);
-    const {data,error}=await admin.from("refund_records").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString(),external_reference:note||null}).eq("id",id).eq("status","requested").select("*").maybeSingle();
-    if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
-    return json({ok:true,refund:data},200,origin);
+    const reason=safeText(body.reason,500)||note;
+    if(reason.length<8)return fail("Alasan keputusan refund minimal 8 karakter.",422,origin);
+    if(!old.branch_id)return fail("Refund tanpa cabang harus diproses melalui approval Finance Head Office.",409,origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang refund tidak dapat diverifikasi.",409,origin);
+    const {data:approval,error:approvalError}=await admin.from("executive_approval_requests")
+      .select("id,version,status").eq("tenant_id",branch.tenant_id).eq("entity_type","refund_record")
+      .eq("entity_id",id).in("status",["pending","claimed"]).maybeSingle();
+    if(approvalError||!approval)return fail("Permintaan refund belum tersedia di Unified Approval Inbox.",409,origin);
+    const actorBranches=await branchIdsForActor().catch(()=>[]);
+    const {data:decision,error}=await admin.rpc("decide_approval",{
+      p_actor_user_id:actor.user.id,p_tenant_id:branch.tenant_id,p_branch_ids:actorBranches,
+      p_approval_id:approval.id,p_decision:next==="approved"?"approve":"reject",
+      p_reason:reason,p_expected_version:approval.version
+    });
+    if(error||!decision)return fail("Keputusan refund gagal atau approval telah berubah. Muat ulang inbox.",409,origin);
+    const {data:updated}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
+    return json({ok:true,refund:updated,approval:decision},200,origin);
   }
 
   if (action === "erp-process-refund") {
@@ -4051,6 +4066,7 @@ if(action==="erp-executive-branch-kpis"){
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
+    if(old.pos_sale_id)return fail("POS_REFUND_COMPENSATION_NOT_READY: tender reversal, Finance journal, receipt and stock return must be committed atomically before processing.",409,origin);
     // Fail closed: a non-HQ finance actor must never process an unscoped refund.
     const financeHQ = await hasFinanceHQ();
     if(!old.branch_id&&!financeHQ)return fail("Refund tanpa cabang hanya dapat diproses oleh Finance Head Office.",403,origin);
