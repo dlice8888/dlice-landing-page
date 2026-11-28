@@ -7,7 +7,11 @@ const required = (v: unknown, name: string) => {
 const unwrap = (result: any, operation: string) => {
   if (result.error) {
     const error = new Error(`Branch Operations ${operation} failed`);
-    (error as any).code = result.error.code ?? "BRANCH_OPS_PERSISTENCE_FAILED";
+    (error as any).code = result.error.code === "PGRST202"
+      ? "BRANCH_OPS_RPC_NOT_DEPLOYED"
+      : result.error.code === "PGRST205"
+        ? "BRANCH_OPS_TABLE_NOT_DEPLOYED"
+        : result.error.code ?? "BRANCH_OPS_PERSISTENCE_FAILED";
     (error as any).details = result.error.message;
     throw error;
   }
@@ -25,8 +29,30 @@ export function createBranchOperationsRepository(
   const call = async (name: string, args: Record<string, unknown>, label: string) =>
     unwrap(await serviceClient.rpc(name, { ...common, ...args }), label);
   const scoped = (table: string) => serviceClient.from(table).select("*").eq("tenant_id", tenantId).eq("branch_id", branchId);
+  const requiredTables = [
+    "branch_ops_equipment",
+    "branch_ops_tasks",
+    "branch_ops_evidence_assets",
+    "branch_ops_incidents",
+    "branch_ops_work_orders",
+    "branch_ops_compliance_checks",
+    "branch_ops_compliance_snapshots",
+  ] as const;
+  const assertReady = async () => {
+    for (const table of requiredTables) {
+      const { error } = await serviceClient.from(table).select("id").limit(0);
+      if (error) {
+        const failure = new Error(`Branch Operations schema is unavailable: ${table}`);
+        (failure as any).code = error.code === "PGRST205" ? "BRANCH_OPS_TABLE_NOT_DEPLOYED" : error.code ?? "BRANCH_OPS_SCHEMA_CHECK_FAILED";
+        (failure as any).details = error.message;
+        throw failure;
+      }
+    }
+    return { ready: true, tables: [...requiredTables] };
+  };
 
   return {
+    assertReady,
     registerEquipment: (v: any) => call("branch_ops_register_equipment", {
       p_asset_code: required(v.assetCode, "assetCode"),
       p_name: required(v.name, "name"),
