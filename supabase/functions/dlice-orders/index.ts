@@ -2585,12 +2585,14 @@ if(action==="erp-executive-branch-kpis"){
 
   if (action === "erp-executive-sales-monitor") {
     if (!hasPerm("finance") && !hasPerm("orders") && !isOwner) return fail("Izin Executive Sales Monitor tidak diizinkan.",403,origin);
-    const period=safeText(body.period,10),anchorDate=safeText(body.anchor_date,10),requestedBranch=safeText(body.branch_id,80);
+    const period=safeText(body.period,10),anchorDate=safeText(body.anchor_date,10),requestedBranch=safeText(body.branch_id,80),requestedTimezone=safeText(body.timezone,40);
     if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate))return fail("Periode atau tanggal laporan tidak valid.",422,origin);
     const allowedIds:string[]=await branchIdsForActor().catch(()=>[] as string[]);
     if(!allowedIds.length)return json({ok:true,kpi_definition_version:"sales-monitor.v2",branches:[],totals:{gross_sales_idr:0,discounts_idr:0,refunds_idr:0,net_sales_idr:0,paid_transactions:0,reconciled_settlement_allocations_idr:0},sources:{sales:[],refunds:[],settlements:[],finance_journals:[]}},200,origin);
     if(requestedBranch&&!allowedIds.includes(requestedBranch))return fail("Cabang laporan tidak berada dalam scope aktor.",403,origin);
+    if(requestedTimezone&&!SUPPORTED_BRANCH_TIMEZONES.includes(requestedTimezone))return fail("Timezone filter tidak didukung.",422,origin);
     let branchQuery=admin.from("branches").select("id,tenant_id,code,name,timezone").in("id",requestedBranch?[requestedBranch]:allowedIds).order("code").limit(500);
+    if(requestedTimezone)branchQuery=branchQuery.eq("timezone",requestedTimezone);
     const branchResult=await branchQuery;
     if(branchResult.error)return fail("Scope cabang laporan gagal dimuat.",500,origin);
     const branches=branchResult.data||[];
