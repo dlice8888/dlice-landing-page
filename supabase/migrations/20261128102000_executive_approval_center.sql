@@ -66,6 +66,22 @@ select t.id,p.category,p.roles,false from public.tenants t cross join (values
 ) p(category,roles)
 on conflict(tenant_id,category) do nothing;
 
+create or replace function public.trg_seed_executive_approval_policies()
+returns trigger language plpgsql security definer set search_path=''
+as $ begin
+ insert into public.executive_approval_policies(tenant_id,category,required_roles,allow_self_approval)
+ values
+ (new.id,'procurement',array['tenant_owner','branch_manager']::text[],false),
+ (new.id,'finance',array['tenant_owner']::text[],false),
+ (new.id,'hr',array['tenant_owner']::text[],false),
+ (new.id,'branch_ops',array['tenant_owner','branch_manager']::text[],false)
+ on conflict(tenant_id,category) do nothing;
+ return new;
+end $;
+drop trigger if exists seed_executive_approval_policies on public.tenants;
+create trigger seed_executive_approval_policies after insert on public.tenants
+for each row execute function public.trg_seed_executive_approval_policies();
+
 create or replace function public.enqueue_executive_approval(
  p_tenant_id uuid,p_category text,p_entity_type text,p_entity_id uuid,p_branch_id uuid,p_created_by uuid,p_amount_idr bigint,p_reason text
 ) returns uuid language plpgsql security definer set search_path=''
