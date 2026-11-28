@@ -105,14 +105,8 @@ export function buildApprovalInbox({ items, actor, now = new Date().toISOString(
     if (!item?.id || seen.has(item.id)) return false;
     seen.add(item.id);
     if (item.status !== "pending" || !item.expires_at || asTime(item.expires_at, "expires_at") <= instant) return false;
-    if (!actor.allowed_branch_ids.includes(item.branch_id) ||
-        !actor.allowed_domains.includes(item.domain) ||
-        !item.eligible_roles?.some((role) => actor.allowed_roles.includes(role))) return false;
-    if (item.created_by === actor.user_id && item.separation_of_duties === true) return false;
-    if (item.delegated_from) {
-      try { assertApprovalDelegation({ actor, approval: item, now }); }
-      catch { return false; }
-    }
+    try { assertApprovalEligibility({ approval: item, actor, now }); }
+    catch { return false; }
     return true;
   }).sort((a, b) =>
     (urgency[a.urgency] ?? urgency.normal) - (urgency[b.urgency] ?? urgency.normal) ||
