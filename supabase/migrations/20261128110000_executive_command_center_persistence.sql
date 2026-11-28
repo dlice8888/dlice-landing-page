@@ -144,13 +144,16 @@ create table if not exists public.executive_approval_delegations (
   tenant_id uuid not null references public.tenants(id) on delete restrict,
   delegator_user_id uuid not null references auth.users(id) on delete restrict,
   delegate_user_id uuid not null references auth.users(id) on delete restrict,
-  source_domains text[] not null check(cardinality(source_domains)>0),
+  source_domains text[] not null check(cardinality(source_domains)>0 and source_domains <@ array['pos','orders','inventory','procurement','finance','hr','franchise']::text[]),
+  idempotency_key text not null check(length(btrim(idempotency_key)) between 8 and 160),
   valid_from timestamptz not null,
   valid_until timestamptz not null,
   revoked_at timestamptz null,
+  revoked_by uuid null references auth.users(id) on delete restrict,
   created_by uuid not null references auth.users(id) on delete restrict,
   created_at timestamptz not null default now(),
   unique(tenant_id,id),
+  unique(tenant_id,idempotency_key),
   check(delegator_user_id<>delegate_user_id),
   check(valid_until>valid_from)
 );
@@ -286,6 +289,84 @@ begin
 end $$;
 revoke all on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) from public,anon,authenticated;
 grant execute on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) to service_role;
+
+-- T02: explicit, time-bounded approval delegation lifecycle.
+create or replace function public.executive_create_approval_delegation(
+ p_tenant_id uuid,p_actor_user_id uuid,p_delegator_user_id uuid,p_delegate_user_id uuid,
+ p_source_domains text[],p_valid_from timestamptz,p_valid_until timestamptz,p_idempotency_key text
+) returns jsonb language plpgsql security definer set search_path='' as $
+declare v public.executive_approval_delegations%rowtype; v_admin boolean; v_inserted integer;
+begin
+ if p_tenant_id is null or p_actor_user_id is null or p_delegator_user_id is null or p_delegate_user_id is null
+  or p_delegator_user_id=p_delegate_user_id or p_valid_from is null or p_valid_until is null
+  or p_valid_until<=p_valid_from or p_valid_from<now()-interval '5 minutes'
+  or p_valid_until>now()+interval '90 days'
+  or p_source_domains is null or cardinality(p_source_domains)<1
+  or not (p_source_domains <@ array['pos','orders','inventory','procurement','finance','hr','franchise']::text[])
+  or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
+  raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
+ end if;
+ select exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+  and m.role in ('tenant_owner','tenant_admin')) into v_admin;
+ if not v_admin and p_actor_user_id<>p_delegator_user_id then
+  raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_ACTOR_MISMATCH';
+ end if;
+ if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+   and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.approvals.delegate')) then
+  raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_PERMISSION_REQUIRED';
+ end if;
+ if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_delegator_user_id and m.status='active')
+  or not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_delegate_user_id and m.status='active') then
+  raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_MEMBERSHIP_REQUIRED';
+ end if;
+ insert into public.executive_approval_delegations(tenant_id,delegator_user_id,delegate_user_id,source_domains,
+  idempotency_key,valid_from,valid_until,created_by)
+ values(p_tenant_id,p_delegator_user_id,p_delegate_user_id,array(select distinct x from unnest(p_source_domains) x order by x),
+  p_idempotency_key,p_valid_from,p_valid_until,p_actor_user_id)
+ on conflict(tenant_id,idempotency_key) do nothing;
+ get diagnostics v_inserted=row_count;
+ select * into v from public.executive_approval_delegations where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if v.delegator_user_id is distinct from p_delegator_user_id or v.delegate_user_id is distinct from p_delegate_user_id
+  or v.source_domains is distinct from array(select distinct x from unnest(p_source_domains) x order by x)
+  or v.valid_from is distinct from p_valid_from or v.valid_until is distinct from p_valid_until then
+  raise exception using errcode='23505',message='EXECUTIVE_DELEGATION_IDEMPOTENCY_KEY_REUSED';
+ end if;
+ if v_inserted=1 then
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'executive.approval.delegation.created','executive_approval_delegation',v.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',p_delegator_user_id,'delegate_user_id',p_delegate_user_id,
+    'source_domains',v.source_domains,'valid_from',p_valid_from,'valid_until',p_valid_until));
+ end if;
+ return jsonb_build_object('id',v.id,'duplicate',v_inserted=0,'valid_from',v.valid_from,'valid_until',v.valid_until);
+end $;
+revoke all on function public.executive_create_approval_delegation(uuid,uuid,uuid,uuid,text[],timestamptz,timestamptz,text) from public,anon,authenticated;
+grant execute on function public.executive_create_approval_delegation(uuid,uuid,uuid,uuid,text[],timestamptz,timestamptz,text) to service_role;
+
+create or replace function public.executive_revoke_approval_delegation(
+ p_tenant_id uuid,p_actor_user_id uuid,p_delegation_id uuid
+) returns jsonb language plpgsql security definer set search_path='' as $
+declare v public.executive_approval_delegations%rowtype; v_admin boolean;
+begin
+ if p_tenant_id is null or p_actor_user_id is null or p_delegation_id is null then
+  raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
+ end if;
+ select exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id
+  and m.status='active' and m.role in ('tenant_owner','tenant_admin')) into v_admin;
+ select * into v from public.executive_approval_delegations where tenant_id=p_tenant_id and id=p_delegation_id for update;
+ if not found then raise exception using errcode='P0002',message='EXECUTIVE_DELEGATION_NOT_FOUND'; end if;
+ if not v_admin and v.delegator_user_id<>p_actor_user_id then
+  raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_REVOKE_FORBIDDEN';
+ end if;
+ if v.revoked_at is not null then return jsonb_build_object('id',v.id,'revoked',true,'duplicate',true); end if;
+ update public.executive_approval_delegations set revoked_at=now(),revoked_by=p_actor_user_id
+  where tenant_id=p_tenant_id and id=p_delegation_id returning * into v;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegation',v.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v.delegator_user_id,'delegate_user_id',v.delegate_user_id));
+ return jsonb_build_object('id',v.id,'revoked',true,'duplicate',false);
+end $;
+revoke all on function public.executive_revoke_approval_delegation(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.executive_revoke_approval_delegation(uuid,uuid,uuid) to service_role;
 
 -- Atomic claim: row lock + optimistic version + idempotency + immutable event.
 create or replace function public.executive_claim_approval(
