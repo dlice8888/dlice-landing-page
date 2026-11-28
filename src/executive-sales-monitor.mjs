@@ -29,7 +29,7 @@ function expectedBusinessDate(paidAt,timezone,cutoff){
  try{parts=new Intl.DateTimeFormat("en-GB",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(instant);}
  catch{fail("EXEC_SALES_SOURCE_TIMEZONE_INVALID","timezone");}
  const p=Object.fromEntries(parts.filter(x=>x.type!=="literal").map(x=>[x.type,Number(x.value)]));
- const match=typeof cutoff==="string"&&/^(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?$/.exec(cutoff);
+ const match=typeof cutoff==="string"&&/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/.exec(cutoff);
  if(!match)fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","cutoff_time");
  const [hour,minute,second=0]=cutoff.split(":").map(Number);
  const localAsUtc=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second);
