@@ -45,3 +45,16 @@ test("rejects malformed UUID and banned account before updating metadata", async
   }), { code: "OWNER_AUTH_ADMIN_USER_BANNED" });
   assert.deepEqual(methods, ["GET"]);
 });
+
+import { readFileSync } from "node:fs";
+const workflow = readFileSync(".github/workflows/staging-owner-auth-repair.yml", "utf8");
+
+test("manual Auth repair workflow is staging-environment scoped and explicitly confirmed", () => {
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /environment:\s*staging/);
+  assert.match(workflow, /confirm_staging_only/);
+  assert.match(workflow, /inputs\.confirm_staging_only\s*==\s*'yes'/);
+  assert.match(workflow, /STAGING_SUPABASE_SERVICE_ROLE_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_SERVICE_ROLE_KEY\s*\}\}/);
+  assert.match(workflow, /scripts\/set-staging-platform-owner\.mjs/);
+  assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY:\s*[^$]/);
+});
