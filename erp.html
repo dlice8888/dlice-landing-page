@@ -96,6 +96,15 @@
 <div class="panel"><div class="panelhead"><div><h2>Executive · Alert & verifikasi</h2><p class="muted">Resolusi alert membutuhkan bukti; verifikasi wajib dilakukan oleh pengguna berbeda dari penyelesai.</p></div><button type="button" id="loadExecutiveAlerts" class="secondary">Muat alert</button></div>
 <div class="field"><label>Tenant</label><select id="executiveTenant"></select></div>
 <div class="panel" style="margin-top:14px"><div class="panelhead"><div><h3>Sales monitor & settlement</h3><p class="muted">Penjualan diakui pada paid_at dan business_date lokal cabang. Refund dipisahkan dari settlement provider.</p></div><button type="button" id="loadExecutiveSalesMonitor" class="secondary">Muat sales monitor</button></div><div class="formgrid"><div class="field"><label>Dari tanggal</label><input id="executiveSalesFrom" type="date" required></div><div class="field"><label>Sampai tanggal</label><input id="executiveSalesThrough" type="date" required></div></div><div id="executiveSalesMonitorResult" class="list" style="margin-top:12px" aria-live="polite"></div></div>
+<div class="panel"><div class="panelhead"><div><h3>Ajukan approval</h3><p class="muted">Saat ini adapter sumber mendukung Purchase Requisition submitted dan HR Leave Request submitted. Entitas lain ditolak sampai adapter spesifik tersedia.</p></div></div>
+<form id="executiveEnqueueApprovalForm" class="formgrid">
+<div class="field"><label>Branch UUID</label><input id="executiveApprovalBranchId" required maxlength="36"></div>
+<div class="field"><label>Domain</label><select id="executiveApprovalDomain"><option value="procurement">Procurement</option><option value="hr">HR</option></select></div>
+<div class="field"><label>Source entity</label><select id="executiveApprovalEntity"><option value="purchase_requisitions">Purchase Requisition</option><option value="hr_leave_requests">HR Leave Request</option></select></div>
+<div class="field"><label>Source entity UUID</label><input id="executiveApprovalSourceId" required maxlength="36"></div>
+<div class="field"><label>Expiry (optional)</label><input id="executiveApprovalExpiry" type="datetime-local"></div>
+<div class="field full"><button type="submit">Masukkan ke approval inbox</button></div>
+</form></div>
 <div class="panel"><div class="panelhead"><div><h3>Approval inbox</h3><p class="muted">Claim memakai row lock, optimistic version, expiry, dan idempotency. Keputusan belum dapat dilakukan sebelum adapter mutasi sumber tersedia.</p></div><button type="button" id="loadExecutiveApprovals" class="secondary">Muat approvals</button></div><div id="executiveApprovalList" class="list" aria-live="polite"></div></div>
 <div class="panel"><div class="panelhead"><div><h3>Delegasi approval</h3><p class="muted">Delegasi dibatasi tenant, domain, dan masa berlaku maksimal 90 hari. Masukkan UUID user yang merupakan anggota aktif tenant.</p></div><button type="button" id="loadExecutiveDelegations" class="secondary">Muat delegasi</button></div>
 <form id="executiveDelegationForm" class="formgrid">
@@ -490,6 +499,19 @@ async function loadExecutiveSalesMonitor(){
  const x=d.sales_monitor||{},fmt=v=>Number(v||0).toLocaleString('id-ID');
  $('executiveSalesMonitorResult').innerHTML=(d.snapshot?'<div class="listitem"><div><strong>Snapshot tersimpan · '+esc(d.snapshot.status)+'</strong><small>ID '+esc(d.snapshot.id)+' · '+(d.company_wide_snapshot?'cakupan seluruh cabang aktif':'cakupan parsial')+'</small></div></div>':'')+(Number(x.legacy_paid_at_count||0)>0?'<div class="notice">Perhatian: '+fmt(x.legacy_paid_at_count)+' transaksi memakai fallback created_at historis, bukan timestamp pembayaran terverifikasi. Angka ini belum memenuhi bukti E6 untuk periode terkait.</div>':'')+'<div class="metrics"><div class="metric"><small>Gross sales</small><strong>Rp '+fmt(x.gross_sales_idr)+'</strong></div><div class="metric"><small>Diskon</small><strong>Rp '+fmt(x.discount_idr)+'</strong></div><div class="metric"><small>Refund diproses</small><strong>Rp '+fmt(x.refund_idr)+'</strong></div><div class="metric"><small>Net sales</small><strong>Rp '+fmt(x.net_sales_idr)+'</strong></div></div><div class="listitem"><div><strong>Settlement provider (terpisah)</strong><small>Gross Rp '+fmt(x.settlement_gross_idr)+' · Fee Rp '+fmt(x.settlement_fee_idr)+' · Net Rp '+fmt(x.settlement_net_idr)+' · Received Rp '+fmt(x.settlement_received_idr)+'</small><small>'+fmt(x.matched_settlements)+' settlement matched · '+fmt(x.paid_transactions)+' paid transactions</small><small>Settlement-to-Finance journal reconciliation is still pending E6 validation.</small></div></div>'+(x.branches||[]).map(b=>'<div class="listitem"><div><strong>'+esc(b.code)+' · '+esc(b.name)+'</strong><small>'+esc(b.timezone)+' · Net sales Rp '+fmt(b.net_sales_idr)+' · Refund Rp '+fmt(b.refund_idr)+'</small><small>Settlement item allocation Rp '+fmt(b.settlement_item_gross_idr)+' · '+fmt(b.matched_settlements)+' reconciled settlement</small></div></div>').join('');
 }
+async function enqueueExecutiveApproval(event){
+ event.preventDefault();const tenant=$('executiveTenant').value;
+ if(!tenant){note('Pilih tenant terlebih dahulu.',true);return}
+ const domain=$('executiveApprovalDomain').value,entity=$('executiveApprovalEntity').value;
+ if((domain==='procurement'&&entity!=='purchase_requisitions')||(domain==='hr'&&entity!=='hr_leave_requests')){note('Domain dan source entity tidak sesuai.',true);return}
+ try{
+  await call('erp-executive-enqueue-approval',{tenant_id:tenant,branch_id:$('executiveApprovalBranchId').value.trim(),
+   source_domain:domain,source_entity:entity,source_entity_id:$('executiveApprovalSourceId').value.trim(),
+   request_payload:{origin:'executive-command-center'},expires_at:$('executiveApprovalExpiry').value?new Date($('executiveApprovalExpiry').value).toISOString():null,
+   idempotency_key:'enqueue:'+entity+':'+$('executiveApprovalSourceId').value.trim()});
+  $('executiveEnqueueApprovalForm').reset();await loadExecutiveApprovals();note('Approval request masuk ke inbox.');
+ }catch(e){note(e.message,true)}
+}
 async function loadExecutiveApprovals(){
  const tenant=$('executiveTenant').value;if(!tenant){$('executiveApprovalList').innerHTML='<p class="muted">Pilih tenant.</p>';return}
  const d=await call('erp-executive-list-approvals',{tenant_id:tenant});
@@ -529,6 +551,7 @@ async function loadExecutiveAlerts(){
 $('loadExecutiveAlerts').onclick=()=>loadExecutiveAlerts().catch(e=>note(e.message,true));
 $('loadExecutiveSalesMonitor').onclick=()=>loadExecutiveSalesMonitor().catch(e=>note(e.message,true));
 $('loadExecutiveApprovals').onclick=()=>loadExecutiveApprovals().catch(e=>note(e.message,true));
+$('executiveEnqueueApprovalForm').onsubmit=enqueueExecutiveApproval;
 $('loadExecutiveDelegations').onclick=()=>loadExecutiveDelegations().catch(e=>note(e.message,true));
 $('executiveDelegationForm').onsubmit=createExecutiveDelegation;
 $('executiveTenant').onchange=()=>{loadExecutiveAlerts().catch(e=>note(e.message,true));loadExecutiveBranchKpis().catch(e=>note(e.message,true));loadExecutiveRankings().catch(e=>note(e.message,true));loadExecutiveApprovals().catch(e=>note(e.message,true));loadExecutiveDelegations().catch(e=>note(e.message,true))};
