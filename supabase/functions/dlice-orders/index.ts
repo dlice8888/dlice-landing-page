@@ -3843,7 +3843,7 @@ if(action==="erp-executive-branch-kpis"){
     if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
     const requestedBranchId=safeText(body.branch_id,80),date=safeText(body.business_date,10),shiftId=safeText(body.shift_id,80);
     if(!shiftId)return fail("Shift wajib dipilih untuk rekonsiliasi berbasis transaksi.",422,origin);
-    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))return fail("Tanggal rekonsiliasi tidak valid.",422,origin);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return fail("Tanggal rekonsiliasi tidak valid.",422,origin);
     const {data:shift,error:shiftError}=await admin.from("pos_shifts")
       .select("id,branch_id,status,opening_cash_idr,expected_cash_idr,opened_at,closed_at")
       .eq("id",shiftId).maybeSingle();
@@ -3885,20 +3885,22 @@ if(action==="erp-executive-branch-kpis"){
         if(parts.length<2||parts.some((tender:any)=>!Number.isSafeInteger(Number(tender.amount_idr))||Number(tender.amount_idr)<=0)||splitTotal!==total)
           return fail("Alokasi split tender tidak cocok dengan total transaksi.",409,origin);
         for(const tender of parts){
-          if(tender.payment_method==="bank_transfer")bankExpected+=Number(tender.amount_idr);
+          if(tender.payment_method==="cash")cashSales+=Number(tender.amount_idr);
+          else if(tender.payment_method==="bank_transfer")bankExpected+=Number(tender.amount_idr);
           else if(tender.payment_method==="qris")qrisExpected+=Number(tender.amount_idr);
-          else if(tender.payment_method!=="cash")return fail("Metode split tender tidak dikenal.",409,origin);
+          else return fail("Metode split tender tidak dikenal.",409,origin);
         }
       }else{
         if(tendersBySale.has(sale.id))return fail("Tender ledger tunggal tidak konsisten dengan metode pembayaran.",409,origin);
-        if(sale.payment_method==="bank_transfer")bankExpected+=total;
+        if(sale.payment_method==="cash")cashSales+=total;
+        else if(sale.payment_method==="bank_transfer")bankExpected+=total;
         else if(sale.payment_method==="qris")qrisExpected+=total;
-        else if(sale.payment_method!=="cash")return fail("Metode pembayaran tidak dikenal.",409,origin);
+        else return fail("Metode pembayaran tidak dikenal.",409,origin);
       }
     }
-    const expectedCash=Number(shift.expected_cash_idr);
-    if(!Number.isSafeInteger(expectedCash)||expectedCash<Number(shift.opening_cash_idr))
-      return fail("Expected cash shift tidak valid.",409,origin);
+    const expectedCash=Number(shift.opening_cash_idr)+cashSales;
+    if(!Number.isSafeInteger(expectedCash)||expectedCash!==Number(shift.expected_cash_idr))
+      return fail("Expected cash shift tidak cocok dengan opening float dan tender kas POS.",409,origin);
     const receivedFields=["cash_counted_idr","bank_received_idr","qris_received_idr"];
     const received:any={};
     for(const key of receivedFields){
