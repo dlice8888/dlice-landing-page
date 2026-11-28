@@ -151,7 +151,7 @@ jobs:
       - name: Check Executive sales and approval module syntax
         run: node --check src/executive-sales-monitor.mjs && node --check src/executive-approval-center.mjs && node --check src/supabase-executive-adapter.mjs
       - name: Run Executive sales and approval contract tests
-        run: node --test tests/contracts/executive-sales-monitor.test.mjs tests/contracts/executive-approval-center.test.mjs tests/contracts/supabase-executive-adapter.test.mjs
+        run: node --test tests/contracts/executive-sales-monitor.test.mjs tests/contracts/executive-approval-center.test.mjs tests/contracts/supabase-executive-adapter.test.mjs tests/contracts/executive-sales-approval-sql-draft.test.mjs
       - name: Run all repository contract tests
         run: node --test tests/contracts/*.test.mjs
       - name: Run Executive stock waste and anomaly alert contracts
