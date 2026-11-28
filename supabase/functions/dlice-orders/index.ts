@@ -2590,7 +2590,7 @@ if(action==="erp-executive-branch-kpis"){
     const allowedIds:string[]=await branchIdsForActor().catch(()=>[] as string[]);
     if(!allowedIds.length)return json({ok:true,kpi_definition_version:"sales-monitor.v2",branches:[],totals:{gross_sales_idr:0,discounts_idr:0,refunds_idr:0,net_sales_idr:0,paid_transactions:0,reconciled_settlement_allocations_idr:0},sources:{sales:[],refunds:[],settlements:[],finance_journals:[]}},200,origin);
     if(requestedBranch&&!allowedIds.includes(requestedBranch))return fail("Cabang laporan tidak berada dalam scope aktor.",403,origin);
-    if(requestedTimezone&&!SUPPORTED_BRANCH_TIMEZONES.includes(requestedTimezone))return fail("Timezone filter tidak didukung.",422,origin);
+    if(requestedTimezone&&!SUPPORTED_BRANCH_TIMEZONES.has(requestedTimezone))return fail("Timezone filter tidak didukung.",422,origin);
     let branchQuery=admin.from("branches").select("id,tenant_id,code,name,timezone").in("id",requestedBranch?[requestedBranch]:allowedIds).order("code").limit(500);
     if(requestedTimezone)branchQuery=branchQuery.eq("timezone",requestedTimezone);
     const branchResult=await branchQuery;
