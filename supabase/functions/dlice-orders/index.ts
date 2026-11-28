@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval","erp-executive-list-delegations","erp-executive-create-delegation","erp-executive-revoke-delegation"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval","erp-executive-list-delegations","erp-executive-create-delegation","erp-executive-revoke-delegation","erp-executive-enqueue-approval","erp-executive-decide-approval"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -2058,6 +2058,39 @@ if (action === "admin-set-profile-role") {
         snapshot=persisted;
       }
       return json({sales_monitor:data,snapshot,company_wide_snapshot:companyWide},200,origin);
+    }
+    if(action==="erp-executive-enqueue-approval"){
+      const branchId=safeText(body.branch_id,64),sourceDomain=safeText(body.source_domain,32),
+        sourceEntity=safeText(body.source_entity,64),sourceEntityId=safeText(body.source_entity_id,64),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      const expiresAt=body.expires_at==null?null:safeText(body.expires_at,40);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(sourceEntityId)||
+        !["procurement","hr"].includes(sourceDomain)||
+        !((sourceDomain==="procurement"&&sourceEntity==="purchase_requisitions")||(sourceDomain==="hr"&&sourceEntity==="hr_leave_requests"))||
+        (expiresAt!==null&&!Number.isFinite(Date.parse(expiresAt)))||idempotencyKey.length<8)
+        return fail("Data sumber approval tidak valid atau belum didukung.",422,origin);
+      const payload=body.request_payload&&typeof body.request_payload==="object"&&!Array.isArray(body.request_payload)?body.request_payload:{};
+      const {data,error}=await admin.rpc("executive_enqueue_approval",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_branch_id:branchId,p_source_domain:sourceDomain,
+        p_source_entity:sourceEntity,p_source_entity_id:sourceEntityId,p_requested_action:"approve_or_reject",
+        p_request_payload:payload,p_idempotency_key:idempotencyKey,p_expires_at:expiresAt,
+      });
+      if(error)return fail("Permintaan approval gagal dibuat. Pastikan sumber berstatus submitted dan berada pada tenant/cabang aktif.",error.code==="42501"?403:409,origin);
+      return json({approval:data},201,origin);
+    }
+    if(action==="erp-executive-decide-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version),
+        decision=safeText(body.decision,16),reason=safeText(body.reason,2000),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0||
+        !["approved","rejected"].includes(decision)||reason.length<8||idempotencyKey.length<8)
+        return fail("Data keputusan approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_decide_approval",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_approval_id:approvalId,
+        p_expected_version:expectedVersion,p_idempotency_key:idempotencyKey,p_decision:decision,p_reason:reason,
+      });
+      if(error)return fail("Keputusan approval ditolak. Periksa claim, delegasi, source version dan status sumber.",error.code==="42501"?403:409,origin);
+      return json({decision:data},200,origin);
     }
     if(action==="erp-executive-list-delegations"){
       const {data,error}=await admin.from("executive_approval_delegations")
