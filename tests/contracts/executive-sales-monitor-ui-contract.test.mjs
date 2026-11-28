@@ -9,7 +9,9 @@ test("Executive live sales monitor exposes day/week/month, date and branch contr
 test("Executive UI invokes authenticated server action and exposes source transaction rows",()=>{
  assert.match(html,/call\('erp-executive-sales-monitor'/);
  assert.match(html,/sources\?\.sales/);
- assert.match(html,/sources\?\.refunds/);\n assert.match(html,/sources\?\.sale_items/);\n assert.match(html,/paid-status proxy/);
+ assert.match(html,/sources\?\.refunds/);
+ assert.match(html,/sources\?\.sale_items/);
+ assert.match(html,/paid-status proxy/);
  assert.match(html,/Alokasi settlement cocok/);
 });
 test("Executive sales monitor uses branch-configured timezone instead of client timezone override",()=>{
