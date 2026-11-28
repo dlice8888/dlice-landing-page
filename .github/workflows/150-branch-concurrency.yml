@@ -1,0 +1,54 @@
+name: Free 150-branch PostgreSQL concurrency probe
+on:
+  push:
+    branches:
+      - "qa/150-branch-concurrency-20261125"
+  pull_request:
+    paths:
+      - "scripts/qa/150-branch-concurrency.sh"
+      - ".github/workflows/150-branch-concurrency.yml"
+      - "docs/implementation/150_BRANCH_CONCURRENCY_DRILL.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 150-branch-concurrency-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  branch-concurrency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Run 150-branch tenant-scoped concurrent reads
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: |
+          docker run --rm --network host \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -w /workspace \
+            -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD \
+            postgres:17.11 bash scripts/qa/150-branch-concurrency.sh
