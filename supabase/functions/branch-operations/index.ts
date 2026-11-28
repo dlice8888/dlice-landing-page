@@ -87,6 +87,12 @@ Deno.serve(async (req: Request) => {
 
   const repo = createBranchOperationsRepository(service, { tenantId, branchId, actorId });
   try {
+    if (action === "get-evidence-url") {
+      const asset = await repo.getEvidenceAsset(safe(body.evidence_asset_id, 80));
+      const { data, error } = await service.storage.from("branch-ops-evidence").createSignedUrl(asset.object_path, 60);
+      if (error || !data?.signedUrl) return fail("Bukti tidak dapat diakses.", 404, origin);
+      return reply({ signed_url: data.signedUrl, expires_in: 60 }, 200, origin);
+    }
     if (action === "upload-evidence" && isMultipart && uploadFile) {
       const purpose = safe(body.purpose, 40);
       if (!["branch_incident", "branch_compliance", "branch_maintenance"].includes(purpose)) return fail("Tujuan bukti tidak valid.", 422, origin);
