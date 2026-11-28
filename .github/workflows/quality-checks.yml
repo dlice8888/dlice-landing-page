@@ -84,6 +84,8 @@ jobs:
         run: node --check src/executive-approval-center.mjs
       - name: Run Executive approval inbox and decision policy contracts
         run: node --test tests/contracts/executive-approval-center.test.mjs
+      - name: Run Executive sales monitor timezone and reconciliation acceptance tests
+        run: node --test tests/contracts/executive-sales-monitor-acceptance.test.mjs
       - name: Check POS cash drawer workflow syntax
         run: node --check src/pos-cash-drawer.mjs
       - name: Run POS cash drawer reconciliation contracts
