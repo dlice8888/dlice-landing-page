@@ -260,35 +260,65 @@ create or replace function public.decide_approval(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_approval_id uuid,p_decision text,p_reason text,p_expected_version integer
 ) returns jsonb language plpgsql security definer set search_path=''
 as $$
-declare a public.executive_approval_requests%rowtype;v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version integer;
+declare
+ a public.executive_approval_requests%rowtype;
+ v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version integer;
 begin
- if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
- if p_decision not in ('approve','reject') or length(btrim(coalesce(p_reason,'')))<8 then raise exception using errcode='22023',message='APPROVAL_DECISION_INPUT_INVALID';end if;
- select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then
+  raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';
+ end if;
+ if p_decision not in ('approve','reject') or length(btrim(coalesce(p_reason,'')))<8 or p_expected_version is null or p_expected_version<1 then
+  raise exception using errcode='22023',message='APPROVAL_DECISION_INPUT_INVALID';
+ end if;
+ select role into v_role from public.tenant_memberships
+ where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role is null then raise exception using errcode='42501',message='APPROVAL_TENANT_MEMBERSHIP_REQUIRED';end if;
+ if exists(select 1 from unnest(coalesce(p_branch_ids,'{}'::uuid[])) x
+  where not exists(select 1 from public.branches b where b.id=x and b.tenant_id=p_tenant_id)) then
+  raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';
+ end if;
  select * into a from public.executive_approval_requests where id=p_approval_id and tenant_id=p_tenant_id for update;
  if not found then raise exception using errcode='P0002',message='APPROVAL_NOT_FOUND';end if;
- if a.branch_id is not null and not (a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
+ if (a.branch_id is not null and not (a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))))
+  or (a.branch_id is null and v_role is distinct from 'tenant_owner') then
+  raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';
+ end if;
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION';end if;
- if a.status not in ('pending','claimed') or a.expires_at<=now() then raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';end if;
- if a.created_by=p_actor_user_id and not a.allow_self_approval then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_DENIED';end if;
+ if a.status not in ('pending','claimed') or a.expires_at<=now() then
+  if a.status in ('pending','claimed') and a.expires_at<=now() then
+   update public.executive_approval_requests set status='expired',version=version+1,updated_at=now() where id=a.id;
+  end if;
+  raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';
+ end if;
+ if a.created_by=p_actor_user_id and not a.allow_self_approval then
+  raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_DENIED';
+ end if;
  if not (v_role=any(a.required_roles)) then
-  select d.delegator_user_id into v_delegator from public.executive_approval_delegations d join public.tenant_memberships dm
-   on dm.tenant_id=d.tenant_id and dm.user_id=d.delegator_user_id and dm.status='active'
+  select d.delegator_user_id into v_delegator
+  from public.executive_approval_delegations d
+  join public.tenant_memberships dm on dm.tenant_id=d.tenant_id and dm.user_id=d.delegator_user_id and dm.status='active'
   where d.tenant_id=p_tenant_id and d.delegate_user_id=p_actor_user_id and d.category=a.category
    and (d.branch_id is null or d.branch_id is not distinct from a.branch_id)
-   and d.approved_at is not null and d.revoked_at is null and now() between d.starts_at and d.ends_at
-   and dm.role=any(a.required_roles) limit 1;
+   and d.approved_at is not null and d.revoked_at is null and now()>=d.starts_at and now()<d.ends_at
+   and dm.role=any(a.required_roles)
+  order by d.ends_at asc limit 1;
   if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_REQUIRED';end if;
-  select role into v_delegator_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=v_delegator and status='active';
+  select role into v_delegator_role from public.tenant_memberships
+   where tenant_id=p_tenant_id and user_id=v_delegator and status='active';
  end if;
  v_limit:=case
   when coalesce(v_delegator_role,v_role)='tenant_owner' then 9223372036854775807::bigint
   else coalesce((
-   select case when coalesce(tm.permissions->>'approval_limit_idr','') ~ '^[0-9]+
+   select case when coalesce(tm.permissions->>'approval_limit_idr','') ~ '^[0-9]+$'
+    then (tm.permissions->>'approval_limit_idr')::bigint else 0::bigint end
+   from public.tenant_memberships tm
+   where tm.tenant_id=p_tenant_id and tm.user_id=coalesce(v_delegator,p_actor_user_id) and tm.status='active'
+  ),0::bigint)
+ end;
  if a.amount_idr>v_limit then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT';end if;
- if a.status='claimed' and a.claimed_by<>p_actor_user_id and a.claim_expires_at>now() then raise exception using errcode='55P03',message='APPROVAL_CLAIMED_BY_OTHER';end if;
-
+ if a.status='claimed' and a.claimed_by is distinct from p_actor_user_id and a.claim_expires_at>now() then
+  raise exception using errcode='55P03',message='APPROVAL_CLAIMED_BY_OTHER';
+ end if;
  if a.entity_type='purchase_requisition' then
   update public.purchase_requisitions set status=case when p_decision='approve' then 'approved' else 'rejected' end,
    approved_by=case when p_decision='approve' then p_actor_user_id else approved_by end,
@@ -310,7 +340,8 @@ begin
    approved_by=case when p_decision='approve' then p_actor_user_id else approved_by end,
    approved_at=case when p_decision='approve' then now() else approved_at end,updated_at=now()
   where id=a.entity_id and tenant_id=p_tenant_id and status='submitted' and created_by<>p_actor_user_id;
- else raise exception using errcode='22023',message='APPROVAL_SOURCE_TYPE_UNSUPPORTED';
+ else
+  raise exception using errcode='22023',message='APPROVAL_SOURCE_TYPE_UNSUPPORTED';
  end if;
  get diagnostics v_updated=row_count;
  if v_updated<>1 then raise exception using errcode='40001',message='APPROVAL_SOURCE_STALE_OR_ALREADY_CHANGED';end if;
