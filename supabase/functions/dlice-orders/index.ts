@@ -2086,7 +2086,7 @@ if (action === "admin-set-profile-role") {
         const snapshotKey=safeText(body.snapshot_idempotency_key,160)||crypto.randomUUID();
         const {data:persisted,error:persistError}=await admin.rpc("executive_persist_command_center_snapshot",{
           p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_period_start:from,p_period_end:through,
-          p_as_of:new Date().toISOString(),p_formula_version:1,p_expected_branch_count:activeBranchIds.length,
+          p_as_of:new Date().toISOString(),p_formula_version:1,p_expected_branch_count:isOwner?150:activeBranchIds.length,
           p_active_branch_count:activeBranchIds.length,p_reconciled_branch_count:0,p_status:"partial",
           p_totals:data,p_branch_facts:[],p_source_gaps:gaps,p_idempotency_key:snapshotKey,
         });
