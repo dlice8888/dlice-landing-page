@@ -447,6 +447,7 @@ declare v_source_branch uuid; v_source_tenant uuid; v_source_status text; v_sour
  v_item public.executive_approval_items%rowtype; v_inserted integer; v_platform_owner boolean;
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_branch_id is null
+  or p_source_domain is null or p_source_entity is null or p_requested_action is null
   or p_source_domain not in ('procurement','hr')
   or p_source_entity not in ('purchase_requisitions','hr_leave_requests')
   or p_source_entity_id is null or p_source_entity_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
@@ -613,6 +614,8 @@ grant execute on function public.executive_get_sales_monitor(uuid,uuid,uuid[],da
  get diagnostics v_inserted=row_count;
  select * into v_item from public.executive_approval_items where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if v_item.source_entity_id is distinct from p_source_entity_id or v_item.source_entity is distinct from p_source_entity
+  or v_item.source_domain is distinct from p_source_domain or v_item.requested_action is distinct from p_requested_action
+  or v_item.request_payload is distinct from p_request_payload
   or v_item.source_version is distinct from v_source_version or v_item.branch_id is distinct from p_branch_id
   or v_item.created_by is distinct from p_actor_user_id then
   raise exception using errcode='23505',message='EXECUTIVE_APPROVAL_ENQUEUE_IDEMPOTENCY_KEY_REUSED';
@@ -637,7 +640,7 @@ declare v public.executive_approval_items%rowtype; v_prior public.executive_appr
  v_platform_owner boolean; v_tenant_admin boolean; v_delegation_id uuid; v_source_version bigint; v_mutation jsonb;
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_approval_id is null
-  or p_expected_version is null or p_expected_version<0
+  or p_expected_version is null or p_expected_version<0 or p_decision is null
   or p_decision not in ('approved','rejected')
   or length(btrim(coalesce(p_reason,''))) not between 8 and 2000
   or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
