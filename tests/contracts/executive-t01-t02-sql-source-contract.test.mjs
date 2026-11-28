@@ -74,3 +74,12 @@ test("SQL function bodies use valid dollar quoting", () => {
   assert.doesNotMatch(sql, /as \$(?:\s|begin)/i);
   assert.doesNotMatch(sql, /\n\$;\n/);
 });
+
+test("T02 delegation create and revoke are audited and branch-scoped", () => {
+  assert.match(sql, /function public\.create_approval_delegation/i);
+  assert.match(sql, /function public\.revoke_approval_delegation/i);
+  assert.match(sql, /APPROVAL_DELEGATE_NOT_ACTIVE_IN_SCOPE/);
+  assert.match(sql, /executive\.approval\.delegation\.created/);
+  assert.match(sql, /executive\.approval\.delegation\.revoked/);
+  assert.match(sql, /d\.delegator_user_id<>a\.created_by/);
+});
