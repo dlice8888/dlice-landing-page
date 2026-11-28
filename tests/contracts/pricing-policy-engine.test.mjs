@@ -1,4 +1,4 @@
 import test from "node:test";import assert from "node:assert/strict";import {resolveEffectiveProductPrice,requestProductPriceChange} from "../../src/pricing-policy-engine.mjs";
-const scope={tenantId:"t1",branchId:"b1",productId:"p1"};
+const scope={tenantId:"t1",branchId:"b1",actorId:"u1",productId:"p1"};
 test("resolves server price with scope and policy version",async()=>{const r=await resolveEffectiveProductPrice({...scope,businessAt:"2026-11-28T10:00:00+07:00"},{resolveEffectiveProductPriceReadOnly:async x=>({...x,priceIdr:25000,scope:"branch",policyVersion:"v2"})});assert.equal(r.priceIdr,25000);});
 test("price change requires approval and rejects invalid scope",async()=>{const input={tenantId:"t1",actorId:"u1",scope:"branch",branchId:"b1",productId:"p1",priceIdr:27000,effectiveFrom:"2026-12-01",reason:"Cost increase",idempotencyKey:"price-key"};const r=await requestProductPriceChange(input,{requestProductPriceChangeAtomically:async x=>({tenantId:x.tenantId,requestId:"pr1",status:"pending_approval"})});assert.equal(r.status,"pending_approval");await assert.rejects(requestProductPriceChange({...input,scope:"unknown"},{}),{code:"PRICING_CHANGE_INVALID"});});
