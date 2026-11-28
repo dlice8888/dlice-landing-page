@@ -4045,14 +4045,26 @@ if(action==="erp-executive-branch-kpis"){
     const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
     if(!branch?.tenant_id)return fail("Tenant cabang refund tidak dapat diverifikasi.",409,origin);
     const {data:approval,error:approvalError}=await admin.from("executive_approval_requests")
-      .select("id,version,status").eq("tenant_id",branch.tenant_id).eq("entity_type","refund_record")
+      .select("id,version,status,claimed_by,claim_expires_at").eq("tenant_id",branch.tenant_id).eq("entity_type","refund_record")
       .eq("entity_id",id).in("status",["pending","claimed"]).maybeSingle();
     if(approvalError||!approval)return fail("Permintaan refund belum tersedia di Unified Approval Inbox.",409,origin);
     const actorBranches=await branchIdsForActor().catch(()=>[]);
+    let decisionVersion=approval.version;
+    if(approval.status==="pending"){
+      const {data:claim,error:claimError}=await admin.rpc("claim_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:branch.tenant_id,p_branch_ids:actorBranches,
+        p_approval_id:approval.id,p_expected_version:approval.version
+      });
+      if(claimError||!claim?.version)return fail("Refund approval gagal diklaim. Muat ulang inbox.",409,origin);
+      decisionVersion=claim.version;
+    }else if(approval.status!=="claimed"||approval.claimed_by!==actor.user.id||
+      !approval.claim_expires_at||new Date(approval.claim_expires_at).getTime()<=Date.now()){
+      return fail("Refund approval sedang diklaim approver lain atau claim telah kedaluwarsa.",409,origin);
+    }
     const {data:decision,error}=await admin.rpc("decide_approval",{
       p_actor_user_id:actor.user.id,p_tenant_id:branch.tenant_id,p_branch_ids:actorBranches,
       p_approval_id:approval.id,p_decision:next==="approved"?"approve":"reject",
-      p_reason:reason,p_expected_version:approval.version
+      p_reason:reason,p_expected_version:decisionVersion
     });
     if(error||!decision)return fail("Keputusan refund gagal atau approval telah berubah. Muat ulang inbox.",409,origin);
     const {data:updated}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
