@@ -150,6 +150,21 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       if (item.description) info.append(el("small", {}, String(item.description)));
       row.append(info);
       const controls = el("div");
+      if (kind === "incidents" && Array.isArray(item.evidence_asset_ids)) {
+        item.evidence_asset_ids.forEach((evidenceId, index) => {
+          const evidenceButton = el("button", { type: "button", className: "branch-ops-review" }, `Bukti ${index + 1}`);
+          evidenceButton.addEventListener("click", async () => {
+            evidenceButton.disabled = true;
+            try {
+              const result = await request({ action: "get-evidence-url", evidence_asset_id: evidenceId });
+              const link = el("a", { href: result.signed_url, target: "_blank", rel: "noopener noreferrer" }, "Buka bukti");
+              controls.append(link);
+            } catch (error) { notice.textContent = error?.message || "Bukti tidak dapat diakses."; onError(error); }
+            finally { evidenceButton.disabled = false; }
+          });
+          controls.append(evidenceButton);
+        });
+      }
       for (const [status, label] of transitions[kind]?.[item.status] || []) {
         const button = el("button", { type: "button", className: "branch-ops-review" }, label);
         button.addEventListener("click", async () => {
