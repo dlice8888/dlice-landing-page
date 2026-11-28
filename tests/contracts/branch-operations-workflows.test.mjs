@@ -120,10 +120,12 @@ test("maintenance evidence is ownership-verified before persistence", async () =
   const deps = common({
     findMaintenanceOrderByIdempotencyKey: async () => null,
     loadBranchEquipmentForUpdate: async () => ({ tenantId: "tenant-a", branchId: "branch-a", status: "active" }),
-    verifyPrivateEvidenceOwnership: async (_tx, _scope, refs, purpose) => {
+    verifyPrivateEvidenceOwnership: async (_tx, input) => {
       verified = true;
-      assert.deepEqual(refs, ["asset-a"]);
-      assert.equal(purpose, "branch_maintenance");
+      assert.deepEqual(input.references, ["asset-a"]);
+      assert.equal(input.purpose, "branch_maintenance");
+      assert.equal(input.requirePrivate, true);
+      assert.equal(input.requireRetained, true);
       return true;
     },
     persistMaintenanceOrder: async (_tx, value) => { persisted = value; return { id: "work-a" }; },
