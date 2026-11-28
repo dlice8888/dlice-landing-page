@@ -565,7 +565,7 @@ begin
  if not (a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_BRANCH_FORBIDDEN'; end if;
  select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
- select * into p from public.approval_policies where id=a.policy_id and active;
+ select * into p from public.approval_policies where id=a.policy_id and tenant_id=a.tenant_id and active;
  if not found or (p.separation_of_duties and a.created_by=p_actor_user_id) or a.amount_idr>p.max_amount_idr or not (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[]) then
    raise exception using errcode='42501',message='APPROVAL_POLICY_OR_SEPARATION_OF_DUTIES_FAILED';
  end if;
@@ -593,7 +593,7 @@ begin
    get diagnostics v_updated=row_count;
  elsif a.source_entity_type='branch_expense' then
    update public.branch_expenses set status=p_decision,reviewed_by=p_actor_user_id,reviewed_at=now()
-   where id=a.source_entity_id and branch_id=a.branch_id and status='pending_approval' and created_at=a.source_version;
+   where id=a.source_entity_id and branch_id=a.branch_id and status='pending_approval' and updated_at=a.source_version;
    get diagnostics v_updated=row_count;
  elsif a.source_entity_type='hr_timesheet' then
    update public.hr_timesheets set status=p_decision,approved_by=case when p_decision='approved' then p_actor_user_id else null end,
