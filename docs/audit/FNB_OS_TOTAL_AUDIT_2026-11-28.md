@@ -232,3 +232,17 @@ Therefore POS E2E is not accepted. Required: per-sale tender split, payment stat
 - No service-role key in browser or logs.
 - No DONE based only on PR, source file, contract test, migration file, or READY Preview.
 - Migration candidate files are not evidence that staging schema has changed.
+
+
+## 9. Remediation work after this audit snapshot
+
+- Added an explicit `verifyPrivateEvidenceOwnership` adapter gate to Branch Operations incident and compliance workflows.
+- Evidence references are now checked in the tenant transaction with tenant ID, branch ID, actor ID, purpose, private-storage requirement and retention requirement before incident or compliance snapshot persistence.
+- Compliance snapshot persistence now receives the verified evidence references, rather than only a source revision and score.
+- Added a negative contract test proving that unverified evidence is rejected before persistence, and strengthened the success contracts to assert tenant/branch-scoped evidence verification.
+- Source commit: `05f4411a705037fadff76d561e12fa4ec775e33d`.
+- Contract-test commit / current PR #153 head at last check: `c4c4825934aa52ca898a5ec2efcfc5e24c63c7c2`.
+- Vercel deployment for the current head reached READY; combined commit status reports Vercel success. This proves build/deployment only.
+- No GitHub Actions run for the latest head was returned at the time of this check. Therefore the new contract tests are added but their exact-head execution remains unverified; no progress percentage or DONE promotion is awarded.
+- Branch Operations still lacks a concrete Supabase repository adapter, canonical persisted schema/RPC, application UI wiring, private Storage policy/object verification implementation, and authenticated staging workflow E2E. The new adapter gate is a fail-closed contract, not proof those integrations exist.
+- The domain matrix remains 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE until additional exact evidence changes feature-level scores.
