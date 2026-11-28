@@ -84,6 +84,10 @@ jobs:
           && node --check src/order-channel-eta-workflows.mjs
           && node --check src/executive-stock-waste-anomaly-alerts.mjs
           && node --check src/finance-budget-consolidation-workflows.mjs
+      - name: Check Branch Operations cross-domain costing module syntax
+        run: node --check src/branch-operations-costing-integration.mjs
+      - name: Run Branch Operations cross-domain costing contracts
+        run: node --test tests/contracts/branch-operations-costing-integration.test.mjs
       - name: Run Branch Operations evidence workflow contracts
         run: node --test tests/contracts/branch-operations-workflows.test.mjs
       - name: Check Branch Operations browser UI syntax
