@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {publishProductCatalog} from "../../src/product-catalog-admin.mjs";
+const input={tenantId:"t1",actorId:"u1",version:2,products:[{sku:"KOPI-01",name:"Kopi"}],categories:[],branchIds:["b1"]};
+test("publishes tenant catalog version and branch rollout result",async()=>{const r=await publishProductCatalog(input,{publishProductCatalogAtomically:async x=>({tenantId:x.tenantId,catalogVersion:x.version,publishedBranches:["b1"],exceptions:[]})});assert.equal(r.catalogVersion,2);});
+test("rejects duplicate SKU and incomplete rollout",async()=>{await assert.rejects(publishProductCatalog({...input,products:[{sku:"A",name:"A"},{sku:"A",name:"B"}]},{}),{code:"CATALOG_DUPLICATE_SKU"});await assert.rejects(publishProductCatalog(input,{publishProductCatalogAtomically:async()=>({})}),{code:"CATALOG_PUBLISH_FAILED"});});
