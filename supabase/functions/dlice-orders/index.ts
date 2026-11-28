@@ -122,7 +122,7 @@ const getAdmin = async (req: Request) => {
   return { user: userData.user, profile: { ...profile, permissions } };
 };
 
-Deno.serve(async (req: Request) => {
+Deno.serve(async (req: Request): Promise<Response> => {
   const origin = req.headers.get("Origin");
   if (req.method === "OPTIONS") {
     if (origin && !isAllowedOrigin(origin)) return fail("Origin tidak diizinkan.", 403, origin);
