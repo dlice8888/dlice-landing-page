@@ -43,6 +43,16 @@ begin
   if tg_op = 'UPDATE' and old.payment_status = 'paid' and new.payment_status <> 'paid' then
     raise exception using errcode='23514', message='PAID_POS_SALE_STATUS_IMMUTABLE';
   end if;
+  if tg_op = 'UPDATE' and old.payment_status = 'paid' and (
+    old.transaction_code is distinct from new.transaction_code or
+    old.shift_id is distinct from new.shift_id or
+    old.cashier_user_id is distinct from new.cashier_user_id or
+    old.subtotal_idr is distinct from new.subtotal_idr or
+    old.discount_idr is distinct from new.discount_idr or
+    old.total_idr is distinct from new.total_idr
+  ) then
+    raise exception using errcode='23514', message='PAID_POS_SALE_FINANCIAL_FIELDS_IMMUTABLE';
+  end if;
 
   if v_newly_paid and current_user not in ('service_role','postgres','supabase_admin') then
     raise exception using errcode='42501', message='POS_PAYMENT_CONFIRMATION_SERVER_ONLY';
