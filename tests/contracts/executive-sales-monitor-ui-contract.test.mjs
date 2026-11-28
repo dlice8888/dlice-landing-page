@@ -10,7 +10,7 @@ test("Executive UI invokes authenticated server action and exposes source transa
  assert.match(html,/call\('erp-executive-sales-monitor'/);
  assert.match(html,/sources\?\.sales/);
  assert.match(html,/sources\?\.refunds/);
- assert.match(html,/settlement_net_received_idr/);
+ assert.match(html,/Alokasi settlement cocok/);
 });
 test("Executive sales monitor uses branch-configured timezone instead of client timezone override",()=>{
  assert.match(html,/Timezone lokal masing-masing cabang/);
