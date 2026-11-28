@@ -35,3 +35,16 @@ test("offline POS replay preserves split tender payload and idempotency", () => 
   assert.match(offline, /p_idempotency_key:key/);
   assert.match(offline, /payload_fingerprint/);
 });
+
+test("POS reconciliation endpoint includes tender, immutable receipt, shift, cash and Finance source rows", () => {
+  const start = edge.indexOf('if (action === "erp-reconcile-pos-sale")');
+  const end = edge.indexOf('if (action === "erp-list-sales")', start);
+  assert.ok(start >= 0 && end > start);
+  const reconciliation = edge.slice(start, end);
+  for (const table of ["pos_sale_tenders", "pos_sale_receipts", "finance_journal_entries", "pos_shifts", "cash_reconciliations", "stock_movements", "admin_audit_logs"]) {
+    assert.match(reconciliation, new RegExp('from\\("' + table + '"\\)'));
+  }
+  assert.match(reconciliation, /tender_total_idr/);
+  assert.match(reconciliation, /tender_matches_sale_total/);
+  assert.match(reconciliation, /branchAccess\(branchId\)/);
+});
