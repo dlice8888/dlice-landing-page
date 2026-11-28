@@ -2651,7 +2651,7 @@ if(action==="erp-executive-branch-kpis"){
         const singleTenantSettlement=allSourceRowsResolved&&settlementTenants.size===1;
         const gross=Number(settlement.gross_amount_idr),net=Number(settlement.net_amount_idr);
         const allocatedGross=rows.reduce((sum:number,item:any)=>sum+Number(item.amount_idr||0),0);
-        const valid=singleTenantSettlement&&settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&allocatedGross===gross&&rows.length>0;
+        const valid=singleTenantSettlement&&settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&net<=gross&&allocatedGross===gross&&rows.length>0;
         settlementAllocationCompleteById.set(settlement.id,valid);
         if(!valid)continue;
         let allocatedNet=0;
