@@ -2600,13 +2600,22 @@ if(action==="erp-executive-branch-kpis"){
       const settlementItems=settlementIds.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("settlement_id",settlementIds)): [];
       const settlements=settlementIds.length?await readAll(()=>admin.from("payment_settlements").select("id,status,provider_reference,net_amount_idr,gross_amount_idr,fee_amount_idr,settlement_date,created_at").in("id",settlementIds)): [];
       const settlementById=new Map(settlements.map((s:any)=>[s.id,s]));
+      const settlementSaleIds=[...new Set(settlementItems.map((item:any)=>item.pos_sale_id).filter(Boolean))];
+      const settlementSourceSales=settlementSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,branch_id").in("id",settlementSaleIds)):[];
+      const settlementSourceBranchIds=[...new Set(settlementSourceSales.map((sale:any)=>sale.branch_id))];
+      const settlementSourceBranches=settlementSourceBranchIds.length?await readAll(()=>admin.from("branches").select("id,tenant_id").in("id",settlementSourceBranchIds)):[];
+      const settlementSaleBranch=new Map(settlementSourceSales.map((sale:any)=>[sale.id,sale.branch_id]));
+      const settlementBranchTenant=new Map(settlementSourceBranches.map((branch:any)=>[branch.id,branch.tenant_id]));
       const settlementNetAllocationByItem=new Map<string,number>();
       const settlementAllocationCompleteById=new Map<string,boolean>();
       for(const settlement of settlements){
         const rows=settlementItems.filter((item:any)=>item.settlement_id===settlement.id).sort((a:any,b:any)=>String(a.id).localeCompare(String(b.id)));
+        const settlementTenants=new Set(rows.map((item:any)=>settlementBranchTenant.get(settlementSaleBranch.get(item.pos_sale_id))).filter(Boolean));
+        const allSourceRowsResolved=rows.length>0&&rows.every((item:any)=>settlementSaleBranch.has(item.pos_sale_id)&&settlementBranchTenant.has(settlementSaleBranch.get(item.pos_sale_id)));
+        const singleTenantSettlement=allSourceRowsResolved&&settlementTenants.size===1;
         const gross=Number(settlement.gross_amount_idr),net=Number(settlement.net_amount_idr);
         const allocatedGross=rows.reduce((sum:number,item:any)=>sum+Number(item.amount_idr||0),0);
-        const valid=settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&allocatedGross===gross&&rows.length>0;
+        const valid=singleTenantSettlement&&settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&allocatedGross===gross&&rows.length>0;
         settlementAllocationCompleteById.set(settlement.id,valid);
         if(!valid)continue;
         let allocatedNet=0;
