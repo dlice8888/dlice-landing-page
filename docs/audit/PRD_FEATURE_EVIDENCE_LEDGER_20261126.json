@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "generated_at": "2026-11-28",
   "repository": "dlice8888/dlice-landing-page",
-  "source_matrix_commit": "e30ada8df4c49f40bb32e819615a0d791fceb6cb",
+  "source_matrix_commit": "40143add3890a48b9f0837a107307737e47eee15",
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
@@ -5191,7 +5191,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Task assignment/scheduling/notification workflow missing. Implementation started in PR #153; see remaining acceptance gaps.",
+      "evidence_or_gap": "Daily tasks, due dates and escalation now have tenant/branch composite-FK schema draft, unique idempotency, active same-branch assignee validation, atomic create/status RPCs, append-only audit and ERP form/list/actions. Official migration, exact-head tests and staging runtime still pending. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 139
@@ -5204,7 +5204,11 @@
           "status": "PARTIAL",
           "evidence": [
             "src/branch-operations-workflows.mjs",
-            "tests/contracts/branch-operations-workflows.test.mjs"
+            "src/branch-operations-supabase-repository.mjs",
+            "supabase/functions/_shared/branch-operations-repository.ts",
+            "supabase/functions/branch-operations/index.ts",
+            "src/branch-operations-ui.mjs",
+            "erp.html (mount remains release-gated)"
           ],
           "score": 10
         },
@@ -5218,7 +5222,7 @@
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
-            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+            "Edge validates Auth getUser, active admin profile, tenant membership, branch status and active branch assignment/tenant-admin scope; staging runtime not yet verified."
           ],
           "score": 7.5
         },
@@ -5226,8 +5230,8 @@
           "weight": 15,
           "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending",
-            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+            "Exact-head Free quality checks PASS at c9a3065bf3fec94e961538167b60cd0e58b9f19a: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Branch Operations workflow, repository adapter, SQL draft, private Storage compensation and UI contract suites passed."
           ],
           "score": 15
         },
@@ -5253,18 +5257,12 @@
           153
         ],
         "audit_pr": 147,
-        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
-        "pr_evidence": [
-          {
-            "pr": 153,
-            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
-            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
-            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
-          }
-        ]
+        "notes": "Concrete candidate adapter, Edge API, UI and SQL persistence draft are present. SQL is not a canonical migration; no staging schema or runtime acceptance. Edge deployment and UI release flag remain held.",
+        "pr_evidence": [],
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
+      "work_evidence": "Candidate source: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; src/branch-operations-workflows.mjs; src/branch-operations-supabase-repository.mjs; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; ERP mount in erp.html. Exact-head quality suite PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Database remains a draft, not a CLI-generated/applied migration; no staging Edge/Storage/tenant A-B/browser runtime evidence.",
       "active_prs": [
         153
       ],
@@ -5388,7 +5386,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Evidence upload/storage/retention workflow missing. Implementation started in PR #153; see remaining acceptance gaps.",
+      "evidence_or_gap": "Private evidence upload now has server-only private bucket draft, tenant/branch/actor path validation, MIME magic and 8 MiB checks, metadata registration, 365-day retention, 60-second signed downloads and orphan-upload compensation. Exact-head contract/type-check suite PASS; canonical migration, staging Storage runtime and tenant A/B proof remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 142
@@ -5401,7 +5399,11 @@
           "status": "PARTIAL",
           "evidence": [
             "src/branch-operations-workflows.mjs",
-            "tests/contracts/branch-operations-workflows.test.mjs"
+            "src/branch-operations-supabase-repository.mjs",
+            "supabase/functions/_shared/branch-operations-repository.ts",
+            "supabase/functions/branch-operations/index.ts",
+            "src/branch-operations-ui.mjs",
+            "erp.html (mount remains release-gated)"
           ],
           "score": 10
         },
@@ -5415,7 +5417,7 @@
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
-            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+            "Edge validates Auth getUser, active admin profile, tenant membership, branch status and active branch assignment/tenant-admin scope; staging runtime not yet verified."
           ],
           "score": 7.5
         },
@@ -5423,8 +5425,8 @@
           "weight": 15,
           "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending",
-            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+            "Exact-head Free quality checks PASS at c9a3065bf3fec94e961538167b60cd0e58b9f19a: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Branch Operations workflow, repository adapter, SQL draft, private Storage compensation and UI contract suites passed."
           ],
           "score": 15
         },
@@ -5450,18 +5452,12 @@
           153
         ],
         "audit_pr": 147,
-        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
-        "pr_evidence": [
-          {
-            "pr": 153,
-            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
-            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
-            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
-          }
-        ]
+        "notes": "Concrete candidate adapter, Edge API, UI and SQL persistence draft are present. SQL is not a canonical migration; no staging schema or runtime acceptance. Edge deployment and UI release flag remain held.",
+        "pr_evidence": [],
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
+      "work_evidence": "Candidate source: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; src/branch-operations-workflows.mjs; src/branch-operations-supabase-repository.mjs; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; ERP mount in erp.html. Exact-head quality suite PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Database remains a draft, not a CLI-generated/applied migration; no staging Edge/Storage/tenant A-B/browser runtime evidence.",
       "active_prs": [
         153
       ],
@@ -5475,7 +5471,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Incident severity, assignment, escalation and closure missing. Implementation started in PR #153; see remaining acceptance gaps.",
+      "evidence_or_gap": "Incident persistence has tenant/branch-scoped atomic RPCs, critical evidence enforcement, high/critical escalation tasks, audit events and independent incident status transitions. Exact-head contract/type-check suite PASS; canonical migration and staging E2E remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 143
@@ -5488,7 +5484,11 @@
           "status": "PARTIAL",
           "evidence": [
             "src/branch-operations-workflows.mjs",
-            "tests/contracts/branch-operations-workflows.test.mjs"
+            "src/branch-operations-supabase-repository.mjs",
+            "supabase/functions/_shared/branch-operations-repository.ts",
+            "supabase/functions/branch-operations/index.ts",
+            "src/branch-operations-ui.mjs",
+            "erp.html (mount remains release-gated)"
           ],
           "score": 10
         },
@@ -5502,7 +5502,7 @@
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
-            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+            "Edge validates Auth getUser, active admin profile, tenant membership, branch status and active branch assignment/tenant-admin scope; staging runtime not yet verified."
           ],
           "score": 7.5
         },
@@ -5510,8 +5510,8 @@
           "weight": 15,
           "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending",
-            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+            "Exact-head Free quality checks PASS at c9a3065bf3fec94e961538167b60cd0e58b9f19a: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Branch Operations workflow, repository adapter, SQL draft, private Storage compensation and UI contract suites passed."
           ],
           "score": 15
         },
@@ -5537,18 +5537,12 @@
           153
         ],
         "audit_pr": 147,
-        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
-        "pr_evidence": [
-          {
-            "pr": 153,
-            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
-            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
-            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
-          }
-        ]
+        "notes": "Concrete candidate adapter, Edge API, UI and SQL persistence draft are present. SQL is not a canonical migration; no staging schema or runtime acceptance. Edge deployment and UI release flag remain held.",
+        "pr_evidence": [],
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
+      "work_evidence": "Candidate source: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; src/branch-operations-workflows.mjs; src/branch-operations-supabase-repository.mjs; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; ERP mount in erp.html. Exact-head quality suite PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Database remains a draft, not a CLI-generated/applied migration; no staging Edge/Storage/tenant A-B/browser runtime evidence.",
       "active_prs": [
         153
       ],
@@ -5562,7 +5556,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Work orders, preventive maintenance and downtime records missing. Implementation started in PR #153; see remaining acceptance gaps.",
+      "evidence_or_gap": "Equipment registry and maintenance work orders have atomic RPCs, retired-asset guard, active same-branch assignee validation, private maintenance evidence ownership and status lifecycle. Exact-head contract/type-check suite PASS; canonical migration, staging E2E and cost integration remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 144
@@ -5575,7 +5569,11 @@
           "status": "PARTIAL",
           "evidence": [
             "src/branch-operations-workflows.mjs",
-            "tests/contracts/branch-operations-workflows.test.mjs"
+            "src/branch-operations-supabase-repository.mjs",
+            "supabase/functions/_shared/branch-operations-repository.ts",
+            "supabase/functions/branch-operations/index.ts",
+            "src/branch-operations-ui.mjs",
+            "erp.html (mount remains release-gated)"
           ],
           "score": 10
         },
@@ -5589,7 +5587,7 @@
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
-            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+            "Edge validates Auth getUser, active admin profile, tenant membership, branch status and active branch assignment/tenant-admin scope; staging runtime not yet verified."
           ],
           "score": 7.5
         },
@@ -5597,8 +5595,8 @@
           "weight": 15,
           "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending",
-            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+            "Exact-head Free quality checks PASS at c9a3065bf3fec94e961538167b60cd0e58b9f19a: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Branch Operations workflow, repository adapter, SQL draft, private Storage compensation and UI contract suites passed."
           ],
           "score": 15
         },
@@ -5624,18 +5622,12 @@
           153
         ],
         "audit_pr": 147,
-        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
-        "pr_evidence": [
-          {
-            "pr": 153,
-            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
-            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
-            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
-          }
-        ]
+        "notes": "Concrete candidate adapter, Edge API, UI and SQL persistence draft are present. SQL is not a canonical migration; no staging schema or runtime acceptance. Edge deployment and UI release flag remain held.",
+        "pr_evidence": [],
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
+      "work_evidence": "Candidate source: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; src/branch-operations-workflows.mjs; src/branch-operations-supabase-repository.mjs; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; ERP mount in erp.html. Exact-head quality suite PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Database remains a draft, not a CLI-generated/applied migration; no staging Edge/Storage/tenant A-B/browser runtime evidence.",
       "active_prs": [
         153
       ],
@@ -5649,7 +5641,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "Audit scoring and executive roll-up missing. Implementation started in PR #153; see remaining acceptance gaps.",
+      "evidence_or_gap": "Compliance checks require private evidence and independent approval; snapshots are immutable and derive a deterministic source revision from approved check/evidence rows. Exact-head contract/type-check suite PASS; canonical migration, staging runtime and cross-domain POS/Inventory/HR/Finance reconciliation remain open.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 145
@@ -5662,7 +5654,11 @@
           "status": "PARTIAL",
           "evidence": [
             "src/branch-operations-workflows.mjs",
-            "tests/contracts/branch-operations-workflows.test.mjs"
+            "src/branch-operations-supabase-repository.mjs",
+            "supabase/functions/_shared/branch-operations-repository.ts",
+            "supabase/functions/branch-operations/index.ts",
+            "src/branch-operations-ui.mjs",
+            "erp.html (mount remains release-gated)"
           ],
           "score": 10
         },
@@ -5676,7 +5672,7 @@
           "weight": 15,
           "status": "PARTIAL",
           "evidence": [
-            "in-transaction authorize port and tenant/branch scope checks; runtime authorization not yet verified"
+            "Edge validates Auth getUser, active admin profile, tenant membership, branch status and active branch assignment/tenant-admin scope; staging runtime not yet verified."
           ],
           "score": 7.5
         },
@@ -5684,8 +5680,8 @@
           "weight": 15,
           "status": "PASS",
           "evidence": [
-            "Contract tests authored; exact-head CI result pending",
-            "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+            "Exact-head Free quality checks PASS at c9a3065bf3fec94e961538167b60cd0e58b9f19a: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Branch Operations workflow, repository adapter, SQL draft, private Storage compensation and UI contract suites passed."
           ],
           "score": 15
         },
@@ -5711,18 +5707,12 @@
           153
         ],
         "audit_pr": 147,
-        "notes": "PR #153 provides implementation-start evidence only. Do not mark DONE or assign a percentage until DB, RLS, adapter, UI, tests, E2E and reconciliation evidence pass.",
-        "pr_evidence": [
-          {
-            "pr": 153,
-            "kind": "tenant_branch_scoped_workflow_orchestration_and_contract_tests",
-            "commit": "35eb4a6c2aeb8be7b202872a59fe8249600ebe1d",
-            "limitations": "No database migration, concrete Supabase adapter, authenticated Edge Function, UI, staging runtime or cross-domain reconciliation yet."
-          }
-        ]
+        "notes": "Concrete candidate adapter, Edge API, UI and SQL persistence draft are present. SQL is not a canonical migration; no staging schema or runtime acceptance. Edge deployment and UI release flag remain held.",
+        "pr_evidence": [],
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a"
       },
       "work_started_at": "2026-11-27",
-      "work_evidence": "PR #153 adds tenant/branch-scoped orchestration and dependency-free contract tests. Source commit 35eb4a6; concrete DB migration, RLS/Storage, repository adapter, Edge Function, UI, staging E2E and reconciliation remain open. Contract suite passed on PR #153 exact-head quality checks be7ae30; database and E2E remain unverified.",
+      "work_evidence": "Candidate source: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; src/branch-operations-workflows.mjs; src/branch-operations-supabase-repository.mjs; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; ERP mount in erp.html. Exact-head quality suite PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Database remains a draft, not a CLI-generated/applied migration; no staging Edge/Storage/tenant A-B/browser runtime evidence.",
       "active_prs": [
         153
       ],
@@ -6256,62 +6246,93 @@
       "source_status": "PARTIAL",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 links paid POS/Order transactions to tenant customer identity through a single RPC/trigger. Cross-channel merge/deduplication and runtime proof remain incomplete.",
+      "evidence_or_gap": "Paid POS sales and online orders link to tenant customer identity through CRM transaction links. Disposable migration replay and pgTAP pass; cross-channel merge/deduplication, staging Auth/tenant runtime and full customer profile E2E remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 162
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 53,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Candidate ERP CRM/HR UI and authenticated dlice-orders action routes; complete cross-channel/provider workflow and live UI acceptance remain pending."
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 20
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Server-side Auth, Platform Owner and tenant/branch scope checks are implemented in Edge source; staging authenticated positive/negative runtime tests remain pending."
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Candidate reconciliation RPCs and immutable ledger/audit evidence exist; no staging transaction reconciliation evidence yet."
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
         "status": "MATCHED_ACTIVE_PR",
         "matched_prs": [
-          145
+          145,
+          153
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
+        "notes": "PR #153 adds concrete POS/Order/Refund/Settlement/Finance integration and HR payroll journal/payment reconciliation source. Disposable schema/pgTAP and exact-head quality tests pass; no staging runtime E2E or provider payout dispatch.",
         "pr_evidence": [
           {
             "pr": 145,
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+          },
+          {
+            "pr": 153,
+            "kind": "exact-head source, disposable migration replay and contract tests",
+            "limitation": "No staging deployment/provider/browser E2E; feature remains PARTIAL."
           }
         ],
-        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
-      }
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+        "active_prs": [
+          153
+        ]
+      },
+      "active_prs": [
+        145
+      ],
+      "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED"
     },
     {
       "feature_id": "D10-F02",
@@ -6440,62 +6461,94 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145 adds reconciled-close-only point earning, expiry lots, FIFO redemption allocations and reversal conservation. SQL remains draft; database replay and POS/Order/Finance E2E not run.",
+      "evidence_or_gap": "Loyalty awards now derive from reconciled net sales; split-tender closes require cash drawer plus per-method provider settlement; later refunds create immutable negative adjustments, reverse unspent points and record spent-points debt while preserving original earning-rule version. Disposable migration replay and pgTAP pass; tiers, staging E2E and live POS/Finance reconciliation remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 165
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 53,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Candidate ERP CRM/HR UI and authenticated dlice-orders action routes; complete cross-channel/provider workflow and live UI acceptance remain pending."
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 20
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Server-side Auth, Platform Owner and tenant/branch scope checks are implemented in Edge source; staging authenticated positive/negative runtime tests remain pending."
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Candidate reconciliation RPCs and immutable ledger/audit evidence exist; no staging transaction reconciliation evidence yet."
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
         "status": "MATCHED_ACTIVE_PR",
         "matched_prs": [
-          145
+          145,
+          153
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
+        "notes": "PR #153 adds concrete POS/Order/Refund/Settlement/Finance integration and HR payroll journal/payment reconciliation source. Disposable schema/pgTAP and exact-head quality tests pass; no staging runtime E2E or provider payout dispatch.",
         "pr_evidence": [
           {
             "pr": 145,
             "kind": "transactional_domain_orchestration_and_sql_drafts",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+          },
+          {
+            "pr": 153,
+            "kind": "exact-head source, disposable migration replay and contract tests",
+            "limitation": "No staging deployment/provider/browser E2E; feature remains PARTIAL."
           }
         ],
-        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
-      }
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+        "active_prs": [
+          153
+        ]
+      },
+      "active_prs": [
+        145
+      ],
+      "work_started_at": "2026-11-25",
+      "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED"
     },
     {
       "feature_id": "D10-F05",
@@ -8052,43 +8105,60 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145/#146 connect payroll run to payout batch, per-employee Xendit adapter, webhook and Finance clearing RPC. Disposable DB replay pending; live provider E2E intentionally disabled.",
+      "evidence_or_gap": "Payroll calculation and Finance journal posting/reconciliation are linked to payment batches. Provider/beneficiary approvals, signed HMAC provider-event ingestion and independent batch reconciliation API/UI are implemented. Disposable migration replay and pgTAP pass; provider-specific payout dispatch/credentials, staging provider E2E and browser acceptance remain incomplete.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 196
       },
-      "progress_pct": null,
-      "scoring_status": "NOT_SCORED_FEATURE_LEVEL",
+      "progress_pct": 53,
+      "scoring_status": "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT",
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Candidate ERP CRM/HR UI and authenticated dlice-orders action routes; complete cross-channel/provider workflow and live UI acceptance remain pending."
+          ],
+          "score": 10
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 20
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Server-side Auth, Platform Owner and tenant/branch scope checks are implemented in Edge source; staging authenticated positive/negative runtime tests remain pending."
+          ],
+          "score": 7.5
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
+            "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+          ],
+          "score": 15
         },
         "e2e_workflow": {
           "weight": 20,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [],
+          "score": 0
         },
         "reconciliation_observability": {
           "weight": 10,
           "status": "UNVERIFIED",
-          "evidence": []
+          "evidence": [
+            "Candidate reconciliation RPCs and immutable ledger/audit evidence exist; no staging transaction reconciliation evidence yet."
+          ],
+          "score": 0
         }
       },
       "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
@@ -8096,10 +8166,11 @@
         "status": "MATCHED_ACTIVE_PR",
         "matched_prs": [
           145,
-          146
+          146,
+          153
         ],
         "audit_pr": 147,
-        "notes": "Feature-level candidate mapping; PR presence is implementation-start/source evidence only. No DONE/progress score until exact code, database, authorization, tests, E2E and reconciliation evidence are verified.",
+        "notes": "PR #153 adds concrete POS/Order/Refund/Settlement/Finance integration and HR payroll journal/payment reconciliation source. Disposable schema/pgTAP and exact-head quality tests pass; no staging runtime E2E or provider payout dispatch.",
         "pr_evidence": [
           {
             "pr": 145,
@@ -8110,10 +8181,25 @@
             "pr": 146,
             "kind": "payroll_provider_and_finance_clearing_adapter",
             "limitation": "PR presence/source/tests are not a DONE gate; score only exact evidence dimensions."
+          },
+          {
+            "pr": 153,
+            "kind": "exact-head source, disposable migration replay and contract tests",
+            "limitation": "No staging deployment/provider/browser E2E; feature remains PARTIAL."
           }
         ],
-        "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
-      }
+        "latest_implementation_commit": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+        "active_prs": [
+          153
+        ]
+      },
+      "active_prs": [
+        145,
+        146
+      ],
+      "work_started_at": "2026-11-25",
+      "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
+      "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED"
     },
     {
       "feature_id": "D12-F07",
@@ -8122,7 +8208,7 @@
       "source_status": "NOT EVIDENCED",
       "audit_status": "PARTIAL",
       "work_status": "IN_PROGRESS",
-      "evidence_or_gap": "PR #145/#146 add payroll labor-cost and Finance clearing evidence paths; reconciled branch P&L and bank settlement E2E remain unproven.",
+      "evidence_or_gap": "Payroll Finance journal source is implemented in candidate migrations, but branch labor-cost aggregation, allocation rules, BI views and staging reconciliation are not yet proven.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 197
@@ -8183,7 +8269,14 @@
           }
         ],
         "latest_implementation_commit": "a985b2d8cfafd22dc6e404de501a0bf7f122edb3"
-      }
+      },
+      "active_prs": [
+        145,
+        146
+      ],
+      "work_started_at": "2026-11-25",
+      "work_evidence": "PR #145 adds HR workforce schema draft, Edge actions and RPC contracts for employee directory, attendance events, timesheets, shift schedules, leave requests, and branch-scoped payroll. Employee lifecycle, shift replacement and overtime policy remain incomplete. Candidate HR payroll-to-Finance journal posting now provides a branch-scoped source for labor costs; branch cost aggregation and BI reporting are still unproven.",
+      "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED"
     },
     {
       "feature_id": "D12-F08",
@@ -12828,9 +12921,11 @@
       147,
       148,
       149,
-      150
+      150,
+      152,
+      153
     ],
-    "reviewed_open_pr_count": 24,
+    "reviewed_open_pr_count": 26,
     "patch_reviewed_prs": [
       71,
       104,
@@ -12855,11 +12950,13 @@
       147,
       148,
       149,
-      150
+      150,
+      152,
+      153
     ],
     "feature_id_count": 189,
-    "matched_feature_ids": 82,
-    "unmatched_feature_ids": 107,
+    "matched_feature_ids": 124,
+    "unmatched_feature_ids": 65,
     "duplicate_rule": "Each feature ID counted once; multiple PRs remain attached to the same ID and do not increase feature count.",
     "evidence_boundary": "PR match is implementation/test/audit source evidence only. It does not automatically change source status or progress. Exact-head tests, database, authorization, E2E and reconciliation remain independently scored.",
     "non_feature_prs": {
@@ -13263,10 +13360,88 @@
     }
   },
   "progress_scoring": {
-    "scored_partial_features": 50,
-    "unscored_partial_features": 138,
-    "status": "50 PARTIAL features have evidence-weighted progress scores (including 43 newly started features); 138 PARTIAL features remain unscored because their six-dimension evidence has not been decomposed. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero."
+    "scored_partial_features": 53,
+    "unscored_partial_features": 135,
+    "status": "53 PARTIAL features have evidence-weighted progress scores; 135 PARTIAL features remain unscored. Latest batch adds evidence-backed scores for CRM unified identity, refund-aware loyalty and HR payroll/Finance integration; Branch Operations scores remain unchanged pending canonical migration and runtime evidence."
   },
   "latest_audit_report": "docs/audit/FNB_OS_TOTAL_AUDIT_2026-11-28.md",
-  "latest_implementation_note": "Branch Operations incident/compliance workflows now require private evidence ownership/retention verification before persistence; contract tests added, exact-head execution pending."
+  "latest_implementation_note": "Branch Operations now has concrete tenant/branch-scoped server adapters, private Storage upload/download verification, evidence-linked maintenance, immutable compliance snapshots and ERP UI behind a false release gate. CRM split-tender financial close and refund-aware loyalty adjustments plus HR payroll Finance/payment reconciliation API/UI are implemented in candidate source. Exact-head quality checks pass; disposable CRM/HR replay and pgTAP passed on the prior migration-equivalent head, latest replay is running. No staging migration, Edge deployment, merge or release.",
+  "latest_pr_heads": {
+    "152": "3dda8d1c6dce3b0a68d4ce95afaae059af3101a0",
+    "153": "40143add3890a48b9f0837a107307737e47eee15"
+  },
+  "branch_operations_increment": {
+    "pr": 153,
+    "implementation_head": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+    "sql_draft": "docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql",
+    "adapter": [
+      "src/branch-operations-supabase-repository.mjs",
+      "supabase/functions/_shared/branch-operations-repository.ts"
+    ],
+    "edge": "supabase/functions/branch-operations/index.ts",
+    "ui": [
+      "src/branch-operations-ui.mjs",
+      "erp.html"
+    ],
+    "features": [
+      "D08-F04",
+      "D08-F07",
+      "D08-F08",
+      "D08-F09",
+      "D08-F10"
+    ],
+    "exact_head_quality_checks": "PASS_46093311446",
+    "canonical_migration": "NOT_GENERATED_OR_APPLIED",
+    "staging_edge_storage_e2e": "NOT_RUN",
+    "tenant_ab_runtime": "NOT_RUN",
+    "release_gate": "BRANCH_OPS_WORKFLOWS_RELEASED=false"
+  },
+  "crm_increment": {
+    "pr": 153,
+    "latest_head": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+    "changes": [
+      "paid POS/Order customer identity linked to tenant CRM records",
+      "split tender close validates total tenders, cash drawer allocation and per-method bank/QRIS settlement items",
+      "reconciliation independently rechecks cash and provider settlement evidence",
+      "loyalty points awarded only from reconciled net sales",
+      "processed refunds create immutable negative loyalty adjustments, reverse unspent points and record spent-points debt",
+      "original earning-rule version retained on each earn entry"
+    ],
+    "disposable_replay": "PASS_46091245841_ON_7E7BC872; latest candidate replay 46093311274 pending",
+    "pgTap": "CRM_AND_HR_EIGHT_DOMAIN_PGTAP_PASS_ON_7E7BC872",
+    "exact_head_quality": "PASS_46093311446_ON_C9A3065",
+    "staging_migration": "NOT_APPLIED",
+    "staging_pos_e2e": "NOT_RUN",
+    "feature_ids": [
+      "D10-F01",
+      "D10-F04"
+    ],
+    "limitations": [
+      "No staging Auth/tenant A/B or POS/Finance E2E",
+      "Customer LTV snapshot adapter remains incomplete",
+      "No score promotion to DONE"
+    ]
+  },
+  "hr_increment": {
+    "pr": 153,
+    "latest_head": "c9a3065bf3fec94e961538167b60cd0e58b9f19a",
+    "new_payment_actions": 11,
+    "edge_action_inventory": 233,
+    "changes": [
+      "payroll Finance journal posting/reconciliation linked to payment batch preparation",
+      "provider configuration and beneficiary profile approval require independent actors",
+      "beneficiary raw bank data read only from server-side Edge secret and only SHA-256 fingerprint persisted",
+      "payroll payment batch approval and independent reconciliation API/UI",
+      "generic raw-body HMAC-SHA256 provider event webhook with idempotent RPC"
+    ],
+    "exact_head_quality": "PASS_46093311446_ON_C9A3065",
+    "disposable_replay": "PASS_46091245841_ON_7E7BC872; latest candidate replay 46093311274 pending",
+    "staging_migration": "NOT_APPLIED",
+    "provider_payout_dispatch": "NOT_IMPLEMENTED_PROVIDER_SPECIFIC",
+    "provider_credentials": "NOT_CONFIGURED",
+    "staging_provider_e2e": "NOT_RUN",
+    "feature_ids": [
+      "D12-F06"
+    ]
+  }
 }
