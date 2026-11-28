@@ -3137,7 +3137,6 @@ if(action==="erp-executive-branch-kpis"){
     }));
     if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
     const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
-    const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
     let data:any=null,error:any=null;
     if(Array.isArray(body.tenders)&&body.tenders.length>0){
       if(body.tenders.length<2||body.tenders.length>5)return fail("Split tender harus terdiri dari 2–5 alokasi.",422,origin);
