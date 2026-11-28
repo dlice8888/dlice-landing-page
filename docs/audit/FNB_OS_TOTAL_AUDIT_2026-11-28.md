@@ -246,3 +246,18 @@ Therefore POS E2E is not accepted. Required: per-sale tender split, payment stat
 - No GitHub Actions run for the latest head was returned at the time of this check. Therefore the new contract tests are added but their exact-head execution remains unverified; no progress percentage or DONE promotion is awarded.
 - Branch Operations still lacks a concrete Supabase repository adapter, canonical persisted schema/RPC, application UI wiring, private Storage policy/object verification implementation, and authenticated staging workflow E2E. The new adapter gate is a fail-closed contract, not proof those integrations exist.
 - The domain matrix remains 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE until additional exact evidence changes feature-level scores.
+
+
+## 10. Live continuation checkpoint — 2026-11-28
+
+- Rechecked PR #153 exact head `d9f2dccdc8c5879c6b8160318e78a1f0a05c5086`.
+- GitHub Free quality checks: **PASS** (run 46088159549).
+- GitHub Free CRM disposable database replay: **IN_PROGRESS** at checkpoint (run 46088159533). No PASS claim until the run completes.
+- GitHub combined status currently reports Vercel success. This is deployment/build status only.
+- Supabase staging remains ACTIVE_HEALTHY (PostgreSQL 17.11). Read-only schema inspection confirms `tenants` and `branches` have `tenant_id` scope, and direct client access is denied by existing RLS policies. `admin_profiles` is service-role-only.
+- No staging DDL, data, Auth metadata, Storage policy, Edge Function deployment, or production change was performed in this checkpoint.
+- The branch operations source still contains orchestration ports and a fail-closed evidence ownership gate, but no concrete database repository adapter, canonical Branch Ops persistence migration/RPC, application UI route, or authenticated runtime E2E has been added/verified. These remain open implementation work, not accepted features.
+- CRM and HR source workflows remain candidate orchestration modules; their canonical migrations exist in the PR base/candidate history, but staging table existence and cross-domain runtime reconciliation are not proven by this checkpoint.
+- Feature status and numeric progress are unchanged: 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE. No feature score is increased by this checkpoint. The 138 unscored PARTIAL features remain unscored.
+- Next implementation batch: add Branch Ops canonical schema + server-only persistence adapter + private Storage metadata verifier + authenticated UI/Edge routes; then integrate CRM ledger events with reconciled POS/order/refund/settlement/Finance sources and HR approved payroll snapshots with balanced Finance journals. These changes must remain candidate-only until final validation.
+- Final merge and staging migration remain explicitly deferred pending user approval after exact-head CI, disposable replay, pgTAP, RLS/ACL/Storage, tenant A/B, provider, browser/device E2E and reconciliation.
