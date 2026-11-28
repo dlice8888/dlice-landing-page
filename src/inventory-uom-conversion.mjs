@@ -14,7 +14,7 @@ export function convertInventoryQuantity({quantity,fromUom,toUom,conversions,at,
   if(visited.has(node))return;
   visiting.add(node);for(const edge of graph.get(node)||[])detectCycle(edge.to);visiting.delete(node);visited.add(node);
  };
- for(const node of graph.keys())detectCycle(node);
+ detectCycle(fromUom);
  const paths=[];
  const walk=(node,factor,versions,path)=>{
   if(node===toUom){paths.push({factor,versions,path});return;}
