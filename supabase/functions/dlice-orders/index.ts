@@ -2548,10 +2548,10 @@ if(action==="erp-executive-branch-kpis"){
       const rows:any[]=[];for(let offset=0;offset<20000;offset+=1000){const page=await makeQuery().range(offset,offset+999);if(page.error)throw page.error;rows.push(...(page.data||[]));if((page.data||[]).length<1000)return rows;}throw new Error("executive_report_row_limit");
     };
     try {
-      const periodSales=await readAll(()=>admin.from("pos_sales").select("id,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at").in("branch_id",branches.map((b:any)=>b.id)).eq("payment_status","paid").gte("created_at",minStart).lt("created_at",maxEnd).order("created_at"));
+      const periodSales=await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at").in("branch_id",branches.map((b:any)=>b.id)).eq("payment_status","paid").gte("created_at",minStart).lt("created_at",maxEnd).order("created_at"));
       const periodRefunds=await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("branch_id",branches.map((b:any)=>b.id)).eq("status","processed").gte("processed_at",minStart).lt("processed_at",maxEnd).not("pos_sale_id","is",null).order("processed_at"));
       const refundSaleIds=[...new Set(periodRefunds.map((r:any)=>r.pos_sale_id).filter(Boolean))];
-      const sourceSales=refundSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at").in("id",refundSaleIds)): [];
+      const sourceSales=refundSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at").in("id",refundSaleIds)): [];
       const salesById=new Map([...periodSales,...sourceSales].map((s:any)=>[s.id,s]));
       const allRefunds=refundSaleIds.length?await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("pos_sale_id",refundSaleIds).eq("status","processed")):periodRefunds;
       const settlementItems=periodSales.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("pos_sale_id",periodSales.map((s:any)=>s.id))):[];
