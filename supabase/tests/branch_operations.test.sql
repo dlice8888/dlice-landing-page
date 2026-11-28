@@ -1,7 +1,7 @@
 -- Branch Operations schema, lifecycle guard and ACL contracts.
 -- Executed only by the disposable Supabase PostgreSQL replay workflow.
 begin;
-select plan(82);
+select plan(86);
 
 select ok(to_regclass('public.branch_ops_equipment') is not null,'equipment table exists');
 select ok(to_regclass('public.branch_ops_tasks') is not null,'task table exists');
@@ -48,6 +48,18 @@ select ok(to_regprocedure('public.branch_ops_register_evidence_asset(uuid,uuid,u
 select ok(to_regprocedure('public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid)') is not null,'compliance submit RPC signature exists');
 select ok(to_regprocedure('public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text)') is not null,'compliance review RPC signature exists');
 select ok(to_regprocedure('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)') is not null,'compliance publish RPC signature exists');
+select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid)'::regprocedure))>0
+  and position('BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' in pg_get_functiondef('public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid)'::regprocedure))>0,
+  'task retries are serialized and cannot replay across branches');
+select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[])'::regprocedure))>0
+  and position('BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' in pg_get_functiondef('public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[])'::regprocedure))>0,
+  'incident retries are serialized and cannot replay across branches');
+select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid,uuid[])'::regprocedure))>0
+  and position('BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' in pg_get_functiondef('public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid,uuid[])'::regprocedure))>0,
+  'maintenance retries are serialized and cannot replay across branches');
+select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0
+  and position('BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0,
+  'compliance snapshot retries are serialized and cannot replay across branches');
 
 select ok(has_function_privilege('service_role','public.branch_ops_register_equipment(uuid,uuid,uuid,text,text)','EXECUTE'),'service role can register equipment');
 select ok(has_function_privilege('service_role','public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid)','EXECUTE'),'service role can create tasks');
