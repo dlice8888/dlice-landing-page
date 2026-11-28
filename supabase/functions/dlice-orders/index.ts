@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation","erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation"]);
+  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation","erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation","erp-executive-get-business-day-cutoff","erp-executive-set-business-day-cutoff"]);
   if(executiveSalesActions.has(action)){
     if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
       return fail("Izin Executive tidak diizinkan.",403,origin);
@@ -2025,6 +2025,21 @@ if (action === "admin-set-profile-role") {
     const allowedBranchIds=(tenantBranches.data||[]).map((x:any)=>x.id);
     const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"):null;
     if(requested&&requested.some((id:string)=>!allowedBranchIds.includes(id)))return fail("Filter cabang di luar penugasan ditolak.",403,origin);
+    if(action==="erp-executive-get-business-day-cutoff"||action==="erp-executive-set-business-day-cutoff"){
+      const branchId=safeText(body.branch_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!allowedBranchIds.includes(branchId))return fail("Cabang cutoff di luar scope.",403,origin);
+      if(action==="erp-executive-get-business-day-cutoff"){
+        const {data,error}=await admin.rpc("get_branch_business_day_cutoff",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_id:branchId,p_branch_ids:allowedBranchIds});
+        if(error)return fail("Konfigurasi business-day cutoff belum tersedia.",503,origin);
+        return json({cutoff:data},200,origin);
+      }
+      const cutoff=safeText(body.cutoff_time,5),expectedVersion=Number(body.expected_version);
+      if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(cutoff)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Waktu cutoff atau versi konfigurasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("set_branch_business_day_cutoff",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_id:branchId,p_branch_ids:allowedBranchIds,p_cutoff_time:cutoff,p_expected_version:expectedVersion});
+      if(error)return fail("Perubahan cutoff ditolak. Periksa role dan versi konfigurasi.",409,origin);
+      return json({cutoff:data},200,origin);
+    }
     if(action==="erp-executive-sales-monitor"){
       const period=safeText(body.period,12)||"day",start=safeText(body.start_date,10),end=safeText(body.end_date,10);
       if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start)
