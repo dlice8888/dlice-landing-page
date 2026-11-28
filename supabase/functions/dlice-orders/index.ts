@@ -2007,6 +2007,8 @@ if (action === "admin-set-profile-role") {
 
   const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval"]);
   if(executiveSalesActions.has(action)){
+    if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
+      return fail("Izin Executive tidak diizinkan.",403,origin);
     if(action==="erp-executive-sales-monitor"&&!hasPerm("reports")&&!hasPerm("finance"))
       return fail("Izin laporan penjualan tidak diizinkan.",403,origin);
     if(action!=="erp-executive-sales-monitor"&&!["procurement","finance","hr","branches"].some(hasPerm))
