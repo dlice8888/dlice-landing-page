@@ -33,23 +33,31 @@ begin
     raise exception using errcode='23503', message='POS_SALE_BRANCH_TIMEZONE_REQUIRED';
   end if;
 
-  if new.payment_status = 'paid' then
-    if tg_op = 'INSERT' and new.paid_at is null then
-      new.paid_at := now();
-      new.paid_at_source := 'payment_transition';
-    elsif tg_op = 'UPDATE' and old.payment_status is distinct from 'paid' then
-      new.paid_at := now();
-      new.paid_at_source := 'payment_transition';
-    elsif new.paid_at is null then
-      new.paid_at := now();
-      new.paid_at_source := 'payment_transition';
-    end if;
+  if tg_op = 'INSERT' and new.payment_status = 'paid' then
+    -- Payment recognition is server-timestamped; clients cannot backdate a new sale.
+    new.paid_at := now();
+    new.paid_at_source := 'payment_transition';
     new.business_date := (new.paid_at at time zone v_timezone)::date;
-  elsif tg_op = 'UPDATE' and old.payment_status in ('paid','refunded') and new.payment_status = 'refunded' then
-    -- Refund is a separate contra-revenue event; preserve the original paid recognition date.
-    new.paid_at := old.paid_at;
-    new.paid_at_source := old.paid_at_source;
-    new.business_date := case when old.paid_at is null then null else (old.paid_at at time zone v_timezone)::date end;
+  elsif tg_op = 'UPDATE' and old.payment_status in ('paid','refunded') then
+    if new.paid_at is distinct from old.paid_at or new.paid_at_source is distinct from old.paid_at_source then
+      raise exception using errcode='42501', message='POS_SALE_PAYMENT_RECOGNITION_IMMUTABLE';
+    end if;
+    if old.payment_status='refunded' and new.payment_status='paid' then
+      raise exception using errcode='23514', message='POS_SALE_REFUND_CANNOT_REOPEN_PAYMENT';
+    end if;
+    if new.payment_status in ('paid','refunded') then
+      -- Refund is a separate contra-revenue event; preserve original paid recognition.
+      new.paid_at := old.paid_at;
+      new.paid_at_source := old.paid_at_source;
+      new.business_date := case when old.paid_at is null then null else (old.paid_at at time zone v_timezone)::date end;
+    else
+      raise exception using errcode='23514', message='POS_SALE_PAID_STATUS_TERMINAL';
+    end if;
+  elsif new.payment_status = 'paid' then
+    -- Pending -> paid is the payment recognition transition.
+    new.paid_at := now();
+    new.paid_at_source := 'payment_transition';
+    new.business_date := (new.paid_at at time zone v_timezone)::date;
   else
     new.paid_at := null;
     new.business_date := null;
@@ -60,7 +68,7 @@ end $$;
 
 drop trigger if exists pos_sales_payment_recognition on public.pos_sales;
 create trigger pos_sales_payment_recognition
-before insert or update of payment_status, branch_id, paid_at
+before insert or update of payment_status, branch_id, paid_at, business_date, paid_at_source
 on public.pos_sales
 for each row execute function public.set_pos_sale_payment_recognition();
 
