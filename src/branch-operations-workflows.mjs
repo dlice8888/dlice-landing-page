@@ -121,14 +121,18 @@ export async function createEquipmentMaintenanceOrder(input, deps) {
   if (!["preventive", "corrective", "inspection"].includes(maintenanceType)) fail("BRANCH_MAINTENANCE_TYPE_INVALID", "Unsupported maintenance type");
   const scheduledAt = required(input.scheduledAt, "scheduledAt");
   if (!Number.isFinite(Date.parse(scheduledAt))) fail("BRANCH_MAINTENANCE_DATE_INVALID", "scheduledAt must be an ISO date/time");
+  const evidenceReferences = Array.isArray(input.evidenceReferences)
+    ? [...new Set(input.evidenceReferences.map((value) => required(value, "evidenceReference")))]
+    : [];
   return inBranchTransaction(deps, scope, async (tx) => {
     const prior = await adapter(deps, "findMaintenanceOrderByIdempotencyKey")(tx, scope);
     if (prior) return Object.freeze({ status: "duplicate", workOrderId: prior.id });
     const equipment = await adapter(deps, "loadBranchEquipmentForUpdate")(tx, { ...scope, equipmentId });
     assertBranch(equipment, scope, "equipment");
     if (equipment.status === "retired") fail("BRANCH_EQUIPMENT_RETIRED", "Retired equipment cannot receive new work orders");
+    await verifyPrivateEvidenceOwnership(deps, tx, scope, evidenceReferences, "branch_maintenance");
     const order = await adapter(deps, "persistMaintenanceOrder")(tx, {
-      ...scope, equipmentId, maintenanceType, scheduledAt,
+      ...scope, equipmentId, maintenanceType, scheduledAt, evidenceReferences,
       description: required(input.description, "description"),
       assignedTo: input.assignedTo == null ? null : required(input.assignedTo, "assignedTo"),
     });
