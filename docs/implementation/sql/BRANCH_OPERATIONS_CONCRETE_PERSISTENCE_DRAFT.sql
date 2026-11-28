@@ -187,10 +187,10 @@ on conflict (id) do update set public=false,file_size_limit=8388608,allowed_mime
 -- the bearer token, resolve tenant membership and branch assignment, then call
 -- these server-side operations with the verified actor id.
 create or replace function public.branch_ops_prevent_immutable_record_mutation()
-returns trigger language plpgsql security invoker set search_path=public,pg_temp as $
+returns trigger language plpgsql security invoker set search_path=public,pg_temp as $$
 begin
   raise exception 'BRANCH_OPS_RECORD_IMMUTABLE' using errcode='55000';
-end $;
+end $$;
 create trigger branch_ops_evidence_assets_immutable
 before update or delete on public.branch_ops_evidence_assets
 for each row execute function public.branch_ops_prevent_immutable_record_mutation();
