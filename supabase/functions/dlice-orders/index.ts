@@ -2111,7 +2111,7 @@ if (action === "admin-set-profile-role") {
         p_source_entity:sourceEntity,p_source_entity_id:sourceEntityId,p_requested_action:"approve_or_reject",
         p_request_payload:payload,p_idempotency_key:idempotencyKey,p_expires_at:expiresAt,
       });
-      if(error)return fail("Permintaan approval gagal dibuat. Pastikan sumber berstatus submitted dan berada pada tenant/cabang aktif.",error.code==="42501"?403:409,origin);
+      if(error)return fail("Permintaan approval gagal dibuat. Pastikan sumber berstatus submitted (PR/HR) atau draft (stock transfer) dan berada pada tenant/cabang aktif.",error.code==="42501"?403:409,origin);
       return json({approval:data},201,origin);
     }
     if(action==="erp-executive-decide-approval"){
