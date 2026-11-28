@@ -447,7 +447,13 @@ begin
   'source_version',a.source_version,'amount_idr',a.amount_idr,'created_by',a.created_by,
   'status',a.status,'urgency',a.urgency,'evidence',a.evidence,'version',a.version,
   'claimed_by',a.claimed_by,'claim_expires_at',a.claim_expires_at,'expires_at',a.expires_at,
-  'created_at',a.created_at,'policy_version',a.policy_version
+  'created_at',a.created_at,'policy_version',a.policy_version,
+  'source_detail',case a.source_entity_type
+    when 'purchase_requisition' then (select jsonb_build_object('number',r.requisition_number,'purpose',r.purpose,'notes',r.notes,'needed_by',r.needed_by) from public.purchase_requisitions r where r.id=a.source_entity_id and r.branch_id=a.branch_id)
+    when 'purchase_order' then (select jsonb_build_object('number',o.po_number,'supplier_id',o.supplier_id,'notes',o.notes) from public.purchase_orders o where o.id=a.source_entity_id and o.branch_id=a.branch_id)
+    when 'branch_expense' then (select jsonb_build_object('code',e.expense_code,'description',e.description,'payment_method',e.payment_method,'receipt_reference',e.receipt_reference) from public.branch_expenses e where e.id=a.source_entity_id and e.branch_id=a.branch_id)
+    when 'hr_timesheet' then (select jsonb_build_object('period_start',t.period_start,'period_end',t.period_end,'total_minutes',t.total_minutes,'employee_user_id',t.employee_user_id) from public.hr_timesheets t where t.id=a.source_entity_id and t.branch_id=a.branch_id)
+    else null end
  )
  from public.approval_inbox_items a
  join public.approval_policies p on p.id=a.policy_id and p.active
