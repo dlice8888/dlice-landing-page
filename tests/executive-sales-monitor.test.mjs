@@ -38,7 +38,7 @@ test("sales, discounts, processed refunds and settlement are reconciled independ
       { id: "r1", pos_sale_id: "s1", branch_id: "b1", status: "processed", processed_at: "2026-11-27T19:00:00Z", amount_idr: 20000 },
       { id: "pending", pos_sale_id: "s1", branch_id: "b1", status: "approved", processed_at: "2026-11-27T19:00:00Z", amount_idr: 5000 },
     ],
-    settlements: [{ id: "st1", created_at: "2026-11-27T19:30:00Z", gross_amount_idr: 90000, fee_amount_idr: 1000, net_amount_idr: 89000, status: "reconciled" }],
+    settlements: [{ id: "st1", branch_id: "b1", created_at: "2026-11-27T19:30:00Z", gross_amount_idr: 90000, fee_amount_idr: 1000, net_amount_idr: 89000, status: "reconciled" }],
   });
   assert.deepEqual(result.totals, {
     gross_sales_idr: 100000, discounts_idr: 10000, refunds_idr: 20000,
@@ -67,4 +67,16 @@ test("does not include another branch even when a row is supplied", () => {
     refunds: [],
   });
   assert.equal(result.totals.net_sales_idr, 0);
+});
+
+test("refunds in the selected business window reduce net sales even when the original sale was earlier", () => {
+  const window = resolveBusinessWindow({ period: "day", anchorDate: "2026-11-28", timeZone: "Asia/Jakarta" });
+  const result = aggregateSalesMonitor({
+    window, branchIds: ["b1"],
+    sales: [{ id: "prior-sale", branch_id: "b1", payment_status: "paid", created_at: "2026-11-26T18:00:00Z", subtotal_idr: 50000, discount_idr: 0, total_idr: 50000 }],
+    refunds: [{ id: "refund-today", pos_sale_id: "prior-sale", branch_id: "b1", status: "processed", processed_at: "2026-11-27T18:00:00Z", amount_idr: 10000 }],
+  });
+  assert.equal(result.totals.gross_sales_idr, 0);
+  assert.equal(result.totals.refunds_idr, 10000);
+  assert.equal(result.totals.net_sales_idr, -10000);
 });
