@@ -101,7 +101,7 @@ begin
  select * into v_branch from public.branches where id=p_branch_id and tenant_id=p_tenant_id and status='active' for share;
  if not found then raise exception using errcode='23503',message='POS_BRANCH_NOT_ACTIVE';end if;
  v_type:=p_fulfillment->>'order_type';
- if v_type not in ('dine_in','takeaway','pickup','delivery') then
+ if v_type is null or v_type not in ('dine_in','takeaway','pickup','delivery') then
   raise exception using errcode='22023',message='POS_ORDER_TYPE_INVALID';
  end if;
  v_table_code:=nullif(left(btrim(coalesce(p_fulfillment->>'table_code','')),40),'');
