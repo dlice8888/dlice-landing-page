@@ -1,6 +1,6 @@
 -- Disposable PostgreSQL/pgTAP contracts for CRM identity, consent, loyalty, Finance close and campaigns.
 begin;
-select plan(44);
+select plan(46);
 
 select ok(to_regclass('public.crm_customers') is not null,'CRM customer identity table exists');
 select ok(to_regclass('public.crm_customer_consent_events') is not null,'append-only consent event ledger exists');
@@ -24,6 +24,13 @@ select ok(to_regprocedure('public.crm_link_transaction_customer(uuid,uuid,text,u
 select ok(to_regprocedure('public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid)') is not null,'Finance close projection RPC exists');
 select ok(to_regprocedure('public.crm_reconcile_financial_close_projection(uuid,uuid,uuid)') is not null,'Finance close reconciliation RPC exists');
 select ok(to_regprocedure('public.crm_award_loyalty_for_reconciled_close(uuid,uuid,text,uuid,uuid)') is not null,'reconciled POS/Order/Finance award RPC exists');
+select ok(position('pos_sale_tenders' in pg_get_functiondef('public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid)'::regprocedure))>0
+  and position('POS_SPLIT_TENDER_METHOD_ALLOCATION_MISMATCH' in pg_get_functiondef('public.crm_build_financial_close_projection(uuid,uuid,text,uuid,uuid)'::regprocedure))>0,
+  'POS split tender must reconcile each bank/QRIS tender with provider settlement and cash with drawer');
+select ok(position('cardinality(v.settlement_ids)>0' in pg_get_functiondef('public.crm_reconcile_financial_close_projection(uuid,uuid,uuid)'::regprocedure))>0
+  and position('v.shift_reconciliation_id is not null' in pg_get_functiondef('public.crm_reconcile_financial_close_projection(uuid,uuid,uuid)'::regprocedure))>0,
+  'Finance review independently rechecks both settlement and cash drawer evidence for split tender');
+
 select ok(to_regprocedure('public.crm_expire_loyalty_points(uuid,uuid,uuid)') is not null,'idempotent points expiry RPC exists');
 select ok(to_regprocedure('public.crm_redeem_reward(uuid,uuid,uuid,text,uuid)') is not null,'FIFO reward redemption RPC exists');
 select ok(to_regprocedure('public.crm_append_loyalty_entry(uuid,uuid,text,bigint,text,text,uuid,uuid)') is not null,'audited adjustment and reversal RPC exists');
