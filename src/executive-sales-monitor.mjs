@@ -16,7 +16,7 @@ export const SUPPORTED_BRANCH_TIMEZONES = Object.freeze([
 const DAY_MS = 86_400_000;
 
 function assertDate(value, label = "date") {
-  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     throw new TypeError(`${label} must be YYYY-MM-DD`);
   }
   const parsed = new Date(`${value}T00:00:00.000Z`);
