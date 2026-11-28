@@ -308,7 +308,7 @@ begin
   or p_valid_until<=p_valid_from or p_valid_from<now()-interval '5 minutes'
   or p_valid_until>now()+interval '90 days'
   or p_source_domains is null or cardinality(p_source_domains)<1
-  or not (p_source_domains <@ array['pos','orders','inventory','procurement','finance','hr','franchise']::text[])
+  or not (p_source_domains <@ array['procurement','hr']::text[])
   or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
   raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
  end if;
