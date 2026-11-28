@@ -33,6 +33,39 @@ export function createExecutivePersistenceRepository({serviceClient,tenantId,act
     p_approval_id:req(approvalId,"approvalId"),p_expected_version:expectedVersion,
     p_idempotency_key:req(idempotencyKey,"idempotencyKey"),p_claim_ttl_seconds:claimTtlSeconds
    },"claimApproval");
+  },
+  async enqueueApproval({branchId,sourceDomain,sourceEntity,sourceEntityId,requestedAction="approve_or_reject",requestPayload={},idempotencyKey,expiresAt=null}){
+   if(!["procurement","hr"].includes(sourceDomain)||
+      !((sourceDomain==="procurement"&&sourceEntity==="purchase_requisitions")||(sourceDomain==="hr"&&sourceEntity==="hr_leave_requests")))
+     fail("EXEC_PERSIST_SOURCE_UNSUPPORTED","No verified source adapter exists for this domain/entity");
+   if(!requestPayload||typeof requestPayload!=="object"||Array.isArray(requestPayload))
+     fail("EXEC_PERSIST_REQUEST_PAYLOAD_INVALID","requestPayload must be an object");
+   return rpc("executive_enqueue_approval",{
+    p_branch_id:req(branchId,"branchId"),p_source_domain:sourceDomain,p_source_entity:sourceEntity,
+    p_source_entity_id:req(sourceEntityId,"sourceEntityId"),p_requested_action:requestedAction,
+    p_request_payload:requestPayload,p_idempotency_key:req(idempotencyKey,"idempotencyKey"),p_expires_at:expiresAt
+   },"enqueueApproval");
+  },
+  async decideApproval({approvalId,expectedVersion,idempotencyKey,decision,reason}){
+   if(!Number.isSafeInteger(expectedVersion)||expectedVersion<0)fail("EXEC_PERSIST_VERSION_INVALID","expectedVersion must be a non-negative integer");
+   if(!["approved","rejected"].includes(decision))fail("EXEC_PERSIST_DECISION_INVALID","decision must be approved or rejected");
+   if(typeof reason!=="string"||reason.trim().length<8||reason.trim().length>2000)
+     fail("EXEC_PERSIST_REASON_INVALID","reason must contain 8-2000 characters");
+   return rpc("executive_decide_approval",{
+    p_approval_id:req(approvalId,"approvalId"),p_expected_version:expectedVersion,
+    p_idempotency_key:req(idempotencyKey,"idempotencyKey"),p_decision:decision,p_reason:reason.trim()
+   },"decideApproval");
+  },
+  async createDelegation({delegatorUserId,delegateUserId,sourceDomains,validFrom,validUntil,idempotencyKey}){
+   if(!Array.isArray(sourceDomains)||!sourceDomains.length)fail("EXEC_PERSIST_DELEGATION_DOMAINS_INVALID","At least one source domain is required");
+   return rpc("executive_create_approval_delegation",{
+    p_delegator_user_id:req(delegatorUserId,"delegatorUserId"),p_delegate_user_id:req(delegateUserId,"delegateUserId"),
+    p_source_domains:sourceDomains,p_valid_from:req(validFrom,"validFrom"),p_valid_until:req(validUntil,"validUntil"),
+    p_idempotency_key:req(idempotencyKey,"idempotencyKey")
+   },"createDelegation");
+  },
+  async revokeDelegation(delegationId){
+   return rpc("executive_revoke_approval_delegation",{p_delegation_id:req(delegationId,"delegationId")},"revokeDelegation");
   }
  });
 }
