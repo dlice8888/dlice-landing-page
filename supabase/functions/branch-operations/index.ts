@@ -80,8 +80,9 @@ Deno.serve(async (req: Request) => {
     .select("id").eq("branch_id", branchId).eq("user_id", actorId).eq("employment_status", "active")
     .or("ends_on.is.null,ends_on.gte." + new Date().toISOString().slice(0, 10)).maybeSingle();
   const tenantAdmin = ["tenant_owner", "tenant_admin"].includes(String(membership.role));
+  const branchManager = ["branch_manager", "manager"].includes(String(membership.role));
   const grants = Array.isArray(membership.permissions) ? membership.permissions : [];
-  const permitted = tenantAdmin || (!!assignment && (grants.includes("*") || grants.includes("branch_operations") || grants.includes("branches") || grants.includes("operations")));
+  const permitted = tenantAdmin || (!!assignment && (branchManager || grants.includes("*") || grants.includes("branch_operations") || grants.includes("branch_operations_approve") || grants.includes("branches") || grants.includes("operations")));
   if (assignmentError || !permitted) return fail("Akses Branch Operations tidak diizinkan.", 403, origin);
 
   const repo = createBranchOperationsRepository(service, { tenantId, branchId, actorId });
