@@ -1,6 +1,10 @@
 /** PO -> accepted GRN -> posted stock movement -> inventory balance parity. */
 export function reconcileProcurementReceipt({purchaseOrder,receipts,movements,inventoryBalance}){
  if(!purchaseOrder?.id||!Number.isFinite(purchaseOrder.ordered_quantity)||purchaseOrder.ordered_quantity<0)throw new Error("PROCUREMENT_RECONCILIATION_CONTEXT_INVALID");
+ const receiptIds=new Set();
+ for(const receipt of receipts||[]){if(!receipt?.id||receiptIds.has(receipt.id))throw new Error("PROCUREMENT_RECEIPT_DUPLICATE");receiptIds.add(receipt.id);}
+ const movementIds=new Set();
+ for(const movement of movements||[]){if(!movement?.id||movementIds.has(movement.id))throw new Error("PROCUREMENT_MOVEMENT_DUPLICATE");movementIds.add(movement.id);}
  const accepted=(receipts||[]).filter(r=>r.purchase_order_id===purchaseOrder.id&&r.status==="accepted").reduce((s,r)=>s+Number(r.accepted_quantity||0),0);
  const rejected=(receipts||[]).filter(r=>r.purchase_order_id===purchaseOrder.id).reduce((s,r)=>s+Number(r.rejected_quantity||0),0);
  if(!Number.isFinite(accepted)||!Number.isFinite(rejected)||accepted<0||rejected<0||accepted+rejected>purchaseOrder.ordered_quantity)throw new Error("PROCUREMENT_RECEIPT_QUANTITY_INVALID");
