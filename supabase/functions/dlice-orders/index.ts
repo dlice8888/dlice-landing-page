@@ -254,7 +254,7 @@ Deno.serve(async (req: Request) => {
     return json({ok:true,receipt},200,origin);
   }
   if (action === "update-order-items") {
-    const token=safeText(body.tracking_token,100);if(token.length!==64||!Array.isArray(body.items))return fail("Perubahan pesanan tidak valid.",422,origin);const hash=await sha256(token),items=[];
+    const token=safeText(body.tracking_token,100);if(token.length!==64||!Array.isArray(body.items))return fail("Perubahan pesanan tidak valid.",422,origin);const hash=await sha256(token),items: {slug:string;quantity:number}[]=[];
     for(const x of body.items.slice(0,20)){const slug=safeText(x?.slug,80),quantity=Number(x?.quantity);if(!/^[a-z0-9-]+$/.test(slug)||!Number.isInteger(quantity)||quantity<1||quantity>100)return fail("Menu/jumlah tidak valid.",422,origin);const prev=items.find(i=>i.slug===slug);if(prev)prev.quantity+=quantity;else items.push({slug,quantity});}
     if(!items.length||items.some(i=>i.quantity>100))return fail("Pilih minimal satu menu.",422,origin);const {data:o}=await admin.from("orders").select("id").eq("tracking_token_hash",hash).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);
     const {data:u,error}=await admin.rpc("update_order_with_reservations",{p_order_id:o.id,p_tracking_token_hash:hash,p_items:items});if(error){const msg=error.message||"";return fail(msg.includes("capacity_exceeded")?"Kapasitas menu tidak mencukupi.":msg.includes("reservation_expired")?"Reservasi berakhir; hubungi admin.":msg.includes("proof_already_uploaded")?"Bukti sudah diunggah; hubungi admin.":"Perubahan pesanan gagal.",409,origin);}
@@ -490,7 +490,7 @@ Deno.serve(async (req: Request) => {
   };
   const actorBranchIds = async (): Promise<string[]> => {
     if (isPlatformOwner) return [];
-    const { data: memberships, error: membershipError } = await admin.from("tenant_memberships").select("tenant_id,role").eq("user_id", actor.user.id).eq("status", "active");
+    const { data: memberships, error: membershipError } = await admin.from("tenant_memberships").select("tenant_id,role,status").eq("user_id", actor.user.id).eq("status", "active");
     if (membershipError) throw new Error("Keanggotaan tenant gagal dimuat.");
     const membershipRows = memberships || [];
     const tenantIds = [...new Set(membershipRows.map((x: { tenant_id: string }) => x.tenant_id))];
@@ -3120,7 +3120,7 @@ if(action==="erp-executive-branch-kpis"){
     ]);
     if (lines.error || audit.error) return fail("Rekonsiliasi requisition/audit gagal dimuat.", 500, origin);
     let purchaseOrder = null;
-    let purchaseOrderItems = [];
+    let purchaseOrderItems: any[] = [];
     if (requisition.converted_purchase_order_id) {
       const { data: po, error: poError } = await admin.from("purchase_orders")
         .select("id,po_number,branch_id,supplier_id,status,subtotal_idr,requested_by,approved_by,notes,created_at")
@@ -3445,7 +3445,7 @@ if(action==="erp-executive-branch-kpis"){
     const latitude=body.latitude===null||body.latitude===undefined?null:Number(body.latitude);
     const longitude=body.longitude===null||body.longitude===undefined?null:Number(body.longitude);
     if(!/^[0-9a-f-]{36}$/i.test(dispatchId)||!["photo","signature","recipient_name","otp_verified","geo_check"].includes(proofType)||
-      ((latitude===null)!==(longitude===null))||(latitude!==null&&(!Number.isFinite(latitude)||latitude < -90||latitude>90||!Number.isFinite(longitude)||longitude < -180||longitude>180)))return fail("Data proof of delivery tidak valid.",422,origin);
+      ((latitude===null)!==(longitude===null))||(latitude!==null&&(longitude===null||!Number.isFinite(latitude)||latitude < -90||latitude>90||!Number.isFinite(longitude)||longitude < -180||longitude>180)))return fail("Data proof of delivery tidak valid.",422,origin);
     const {data:dispatch,error:dispatchError}=await admin.from("delivery_dispatches").select("id,branch_id,tenant_id").eq("id",dispatchId).maybeSingle();
     if(dispatchError)return fail("Pengiriman belum dapat diverifikasi.",503,origin);
     if(!dispatch)return fail("Pengiriman tidak ditemukan.",404,origin);
@@ -3845,7 +3845,7 @@ if(action==="erp-executive-branch-kpis"){
     const fields=["cash_expected_idr","cash_counted_idr","bank_expected_idr","bank_received_idr","qris_expected_idr","qris_received_idr"];
     const values:any={};for(const key of fields){const n=Number(body[key]||0);if(!Number.isSafeInteger(n)||n<0)return fail("Nilai rekonsiliasi tidak valid.",422,origin);values[key]=n;}
     const code="REC-"+date.replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
-    const {data,error}=await admin.from("cash_reconciliations").insert({reconciliation_code:code,branch_id:branchId,shift_id,business_date:date,...values,status:"submitted",prepared_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
+    const {data,error}=await admin.from("cash_reconciliations").insert({reconciliation_code:code,branch_id:branchId,shift_id:shiftId,business_date:date,...values,status:"submitted",prepared_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
     if(error||!data)return fail("Rekonsiliasi gagal disimpan. Periksa duplikasi cabang/tanggal/shift.",409,origin);
     return json({ok:true,reconciliation:data},201,origin);
   }
