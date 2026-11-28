@@ -81,6 +81,8 @@ jobs:
         run: node --test tests/contracts/pos-core-workflows.test.mjs
       - name: Run Executive sales monitor Edge authorization and source contracts
         run: node --test tests/contracts/executive-sales-monitor-edge-contract.test.mjs
+      - name: Run Executive live sales monitor ERP UI contracts
+        run: node --test tests/contracts/executive-sales-monitor-ui-contract.test.mjs
       - name: Check new domain workflow module syntax
         run: >-
           node --check src/branch-operations-workflows.mjs
