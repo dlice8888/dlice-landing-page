@@ -18,6 +18,11 @@ test("Branch Operations schema is tenant/branch keyed and RLS protected", () => 
   assert.doesNotMatch(sql, /create policy branch_ops_evidence_(?:upload|read)_scope/);
 });
 
+test("Branch Operations SQL function bodies have balanced PostgreSQL dollar delimiters", () => {
+  assert.equal((sql.match(/as \\$\\$/g) || []).length, (sql.match(/end \\$\\$;/g) || []).length);
+  assert.equal((sql.match(/as \\$\\$/g) || []).length, 13);
+});
+
 test("Branch Operations RPCs are atomic server-only entry points with audit events", () => {
   for (const fn of ["branch_ops_create_task","branch_ops_record_incident","branch_ops_create_maintenance_order","branch_ops_register_evidence_asset","branch_ops_submit_compliance_check","branch_ops_review_compliance_check","branch_ops_publish_compliance_snapshot","branch_ops_register_equipment","branch_ops_update_task_status","branch_ops_update_incident_status","branch_ops_update_work_order_status"]) {
     assert.match(sql, new RegExp("create or replace function public\\."+fn));
