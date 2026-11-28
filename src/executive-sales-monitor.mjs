@@ -20,7 +20,11 @@ const safeAmount=(value,key)=>{
  return n;
 };
 const sum=(rows,key,refundKey)=>{
- return rows.reduce((total,row)=>total+safeAmount(refundKey?row[refundKey]:row[key],key),0);
+ return rows.reduce((total,row)=>{
+  const next=total+safeAmount(refundKey?row[refundKey]:row[key],key);
+  if(!Number.isSafeInteger(next))fail("EXEC_SALES_RECONCILIATION_INVALID",key+" aggregate exceeds safe integer range");
+  return next;
+ },0);
 };
 function expectedBusinessDate(paidAt,timezone,cutoff){
  const instant=new Date(paidAt);
@@ -93,8 +97,14 @@ export async function getExecutiveSalesMonitor(input,deps){
   // Recompute from the immutable payment timestamp and the branch policy snapshot.
   // Never trust a client-supplied timezone or a stored business_date without provenance.
   const computedBusinessDate=expectedBusinessDate(row.paid_at,row.timezone,row.cutoff_time);
-  if(!Number.isSafeInteger(Number(row.business_day_policy_version))||Number(row.business_day_policy_version)<1)
-   fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","A versioned branch business-day cutoff is required");
+  const policyVersion=Number(row.business_day_policy_version);
+  const legacyBackfill=row.paid_at_source==="legacy_created_at_backfill";
+  // Historical paid rows may have been backfilled before a branch policy existed.
+  // Keep them visible for reconciliation, but never treat them as fully proven:
+  // the snapshot's legacy_paid_at_count forces reconciliation_incomplete.
+  if(!Number.isSafeInteger(policyVersion)||policyVersion<0||
+     (legacyBackfill&&policyVersion!==0)||(!legacyBackfill&&policyVersion<1))
+   fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","A valid branch cutoff policy version or explicit legacy backfill provenance is required");
   if(row.business_date!==computedBusinessDate)
    fail("EXEC_SALES_BUSINESS_DATE_MISMATCH","Stored business date differs from branch timezone/cutoff calculation");
   if((allowedBranches&&!allowedBranches.has(row.branch_id))||row.business_date<startDate||row.business_date>endDate)
