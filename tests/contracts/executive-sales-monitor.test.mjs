@@ -78,3 +78,28 @@ test("rejects source rows without captured cutoff provenance",async()=>{
  const bad=snapshot({transactions:[{...snapshot().transactions[0],cutoff_time:null}]});
  await assert.rejects(getExecutiveSalesMonitor(input,deps(bad)),{code:"EXEC_SALES_SOURCE_CUTOFF_INVALID"});
 });
+
+
+test("keeps explicitly backfilled legacy paid rows visible but never reconciled",async()=>{
+ const legacy=snapshot({
+  transactions:[{...snapshot().transactions[0],paid_at_source:"legacy_created_at_backfill",business_day_policy_version:0}],
+  payment_reconciliation:{...snapshot().payment_reconciliation,legacy_paid_at_count:1}
+ });
+ const result=await getExecutiveSalesMonitor(input,deps(legacy));
+ assert.equal(result.transactions.length,1);
+ assert.equal(result.reconciliation_status,"reconciliation_incomplete");
+});
+
+test("rejects unversioned non-legacy payment recognition",async()=>{
+ const unversioned=snapshot({transactions:[{...snapshot().transactions[0],paid_at_source:"payment_transition",business_day_policy_version:0}]});
+ await assert.rejects(getExecutiveSalesMonitor(input,deps(unversioned)),{code:"EXEC_SALES_SOURCE_CUTOFF_INVALID"});
+});
+
+test("applies non-midnight branch cutoff immediately before and at the local boundary",async()=>{
+ const before=snapshot({transactions:[{...snapshot().transactions[0],paid_at:"2026-11-28T19:59:00Z",
+  business_date:"2026-11-28",timezone:"Asia/Jakarta",cutoff_time:"03:00:00"}]});
+ await getExecutiveSalesMonitor(input,deps(before));
+ const atBoundary=snapshot({transactions:[{...snapshot().transactions[0],paid_at:"2026-11-28T20:00:00Z",
+  business_date:"2026-11-29",timezone:"Asia/Jakarta",cutoff_time:"03:00:00"}]});
+ await assert.rejects(getExecutiveSalesMonitor(input,deps(atBoundary)),{code:"EXEC_SALES_SOURCE_SCOPE_INVALID"});
+});
