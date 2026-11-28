@@ -166,7 +166,8 @@ begin
  if exists(select 1 from unnest(coalesce(p_branch_ids,'{}'::uuid[])) x where not exists(select 1 from public.branches b where b.id=x and b.tenant_id=p_tenant_id))
   then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
- where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now()\n  and ((branch_id is not null and branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (branch_id is null and v_role='tenant_owner'));
+ where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now()
+  and ((branch_id is not null and branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (branch_id is null and v_role='tenant_owner'));
  select coalesce(jsonb_agg(jsonb_build_object('id',a.id,'tenant_id',a.tenant_id,'category',a.category,'source_entity',a.entity_type,
   'source_entity_id',a.entity_id,'branch_id',a.branch_id,'created_by',a.created_by,'amount_idr',a.amount_idr,'status',a.status,
   'source_version',a.source_version,'version',a.version,'expires_at',a.expires_at,'claimed_by',a.claimed_by,
@@ -248,21 +249,6 @@ as $$ declare v_role text;v_rows jsonb;begin
  return jsonb_build_object('delegations',v_rows);
 end $$;
 
-revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
-revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
-revoke all on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) from public,anon,authenticated;
-revoke all on function public.decide_approval(uuid,uuid,uuid[],uuid,text,text,integer) from public,anon,authenticated;
-revoke all on function public.list_approval_decision_history(uuid,uuid,uuid[],uuid) from public,anon,authenticated;
-grant execute on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) to service_role;
-grant execute on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) to service_role;
-grant execute on function public.decide_approval(uuid,uuid,uuid[],uuid,text,text,integer) to service_role;
-grant execute on function public.list_approval_decision_history(uuid,uuid,uuid[],uuid) to service_role;
-revoke all on function public.list_approval_delegations(uuid,uuid,uuid[]) from public,anon,authenticated;\ngrant execute on function public.list_approval_delegations(uuid,uuid,uuid[]) to service_role;\nrevoke all on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
-revoke all on function public.approve_approval_delegation(uuid,uuid,uuid[],uuid) from public,anon,authenticated;
-revoke all on function public.revoke_approval_delegation(uuid,uuid,uuid) from public,anon,authenticated;
-grant execute on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) to service_role;
-grant execute on function public.approve_approval_delegation(uuid,uuid,uuid[],uuid) to service_role;
-grant execute on function public.revoke_approval_delegation(uuid,uuid,uuid) to service_role;
 commit;
 
   then (select (permissions->>'approval_limit_idr')::bigint from public.tenant_memberships where tenant_id=p_tenant_id and user_id=coalesce(v_delegator,p_actor_user_id))
@@ -285,7 +271,6 @@ end $$;
 
 
 
-revoke all on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
 commit;
 
   then (select (permissions->>'approval_limit_idr')::bigint from public.tenant_memberships where tenant_id=p_tenant_id and user_id=coalesce(v_delegator,p_actor_user_id))
@@ -485,4 +470,27 @@ as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;be
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
 end $$;
 
+
+revoke all on function public.trg_seed_executive_approval_policies() from public,anon,authenticated;
+revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
+revoke all on function public.trg_enqueue_purchase_requisition_approval() from public,anon,authenticated;
+revoke all on function public.trg_enqueue_refund_approval() from public,anon,authenticated;
+revoke all on function public.trg_enqueue_payroll_approval() from public,anon,authenticated;
+revoke all on function public.trg_enqueue_branch_compliance_approval() from public,anon,authenticated;
+revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
+revoke all on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) from public,anon,authenticated;
+revoke all on function public.decide_approval(uuid,uuid,uuid[],uuid,text,text,integer) from public,anon,authenticated;
+revoke all on function public.list_approval_decision_history(uuid,uuid,uuid[],uuid) from public,anon,authenticated;
+revoke all on function public.list_approval_delegations(uuid,uuid,uuid[]) from public,anon,authenticated;
+revoke all on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
+revoke all on function public.approve_approval_delegation(uuid,uuid,uuid[],uuid) from public,anon,authenticated;
+revoke all on function public.revoke_approval_delegation(uuid,uuid,uuid) from public,anon,authenticated;
+grant execute on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) to service_role;
+grant execute on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) to service_role;
+grant execute on function public.decide_approval(uuid,uuid,uuid[],uuid,text,text,integer) to service_role;
+grant execute on function public.list_approval_decision_history(uuid,uuid,uuid[],uuid) to service_role;
+grant execute on function public.list_approval_delegations(uuid,uuid,uuid[]) to service_role;
+grant execute on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) to service_role;
+grant execute on function public.approve_approval_delegation(uuid,uuid,uuid[],uuid) to service_role;
+grant execute on function public.revoke_approval_delegation(uuid,uuid,uuid) to service_role;
 commit;
