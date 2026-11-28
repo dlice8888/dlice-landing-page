@@ -336,7 +336,7 @@ begin
  select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),
    array_agg(evidence_asset_id),
    md5(coalesce(string_agg(concat_ws('|',id::text,check_key,title,weight::text,result,status,
-     evidence_asset_id::text,created_by::text,approved_by::text,approved_at::text),E'\\n'
+     evidence_asset_id::text,created_by::text,approved_by::text,approved_at::text),chr(10)
      order by business_date,check_key,id),''))
  into v_count,v_pass,v_weight,v_ids,v_source_revision
  from public.branch_ops_compliance_checks
