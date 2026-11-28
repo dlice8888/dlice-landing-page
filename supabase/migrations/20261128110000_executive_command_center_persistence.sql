@@ -107,6 +107,7 @@ create table if not exists public.executive_command_center_snapshots (
   unique(tenant_id,idempotency_key),
   check(period_end >= period_start),
   check(reconciled_branch_count <= active_branch_count),
+  check(expected_branch_count >= active_branch_count),
   check(status <> 'complete' or (active_branch_count=expected_branch_count and reconciled_branch_count=active_branch_count and jsonb_array_length(source_gaps)=0))
 );
 create index if not exists executive_cc_snapshot_period_idx
@@ -236,6 +237,7 @@ begin
      or p_formula_version is null or p_formula_version<1
      or p_expected_branch_count is null or p_expected_branch_count not between 1 and 150
      or p_active_branch_count is null or p_active_branch_count not between 0 and 150
+     or p_expected_branch_count<p_active_branch_count
      or p_reconciled_branch_count is null or p_reconciled_branch_count not between 0 and p_active_branch_count
      or p_status is null or p_status not in ('partial','complete')
      or p_totals is null or jsonb_typeof(p_totals)<>'object'
@@ -280,7 +282,11 @@ begin
     where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
   if v_inserted=0 and (
     v.period_start is distinct from p_period_start or v.period_end is distinct from p_period_end
-    or v.formula_version is distinct from p_formula_version or v.totals is distinct from p_totals
+    or v.formula_version is distinct from p_formula_version
+    or v.expected_branch_count is distinct from p_expected_branch_count
+    or v.active_branch_count is distinct from p_active_branch_count
+    or v.reconciled_branch_count is distinct from p_reconciled_branch_count
+    or v.status is distinct from p_status or v.totals is distinct from p_totals
     or v.branch_facts is distinct from p_branch_facts or v.source_gaps is distinct from p_source_gaps
   ) then
     raise exception using errcode='23505',message='EXECUTIVE_SNAPSHOT_IDEMPOTENCY_KEY_REUSED';
