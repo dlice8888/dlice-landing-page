@@ -2020,20 +2020,44 @@ if (action === "admin-set-profile-role") {
       const requested=Array.isArray(body.branch_ids)?body.branch_ids:null;
       if(requested&&requested.some((x:any)=>typeof x!=="string"||!/^[0-9a-f-]{36}$/i.test(x)))
         return fail("Daftar cabang memuat ID yang tidak valid.",422,origin);
-      let branchIds=requested;
-      if(!branchIds||branchIds.length===0){
-        const {data:branchRows,error:branchError}=await admin.from("branches").select("id").eq("tenant_id",tenantId).eq("status","active").limit(150);
-        if(branchError)return fail("Scope cabang Executive belum dapat diverifikasi.",503,origin);
-        branchIds=(branchRows||[]).map((x:any)=>x.id);
-      }
+      const {data:activeBranchRows,error:activeBranchError}=await admin.from("branches")
+        .select("id").eq("tenant_id",tenantId).eq("status","active").limit(151);
+      if(activeBranchError)return fail("Scope cabang Executive belum dapat diverifikasi.",503,origin);
+      const activeBranchIds=(activeBranchRows||[]).map((x:any)=>x.id);
+      if(activeBranchIds.length<1||activeBranchIds.length>150)
+        return fail("Jumlah cabang aktif di luar batas dukungan 1–150.",409,origin);
+      const branchIds=requested&&requested.length?requested:activeBranchIds;
       if(branchIds.length<1||branchIds.length>150||new Set(branchIds).size!==branchIds.length)
         return fail("Pilih 1–150 cabang unik untuk sales monitor.",422,origin);
+      if(branchIds.some((id:string)=>!activeBranchIds.includes(id)))
+        return fail("Sales monitor hanya menerima cabang aktif pada tenant yang dipilih.",403,origin);
       const {data,error}=await admin.rpc("executive_get_sales_monitor",{
         p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_branch_ids:branchIds,
         p_from_date:from,p_through_date:through,
       });
       if(error)return fail("Sales monitor gagal dimuat. Periksa hak akses, paid_at, dan rekonsiliasi settlement.",error.code==="42501"?403:409,origin);
-      return json({sales_monitor:data},200,origin);
+      let snapshot=null;
+      const companyWide=branchIds.length===activeBranchIds.length&&activeBranchIds.every((id:string)=>branchIds.includes(id));
+      if(companyWide){
+        const gaps:any[]=[
+          {source_domain:"finance",code:"FINANCE_JOURNAL_RECONCILIATION_PENDING",message:"Settlement belum direkonsiliasi terhadap jurnal Finance."},
+          {source_domain:"pos",code:"POS_TENDER_CASH_STOCK_KDS_RECONCILIATION_PENDING",message:"Tender, cash drawer, stock movement dan KDS belum direkonsiliasi pada snapshot ini."},
+        ];
+        if(Number(data?.legacy_paid_at_count||0)>0)gaps.push({
+          source_domain:"pos",code:"LEGACY_PAID_AT_ESTIMATE",count:Number(data.legacy_paid_at_count),
+          message:"Sebagian paid_at historis memakai created_at sebagai estimasi."
+        });
+        const snapshotKey=safeText(body.snapshot_idempotency_key,160)||crypto.randomUUID();
+        const {data:persisted,error:persistError}=await admin.rpc("executive_persist_command_center_snapshot",{
+          p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_period_start:from,p_period_end:through,
+          p_as_of:new Date().toISOString(),p_formula_version:1,p_expected_branch_count:activeBranchIds.length,
+          p_active_branch_count:activeBranchIds.length,p_reconciled_branch_count:0,p_status:"partial",
+          p_totals:data,p_branch_facts:[],p_source_gaps:gaps,p_idempotency_key:snapshotKey,
+        });
+        if(persistError)return fail("Sales monitor termuat tetapi snapshot persisten gagal disimpan.",persistError.code==="42501"?403:409,origin);
+        snapshot=persisted;
+      }
+      return json({sales_monitor:data,snapshot,company_wide_snapshot:companyWide},200,origin);
     }
     if(action==="erp-executive-list-delegations"){
       const {data,error}=await admin.from("executive_approval_delegations")
