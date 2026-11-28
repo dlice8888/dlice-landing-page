@@ -67,6 +67,17 @@ jobs:
         run: node --test tests/contracts/franchise-opening-gates-contract.test.mjs
       - name: Run ERP command-center contract tests
         run: node --test tests/contracts/command-center-contract.test.mjs
+      - name: Run Executive T01/T02 persistence and workflow contracts
+        run: >-
+          node --test
+          tests/contracts/executive-sales-approval.contract.test.mjs
+          tests/contracts/executive-persistence.contract.test.mjs
+          tests/contracts/executive-persistence-sql-contract.test.mjs
+      - name: Check Executive server adapter syntax
+        run: >-
+          node --check src/executive-sales-monitor.mjs
+          && node --check src/executive-approval-center.mjs
+          && node --check src/executive-persistence-repository.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
       - name: Check new domain workflow module syntax

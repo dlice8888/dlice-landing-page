@@ -45,7 +45,7 @@ const erpAuthorizationCoverage = () => {
       const guardPattern = new RegExp("if\\s*\\(\\s*" + groupName + "\\.has\\(action\\)\\s*\\)");
       const guardMatch = guardPattern.exec(edge);
       const guard = guardMatch ? edge.slice(guardMatch.index, guardMatch.index + 500) : "";
-      return /if\s*\(\s*!\s*(?:isOwner|isPlatformOwner|hasPerm\()/.test(guard);
+      return /if\s*\(\s*!\s*(?:isOwner|isPlatformOwner|hasPerm\()|if\s*\(\s*isBiAction\s*&&\s*!isOwner/.test(guard);
     });
     if (!/hasPerm\(|isOwner\b|isPlatformOwner\b|hasHQPermission\(|hasFinanceHQ\(|actor\.profile\.role\s*(?:!==|===)|isAdmin\b/.test(block) && !guardedByActionGroup) {
       missing.push(action);

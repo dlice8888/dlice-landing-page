@@ -54,7 +54,11 @@ test("BI SQL enforces completeness, independent reconciliation/lineage approval 
 
 test("BI Edge mutation actions verify tenant ownership and Platform Owner gate",()=>{
  assert.match(edge,/const biExecutiveActions=new Set\(\[[\s\S]*erp-bi-review-reconciliation/);
- assert.match(edge,/if\(!isOwner\)return fail\("BI dan Executive Command Center/);
+ assert.match(edge,/if\(isBiAction&&!isOwner\)return fail\("BI Analytics/);
+ assert.match(edge,/if\(!isBiAction&&!isOwner\)\{[\s\S]{0,900}tenant_memberships[\s\S]{0,500}status","active"/);
+ assert.match(edge,/executive\.approvals\.claim/);
+ assert.match(edge,/executive\.approvals\.delegate/);
+ assert.match(edge,/executive_decide_approval/);
  assert.match(edge,/eq\("id",reconciliationId\)\.eq\("tenant_id",tenantId\)/);
  assert.match(edge,/eq\("id",snapshotId\)\.eq\("tenant_id",tenantId\)/);
  assert.match(edge,/bi_review_reconciliation_run/);

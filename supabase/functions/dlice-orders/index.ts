@@ -600,7 +600,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
 
-  if(action==="admin-session-info"){return json({role:actor.profile.role,permissions:actor.profile.permissions||[],display_name:actor.profile.display_name||actor.profile.username||""},200,origin);}
+  if(action==="admin-session-info"){return json({user_id:actor.user.id,role:actor.profile.role,permissions:actor.profile.permissions||[],display_name:actor.profile.display_name||actor.profile.username||""},200,origin);}
 
   if(action==="admin-payment-settings"){if(!isPlatformOwner)return fail("Hanya Owner.",403,origin);const {data,error}=await admin.from("payment_settings").select("method,display_name,instructions,account_name,account_number,qr_storage_path,is_enabled,updated_at").order("method");if(error)return fail("Pengaturan gagal dimuat.",500,origin);const settings=[];for(const s of data||[]){let qr_url=null;if(s.qr_storage_path){const {data:u}=await admin.storage.from("dlice-payment-assets").createSignedUrl(s.qr_storage_path,3600);qr_url=u?.signedUrl||null;}settings.push({...s,qr_url});}return json({settings},200,origin);}
   if(action==="admin-save-payment-settings"){if(!isPlatformOwner)return fail("Hanya Owner.",403,origin);const method=safeText(body.method,30),display_name=safeText(body.display_name,100),instructions=safeText(body.instructions,1000),account_name=safeText(body.account_name,120),account_number=safeText(body.account_number,80),is_enabled=body.is_enabled===true;if(!["bank_transfer","dlice_qris"].includes(method))return fail("Metode tidak valid.",422,origin);const {data:current}=await admin.from("payment_settings").select("qr_storage_path").eq("method",method).maybeSingle();if(is_enabled&&method==="bank_transfer"&&(!display_name||!account_name||!account_number))return fail("Lengkapi bank, nama pemilik, dan nomor rekening.",422,origin);if(is_enabled&&method==="dlice_qris"&&!current?.qr_storage_path)return fail("Unggah QRIS dahulu.",422,origin);const {error}=await admin.from("payment_settings").upsert({method,display_name:display_name||(method==="dlice_qris"?"QRIS D’Lice":"Transfer bank"),instructions:instructions||null,account_name:method==="bank_transfer"?account_name||null:null,account_number:method==="bank_transfer"?account_number||null:null,is_enabled,updated_by:actor.user.id,updated_at:new Date().toISOString()},{onConflict:"method"});if(error)return fail("Pengaturan gagal disimpan.",500,origin);await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"update_payment_settings",entity_type:"payment_settings",entity_id:method,metadata:{method,is_enabled}});return json({ok:true},200,origin);}
@@ -2005,14 +2005,185 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval","erp-executive-list-delegations","erp-executive-create-delegation","erp-executive-revoke-delegation","erp-executive-enqueue-approval","erp-executive-decide-approval"]);
   if(biExecutiveActions.has(action)){
-    if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
+    const isBiAction=action.startsWith("erp-bi-");
+    if(isBiAction&&!isOwner)return fail("BI Analytics sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
     if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
     const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
     if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
     if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    let executiveMembership:any=null;
+    let executiveBranchIds:string[]=[];
+    if(!isBiAction&&!isOwner){
+      const {data:membership,error:membershipError}=await admin.from("tenant_memberships")
+        .select("role,permissions,status").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
+      if(membershipError)return fail("Membership Executive gagal diverifikasi.",503,origin);
+      if(!membership)return fail("Akses Executive memerlukan membership aktif pada tenant.",403,origin);
+      executiveMembership=membership;
+      const permissions=Array.isArray(membership.permissions)?membership.permissions:[];
+      const tenantAdmin=["tenant_owner","tenant_admin"].includes(String(membership.role));
+      const requiredPermission:Record<string,string>={
+        "erp-executive-sales-monitor":"executive.command_center.read",
+        "erp-executive-list-approvals":"executive.approvals.claim",
+        "erp-executive-claim-approval":"executive.approvals.claim",
+        "erp-executive-list-delegations":"executive.approvals.delegate",
+        "erp-executive-create-delegation":"executive.approvals.delegate",
+        "erp-executive-revoke-delegation":"executive.approvals.delegate",
+      };
+      const required=requiredPermission[action];
+      if(required&&!tenantAdmin&&!permissions.includes(required))
+        return fail("Izin Executive tidak mencukupi untuk tindakan ini.",403,origin);
+      if(action==="erp-executive-enqueue-approval"){
+        const domain=safeText(body.source_domain,32);
+        if(!tenantAdmin&&!permissions.includes(domain))return fail("Izin domain sumber tidak mencukupi untuk mengajukan approval.",403,origin);
+      }
+      const {data:assignments,error:assignmentError}=await admin.from("branch_assignments").select("branch_id")
+        .eq("user_id",actor.user.id).eq("employment_status","active").lte("starts_on",todayDate())
+        .or(`ends_on.is.null,ends_on.gte.${todayDate()}`);
+      if(assignmentError)return fail("Penugasan cabang Executive gagal dimuat.",503,origin);
+      const assignedIds=(assignments||[]).map((x:any)=>x.branch_id);
+      const {data:tenantBranches,error:branchError}=await admin.from("branches").select("id")
+        .eq("tenant_id",tenantId).in("id",assignedIds.length?assignedIds:["00000000-0000-0000-0000-000000000000"]);
+      if(branchError)return fail("Cakupan cabang Executive gagal dimuat.",503,origin);
+      executiveBranchIds=(tenantBranches||[]).map((x:any)=>x.id);
+    }
+    if(action==="erp-executive-sales-monitor"){
+      const from=safeText(body.from_date,10),through=safeText(body.through_date,10);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(through)||through<from)
+        return fail("Periode sales monitor tidak valid.",422,origin);
+      const requested=Array.isArray(body.branch_ids)?body.branch_ids:null;
+      if(requested&&requested.some((x:any)=>typeof x!=="string"||!/^[0-9a-f-]{36}$/i.test(x)))
+        return fail("Daftar cabang memuat ID yang tidak valid.",422,origin);
+      const {data:activeBranchRows,error:activeBranchError}=await admin.from("branches")
+        .select("id").eq("tenant_id",tenantId).eq("status","active").limit(151);
+      if(activeBranchError)return fail("Scope cabang Executive belum dapat diverifikasi.",503,origin);
+      const activeBranchIds=(activeBranchRows||[]).map((x:any)=>x.id);
+      if(activeBranchIds.length<1||activeBranchIds.length>150)
+        return fail("Jumlah cabang aktif di luar batas dukungan 1–150.",409,origin);
+      const branchIds=requested&&requested.length?requested:activeBranchIds;
+      if(branchIds.length<1||branchIds.length>150||new Set(branchIds).size!==branchIds.length)
+        return fail("Pilih 1–150 cabang unik untuk sales monitor.",422,origin);
+      if(branchIds.some((id:string)=>!activeBranchIds.includes(id)))
+        return fail("Sales monitor hanya menerima cabang aktif pada tenant yang dipilih.",403,origin);
+      const {data,error}=await admin.rpc("executive_get_sales_monitor",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_branch_ids:branchIds,
+        p_from_date:from,p_through_date:through,
+      });
+      if(error)return fail("Sales monitor gagal dimuat. Periksa hak akses, paid_at, dan rekonsiliasi settlement.",error.code==="42501"?403:409,origin);
+      let snapshot=null;
+      const companyWide=branchIds.length===activeBranchIds.length&&activeBranchIds.every((id:string)=>branchIds.includes(id));
+      if(companyWide){
+        const gaps:any[]=[
+          {source_domain:"finance",code:"FINANCE_JOURNAL_RECONCILIATION_PENDING",message:"Settlement belum direkonsiliasi terhadap jurnal Finance."},
+          {source_domain:"pos",code:"POS_TENDER_CASH_STOCK_KDS_RECONCILIATION_PENDING",message:"Tender, cash drawer, stock movement dan KDS belum direkonsiliasi pada snapshot ini."},
+        ];
+        if(Number(data?.legacy_paid_at_count||0)>0)gaps.push({
+          source_domain:"pos",code:"LEGACY_PAID_AT_ESTIMATE",count:Number(data.legacy_paid_at_count),
+          message:"Sebagian paid_at historis memakai created_at sebagai estimasi."
+        });
+        const snapshotKey=safeText(body.snapshot_idempotency_key,160)||crypto.randomUUID();
+        const {data:persisted,error:persistError}=await admin.rpc("executive_persist_command_center_snapshot",{
+          p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_period_start:from,p_period_end:through,
+          p_as_of:new Date().toISOString(),p_formula_version:1,p_expected_branch_count:isOwner?150:activeBranchIds.length,
+          p_active_branch_count:activeBranchIds.length,p_reconciled_branch_count:0,p_status:"partial",
+          p_totals:data,p_branch_facts:[],p_source_gaps:gaps,p_idempotency_key:snapshotKey,
+        });
+        if(persistError)return fail("Sales monitor termuat tetapi snapshot persisten gagal disimpan.",persistError.code==="42501"?403:409,origin);
+        snapshot=persisted;
+      }
+      return json({sales_monitor:data,snapshot,company_wide_snapshot:companyWide},200,origin);
+    }
+    if(action==="erp-executive-enqueue-approval"){
+      const branchId=safeText(body.branch_id,64),sourceDomain=safeText(body.source_domain,32),
+        sourceEntity=safeText(body.source_entity,64),sourceEntityId=safeText(body.source_entity_id,64),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      const expiresAt=body.expires_at==null?null:safeText(body.expires_at,40);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!/^[0-9a-f-]{36}$/i.test(sourceEntityId)||
+        !["procurement","hr","inventory"].includes(sourceDomain)||
+        !((sourceDomain==="procurement"&&sourceEntity==="purchase_requisitions")||(sourceDomain==="hr"&&sourceEntity==="hr_leave_requests")||(sourceDomain==="inventory"&&sourceEntity==="stock_transfers"))||
+        (expiresAt!==null&&!Number.isFinite(Date.parse(expiresAt)))||idempotencyKey.length<8)
+        return fail("Data sumber approval tidak valid atau belum didukung.",422,origin);
+      const payload=body.request_payload&&typeof body.request_payload==="object"&&!Array.isArray(body.request_payload)?body.request_payload:{};
+      const {data,error}=await admin.rpc("executive_enqueue_approval",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_branch_id:branchId,p_source_domain:sourceDomain,
+        p_source_entity:sourceEntity,p_source_entity_id:sourceEntityId,p_requested_action:"approve_or_reject",
+        p_request_payload:payload,p_idempotency_key:idempotencyKey,p_expires_at:expiresAt,
+      });
+      if(error)return fail("Permintaan approval gagal dibuat. Pastikan sumber berstatus submitted (PR/HR) atau draft (stock transfer) dan berada pada tenant/cabang aktif.",error.code==="42501"?403:409,origin);
+      return json({approval:data},201,origin);
+    }
+    if(action==="erp-executive-decide-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version),
+        decision=safeText(body.decision,16),reason=safeText(body.reason,2000),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0||
+        !["approved","rejected"].includes(decision)||reason.length<8||idempotencyKey.length<8)
+        return fail("Data keputusan approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_decide_approval",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_approval_id:approvalId,
+        p_expected_version:expectedVersion,p_idempotency_key:idempotencyKey,p_decision:decision,p_reason:reason,
+      });
+      if(error)return fail("Keputusan approval ditolak. Periksa claim, delegasi, source version dan status sumber.",error.code==="42501"?403:409,origin);
+      return json({decision:data},200,origin);
+    }
+    if(action==="erp-executive-list-delegations"){
+      const {data,error}=await admin.from("executive_approval_delegations")
+        .select("id,delegator_user_id,delegate_user_id,source_domains,valid_from,valid_until,revoked_at,created_at")
+        .eq("tenant_id",tenantId).order("created_at",{ascending:false}).limit(100);
+      if(error)return fail("Daftar delegasi belum tersedia. Terapkan migration Executive di disposable DB terlebih dahulu.",503,origin);
+      return json({delegations:data||[]},200,origin);
+    }
+    if(action==="erp-executive-create-delegation"){
+      const delegator=safeText(body.delegator_user_id,64),delegate=safeText(body.delegate_user_id,64),
+        domains=Array.isArray(body.source_domains)?body.source_domains:[],
+        validFrom=safeText(body.valid_from,40),validUntil=safeText(body.valid_until,40),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(delegator)||!/^[0-9a-f-]{36}$/i.test(delegate)||delegator===delegate||
+        !domains.length||domains.some((x:any)=>!["procurement","hr","inventory"].includes(x))||
+        !Number.isFinite(Date.parse(validFrom))||!Number.isFinite(Date.parse(validUntil))||idempotencyKey.length<8)
+        return fail("Data delegasi approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_create_approval_delegation",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_delegator_user_id:delegator,p_delegate_user_id:delegate,
+        p_source_domains:domains,p_valid_from:validFrom,p_valid_until:validUntil,p_idempotency_key:idempotencyKey,
+      });
+      if(error)return fail("Delegasi approval ditolak. Periksa membership, izin, periode dan domain.",error.code==="42501"?403:409,origin);
+      return json({delegation:data},200,origin);
+    }
+    if(action==="erp-executive-revoke-delegation"){
+      const delegationId=safeText(body.delegation_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(delegationId))return fail("ID delegasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_revoke_approval_delegation",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_delegation_id:delegationId,
+      });
+      if(error)return fail("Pencabutan delegasi ditolak.",error.code==="42501"?403:409,origin);
+      return json({delegation:data},200,origin);
+    }
+    if(action==="erp-executive-list-approvals"){
+      let query=admin.from("executive_approval_items")
+        .select("id,branch_id,source_domain,source_entity,source_entity_id,source_version,requested_action,status,claimed_by,claim_expires_at,expires_at,version,created_at")
+        .eq("tenant_id",tenantId).in("status",["pending","claimed"]);
+      if(!isOwner&&!["tenant_owner","tenant_admin"].includes(String(executiveMembership?.role))){
+        if(!executiveBranchIds.length)return json({approvals:[]},200,origin);
+        query=query.in("branch_id",executiveBranchIds);
+      }
+      const {data,error}=await query.order("created_at",{ascending:false}).limit(200);
+      if(error)return fail("Approval inbox belum tersedia. Terapkan migration Executive di disposable DB terlebih dahulu.",503,origin);
+      return json({approvals:data||[]},200,origin);
+    }
+    if(action==="erp-executive-claim-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0||idempotencyKey.length<8)
+        return fail("Data claim approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_claim_approval",{
+        p_tenant_id:tenantId,p_approval_id:approvalId,p_actor_user_id:actor.user.id,
+        p_expected_version:expectedVersion,p_idempotency_key:idempotencyKey,p_claim_ttl_seconds:300,
+      });
+      if(error)return fail("Claim approval ditolak. Periksa versi, scope cabang, expiry, dan status item.",error.code==="42501"?403:409,origin);
+      return json({claim:data},200,origin);
+    }
     if(action==="erp-bi-list-snapshots"){
       const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).order("period_end",{ascending:false}).limit(200);
       if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
