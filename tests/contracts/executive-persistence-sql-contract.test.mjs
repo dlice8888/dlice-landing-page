@@ -61,7 +61,7 @@ test("T02 delegation lifecycle is tenant-bound, time-limited, idempotent and aud
  assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
  assert.match(migration,/executive_create_approval_delegation/i);
  assert.match(migration,/executive_revoke_approval_delegation/i);
- assert.match(migration,/p_valid_until>now\+interval '90 days'/i);
+ assert.match(migration,/p_valid_until>now\(\)\+interval '90 days'/i);
  assert.match(migration,/EXECUTIVE_DELEGATION_MEMBERSHIP_REQUIRED/i);
  assert.match(migration,/EXECUTIVE_DELEGATION_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/executive\.approval\.delegation\.created/i);
