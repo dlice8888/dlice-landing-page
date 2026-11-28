@@ -20,8 +20,29 @@ These changes are **not a staging release**. No production mutation, staging mig
 4. POS reconciliation across sale totals, split tender, refunds, settlements, cash drawer, inventory movements, KDS tickets, immutable receipts, Finance journal entries, and audit events.
 5. Evidence ledger for every feature from E0 through E6. No feature is DONE on source or CI evidence alone.
 
-## Known limitations
+## Ticket coverage and evidence status
 
-Executive sales monitor, branch-local business-day cutoff, Unified Approval Inbox, claim/decision/history/delegation actions, POS order-type checkout, and fulfillment history are now wired through the ERP UI and authenticated Edge API. Their database migrations remain source-only until the final migration batch is explicitly scheduled.
+The candidate contains source modules and contract tests for the 39 requested tickets:
+- T01–T02 Executive sales monitor and unified approval center.
+- T03–T09 POS shifts, cart, order types, payment, refund/void, cash drawer and independent order/payment/fulfillment state.
+- T10–T16 unified order queue, availability, routing, business numbering, timeline, cancellation/history and notifications.
+- T17–T23 KDS, prep SLA, kitchen lifecycle, recipe yield/costing, prep planning, batch consumption and production mode.
+- T24–T30 product catalog, branch availability, pricing, BOM, recipe versioning, stock availability and recipe change rollout.
+- T31–T39 inventory balance, movement ledger, warehouse/bin, UOM, stock buckets, reorder, cycle count, adjustments and procurement receiving reconciliation.
 
-The current branch's contract suite and staging CORS/KDS probes have passed at the latest observed head. Disposable migration replay is still running. Staging schema inspection confirms the T01/T02/POS-fulfillment objects are not yet present, so authenticated staging workflow E2E and E6 transaction reconciliation remain blocked until the final migration/deployment window. Do not infer schema readiness, successful staging migration application, or E6 from source/CI evidence alone.
+All 39 remain **PARTIAL** until each database contract, authenticated tenant/branch runtime workflow, browser/device acceptance and feature-specific E6 reconciliation is evidenced.
+
+## Migration status
+
+Official source migrations in this candidate cover Executive sales, Executive approvals, POS shift/cash, order state transitions and POS sale fulfillment types. Order Management, Kitchen/Production and Menu/Recipe SQL remain design drafts in `docs/implementation/sql`; they are not yet official migrations. Inventory modules rely partly on the existing stock transfer, count, receiving and movement foundations; full parity still requires E6 evidence.
+
+The full repository disposable local Supabase migration replay **passed** on candidate commit `207314a2f835660d6d8fdb45dfa719818b6fa241`. The Free quality-check workflow also **passed**, including the full contract suite. This is source and disposable-database evidence only; it does not prove that the migrations were applied to staging or that staging workflows passed.
+
+## Remaining acceptance gates
+
+1. Promote the reviewed Order, Kitchen/Production and Menu/Recipe SQL designs into official migrations after dependency, RLS, FK, function ACL and rollback review.
+2. Run authenticated staging tenant A/B and branch A/B workflows.
+3. Run browser/device acceptance for Executive, POS, Order, Kitchen, Menu and Inventory workflows.
+4. Reconcile POS sale, tender allocation, refund, settlement, cash drawer, stock movements, KDS tickets, immutable receipt, Finance journals and audit events through E6.
+
+No production mutation, staging migration application, merge, auto-merge, force push, or release-flag change has been performed. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain closed.
