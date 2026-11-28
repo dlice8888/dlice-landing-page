@@ -1,9 +1,9 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; exact-head quality PASS; CRM/HR disposable replay PASS; Branch Ops adapter/UI source complete but schema remains draft; provider payout dispatch and staging E2E pending)",
+  "snapshot_at": "2026-11-28 (implementation head c9a3065 exact-head quality PASS and disposable canonical migration replay/pgTAP PASS; audit/matrix documentation refreshed separately; Branch Ops SQL draft remains not migrated; 188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
-  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence. Branch Operations candidate batch adds a canonical SQL persistence draft, service-role-only atomic RPCs, explicit Edge Auth/tenant/branch authorization, private server-uploaded evidence, lifecycle UI and contract tests. Draft is not a CLI-generated migration and is not applied; Edge Function is not deployed; ERP mount remains behind BRANCH_OPS_WORKFLOWS_RELEASED=false. No progress score changes until exact-head CI and staging runtime acceptance. Exact-head Free quality checks run 46089862837 completed PASS on commit 01255157a504800612982e908e11b1c9061a822f, including Node syntax, repository/static contracts and Deno type-check for Branch Operations. Disposable migration replay is separate and pending; no branch_ops migration was applied. New Branch Ops evidence download route uses 60-second signed URLs after tenant/branch-scoped metadata and retention lookup. Exact-head Free quality check steps through migration/docs coverage all PASS on 02a072bb99ffdba131e0aa1e3384c17e19316dbc; final cleanup step was still running at snapshot. Latest batch: exact-head Free quality checks PASS and CRM/HR disposable replay + pgTAP PASS; Branch Operations now has concrete server adapter, private Storage verification, UI and workflow source, but its SQL remains a draft and has not been migrated/replayed.",
+  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence. Branch Operations candidate batch adds a canonical SQL persistence draft, service-role-only atomic RPCs, explicit Edge Auth/tenant/branch authorization, private server-uploaded evidence, lifecycle UI and contract tests. Draft is not a CLI-generated migration and is not applied; Edge Function is not deployed; ERP mount remains behind BRANCH_OPS_WORKFLOWS_RELEASED=false. No progress score changes until exact-head CI and staging runtime acceptance. Exact-head Free quality checks run 46089862837 completed PASS on commit 01255157a504800612982e908e11b1c9061a822f, including Node syntax, repository/static contracts and Deno type-check for Branch Operations. Disposable migration replay is separate and pending; no branch_ops migration was applied. New Branch Ops evidence download route uses 60-second signed URLs after tenant/branch-scoped metadata and retention lookup. Exact-head Free quality check steps through migration/docs coverage all PASS on 02a072bb99ffdba131e0aa1e3384c17e19316dbc; final cleanup step was still running at snapshot. Latest batch: exact-head Free quality checks PASS and CRM/HR disposable replay + pgTAP PASS; Branch Operations now has concrete server adapter, private Storage verification, UI and workflow source, but its SQL remains a draft and has not been migrated/replayed. Exact-head implementation validation at c9a3065: Free quality checks PASS and disposable canonical migration replay/schema verification/CRM+HR+eight-domain pgTAP PASS. Branch Operations remains a SQL draft and is intentionally excluded from canonical replay until the final migration batch.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
     "PUBLIC_TENANT_ROUTING_RELEASED": false
@@ -6349,7 +6349,7 @@
               "weight": 20,
               "status": "PASS",
               "evidence": [
-                "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "Exact-head canonical migration replay and schema verification PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 20
             },
@@ -6366,7 +6366,7 @@
               "status": "PASS",
               "evidence": [
                 "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
-                "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "CRM, HR and eight-domain pgTAP workflow contracts PASS in disposable Supabase: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 15
             },
@@ -6413,7 +6413,7 @@
           "active_prs": [
             145
           ],
-          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending."
+          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending."
         },
         {
           "requirement": "Consent and communication preferences",
@@ -6554,7 +6554,7 @@
             145
           ],
           "work_started_at": "2026-11-25",
-          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
+          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "feature_id": "D10-F04",
           "progress_pct": 53,
@@ -6572,7 +6572,7 @@
               "weight": 20,
               "status": "PASS",
               "evidence": [
-                "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "Exact-head canonical migration replay and schema verification PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 20
             },
@@ -6589,7 +6589,7 @@
               "status": "PASS",
               "evidence": [
                 "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
-                "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "CRM, HR and eight-domain pgTAP workflow contracts PASS in disposable Supabase: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 15
             },
@@ -8235,7 +8235,7 @@
             146
           ],
           "work_started_at": "2026-11-25",
-          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
+          "work_evidence": "PR #153 candidate source and UI/Edge actions; disposable migration replay + pgTAP PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274); exact-head Free quality checks PASS (https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446); current implementation head c9a3065bf3fec94e961538167b60cd0e58b9f19a. Staging tenant A/B and browser E2E remain pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "feature_id": "D12-F06",
           "progress_pct": 53,
@@ -8253,7 +8253,7 @@
               "weight": 20,
               "status": "PASS",
               "evidence": [
-                "Canonical CRM/HR migrations replayed successfully in disposable Supabase and schema verified: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "Exact-head canonical migration replay and schema verification PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 20
             },
@@ -8270,7 +8270,7 @@
               "status": "PASS",
               "evidence": [
                 "Exact-head Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446",
-                "Disposable pgTAP workflow tests PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46091245841"
+                "CRM, HR and eight-domain pgTAP workflow contracts PASS in disposable Supabase: https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274"
               ],
               "score": 15
             },
