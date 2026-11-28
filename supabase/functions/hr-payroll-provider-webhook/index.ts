@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
   });
   if (error) {
     const code = error.code === "23505" ? 409 : error.code === "42501" ? 403 : 422;
-    return json({ error: "Provider event was not accepted", code: error.message }, code);
+    return json({ error: "Provider event was not accepted", code: error.code ?? "PROVIDER_EVENT_REJECTED" }, code);
   }
   return json({ ok: true, provider_event: data }, 200);
 });
