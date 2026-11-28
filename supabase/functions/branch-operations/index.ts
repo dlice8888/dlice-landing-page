@@ -177,7 +177,7 @@ Deno.serve(async (req: Request) => {
     if (action === "publish-compliance") {
       const result = await repo.publishComplianceSnapshot({
         periodStart: safe(body.period_start, 10), periodEnd: safe(body.period_end, 10),
-        idempotencyKey: idempotency(body.idempotency_key), sourceRevision: safe(body.source_revision, 160),
+        idempotencyKey: idempotency(body.idempotency_key), sourceRevision: safe(body.source_revision, 160) || null,
       });
       return reply(result, 200, origin);
     }
