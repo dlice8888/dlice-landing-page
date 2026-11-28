@@ -147,6 +147,7 @@ test("approval eligibility applies amount/category policy and excludes another a
   assert.throws(() => assertApprovalEligibility({
     approval: item, actor: { ...scopedActor, max_approval_amount_idr: 10 }, now,
   }), /approval_amount_limit_exceeded/);
+  assert.equal(buildApprovalInbox({ items: [item], actor: { ...scopedActor, max_approval_amount_idr: 10 }, now }).length, 0);
   assert.throws(() => assertApprovalEligibility({
     approval: item, actor: { ...scopedActor, allowed_categories: ["expense"] }, now,
   }), /approval_category_forbidden/);
