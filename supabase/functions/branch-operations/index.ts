@@ -9,7 +9,7 @@ const SERVICE_KEY = secretKeysRaw ? JSON.parse(secretKeysRaw)["default"] : Deno.
 const allowedOrigins = new Set((Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "").split(",").map(v => v.trim()).filter(Boolean));
 const cors = (origin: string | null) => ({
   ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Vary": "Origin",
 });
