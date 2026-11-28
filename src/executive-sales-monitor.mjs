@@ -166,17 +166,30 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
     if (gross - discount !== total) {
       throw new Error(`sale_total_mismatch:${sale.id}`);
     }
+    // Prefer an explicit business_date, then the actual payment timestamp.
+    // created_at is retained only as a clearly labelled legacy proxy.
+    const recognitionField = typeof sale.business_date === "string"
+      ? "business_date"
+      : (sale.paid_at ? "paid_at" : "created_at");
+    const recognitionValue = sale[recognitionField];
+    const isInBusinessDateWindow = recognitionField === "business_date"
+      ? recognitionValue >= window.from_business_date && recognitionValue <= window.through_business_date
+      : insideWindow(recognitionValue, window);
     const normalized = {
       id: sale.id,
       transaction_code: sale.transaction_code || null,
       branch_id: sale.branch_id,
       created_at: sale.created_at,
+      paid_at: sale.paid_at || null,
+      business_date: sale.business_date || null,
+      recognition_field: recognitionField,
+      recognition_value: recognitionValue,
       gross_idr: gross,
       discount_idr: discount,
       net_before_refunds_idr: total,
     };
     saleById.set(sale.id, normalized);
-    if (insideWindow(sale.created_at, window)) includedSales.push({ ...normalized });
+    if (isInBusinessDateWindow) includedSales.push({ ...normalized });
   }
 
   const allProcessedRefundsBySale = new Map();
@@ -241,11 +254,24 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
     .filter((item) => item.status === "reconciled")
     .reduce((sum, item) => sum + item.net_amount_idr, 0);
 
+  const recognitionFields = new Set(includedSales.map((sale) => sale.recognition_field));
+  const salesBusinessDateCertified = includedSales.length > 0 &&
+    [...recognitionFields].every((field) => field === "business_date" || field === "paid_at");
+  const salesRecognitionSemantics = recognitionFields.size === 0
+    ? "no_sales_in_window"
+    : recognitionFields.size > 1
+      ? "mixed_business_date_paid_at_and_legacy_created_at"
+      : recognitionFields.has("business_date")
+        ? "business_date"
+        : recognitionFields.has("paid_at")
+          ? "paid_at_branch_timezone"
+          : "created_at_legacy_proxy";
+
   return Object.freeze({
     kpi_definition_version: KPI_DEFINITION_VERSION,
-    sales_recognition_semantics: "paid_status_at_created_at_branch_timezone_proxy",
-    sales_recognition_timestamp_field: "created_at",
-    sales_business_date_certified: false,
+    sales_recognition_semantics: salesRecognitionSemantics,
+    sales_recognition_timestamp_field: recognitionFields.size === 1 ? [...recognitionFields][0] : "per_sale",
+    sales_business_date_certified: salesBusinessDateCertified,
     window,
     totals: Object.freeze({
       gross_sales_idr: grossSales,
