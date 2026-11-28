@@ -86,6 +86,12 @@ jobs:
           && node --check src/finance-budget-consolidation-workflows.mjs
       - name: Run Branch Operations evidence workflow contracts
         run: node --test tests/contracts/branch-operations-workflows.test.mjs
+      - name: Check Branch Operations browser UI syntax
+        run: node --check src/branch-operations-ui.mjs && node --check src/branch-operations-supabase-repository.mjs
+      - name: Run Branch Operations Supabase repository contracts
+        run: node --test tests/contracts/branch-operations-supabase-repository.test.mjs
+      - name: Type-check Branch Operations authenticated Edge Function
+        run: deno check supabase/functions/branch-operations/index.ts
       - name: Check CRM referral support and LTV module syntax
         run: node --check src/crm-referral-support-ltv-workflows.mjs
       - name: Run CRM referral support and LTV workflow contracts
