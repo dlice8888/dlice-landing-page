@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {getExecutiveSalesMonitor} from "../src/executive-sales-monitor.mjs";
-import {claimApproval,decideApproval} from "../src/executive-approval-center.mjs";
+import {getExecutiveSalesMonitor} from "../../src/executive-sales-monitor.mjs";
+import {claimApproval,decideApproval} from "../../src/executive-approval-center.mjs";
 
 const salesDeps=(overrides={})=>({
  withTenantTransaction:(_scope,fn)=>fn({}),
