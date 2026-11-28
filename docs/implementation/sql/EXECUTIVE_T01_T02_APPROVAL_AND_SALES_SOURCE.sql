@@ -44,6 +44,10 @@ begin
     raise exception using errcode='23514', message='PAID_POS_SALE_STATUS_IMMUTABLE';
   end if;
 
+  if v_newly_paid and current_user not in ('service_role','postgres','supabase_admin') then
+    raise exception using errcode='42501', message='POS_PAYMENT_CONFIRMATION_SERVER_ONLY';
+  end if;
+
   if v_newly_paid then
     new.paid_at := now();
     new.business_timezone := v_timezone;
@@ -64,7 +68,7 @@ $$;
 
 drop trigger if exists pos_sales_set_business_time on public.pos_sales;
 create trigger pos_sales_set_business_time
-before insert or update of payment_status, branch_id on public.pos_sales
+before insert or update on public.pos_sales
 for each row execute function public.set_pos_sale_business_time();
 revoke all on function public.set_pos_sale_business_time() from public, anon, authenticated;
 
