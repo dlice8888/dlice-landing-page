@@ -42,6 +42,30 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
 
   return Object.freeze({
     scope,
+    async registerEquipment(input) {
+      return rpc("branch_ops_register_equipment", {
+        p_asset_code: required(input.assetCode, "assetCode"),
+        p_name: required(input.name, "name"),
+      }, "registerEquipment");
+    },
+    async updateTaskStatus(input) {
+      return rpc("branch_ops_update_task_status", {
+        p_task_id: required(input.taskId, "taskId"),
+        p_status: required(input.status, "status"),
+      }, "updateTaskStatus");
+    },
+    async updateIncidentStatus(input) {
+      return rpc("branch_ops_update_incident_status", {
+        p_incident_id: required(input.incidentId, "incidentId"),
+        p_status: required(input.status, "status"),
+      }, "updateIncidentStatus");
+    },
+    async updateWorkOrderStatus(input) {
+      return rpc("branch_ops_update_work_order_status", {
+        p_work_order_id: required(input.workOrderId, "workOrderId"),
+        p_status: required(input.status, "status"),
+      }, "updateWorkOrderStatus");
+    },
     async createTask(input) {
       return rpc("branch_ops_create_task", {
         p_assignee_id: required(input.assigneeId, "assigneeId"),
