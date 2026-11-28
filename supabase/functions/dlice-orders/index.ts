@@ -3037,6 +3037,23 @@ if(action==="erp-executive-branch-kpis"){
     return json({ok:true,shift:data},200,origin);
   }
 
+  if (action === "erp-create-pos-sale-split-tender") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
+    const discount=Number(body.discount_idr||0),rawTenders=body.tenders;
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!Array.isArray(items)||!items.length||items.length>50)return fail("Pilih minimal satu menu.",422,origin);
+    if(!Number.isSafeInteger(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.",403,origin);
+    if(!Array.isArray(rawTenders)||rawTenders.length<2||rawTenders.length>5)return fail("Split tender harus memiliki 2 sampai 5 alokasi.",422,origin);
+    const cleanItems=items.map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers.map((m:any)=>({code:safeText(m?.code,40)})):[],substitutions:Array.isArray(x?.substitutions)?x.substitutions.map((sub:any)=>({recipe_ingredient_id:safeText(sub?.recipe_ingredient_id,80),substitute_inventory_item_id:safeText(sub?.substitute_inventory_item_id,80)})):[]}));
+    if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
+    const tenders=rawTenders.map((x:any)=>({payment_method:safeText(x?.payment_method,30),amount_idr:Number(x?.amount_idr),reference:safeText(x?.reference,120)||null}));
+    if(tenders.some((x:any)=>!["cash","bank_transfer","qris"].includes(x.payment_method)||!Number.isSafeInteger(x.amount_idr)||x.amount_idr<=0))return fail("Metode atau nominal tender tidak valid. Kartu belum didukung oleh RPC staging.",422,origin);
+    const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+    const {data,error}=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey,p_tenders:tenders});
+    if(error)return fail(error.message.includes("split_tender_total_mismatch")?"Total alokasi tender harus sama dengan total transaksi.":error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk payload berbeda.":"Transaksi split tender gagal. Periksa shift, harga, stok, dan alokasi pembayaran.",409,origin);
+    return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
+  }
+
   if (action === "erp-create-pos-sale") {
     const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
     const method=safeText(body.payment_method,20),discount=Number(body.discount_idr||0);
