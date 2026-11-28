@@ -206,7 +206,7 @@ end $$;
 
 
 create or replace function public.branch_ops_assert_approver(p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid)
-returns void language plpgsql security invoker set search_path=public,pg_temp as $
+returns void language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_allowed boolean;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
@@ -218,7 +218,7 @@ begin
      or tm.permissions @> '["*"]'::jsonb
    )) into v_allowed;
  if not v_allowed then raise exception 'BRANCH_OPS_APPROVAL_FORBIDDEN' using errcode='42501'; end if;
-end $;
+end $$;
 
 create or replace function public.branch_ops_create_task(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_assignee_id uuid,p_idempotency_key text,
@@ -350,7 +350,7 @@ end $$;
 create or replace function public.branch_ops_submit_compliance_check(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_check_key text,p_title text,p_weight integer,
  p_business_date date,p_evidence_asset_id uuid
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_compliance_checks;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
@@ -372,11 +372,11 @@ begin
  values(p_actor_id,'branch.compliance.check.submitted','branch_ops_compliance_check',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'check_key',p_check_key));
  return jsonb_build_object('status','submitted','checkId',v_row.id);
-end $;
+end $$;
 
 create or replace function public.branch_ops_review_compliance_check(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_check_id uuid,p_result text
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_compliance_checks;
 begin
  perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
@@ -392,12 +392,12 @@ begin
  values(p_actor_id,'branch.compliance.check.reviewed','branch_ops_compliance_check',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'result',p_result,'submitted_by',v_row.created_by));
  return jsonb_build_object('status','approved','checkId',v_row.id,'result',p_result);
-end $;
+end $$;
 
 
 create or replace function public.branch_ops_register_equipment(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_asset_code text,p_name text
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_equipment;
 begin
  perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
@@ -411,11 +411,11 @@ begin
  values(p_actor_id,'branch.equipment.registered','branch_ops_equipment',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'asset_code',p_asset_code));
  return jsonb_build_object('status','registered','equipmentId',v_row.id);
-end $;
+end $$;
 
 create or replace function public.branch_ops_update_task_status(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_task_id uuid,p_status text
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_tasks;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
@@ -432,11 +432,11 @@ begin
  values(p_actor_id,'branch.task.status_changed','branch_ops_task',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
  return jsonb_build_object('status',v_row.status,'taskId',v_row.id);
-end $;
+end $$;
 
 create or replace function public.branch_ops_update_incident_status(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_incident_id uuid,p_status text
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_incidents;
 begin
  perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
@@ -452,11 +452,11 @@ begin
  values(p_actor_id,'branch.incident.status_changed','branch_ops_incident',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
  return jsonb_build_object('status',v_row.status,'incidentId',v_row.id);
-end $;
+end $$;
 
 create or replace function public.branch_ops_update_work_order_status(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_work_order_id uuid,p_status text
-) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_work_orders;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
@@ -472,7 +472,7 @@ begin
  values(p_actor_id,'branch.maintenance.status_changed','branch_ops_work_order',v_row.id::text,
    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
  return jsonb_build_object('status',v_row.status,'workOrderId',v_row.id);
-end $;
+end $$;
 
 revoke all on function public.branch_ops_register_equipment(uuid,uuid,uuid,text,text) from public,anon,authenticated;
 revoke all on function public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
