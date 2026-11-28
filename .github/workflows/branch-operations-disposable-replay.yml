@@ -1,0 +1,76 @@
+name: Branch Operations disposable migration replay
+
+on:
+  pull_request:
+    paths:
+      - "docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql"
+      - "supabase/tests/branch_operations.test.sql"
+      - "scripts/prepare-branch-operations-migration.sh"
+      - ".github/workflows/branch-operations-disposable-replay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-operations-disposable-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  disposable-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Initialize local Supabase config when absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase --version
+          if [[ ! -f supabase/config.toml ]]; then
+            supabase init
+          fi
+
+      - name: Generate timestamped migration with Supabase CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration --help >/dev/null
+          supabase migration new --help >/dev/null
+          supabase migration new branch_operations_persistence
+          migration="$(find supabase/migrations -maxdepth 1 -type f -name '*_branch_operations_persistence.sql' -print | sort | tail -n 1)"
+          test -n "$migration"
+          test -s docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql
+          cp docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql "$migration"
+          printf 'Generated migration: %s\n' "$migration"
+          printf '%s\n' "$migration" > /tmp/branch-operations-migration-path
+
+      - name: Start isolated disposable Supabase stack
+        run: supabase start
+
+      - name: Replay all canonical migrations
+        run: supabase db reset
+
+      - name: Run Branch Operations pgTAP and complete database suite
+        run: supabase test db
+
+      - name: Stop and discard disposable database
+        if: always()
+        run: supabase stop --no-backup
+
+      - name: Upload CLI-generated migration for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: branch-operations-cli-migration
+          path: supabase/migrations/*_branch_operations_persistence.sql
+          if-no-files-found: ignore
+          retention-days: 7
