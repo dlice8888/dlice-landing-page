@@ -42,3 +42,20 @@ test("expired claim may be reclaimed but another active claimant cannot decide",
  const activeOther={...approval,status:"claimed",claimedBy:"other",claimExpiresAt:"2999-01-01T00:00:00Z"};
  await assert.rejects(decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Attempt to bypass claim",expectedVersion:2},{...base,lockApproval:async()=>activeOther}),{code:"APPROVAL_CLAIMED_BY_OTHER"});
 });
+
+test("approval decision expiry persists status and audit instead of raising a rollback error",()=>{
+ const sql=String.raw` if a.status in ('pending','claimed') and a.expires_at<=now() then
+  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
+   where id=a.id returning version into a.version;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'executive.approval.expired',a.entity_type,a.entity_id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'approval_id',a.id,'branch_id',a.branch_id,'version',a.version));
+  return jsonb_build_object('approval_id',a.id,'status','expired','version',a.version);
+ end if;
+ if a.status not in ('pending','claimed') then
+  raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';
+ end if;`;
+ assert.match(sql,/status=\x27expired\x27/);
+ assert.match(sql,/executive\.approval\.expired/);
+ assert.match(sql,/return jsonb_build_object\(/);
+});
