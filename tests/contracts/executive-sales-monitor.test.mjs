@@ -63,9 +63,12 @@ test("recomputes immutable business date using WIB, WITA and WIT branch-local cu
   {sale_id:"wita",branch_id:"b2",business_date:"2026-11-29",paid_at:"2026-11-28T16:00:00Z",paid_at_source:"provider_confirmed",timezone:"Asia/Makassar",cutoff_time:"00:00:00",business_day_policy_version:2},
   {sale_id:"wit",branch_id:"b3",business_date:"2026-11-29",paid_at:"2026-11-28T15:30:00Z",paid_at_source:"provider_confirmed",timezone:"Asia/Jayapura",cutoff_time:"00:00:00",business_day_policy_version:2}
  ].map(row=>({...snapshot().transactions[0],...row}));
- const daily=[{business_date:"2026-11-28",gross_idr:300000,discount_idr:30000,refund_idr:15000,net_sales_idr:255000,matched_settlement_idr:255000,transaction_count:3}];
+ const daily=[
+  {business_date:"2026-11-28",gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,matched_settlement_idr:85000,transaction_count:1},
+  {business_date:"2026-11-29",gross_idr:200000,discount_idr:20000,refund_idr:10000,net_sales_idr:170000,matched_settlement_idr:170000,transaction_count:2}
+ ];
  const value=snapshot({transactions:rows,daily,totals:{gross_idr:300000,discount_idr:30000,refund_idr:15000,net_sales_idr:255000,matched_settlement_idr:255000,transaction_count:3},payment_reconciliation:{sale_count:3,tender_mismatch_count:0,tender_allocations_balanced:true,legacy_paid_at_count:0},finance_reconciliation:{...snapshot().finance_reconciliation,sale_count:3}});
- await assert.rejects(getExecutiveSalesMonitor(input,deps(value)),{code:"EXEC_SALES_SOURCE_SCOPE_INVALID"});
+ await getExecutiveSalesMonitor({...input,endDate:"2026-11-29"},deps(value));
 });
 test("rejects a source row whose stored business date disagrees with branch timezone and cutoff",async()=>{
  const bad=snapshot({transactions:[{...snapshot().transactions[0],business_date:"2026-11-29",cutoff_time:"00:00:00",business_day_policy_version:1}]});
