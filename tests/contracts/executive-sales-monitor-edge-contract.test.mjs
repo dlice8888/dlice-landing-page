@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const edge=await readFile(new URL("../../supabase/functions/dlice-orders/index.ts",import.meta.url),"utf8");
+const shared=await readFile(new URL("../../supabase/functions/_shared/executive-sales-monitor.mjs",import.meta.url),"utf8");
 
 test("executive sales monitor derives branch scope from authenticated memberships",()=>{
  const start=edge.indexOf('if (action === "erp-executive-sales-monitor")');
@@ -43,4 +44,11 @@ test("Executive sales monitor timezone filter is validated and cannot widen bran
   assert.match(edge, /!SUPPORTED_BRANCH_TIMEZONES\.has\(requestedTimezone\)/);
   assert.match(edge, /branchQuery=branchQuery\.eq\("timezone",requestedTimezone\)/);
   assert.match(edge, /requestedBranch&&!allowedIds\.includes\(requestedBranch\)/);
+});
+
+test("Edge aggregation uses the same versioned business-date rules as the source module", () => {
+ assert.match(shared,/KPI_DEFINITION_VERSION = "sales-monitor\.v2"/);
+ assert.match(shared,/recognitionField === "business_date"/);
+ assert.match(shared,/insideWindow\(recognitionValue, window\)/);
+ assert.match(edge,/\.\/_shared\/executive-sales-monitor\.mjs/);
 });
