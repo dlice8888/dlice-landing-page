@@ -49,6 +49,8 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
  assert.match(migration,/create table if not exists public\.executive_approval_delegations/i);
  assert.match(migration,/create table if not exists public\.executive_approval_decisions/i);
  assert.match(migration,/for update/i);
+ assert.match(migration,/Recheck after acquiring the row lock/i);
+ assert.match(migration,/Recheck after the item lock/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_STALE_VERSION/i);
  assert.match(migration,/p_expected_version is null or p_expected_version<0/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_IDEMPOTENCY_KEY_REUSED/i);
