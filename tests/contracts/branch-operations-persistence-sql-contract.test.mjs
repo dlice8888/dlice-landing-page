@@ -44,6 +44,7 @@ test("Edge API validates Auth, tenant membership and branch assignment before se
   assert.match(edge, /branch_assignments/);
   assert.match(edge, /service\.storage\.from\("branch-ops-evidence"\)\.upload/);
   assert.match(edge, /createBranchOperationsRepository\(service/);
+  assert.match(edge, /createSignedUrl\(asset\.object_path, 60\)/);
   for (const action of ["register-equipment","update-task-status","update-incident-status","update-work-order-status"]) assert.match(edge, new RegExp(action));
 });
 
@@ -54,6 +55,7 @@ test("ERP Branch Operations UI is wired but remains closed behind the release ga
   assert.match(ui, /submit-compliance-check/);
   assert.match(ui, /review-compliance-check/);
   assert.match(ui, /upload-evidence/);
+  assert.match(ui, /get-evidence-url/);
   assert.match(ui, /register-equipment/);
   assert.match(ui, /update-work-order-status/);
 });
