@@ -3841,38 +3841,89 @@ if(action==="erp-executive-branch-kpis"){
 
   if (action === "erp-create-cash-reconciliation") {
     if(!hasPerm("finance"))return fail("Izin Finance diperlukan.",403,origin);
-    const branchId=safeText(body.branch_id,80),date=safeText(body.business_date,10),shiftId=safeText(body.shift_id,80)||null;
+    const requestedBranchId=safeText(body.branch_id,80),date=safeText(body.business_date,10),shiftId=safeText(body.shift_id,80);
+    if(!shiftId)return fail("Shift wajib dipilih untuk rekonsiliasi berbasis transaksi.",422,origin);
+    if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date))return fail("Tanggal rekonsiliasi tidak valid.",422,origin);
+    const {data:shift,error:shiftError}=await admin.from("pos_shifts")
+      .select("id,branch_id,status,opening_cash_idr,expected_cash_idr,opened_at,closed_at")
+      .eq("id",shiftId).maybeSingle();
+    if(shiftError||!shift)return fail("Shift tidak ditemukan.",404,origin);
+    const branchId=shift.branch_id;
+    if(requestedBranchId&&requestedBranchId!==branchId)return fail("Cabang tidak cocok dengan shift.",403,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return fail("Tanggal rekonsiliasi tidak valid.",422,origin);
-    const fields=["cash_expected_idr","cash_counted_idr","bank_expected_idr","bank_received_idr","qris_expected_idr","qris_received_idr"];
-    const values:any={};for(const key of fields){const n=Number(body[key]||0);if(!Number.isSafeInteger(n)||n<0)return fail("Nilai rekonsiliasi tidak valid.",422,origin);values[key]=n;}
+    if(shift.status!=="closed"||!shift.closed_at)return fail("Shift harus ditutup sebelum rekonsiliasi.",409,origin);
+
+    // Expected values are derived from persisted POS source records, never trusted from the browser.
+    const {data:sales,error:salesError}=await admin.from("pos_sales")
+      .select("id,total_idr,payment_method,payment_status")
+      .eq("branch_id",branchId).eq("shift_id",shiftId);
+    if(salesError)return fail("Transaksi shift gagal dimuat untuk rekonsiliasi.",503,origin);
+    const saleRows=sales||[];
+    if(saleRows.some((sale:any)=>sale.payment_status!=="paid"))
+      return fail("Shift memiliki transaksi pending/refunded/voided; selesaikan kompensasi sebelum rekonsiliasi.",409,origin);
+    const saleIds=saleRows.map((sale:any)=>sale.id);
+    let tenderRows:any[]=[];
+    if(saleIds.length){
+      const {data:tenders,error:tenderError}=await admin.from("pos_sale_tenders")
+        .select("sale_id,payment_method,amount_idr")
+        .eq("branch_id",branchId).in("sale_id",saleIds);
+      if(tenderError)return fail("Tender ledger gagal dimuat untuk rekonsiliasi.",503,origin);
+      tenderRows=tenders||[];
+    }
+    const tendersBySale=new Map<string,any[]>();
+    for(const tender of tenderRows){
+      const bucket=tendersBySale.get(tender.sale_id)||[];
+      bucket.push(tender);tendersBySale.set(tender.sale_id,bucket);
+    }
+    let bankExpected=0,qrisExpected=0;
+    for(const sale of saleRows){
+      const total=Number(sale.total_idr);
+      if(!Number.isSafeInteger(total)||total<0)return fail("Total transaksi tidak valid untuk rekonsiliasi.",409,origin);
+      if(sale.payment_method==="split"){
+        const parts=tendersBySale.get(sale.id)||[];
+        const splitTotal=parts.reduce((sum:number,tender:any)=>sum+Number(tender.amount_idr),0);
+        if(parts.length<2||parts.some((tender:any)=>!Number.isSafeInteger(Number(tender.amount_idr))||Number(tender.amount_idr)<=0)||splitTotal!==total)
+          return fail("Alokasi split tender tidak cocok dengan total transaksi.",409,origin);
+        for(const tender of parts){
+          if(tender.payment_method==="bank_transfer")bankExpected+=Number(tender.amount_idr);
+          else if(tender.payment_method==="qris")qrisExpected+=Number(tender.amount_idr);
+          else if(tender.payment_method!=="cash")return fail("Metode split tender tidak dikenal.",409,origin);
+        }
+      }else{
+        if(tendersBySale.has(sale.id))return fail("Tender ledger tunggal tidak konsisten dengan metode pembayaran.",409,origin);
+        if(sale.payment_method==="bank_transfer")bankExpected+=total;
+        else if(sale.payment_method==="qris")qrisExpected+=total;
+        else if(sale.payment_method!=="cash")return fail("Metode pembayaran tidak dikenal.",409,origin);
+      }
+    }
+    const expectedCash=Number(shift.expected_cash_idr);
+    if(!Number.isSafeInteger(expectedCash)||expectedCash<Number(shift.opening_cash_idr))
+      return fail("Expected cash shift tidak valid.",409,origin);
+    const receivedFields=["cash_counted_idr","bank_received_idr","qris_received_idr"];
+    const received:any={};
+    for(const key of receivedFields){
+      const n=Number(body[key]??0);
+      if(!Number.isSafeInteger(n)||n<0||n>1000000000000)return fail("Nilai uang hasil hitung tidak valid.",422,origin);
+      received[key]=n;
+    }
     const code="REC-"+date.replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase();
-    const {data,error}=await admin.from("cash_reconciliations").insert({reconciliation_code:code,branch_id:branchId,shift_id:shiftId,business_date:date,...values,status:"submitted",prepared_by:actor.user.id,notes:safeText(body.notes,500)||null}).select("*").single();
+    const {data,error}=await admin.from("cash_reconciliations").insert({
+      reconciliation_code:code,branch_id:branchId,shift_id:shiftId,business_date:date,
+      cash_expected_idr:expectedCash,cash_counted_idr:received.cash_counted_idr,
+      bank_expected_idr:bankExpected,bank_received_idr:received.bank_received_idr,
+      qris_expected_idr:qrisExpected,qris_received_idr:received.qris_received_idr,
+      status:"submitted",prepared_by:actor.user.id,
+      notes:safeText(body.notes,500)||"Expected amounts derived from closed POS shift and tender ledger."
+    }).select("*").single();
     if(error||!data)return fail("Rekonsiliasi gagal disimpan. Periksa duplikasi cabang/tanggal/shift.",409,origin);
-    return json({ok:true,reconciliation:data},201,origin);
-  }
-
-  if (action === "erp-list-cash-reconciliations") {
-    if(!hasPerm("finance")&&!hasPerm("reports"))return fail("Izin Finance diperlukan.",403,origin);
-    const branchId=safeText(body.branch_id,80),ids=await branchIdsForActor().catch(()=>[]);
-    if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
-    let q=admin.from("cash_reconciliations").select("*,branches(code,name),pos_shifts(opened_at,closed_at,status)").order("business_date",{ascending:false}).limit(300);
-    if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
-    const {data,error}=await q;if(error)return fail("Daftar rekonsiliasi gagal dimuat.",500,origin);return json({reconciliations:data||[]},200,origin);
-  }
-
-  if (action === "erp-review-cash-reconciliation") {
-    if(!hasPerm("finance")&&!isOwner)return fail("Izin Finance diperlukan.",403,origin);
-    const id=safeText(body.id,80),decision=safeText(body.status,20);
-    if(!["approved","exception"].includes(decision))return fail("Status rekonsiliasi tidak valid.",422,origin);
-    const {data:old}=await admin.from("cash_reconciliations").select("id,branch_id,prepared_by,status").eq("id",id).maybeSingle();
-    if(!old)return fail("Rekonsiliasi tidak ditemukan.",404,origin);
-    if(old.prepared_by===actor.user.id)return fail("Pemisahan tugas: pembuat tidak boleh meninjau rekonsiliasi sendiri.",403,origin);
-    if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
-    if(old.status!=="submitted")return fail("Rekonsiliasi tidak menunggu tinjauan.",409,origin);
-    const {data,error}=await admin.from("cash_reconciliations").update({status:decision,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString()}).eq("id",id).eq("status","submitted").select("*").maybeSingle();
-    if(error||!data)return fail("Rekonsiliasi berubah saat ditinjau.",409,origin);
-    return json({ok:true,reconciliation:data},200,origin);
+    await admin.from("admin_audit_logs").insert({
+      actor_user_id:actor.user.id,action:"pos_cash_reconciliation_submitted",
+      entity_type:"cash_reconciliation",entity_id:data.id,
+      metadata:{branch_id:branchId,shift_id:shiftId,sale_count:saleRows.length,
+        expected_cash_idr:expectedCash,bank_expected_idr:bankExpected,qris_expected_idr:qrisExpected}
+    });
+    return json({ok:true,reconciliation:data,source_summary:{sale_count:saleRows.length,
+      expected_cash_idr:expectedCash,bank_expected_idr:bankExpected,qris_expected_idr:qrisExpected}},201,origin);
   }
 
   if (action === "erp-list-fiscal-periods") {
