@@ -3875,7 +3875,7 @@ if(action==="erp-executive-branch-kpis"){
       const bucket=tendersBySale.get(tender.sale_id)||[];
       bucket.push(tender);tendersBySale.set(tender.sale_id,bucket);
     }
-    let bankExpected=0,qrisExpected=0;
+    let cashSales=0,bankExpected=0,qrisExpected=0;
     for(const sale of saleRows){
       const total=Number(sale.total_idr);
       if(!Number.isSafeInteger(total)||total<0)return fail("Total transaksi tidak valid untuk rekonsiliasi.",409,origin);
