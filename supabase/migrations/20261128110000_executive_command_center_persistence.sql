@@ -494,7 +494,7 @@ begin
       and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)
   )) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
  end if;
- select count(*) into v_count from public.branches b where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id;
+ select count(*) into v_count from public.branches b where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id and b.status='active';
  if v_count<>cardinality(p_branch_ids) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
  if exists(select 1 from public.pos_sales s where s.branch_id=any(p_branch_ids)
    and s.payment_status in ('paid','refunded') and s.paid_at is not null
@@ -611,7 +611,8 @@ grant execute on function public.executive_get_sales_monitor(uuid,uuid,uuid[],da
  else
   raise exception using errcode='22023',message='EXECUTIVE_APPROVAL_SOURCE_ADAPTER_UNSUPPORTED';
  end if;
- if v_source_branch is null or v_source_tenant is distinct from p_tenant_id or v_source_branch is distinct from p_branch_id then
+ if v_source_branch is null or v_source_tenant is distinct from p_tenant_id or v_source_branch is distinct from p_branch_id
+  or not exists(select 1 from public.branches b where b.id=p_branch_id and b.tenant_id=p_tenant_id and b.status='active') then
   raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_SOURCE_SCOPE_DENIED';
  end if;
  if v_source_status<>'submitted' then raise exception using errcode='23514',message='EXECUTIVE_APPROVAL_SOURCE_NOT_SUBMITTED'; end if;
@@ -705,6 +706,9 @@ begin
   if v_delegation_id is null then raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_DELEGATION_REQUIRED'; end if;
  end if;
  if v.created_by=p_actor_user_id then raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_SELF_APPROVAL_DENIED'; end if;
+ if not exists(select 1 from public.branches b where b.id=v.branch_id and b.tenant_id=p_tenant_id and b.status='active') then
+  raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_BRANCH_INACTIVE_OR_OUT_OF_SCOPE';
+ end if;
  if v.source_entity_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 create or replace function public.executive_get_sales_monitor(
  p_tenant_id uuid,p_actor_user_id uuid,p_branch_ids uuid[],p_from_date date,p_through_date date
