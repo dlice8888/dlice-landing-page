@@ -406,6 +406,10 @@ begin
   if not found then
     raise exception using errcode='23514',message='APPROVAL_POLICY_MISSING';
   end if;
+  update public.approval_inbox_items
+    set status='stale',version=version+1,updated_at=now()
+    where tenant_id=v_tenant and source_entity_type=v_entity and source_entity_id=v_source_id
+      and source_version<>v_version and status in ('pending','claimed');
   insert into public.approval_inbox_items(
     tenant_id,branch_id,domain,category,source_entity_type,source_entity_id,source_version,
     policy_id,policy_version,amount_idr,created_by,expires_at,evidence
