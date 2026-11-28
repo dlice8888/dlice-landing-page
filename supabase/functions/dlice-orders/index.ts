@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
+  const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings","erp-executive-sales-monitor","erp-executive-list-approvals","erp-executive-claim-approval"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
     const tenantId=safeText(body.tenant_id,64);
@@ -2013,6 +2013,45 @@ if (action === "admin-set-profile-role") {
     const {data:tenant,error:tenantError}=await admin.from("tenants").select("id").eq("id",tenantId).maybeSingle();
     if(tenantError)return fail("Tenant belum dapat diverifikasi.",503,origin);
     if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
+    if(action==="erp-executive-sales-monitor"){
+      const from=safeText(body.from_date,10),through=safeText(body.through_date,10);
+      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(from)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(through)||through<from)
+        return fail("Periode sales monitor tidak valid.",422,origin);
+      const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"&&/^[0-9a-f-]{36}$/i.test(x)):null;
+      let branchIds=requested;
+      if(!branchIds||branchIds.length===0){
+        const {data:branchRows,error:branchError}=await admin.from("branches").select("id").eq("tenant_id",tenantId).eq("status","active").limit(150);
+        if(branchError)return fail("Scope cabang Executive belum dapat diverifikasi.",503,origin);
+        branchIds=(branchRows||[]).map((x:any)=>x.id);
+      }
+      if(branchIds.length<1||branchIds.length>150||new Set(branchIds).size!==branchIds.length)
+        return fail("Pilih 1–150 cabang unik untuk sales monitor.",422,origin);
+      const {data,error}=await admin.rpc("executive_get_sales_monitor",{
+        p_tenant_id:tenantId,p_actor_user_id:actor.user.id,p_branch_ids:branchIds,
+        p_from_date:from,p_through_date:through,
+      });
+      if(error)return fail("Sales monitor gagal dimuat. Periksa hak akses, paid_at, dan rekonsiliasi settlement.",error.code==="42501"?403:409,origin);
+      return json({sales_monitor:data},200,origin);
+    }
+    if(action==="erp-executive-list-approvals"){
+      const {data,error}=await admin.from("executive_approval_items")
+        .select("id,branch_id,source_domain,source_entity,source_entity_id,source_version,requested_action,status,claimed_by,claim_expires_at,expires_at,version,created_at")
+        .eq("tenant_id",tenantId).in("status",["pending","claimed"]).order("created_at",{ascending:false}).limit(200);
+      if(error)return fail("Approval inbox belum tersedia. Terapkan migration Executive di disposable DB terlebih dahulu.",503,origin);
+      return json({approvals:data||[]},200,origin);
+    }
+    if(action==="erp-executive-claim-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version),
+        idempotencyKey=safeText(body.idempotency_key,160)||crypto.randomUUID();
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0||idempotencyKey.length<8)
+        return fail("Data claim approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_claim_approval",{
+        p_tenant_id:tenantId,p_approval_id:approvalId,p_actor_user_id:actor.user.id,
+        p_expected_version:expectedVersion,p_idempotency_key:idempotencyKey,p_claim_ttl_seconds:300,
+      });
+      if(error)return fail("Claim approval ditolak. Periksa versi, scope cabang, expiry, dan status item.",error.code==="42501"?403:409,origin);
+      return json({claim:data},200,origin);
+    }
     if(action==="erp-bi-list-snapshots"){
       const {data,error}=await admin.from("bi_metric_snapshots").select("id,metric_id,period_start,period_end,dimension_key,dimension_value,metric_value,formula_version,status,calculated_at,published_at,bi_metric_definitions(metric_key,display_name,unit)").eq("tenant_id",tenantId).order("period_end",{ascending:false}).limit(200);
       if(error)return fail("Snapshot BI belum tersedia. Terapkan migrasi pada batch final.",503,origin);
