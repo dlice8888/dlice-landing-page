@@ -22,6 +22,19 @@ const safeAmount=(value,key)=>{
 const sum=(rows,key,refundKey)=>{
  return rows.reduce((total,row)=>total+safeAmount(refundKey?row[refundKey]:row[key],key),0);
 };
+function expectedBusinessDate(paidAt,timezone,cutoff){
+ const instant=new Date(paidAt);
+ if(!Number.isFinite(instant.getTime()))fail("EXEC_SALES_SOURCE_TIMESTAMP_INVALID","paid_at");
+ let parts;
+ try{parts=new Intl.DateTimeFormat("en-GB",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).formatToParts(instant);}
+ catch{fail("EXEC_SALES_SOURCE_TIMEZONE_INVALID","timezone");}
+ const p=Object.fromEntries(parts.filter(x=>x.type!=="literal").map(x=>[x.type,Number(x.value)]));
+ const match=typeof cutoff==="string"&&/^(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?$/.exec(cutoff);
+ if(!match)fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","cutoff_time");
+ const [hour,minute,second=0]=cutoff.split(":").map(Number);
+ const localAsUtc=Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second);
+ return new Date(localAsUtc-((hour*3600+minute*60+second)*1000)).toISOString().slice(0,10);
+}
 function assertAggregateParity(result){
  const daily=result.daily,transactions=result.transactions,totals=result.totals;
  for(const key of moneyKeys){
