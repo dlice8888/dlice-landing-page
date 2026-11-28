@@ -57,7 +57,7 @@ The preflight and contract tests are source-level safeguards. They do not prove 
 
 ## Official migration generated and committed — 2026-11-28
 
-- Supabase CLI generated `20261128024514_branch_operations_persistence.sql` via `supabase migration new branch_operations_persistence`.
+- Supabase CLI generated `20261128030033_20261128024514_branch_operations_persistence.sql` via `supabase migration new branch_operations_persistence`.
 - Artifact SHA-256: `b83b477f44ae5581a8bf018422024d2f6189c77b015c9093887818379a1519ba`.
 - The committed file is byte-identical to the reviewed SQL draft.
 - Exact-head disposable replay run `46099584526`: migration generation, isolated local stack, complete migration replay, 92 Branch Operations pgTAP assertions, complete database test suite, and disposable teardown all PASS.
