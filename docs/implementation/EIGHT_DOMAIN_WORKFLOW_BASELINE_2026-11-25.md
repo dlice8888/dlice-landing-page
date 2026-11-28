@@ -1,0 +1,83 @@
+# Eight-domain workflow implementation status
+
+**Branch:** `feat/eight-domain-workflow-kernel-20261125`  
+**Base:** `staging` at branch creation  
+**Current scope:** source implementation, server command contracts, ERP workspaces, and design-only SQL drafts. Per the agreed sequencing, integration tests, merge, migration replay/application, and staging runtime rollout are deferred to the final coordinated batch.
+
+## Priority order
+
+1. CRM, Loyalty & Marketing — 8/9 previously unproven
+2. HR & Workforce — 8/9
+3. Delivery & Fulfillment — 6/8
+4. Franchise & Expansion — 6/8
+5. BI & Analytics — 7/10
+6. SaaS Tenant Management — 6/8
+7. Procurement & Supplier — 5/10
+8. Executive Command Center — 5/10
+
+## Current source slices
+
+| Domain | Implemented in this branch | Still not complete / acceptance blockers |
+|---|---|---|
+| CRM | ERP customer/consent/ledger/reward UI; tenant-scoped Edge commands; reward activation and atomic voucher redemption; campaign draft, independent approval and consent-aware audience preparation; design RPCs for voucher consumption against a verified transaction link and void with immutable loyalty reversal; Edge commands enforce branch authorization and require the transaction link | POS/online-order identity linking and automatic earn from reconciled eligible net sales are not wired; the trusted source-link writer must be integrated into the POS/order payment lifecycle; outbound campaign provider/send/retry/unsubscribe webhook; role-scoped tenant access remains fail-closed pending isolation release; no deployed schema/runtime evidence |
+| HR | Branch staff list; attendance read/write with serialized state RPC; roster creation with overlap guard; leave request, named coverage confirmation and independent approval; attendance-derived timesheet generation, employee submission and independent approval; effective-dated hourly compensation records; payroll draft calculation from approved timesheets with full-period rate coverage; independent payroll submitter and approver with audit trail | Monthly/fixed compensation, overtime/allowances/tax/benefit/deduction rules, payroll posting to Finance and journal reconciliation; compensation rate overlap governance still needs a formal constraint; schedule editing/cancellation; role-scoped non-Owner access pending tenant isolation; no deployed schema/runtime evidence |
+| Delivery | Branch dispatch list and booking command; atomic booking advances a ready, paid order to dispatched; idempotent status event transitions; POD capture command with tenant/branch/dispatch-scoped object-path checks, private bucket existence/MIME/size validation, recipient-name and OTP evidence; delivered state requires recorded POD | Actual browser upload flow and storage bucket/policy provisioning; provider quotes/booking API and signed webhook ingress; customer notifications, retry/compensation/refund; COD and courier fee reconciliation to Finance; no provider is activated or assumed |
+| Franchise | Application intake with six due-diligence checklist rows created atomically; evidence-backed checklist and site review; independent application approval gate; opening-gate schema and effective-dated agreement schema; royalty draft calculation sourced only from published branch net-sales BI snapshot and passed reconciliation | Territory exclusivity/conflict engine; agreement drafting/signature/e-sign; all 10 opening-gate UI and verification; tenant/branch provisioning; royalty review/approval/invoice/payment and Finance posting; no deployed schema/runtime evidence |
+| BI | Metric catalogue, source watermark, reconciliation and versioned snapshot schema; snapshot publication requires fresh complete watermarks, passed reconciliation and now a versioned source-entity lineage map for every declared source; a trigger blocks publishing when lineage is incomplete or formula version mismatches; UI displays published snapshots | Source ingestion/aggregation jobs and KPI catalogue seed; metric formula governance; cohort/segmentation/export; automated source-to-ledger reconciliation; no snapshot runtime evidence |
+| SaaS Tenant | Plan version/entitlement, subscription, usage, invoice/payment and offboarding/legal-hold schema; server-side entitlement/quota check; usage recording RPC serializes metering per tenant, validates source/idempotency payload, and returns the prior event on an identical retry; Owner UI for plan view, trial, cancellation and offboarding; independent offboarding approval with retention window and legal-hold block | Metering is not yet called from every protected operational API and event source authenticity needs per-domain wiring; payment gateway/webhook settlement and invoice lifecycle; tenant lifecycle/suspension and retention execution; data export and deletion evidence; no deployed schema/runtime evidence |
+| Procurement | Reuses existing requisition→PO→receipt flow; tenant supplier ownership bridge with independent approval; invoice matching requires accepted receipt lines and PO quantity/price; Edge branch authorization; independent invoice approval is allowed only for clean matched invoices, requires a reason, records approval event and admin audit, and cannot be performed by invoice receiver; ERP UI exposes the approval step | Supplier invoice intake/storage verification; AP journal posting, returns/credit notes and supplier payment reconciliation; receipt status/columns still require final disposable/staging schema parity; no deployed schema/runtime evidence |
+| Executive | KPI target and operational alert schema; alert acknowledge/investigate/resolve/reopen commands; resolution requires evidence; independent verifier required; UI for alert queue, verification and branch KPI snapshots | Governed 150-branch KPI dashboard; company→region→branch→shift→transaction drilldown with authorization at every step; target catalogue and variance automation; alert generation from reconciled source data; no deployed schema/runtime evidence |
+
+## BI lineage guard increment (2026-11-25)\n\n- Added versioned metric source-lineage records with explicit source entity, field, key, join rule, aggregation rule and transformation reference.\n- Added a publication guard that rejects a snapshot if its formula version is not current or any declared source entity lacks a lineage record. This is a design-stage enforcement rule; metric lineage rows and source ingestion still need to be populated and verified.\n\n## SaaS metering hardening increment (2026-11-25)\n\n- Reworked the draft usage-recording RPC to serialize quota consumption per tenant, validate event identity and payload bounds, and return the existing event for a byte-for-byte equivalent business retry. Reusing an idempotency key with altered event facts is rejected.\n- This is a safer metering primitive, not proof that operational API usage is being metered. Each domain must call it only after its own authoritative operation commits; client-provided usage must never be trusted.\n\n## Delivery Storage upload increment (2026-11-25)\n\n- Added an Edge upload command that verifies branch access against the dispatch, accepts only JPEG/PNG/WebP images up to 5 MB, checks the binary file signature against the declared MIME, and generates the object path server-side under `tenant_id/branch_id/dispatch_id/` in the private `delivery-proof` bucket.\n- Updated the ERP proof form to upload a selected photo/signature directly and then register its proof record. The browser cannot choose an arbitrary storage path.\n- This requires the private `delivery-proof` bucket and its retention/access policy to exist in the eventual schema/storage rollout. No provider booking, signed webhook, live tracking, courier settlement or Finance reconciliation is enabled. The upload path has not been runtime-tested.\n\n## HR payroll Finance outbox increment (2026-11-25)
+
+- Added `hr_payroll_finance_outbox` to the HR SQL design draft. It snapshots an approved payroll run and its lines into a tenant/branch-scoped, idempotent Finance handoff queue. The queue RPC checks the run is approved, requires an independent queue actor, verifies line totals against the payroll header, and verifies every payroll line references an approved timesheet and effective compensation rate.
+- Added the Edge action `erp-hr-queue-payroll-finance` and an ERP control labelled “Siapkan Finance”. Payroll list now displays the outbox state.
+- Queueing is explicitly not journal posting, payment, or reconciliation. The actual Finance journal schema, posting ACL, payment lifecycle and reconciliation keys have not been identified, so the workflow does not mark payroll posted or reconciled.
+
+## BI publication evidence gate increment (2026-11-25)
+
+- Strengthened the BI snapshot publication trigger in the SQL design draft. A published metric now requires a current active metric definition at the same formula version, lineage for every declared source entity, selected source watermarks that belong to the same tenant and cover the snapshot window, complete expected/observed record counts, and watermark ingestion within the metric freshness SLA.
+- Every declared source entity must have a matching selected watermark. Reconciliation references must belong to the same tenant, be explicitly `passed` (not waived), be reviewed, and cover the snapshot period.
+- This is a database design gate only. Source ingestion jobs, approved lineage population, actual source aggregation, and runtime evidence remain unimplemented/unverified; the draft has not been replayed or applied.
+
+## CRM paid-transaction identity linking increment (2026-11-25)
+
+- Added `erp-crm-link-paid-transaction` to connect a paid `online_order` or `pos_sale` to a tenant-owned CRM customer. Source records are re-read server-side; payment must be `paid`; branch and tenant are derived/verified from the source; unassigned online orders fail closed.
+- Identity matching uses online-order WhatsApp or a POS customer reference only if it is strictly phone-shaped. Otherwise the user must choose a CRM customer. A source transaction can have only one customer link; repeated same-customer requests are idempotent and conflicting relinks are rejected.
+- Added the CRM UI workflow for this action. It intentionally does not award points.
+- Automatic earning is still not implemented: source schema reconnaissance found `orders` and `pos_sales` but no proven Finance reconciliation/net-sales source mapping. Awarding from a paid gross transaction would over-credit refunds, discounts, voids and chargebacks. This must wait for the Finance reconciliation source contract.
+
+## Procurement approval increment (2026-11-25)\n\n- Added a draft RPC `procurement_approve_supplier_invoice` for independently approving only invoices with status `matched` and no non-matched detail rows. It records a reason, approval event and audit record.\n- Added the corresponding Edge Function action and ERP UI action. Branch access is checked before invoking the RPC. The invoice receiver cannot approve their own invoice.\n- This does not post AP to Finance or mark an invoice paid. The Finance journal contract, payment rail, reconciliation key and credit-note/return handling remain outstanding. The SQL remains a design draft only.\n\n## Latest implementation increment (2026-11-25)\n\n- HR payroll source draft now extends the existing `hr_payroll_runs` / `hr_payroll_lines` structures instead of defining parallel replacement tables. It adds effective-dated hourly rates, links payroll lines to approved timesheets and compensation-rate records, and adds independent submit/approve workflow commands.\n- HR Edge Function commands and ERP workspace forms now cover rate entry/listing, payroll generation/listing, submission and approval. They remain Platform-Owner-only while tenant isolation is unreleased.\n- Payroll calculation is deliberately limited to hourly gross wages. It does not calculate overtime, monthly salary, tax, benefits, deductions or net pay. No payment or Finance journal posting is implemented because the actual Finance journal schema and reconciliation keys must first be confirmed.\n\n## Design SQL files (not migrations)
+
+- `docs/implementation/sql/CRM_LOYALTY_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/HR_WORKFORCE_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/DELIVERY_FULFILLMENT_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/FRANCHISE_EXPANSION_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/BI_ANALYTICS_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/SAAS_TENANT_BILLING_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/PROCUREMENT_SUPPLIER_SCHEMA_DRAFT.sql`
+- `docs/implementation/sql/EXECUTIVE_COMMAND_CENTER_SCHEMA_DRAFT.sql`
+
+These files are design artifacts only. They must be reconciled against the exact staging schema, checked for dependency order, replayed on a disposable database, and reviewed before becoming timestamped migrations. None has been applied to staging or Production.
+
+## Security boundaries retained
+
+- `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+- CRM and HR commands remain Platform-Owner-only/fail-closed while tenant isolation is unreleased.
+- Franchise, BI, Executive, SaaS plan/offboarding and supplier-ownership administration are Platform-Owner-only.
+- Delivery and Procurement operational actions check the actor's branch permission before mutation.
+- New tables use service-role-only RLS and revoke direct anon/authenticated access in the design drafts.
+- Never trust client tenant IDs as authority; resolve/verify tenant and branch on the server.
+- Never expose service-role credentials in browser code or logs.
+- No Supabase schema/data/Auth mutation, Edge Function deployment, Production change, PR creation or merge was performed in this implementation phase.
+
+## Current branch inspection (2026-11-25)
+
+- Latest compare: branch commit count is refreshed after this documentation update; see the final compare evidence for the exact ahead/behind count. Edge Function handlers were inspected at the preceding source revision; the latest commit after that inspection only refreshed this evidence document.
+- Source-level structural inspection: ERP section tags balanced (19/19), no missing static element references in the ERP script, new CRM paid-transaction identity linking and voucher consume/void, HR compensation/payroll plus Finance outbox handoff, Procurement invoice approval, and Delivery private proof upload action handlers are present; CRM, HR and Delivery forms are wired to their Edge actions; both release flags remain false. A quick raw ID regex sees two template-string false positives; it is not treated as a duplicate-ID pass.
+- No new build, test, deploy, migration replay, staging runtime or E2E job was triggered in this implementation increment. Prior Vercel build-rate-limit failure is historical evidence only and must be rechecked at final batch.
+- A green Preview build, CI tests, disposable migration replay, staging runtime, full E2E and transaction reconciliation remain unproven.
+
+## Final acceptance rule
+
+A feature is not DONE because a pure rule, SQL draft, Edge action, route, or screen exists. It must be proven end-to-end from PRD feature → database entity/relation → RLS → API/RPC → UI → tests → staging runtime → cross-domain reconciliation. Until those proofs exist, status remains PARTIAL / NOT VERIFIED / BLOCKED as appropriate.

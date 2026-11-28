@@ -1,0 +1,105 @@
+name: Branch Operations disposable migration replay
+
+on:
+  pull_request:
+    paths:
+      - "docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql"
+      - "supabase/migrations/20261128024514_branch_operations_persistence.sql"
+      - "supabase/tests/branch_operations.test.sql"
+      - "scripts/prepare-branch-operations-migration.sh"
+      - ".github/workflows/branch-operations-disposable-replay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fnb-os-disposable-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  disposable-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact candidate commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 3.4.0
+
+      - name: Initialize local Supabase config when absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase --version
+          if [[ ! -f supabase/config.toml ]]; then
+            supabase init --force
+          fi
+          if [[ ! -f supabase/config.toml ]]; then
+            supabase config convert --to toml
+          fi
+          test -f supabase/config.toml
+
+      - name: Verify official CLI-generated migration is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          migration="supabase/migrations/20261128024514_branch_operations_persistence.sql"
+          draft="docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql"
+          test -s "$migration"
+          test -s "$draft"
+          cmp -s "$migration" "$draft"
+          echo "Verified committed CLI-generated migration: $migration"
+      - name: Configure isolated disposable Supabase ports
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_port="$(python3 - <<'PY'
+          import os, socket
+          seed = 30000 + (int(os.environ["GITHUB_RUN_ID"]) % 500) * 5
+          for offset in range(0, 2500, 5):
+              base = 30000 + ((seed - 30000 + offset) % 2500)
+              sockets = []
+              try:
+                  for port in range(base, base + 5):
+                      sock = socket.socket()
+                      sock.bind(("0.0.0.0", port))
+                      sockets.append(sock)
+                  print(base)
+                  break
+              except OSError:
+                  pass
+              finally:
+                  for sock in sockets:
+                      sock.close()
+          else:
+              raise SystemExit("No available isolated port block")
+          PY
+          )"
+          sed -i \
+            -e "s/^project_id = .*/project_id = \"dlice-branch-ops-${GITHUB_RUN_ID}\"/" \
+            -e "s/^port = 54321$/port = $((base_port + 1))/" \
+            -e "s/^port = 54322$/port = $((base_port + 2))/" \
+            -e "s/^shadow_port = 54320$/shadow_port = ${base_port}/" \
+            -e "s/^port = 54323$/port = $((base_port + 3))/" \
+            -e "s/^port = 54324$/port = $((base_port + 4))/" \
+            supabase/config.toml
+      - name: Start isolated disposable Supabase stack
+        run: supabase start --exclude inbucket
+
+      - name: Replay all canonical migrations
+        run: supabase db reset
+
+      - name: Run Branch Operations pgTAP and complete database suite
+        run: supabase test db
+
+      - name: Stop and discard disposable database
+        if: always()
+        run: supabase stop --no-backup
+

@@ -53,10 +53,109 @@ jobs:
         run: deno test supabase/functions/dlice-orders/password-security_test.ts
       - name: Verify leaked-password guard on Auth flows
         run: node --test tests/contracts/leaked-password-guard-contract.test.mjs
+      - name: Run Delivery atomic adapter, worker and SQL contracts
+        run: node --test tests/contracts/delivery-atomic-adapter-worker.test.mjs tests/contracts/delivery-sql-contract.test.mjs
+      - name: Run eight-domain SQL delimiter contracts
+        run: node --test tests/contracts/eight-domain-sql-delimiter-contract.test.mjs
+      - name: Run SaaS billing metering and offboarding contracts
+        run: node --test tests/contracts/saas-billing-metering-contract.test.mjs
+      - name: Run BI evidence ingestion and reconciliation contracts
+        run: node --test tests/contracts/bi-evidence-ingestion-contract.test.mjs
+      - name: Run Franchise opening gate workflow contracts
+        run: node --test tests/contracts/franchise-opening-gates-contract.test.mjs
       - name: Run ERP command-center contract tests
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Check new domain workflow module syntax
+        run: >-
+          node --check src/branch-operations-workflows.mjs
+          && node --check src/recipe-bom-unit-economics.mjs
+          && node --check src/procurement-supplier-workflows.mjs
+          && node --check src/crm-referral-support-ltv-workflows.mjs
+          && node --check src/bi-forecast-report-alert-workflows.mjs
+          && node --check src/integration-connector-health-sync-workflows.mjs
+          && node --check src/quality-release-accessibility-gates.mjs
+          && node --check src/inventory-lot-valuation-workflows.mjs
+          && node --check src/pos-promotion-voucher-workflows.mjs
+          && node --check src/hr-recruitment-training-performance-workflows.mjs
+          && node --check src/admin-access-review-recovery-support-workflows.mjs
+          && node --check src/kitchen-routing-food-safety-allergens.mjs
+          && node --check src/order-channel-eta-workflows.mjs
+          && node --check src/executive-stock-waste-anomaly-alerts.mjs
+          && node --check src/finance-budget-consolidation-workflows.mjs
+      - name: Check Branch Operations cross-domain costing module syntax
+        run: node --check src/branch-operations-costing-integration.mjs
+      - name: Run Branch Operations cross-domain costing contracts
+        run: node --test tests/contracts/branch-operations-costing-integration.test.mjs
+      - name: Run Branch Operations evidence workflow contracts
+        run: node --test tests/contracts/branch-operations-workflows.test.mjs
+      - name: Check Branch Operations browser UI syntax
+        run: node --check src/branch-operations-ui.mjs && node --check src/branch-operations-supabase-repository.mjs
+      - name: Run Branch Operations Supabase repository contracts
+        run: node --test tests/contracts/branch-operations-supabase-repository.test.mjs
+      - name: Verify Branch Operations RPC signature and ACL parity
+        run: node --test tests/contracts/branch-operations-rpc-signature-contract.test.mjs
+      - name: Verify Branch Operations persistence, Auth, Storage and UI contracts
+        run: node --test tests/contracts/branch-operations-persistence-sql-contract.test.mjs
+      - name: Check HR payroll Finance reconciliation syntax
+        run: node --check src/hr-payroll-finance-reconciliation.mjs
+      - name: Run HR payroll Finance reconciliation contracts
+        run: node --test tests/contracts/hr-payroll-finance-reconciliation.test.mjs
+      - name: Verify HR payroll provider batch and signed reconciliation contracts
+        run: node --test tests/contracts/hr-payroll-payment-workflows.test.mjs
+      - name: Type-check payroll provider webhook Edge Function
+        run: deno check supabase/functions/hr-payroll-provider-webhook/index.ts
+      - name: Type-check Branch Operations authenticated Edge Function
+        run: deno check supabase/functions/branch-operations/index.ts
+      - name: Check CRM referral support and LTV module syntax
+        run: node --check src/crm-referral-support-ltv-workflows.mjs
+      - name: Check CRM customer LTV projection syntax
+        run: node --check src/crm-customer-ltv-projection.mjs
+      - name: Run reconciled CRM customer LTV projection contracts
+        run: node --test tests/contracts/crm-customer-ltv-projection.test.mjs
+      - name: Run CRM referral support and LTV workflow contracts
+        run: node --test tests/contracts/crm-referral-support-ltv-workflows.test.mjs
+      - name: Verify CRM POS refund settlement and Finance integration contracts
+        run: node --test tests/contracts/crm-pos-refund-settlement-finance-integration.test.mjs
+      - name: Type-check authenticated ERP Edge API
+        run: deno check supabase/functions/dlice-orders/index.ts
+      - name: Run BI forecasting reporting and KPI alert workflow contracts
+        run: node --test tests/contracts/bi-forecast-report-alert-workflows.test.mjs
+      - name: Run Integration connector health and catalog sync contracts
+        run: node --test tests/contracts/integration-connector-health-sync-workflows.test.mjs
+      - name: Run Quality pilot rollback release and accessibility gate contracts
+        run: node --test tests/contracts/quality-release-accessibility-gates.test.mjs
+      - name: Run Inventory lot allocation and valuation contracts
+        run: node --test tests/contracts/inventory-lot-valuation-workflows.test.mjs
+      - name: Run POS promotion and voucher workflow contracts
+        run: node --test tests/contracts/pos-promotion-voucher-workflows.test.mjs
+      - name: Run HR recruitment training and performance contracts
+        run: node --test tests/contracts/hr-recruitment-training-performance-workflows.test.mjs
+      - name: Run Admin access review recovery and support access contracts
+        run: node --test tests/contracts/admin-access-review-recovery-support-workflows.test.mjs
+      - name: Run Kitchen routing food safety and allergen contracts
+        run: node --test tests/contracts/kitchen-routing-food-safety-allergens.test.mjs
+      - name: Check Delivery fulfilment reconciliation syntax
+        run: node --check src/delivery-fulfillment-reconciliation.mjs
+      - name: Run Delivery fulfilment reconciliation contracts
+        run: node --test tests/contracts/delivery-fulfillment-reconciliation.test.mjs
+      - name: Run Order external channel ETA and SLA contracts
+        run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
+      - name: Check reconciled Executive Command Center read model syntax
+        run: node --check src/executive-command-center-reconciled-read-model.mjs
+      - name: Run reconciled Executive Command Center read model contracts
+        run: node --test tests/contracts/executive-command-center-reconciled-read-model.test.mjs
+      - name: Run Executive stock waste and anomaly alert contracts
+        run: node --test tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs
+      - name: Run Finance budget variance and consolidation contracts
+        run: node --test tests/contracts/finance-budget-consolidation-workflows.test.mjs
+      - name: Run blocked acceptance remediation workflow contracts
+        run: node --test tests/contracts/blocked-acceptance-remediation-workflows.test.mjs
+      - name: Run Menu Recipe nested BOM and unit economics contracts
+        run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
+      - name: Run Procurement supplier pricing demand and return contracts
+        run: node --test tests/contracts/procurement-supplier-workflows.test.mjs
       - name: Run atomic admin permission audit contract tests
         run: node --test tests/contracts/admin-permission-audit-contract.test.mjs
       - name: Verify staging secret workflow triggers
@@ -109,3 +208,4 @@ jobs:
             fi
           fi
           echo "Migration files and release notes exist; migration changes must update release documentation."
+
