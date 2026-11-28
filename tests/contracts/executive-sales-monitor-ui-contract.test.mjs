@@ -28,3 +28,11 @@ test("Executive approval center renders source-backed entity detail and evidence
  assert.match(html,/Detail entity sumber/);
  assert.match(html,/Referensi bukti/);
 });
+
+test("Executive sales transaction drill-down includes refunds, settlement allocations and Finance journals",()=>{
+ assert.match(html,/sale_refunds/);
+ assert.match(html,/sale_settlements/);
+ assert.match(html,/sale_finance_journals/);
+ assert.match(html,/Finance journal \(/);
+ assert.match(html,/Settlement \(/);
+});
