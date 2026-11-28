@@ -159,7 +159,7 @@ settlement_allocation_base as (
   join public.payment_settlements ps on ps.id=i.settlement_id
   join settlement_tenant_totals st on st.settlement_id=i.settlement_id
   where ps.status='reconciled' and ps.net_amount_idr is not null
-    and ps.gross_amount_idr>0 and st.tenant_count=1
+    and ps.gross_amount_idr>0 and ps.net_amount_idr<=ps.gross_amount_idr and st.tenant_count=1
     and st.allocated_gross_idr=ps.gross_amount_idr
 ),
 settlement_allocations as (
