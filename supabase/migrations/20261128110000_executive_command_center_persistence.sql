@@ -314,7 +314,7 @@ begin
   or p_valid_until<=p_valid_from or p_valid_from<now()-interval '5 minutes'
   or p_valid_until>now()+interval '90 days'
   or p_source_domains is null or cardinality(p_source_domains)<1
-  or not (p_source_domains <@ array['procurement','hr']::text[])
+  or not (p_source_domains <@ array['procurement','hr','inventory']::text[])
   or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
   raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
  end if;
@@ -475,8 +475,8 @@ declare
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_branch_id is null
   or p_source_domain is null or p_source_entity is null or p_requested_action is null
-  or p_source_domain not in ('procurement','hr')
-  or p_source_entity not in ('purchase_requisitions','hr_leave_requests')
+  or p_source_domain not in ('procurement','hr','inventory')
+  or p_source_entity not in ('purchase_requisitions','hr_leave_requests','stock_transfers')
   or p_source_entity_id is null or length(p_source_entity_id)<>36
   or p_requested_action<>'approve_or_reject'
   or p_request_payload is null or jsonb_typeof(p_request_payload)<>'object'
@@ -506,6 +506,14 @@ begin
    from public.hr_leave_requests l
    where l.id=p_source_entity_id::uuid
    for update of l;
+ elsif p_source_entity='stock_transfers' and p_source_domain='inventory' then
+  select st.source_branch_id,sb.tenant_id,st.status,floor(extract(epoch from st.updated_at)*1000000)::bigint
+   into v_source_branch,v_source_tenant,v_source_status,v_source_version
+   from public.stock_transfers st
+   join public.branches sb on sb.id=st.source_branch_id
+   join public.branches db on db.id=st.destination_branch_id and db.tenant_id=sb.tenant_id
+   where st.id=p_source_entity_id::uuid and sb.status='active' and db.status='active'
+   for update of st;
  else
   raise exception using errcode='22023',message='EXECUTIVE_APPROVAL_SOURCE_ADAPTER_UNSUPPORTED';
  end if;
@@ -514,7 +522,8 @@ begin
   or not exists(select 1 from public.branches b where b.id=p_branch_id and b.tenant_id=p_tenant_id and b.status='active') then
   raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_SOURCE_SCOPE_DENIED';
  end if;
- if v_source_status<>'submitted' then
+ if (p_source_entity='stock_transfers' and v_source_status<>'draft')
+  or (p_source_entity<>'stock_transfers' and v_source_status<>'submitted') then
   raise exception using errcode='23514',message='EXECUTIVE_APPROVAL_SOURCE_NOT_SUBMITTED';
  end if;
  if not v_platform_owner
@@ -669,6 +678,20 @@ begin
   v_source_version:=v.source_version;
   v_mutation:=public.hr_review_leave_request(
    v.source_entity_id::uuid,p_actor_user_id,p_decision='approved',btrim(p_reason));
+ elsif v.source_domain='inventory' and v.source_entity='stock_transfers' then
+  perform 1 from public.stock_transfers st
+   join public.branches sb on sb.id=st.source_branch_id and sb.tenant_id=p_tenant_id
+   join public.branches db on db.id=st.destination_branch_id and db.tenant_id=p_tenant_id
+   where st.id=v.source_entity_id::uuid and st.source_branch_id=v.branch_id
+    and st.status='draft' and sb.status='active' and db.status='active'
+    and floor(extract(epoch from st.updated_at)*1000000)::bigint=v.source_version
+   for update of st;
+  if not found then
+   raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_SOURCE_VERSION_MISMATCH';
+  end if;
+  v_source_version:=v.source_version;
+  v_mutation:=public.erp_transition_stock_transfer(
+   v.source_entity_id::uuid,p_actor_user_id,case when p_decision='approved' then 'approve' else 'cancel' end);
  else
   raise exception using errcode='0A000',message='EXECUTIVE_APPROVAL_SOURCE_ADAPTER_UNSUPPORTED';
  end if;
