@@ -158,7 +158,8 @@ settlement_allocations as (
 settlement_by_sale as (
   select i.pos_sale_id,
          sum(i.amount_idr)::bigint as allocated_gross_idr,
-         sum(sa.allocated_net_idr)::bigint as allocated_net_idr,
+         case when count(*)=count(sa.allocated_net_idr) then sum(sa.allocated_net_idr)::bigint else null end as allocated_net_idr,
+         (count(*)=count(sa.allocated_net_idr)) as settlement_allocation_complete,
          count(*) filter(where ps.status='reconciled')::integer as reconciled_settlement_count
   from public.payment_settlement_items i
   join public.payment_settlements ps on ps.id=i.settlement_id
@@ -170,6 +171,7 @@ select s.sale_id,s.transaction_code,s.tenant_id,s.branch_id,s.business_date,s.pa
        coalesce(r.refund_total_idr,0)::bigint as processed_refund_total_idr,
        coalesce(st.allocated_gross_idr,0)::bigint as settlement_allocated_gross_idr,
        st.allocated_net_idr as settlement_allocated_net_idr,
+       coalesce(st.settlement_allocation_complete,false) as settlement_allocation_complete,
        coalesce(st.reconciled_settlement_count,0)::integer as reconciled_settlement_count,
        coalesce(j.posted_journal_total_idr,0)::bigint as posted_journal_total_idr,
        coalesce(j.posted_journal_count,0)::integer as posted_journal_count
