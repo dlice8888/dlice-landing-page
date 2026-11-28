@@ -115,11 +115,13 @@ create table if not exists public.branch_ops_compliance_checks (
   status text not null default 'draft' check (status in ('draft','submitted','approved','rejected')),
   evidence_asset_id uuid null,
   business_date date not null,
+  created_by uuid not null references auth.users(id) on delete restrict,
   approved_by uuid null references auth.users(id) on delete restrict,
   approved_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (tenant_id,id),
+  unique (tenant_id,branch_id,check_key,business_date),
   foreign key (tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict,
   foreign key (tenant_id,evidence_asset_id) references public.branch_ops_evidence_assets(tenant_id,id) on delete restrict,
   check (status<>'approved' or (approved_by is not null and approved_at is not null and result in ('pass','fail','not_applicable')))
@@ -364,15 +366,67 @@ begin
  return jsonb_build_object('status','published','snapshotId',v_row.id,'score',v_score);
 end $$;
 
+
+create or replace function public.branch_ops_submit_compliance_check(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_check_key text,p_title text,p_weight integer,
+ p_business_date date,p_evidence_asset_id uuid
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_compliance_checks;
+begin
+ perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ if not exists(select 1 from public.branch_ops_evidence_assets e where e.id=p_evidence_asset_id
+   and e.tenant_id=p_tenant_id and e.branch_id=p_branch_id and e.owner_user_id=p_actor_id
+   and e.purpose='branch_compliance' and e.retention_until>now()) then
+   raise exception 'BRANCH_COMPLIANCE_EVIDENCE_UNVERIFIED' using errcode='42501';
+ end if;
+ insert into public.branch_ops_compliance_checks(tenant_id,branch_id,check_key,title,weight,result,status,evidence_asset_id,business_date,created_by)
+ values(p_tenant_id,p_branch_id,p_check_key,p_title,p_weight,'pending','submitted',p_evidence_asset_id,p_business_date,p_actor_id)
+ on conflict(tenant_id,branch_id,check_key,business_date) do update
+   set title=excluded.title,weight=excluded.weight,result='pending',status='submitted',
+       evidence_asset_id=excluded.evidence_asset_id,created_by=excluded.created_by,
+       approved_by=null,approved_at=null,updated_at=now()
+   where public.branch_ops_compliance_checks.status in ('draft','rejected')
+ returning * into v_row;
+ if v_row.id is null then raise exception 'BRANCH_COMPLIANCE_CHECK_ALREADY_REVIEWED' using errcode='55000'; end if;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.compliance.check.submitted','branch_ops_compliance_check',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'check_key',p_check_key));
+ return jsonb_build_object('status','submitted','checkId',v_row.id);
+end $;
+
+create or replace function public.branch_ops_review_compliance_check(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_check_id uuid,p_result text
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_compliance_checks;
+begin
+ perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ select * into v_row from public.branch_ops_compliance_checks
+ where id=p_check_id and tenant_id=p_tenant_id and branch_id=p_branch_id for update;
+ if not found then raise exception 'BRANCH_COMPLIANCE_CHECK_NOT_FOUND' using errcode='P0002'; end if;
+ if v_row.status<>'submitted' then raise exception 'BRANCH_COMPLIANCE_CHECK_NOT_SUBMITTED' using errcode='55000'; end if;
+ if v_row.created_by=p_actor_id then raise exception 'BRANCH_COMPLIANCE_SEPARATION_OF_DUTIES' using errcode='42501'; end if;
+ if p_result not in ('pass','fail','not_applicable') then raise exception 'BRANCH_COMPLIANCE_RESULT_INVALID'; end if;
+ update public.branch_ops_compliance_checks set status='approved',result=p_result,approved_by=p_actor_id,approved_at=now(),updated_at=now()
+ where id=p_check_id returning * into v_row;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.compliance.check.reviewed','branch_ops_compliance_check',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'result',p_result,'submitted_by',v_row.created_by));
+ return jsonb_build_object('status','approved','checkId',v_row.id,'result',p_result);
+end $;
+
 revoke all on function public.branch_ops_assert_actor(uuid,uuid,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint) from public,anon,authenticated;
 revoke all on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text) from public,anon,authenticated;
+revoke all on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) from public,anon,authenticated;
+revoke all on function public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.branch_ops_assert_actor(uuid,uuid,uuid) to service_role;
 grant execute on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) to service_role;
 grant execute on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) to service_role;
 grant execute on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) to service_role;
 grant execute on function public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint) to service_role;
 grant execute on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text) to service_role;
+grant execute on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) to service_role;
+grant execute on function public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text) to service_role;
