@@ -34,6 +34,9 @@ test("UOM conversion uses active effective dimension-compatible snapshot",()=>{
  const result=convertInventoryQuantity({quantity:1.25,fromUom:"kg",toUom:"g",at:"2026-11-28T00:00:00Z",conversions:[{from_uom:"kg",to_uom:"g",factor:1000,from_dimension:"mass",to_dimension:"mass",status:"active",effective_from:"2026-01-01T00:00:00Z",version:"uom-v2"}]});
  assert.equal(result.quantity,1250);assert.equal(result.conversion_version,"uom-v2");
  assert.throws(()=>convertInventoryQuantity({quantity:1,fromUom:"kg",toUom:"l",at:"2026-11-28T00:00:00Z",conversions:[{from_uom:"kg",to_uom:"l",factor:1,from_dimension:"mass",to_dimension:"volume",status:"active",effective_from:"2026-01-01T00:00:00Z"}]}),/CONVERSION_NOT_FOUND/);
+ const chain=convertInventoryQuantity({quantity:2,fromUom:"case",toUom:"unit",at:"2026-11-28T00:00:00Z",conversions:[{from_uom:"case",to_uom:"pack",factor:6,from_dimension:"count",to_dimension:"count",status:"active",effective_from:"2026-01-01T00:00:00Z",version:"v1"},{from_uom:"pack",to_uom:"unit",factor:10,from_dimension:"count",to_dimension:"count",status:"active",effective_from:"2026-01-01T00:00:00Z",version:"v2"}]});
+ assert.equal(chain.quantity,120);
+ assert.throws(()=>convertInventoryQuantity({quantity:1,fromUom:"a",toUom:"c",at:"2026-11-28T00:00:00Z",conversions:[{from_uom:"a",to_uom:"b",factor:2,from_dimension:"count",to_dimension:"count",status:"active",effective_from:"2026-01-01T00:00:00Z"},{from_uom:"b",to_uom:"a",factor:0.5,from_dimension:"count",to_dimension:"count",status:"active",effective_from:"2026-01-01T00:00:00Z"}]}),/CONVERSION_CYCLE/);
 });
 
 test("stock buckets reconcile and reservations use optimistic version",()=>{
