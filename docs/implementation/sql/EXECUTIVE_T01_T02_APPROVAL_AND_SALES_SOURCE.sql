@@ -196,7 +196,7 @@ alter table public.branch_expenses
   add column if not exists updated_at timestamptz not null default now();
 create or replace function public.touch_approval_source_updated_at()
 returns trigger language plpgsql security invoker set search_path=''
-as $ begin new.updated_at:=now(); return new; end; $;
+as $$ begin new.updated_at:=now(); return new; end; $$;
 drop trigger if exists branch_expenses_touch_updated_at on public.branch_expenses;
 drop trigger if exists purchase_requisitions_touch_updated_at on public.purchase_requisitions;
 drop trigger if exists purchase_orders_touch_updated_at on public.purchase_orders;
