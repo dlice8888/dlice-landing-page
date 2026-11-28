@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   buildApprovalInbox, assertApprovalClaim, assertApprovalDecision,
-  assertApprovalDelegation,
+  assertApprovalDelegation, assertApprovalEligibility, rankPendingApprovals,
 } from "../../src/executive-approval-center.mjs";
 
 const now = "2026-11-28T10:00:00.000Z";
