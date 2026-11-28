@@ -46,3 +46,23 @@ test("incident evidence ids are deduplicated before the atomic database write", 
   });
   assert.deepEqual(args.p_evidence_asset_ids, ["asset-a"]);
 });
+
+test("equipment registration and lifecycle transitions use server-scoped RPC calls", async () => {
+  const calls = [];
+  const client = {
+    rpc: async (name, args) => { calls.push({ name, args }); return { data: { status: "ok" }, error: null }; },
+    from: () => ({}),
+  };
+  const repo = createBranchOperationsRepository({ serviceClient: client, ...scope });
+  await repo.registerEquipment({ assetCode: "FRIDGE-01", name: "Display chiller" });
+  await repo.updateTaskStatus({ taskId: "task-a", status: "completed" });
+  await repo.updateIncidentStatus({ incidentId: "incident-a", status: "resolved" });
+  await repo.updateWorkOrderStatus({ workOrderId: "work-a", status: "in_progress" });
+  assert.deepEqual(calls.map((call) => call.name), [
+    "branch_ops_register_equipment",
+    "branch_ops_update_task_status",
+    "branch_ops_update_incident_status",
+    "branch_ops_update_work_order_status",
+  ]);
+  assert.ok(calls.every((call) => call.args.p_tenant_id === scope.tenantId && call.args.p_branch_id === scope.branchId && call.args.p_actor_id === scope.actorId));
+});
