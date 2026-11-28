@@ -43,9 +43,9 @@ test("prep planning reserves only available stock and carries recipe version",()
 });
 
 test("production consumption must reconcile to posted stock movement ledger",()=>{
- const result=reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:4.5},movements:[{batch_id:"batch1",ingredient_id:"flour",quantity_base:4.5,status:"posted"}],wasteByIngredient:{flour:0.5},varianceTolerance:1});
+ const result=reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:4.5},movements:[{id:"m-ok",batch_id:"batch1",ingredient_id:"flour",quantity_base:4.5,status:"posted"}],wasteByIngredient:{flour:0.5},varianceTolerance:1});
  assert.equal(result.reconciled,true);
- assert.throws(()=>reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:5},movements:[{batch_id:"batch1",ingredient_id:"flour",quantity_base:4,status:"posted"}]}),/LEDGER_MISMATCH/);
+ assert.throws(()=>reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:5},movements:[{id:"m-bad",batch_id:"batch1",ingredient_id:"flour",quantity_base:4,status:"posted"}]}),/LEDGER_MISMATCH/);
  const duplicate={id:"m1",batch_id:"batch1",ingredient_id:"flour",quantity_base:4.5,status:"posted"};
  assert.throws(()=>reconcileProductionConsumption({batchId:"batch1",recipeVersionId:"rv1",plannedByIngredient:{flour:4},actualByIngredient:{flour:9},movements:[duplicate,duplicate]}),/MOVEMENT_DUPLICATE/);
 });
