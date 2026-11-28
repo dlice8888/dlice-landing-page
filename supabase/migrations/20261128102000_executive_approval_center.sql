@@ -147,7 +147,7 @@ for each row execute function public.trg_enqueue_payroll_approval();
 create or replace function public.trg_enqueue_branch_compliance_approval()
 returns trigger language plpgsql security definer set search_path=''
 as $$ begin
- if new.status='submitted' and (tg_op='INSERT' or old.status is distinct from new.status) then
+ if new.status='submitted' and new.result in ('pass','fail','not_applicable') and (tg_op='INSERT' or old.status is distinct from new.status) then
   perform public.enqueue_executive_approval(new.tenant_id,'branch_ops','branch_ops_compliance_check',new.id,new.branch_id,new.created_by,0,new.check_key||': '||new.title);
  end if;return new;end $$;
 drop trigger if exists enqueue_branch_compliance_approval on public.branch_ops_compliance_checks;
