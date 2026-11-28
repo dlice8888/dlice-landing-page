@@ -38,6 +38,23 @@ const audit = (deps, tx, scope, event) => adapter(deps, "appendAudit")(tx, {
   idempotencyKey: scope.idempotencyKey, ...event,
 });
 
+/** Require a repository-backed proof that every evidence object is private, retained and owned by this tenant/branch. */
+const verifyPrivateEvidenceOwnership = async (deps, tx, scope, references, purpose) => {
+  if (!references.length) return;
+  const verified = await adapter(deps, "verifyPrivateEvidenceOwnership")(tx, {
+    tenantId: scope.tenantId,
+    branchId: scope.branchId,
+    actorId: scope.actorId,
+    references: [...references],
+    purpose,
+    requirePrivate: true,
+    requireRetained: true,
+  });
+  if (verified !== true) {
+    fail("BRANCH_EVIDENCE_OWNERSHIP_UNVERIFIED", "Evidence must be verified as private, retained and owned by this tenant and branch");
+  }
+};
+
 /** Create a branch task only after resolving a same-branch assignee and checklist. */
 export async function createBranchTask(input, deps) {
   const scope = scopeOf(input, "branch.task.create");
@@ -76,6 +93,7 @@ export async function recordBranchIncident(input, deps) {
     const prior = await adapter(deps, "findBranchIncidentByIdempotencyKey")(tx, scope);
     if (prior) return Object.freeze({ status: "duplicate", incidentId: prior.id, escalationTaskId: prior.escalationTaskId ?? null });
     if (severity === "critical" && evidenceReferences.length === 0) fail("BRANCH_INCIDENT_EVIDENCE_REQUIRED", "Critical incidents require evidence");
+    await verifyPrivateEvidenceOwnership(deps, tx, scope, evidenceReferences, "branch_incident");
     const incident = await adapter(deps, "persistBranchIncident")(tx, {
       ...scope, category, description, severity, evidenceReferences,
       occurredAt: input.occurredAt ?? null,
@@ -130,16 +148,21 @@ export async function publishBranchComplianceScore(input, deps) {
     const prior = await adapter(deps, "findBranchComplianceSnapshotByIdempotencyKey")(tx, scope);
     if (prior) return Object.freeze({ status: "duplicate", snapshotId: prior.id, score: prior.score });
     const evidence = await adapter(deps, "loadBranchComplianceEvidence")(tx, { ...scope, periodStart, periodEnd });
+    const evidenceReferences = Array.isArray(evidence?.evidenceReferences)
+      ? [...new Set(evidence.evidenceReferences.map((value) => required(value, "evidenceReference")))]
+      : [];
     if (!evidence || evidence.approved !== true || evidence.reconciled !== true ||
         !Number.isInteger(evidence.requiredChecks) || evidence.requiredChecks < 1 ||
         evidence.completedChecks !== evidence.requiredChecks ||
         !Number.isFinite(evidence.score) || evidence.score < 0 || evidence.score > 100 ||
-        !Array.isArray(evidence.evidenceReferences) || evidence.evidenceReferences.length < evidence.requiredChecks) {
+        evidenceReferences.length < evidence.requiredChecks) {
       fail("BRANCH_COMPLIANCE_EVIDENCE_INCOMPLETE", "All approved checks, evidence references and reconciliations are required");
     }
+    await verifyPrivateEvidenceOwnership(deps, tx, scope, evidenceReferences, "branch_compliance");
     const snapshot = await adapter(deps, "persistBranchComplianceSnapshot")(tx, {
       ...scope, periodStart, periodEnd, score: evidence.score,
       completedChecks: evidence.completedChecks, requiredChecks: evidence.requiredChecks,
+      evidenceReferences,
       sourceRevision: required(evidence.sourceRevision, "sourceRevision"),
     });
     if (!snapshot?.id) fail("BRANCH_COMPLIANCE_SNAPSHOT_FAILED", "Compliance snapshot was not persisted");
