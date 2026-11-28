@@ -109,7 +109,26 @@ Deno.serve(async (req: Request) => {
       // The bucket has no anon/authenticated Storage policies and is never public.
       const { error: uploadError } = await service.storage.from("branch-ops-evidence").upload(path, uploadFile, { contentType: uploadFile.type, upsert: false });
       if (uploadError) return fail("Upload bukti ditolak oleh kebijakan Storage.", 403, origin);
-      const registered = await repo.registerEvidenceAsset({ objectPath: path, purpose, mimeType: uploadFile.type, sizeBytes: uploadFile.size });
+      let registered: unknown;
+      try {
+        registered = await repo.registerEvidenceAsset({ objectPath: path, purpose, mimeType: uploadFile.type, sizeBytes: uploadFile.size });
+      } catch (registrationError) {
+        // Resolve ambiguous RPC outcomes before compensation: never delete an object
+        // if its metadata row was committed but the client lost the response.
+        const { data: existingAsset } = await service.from("branch_ops_evidence_assets")
+          .select("id").eq("tenant_id", tenantId).eq("branch_id", branchId)
+          .eq("owner_user_id", actorId).eq("object_path", path).maybeSingle();
+        if (existingAsset?.id) {
+          registered = existingAsset.id;
+        } else {
+          const { error: cleanupError } = await service.storage.from("branch-ops-evidence").remove([path]);
+          if (cleanupError) {
+            console.error("branch_ops_upload_compensation_failed", { code: cleanupError.name ?? "STORAGE_DELETE_FAILED" });
+            return fail("Metadata gagal disimpan dan pembersihan file yatim juga gagal; perlu penanganan operasional.", 500, origin);
+          }
+          throw registrationError;
+        }
+      }
       return reply({ ok: true, evidence_asset_id: registered, object_path: path }, 201, origin);
     }
     if (action === "register-equipment") {
