@@ -83,3 +83,8 @@ test("T02 delegation create and revoke are audited and branch-scoped", () => {
   assert.match(sql, /executive\.approval\.delegation\.revoked/);
   assert.match(sql, /d\.delegator_user_id<>a\.created_by/);
 });
+
+test("T02 prevents employee self-approval even when another creator submitted the timesheet", () => {
+  assert.match(sql, /APPROVAL_EMPLOYEE_SELF_APPROVAL_FORBIDDEN/);
+  assert.match(sql, /employee_user_id=p_actor_user_id/);
+});
