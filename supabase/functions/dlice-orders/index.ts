@@ -593,7 +593,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-list-purchase-orders": "procurement",
     "erp-create-purchase-order": "procurement",
     "erp-update-purchase-order": "procurement",
+    "erp-executive-sales-monitor": "reports",
+    "erp-executive-branch-kpis": "reports",
+    "erp-executive-list-branch-rankings": "reports",
+    "erp-executive-list-alerts": "reports",
+    "erp-executive-publish-branch-ranking": "branches",
+    "erp-executive-transition-alert": "branches",
+    "erp-executive-verify-alert": "branches",
+    "erp-executive-get-business-day-cutoff": "branches",
+    "erp-executive-set-business-day-cutoff": "branches",
   };
+  const executiveApprovalActions = new Set([
+    "erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval",
+    "erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation",
+    "erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation",
+  ]);
+  // This broad action gate is only the first layer: the approval RPC still checks
+  // tenant role, branch, category, SoD, amount limit, delegation and expiry.
+  if (executiveApprovalActions.has(action) && !isPlatformOwner && !actor.profile.permissions.includes("*") &&
+      !["finance","procurement","staff","branches"].some((p) => actor.profile.permissions.includes(p))) {
+    return fail("Akses ditolak. Tidak ada izin domain untuk pusat persetujuan.",403,origin);
+  }
+
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
