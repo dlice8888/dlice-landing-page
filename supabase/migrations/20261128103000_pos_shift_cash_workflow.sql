@@ -113,7 +113,7 @@ create or replace function public.pos_record_cash_movement_atomic(
  p_movement_type text,p_amount_idr bigint,p_reason text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint; v_supervisor boolean; v_sales bigint; v_in bigint; v_out bigint; v_refunds bigint;
+declare v_branch public.branches%rowtype; v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint; v_supervisor boolean; v_sales bigint; v_in bigint; v_out bigint; v_refunds bigint;
 begin
  if coalesce(auth.jwt()->>'role','')<>'service_role' then raise exception using errcode='42501',message='POS_SERVICE_ROLE_REQUIRED'; end if;
  if p_movement_type not in ('cash_in','cash_out') or p_amount_idr<=0 or length(btrim(coalesce(p_reason,'')))<3
