@@ -11,7 +11,7 @@ fi
 supabase db reset --help >/dev/null
 supabase test db --help >/dev/null
 
-migration="supabase/migrations/20261128024514_branch_operations_persistence.sql"
+migration="supabase/migrations/20261128030033_20261128030033_20261128024514_branch_operations_persistence.sql"
 draft="docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql"
 test -s "$migration"
 test -s "$draft"
