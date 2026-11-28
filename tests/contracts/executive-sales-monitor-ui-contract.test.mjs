@@ -22,3 +22,9 @@ test("Executive sales monitor uses branch-configured timezone instead of client 
  assert.match(html,/Timezone lokal masing-masing cabang/);
  assert.doesNotMatch(html,/timezone:\s*\$\('executiveSalesTimezone'\)\.value/);
 });
+
+test("Executive approval center renders source-backed entity detail and evidence",()=>{
+ assert.match(html,/item\\.source_detail/);
+ assert.match(html,/Detail entity sumber/);
+ assert.match(html,/Referensi bukti/);
+});
