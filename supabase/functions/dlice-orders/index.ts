@@ -2034,7 +2034,7 @@ if (action === "admin-set-profile-role") {
         return json({cutoff:data},200,origin);
       }
       const cutoff=safeText(body.cutoff_time,5),expectedVersion=Number(body.expected_version);
-      if(!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(cutoff)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+      if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
         return fail("Waktu cutoff atau versi konfigurasi tidak valid.",422,origin);
       const {data,error}=await admin.rpc("set_branch_business_day_cutoff",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_id:branchId,p_branch_ids:allowedBranchIds,p_cutoff_time:cutoff,p_expected_version:expectedVersion});
       if(error)return fail("Perubahan cutoff ditolak. Periksa role dan versi konfigurasi.",409,origin);
