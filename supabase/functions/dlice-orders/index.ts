@@ -894,7 +894,7 @@ if (action === "admin-set-profile-role") {
     const next = safeText(body.operational_status, 40);
     const allowed = ["received","confirmed","preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed","cancelled","delivery_issue"];
     if (!allowed.includes(next)) return fail("Status pesanan tidak valid.", 422, origin);
-    const { data: oldOrder } = await admin.from("orders").select("branch_id,operational_status,payment_status").eq("id", orderId).maybeSingle();
+    const { data: oldOrder } = await admin.from("orders").select("branch_id,operational_status,payment_status,state_version").eq("id", orderId).maybeSingle();
     if (!oldOrder) return fail("Pesanan tidak ditemukan.", 404, origin);
     if (!await actorCanAccessBranch(oldOrder.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     if (["preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed"].includes(next) && oldOrder.payment_status !== "paid") {
@@ -902,17 +902,31 @@ if (action === "admin-set-profile-role") {
     }
     if(oldOrder.payment_status==="paid"&&next!==oldOrder.operational_status){const {data:n}=await admin.from("notification_log").select("status").eq("order_id",orderId).eq("notification_type","payment_verified_whatsapp").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n||n.status!=="sent")return fail("Kirim konfirmasi pembayaran beserta tutorial tracking, lalu tandai terkirim sebelum memperbarui status.",409,origin);}
     if(["cancelled","delivery_issue"].includes(next)&&safeText(body.reason,500).length<4)return fail("Alasan wajib diisi untuk pembatalan/kendala.",422,origin);
-    const { data: applied, error } = await admin.rpc("admin_apply_operational_status_change", { p_order_id: orderId, p_actor_user_id: actor.user.id, p_next_status: next, p_reason: safeText(body.reason,500) });
-    if (error || applied !== true) return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan status terbaru.", 409, origin);
-    return json({ ok: true }, 200, origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",oldOrder.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const {data:applied,error}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:oldOrder.branch_id,p_actor_user_id:actor.user.id,p_order_id:orderId,
+      p_domain:"order",p_next_status:next,p_expected_version:oldOrder.state_version,
+      p_idempotency_key:safeText(body.idempotency_key,120)||"order-state:"+orderId+":order:"+oldOrder.state_version+":"+next,
+      p_payment_evidence_type:null,p_handover_acknowledgement:null,p_reason:safeText(body.reason,500)
+    });
+    if(error||!applied)return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan versi terbaru.",409,origin);
+    return json({ok:true,transition:applied},200,origin);
   }
 
 
   if (action === "admin-verify-payment") {
     const orderId=safeText(body.order_id,80),result=safeText(body.result,20),note=safeText(body.note,500);if(!["paid","rejected"].includes(result))return fail("Hasil verifikasi tidak valid.",422,origin);
-    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
+    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status,state_version").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
     const {data:p}=await admin.from("payment_records").select("id,proof_storage_path,method").eq("order_id",orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!p)return fail("Tidak ada pembayaran menunggu verifikasi.",409,origin);if(result==="paid"&&!p.proof_storage_path)return fail("Bukti pembayaran wajib tersedia.",409,origin);
-    const {data:applied,error:applyError}=await admin.rpc("admin_apply_payment_verification",{p_order_id:orderId,p_payment_id:p.id,p_actor_user_id:actor.user.id,p_result:result,p_note:note});if(applyError||applied!==true)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",o.branch_id).maybeSingle();if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const {data:applied,error:applyError}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:o.branch_id,p_actor_user_id:actor.user.id,p_order_id:orderId,
+      p_domain:"payment",p_next_status:result,p_expected_version:o.state_version,
+      p_idempotency_key:"order-payment:"+orderId+":"+p.id+":"+result,
+      p_payment_evidence_type:result==="paid"?(p.method==="cash"?"cash_tender":"verified_provider_event"):null,
+      p_handover_acknowledgement:null,p_reason:note
+    });if(applyError||!applied)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
     if(result==="paid"){const token=randomToken(),hash=await sha256(token);await admin.from("orders").update({tracking_token_hash:hash}).eq("id",orderId);const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",orderId);const items=(lines||[]).map(i=>`• ${i.product_name_snapshot} × ${i.quantity} — Rp${Number(i.line_total_idr).toLocaleString("id-ID")}`).join("\n");const code=formatTransactionCode(o.order_number,o.created_at,o.timezone),publicBase=origin&&isAllowedOrigin(origin)?origin:"https://dlice.vercel.app",track=`${publicBase}/track.html?token=${token}`,method=p.method==="dlice_qris"?"QRIS D’Lice":"Transfer bank";const msg=`Halo ${o.customer_name}, pembayaran pesanan D’Lice ${code} sudah diverifikasi.\nTotal diterima: Rp${Number(o.product_subtotal_idr).toLocaleString("id-ID")}\nMetode: ${method}\nTanggal: ${o.requested_date}, ${o.requested_time} waktu lokal cabang\nPenerimaan: ${o.receiving_method==="delivery"?"Delivery — "+(o.delivery_address||""):"Pickup"}\nDetail:\n${items}\n\nTutorial cek progress seperti ojol/logistik: buka tautan pribadi berikut, lihat status terakhir dan waktu pembaruan, lalu cek riwayat status. Simpan tautan ini dan jangan bagikan ke orang lain:\n${track}\nJika bermasalah, kirim kode ${code} ke WhatsApp D’Lice. Terima kasih 💗`;const key=`payment-verified:${orderId}`;const {error:le}=await admin.from("notification_log").upsert({order_id:orderId,notification_type:"payment_verified_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:o.customer_whatsapp,message_text:msg},{onConflict:"idempotency_key",ignoreDuplicates:true});if(le)return fail("Pembayaran sudah terverifikasi, tetapi notifikasi gagal dicatat. Retry dari panel staf.",500,origin);return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Kirim konfirmasi beserta tautan tracking, lalu tandai pengiriman berhasil."},200,origin);}
     return json({ok:true,message:"Pembayaran ditolak; riwayat, audit, dan kapasitas diperbarui dalam satu transaksi."},200,origin);
   }
@@ -3725,18 +3739,23 @@ if(action==="erp-executive-branch-kpis"){
     const id=safeText(body.order_id,80),next=safeText(body.fulfillment_status,30),note=safeText(body.notes,500);
     const allowed=["accepted","preparing","ready","dispatched","fulfilled","failed","cancelled"];
     if(!allowed.includes(next))return fail("Status fulfillment tidak valid.",422,origin);
-    const {data:old}=await admin.from("orders").select("id,branch_id,fulfillment_status,operational_status,payment_status").eq("id",id).maybeSingle();
+    const {data:old}=await admin.from("orders").select("id,branch_id,fulfillment_status,operational_status,payment_status,state_version").eq("id",id).maybeSingle();
     if(!old)return fail("Pesanan tidak ditemukan.",404,origin);
     if(!old.branch_id||!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     const transitions:Record<string,string[]>={unassigned:["accepted","cancelled"],queued:["accepted","cancelled"],accepted:["preparing","cancelled","failed"],preparing:["ready","failed"],ready:["dispatched","fulfilled","cancelled"],dispatched:["fulfilled","failed"],failed:["accepted","cancelled"],fulfilled:[],cancelled:[]};
     if(!(transitions[old.fulfillment_status]||[]).includes(next))return fail("Perubahan status fulfillment tidak diizinkan.",409,origin);
     if(next==="fulfilled"&&!["paid","verified","settled"].includes(String(old.payment_status)))return fail("Pesanan belum memiliki status pembayaran yang disetujui.",409,origin);
-    const values:any={fulfillment_status:next,fulfillment_notes:note||null,updated_at:new Date().toISOString()};
-    if(next==="fulfilled")values.fulfilled_at=new Date().toISOString();
-    const {data,error}=await admin.from("orders").update(values).eq("id",id).eq("fulfillment_status",old.fulfillment_status).select("id,fulfillment_status,branch_id,fulfilled_at").maybeSingle();
-    if(error||!data)return fail("Status berubah atau gagal disimpan. Muat ulang.",409,origin);
-    await admin.from("order_status_history").insert({order_id:id,status_type:"operational",old_status:old.fulfillment_status,new_status:next,note:note||"Fulfillment status updated"});
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"order_fulfillment_"+next,entity_type:"order",entity_id:id,metadata:{branch_id:old.branch_id,previous_status:old.fulfillment_status}});
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const handover=safeText(body.handover_acknowledgement,300);
+    if(next==="dispatched"&&handover.length<4)return fail("Bukti serah-terima kurir wajib diisi.",422,origin);
+    const {data,error}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:old.branch_id,p_actor_user_id:actor.user.id,p_order_id:id,
+      p_domain:"fulfillment",p_next_status:next,p_expected_version:old.state_version,
+      p_idempotency_key:safeText(body.idempotency_key,120)||"order-state:"+id+":fulfillment:"+old.state_version+":"+next,
+      p_payment_evidence_type:null,p_handover_acknowledgement:handover||null,p_reason:note
+    });
+    if(error||!data)return fail("Status berubah atau gagal disimpan. Muat ulang dan periksa pembayaran, serah-terima, serta versi.",409,origin);
     return json({ok:true,order:data},200,origin);
   }
 
