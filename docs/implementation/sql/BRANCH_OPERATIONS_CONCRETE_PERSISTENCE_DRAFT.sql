@@ -328,13 +328,17 @@ end $$;
 create or replace function public.branch_ops_publish_compliance_snapshot(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_period_start date,p_period_end date,p_idempotency_key text,p_source_revision text
 ) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
-declare v_count integer; v_pass integer; v_weight numeric; v_score numeric; v_ids uuid[]; v_row public.branch_ops_compliance_snapshots;
+declare v_count integer; v_pass integer; v_weight numeric; v_score numeric; v_ids uuid[]; v_source_revision text; v_row public.branch_ops_compliance_snapshots;
 begin
  perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
  select * into v_row from public.branch_ops_compliance_snapshots where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then return jsonb_build_object('status','duplicate','snapshotId',v_row.id,'score',v_row.score); end if;
- select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),array_agg(evidence_asset_id)
- into v_count,v_pass,v_weight,v_ids
+ select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),
+   array_agg(evidence_asset_id),
+   md5(coalesce(string_agg(concat_ws('|',id::text,check_key,title,weight::text,result,status,
+     evidence_asset_id::text,created_by::text,approved_by::text,approved_at::text),E'\\n'
+     order by business_date,check_key,id),''))
+ into v_count,v_pass,v_weight,v_ids,v_source_revision
  from public.branch_ops_compliance_checks
  where tenant_id=p_tenant_id and branch_id=p_branch_id and business_date between p_period_start and p_period_end
    and status='approved' and result in ('pass','fail','not_applicable');
@@ -349,9 +353,12 @@ begin
    raise exception 'BRANCH_COMPLIANCE_EVIDENCE_UNVERIFIED';
  end if;
  if v_weight<=0 then raise exception 'BRANCH_COMPLIANCE_NO_APPLICABLE_CHECKS'; end if;
+ if p_source_revision is not null and p_source_revision<>'' and p_source_revision<>v_source_revision then
+   raise exception 'BRANCH_COMPLIANCE_SOURCE_REVISION_MISMATCH' using errcode='40001';
+ end if;
  v_score:=round((v_pass/v_weight)*100,2);
  insert into public.branch_ops_compliance_snapshots(tenant_id,branch_id,period_start,period_end,score,completed_checks,required_checks,evidence_asset_ids,source_revision,idempotency_key,published_by)
- values(p_tenant_id,p_branch_id,p_period_start,p_period_end,v_score,v_count,v_count,coalesce(v_ids,'{}'::uuid[]),p_source_revision,p_idempotency_key,p_actor_id)
+ values(p_tenant_id,p_branch_id,p_period_start,p_period_end,v_score,v_count,v_count,coalesce(v_ids,'{}'::uuid[]),v_source_revision,p_idempotency_key,p_actor_id)
  returning * into v_row;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_id,'branch.compliance.published','branch_ops_compliance_snapshot',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'score',v_score,'checks',v_count));
