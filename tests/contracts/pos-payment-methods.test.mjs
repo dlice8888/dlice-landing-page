@@ -1,5 +1,6 @@
 import test from "node:test";
-import assert from "node:assert/strict";\nimport {readFile} from "node:fs/promises";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
 import {createPosPaymentIntent,recordPosTender,ingestPosProviderCallback,reconcilePosSettlement} from "../../src/pos-payment-methods.mjs";
 const scope={tenantId:"t1",branchId:"b1",actorId:"u1",saleId:"s1",idempotencyKey:"payment-key"};
 const base=()=>({createPaymentIntentAtomically:async x=>({intentId:"i1",tenantId:x.tenantId,branchId:x.branchId,amountIdr:10000,status:"pending"}),
