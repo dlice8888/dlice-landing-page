@@ -381,7 +381,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const token = safeText(body.tracking_token, 100);
     if (token.length !== 64) return fail("Token pelacakan tidak valid.", 401, origin);
     const tokenHash = await sha256(token);
-    const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot").eq("tracking_token_hash", tokenHash).maybeSingle();
+    const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot,state_version").eq("tracking_token_hash", tokenHash).maybeSingle();
     if (orderError || !order) return fail("Pesanan tidak ditemukan.", 404, origin);
     const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at").eq("order_id", order.id);
     if (reservationError || !reservations?.length) return fail("Reservasi pesanan tidak ditemukan.", 409, origin);
@@ -395,7 +395,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Batas 15 menit telah lewat. Hubungi admin; jangan melakukan pembayaran baru sebelum dikonfirmasi.", 409, origin);
       const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
       if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
-      await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
+      const {data:updatedOrder,error:stateError}=await admin.from("orders").update({payment_status:"pending_verification",state_version:order.state_version+1,updated_at:new Date().toISOString()}).eq("id",order.id).eq("state_version",order.state_version).select("id").maybeSingle();
+      if(stateError||!updatedOrder)return fail("Status pembayaran berubah saat bukti dikirim. Muat ulang pesanan.",409,origin);
       await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer confirmed payment after uploading proof" });
       return json({ ok: true, message: "Bukti pembayaran sudah tercatat dan menunggu pemeriksaan admin." }, 200, origin);
     }
@@ -437,7 +438,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       : await admin.from("payment_records").insert({ order_id: order.id, ...paymentValues, status: "pending_verification" });
     if (payError) return fail("Bukti tersimpan tetapi pencatatan pembayaran gagal; hubungi admin dan jangan unggah ulang dulu.", 500, origin);
     await admin.from("order_reservations").update({ status: "held_for_verification", proof_received_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
-    await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
+    const {data:updatedOrder,error:stateError}=await admin.from("orders").update({payment_status:"pending_verification",state_version:order.state_version+1,updated_at:new Date().toISOString()}).eq("id",order.id).eq("state_version",order.state_version).select("id").maybeSingle();
+      if(stateError||!updatedOrder)return fail("Status pembayaran berubah saat bukti dikirim. Muat ulang pesanan.",409,origin);
     await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Payment proof uploaded; awaiting admin verification" });
     return json({ ok: true, message: "Bukti tersimpan secara privat dan menunggu verifikasi admin." }, 200, origin);
   }
