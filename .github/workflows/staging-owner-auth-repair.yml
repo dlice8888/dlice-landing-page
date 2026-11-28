@@ -1,0 +1,42 @@
+name: Staging Owner Auth Admin repair
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner_user_id:
+        description: UUID of the already-existing Owner verified in staging Auth Users
+        required: true
+        type: string
+      confirm_staging_only:
+        description: Confirm this run may update Auth metadata in D'Lice staging only
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+jobs:
+  repair-existing-owner:
+    if: inputs.confirm_staging_only == 'yes'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+      - name: Update existing Owner claim through Supabase Auth Admin
+        env:
+          STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+          STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+          OWNER_USER_ID: ${{ inputs.owner_user_id }}
+        run: |
+          set -euo pipefail
+          test -n "$STAGING_SUPABASE_URL"
+          test -n "$STAGING_SUPABASE_SERVICE_ROLE_KEY"
+          node scripts/set-staging-platform-owner.mjs --confirm-staging-owner-uuid "$OWNER_USER_ID"
