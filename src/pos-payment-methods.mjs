@@ -3,7 +3,7 @@ const fail=(code,message)=>{throw Object.assign(new Error(message),{code});};
 const req=(v,k)=>{if(typeof v!=="string"||!v.trim())fail("POS_PAYMENT_INPUT_REQUIRED",k);return v.trim();};
 const amount=(v,k)=>{if(!Number.isSafeInteger(v)||v<=0)fail("POS_PAYMENT_AMOUNT_INVALID",k);return v;};
 const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("POS_PAYMENT_ADAPTER_REQUIRED",k);return d[k];};
-const METHODS=new Set(["cash","qris","bank_transfer","card","other"]);
+const METHODS=new Set(["cash","qris","bank_transfer","card","split"]);
 export async function createPosPaymentIntent(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
   saleId:req(input?.saleId,"saleId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),paymentMethod:input.paymentMethod,providerId:input.providerId??null};
@@ -23,7 +23,7 @@ export async function recordPosTender(input,deps){
  if(payload.paymentMethod!=="cash"&&!payload.verifiedProviderEventId)fail("POS_PAYMENT_PROVIDER_PROOF_REQUIRED","Non-cash tender requires a verified provider event");
  const result=await fn(deps,"recordTenderAtomically")(payload);
  if(!result?.tenderId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
-  !["pending","partially_paid","paid"].includes(result.paymentStatus)||!Number.isSafeInteger(result.allocatedTotalIdr)||
+  !["pending","paid"].includes(result.paymentStatus)||!Number.isSafeInteger(result.allocatedTotalIdr)||
   !Number.isSafeInteger(result.remainingIdr)||result.remainingIdr<0)
   fail("POS_PAYMENT_TENDER_PERSIST_FAILED","Atomic tender allocation result is invalid");
  return Object.freeze(result);
