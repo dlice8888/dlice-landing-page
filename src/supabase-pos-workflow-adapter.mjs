@@ -32,7 +32,10 @@ export function createSupabasePosWorkflowAdapter(client,options={}){
    const result=await call("pos_create_order_with_fulfillment_atomic",{
     p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),
     p_actor_user_id:required(i.actorId,"actorId"),p_shift_id:required(i.shiftId,"shiftId"),
-    p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_fulfillment:i.fulfillment,p_items:i.items,
+    p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_fulfillment:{
+     order_type:i.fulfillment.orderType,table_code:i.fulfillment.tableId??null,pickup_at:i.fulfillment.pickupAt??null,
+     delivery_address:i.fulfillment.deliveryAddress??null,delivery_area_id:i.fulfillment.deliveryAreaId??null
+    },p_items:i.items,
     p_payment_method:required(i.paymentMethod,"paymentMethod"),p_discount_idr:i.discountIdr??0,
     p_customer_reference:i.customerReference??null,p_notes:i.notes??null,p_tenders:i.tenders??null
    },"POS_ORDER_CREATE_RPC_FAILED");
