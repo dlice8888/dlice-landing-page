@@ -2005,6 +2005,61 @@ if (action === "admin-set-profile-role") {
     }
    }
 
+  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval"]);
+  if(executiveSalesActions.has(action)){
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:membership,error:membershipError}=await admin.from("tenant_memberships")
+      .select("tenant_id,role").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
+    if(membershipError)return fail("Keanggotaan tenant belum dapat diverifikasi.",503,origin);
+    if(!membership)return fail("Akses tenant ditolak.",403,origin);
+    const actorBranches=await branchIdsForActor().catch(()=>[]);
+    const tenantBranches=await admin.from("branches").select("id").eq("tenant_id",tenantId).in("id",actorBranches);
+    if(tenantBranches.error)return fail("Scope cabang belum dapat diverifikasi.",503,origin);
+    const allowedBranchIds=(tenantBranches.data||[]).map((x:any)=>x.id);
+    const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"):null;
+    if(requested&&requested.some((id:string)=>!allowedBranchIds.includes(id)))return fail("Filter cabang di luar penugasan ditolak.",403,origin);
+    if(action==="erp-executive-sales-monitor"){
+      const period=safeText(body.period,12)||"day",start=safeText(body.start_date,10),end=safeText(body.end_date,10);
+      if(!["day","week","month"].includes(period)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)
+        return fail("Periode penjualan tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_sales_monitor_snapshot",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:requested??allowedBranchIds,
+        p_period_type:period,p_period_start:start,p_period_end:end,
+      });
+      if(error)return fail("Sales monitor belum tersedia. Migration dan RPC belum diterapkan pada staging.",503,origin);
+      return json({snapshot:data},200,origin);
+    }
+    if(action==="erp-executive-list-pending-approvals"){
+      const categories=Array.isArray(body.categories)?body.categories.filter((x:any)=>["procurement","finance","hr","branch_ops"].includes(x)):null;
+      const {data,error}=await admin.rpc("list_pending_approvals",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_categories:categories,
+      });
+      if(error)return fail("Approval inbox belum tersedia. Migration dan RPC belum diterapkan pada staging.",503,origin);
+      return json({approvals:data?.approvals||data||[]},200,origin);
+    }
+    if(action==="erp-executive-claim-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Claim approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("claim_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_approval_id:approvalId,p_expected_version:expectedVersion,
+      });
+      if(error)return fail("Approval tidak dapat diklaim. Periksa scope, expiry, dan versi sumber.",409,origin);
+      return json({claim:data},200,origin);
+    }
+    if(action==="erp-executive-decide-approval"){
+      const approvalId=safeText(body.approval_id,64),decision=safeText(body.decision,20),reason=safeText(body.reason,1000),expectedVersion=Number(body.expected_version);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!["approve","reject"].includes(decision)||reason.length<8||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Keputusan approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("decide_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_approval_id:approvalId,p_decision:decision,p_reason:reason,p_expected_version:expectedVersion,
+      });
+      if(error)return fail("Keputusan approval ditolak. Periksa separation of duties, delegasi, expiry, dan versi sumber.",409,origin);
+      return json({decision:data},200,origin);
+    }
+  }
+
   const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
