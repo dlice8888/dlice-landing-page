@@ -7,8 +7,12 @@ const fail=(code,message)=>{const e=new Error(message);e.code=code;throw e;};
 const req=(v,n)=>{if(typeof v!=="string"||!v.trim())fail("APPROVAL_INPUT_REQUIRED",n);return v.trim();};
 const fn=(d,n)=>{if(typeof d?.[n]!=="function")fail("APPROVAL_ADAPTER_REQUIRED",n);return d[n];};
 const decisionSet=new Set(["approve","reject"]);
+const isTenantOwner=actor=>actor?.roles?.some(role=>role==="tenant_owner"||role==="owner")===true;
+const canAccessBranch=(actor,branchId)=>branchId
+ ?actor?.branchIds?.includes(branchId)===true
+ :isTenantOwner(actor);
 async function assertApprovalEligibility(tx,approval,actor,actorId,deps){
- if(!actor.branchIds?.includes(approval.branchId)||!actor.categories?.includes(approval.category))
+ if(!canAccessBranch(actor,approval.branchId)||!actor.categories?.includes(approval.category))
   fail("APPROVAL_BRANCH_OR_CATEGORY_DENIED","Approval outside actor scope");
  const direct=actor.roles?.some(role=>approval.requiredRoles?.includes(role))===true;
  let delegation=null;
@@ -56,7 +60,8 @@ export async function listApprovalHistory(input,deps){
   const actor=await fn(deps,"resolveApproverScope")(tx,scope);
   const approval=await fn(deps,"lockApproval")(tx,{tenantId,approvalId});
   if(!actor||actor.tenantId!==tenantId||!approval||approval.tenantId!==tenantId||
-     !actor.branchIds?.includes(approval.branchId))fail("APPROVAL_SCOPE_DENIED","Approval history outside actor scope");
+     !canAccessBranch(actor,approval.branchId)||!actor.categories?.includes(approval.category))
+   fail("APPROVAL_SCOPE_DENIED","Approval history outside actor scope");
   const rows=await fn(deps,"loadApprovalDecisionHistory")(tx,{tenantId,approvalId});
   if(!Array.isArray(rows))fail("APPROVAL_HISTORY_INVALID","Approval decision history is unavailable");
   return Object.freeze(rows);
@@ -72,7 +77,7 @@ export async function listPendingApprovals(input,deps){
   if(!Array.isArray(rows))fail("APPROVAL_SOURCE_INVALID","Approval source rows required");
   const seen=new Set();
   for(const row of rows){
-   if(row.tenantId!==tenantId||!policy.branchIds.includes(row.branchId)||!policy.categories.includes(row.category))fail("APPROVAL_SOURCE_SCOPE_MISMATCH","Approval outside authorized scope");
+   if(row.tenantId!==tenantId||!canAccessBranch(policy,row.branchId)||!policy.categories.includes(row.category))fail("APPROVAL_SOURCE_SCOPE_MISMATCH","Approval outside authorized scope");
    if(!row.entityType||!row.entityId||seen.has(row.entityType+":"+row.entityId))fail("APPROVAL_DUPLICATE_SOURCE","Duplicate or invalid approval entity");
    seen.add(row.entityType+":"+row.entityId);
   }
