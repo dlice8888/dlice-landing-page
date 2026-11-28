@@ -131,7 +131,10 @@ begin
  left join settlements st on st.pos_sale_id=s.sale_id left join journals j on j.source_id=s.sale_id
  where s.business_date between p_period_start and p_period_end;
 
- select count(*) filter(where net_sales_idr<0)::integer into v_refund_overrun from _exec_sales_rows;\n if v_refund_overrun>0 then raise exception using errcode='23514',message='EXECUTIVE_REFUND_EXCEEDS_SALE_TOTAL';end if;\n select count(*) filter(where tender_allocated_idr<>sale_total_idr)::integer into v_tender_mismatch from _exec_sales_rows;\n select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
+ select count(*) filter(where net_sales_idr<0)::integer into v_refund_overrun from _exec_sales_rows;
+ if v_refund_overrun>0 then raise exception using errcode='23514',message='EXECUTIVE_REFUND_EXCEEDS_SALE_TOTAL';end if;
+ select count(*) filter(where tender_allocated_idr<>sale_total_idr)::integer into v_tender_mismatch from _exec_sales_rows;
+ select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
   coalesce(sum(net_sales_idr),0),coalesce(sum(matched_settlement_idr),0),count(*)::integer,
   count(*) filter(where finance_journal_entry_count>0)::integer,
   count(*) filter(where finance_journal_entry_count=0)::integer,
@@ -164,7 +167,8 @@ begin
   'processed_refund_idr',processed_refund_idr,'net_sales_idr',net_sales_idr,'tender_allocated_idr',tender_allocated_idr,
   'matched_settlement_idr',matched_settlement_idr,'finance_journal_entry_count',finance_journal_entry_count)
   order by business_date,transaction_code),'[]'::jsonb) into v_rows from _exec_sales_rows;
- v_payment:=jsonb_build_object('sale_count',v_count,'tender_mismatch_count',v_tender_mismatch,'tender_allocations_balanced',v_tender_mismatch=0);\n v_finance:=jsonb_build_object('sale_count',v_count,'sale_without_journal_count',v_missing_journal,
+ v_payment:=jsonb_build_object('sale_count',v_count,'tender_mismatch_count',v_tender_mismatch,'tender_allocations_balanced',v_tender_mismatch=0);
+ v_finance:=jsonb_build_object('sale_count',v_count,'sale_without_journal_count',v_missing_journal,
   'linked_journal_entry_count',v_journal_count,'status',case when v_missing_journal=0 then 'journal_links_present' else 'journal_links_incomplete' end);
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.sales_monitor.snapshot','executive_sales_monitor_snapshots',v_snapshot.id::text,
