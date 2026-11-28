@@ -10,7 +10,7 @@
 The user-provided rollup (189 total / 145 partial / 39 unproven / 5 blocked) is an older snapshot. The canonical staging ledger `docs/audit/PRD_FEATURE_EVIDENCE_LEDGER_20261126.json`, generated 2026-11-28, currently classifies **189 total / 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE**. This is an implementation-start classification, not a completion claim.
 
 - 53 features have a numeric score (46 explicit partial-credit + 7 provisional).
-- 136 PARTIAL features remain unscored at feature level.
+- 135 PARTIAL features remain unscored at feature level; the single BLOCKED feature is also unscored (136 unscored rows total).
 - Overall mean of the 53 scored features: **40.6%**. This is a mean of the scored subset only, not a weighted score for all 189 features.
 - Evidence dimensions across the 189 rows: code/UI 3 verified, 48 partial, 138 unverified; database 8 verified, 0 partial, 181 unverified; authorization 5 verified, 46 partial, 138 unverified; automated tests 51 verified, 0 partial, 138 unverified; E2E workflow 0 verified, 0 partial, 189 unverified; reconciliation/observability 0 verified, 30 partial, 159 unverified.
 - Therefore, **0/189 features currently meet the complete workflow/E2E evidence gate**. DONE remains 0.
