@@ -2015,7 +2015,7 @@ if (action === "admin-set-profile-role") {
     if(!tenant)return fail("Tenant tidak ditemukan.",404,origin);
     if(action==="erp-executive-sales-monitor"){
       const from=safeText(body.from_date,10),through=safeText(body.through_date,10);
-      if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(from)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(through)||through<from)
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(through)||through<from)
         return fail("Periode sales monitor tidak valid.",422,origin);
       const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"&&/^[0-9a-f-]{36}$/i.test(x)):null;
       let branchIds=requested;
