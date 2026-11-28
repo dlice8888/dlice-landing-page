@@ -138,6 +138,9 @@ create table if not exists public.executive_approval_items (
 );
 create index if not exists executive_approval_queue_idx
   on public.executive_approval_items(tenant_id,branch_id,status,created_at desc);
+create unique index if not exists executive_approval_one_active_source_idx
+  on public.executive_approval_items(tenant_id,source_domain,source_entity,source_entity_id)
+  where status in ('pending','claimed');
 
 create table if not exists public.executive_approval_delegations (
   id uuid primary key default gen_random_uuid(),
