@@ -26,3 +26,19 @@ test("expired approval cannot be claimed",async()=>{
  const expired={...approval,expiresAt:"2000-01-01T00:00:00Z"};
  await assert.rejects(claimApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",expectedVersion:2},{...base,lockApproval:async()=>expired}),{code:"APPROVAL_EXPIRED"});
 });
+
+test("already claimed approval can be decided by the same active claimant without a second claim",async()=>{
+ const claimed={...approval,status:"claimed",claimedBy:"approver",claimExpiresAt:"2999-01-01T00:00:00Z"};
+ let claimCalls=0;
+ const deps={...base,lockApproval:async()=>claimed,claimApprovalLocked:async()=>{claimCalls++;return {claimedBy:"approver"};}};
+ const result=await decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Claim owner reviewed",expectedVersion:2},deps);
+ assert.equal(result.decision,"approve");
+ assert.equal(claimCalls,0);
+});
+test("expired claim may be reclaimed but another active claimant cannot decide",async()=>{
+ const expiredClaim={...approval,status:"claimed",claimedBy:"other",claimExpiresAt:"2000-01-01T00:00:00Z"};
+ const reclaimed=await claimApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",expectedVersion:2},{...base,lockApproval:async()=>expiredClaim});
+ assert.equal(reclaimed.claimedBy,"approver");
+ const activeOther={...approval,status:"claimed",claimedBy:"other",claimExpiresAt:"2999-01-01T00:00:00Z"};
+ await assert.rejects(decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Attempt to bypass claim",expectedVersion:2},{...base,lockApproval:async()=>activeOther}),{code:"APPROVAL_CLAIMED_BY_OTHER"});
+});
