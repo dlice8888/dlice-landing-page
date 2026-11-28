@@ -85,3 +85,54 @@ export function assertApprovalDecision({
     policy_version: APPROVAL_POLICY_VERSION,
   });
 }
+
+/**
+ * Build a branch/domain/role-scoped inbox projection from source references.
+ * This projection never owns or mutates the source entity's business status.
+ */
+export function buildApprovalInbox({ items, actor, now = new Date().toISOString() }) {
+  if (!actor?.user_id || !Array.isArray(actor.allowed_branch_ids) ||
+      !Array.isArray(actor.allowed_domains) || !Array.isArray(actor.allowed_roles)) {
+    throw new TypeError("approval_actor_scope_required");
+  }
+  const instant = asTime(now, "now");
+  const seen = new Set();
+  const urgency = { critical: 0, high: 1, normal: 2, low: 3 };
+  return [...(items || [])].filter((item) => {
+    if (!item?.id || seen.has(item.id)) return false;
+    seen.add(item.id);
+    if (item.status !== "pending" || !item.expires_at || asTime(item.expires_at, "expires_at") <= instant) return false;
+    if (!actor.allowed_branch_ids.includes(item.branch_id) ||
+        !actor.allowed_domains.includes(item.domain) ||
+        !item.eligible_roles?.some((role) => actor.allowed_roles.includes(role))) return false;
+    return true;
+  }).sort((a, b) =>
+    (urgency[a.urgency] ?? urgency.normal) - (urgency[b.urgency] ?? urgency.normal) ||
+    Number(b.amount_idr || 0) - Number(a.amount_idr || 0) ||
+    asTime(a.expires_at, "expires_at") - asTime(b.expires_at, "expires_at")
+  ).map((item) => Object.freeze({
+    id: item.id, domain: item.domain, category: item.category,
+    branch_id: item.branch_id, amount_idr: item.amount_idr,
+    urgency: item.urgency || "normal", expires_at: item.expires_at,
+    created_by: item.created_by, claimed_by: item.claimed_by || null,
+    source_entity_type: item.source_entity_type,
+    source_entity_id: item.source_entity_id,
+    source_version: item.source_version,
+    evidence: Array.isArray(item.evidence) ? item.evidence : [],
+  }));
+}
+
+export function assertApprovalDelegation({ actor, approval, now = new Date().toISOString() }) {
+  if (!approval?.delegated_from) return true;
+  const instant = asTime(now, "now");
+  const valid = (actor?.delegations || []).some((grant) =>
+    grant.delegator_user_id === approval.delegated_from &&
+    grant.delegate_user_id === actor.user_id &&
+    grant.domain === approval.domain &&
+    grant.branch_id === approval.branch_id &&
+    grant.active === true &&
+    (!grant.expires_at || asTime(grant.expires_at, "delegation_expires_at") > instant)
+  );
+  if (!valid) throw new Error("approval_delegation_invalid");
+  return true;
+}
