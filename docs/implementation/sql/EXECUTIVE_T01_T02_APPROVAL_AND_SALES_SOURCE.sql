@@ -538,6 +538,9 @@ begin
        and p.eligible_roles @> array[delegator.role]
    ))
    and (not p.separation_of_duties or a.created_by<>p_actor_user_id)
+   and not (a.source_entity_type='hr_timesheet' and exists(
+     select 1 from public.hr_timesheets t where t.id=a.source_entity_id and t.employee_user_id=p_actor_user_id
+   ))
  order by case a.urgency when 'critical' then 0 when 'high' then 1 when 'normal' then 2 else 3 end,
           a.amount_idr desc,a.expires_at,a.created_at;
 end;
@@ -562,6 +565,9 @@ begin
  select * into p from public.approval_policies where id=a.policy_id and tenant_id=a.tenant_id and active;
  if not found then raise exception using errcode='23514',message='APPROVAL_POLICY_INACTIVE'; end if;
  if p.separation_of_duties and a.created_by=p_actor_user_id then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_FORBIDDEN'; end if;
+ if a.source_entity_type='hr_timesheet' and exists(
+   select 1 from public.hr_timesheets t where t.id=a.source_entity_id and t.employee_user_id=p_actor_user_id
+ ) then raise exception using errcode='42501',message='APPROVAL_EMPLOYEE_SELF_APPROVAL_FORBIDDEN'; end if;
  if not (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[]) then raise exception using errcode='42501',message='APPROVAL_CATEGORY_FORBIDDEN'; end if;
  if a.amount_idr>p.max_amount_idr then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT_EXCEEDED'; end if;
  if not (p.eligible_roles @> array[v_role]) then
@@ -626,6 +632,9 @@ begin
  if not found or (p.separation_of_duties and a.created_by=p_actor_user_id) or a.amount_idr>p.max_amount_idr or not (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[]) then
    raise exception using errcode='42501',message='APPROVAL_POLICY_OR_SEPARATION_OF_DUTIES_FAILED';
  end if;
+ if a.source_entity_type='hr_timesheet' and exists(
+   select 1 from public.hr_timesheets t where t.id=a.source_entity_id and t.employee_user_id=p_actor_user_id
+ ) then raise exception using errcode='42501',message='APPROVAL_EMPLOYEE_SELF_APPROVAL_FORBIDDEN'; end if;
  if not (p.eligible_roles @> array[v_role]) and a.delegated_from is distinct from (
    select d.delegator_user_id from public.approval_delegations d
    join public.admin_profiles dp on dp.user_id=d.delegator_user_id and dp.is_active
