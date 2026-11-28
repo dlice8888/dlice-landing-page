@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history"]);
+  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation","erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation"]);
   if(executiveSalesActions.has(action)){
     if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
       return fail("Izin Executive tidak diizinkan.",403,origin);
@@ -2072,6 +2072,36 @@ if (action === "admin-set-profile-role") {
       });
       if(error)return fail("Riwayat keputusan tidak dapat dimuat.",403,origin);
       return json({history:data||[]},200,origin);
+    }
+    if(action==="erp-executive-list-approval-delegations"){
+      const {data,error}=await admin.rpc("list_approval_delegations",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds});
+      if(error)return fail("Delegasi approval tidak dapat dimuat.",403,origin);
+      return json({delegations:data?.delegations||[]},200,origin);
+    }
+    if(action==="erp-executive-create-approval-delegation"){
+      const delegateUserId=safeText(body.delegate_user_id,64),category=safeText(body.category,30),branchId=safeText(body.branch_id,64)||null;
+      const startsAt=safeText(body.starts_at,40),endsAt=safeText(body.ends_at,40);
+      const permission=category==="branch_ops"?"branches":category;
+      if(!/^[0-9a-f-]{36}$/i.test(delegateUserId)||!["procurement","finance","hr","branch_ops"].includes(category)||
+        !Number.isFinite(Date.parse(startsAt))||!Number.isFinite(Date.parse(endsAt))||Date.parse(endsAt)<=Date.parse(startsAt))
+        return fail("Delegasi approval tidak valid.",422,origin);
+      if(!hasPerm(permission))return fail("Izin membuat delegasi untuk domain ini ditolak.",403,origin);
+      if(branchId&&!allowedBranchIds.includes(branchId))return fail("Cabang delegasi di luar scope ditolak.",403,origin);
+      const {data,error}=await admin.rpc("create_approval_delegation",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,
+        p_branch_ids:allowedBranchIds,p_delegate_user_id:delegateUserId,p_category:category,p_branch_id:branchId,p_starts_at:startsAt,p_ends_at:endsAt});
+      if(error)return fail("Delegasi tidak dapat dibuat. Periksa role, anggota tenant, dan scope cabang.",409,origin);
+      return json({delegation:data},200,origin);
+    }
+    if(action==="erp-executive-approve-approval-delegation"||action==="erp-executive-revoke-approval-delegation"){
+      const delegationId=safeText(body.delegation_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(delegationId))return fail("ID delegasi tidak valid.",422,origin);
+      const rpc=action==="erp-executive-approve-approval-delegation"?"approve_approval_delegation":"revoke_approval_delegation";
+      const args=action==="erp-executive-approve-approval-delegation"
+        ?{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_delegation_id:delegationId}
+        :{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_delegation_id:delegationId};
+      const {data,error}=await admin.rpc(rpc,args);
+      if(error)return fail("Perubahan delegasi ditolak oleh policy.",403,origin);
+      return json({delegation:data},200,origin);
     }
   }
 
