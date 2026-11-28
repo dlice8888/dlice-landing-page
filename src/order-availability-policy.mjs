@@ -5,7 +5,7 @@ export function quoteBranchAvailability({now,timezone,operatingHours,holidayDate
  if(!zones.has(timezone))throw new Error("ORDER_AVAILABILITY_TIMEZONE_INVALID");
  const instant=Date.parse(requestedAt),current=Date.parse(now);if(!Number.isFinite(instant)||!Number.isFinite(current)||instant<current)throw new Error("ORDER_AVAILABILITY_TIME_INVALID");
  if(!Number.isInteger(cutoffMinutes)||cutoffMinutes<0||!Number.isInteger(capacityUsed)||capacityUsed<0||!Number.isInteger(capacityLimit)||capacityLimit<1)throw new Error("ORDER_AVAILABILITY_CAPACITY_INVALID");
- const p=parts(instant,timezone),date=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(instant));
+ const p=parts(instant,timezone),dateParts=Object.fromEntries(new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date(instant)).map(x=>[x.type,x.value])),date=dateParts.year+"-"+dateParts.month+"-"+dateParts.day;
  if(holidayDates.includes(date))return Object.freeze({available:false,reason:"holiday",business_date:date,timezone});
  const hours=operatingHours?.[p.weekday];if(!hours?.open||!hours?.close)return Object.freeze({available:false,reason:"closed",business_date:date,timezone});
  const minutes=Number(p.hour)*60+Number(p.minute),open=Number(hours.open.slice(0,2))*60+Number(hours.open.slice(3,5)),close=Number(hours.close.slice(0,2))*60+Number(hours.close.slice(3,5));
