@@ -1,4 +1,4 @@
-/** D02-F02: POS cart normalization; server remains authoritative for price and availability. */
+/** D02-F02: POS cart normalization and server-priced atomic checkout. */
 const fail=(code,message)=>{throw Object.assign(new Error(message),{code});};
 const req=(v,k)=>{if(typeof v!=="string"||!v.trim())fail("POS_CART_INPUT_REQUIRED",k);return v.trim();};
 const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("POS_CART_ADAPTER_REQUIRED",k);return d[k];};
@@ -15,20 +15,17 @@ export function normalizePosCartItems(items){
  });
 }
 export async function submitPosCart(input,deps){
- const tenantId=req(input?.tenantId,"tenantId"),branchId=req(input?.branchId,"branchId"),actorId=req(input?.actorId,"actorId"),
-  shiftId=req(input?.shiftId,"shiftId"),idempotencyKey=req(input?.idempotencyKey,"idempotencyKey");
- const items=normalizePosCartItems(input.items),discountIdr=input.discountIdr??0;
- if(!Number.isSafeInteger(discountIdr)||discountIdr<0)fail("POS_CART_DISCOUNT_INVALID","Discount must be a non-negative integer");
- const scope={tenantId,branchId,actorId,shiftId,action:"pos.checkout.create"};
- return fn(deps,"withTenantTransaction")(scope,async tx=>{
-  await fn(deps,"authorizeCheckout")(tx,scope);
-  const shift=await fn(deps,"lockOpenShift")(tx,{tenantId,branchId,shiftId,actorId});
-  if(!shift||shift.status!=="open")fail("POS_CART_SHIFT_NOT_OPEN","An assigned open shift is required");
-  const result=await fn(deps,"createSaleFromServerCatalogOnce")(tx,{...scope,items,discountIdr,idempotencyKey});
-  if(!result?.saleId||!Array.isArray(result.items)||!Number.isSafeInteger(result.totalIdr)||result.totalIdr<0)fail("POS_CART_SERVER_RESULT_INVALID","Server checkout result is incomplete");
-  const itemTotal=result.items.reduce((sum,x)=>sum+x.lineTotalIdr,0);
-  if(!Number.isSafeInteger(itemTotal)||itemTotal-discountIdr!==result.totalIdr)fail("POS_CART_TOTAL_MISMATCH","Persisted sale total does not match server-priced items");
-  await fn(deps,"appendAudit")(tx,{...scope,action:"pos.sale.created",entityType:"pos_sale",entityId:result.saleId,metadata:{idempotencyKey,totalIdr:result.totalIdr,itemCount:result.items.length}});
-  return Object.freeze(result);
- });
+ const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
+  shiftId:req(input?.shiftId,"shiftId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),
+  items:normalizePosCartItems(input.items),discountIdr:input.discountIdr??0};
+ if(!Number.isSafeInteger(payload.discountIdr)||payload.discountIdr<0)fail("POS_CART_DISCOUNT_INVALID","Discount must be a non-negative integer");
+ const result=await fn(deps,"checkoutPosCartAtomically")(payload);
+ if(!result?.saleId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
+  !Array.isArray(result.items)||!Number.isSafeInteger(result.totalIdr)||result.totalIdr<0||
+  !Number.isSafeInteger(result.discountIdr)||result.discountIdr!==payload.discountIdr)
+  fail("POS_CART_SERVER_RESULT_INVALID","Atomic server checkout result is incomplete");
+ const itemTotal=result.items.reduce((sum,x)=>sum+x.lineTotalIdr,0);
+ if(!Number.isSafeInteger(itemTotal)||itemTotal-result.discountIdr!==result.totalIdr)
+  fail("POS_CART_TOTAL_MISMATCH","Persisted sale total does not match server-priced items");
+ return Object.freeze(result);
 }
