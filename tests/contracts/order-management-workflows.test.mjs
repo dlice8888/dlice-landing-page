@@ -22,7 +22,7 @@ test("unified order queue deduplicates canonical records and enforces tenant and
 
 test("availability enforces branch timezone, holiday, operating hours, cutoff and capacity",()=>{
  const hours={Sat:{open:"09:00",close:"21:00"}};
- const base={now:"2026-11-28T02:00:00Z",timezone:"Asia/Jakarta",operatingHours:hours,capacityUsed:2,capacityLimit:5,requestedAt:"2026-11-28T03:00:00Z"};
+ const base={now:"2026-11-28T00:00:00Z",timezone:"Asia/Jakarta",operatingHours:hours,capacityUsed:2,capacityLimit:5,requestedAt:"2026-11-28T03:00:00Z"};
  assert.equal(quoteBranchAvailability(base).available,true);
  assert.equal(quoteBranchAvailability({...base,holidayDates:["2026-11-28"]}).reason,"holiday");
  assert.equal(quoteBranchAvailability({...base,capacityUsed:5}).reason,"capacity_full");
