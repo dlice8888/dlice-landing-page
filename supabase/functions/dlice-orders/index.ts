@@ -3146,6 +3146,9 @@ if(action==="erp-executive-branch-kpis"){
     const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
     const method=safeText(body.payment_method,20),discount=Number(body.discount_idr||0);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:branchMeta,error:branchMetaError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchMetaError||!branchMeta?.tenant_id)return fail("Tenant cabang tidak dapat diverifikasi.",503,origin);
+    const tenantId=branchMeta.tenant_id;
     if(!Array.isArray(items)||!items.length||items.length>50)return fail("Pilih minimal satu menu.",422,origin);
     if(!Number.isFinite(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.",403,origin);
     const cleanItems=items.map((x:any)=>({
