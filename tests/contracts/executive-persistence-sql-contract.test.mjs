@@ -10,6 +10,7 @@ test("T01 payment recognition stores immutable payment time and branch-local bus
  assert.match(migration,/at time zone v_timezone/i);
  assert.match(migration,/legacy_created_at_backfill/i);
  assert.match(migration,/POS_SALE_PAYMENT_RECOGNITION_IMMUTABLE/i);
+ assert.match(migration,/revoke all on function public\.set_pos_sale_payment_recognition\(\) from public,anon,authenticated,service_role/i);
  assert.match(migration,/POS_SALE_PAID_BRANCH_IMMUTABLE/i);
  assert.match(migration,/POS_SALE_PAID_STATUS_TERMINAL/i);
 });
