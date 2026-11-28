@@ -155,6 +155,18 @@ where s.payment_status='paid';
 revoke all on public.executive_sales_reconciliation_v from public,anon,authenticated;
 grant select on public.executive_sales_reconciliation_v to service_role;
 
+-- Give legacy branch expenses an optimistic source timestamp so resubmission cannot
+-- collide with an earlier approval attempt.
+alter table public.branch_expenses
+  add column if not exists updated_at timestamptz not null default now();
+create or replace function public.touch_branch_expense_updated_at()
+returns trigger language plpgsql security invoker set search_path=''
+as $ begin new.updated_at:=now(); return new; end; $;
+drop trigger if exists branch_expenses_touch_updated_at on public.branch_expenses;
+create trigger branch_expenses_touch_updated_at before update on public.branch_expenses
+for each row execute function public.touch_branch_expense_updated_at();
+revoke all on function public.touch_branch_expense_updated_at() from public,anon,authenticated;
+
 -- T02: approval policy and inbox are references to source entities, not replacement statuses.
 create table if not exists public.approval_policies (
   id uuid primary key default gen_random_uuid(),
@@ -395,7 +407,7 @@ from (
   o.subtotal_idr,o.requested_by,'purchase_orders'
  from public.purchase_orders o join public.branches b on b.id=o.branch_id where o.status='submitted'
  union all
- select b.tenant_id,e.branch_id,'finance',coalesce(e.category,'expense'),'branch_expense',e.id,e.created_at,
+ select b.tenant_id,e.branch_id,'finance',coalesce(e.category,'expense'),'branch_expense',e.id,e.updated_at,
   e.amount_idr,e.created_by,'branch_expenses'
  from public.branch_expenses e join public.branches b on b.id=e.branch_id where e.status='pending_approval'
  union all
@@ -420,7 +432,7 @@ begin
  elsif a.source_entity_type='purchase_order' then
   return exists(select 1 from public.purchase_orders o where o.id=a.source_entity_id and o.branch_id=a.branch_id and o.status='submitted' and o.updated_at=a.source_version);
  elsif a.source_entity_type='branch_expense' then
-  return exists(select 1 from public.branch_expenses e where e.id=a.source_entity_id and e.branch_id=a.branch_id and e.status='pending_approval' and e.created_at=a.source_version);
+  return exists(select 1 from public.branch_expenses e where e.id=a.source_entity_id and e.branch_id=a.branch_id and e.status='pending_approval' and e.updated_at=a.source_version);
  elsif a.source_entity_type='hr_timesheet' then
   return exists(select 1 from public.hr_timesheets t where t.id=a.source_entity_id and t.branch_id=a.branch_id and t.status='submitted' and t.updated_at=a.source_version);
  end if;
