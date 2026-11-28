@@ -6,7 +6,7 @@
 
 ## 1. Repository-wide PR totals
 
-GitHub search across the repository returns **152 actual pull requests** (PR numbers 1–154; #34 and #52 are absent):
+GitHub search across the repository returns **152 actual pull requests** (PR numbers 1–154; #34 and #45 are absent):
 
 | Current disposition | Count |
 |---|---:|
@@ -15,7 +15,9 @@ GitHub search across the repository returns **152 actual pull requests** (PR num
 | Open | 27 |
 | **Actual PRs** | **152** |
 
-The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 47 actual PRs #108–#154, yielding the counts above. The PR count is a repository-history count, not a feature-completion metric.
+The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 47 actual PRs #108–#154, yielding 152 actual PRs overall. PR #52 exists and is merged; the two missing numbers are #34 and #45. The PR count is a repository-history count, not a feature-completion metric.
+
+Merged PR numbers (93): `#4 #5 #6 #7 #8 #10–#20 #23–#30 #32 #33 #35–#37 #39–#44 #46–#70 #72 #75 #78 #81 #84 #88–#92 #94 #96–#100 #102 #103 #105 #106 #110 #120 #121 #128–#138 #141 #142 #153`.
 
 ## 2. All currently open PRs — disposition and next action
 
@@ -47,8 +49,7 @@ The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 
 | #150 | #145 base | Food safety, recall and supplier CAPA workflows | Conflicted; rebase and run domain pgTAP + workflow/E2E before merge |
 | #151 | #145 base | CRM financial-close SQL syntax correction | Superseded by merged #153; corrected SQL is included in the merged dependency tree |
 | #152 | #145 head | Eight-domain official migrations and ACL hardening | Superseded by merged #153; its migration/ACL work is included in the merged dependency tree |
-| #154 | staging | Source migration filenames ↔ applied Supabase ledger parity | Current follow-up candidate; filename-only source reconciliation, no DDL; exact 72/72 mapping verified, disposable/quality tests must pass before merge |
-| #153 | staging | 39 PRD gaps, Branch Operations persistence and integrations | **Merged** to staging as `2f661ee30f95f09f6d32f0f749189f7ae95ed433`; nine schema migrations subsequently applied |
+| #154 | staging | Source migration filenames ↔ applied Supabase ledger parity | Current follow-up candidate; filename-only source reconciliation, no DDL; exact 72/72 mapping verified; quality, CRM disposable replay and full 18-file/1,643-test migration replay pass; Branch Operations dedicated replay is running before merge |
 
 ### Required dependency chain
 
@@ -61,7 +62,7 @@ staging
                       └─ PR #154 migration filename ↔ ledger parity (pending)
 ```
 
-PR #151's CRM SQL syntax correction is carried through #152 into merged #153. PR #144/#145/#151/#152 remain open but are superseded by merged #153 and should be closed as redundant after #154 parity is accepted. PR #146 and #150 are sibling candidates based on #145 and are not included in #153. PR #143, #123 and #127 are independent staging candidates requiring their own conflict resolution and acceptance. PR #154 is a follow-up that changes source filenames and contract references only; it must not rerun staging DDL.
+PR #153 is merged (commit `2f661ee30f95f09f6d32f0f749189f7ae95ed433`) and carries the accepted #144 → #145 → #152 dependency chain, including #151's CRM SQL correction. PR #144/#145/#151/#152 remain open but are superseded by merged #153 and should be closed as redundant after #154 parity is accepted. PR #146 and #150 are sibling candidates based on #145 and are not included in #153. PR #143, #123 and #127 are independent staging candidates requiring their own conflict resolution and acceptance. PR #154 is a follow-up that changes source filenames and contract references only; it must not rerun staging DDL.
 
 ## 3. Closed-unmerged PRs — complete disposition
 
@@ -141,13 +142,13 @@ A read-only query of `auth.users.raw_app_meta_data` returned zero users whose `p
 ## 6. Remaining staging acceptance and release gates
 
 1. Complete source filename ↔ Supabase migration ledger parity PR #154; the current candidate tree has 72 source files / 72 applied versions / zero mismatches / zero orphan files. Complete exact-head quality, CRM, full migration replay and Branch Operations pgTAP before merge. This PR does not execute DDL.
-2. Re-run Security and Performance Advisors after the staging migration set. Current Security Advisor: leaked-password protection disabled (WARN). Current Performance Advisor: 168 unindexed-FK INFO findings plus unused-index INFO findings; do not delete indexes based only on zero scans. Add FK indexes only after query-plan/usage review and confirm they are not already covered by composite indexes.
+2. Re-run Security and Performance Advisors after the staging migration set. Current Security Advisor: leaked-password protection disabled (WARN). Current Performance Advisor: 168 unindexed-FK INFO findings and 132 unused-index INFO findings; do not delete indexes based only on zero scans. Add FK indexes only after query-plan/usage review and confirm they are not already covered by composite indexes.
 3. Verify Auth Owner through official Supabase Auth Admin and protected allowlist. Current read-only Auth query still returns **zero** users with `raw_app_meta_data.platform_owner` JSON boolean true. No SQL metadata mutation and no allowlist guessing.
-4. Run authenticated tenant A/B own-read/write, cross-tenant read/write denial, branch isolation, Storage and background-job probes; require zero BLOCKED/SKIPPED and verify postconditions.
-5. Run POS staging E2E only after Owner Auth and allowlist are independently verified. Reconcile sale totals, tender allocations, cash drawer, stock movements, KDS tickets, immutable receipt and audit events.
+4. Tenant A/B P01–P09 acceptance on staging commit `2f661ee30f95f09f6d32f0f749189f7ae95ed433` **PASS**: both existing identities authenticated via passwordless magic link; own-branch reads passed; cross-tenant reads and writes denied; zero DB side effects verified; RLS direct-client reads exposed no branch rows; direct mutation RPC denied; 9/9 PASS, 0 failed, 0 blocked, 0 skipped. The separate legacy negative-probe workflow remains BLOCKED because it expects obsolete username/password and branch-ID secrets; do not treat that as an authorization failure or bypass the gate.
+5. POS data reconciliation is **NOT BALANCED** on current staging data: 6 historical paid sales (25–26 Oct) total IDR 600; 0 tender rows, 0 receipt rows, 0 cash reconciliation rows, 0 Finance journal entries; 6 KDS tickets; 26 stock movements; 273 admin audit logs. Each of the six sales has no matching tender allocation and no immutable receipt (6/6 exceptions). Do not invent tenders/receipts or alter historical data; trace whether these are incomplete legacy/test fixtures before remediation. Run POS mutation E2E only after Owner Auth and allowlist are independently verified.
 6. Run Delivery and Payroll provider E2E (signed webhook/idempotency, payout items, settlement and bank reconciliation). Deployment alone is not provider E2E proof.
 7. Run Owner Command Center company → region → branch → shift → transaction drill-down; reconcile POS/Finance/Inventory/Delivery/HR/KDS totals and freshness.
 8. Execute backup/restore drill and 150-branch concurrency/tenant-isolation probes. The current 150 branches are planned/pending, not operationally active.
 9. Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. No release or Production promotion is authorized by this staging integration.
 
-**Decision:** PR #153 and nine schema migrations are merged/applied to staging, and the three relevant Edge Functions are deployed. Schema/RLS/ACL/Storage checks are passing. Full operational reconciliation is still blocked by the unverified Owner Auth boolean/allowlist and outstanding tenant A/B, POS, provider, backup/restore and scale runtime tests. No feature is promoted to DONE based on migration or deployment alone.
+**Decision:** PR #153 is merged; nine migrations are applied; all 72 migration filenames map 1:1 to the 72 Supabase ledger versions in the PR #154 candidate. Staging A/B P01–P09 passed. Quality CI, CRM/HR/eight-domain replay and full disposable migration replay pass on PR #154's current candidate head; Branch Operations dedicated replay is the remaining required automated check before PR #154 merge. Three staging Edge Functions are deployed. Full operational reconciliation remains incomplete: Owner Auth boolean is still absent (0 accounts), POS 6/6 sales lack tenders and receipts, cash/Finance reconciliation tables are empty, and Delivery/Payroll provider E2E, Owner drilldown, backup/restore and 150-branch scale tests remain outstanding. No feature is promoted to DONE based on migration or deployment alone.
