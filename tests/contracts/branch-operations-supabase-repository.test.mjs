@@ -81,3 +81,42 @@ test("maintenance work orders persist only scoped evidence asset IDs", async () 
   });
   assert.deepEqual(args.p_evidence_asset_ids, ["asset-a"]);
 });
+
+
+test("schema readiness fails closed when any canonical Branch Operations table is missing", async () => {
+  const checked = [];
+  const client = {
+    rpc: async () => ({ data: null, error: null }),
+    from: (table) => ({
+      select: () => ({
+        limit: async () => {
+          checked.push(table);
+          return table === "branch_ops_work_orders"
+            ? { data: null, error: { code: "PGRST205", message: "table not found" } }
+            : { data: [], error: null };
+        },
+      }),
+    }),
+  };
+  const repo = createBranchOperationsRepository({ serviceClient: client, ...scope });
+  await assert.rejects(repo.assertReady(), { code: "BRANCH_OPS_TABLE_NOT_DEPLOYED" });
+  assert.deepEqual(checked, [
+    "branch_ops_equipment",
+    "branch_ops_tasks",
+    "branch_ops_evidence_assets",
+    "branch_ops_incidents",
+    "branch_ops_work_orders",
+  ]);
+});
+
+test("missing PostgREST RPC is surfaced as an explicit deployment blocker", async () => {
+  const client = {
+    rpc: async () => ({ data: null, error: { code: "PGRST202", message: "function not found" } }),
+    from: () => ({}),
+  };
+  const repo = createBranchOperationsRepository({ serviceClient: client, ...scope });
+  await assert.rejects(
+    repo.createTask({ assigneeId: "staff-a", idempotencyKey: "task-idem-0001", title: "Closing", dueAt: "2026-11-28T12:00:00Z" }),
+    { code: "BRANCH_OPS_RPC_NOT_DEPLOYED" },
+  );
+});
