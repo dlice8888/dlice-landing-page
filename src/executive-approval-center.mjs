@@ -34,7 +34,10 @@ export async function claimApproval(input,deps){
   if(!actor||actor.tenantId!==tenantId)fail("APPROVAL_SCOPE_DENIED","Actor has no tenant approval scope");
   const approval=await fn(deps,"lockApproval")(tx,{tenantId,approvalId});
   if(!approval||approval.tenantId!==tenantId)fail("APPROVAL_NOT_FOUND","Approval not found");
-  if(approval.status!=="pending")fail("APPROVAL_NOT_PENDING","Approval is no longer pending");
+  const activeClaim=approval.status==="claimed"&&approval.claimedBy===actorId&&
+   Number.isFinite(Date.parse(approval.claimExpiresAt??""))&&Date.parse(approval.claimExpiresAt)>Date.now();
+  if(approval.status!=="pending"&&!activeClaim&&!(approval.status==="claimed"&&Date.parse(approval.claimExpiresAt??"")<=Date.now()))
+   fail(approval.status==="claimed"?"APPROVAL_CLAIMED_BY_OTHER":"APPROVAL_NOT_PENDING","Approval is not available to claim");
   if(approval.version!==expectedVersion)fail("APPROVAL_STALE_VERSION","Approval changed; reload before claiming");
   if(!Number.isFinite(Date.parse(approval.expiresAt))||Date.parse(approval.expiresAt)<=Date.now())
    fail("APPROVAL_EXPIRED","Approval has expired");
@@ -87,12 +90,15 @@ export async function decideApproval(input,deps){
   if(!actor||actor.tenantId!==tenantId)fail("APPROVAL_SCOPE_DENIED","Actor has no tenant approval scope");
   const approval=await fn(deps,"lockApproval")(tx,{tenantId,approvalId});
   if(!approval||approval.tenantId!==tenantId)fail("APPROVAL_NOT_FOUND","Approval not found");
-  if(approval.status!=="pending")fail("APPROVAL_NOT_PENDING","Approval is no longer pending");
+  const ownActiveClaim=approval.status==="claimed"&&approval.claimedBy===actorId&&
+   Number.isFinite(Date.parse(approval.claimExpiresAt??""))&&Date.parse(approval.claimExpiresAt)>Date.now();
+  if(approval.status!=="pending"&&!ownActiveClaim&&!(approval.status==="claimed"&&Date.parse(approval.claimExpiresAt??"")<=Date.now()))
+   fail(approval.status==="claimed"?"APPROVAL_CLAIMED_BY_OTHER":"APPROVAL_NOT_PENDING","Approval is not available to decide");
   if(approval.version!==expectedVersion)fail("APPROVAL_STALE_VERSION","Approval changed; reload before deciding");
   if(Date.parse(approval.expiresAt)<=Date.now())fail("APPROVAL_EXPIRED","Approval has expired");
   const delegation=await assertApprovalEligibility(tx,approval,actor,actorId,deps);
-  if(approval.claimedBy&&approval.claimedBy!==actorId&&approval.claimExpiresAt&&Date.parse(approval.claimExpiresAt)>Date.now())fail("APPROVAL_CLAIMED_BY_OTHER","Approval is claimed by another approver");
-  const claim=await fn(deps,"claimApprovalLocked")(tx,{tenantId,approvalId,actorId,expectedVersion,delegatedBy:delegation?.delegatorUserId??null});
+  let claim={claimedBy:actorId};
+  if(!ownActiveClaim)claim=await fn(deps,"claimApprovalLocked")(tx,{tenantId,approvalId,actorId,expectedVersion,delegatedBy:delegation?.delegatorUserId??null});
   if(!claim||claim.claimedBy!==actorId)fail("APPROVAL_CLAIM_FAILED","Atomic claim failed");
   const source=await fn(deps,"decideSourceEntityOnce")(tx,{tenantId,entityType:approval.entityType,entityId:approval.entityId,actorId,decision,reason,expectedSourceVersion:approval.sourceVersion,idempotencyKey:"approval:"+approvalId+":"+expectedVersion});
   if(!source?.updated||source.updateCount!==1)fail("APPROVAL_SOURCE_TRANSITION_FAILED","Source entity must transition exactly once");
