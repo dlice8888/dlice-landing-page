@@ -170,6 +170,7 @@ Deno.serve(async (req: Request) => {
         equipmentId: safe(body.equipment_id, 80), idempotencyKey: idempotency(body.idempotency_key),
         maintenanceType: safe(body.maintenance_type, 30), scheduledAt: safe(body.scheduled_at, 80),
         description: safe(body.description, 4000), assignedTo: safe(body.assigned_to, 80) || null,
+        evidenceAssetIds: Array.isArray(body.evidence_asset_ids) ? body.evidence_asset_ids.map(v => safe(v, 80)) : [],
       });
       return reply(result, 200, origin);
     }
