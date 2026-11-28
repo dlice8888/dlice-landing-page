@@ -519,7 +519,7 @@ begin
     else null end
  )
  from public.approval_inbox_items a
- join public.approval_policies p on p.id=a.policy_id and p.active
+ join public.approval_policies p on p.id=a.policy_id and p.tenant_id=a.tenant_id and p.active
  where a.status in ('pending','claimed') and a.expires_at>now()
    and a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))
    and (p_branch_id is null or a.branch_id=p_branch_id)
@@ -694,7 +694,7 @@ create or replace function public.create_approval_delegation(
 ) returns jsonb
 language plpgsql security invoker set search_path=''
 as $
-declare v_role text;v_active boolean;v_tenant_id uuid;v_delegation public.approval_delegations%rowtype;
+declare v_role text;v_active boolean;v_tenant_id uuid;v_policy public.approval_policies%rowtype;v_delegation public.approval_delegations%rowtype;
 begin
  if p_delegate_user_id is null or p_delegate_user_id=p_actor_user_id
     or p_domain not in ('procurement','finance','hr','branch_ops')
@@ -711,10 +711,14 @@ begin
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
  select tenant_id into v_tenant_id from public.branches where id=p_branch_id;
  if v_tenant_id is null then raise exception using errcode='P0002',message='APPROVAL_BRANCH_NOT_FOUND'; end if;
- if not exists(select 1 from public.approval_policies p
+ select * into v_policy from public.approval_policies p
    where p.tenant_id=v_tenant_id and p.domain=p_domain and p.active
-     and p.eligible_roles @> array[v_role]) then
-   raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_FORBIDDEN';
+     and p.eligible_roles @> array[v_role]
+   order by p.policy_version desc limit 1;
+ if not found then raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_FORBIDDEN'; end if;
+ if p_max_amount_idr>v_policy.max_amount_idr
+    or (p_category is not null and not (v_policy.allowed_categories @> array['*']::text[] or v_policy.allowed_categories @> array[p_category]::text[])) then
+   raise exception using errcode='42501',message='APPROVAL_DELEGATION_POLICY_LIMIT_EXCEEDED';
  end if;
  if not exists(select 1 from public.admin_profiles a where a.user_id=p_delegate_user_id and a.is_active)
     or not (
