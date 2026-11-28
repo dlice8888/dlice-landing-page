@@ -358,6 +358,10 @@ begin
     join public.pos_sales s on s.id=psi.pos_sale_id
     join public.branches b on b.id=s.branch_id
     where psi.settlement_id=ps.id and b.tenant_id=p_tenant_id and s.branch_id=any(p_branch_ids))
+   and not exists(select 1 from public.payment_settlement_items psi
+    join public.pos_sales s on s.id=psi.pos_sale_id
+    join public.branches b on b.id=s.branch_id
+    where psi.settlement_id=ps.id and (b.tenant_id<>p_tenant_id or not (s.branch_id=any(p_branch_ids))))
  )
  select jsonb_build_object(
   'tenant_id',p_tenant_id,'from_date',p_from_date,'through_date',p_through_date,
