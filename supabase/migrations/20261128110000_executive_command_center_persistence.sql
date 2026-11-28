@@ -322,7 +322,8 @@ begin
    and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.approvals.delegate')) then
   raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_PERMISSION_REQUIRED';
  end if;
- if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_delegator_user_id and m.status='active')
+ if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_delegator_user_id
+   and m.status='active' and (m.role in ('tenant_owner','tenant_admin') or m.permissions ?| p_source_domains))
   or not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_delegate_user_id and m.status='active') then
   raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_MEMBERSHIP_REQUIRED';
  end if;
