@@ -87,6 +87,8 @@ Deno.serve(async (req: Request) => {
 
   const repo = createBranchOperationsRepository(service, { tenantId, branchId, actorId });
   try {
+    // Fail closed until the reviewed Branch Operations migration is present.
+    await repo.assertReady();
     if (action === "get-evidence-url") {
       const asset = await repo.getEvidenceAsset(safe(body.evidence_asset_id, 80));
       const { data, error } = await service.storage.from("branch-ops-evidence").createSignedUrl(asset.object_path, 60);
