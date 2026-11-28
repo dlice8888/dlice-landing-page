@@ -37,7 +37,7 @@ export async function getExecutiveSalesMonitor(input,deps){
  const period=input?.period??"day";
  if(!["day","week","month"].includes(period))fail("EXEC_SALES_PERIOD_INVALID","Unsupported period");
  const requestedDate=required(input?.businessDate,"businessDate");
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(requestedDate)||Number.isNaN(Date.parse(requestedDate)))fail("EXEC_SALES_DATE_INVALID","businessDate must be YYYY-MM-DD");
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)||Number.isNaN(Date.parse(requestedDate)))fail("EXEC_SALES_DATE_INVALID","businessDate must be YYYY-MM-DD");
  const requestedBranches=input?.branchIds??[];
  if(!Array.isArray(requestedBranches)||requestedBranches.some(x=>typeof x!=="string"))fail("EXEC_SALES_BRANCH_FILTER_INVALID","branchIds must be strings");
  const scope=Object.freeze({actorId,tenantId,requestedDate,period,requestedBranches});
