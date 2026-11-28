@@ -69,6 +69,16 @@ jobs:
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Check POS shift cart order payment refund and lifecycle modules
+        run: >-
+          node --check src/pos-shift-workflow.mjs
+          && node --check src/pos-cart.mjs
+          && node --check src/pos-order-type.mjs
+          && node --check src/pos-payment-methods.mjs
+          && node --check src/pos-refund-void-workflow.mjs
+          && node --check src/order-payment-fulfillment-state.mjs
+      - name: Run POS core workflow invariants
+        run: node --test tests/contracts/pos-core-workflows.test.mjs
       - name: Check new domain workflow module syntax
         run: >-
           node --check src/branch-operations-workflows.mjs
