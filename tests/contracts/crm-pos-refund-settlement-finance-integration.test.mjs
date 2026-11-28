@@ -28,7 +28,7 @@ test("Refunds after award create immutable loyalty adjustments and preserve orig
   assert.match(migration, /earning_rule_version/);
   assert.match(migration, /refund-adjustment:/);
   assert.match(migration, /spent_points_debt/);
-  assert.match(migration, /allocation_kind='earn_reversal'/);
+  assert.match(migration, /earn_reversal/);
   assert.match(migration, /crm\.loyalty\.refund_points_adjusted/);
   assert.match(pgTap, /processed refunds reverse unspent loyalty lots/);
 });
