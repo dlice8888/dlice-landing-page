@@ -508,7 +508,7 @@ async function enqueueExecutiveApproval(event){
   await call('erp-executive-enqueue-approval',{tenant_id:tenant,branch_id:$('executiveApprovalBranchId').value.trim(),
    source_domain:domain,source_entity:entity,source_entity_id:$('executiveApprovalSourceId').value.trim(),
    request_payload:{origin:'executive-command-center'},expires_at:$('executiveApprovalExpiry').value?new Date($('executiveApprovalExpiry').value).toISOString():null,
-   idempotency_key:'enqueue:'+entity+':'+$('executiveApprovalSourceId').value.trim()});
+   idempotency_key:'enqueue:'+crypto.randomUUID()});
   $('executiveEnqueueApprovalForm').reset();await loadExecutiveApprovals();note('Approval request masuk ke inbox.');
  }catch(e){note(e.message,true)}
 }
