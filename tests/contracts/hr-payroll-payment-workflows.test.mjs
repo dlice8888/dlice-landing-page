@@ -42,4 +42,5 @@ test("HR UI includes provider, beneficiary, payment batch and reconciliation wor
   for (const id of ["hrPaymentProviderForm","hrBeneficiaryForm","hrPaymentBatchForm","hrPaymentBatchList","hrPaymentItemList"]) assert.ok(erp.includes(id));
   assert.ok(erp.includes("erp-hr-reconcile-payroll-payment-batch"));
   assert.ok(erp.includes("hr-payroll-provider-webhook"));
+  assert.ok(erp.includes("platform_owner!==true"));
 });
