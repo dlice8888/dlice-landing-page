@@ -32,16 +32,16 @@ from public.branches b
 left join public.branch_business_day_policies p on p.tenant_id=b.tenant_id and p.branch_id=b.id
 where b.id=s.branch_id and s.payment_status in ('paid','refunded') and s.paid_at is null;
 
-do $ begin
+do $do$ begin
  if not exists(select 1 from pg_constraint where conname='pos_sales_paid_at_source_check') then
   alter table public.pos_sales add constraint pos_sales_paid_at_source_check
    check(paid_at_source is null or paid_at_source in ('payment_transition','legacy_created_at_backfill'));
  end if;
-end $;
+end $do$;
 
 create or replace function public.set_pos_sale_payment_recognition()
 returns trigger language plpgsql security invoker set search_path=''
-as $
+as $fn$
 declare v_timezone text;v_cutoff time;v_policy_version integer;
 begin
  select b.timezone,coalesce(p.cutoff_time,time '00:00'),coalesce(p.policy_version,0)
@@ -76,7 +76,7 @@ begin
   new.business_day_cutoff:=null;new.business_day_policy_version:=null;
  end if;
  return new;
-end $;
+end $fn$;
 drop trigger if exists pos_sales_payment_recognition on public.pos_sales;
 create trigger pos_sales_payment_recognition
 before insert or update of payment_status,branch_id,paid_at,paid_at_source,business_date,business_day_cutoff,business_day_policy_version
@@ -301,7 +301,7 @@ end $$;
 create or replace function public.get_branch_business_day_cutoff(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[]
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $ declare v_role text;v_platform_owner boolean;v_branch public.branches%rowtype;v_cutoff time;v_version integer;begin
+as $fn$ declare v_role text;v_platform_owner boolean;v_branch public.branches%rowtype;v_cutoff time;v_version integer;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
@@ -312,12 +312,12 @@ as $ declare v_role text;v_platform_owner boolean;v_branch public.branches%rowty
   raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_READ_DENIED';end if;
  select cutoff_time,policy_version into v_cutoff,v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id;
  return jsonb_build_object('branch_id',p_branch_id,'timezone',v_branch.timezone,'cutoff_time',coalesce(v_cutoff,time '00:00'),'policy_version',coalesce(v_version,0));
-end $$;
+end $fn$;
 
 create or replace function public.set_branch_business_day_cutoff(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[],p_cutoff_time time without time zone,p_expected_version integer
 ) returns jsonb language plpgsql security invoker set search_path=''
-as $ declare v_role text;v_platform_owner boolean;v_version integer;begin
+as $fn$ declare v_role text;v_platform_owner boolean;v_version integer;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
@@ -336,7 +336,7 @@ as $ declare v_role text;v_platform_owner boolean;v_version integer;begin
  values(p_actor_user_id,'executive.branch_business_day_cutoff.updated','branches',p_branch_id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'cutoff_time',p_cutoff_time,'policy_version',v_version+1));
  return jsonb_build_object('branch_id',p_branch_id,'cutoff_time',p_cutoff_time,'policy_version',v_version+1);
-end $$;
+end $fn$;
 
 revoke all on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) from public,anon,authenticated;
 grant execute on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) to service_role;
