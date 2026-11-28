@@ -4,7 +4,7 @@ export function dispatchKitchenTicket({order,items,stations,branchId,idempotency
  if(typeof idempotencyKey!=="string"||idempotencyKey.trim().length<16)throw new Error("KDS_IDEMPOTENCY_REQUIRED");
  const active=(stations||[]).filter(s=>s.branch_id===branchId&&s.is_active===true);
  const tickets=[];
- for(const item of items){const station=active.find(s=>(s.product_ids||[]).includes(item.product_id)||(s.category_ids||[]).includes(item.category_id));if(!station)throw new Error("KDS_STATION_NOT_CONFIGURED");tickets.push(Object.freeze({order_id:order.id,branch_id:branchId,station_id:station.id,sale_item_id:item.id,quantity:item.quantity,status:"waiting",source_version:order.version}));}
+ for(const item of items){const matches=active.filter(s=>(s.product_ids||[]).includes(item.product_id)||(s.category_ids||[]).includes(item.category_id));if(!matches.length)throw new Error("KDS_STATION_NOT_CONFIGURED");if(matches.length>1)throw new Error("KDS_STATION_ROUTE_AMBIGUOUS");const station=matches[0];tickets.push(Object.freeze({order_id:order.id,branch_id:branchId,station_id:station.id,sale_item_id:item.id,quantity:item.quantity,status:"waiting",source_version:order.version}));}
  return Object.freeze({idempotency_key:idempotencyKey.trim(),tickets:Object.freeze(tickets)});
 }
 export function claimKitchenTicket({ticket,actor,assignedStationIds,expectedVersion}){
