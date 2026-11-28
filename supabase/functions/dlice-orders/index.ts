@@ -259,6 +259,7 @@ Deno.serve(async (req: Request) => {
     if(!items.length||items.some(i=>i.quantity>100))return fail("Pilih minimal satu menu.",422,origin);const {data:o}=await admin.from("orders").select("id").eq("tracking_token_hash",hash).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);
     const {data:u,error}=await admin.rpc("update_order_with_reservations",{p_order_id:o.id,p_tracking_token_hash:hash,p_items:items});if(error){const msg=error.message||"";return fail(msg.includes("capacity_exceeded")?"Kapasitas menu tidak mencukupi.":msg.includes("reservation_expired")?"Reservasi berakhir; hubungi admin.":msg.includes("proof_already_uploaded")?"Bukti sudah diunggah; hubungi admin.":"Perubahan pesanan gagal.",409,origin);}
     const {data:m}=await admin.from("orders").select("order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,customer_notes,product_subtotal_idr,receipt_version").eq("id",o.id).single();const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,unit_price_idr,line_total_idr").eq("order_id",o.id);
+    if(!m)return fail("Struk pesanan tidak ditemukan setelah perubahan.",500,origin);
     return json({ok:true,...u,receipt:{...m,transaction_code:formatTransactionCode(m.order_number,m.created_at,m.timezone),items:lines||[],subtotal_idr:m.product_subtotal_idr}},200,origin);
   }
   if (action === "finalize-order-whatsapp") {
@@ -2446,7 +2447,8 @@ if(action==="erp-executive-branch-kpis"){
     if(!shift)return fail("Shift tidak ditemukan.",404,origin);
     if(!await branchAccess(shift.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(shift.opened_by!==actor.user.id&&!isOwner&&!hasPerm("branches"))return fail("Hanya pembuka shift atau supervisor yang dapat membuat serah terima.",403,origin);
-    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",shift.branch_id).maybeSingle();
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",shift.branch_id).maybeSingle();
+    if(branchError||!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
     const {data:handover,error}=await admin.from("shift_handover_records").insert({tenant_id:branch.tenant_id,branch_id:shift.branch_id,shift_id:shift.id,outgoing_user_id:actor.user.id,incoming_user_id:safeText(body.incoming_user_id,80)||null,cash_counted_idr:cash,pending_orders:pending,waste_summary:waste,open_issues:safeText(body.open_issues,1000)||null,notes:safeText(body.notes,1000)||null}).select("*").single();
     if(error||!handover)return fail("Serah terima sudah ada atau gagal disimpan.",409,origin);
     await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"shift_handover_submitted",entity_type:"shift_handover",entity_id:handover.id,metadata:{branch_id:shift.branch_id,shift_id:shift.id}});
