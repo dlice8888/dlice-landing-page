@@ -8,5 +8,5 @@ export function formatBusinessOrderNumber({businessDate,sequence,branchCode}){
 export function assertOrderNumberRetry({existingNumber,idempotencyKey,requestedIdempotencyKey}){
  if(typeof requestedIdempotencyKey!=="string"||requestedIdempotencyKey.trim().length<16)throw new Error("ORDER_NUMBER_IDEMPOTENCY_REQUIRED");
  if(existingNumber&&idempotencyKey!==requestedIdempotencyKey)throw new Error("ORDER_NUMBER_IDEMPOTENCY_CONFLICT");
- return Object.freeze({order_number:existingNumber||null,idempotency_key:requestedIdempotencyKey,generate_only_if_absent:!!existingNumber});
+ return Object.freeze({order_number:existingNumber||null,idempotency_key:requestedIdempotencyKey,generate_only_if_absent:!existingNumber});
 }
