@@ -354,6 +354,18 @@ begin
  end if;
  select count(*) into v_count from public.branches b where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id;
  if v_count<>cardinality(p_branch_ids) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
+ if exists(select 1 from public.pos_sales s where s.branch_id=any(p_branch_ids)
+   and s.payment_status in ('paid','refunded') and s.paid_at is not null
+   and s.subtotal_idr-s.discount_idr<>s.total_idr) then
+  raise exception using errcode='23514',message='EXECUTIVE_SALES_SOURCE_TOTAL_MISMATCH';
+ end if;
+ if exists(
+  select s.id from public.pos_sales s join public.refund_records r on r.pos_sale_id=s.id and r.status='processed'
+  join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
+  where s.branch_id=any(p_branch_ids) and s.paid_at is not null
+   and (r.processed_at at time zone b.timezone)::date between p_from_date and p_through_date
+  group by s.id,s.total_idr having sum(r.amount_idr)>s.total_idr
+ ) then raise exception using errcode='23514',message='EXECUTIVE_PROCESSED_REFUND_EXCEEDS_SALE'; end if;
  with branch_sales as (
   select b.id branch_id,b.code,b.name,b.timezone,
    coalesce(sum(s.subtotal_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint gross_sales_idr,
@@ -367,7 +379,7 @@ begin
  ), branch_refunds as (
   select r.branch_id,coalesce(sum(r.amount_idr),0)::bigint refund_idr
   from public.refund_records r join public.branches b on b.id=r.branch_id and b.tenant_id=p_tenant_id
-  where r.branch_id=any(p_branch_ids) and r.status='processed'
+  where r.branch_id=any(p_branch_ids) and r.pos_sale_id is not null and r.status='processed'
     and (r.processed_at at time zone b.timezone)::date between p_from_date and p_through_date
   group by r.branch_id
  ), branch_settlements as (
