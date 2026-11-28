@@ -46,7 +46,7 @@ test("Delivery Edge actions authenticate Platform Owner and authorize selected b
 });
 
 test("Verified delivery webhook validation has a complete PL/pgSQL IF predicate in draft and official migration",()=>{
- const migration=read("../../supabase/migrations/20261126192501_delivery_fulfillment_provider.sql");
+ const migration=read("../../supabase/migrations/20261128030020_20261126192501_delivery_fulfillment_provider.sql");
  for(const sql of [atomic,migration]){
   const start=sql.indexOf("create or replace function public.delivery_ingest_verified_provider_event");
   const end=sql.indexOf("create or replace function public.delivery_claim_outbox_batch",start);
