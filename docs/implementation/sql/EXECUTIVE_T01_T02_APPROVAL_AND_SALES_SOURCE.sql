@@ -793,6 +793,47 @@ begin
 end;
 $$;
 
+create or replace function public.list_approval_history(
+ p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_branch_id uuid default null
+) returns setof jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare v_active boolean;
+begin
+ select is_active into v_active from public.admin_profiles where user_id=p_actor_user_id;
+ if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
+ return query
+ select jsonb_build_object('decision_id',d.id,'approval_id',d.approval_id,'tenant_id',a.tenant_id,
+  'branch_id',a.branch_id,'domain',a.domain,'category',a.category,'source_entity_type',d.source_entity_type,
+  'source_entity_id',d.source_entity_id,'source_version',d.source_version,'policy_version',d.policy_version,
+  'actor_user_id',d.actor_user_id,'decision',d.decision,'reason',d.reason,'created_at',d.created_at)
+ from public.approval_decisions d join public.approval_inbox_items a on a.id=d.approval_id
+ where a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))
+   and (p_branch_id is null or a.branch_id=p_branch_id)
+ order by d.created_at desc limit 250;
+end;
+$;
+
+create or replace function public.list_approval_delegations(
+ p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_branch_id uuid default null
+) returns setof jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare v_active boolean;
+begin
+ select is_active into v_active from public.admin_profiles where user_id=p_actor_user_id;
+ if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
+ return query
+ select jsonb_build_object('id',d.id,'tenant_id',d.tenant_id,'branch_id',d.branch_id,
+  'delegator_user_id',d.delegator_user_id,'delegate_user_id',d.delegate_user_id,'domain',d.domain,
+  'category',d.category,'max_amount_idr',d.max_amount_idr,'starts_at',d.starts_at,
+  'expires_at',d.expires_at,'revoked_at',d.revoked_at,'created_at',d.created_at)
+ from public.approval_delegations d
+ where d.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))
+   and (p_branch_id is null or d.branch_id=p_branch_id)
+ order by d.revoked_at nulls first,d.expires_at desc;
+end;
+$;
 revoke all on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) from public,anon,authenticated;
 revoke all on function public.claim_approval(uuid,uuid,uuid[],integer) from public,anon,authenticated;
 revoke all on function public.decide_approval(uuid,uuid,uuid[],integer,text,text,text) from public,anon,authenticated;
@@ -803,5 +844,9 @@ revoke all on function public.create_approval_delegation(uuid,uuid[],uuid,text,u
 revoke all on function public.revoke_approval_delegation(uuid,uuid,uuid[]) from public,anon,authenticated;
 grant execute on function public.create_approval_delegation(uuid,uuid[],uuid,text,uuid,text,bigint,timestamptz,timestamptz) to service_role;
 grant execute on function public.revoke_approval_delegation(uuid,uuid,uuid[]) to service_role;
+revoke all on function public.list_approval_history(uuid,uuid[],uuid) from public,anon,authenticated;
+revoke all on function public.list_approval_delegations(uuid,uuid[],uuid) from public,anon,authenticated;
+grant execute on function public.list_approval_history(uuid,uuid[],uuid) to service_role;
+grant execute on function public.list_approval_delegations(uuid,uuid[],uuid) to service_role;
 
 commit;
