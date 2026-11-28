@@ -2,7 +2,10 @@
 const required=(v,k)=>{if(typeof v!=="string"||!v.trim())throw Object.assign(new Error(k+" is required"),{code:"EXEC_SALES_INPUT_REQUIRED"});return v.trim();};
 export function createSupabaseExecutiveSalesAdapter(client){
  if(typeof client?.rpc!=="function")throw Object.assign(new Error("Supabase RPC client required"),{code:"EXEC_SALES_RPC_CLIENT_REQUIRED"});
- return Object.freeze({loadSalesMonitorSnapshot:async q=>{
+ return Object.freeze({
+  getBranchBusinessDayCutoff:async q=>{const {data,error}=await client.rpc("get_branch_business_day_cutoff",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_id:required(q.branchId,"branchId"),p_branch_ids:q.branchIds??[]});if(error){const e=new Error(error.message||"Branch cutoff read failed");e.code=error.code||"EXEC_CUTOFF_RPC_FAILED";throw e;}return data;},
+  setBranchBusinessDayCutoff:async q=>{const {data,error}=await client.rpc("set_branch_business_day_cutoff",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_id:required(q.branchId,"branchId"),p_branch_ids:q.branchIds??[],p_cutoff_time:q.cutoffTime,p_expected_version:q.expectedVersion});if(error){const e=new Error(error.message||"Branch cutoff update failed");e.code=error.code||"EXEC_CUTOFF_RPC_FAILED";throw e;}return data;},
+  loadSalesMonitorSnapshot:async q=>{
   const {data,error}=await client.rpc("executive_sales_monitor_snapshot",{
    p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),
    p_branch_ids:q.branchIds??null,p_period_type:q.period,p_period_start:q.startDate,p_period_end:q.endDate
