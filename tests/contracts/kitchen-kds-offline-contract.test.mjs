@@ -33,7 +33,7 @@ test("POS retry key returns the original result and rejects changed payloads", (
   assert.match(migration, /payload_fingerprint/i);
   assert.match(migration, /create or replace function public\.erp_create_pos_sale_idempotent/i);
   assert.match(edge, /erp-create-pos-sale/);
-  assert.match(edge, /erp_create_pos_sale_idempotent/);
+  assert.match(edge, /pos_create_order_with_fulfillment_atomic/);
   assert.match(edge, /idempotency_key/);
 });
 

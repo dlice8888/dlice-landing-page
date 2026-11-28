@@ -1,0 +1,79 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {listPendingApprovals,claimApproval,decideApproval,listApprovalHistory} from "../../src/executive-approval-center.mjs";
+const approval={tenantId:"t1",id:"a1",branchId:"b1",category:"procurement",entityType:"purchase_order",entityId:"po1",status:"pending",version:2,sourceVersion:4,createdBy:"creator",expiresAt:"2999-01-01T00:00:00Z",amountIdr:1000,requiredRoles:["finance_approver"],policy:{allowSelfApproval:false}};
+const actor={tenantId:"t1",branchIds:["b1"],categories:["procurement"],roles:["finance_approver"],maxApprovalAmountIdr:10000};
+const base={withTenantTransaction:async(_s,fn)=>fn({}),resolveApproverScope:async()=>actor,loadPendingApprovalSources:async()=>[{...approval}],lockApproval:async()=>approval,claimApprovalLocked:async(_tx,{actorId})=>({claimedBy:actorId,claimExpiresAt:"2999-01-01T00:00:00Z"}),resolveActiveDelegation:async()=>({valid:false}),loadApprovalDecisionHistory:async()=>[{id:"d1",decision:"approve"}],decideSourceEntityOnce:async()=>({updated:true,updateCount:1,version:5}),persistApprovalDecision:async()=>({id:"d1"}),appendAudit:async()=>{}};
+test("inbox filters by server-resolved branch and category scope",async()=>{const rows=await listPendingApprovals({tenantId:"t1",actorId:"approver"},base);assert.equal(rows.length,1);});
+test("decision updates source once and appends audit",async()=>{const r=await decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Reviewed and verified",expectedVersion:2},base);assert.equal(r.sourceVersion,5);});
+test("rejects self approval, stale version, wrong branch and duplicate source",async()=>{await assert.rejects(decideApproval({tenantId:"t1",actorId:"creator",approvalId:"a1",decision:"approve",reason:"Self approve attempt",expectedVersion:2},base),{code:"APPROVAL_SELF_APPROVAL_DENIED"});await assert.rejects(decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Stale version attempt",expectedVersion:1},base),{code:"APPROVAL_STALE_VERSION"});await assert.rejects(listPendingApprovals({tenantId:"t1",actorId:"approver"},{...base,loadPendingApprovalSources:async()=>[{...approval,branchId:"b2"}]}),{code:"APPROVAL_SOURCE_SCOPE_MISMATCH"});await assert.rejects(listPendingApprovals({tenantId:"t1",actorId:"approver"},{...base,loadPendingApprovalSources:async()=>[{...approval},{...approval}]}),{code:"APPROVAL_DUPLICATE_SOURCE"});});
+test("rejects a second source transition or missing audit result",async()=>{await assert.rejects(decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Verified evidence",expectedVersion:2},{...base,decideSourceEntityOnce:async()=>({updated:true,updateCount:2})}),{code:"APPROVAL_SOURCE_TRANSITION_FAILED"});});
+
+test("approval can be claimed and history is scoped",async()=>{
+ const claim=await claimApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",expectedVersion:2},base);
+ assert.equal(claim.claimedBy,"approver");
+ const history=await listApprovalHistory({tenantId:"t1",actorId:"approver",approvalId:"a1"},base);
+ assert.equal(history.length,1);
+});
+test("approved active delegation can satisfy role eligibility",async()=>{
+ const delegatedActor={...actor,roles:[]};
+ const delegatedDeps={...base,resolveApproverScope:async()=>delegatedActor,
+  resolveActiveDelegation:async(_tx,q)=>{assert.deepEqual(q.requiredRoles,["finance_approver"]);assert.equal("delegatorUserIds" in q,false);return {valid:true,delegatorUserId:"manager",delegatorRole:"finance_approver"};}};
+ const r=await decideApproval({tenantId:"t1",actorId:"delegate",approvalId:"a1",decision:"approve",reason:"Delegated reviewer checked source",expectedVersion:2},delegatedDeps);
+ assert.equal(r.decision,"approve");
+});
+test("expired approval cannot be claimed",async()=>{
+ const expired={...approval,expiresAt:"2000-01-01T00:00:00Z"};
+ await assert.rejects(claimApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",expectedVersion:2},{...base,lockApproval:async()=>expired}),{code:"APPROVAL_EXPIRED"});
+});
+
+test("already claimed approval can be decided by the same active claimant without a second claim",async()=>{
+ const claimed={...approval,status:"claimed",claimedBy:"approver",claimExpiresAt:"2999-01-01T00:00:00Z"};
+ let claimCalls=0;
+ const deps={...base,lockApproval:async()=>claimed,claimApprovalLocked:async()=>{claimCalls++;return {claimedBy:"approver"};}};
+ const result=await decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Claim owner reviewed",expectedVersion:2},deps);
+ assert.equal(result.decision,"approve");
+ assert.equal(claimCalls,0);
+});
+test("expired claim may be reclaimed but another active claimant cannot decide",async()=>{
+ const expiredClaim={...approval,status:"claimed",claimedBy:"other",claimExpiresAt:"2000-01-01T00:00:00Z"};
+ const reclaimed=await claimApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",expectedVersion:2},{...base,lockApproval:async()=>expiredClaim});
+ assert.equal(reclaimed.claimedBy,"approver");
+ const activeOther={...approval,status:"claimed",claimedBy:"other",claimExpiresAt:"2999-01-01T00:00:00Z"};
+ await assert.rejects(decideApproval({tenantId:"t1",actorId:"approver",approvalId:"a1",decision:"approve",reason:"Attempt to bypass claim",expectedVersion:2},{...base,lockApproval:async()=>activeOther}),{code:"APPROVAL_CLAIMED_BY_OTHER"});
+});
+
+test("approval decision expiry persists status and audit instead of raising a rollback error",()=>{
+ const sql=String.raw` if a.status in ('pending','claimed') and a.expires_at<=now() then
+  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
+   where id=a.id returning version into a.version;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'executive.approval.expired',a.entity_type,a.entity_id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'approval_id',a.id,'branch_id',a.branch_id,'version',a.version));
+  return jsonb_build_object('approval_id',a.id,'status','expired','version',a.version);
+ end if;
+ if a.status not in ('pending','claimed') then
+  raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';
+ end if;`;
+ assert.match(sql,/status=\x27expired\x27/);
+ assert.match(sql,/executive\.approval\.expired/);
+ assert.match(sql,/return jsonb_build_object\(/);
+});
+
+
+test("tenant-wide approvals are visible only to tenant owners",async()=>{
+ const tenantWide={...approval,branchId:null};
+ const owner={tenantId:"t1",branchIds:[],categories:["procurement"],roles:["tenant_owner"],maxApprovalAmountIdr:10000};
+ const ownerDeps={...base,resolveApproverScope:async()=>owner,loadPendingApprovalSources:async()=>[tenantWide],
+  lockApproval:async()=>tenantWide,loadApprovalDecisionHistory:async()=>[{id:"d-tenant",decision:"approve"}]};
+ const rows=await listPendingApprovals({tenantId:"t1",actorId:"owner"},ownerDeps);
+ assert.equal(rows.length,1);
+ const history=await listApprovalHistory({tenantId:"t1",actorId:"owner",approvalId:"a1"},ownerDeps);
+ assert.equal(history.length,1);
+ await assert.rejects(listPendingApprovals({tenantId:"t1",actorId:"branch-manager"},{
+  ...base,loadPendingApprovalSources:async()=>[tenantWide]
+ }),{code:"APPROVAL_SOURCE_SCOPE_MISMATCH"});
+ await assert.rejects(listApprovalHistory({tenantId:"t1",actorId:"branch-manager",approvalId:"a1"},{
+  ...base,lockApproval:async()=>tenantWide
+ }),{code:"APPROVAL_SCOPE_DENIED"});
+});

@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {generateBusinessOrderNumber} from "../../src/business-order-number.mjs";
+const input={tenantId:"t1",actorId:"u1",branchId:"b1",orderId:"o1",idempotencyKey:"number-key"};
+test("business order number uses server-generated DLC date and sequence",async()=>{const r=await generateBusinessOrderNumber(input,{generateBusinessOrderNumberAtomically:async x=>({...x,businessOrderNumber:"DLC-28/11/2026-00042"})});assert.equal(r.businessOrderNumber,"DLC-28/11/2026-00042");});
+test("rejects invalid format and missing adapter",async()=>{await assert.rejects(generateBusinessOrderNumber(input,{generateBusinessOrderNumberAtomically:async x=>({...x,businessOrderNumber:"DLC-20261128-42"})}),{code:"BUSINESS_ORDER_NUMBER_INVALID"});await assert.rejects(generateBusinessOrderNumber(input,{}),{code:"BUSINESS_ORDER_NUMBER_ADAPTER_REQUIRED"});});

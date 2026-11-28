@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {convertInventoryQuantity} from "../../src/inventory-uom-conversion.mjs";
+const input={tenantId:"t1",inventoryItemId:"i1",quantity:2,fromUnit:"kg",toUnit:"g",effectiveDate:"2026-11-28"};
+test("converts using effective-dated server ratio",async()=>{const r=await convertInventoryQuantity(input,{convertInventoryQuantityReadOnly:async x=>({...x,convertedQuantity:2000,factor:1000})});assert.equal(r.convertedQuantity,2000);});
+test("rejects negative quantity and invalid conversion",async()=>{await assert.rejects(convertInventoryQuantity({...input,quantity:-1},{}),{code:"INVENTORY_UOM_QUANTITY_INVALID"});await assert.rejects(convertInventoryQuantity(input,{convertInventoryQuantityReadOnly:async x=>({...x,convertedQuantity:2000,factor:0})}),{code:"INVENTORY_UOM_CONVERSION_INVALID"});});

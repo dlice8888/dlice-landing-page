@@ -1,0 +1,11 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {recordCashDrawerMovement,reconcileCashDrawer} from "../../src/pos-cash-drawer.mjs";
+const scope={tenantId:"t1",branchId:"b1",actorId:"u1",shiftId:"sh1"};
+const ledger={openingCashIdr:100000,cashSalesIdr:50000,cashInIdr:20000,cashOutIdr:10000,cashRefundsIdr:5000,pendingPaymentCount:0,pendingOrderCount:0};
+const base=()=>({recordCashMovementAtomically:async x=>({movementId:"m1",tenantId:x.tenantId,branchId:x.branchId,shiftId:x.shiftId,amountIdr:x.amountIdr}),
+ reconcileCashDrawerAtomically:async x=>({reconciliationId:"r1",tenantId:x.tenantId,branchId:x.branchId,shiftId:x.shiftId,ledger,expectedCashIdr:155000,countedCashIdr:x.countedCashIdr,varianceIdr:x.countedCashIdr-155000})});
+test("records cash in/out through a single atomic server operation",async()=>{const r=await recordCashDrawerMovement({...scope,idempotencyKey:"cash-move-1",movementType:"cash_in",amountIdr:10000,reason:"Petty cash top-up"},base());assert.equal(r.shiftId,"sh1");});
+test("rejects invalid movement type and amount",async()=>{await assert.rejects(recordCashDrawerMovement({...scope,idempotencyKey:"k",movementType:"cash_in",amountIdr:0,reason:"x"},base()),{code:"POS_CASH_AMOUNT_INVALID"});await assert.rejects(recordCashDrawerMovement({...scope,idempotencyKey:"k",movementType:"transfer",amountIdr:1000,reason:"x"},base()),{code:"POS_CASH_MOVEMENT_TYPE_INVALID"});});
+test("reconciles expected drawer from opening cash, tender and movement ledger",async()=>{const r=await reconcileCashDrawer({...scope,countedCashIdr:155000,reason:"Drawer count"},base());assert.equal(r.expectedCashIdr,155000);assert.equal(r.varianceIdr,0);});
+test("rejects pending transactions and snapshot mismatch",async()=>{await assert.rejects(reconcileCashDrawer({...scope,countedCashIdr:155000,reason:"Drawer count"},{...base(),reconcileCashDrawerAtomically:async x=>({...base().reconcileCashDrawerAtomically(x),ledger:{...ledger,pendingPaymentCount:1}})}),{code:"POS_CASH_RECONCILIATION_MISMATCH"});await assert.rejects(reconcileCashDrawer({...scope,countedCashIdr:155000,reason:"Drawer count"},{...base(),reconcileCashDrawerAtomically:async x=>({...await base().reconcileCashDrawerAtomically(x),expectedCashIdr:100})}),{code:"POS_CASH_LEDGER_MISMATCH"});});

@@ -381,7 +381,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const token = safeText(body.tracking_token, 100);
     if (token.length !== 64) return fail("Token pelacakan tidak valid.", 401, origin);
     const tokenHash = await sha256(token);
-    const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot").eq("tracking_token_hash", tokenHash).maybeSingle();
+    const { data: order, error: orderError } = await admin.from("orders").select("id,payment_status,requested_date,requested_time,receiving_method,customer_whatsapp,product_subtotal_idr,receipt_version,receipt_confirmed_version,receipt_snapshot,state_version").eq("tracking_token_hash", tokenHash).maybeSingle();
     if (orderError || !order) return fail("Pesanan tidak ditemukan.", 404, origin);
     const { data: reservations, error: reservationError } = await admin.from("order_reservations").select("id,status,expires_at").eq("order_id", order.id);
     if (reservationError || !reservations?.length) return fail("Reservasi pesanan tidak ditemukan.", 409, origin);
@@ -395,7 +395,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       if (!allStillActive && !reservations.every((r) => r.status === "held_for_verification")) return fail("Batas 15 menit telah lewat. Hubungi admin; jangan melakukan pembayaran baru sebelum dikonfirmasi.", 409, origin);
       const { error: updateError } = await admin.from("order_reservations").update({ status: "held_for_verification", payment_declared_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
       if (updateError) return fail("Pernyataan pembayaran belum tersimpan.", 500, origin);
-      await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
+      const {data:updatedOrder,error:stateError}=await admin.from("orders").update({payment_status:"pending_verification",state_version:order.state_version+1,updated_at:new Date().toISOString()}).eq("id",order.id).eq("state_version",order.state_version).select("id").maybeSingle();
+      if(stateError||!updatedOrder)return fail("Status pembayaran berubah saat bukti dikirim. Muat ulang pesanan.",409,origin);
       await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Customer confirmed payment after uploading proof" });
       return json({ ok: true, message: "Bukti pembayaran sudah tercatat dan menunggu pemeriksaan admin." }, 200, origin);
     }
@@ -437,7 +438,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       : await admin.from("payment_records").insert({ order_id: order.id, ...paymentValues, status: "pending_verification" });
     if (payError) return fail("Bukti tersimpan tetapi pencatatan pembayaran gagal; hubungi admin dan jangan unggah ulang dulu.", 500, origin);
     await admin.from("order_reservations").update({ status: "held_for_verification", proof_received_at: new Date().toISOString() }).eq("order_id", order.id).eq("status", "active");
-    await admin.from("orders").update({ payment_status: "pending_verification" }).eq("id", order.id);
+    const {data:updatedOrder,error:stateError}=await admin.from("orders").update({payment_status:"pending_verification",state_version:order.state_version+1,updated_at:new Date().toISOString()}).eq("id",order.id).eq("state_version",order.state_version).select("id").maybeSingle();
+      if(stateError||!updatedOrder)return fail("Status pembayaran berubah saat bukti dikirim. Muat ulang pesanan.",409,origin);
     await admin.from("order_status_history").insert({ order_id: order.id, status_type: "payment", old_status: order.payment_status, new_status: "pending_verification", note: "Payment proof uploaded; awaiting admin verification" });
     return json({ ok: true, message: "Bukti tersimpan secara privat dan menunggu verifikasi admin." }, 200, origin);
   }
@@ -593,7 +595,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-list-purchase-orders": "procurement",
     "erp-create-purchase-order": "procurement",
     "erp-update-purchase-order": "procurement",
+    "erp-executive-sales-monitor": "reports",
+    "erp-executive-branch-kpis": "reports",
+    "erp-executive-list-branch-rankings": "reports",
+    "erp-executive-list-alerts": "reports",
+    "erp-executive-publish-branch-ranking": "branches",
+    "erp-executive-transition-alert": "branches",
+    "erp-executive-verify-alert": "branches",
+    "erp-executive-get-business-day-cutoff": "branches",
+    "erp-executive-set-business-day-cutoff": "branches",
+    "erp-record-cash-movement": "pos",
+    "erp-reconcile-cash-drawer": "pos",
   };
+  const executiveApprovalActions = new Set([
+    "erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval",
+    "erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation",
+    "erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation",
+  ]);
+  // This broad action gate is only the first layer: the approval RPC still checks
+  // tenant role, branch, category, SoD, amount limit, delegation and expiry.
+  if (!isPlatformOwner && executiveApprovalActions.has(action) && !actor.profile.permissions.includes("*") &&
+      !["finance","procurement","staff","branches"].some((p) => actor.profile.permissions.includes(p))) {
+    return fail("Akses ditolak. Tidak ada izin domain untuk pusat persetujuan.",403,origin);
+  }
+
   const requiredPermission = permissionForAction[action];
   if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
@@ -871,7 +896,7 @@ if (action === "admin-set-profile-role") {
     const next = safeText(body.operational_status, 40);
     const allowed = ["received","confirmed","preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed","cancelled","delivery_issue"];
     if (!allowed.includes(next)) return fail("Status pesanan tidak valid.", 422, origin);
-    const { data: oldOrder } = await admin.from("orders").select("branch_id,operational_status,payment_status").eq("id", orderId).maybeSingle();
+    const { data: oldOrder } = await admin.from("orders").select("branch_id,operational_status,payment_status,state_version").eq("id", orderId).maybeSingle();
     if (!oldOrder) return fail("Pesanan tidak ditemukan.", 404, origin);
     if (!await actorCanAccessBranch(oldOrder.branch_id)) return fail("Akses cabang tidak diizinkan.", 403, origin);
     if (["preparing","ready_for_pickup","waiting_for_courier","in_delivery","completed"].includes(next) && oldOrder.payment_status !== "paid") {
@@ -879,17 +904,31 @@ if (action === "admin-set-profile-role") {
     }
     if(oldOrder.payment_status==="paid"&&next!==oldOrder.operational_status){const {data:n}=await admin.from("notification_log").select("status").eq("order_id",orderId).eq("notification_type","payment_verified_whatsapp").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!n||n.status!=="sent")return fail("Kirim konfirmasi pembayaran beserta tutorial tracking, lalu tandai terkirim sebelum memperbarui status.",409,origin);}
     if(["cancelled","delivery_issue"].includes(next)&&safeText(body.reason,500).length<4)return fail("Alasan wajib diisi untuk pembatalan/kendala.",422,origin);
-    const { data: applied, error } = await admin.rpc("admin_apply_operational_status_change", { p_order_id: orderId, p_actor_user_id: actor.user.id, p_next_status: next, p_reason: safeText(body.reason,500) });
-    if (error || applied !== true) return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan status terbaru.", 409, origin);
-    return json({ ok: true }, 200, origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",oldOrder.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const {data:applied,error}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:oldOrder.branch_id,p_actor_user_id:actor.user.id,p_order_id:orderId,
+      p_domain:"order",p_next_status:next,p_expected_version:oldOrder.state_version,
+      p_idempotency_key:safeText(body.idempotency_key,120)||"order-state:"+orderId+":order:"+oldOrder.state_version+":"+next,
+      p_payment_evidence_type:null,p_handover_acknowledgement:null,p_reason:safeText(body.reason,500)
+    });
+    if(error||!applied)return fail("Status tidak berubah. Periksa pembayaran, notifikasi konfirmasi, alasan, dan versi terbaru.",409,origin);
+    return json({ok:true,transition:applied},200,origin);
   }
 
 
   if (action === "admin-verify-payment") {
     const orderId=safeText(body.order_id,80),result=safeText(body.result,20),note=safeText(body.note,500);if(!["paid","rejected"].includes(result))return fail("Hasil verifikasi tidak valid.",422,origin);
-    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
+    const {data:o}=await admin.from("orders").select("id,branch_id,order_number,created_at,timezone,customer_name,customer_whatsapp,requested_date,requested_time,receiving_method,delivery_address,product_subtotal_idr,payment_status,state_version").eq("id",orderId).maybeSingle();if(!o)return fail("Pesanan tidak ditemukan.",404,origin);if(!await actorCanAccessBranch(o.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);if(["paid","refunded"].includes(o.payment_status))return fail("Status pembayaran tidak dapat ditimpa.",409,origin);
     const {data:p}=await admin.from("payment_records").select("id,proof_storage_path,method").eq("order_id",orderId).eq("status","pending_verification").order("created_at",{ascending:false}).limit(1).maybeSingle();if(!p)return fail("Tidak ada pembayaran menunggu verifikasi.",409,origin);if(result==="paid"&&!p.proof_storage_path)return fail("Bukti pembayaran wajib tersedia.",409,origin);
-    const {data:applied,error:applyError}=await admin.rpc("admin_apply_payment_verification",{p_order_id:orderId,p_payment_id:p.id,p_actor_user_id:actor.user.id,p_result:result,p_note:note});if(applyError||applied!==true)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",o.branch_id).maybeSingle();if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const {data:applied,error:applyError}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:o.branch_id,p_actor_user_id:actor.user.id,p_order_id:orderId,
+      p_domain:"payment",p_next_status:result,p_expected_version:o.state_version,
+      p_idempotency_key:"order-payment:"+orderId+":"+p.id+":"+result,
+      p_payment_evidence_type:result==="paid"?(p.method==="cash"?"cash_tender":"verified_provider_event"):null,
+      p_handover_acknowledgement:null,p_reason:note
+    });if(applyError||!applied)return fail("Verifikasi gagal atau pesanan sudah berubah. Muat ulang pesanan dan periksa statusnya.",409,origin);
     if(result==="paid"){const token=randomToken(),hash=await sha256(token);await admin.from("orders").update({tracking_token_hash:hash}).eq("id",orderId);const {data:lines}=await admin.from("order_items").select("product_name_snapshot,quantity,line_total_idr").eq("order_id",orderId);const items=(lines||[]).map(i=>`• ${i.product_name_snapshot} × ${i.quantity} — Rp${Number(i.line_total_idr).toLocaleString("id-ID")}`).join("\n");const code=formatTransactionCode(o.order_number,o.created_at,o.timezone),publicBase=origin&&isAllowedOrigin(origin)?origin:"https://dlice.vercel.app",track=`${publicBase}/track.html?token=${token}`,method=p.method==="dlice_qris"?"QRIS D’Lice":"Transfer bank";const msg=`Halo ${o.customer_name}, pembayaran pesanan D’Lice ${code} sudah diverifikasi.\nTotal diterima: Rp${Number(o.product_subtotal_idr).toLocaleString("id-ID")}\nMetode: ${method}\nTanggal: ${o.requested_date}, ${o.requested_time} waktu lokal cabang\nPenerimaan: ${o.receiving_method==="delivery"?"Delivery — "+(o.delivery_address||""):"Pickup"}\nDetail:\n${items}\n\nTutorial cek progress seperti ojol/logistik: buka tautan pribadi berikut, lihat status terakhir dan waktu pembaruan, lalu cek riwayat status. Simpan tautan ini dan jangan bagikan ke orang lain:\n${track}\nJika bermasalah, kirim kode ${code} ke WhatsApp D’Lice. Terima kasih 💗`;const key=`payment-verified:${orderId}`;const {error:le}=await admin.from("notification_log").upsert({order_id:orderId,notification_type:"payment_verified_whatsapp",status:"manual_action_required",idempotency_key:key,recipient_whatsapp:o.customer_whatsapp,message_text:msg},{onConflict:"idempotency_key",ignoreDuplicates:true});if(le)return fail("Pembayaran sudah terverifikasi, tetapi notifikasi gagal dicatat. Retry dari panel staf.",500,origin);return json({ok:true,order_id:orderId,notification_type:"payment_verified_whatsapp",whatsapp_url:`https://wa.me/${o.customer_whatsapp}?text=${encodeURIComponent(msg)}`,notification:"manual_action_required",message:"Kirim konfirmasi beserta tautan tracking, lalu tandai pengiriman berhasil."},200,origin);}
     return json({ok:true,message:"Pembayaran ditolak; riwayat, audit, dan kapasitas diperbarui dalam satu transaksi."},200,origin);
   }
@@ -2005,6 +2044,123 @@ if (action === "admin-set-profile-role") {
     }
    }
 
+  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history","erp-executive-list-approval-delegations","erp-executive-create-approval-delegation","erp-executive-approve-approval-delegation","erp-executive-revoke-approval-delegation","erp-executive-get-business-day-cutoff","erp-executive-set-business-day-cutoff"]);
+  if(executiveSalesActions.has(action)){
+    if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
+      return fail("Izin Executive tidak diizinkan.",403,origin);
+    if(action==="erp-executive-sales-monitor"&&!isPlatformOwner&&!hasPerm("reports")&&!hasPerm("finance"))
+      return fail("Izin laporan penjualan tidak diizinkan.",403,origin);
+    if(action!=="erp-executive-sales-monitor"&&!isPlatformOwner&&!["procurement","finance","hr","branches"].some(hasPerm))
+      return fail("Izin approval domain tidak diizinkan.",403,origin);
+    const tenantId=safeText(body.tenant_id,64);
+    if(!/^[0-9a-f-]{36}$/i.test(tenantId))return fail("Tenant wajib dipilih.",422,origin);
+    const {data:membership,error:membershipError}=await admin.from("tenant_memberships")
+      .select("tenant_id,role").eq("tenant_id",tenantId).eq("user_id",actor.user.id).eq("status","active").maybeSingle();
+    if(membershipError)return fail("Keanggotaan tenant belum dapat diverifikasi.",503,origin);
+    const ownerReadAction=["erp-executive-sales-monitor","erp-executive-get-business-day-cutoff","erp-executive-set-business-day-cutoff"].includes(action);
+    if(!membership&&!(isPlatformOwner&&ownerReadAction))return fail("Akses tenant ditolak.",403,origin);
+    const tenantBranches=isPlatformOwner&&ownerReadAction
+      ? await admin.from("branches").select("id").eq("tenant_id",tenantId)
+      : await admin.from("branches").select("id").eq("tenant_id",tenantId).in("id",await branchIdsForActor().catch(()=>[]));
+    if(tenantBranches.error)return fail("Scope cabang belum dapat diverifikasi.",503,origin);
+    const allowedBranchIds=(tenantBranches.data||[]).map((x:any)=>x.id);
+    const requested=Array.isArray(body.branch_ids)?body.branch_ids.filter((x:any)=>typeof x==="string"):null;
+    if(requested&&requested.some((id:string)=>!allowedBranchIds.includes(id)))return fail("Filter cabang di luar penugasan ditolak.",403,origin);
+    if(action==="erp-executive-get-business-day-cutoff"||action==="erp-executive-set-business-day-cutoff"){
+      const branchId=safeText(body.branch_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(branchId)||!allowedBranchIds.includes(branchId))return fail("Cabang cutoff di luar scope.",403,origin);
+      if(action==="erp-executive-get-business-day-cutoff"){
+        const {data,error}=await admin.rpc("get_branch_business_day_cutoff",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_id:branchId,p_branch_ids:allowedBranchIds});
+        if(error)return fail("Konfigurasi business-day cutoff belum tersedia.",503,origin);
+        return json({cutoff:data},200,origin);
+      }
+      const cutoff=safeText(body.cutoff_time,5),expectedVersion=Number(body.expected_version);
+      if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Waktu cutoff atau versi konfigurasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("set_branch_business_day_cutoff",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_id:branchId,p_branch_ids:allowedBranchIds,p_cutoff_time:cutoff,p_expected_version:expectedVersion});
+      if(error)return fail("Perubahan cutoff ditolak. Periksa role dan versi konfigurasi.",409,origin);
+      return json({cutoff:data},200,origin);
+    }
+    if(action==="erp-executive-sales-monitor"){
+      const period=safeText(body.period,12)||"day",start=safeText(body.start_date,10),end=safeText(body.end_date,10);
+      if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start)
+        return fail("Periode penjualan tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("executive_sales_monitor_snapshot",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:requested??allowedBranchIds,
+        p_period_type:period,p_period_start:start,p_period_end:end,
+      });
+      if(error)return fail("Sales monitor belum tersedia. Migration dan RPC belum diterapkan pada staging.",503,origin);
+      return json({snapshot:data},200,origin);
+    }
+    if(action==="erp-executive-list-pending-approvals"){
+      const categories=Array.isArray(body.categories)?body.categories.filter((x:any)=>["procurement","finance","hr","branch_ops"].includes(x)):null;
+      const {data,error}=await admin.rpc("list_pending_approvals",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_categories:categories,
+      });
+      if(error)return fail("Approval inbox belum tersedia. Migration dan RPC belum diterapkan pada staging.",503,origin);
+      return json({approvals:data?.approvals||data||[]},200,origin);
+    }
+    if(action==="erp-executive-claim-approval"){
+      const approvalId=safeText(body.approval_id,64),expectedVersion=Number(body.expected_version);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Claim approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("claim_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,p_expected_version:expectedVersion,
+      });
+      if(error)return fail("Approval tidak dapat diklaim. Periksa scope, expiry, dan versi sumber.",409,origin);
+      return json({claim:data},200,origin);
+    }
+    if(action==="erp-executive-decide-approval"){
+      const approvalId=safeText(body.approval_id,64),decision=safeText(body.decision,20),reason=safeText(body.reason,1000),expectedVersion=Number(body.expected_version);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!["approve","reject"].includes(decision)||reason.length<8||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
+        return fail("Keputusan approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("decide_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,p_decision:decision,p_reason:reason,p_expected_version:expectedVersion,
+      });
+      if(error)return fail("Keputusan approval ditolak. Periksa separation of duties, delegasi, expiry, dan versi sumber.",409,origin);
+      return json({decision:data},200,origin);
+    }
+    if(action==="erp-executive-approval-history"){
+      const approvalId=safeText(body.approval_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId))return fail("ID approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("list_approval_decision_history",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,
+      });
+      if(error)return fail("Riwayat keputusan tidak dapat dimuat.",403,origin);
+      return json({history:data||[]},200,origin);
+    }
+    if(action==="erp-executive-list-approval-delegations"){
+      const {data,error}=await admin.rpc("list_approval_delegations",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds});
+      if(error)return fail("Delegasi approval tidak dapat dimuat.",403,origin);
+      return json({delegations:data?.delegations||[]},200,origin);
+    }
+    if(action==="erp-executive-create-approval-delegation"){
+      const delegateUserId=safeText(body.delegate_user_id,64),category=safeText(body.category,30),branchId=safeText(body.branch_id,64)||null;
+      const startsAt=safeText(body.starts_at,40),endsAt=safeText(body.ends_at,40);
+      const permission=category==="branch_ops"?"branches":category;
+      if(!/^[0-9a-f-]{36}$/i.test(delegateUserId)||!["procurement","finance","hr","branch_ops"].includes(category)||
+        !Number.isFinite(Date.parse(startsAt))||!Number.isFinite(Date.parse(endsAt))||Date.parse(endsAt)<=Date.parse(startsAt))
+        return fail("Delegasi approval tidak valid.",422,origin);
+      if(!hasPerm(permission))return fail("Izin membuat delegasi untuk domain ini ditolak.",403,origin);
+      if(branchId&&!allowedBranchIds.includes(branchId))return fail("Cabang delegasi di luar scope ditolak.",403,origin);
+      const {data,error}=await admin.rpc("create_approval_delegation",{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,
+        p_branch_ids:allowedBranchIds,p_delegate_user_id:delegateUserId,p_category:category,p_branch_id:branchId,p_starts_at:startsAt,p_ends_at:endsAt});
+      if(error)return fail("Delegasi tidak dapat dibuat. Periksa role, anggota tenant, dan scope cabang.",409,origin);
+      return json({delegation:data},200,origin);
+    }
+    if(action==="erp-executive-approve-approval-delegation"||action==="erp-executive-revoke-approval-delegation"){
+      const delegationId=safeText(body.delegation_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(delegationId))return fail("ID delegasi tidak valid.",422,origin);
+      const rpc=action==="erp-executive-approve-approval-delegation"?"approve_approval_delegation":"revoke_approval_delegation";
+      const args=action==="erp-executive-approve-approval-delegation"
+        ?{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_delegation_id:delegationId}
+        :{p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_delegation_id:delegationId};
+      const {data,error}=await admin.rpc(rpc,args);
+      if(error)return fail("Perubahan delegasi ditolak oleh policy.",403,origin);
+      return json({delegation:data},200,origin);
+    }
+  }
+
   const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
   if(biExecutiveActions.has(action)){
     if(!isOwner)return fail("BI dan Executive Command Center sementara hanya dapat diakses Platform Owner.",403,origin);
@@ -2939,31 +3095,60 @@ if(action==="erp-executive-branch-kpis"){
     const branchId=safeText(body.branch_id,80),cash=Number(body.opening_cash_idr||0);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(!Number.isFinite(cash)||cash<0||cash>1000000000)return fail("Saldo awal kas tidak valid.",422,origin);
-    const {data,error}=await admin.from("pos_shifts").insert({branch_id:branchId,opened_by:actor.user.id,opening_cash_idr:Math.round(cash),expected_cash_idr:Math.round(cash),status:"open"}).select("*").single();
-    if(error||!data)return fail("Shift gagal dibuka. Pastikan cabang aktif dan tidak ada shift terbuka milik Anda.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_opened",entity_type:"pos_shift",entity_id:data.id,metadata:{branch_id:branchId,opening_cash_idr:cash}});
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_open_shift_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,p_opening_cash_idr:Math.round(cash)});
+    if(error||!data)return fail("Shift gagal dibuka. Periksa akses cabang dan shift terbuka.",409,origin);
     return json({ok:true,shift:data},201,origin);
   }
 
   if (action === "erp-close-shift") {
     const shiftId=safeText(body.shift_id,80),counted=Number(body.counted_cash_idr),note=safeText(body.notes,500);
     if(!Number.isFinite(counted)||counted<0||counted>1000000000)return fail("Kas hasil hitung tidak valid.",422,origin);
-    const {data:old,error:oldError}=await admin.from("pos_shifts").select("*").eq("id",shiftId).maybeSingle();
+    const {data:old,error:oldError}=await admin.from("pos_shifts").select("id,branch_id,status").eq("id",shiftId).maybeSingle();
     if(oldError||!old)return fail("Shift tidak ditemukan.",404,origin);
-    if(!isOwner&&old.opened_by!==actor.user.id&&!hasPerm("branches"))return fail("Hanya pembuka shift atau Owner yang dapat menutup shift ini.",403,origin);
     if(!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.status!=="open")return fail("Shift sudah ditutup.",409,origin);
-    const variance=Math.round(counted)-Number(old.expected_cash_idr);
-    const {data,error}=await admin.from("pos_shifts").update({status:"closed",counted_cash_idr:Math.round(counted),cash_variance_idr:variance,closed_by:actor.user.id,closed_at:new Date().toISOString(),notes:note}).eq("id",shiftId).eq("status","open").select("*").maybeSingle();
-    if(error||!data)return fail("Shift berubah saat proses berlangsung; muat ulang.",409,origin);
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"pos_shift_closed",entity_type:"pos_shift",entity_id:shiftId,metadata:{expected_cash_idr:old.expected_cash_idr,counted_cash_idr:counted,cash_variance_idr:variance}});
-    return json({ok:true,shift:data},200,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(branchError||!branch)return fail("Cabang shift tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_close_shift_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:old.branch_id,p_actor_user_id:actor.user.id,p_shift_id:shiftId,p_counted_cash_idr:Math.round(counted),p_reason:note||"Shift close"});
+    if(error||!data)return fail("Shift tidak dapat ditutup. Periksa pembayaran pending, variance, dan otorisasi.",409,origin);
+    return json({ok:true,...data},200,origin);
+  }
+
+  if (action === "erp-record-cash-movement") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),type=safeText(body.movement_type,20);
+    const amount=Number(body.amount_idr),reason=safeText(body.reason,500),key=safeText(body.idempotency_key,120);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!["cash_in","cash_out"].includes(type)||!Number.isSafeInteger(amount)||amount<=0||reason.length<3||key.length<8)
+      return fail("Data pergerakan kas tidak valid.",422,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_record_cash_movement_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,
+      p_shift_id:shiftId,p_idempotency_key:key,p_movement_type:type,p_amount_idr:amount,p_reason:reason});
+    if(error||!data)return fail("Pergerakan kas ditolak. Periksa shift, saldo, alasan, dan scope.",409,origin);
+    return json({movement:data},200,origin);
+  }
+
+  if (action === "erp-reconcile-cash-drawer") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),counted=Number(body.counted_cash_idr),reason=safeText(body.reason,500);
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!Number.isSafeInteger(counted)||counted<0||reason.length<3)return fail("Data rekonsiliasi kas tidak valid.",422,origin);
+    const {data:branch,error:branchError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchError||!branch)return fail("Cabang tidak ditemukan.",404,origin);
+    const {data,error}=await admin.rpc("pos_reconcile_cash_drawer_atomic",{p_tenant_id:branch.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,
+      p_shift_id:shiftId,p_counted_cash_idr:counted,p_reason:reason});
+    if(error||!data)return fail("Rekonsiliasi kas ditolak. Periksa pending payment, variance, dan scope.",409,origin);
+    return json({reconciliation:data},200,origin);
   }
 
   if (action === "erp-create-pos-sale") {
     const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
     const method=safeText(body.payment_method,20),discount=Number(body.discount_idr||0);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    const {data:branchMeta,error:branchMetaError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchMetaError||!branchMeta?.tenant_id)return fail("Tenant cabang tidak dapat diverifikasi.",503,origin);
+    const tenantId=branchMeta.tenant_id;
     if(!Array.isArray(items)||!items.length||items.length>50)return fail("Pilih minimal satu menu.",422,origin);
     if(!Number.isFinite(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.",403,origin);
     const cleanItems=items.map((x:any)=>({
@@ -2973,8 +3158,26 @@ if(action==="erp-executive-branch-kpis"){
     }));
     if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
     const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
-    const {data,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_payment_method:method,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey});
-    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":"Transaksi POS gagal. Periksa shift, resep, stok, dan item.",409,origin);
+    let data:any=null,error:any=null;
+    const fulfillmentInput=(body.fulfillment&&typeof body.fulfillment==="object"?body.fulfillment:{}) as Record<string,unknown>;
+    const fulfillment={order_type:safeText(fulfillmentInput.order_type,20)||"takeaway",
+      table_code:safeText(fulfillmentInput.table_code,40),pickup_at_local:safeText(fulfillmentInput.pickup_at_local,40),
+      pickup_at:safeText(fulfillmentInput.pickup_at,50),delivery_address:safeText(fulfillmentInput.delivery_address,500),
+      delivery_area_id:safeText(fulfillmentInput.delivery_area_id,80)};
+    let tenders:any[]|null=null;
+    if(Array.isArray(body.tenders)&&body.tenders.length>0){
+      if(body.tenders.length<2||body.tenders.length>5)return fail("Split tender harus terdiri dari 2–5 alokasi.",422,origin);
+      tenders=body.tenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)}));
+      if(tenders.some((t:any)=>!["cash","bank_transfer","qris"].includes(t.payment_method)||!Number.isSafeInteger(t.amount_idr)||t.amount_idr<=0||t.amount_idr>1000000000)||
+        new Set(tenders.map((t:any)=>t.payment_method)).size<2)return fail("Metode dan nominal split tender tidak valid.",422,origin);
+    }else if(!["cash","bank_transfer","qris"].includes(method))return fail("Metode pembayaran tidak valid.",422,origin);
+    ({data,error}=await admin.rpc("pos_create_order_with_fulfillment_atomic",{
+      p_tenant_id:tenantId,p_branch_id:branchId,p_actor_user_id:actor.user.id,p_shift_id:shiftId,
+      p_idempotency_key:idempotencyKey,p_items:cleanItems,p_payment_method:tenders?"split":method,
+      p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),
+      p_notes:safeText(body.notes,500),p_tenders:tenders,p_fulfillment:fulfillment
+    }));
+    if(error)return fail(error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("product_unavailable")?"Menu tidak aktif atau harga belum ditetapkan.":error.message.includes("insufficient_stock")?"Stok bahan tidak mencukupi; transaksi dibatalkan.":error.message.includes("active_recipe_required")?"Aktifkan resep sebelum mengaktifkan pelacakan stok.":error.message.includes("idempotency_key_payload_mismatch")||error.message.includes("POS_FULFILLMENT_IDEMPOTENCY_PAYLOAD_MISMATCH")?"Kunci transaksi sudah digunakan untuk isi transaksi yang berbeda.":error.message.includes("invalid_modifier")?"Modifier tidak aktif atau tidak sesuai dengan menu.":error.message.includes("invalid_recipe_substitution")?"Substitusi bahan belum disetujui untuk resep aktif.":error.message.includes("split_tender_total_mismatch")?"Total alokasi tender harus sama persis dengan total transaksi.":error.message.includes("POS_ORDER_TYPE_DETAILS_INVALID")?"Detail meja, pickup, atau delivery belum lengkap.":"Transaksi POS gagal. Periksa shift, jenis order, resep, stok, dan item.",409,origin);
     return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
   }
 
@@ -3020,8 +3223,22 @@ if(action==="erp-executive-branch-kpis"){
     const items=Array.isArray(operation.items)?(operation.items as any[]).map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers:[],substitutions:Array.isArray(x?.substitutions)?x.substitutions:[]})): [];
     if(!items.length||items.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000))return fail("Item transaksi offline tidak valid.",422,origin);
     const key=operationId;
-    const {data:result,error}=await admin.rpc("erp_create_pos_sale_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:items,p_payment_method:safeText(operation.payment_method,20),p_discount_idr:Math.round(Number(operation.discount_idr||0)),p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:key});
-    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
+    const {data:branchMeta,error:branchMetaError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
+    if(branchMetaError||!branchMeta?.tenant_id)return fail("Tenant cabang tidak dapat diverifikasi untuk sinkronisasi.",503,origin);
+    const fulfillmentInput=((operation.fulfillment&&typeof operation.fulfillment==="object")?operation.fulfillment:{order_type:"takeaway"}) as Record<string,unknown>;
+    const fulfillment={order_type:safeText(fulfillmentInput.order_type,20)||"takeaway",table_code:safeText(fulfillmentInput.table_code,40),
+      pickup_at_local:safeText(fulfillmentInput.pickup_at_local,40),pickup_at:safeText(fulfillmentInput.pickup_at,50),
+      delivery_address:safeText(fulfillmentInput.delivery_address,500),delivery_area_id:safeText(fulfillmentInput.delivery_area_id,80)};
+    const offlineTenders=Array.isArray(operation.tenders)?operation.tenders.map((t:any)=>({payment_method:safeText(t?.payment_method,20),
+      amount_idr:Number(t?.amount_idr),reference:safeText(t?.reference,120)})):null;
+    const method=offlineTenders?.length?"split":safeText(operation.payment_method,20);
+    const {data:result,error}=await admin.rpc("pos_create_order_with_fulfillment_atomic",{
+      p_tenant_id:branchMeta.tenant_id,p_branch_id:branchId,p_actor_user_id:actor.user.id,p_shift_id:shiftId,
+      p_idempotency_key:key,p_items:items,p_payment_method:method,p_discount_idr:Math.round(Number(operation.discount_idr||0)),
+      p_customer_reference:safeText(operation.customer_reference,120),p_notes:safeText(operation.notes,500),
+      p_tenders:offlineTenders,p_fulfillment:fulfillment
+    });
+    if(error)return fail(error.message.includes("insufficient_stock")?"Sinkronisasi ditolak karena stok tidak mencukupi.":error.message.includes("open_shift_required")?"Shift terkait tidak lagi terbuka; minta supervisor menyelesaikan transaksi.":error.message.includes("POS_ORDER_TYPE_DETAILS_INVALID")?"Detail jenis order offline tidak valid.":"Operasi offline gagal divalidasi. Transaksi belum disinkronkan.",409,origin);
     const {data:receipt,error:receiptError}=await admin.from("offline_sync_receipts").insert({branch_id:branchId,actor_user_id:actor.user.id,device_id:deviceId,client_operation_id:operationId,operation_type:"pos-sale",payload_fingerprint:fingerprint,result}).select("id,client_operation_id,synced_at").single();
     if(receiptError){
       const {data:retry}=await admin.from("offline_sync_receipts").select("actor_user_id,branch_id,payload_fingerprint,result").eq("device_id",deviceId).eq("client_operation_id",operationId).maybeSingle();
@@ -3057,7 +3274,7 @@ if(action==="erp-executive-branch-kpis"){
   if (action === "erp-list-sales") {
     if(!hasPerm("pos")&&!hasPerm("reports"))return fail("Izin laporan POS tidak diizinkan.",403,origin);
     const branchId=safeText(body.branch_id,80),since=safeText(body.since,10),ids=await branchIdsForActor().catch(()=>[]);
-    let q=admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at,branches(code,name),pos_sale_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr)").order("created_at",{ascending:false}).limit(200);
+    let q=admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at,branches(code,name),pos_sale_items(product_name_snapshot,quantity,unit_price_idr,line_total_idr),pos_sale_fulfillments(order_type,table_code,pickup_at,delivery_address,delivery_area_id,order_status,fulfillment_status,version)").order("created_at",{ascending:false}).limit(200);
     if(branchId&&!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(branchId)q=q.eq("branch_id",branchId);else q=ids?.length?q.in("branch_id",ids):q.eq("branch_id","00000000-0000-0000-0000-000000000000");
     if(since)q=q.gte("created_at",since+"T00:00:00");
@@ -3545,18 +3762,23 @@ if(action==="erp-executive-branch-kpis"){
     const id=safeText(body.order_id,80),next=safeText(body.fulfillment_status,30),note=safeText(body.notes,500);
     const allowed=["accepted","preparing","ready","dispatched","fulfilled","failed","cancelled"];
     if(!allowed.includes(next))return fail("Status fulfillment tidak valid.",422,origin);
-    const {data:old}=await admin.from("orders").select("id,branch_id,fulfillment_status,operational_status,payment_status").eq("id",id).maybeSingle();
+    const {data:old}=await admin.from("orders").select("id,branch_id,fulfillment_status,operational_status,payment_status,state_version").eq("id",id).maybeSingle();
     if(!old)return fail("Pesanan tidak ditemukan.",404,origin);
     if(!old.branch_id||!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     const transitions:Record<string,string[]>={unassigned:["accepted","cancelled"],queued:["accepted","cancelled"],accepted:["preparing","cancelled","failed"],preparing:["ready","failed"],ready:["dispatched","fulfilled","cancelled"],dispatched:["fulfilled","failed"],failed:["accepted","cancelled"],fulfilled:[],cancelled:[]};
     if(!(transitions[old.fulfillment_status]||[]).includes(next))return fail("Perubahan status fulfillment tidak diizinkan.",409,origin);
     if(next==="fulfilled"&&!["paid","verified","settled"].includes(String(old.payment_status)))return fail("Pesanan belum memiliki status pembayaran yang disetujui.",409,origin);
-    const values:any={fulfillment_status:next,fulfillment_notes:note||null,updated_at:new Date().toISOString()};
-    if(next==="fulfilled")values.fulfilled_at=new Date().toISOString();
-    const {data,error}=await admin.from("orders").update(values).eq("id",id).eq("fulfillment_status",old.fulfillment_status).select("id,fulfillment_status,branch_id,fulfilled_at").maybeSingle();
-    if(error||!data)return fail("Status berubah atau gagal disimpan. Muat ulang.",409,origin);
-    await admin.from("order_status_history").insert({order_id:id,status_type:"operational",old_status:old.fulfillment_status,new_status:next,note:note||"Fulfillment status updated"});
-    await admin.from("admin_audit_logs").insert({actor_user_id:actor.user.id,action:"order_fulfillment_"+next,entity_type:"order",entity_id:id,metadata:{branch_id:old.branch_id,previous_status:old.fulfillment_status}});
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang tidak ditemukan.",409,origin);
+    const handover=safeText(body.handover_acknowledgement,300);
+    if(next==="dispatched"&&handover.length<4)return fail("Bukti serah-terima kurir wajib diisi.",422,origin);
+    const {data,error}=await admin.rpc("pos_transition_order_state_atomic",{
+      p_tenant_id:branch.tenant_id,p_branch_id:old.branch_id,p_actor_user_id:actor.user.id,p_order_id:id,
+      p_domain:"fulfillment",p_next_status:next,p_expected_version:old.state_version,
+      p_idempotency_key:safeText(body.idempotency_key,120)||"order-state:"+id+":fulfillment:"+old.state_version+":"+next,
+      p_payment_evidence_type:null,p_handover_acknowledgement:handover||null,p_reason:note
+    });
+    if(error||!data)return fail("Status berubah atau gagal disimpan. Muat ulang dan periksa pembayaran, serah-terima, serta versi.",409,origin);
     return json({ok:true,order:data},200,origin);
   }
 
@@ -3817,9 +4039,36 @@ if(action==="erp-executive-branch-kpis"){
     if(old.requested_by===actor.user.id)return fail("Pemisahan tugas: pembuat refund tidak boleh menyetujui sendiri.",403,origin);
     if(old.branch_id&&!await hasFinanceHQ()&&!await branchAccess(old.branch_id))return fail("Akses cabang tidak diizinkan.",403,origin);
     if(old.status!=="requested")return fail("Refund bukan lagi menunggu keputusan.",409,origin);
-    const {data,error}=await admin.from("refund_records").update({status:next,reviewed_by:actor.user.id,reviewed_at:new Date().toISOString(),external_reference:note||null}).eq("id",id).eq("status","requested").select("*").maybeSingle();
-    if(error||!data)return fail("Refund berubah saat diproses.",409,origin);
-    return json({ok:true,refund:data},200,origin);
+    const reason=safeText(body.reason,500)||note;
+    if(reason.length<8)return fail("Alasan keputusan refund minimal 8 karakter.",422,origin);
+    if(!old.branch_id)return fail("Refund tanpa cabang harus diproses melalui approval Finance Head Office.",409,origin);
+    const {data:branch}=await admin.from("branches").select("tenant_id").eq("id",old.branch_id).maybeSingle();
+    if(!branch?.tenant_id)return fail("Tenant cabang refund tidak dapat diverifikasi.",409,origin);
+    const {data:approval,error:approvalError}=await admin.from("executive_approval_requests")
+      .select("id,version,status,claimed_by,claim_expires_at").eq("tenant_id",branch.tenant_id).eq("entity_type","refund_record")
+      .eq("entity_id",id).in("status",["pending","claimed"]).maybeSingle();
+    if(approvalError||!approval)return fail("Permintaan refund belum tersedia di Unified Approval Inbox.",409,origin);
+    const actorBranches=await branchIdsForActor().catch(()=>[]);
+    let decisionVersion=approval.version;
+    if(approval.status==="pending"){
+      const {data:claim,error:claimError}=await admin.rpc("claim_approval",{
+        p_actor_user_id:actor.user.id,p_tenant_id:branch.tenant_id,p_branch_ids:actorBranches,
+        p_approval_id:approval.id,p_expected_version:approval.version
+      });
+      if(claimError||!claim?.version)return fail("Refund approval gagal diklaim. Muat ulang inbox.",409,origin);
+      decisionVersion=claim.version;
+    }else if(approval.status!=="claimed"||approval.claimed_by!==actor.user.id||
+      !approval.claim_expires_at||new Date(approval.claim_expires_at).getTime()<=Date.now()){
+      return fail("Refund approval sedang diklaim approver lain atau claim telah kedaluwarsa.",409,origin);
+    }
+    const {data:decision,error}=await admin.rpc("decide_approval",{
+      p_actor_user_id:actor.user.id,p_tenant_id:branch.tenant_id,p_branch_ids:actorBranches,
+      p_approval_id:approval.id,p_decision:next==="approved"?"approve":"reject",
+      p_reason:reason,p_expected_version:decisionVersion
+    });
+    if(error||!decision)return fail("Keputusan refund gagal atau approval telah berubah. Muat ulang inbox.",409,origin);
+    const {data:updated}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
+    return json({ok:true,refund:updated,approval:decision},200,origin);
   }
 
   if (action === "erp-process-refund") {
@@ -3829,6 +4078,7 @@ if(action==="erp-executive-branch-kpis"){
     const {data:old}=await admin.from("refund_records").select("*").eq("id",id).maybeSingle();
     if(!old)return fail("Refund tidak ditemukan.",404,origin);
     if(old.status!=="approved")return fail("Refund harus disetujui sebelum diproses.",409,origin);
+    if(old.pos_sale_id)return fail("POS_REFUND_COMPENSATION_NOT_READY: tender reversal, Finance journal, receipt and stock return must be committed atomically before processing.",409,origin);
     // Fail closed: a non-HQ finance actor must never process an unscoped refund.
     const financeHQ = await hasFinanceHQ();
     if(!old.branch_id&&!financeHQ)return fail("Refund tanpa cabang hanya dapat diproses oleh Finance Head Office.",403,origin);

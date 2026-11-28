@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {createWarehouseLocation} from "../../src/warehouse-location-tree.mjs";
+const input={tenantId:"t1",branchId:"b1",actorId:"u1",warehouseId:"w1",code:"BIN-A1",name:"Bin A1",locationType:"bin",capacity:100};
+test("creates zone/bin in tenant and branch scope",async()=>{const r=await createWarehouseLocation(input,{createWarehouseLocationAtomically:async x=>({locationId:"l1",tenantId:x.tenantId,branchId:x.branchId,locationType:x.locationType})});assert.equal(r.locationType,"bin");});
+test("rejects invalid type and negative capacity",async()=>{await assert.rejects(createWarehouseLocation({...input,locationType:"warehouse"},{}),{code:"WAREHOUSE_LOCATION_INVALID"});await assert.rejects(createWarehouseLocation({...input,capacity:-1},{}),{code:"WAREHOUSE_CAPACITY_INVALID"});});

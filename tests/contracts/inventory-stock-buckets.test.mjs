@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {getInventoryStockBuckets,reserveInventoryStock} from "../../src/inventory-stock-buckets.mjs";
+const scope={tenantId:"t1",branchId:"b1",actorId:"u1",inventoryItemId:"i1"};
+test("stock buckets reconcile to on-hand",async()=>{const r=await getInventoryStockBuckets(scope,{getInventoryStockBucketsReadOnly:async x=>({...x,onHand:100,available:60,reserved:20,inTransit:10,blocked:10})});assert.equal(r.onHand,100);});
+test("reservation requires positive quantity and server reference",async()=>{const r=await reserveInventoryStock({...scope,quantity:5,sourceId:"o1",idempotencyKey:"reserve-key"},{reserveInventoryStockAtomically:async x=>({reservationId:"r1",tenantId:x.tenantId,branchId:x.branchId,quantity:x.quantity})});assert.equal(r.reservationId,"r1");await assert.rejects(reserveInventoryStock({...scope,quantity:0,sourceId:"o1",idempotencyKey:"k"},{}),{code:"STOCK_BUCKET_QUANTITY_INVALID"});});

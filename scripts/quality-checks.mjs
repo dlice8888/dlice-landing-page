@@ -52,8 +52,9 @@ for (const [label, pattern] of [
   ["tracking rate limit", /consumeRateLimit\("track-order-by-code"/],
   ["database-backed rate limit RPC", /admin\.rpc\("consume_rate_limit"/],
   ["privacy-preserving funnel event action", /action === "record-funnel-event"/],
-  ["atomic payment verification RPC", /admin\.rpc\("admin_apply_payment_verification"/],
-  ["atomic operational status RPC", /admin\.rpc\("admin_apply_operational_status_change"/],
+  ["atomic payment verification RPC", /admin\.rpc\("pos_transition_order_state_atomic"[\s\S]*?p_domain:"payment"/],
+  ["atomic operational status RPC", /admin\.rpc\("pos_transition_order_state_atomic"[\s\S]*?p_domain:"order"/],
+  ["atomic POS order fulfillment RPC", /admin\.rpc\("pos_create_order_with_fulfillment_atomic"/],
   ["atomic initial owner bootstrap RPC", /admin\.rpc\("dlice_bootstrap_initial_owner"/],
   ["atomic tenant creation RPC", /admin\.rpc\("dlice_create_tenant_with_owner"/],
 ]) {
@@ -75,7 +76,9 @@ for (const file of [
 }
 for (const file of [
   "supabase/migrations/20261019185240_atomic_payment_verification.sql",
-  "supabase/migrations/20261019185629_atomic_operational_status_changes.sql"
+  "supabase/migrations/20261019185629_atomic_operational_status_changes.sql",
+  "supabase/migrations/20261128103500_order_state_transition_atomic.sql",
+  "supabase/migrations/20261128104000_pos_sale_fulfillment_types.sql"
 ]) {
   try {
     const sql = read(file);
