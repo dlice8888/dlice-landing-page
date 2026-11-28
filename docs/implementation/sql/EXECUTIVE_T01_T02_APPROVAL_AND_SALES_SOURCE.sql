@@ -457,7 +457,7 @@ begin
   'id',a.id,'tenant_id',a.tenant_id,'branch_id',a.branch_id,'domain',a.domain,'category',a.category,
   'source_entity_type',a.source_entity_type,'source_entity_id',a.source_entity_id,
   'source_version',a.source_version,'amount_idr',a.amount_idr,'created_by',a.created_by,
-  'status',a.status,'urgency',a.urgency,'evidence',a.evidence,'version',a.version,
+  'status',a.status,'urgency',case when a.expires_at<=now()+interval '6 hours' then 'critical' when a.amount_idr>=100000000 then 'high' else a.urgency end,'evidence',a.evidence,'version',a.version,
   'claimed_by',a.claimed_by,'claim_expires_at',a.claim_expires_at,'expires_at',a.expires_at,
   'created_at',a.created_at,'policy_version',a.policy_version,
   'source_detail',case a.source_entity_type
@@ -476,6 +476,7 @@ begin
    and (p_category is null or a.category=p_category)
    and (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[])
    and public.approval_source_is_current(a.id)
+   and a.amount_idr<=p.max_amount_idr
    and (p.eligible_roles @> array[v_role] or exists(
      select 1 from public.approval_delegations d
      join public.admin_profiles delegator on delegator.user_id=d.delegator_user_id and delegator.is_active
@@ -517,7 +518,7 @@ begin
    join public.admin_profiles dp on dp.user_id=d.delegator_user_id and dp.is_active
    where d.tenant_id=a.tenant_id and d.delegate_user_id=p_actor_user_id and d.domain=a.domain
      and d.branch_id=a.branch_id and (d.category is null or d.category=a.category)
-     and d.max_amount_idr>=a.amount_idr and d.revoked_at is null and d.starts_at<=now()
+     and d.max_amount_idr>=a.amount_idr and d.delegator_user_id<>a.created_by and d.revoked_at is null and d.starts_at<=now()
      and d.expires_at>now() and p.eligible_roles @> array[dp.role]
    limit 1;
    if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_FORBIDDEN'; end if;
