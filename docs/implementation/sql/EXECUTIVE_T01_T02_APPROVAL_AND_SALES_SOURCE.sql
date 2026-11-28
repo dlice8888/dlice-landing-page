@@ -299,6 +299,10 @@ create index if not exists approval_delegations_active_idx
 create unique index if not exists approval_delegations_active_unique_idx
   on public.approval_delegations(tenant_id,delegator_user_id,delegate_user_id,domain,branch_id,(coalesce(category,'')))
   where revoked_at is null;
+create index if not exists approval_delegations_branch_scope_idx
+  on public.approval_delegations(branch_id,revoked_at,expires_at);
+create index if not exists approval_claim_events_history_idx
+  on public.approval_claim_events(approval_id,created_at desc);
 
 create table if not exists public.approval_claim_events (
   id uuid primary key default gen_random_uuid(),
@@ -831,7 +835,7 @@ begin
  from public.approval_delegations d
  where d.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))
    and (p_branch_id is null or d.branch_id=p_branch_id)
- order by d.revoked_at nulls first,d.expires_at desc;
+ order by d.revoked_at nulls first,d.expires_at desc limit 500;
 end;
 $$;
 revoke all on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) from public,anon,authenticated;
