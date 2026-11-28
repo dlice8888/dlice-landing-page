@@ -20,7 +20,7 @@ test("Branch Operations schema is tenant/branch keyed and RLS protected", () => 
 
 test("Branch Operations SQL function bodies have balanced PostgreSQL dollar delimiters", () => {
   assert.equal(sql.split("as $$").length - 1, sql.split("end $$;").length - 1);
-  assert.equal(sql.split("as $$").length - 1, 13);
+  assert.equal(sql.split("as $").length - 1, 14);
 });
 test("Branch Operations RPCs are atomic server-only entry points with audit events", () => {
   for (const fn of ["branch_ops_create_task","branch_ops_record_incident","branch_ops_create_maintenance_order","branch_ops_register_evidence_asset","branch_ops_submit_compliance_check","branch_ops_review_compliance_check","branch_ops_publish_compliance_snapshot","branch_ops_register_equipment","branch_ops_update_task_status","branch_ops_update_incident_status","branch_ops_update_work_order_status"]) {
@@ -36,6 +36,9 @@ test("Branch Operations RPCs are atomic server-only entry points with audit even
   assert.match(sql, /BRANCH_WORK_ORDER_TRANSITION_INVALID/);
   assert.match(sql, /BRANCH_EVIDENCE_OWNERSHIP_UNVERIFIED/);
   assert.match(sql, /BRANCH_MAINTENANCE_EVIDENCE_UNVERIFIED/);
+  assert.match(sql, /branch_ops_prevent_immutable_record_mutation/);
+  assert.match(sql, /BRANCH_COMPLIANCE_SOURCE_REVISION_MISMATCH/);
+  assert.match(sql, /md5\(coalesce\(string_agg/);
   assert.match(sql, /left\(p_idempotency_key,88\).*escalation/);
 });
 
