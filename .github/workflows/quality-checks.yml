@@ -166,6 +166,19 @@ jobs:
         run: node --test tests/contracts/quality-release-accessibility-gates.test.mjs
       - name: Run Inventory lot allocation and valuation contracts
         run: node --test tests/contracts/inventory-lot-valuation-workflows.test.mjs
+      - name: Check inventory and warehouse workflow module syntax
+        run: >-
+          node --check src/inventory-balance-service.mjs
+          && node --check src/stock-movement-ledger.mjs
+          && node --check src/warehouse-location-tree.mjs
+          && node --check src/inventory-uom-conversion.mjs
+          && node --check src/inventory-stock-buckets.mjs
+          && node --check src/inventory-reorder-planner.mjs
+          && node --check src/inventory-cycle-count.mjs
+          && node --check src/inventory-adjustment-approval.mjs
+          && node --check src/procurement-stock-reconciliation.mjs
+      - name: Run inventory and warehouse acceptance contracts
+        run: node --test tests/contracts/inventory-warehouse-workflows.test.mjs
       - name: Run POS promotion and voucher workflow contracts
         run: node --test tests/contracts/pos-promotion-voucher-workflows.test.mjs
       - name: Run HR recruitment training and performance contracts
