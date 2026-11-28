@@ -602,6 +602,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-executive-verify-alert": "branches",
     "erp-executive-get-business-day-cutoff": "branches",
     "erp-executive-set-business-day-cutoff": "branches",
+    "erp-record-cash-movement": "pos",
+    "erp-reconcile-cash-drawer": "pos",
   };
   const executiveApprovalActions = new Set([
     "erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval",
