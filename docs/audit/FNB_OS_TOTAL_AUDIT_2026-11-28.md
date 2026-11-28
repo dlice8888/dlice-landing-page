@@ -1,3 +1,7 @@
+> **Superseded on 2026-11-28:** This file is retained as the historical pre-merge checkpoint. Its PR #153 OPEN/DRAFT status, 72-migration count, older progress scoring, and older Vercel/DB observations are stale. Use [LIVE_STAGING_PRD_RECONCILIATION_20261128.md](./LIVE_STAGING_PRD_RECONCILIATION_20261128.md) for the post-merge live audit: PR #153 merged, 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE, 73 applied migration versions, current Owner Auth discrepancy, current POS persisted-data reconciliation, and current Vercel Preview evidence.
+
+---
+
 # D’Lice FnB OS — Total PRD Audit & Remediation Update
 
 **Audit timestamp:** 2026-11-28 (Asia/Jakarta)  
