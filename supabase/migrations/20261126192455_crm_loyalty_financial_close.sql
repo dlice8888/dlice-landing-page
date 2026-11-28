@@ -1397,6 +1397,7 @@ declare
   v_allocate bigint:=0;
   v_adjustment_key text;
   v_adjustment_reference text;
+  v_has_existing boolean:=false;
 begin
   if p_tenant_id is null or p_branch_id is null or p_source_id is null
      or p_actor_user_id is null or p_source_type not in ('pos_sale','online_order') then
@@ -1435,28 +1436,30 @@ begin
    where tenant_id=p_tenant_id and id=v_customer_id and status='active' for update;
   if not found then raise exception using errcode='P0002',message='ACTIVE_CUSTOMER_NOT_FOUND'; end if;
 
-  select * into v_rule from public.crm_loyalty_earning_rules
-   where tenant_id=p_tenant_id and status='approved'
-   order by approved_at desc limit 1 for share;
-  if not found or v_rule.points_validity_days is null then
-    raise exception using errcode='23514',message='APPROVED_EARNING_RULE_WITH_VALIDITY_REQUIRED';
-  end if;
   select * into v_existing from public.crm_loyalty_ledger
    where tenant_id=p_tenant_id and entry_kind='earn'
      and source_reference like p_source_type||':'||p_source_id::text||':close:%'
    order by created_at asc limit 1 for update;
+  v_has_existing:=found;
 
-  if found and v_existing.earning_rule_version is not null then
+  if v_has_existing and v_existing.earning_rule_version is not null then
     select * into v_rule from public.crm_loyalty_earning_rules
      where tenant_id=p_tenant_id and version=v_existing.earning_rule_version;
     if not found or v_rule.points_validity_days is null then
       raise exception using errcode='23514',message='ORIGINAL_EARNING_RULE_VERSION_NOT_FOUND';
     end if;
+  else
+    select * into v_rule from public.crm_loyalty_earning_rules
+     where tenant_id=p_tenant_id and status='approved'
+     order by approved_at desc limit 1 for share;
+    if not found or v_rule.points_validity_days is null then
+      raise exception using errcode='23514',message='APPROVED_EARNING_RULE_WITH_VALIDITY_REQUIRED';
+    end if;
   end if;
   v_points:=floor(v_net/1000.0)::bigint*v_rule.points_per_thousand_idr;
   if v_close.reconciled_at is null then raise exception using errcode='23514',message='FINANCIAL_CLOSE_RECONCILIATION_TIMESTAMP_REQUIRED'; end if;
 
-  if found then
+  if v_has_existing then
     if v_existing.customer_id<>v_customer_id or v_existing.entry_kind<>'earn' then
       raise exception using errcode='23505',message='LOYALTY_IDEMPOTENCY_COLLISION';
     end if;
