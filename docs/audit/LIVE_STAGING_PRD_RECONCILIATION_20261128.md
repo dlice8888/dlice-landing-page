@@ -2,7 +2,7 @@
 **Audit date:** 28 November 2026 (Asia/Jakarta)  
 **Repository:** `dlice8888/dlice-landing-page`  
 **Code branch:** `staging`  
-**Vercel preview commit:** `243ca3e3237d9a233258fa56719325b860ccafdb`  
+**Vercel preview commit:** `5b559b3203d5bfb2732111fe0507abfed5cec3b6`  
 **Supabase project:** `dlice-staging` (`higoadrzxnhzbbwhdbmh`, ACTIVE_HEALTHY, PostgreSQL 17.11)
 
 ## 1. Executive result
@@ -217,3 +217,57 @@ The latest staging Preview deployment is READY at commit `243ca3e3237d9a233258fa
 - Feature matrix: `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json` on `staging`.
 - Live Supabase project catalog, migration history, RLS/function privilege queries and Advisor results captured 2026-11-28.
 - Vercel staging Preview deployment metadata for commit `243ca3e3237d9a233258fa56719325b860ccafdb`.
+
+
+## 8. Exact staging HEAD re-check — 2026-11-28
+
+**Exact staging HEAD:** `5b559b3203d5bfb2732111fe0507abfed5cec3b6`  
+**Vercel Preview:** READY for this exact commit. This is deployment/build evidence only.
+
+### Owner Auth Admin and allowlist
+
+A fresh read-only query against the existing Owner UUID `378f02bc-2719-4b07-9107-4ce94299aa27` confirms:
+
+- `admin_profiles.role = 'owner'`, `is_active = true`, and the Auth user is not banned.
+- `raw_app_meta_data->'platform_owner'` is NULL; it is not JSON boolean `true`.
+- The staging Edge Function source requires both the exact Owner UUID in `DLICE_PLATFORM_OWNER_USER_IDS` and `auth.getUser(token).app_metadata.platform_owner === true`.
+- PR #158 exact head `8de35d89863862d1a6d88b2534fd9892d489b263` has Free quality checks PASS (run `46128998100`), but its manually gated Auth Admin workflow has not been executed. The Edge Function secret value is not exposed by the connected tools, so allowlist membership is NOT VERIFIED.
+
+Do not edit `auth.users` metadata through SQL. Do not infer allowlist membership from the source parser or from PR checks.
+
+### Tenant A/B and Branch Operations
+
+- The existing QA fixture branches resolve to Tenant A / `QA-DLICE-A` and Tenant B / `QA-TENANT-B`; both are active.
+- Staging Tenant Isolation Acceptance run `46132419164` passed P01–P09 on commit `243ca3e3237d9a233258fa56719325b860ccafdb`.
+- The current exact HEAD `5b559b3203d5bfb2732111fe0507abfed5cec3b6` has a passing Free quality check (run `46132560932`), but no tenant-isolation run is recorded on this exact SHA. The prior P01–P09 pass is therefore a parent-commit result, not exact-HEAD acceptance.
+- Live Branch Operations persistence has 7/7 tables with RLS and one policy each; 14 `branch_ops_*` RPCs exist, and the `branch-ops-evidence` bucket is private.
+- PR #153 Branch Operations disposable replay passed on its exact candidate head `b107f20b1629b8b20e7359da0e644c9da99809fb` (run `46100334022`), including the 92-assertion Branch Operations pgTAP suite and full migration replay.
+- The seven Branch Operations tables currently contain no operational rows. Live authenticated Tenant A/B, Branch A/B, Storage upload/download and browser workflow acceptance remain unproven.
+
+### POS, cash drawer and Finance reconciliation
+
+PR #143 remains open at head `0e3539b02c65a6411ccca0d37bb3ee94d912c740`; it is not the current staging HEAD.
+
+- Static checks and disposable migration replay for the PR candidate passed, but its positive staging POS E2E failed before business mutations with `STAGING_AUTH_BLOCKED`.
+- The current six persisted QA sales have six items and six KDS tickets, but zero tender rows, zero immutable receipts, zero cash reconciliations and zero Finance journal entries.
+- The PR #143 candidate E2E source covers split tender exact-sum, cash-vs-noncash drawer delta, split-tender idempotency, stock movements, KDS, immutable receipt retrieval and audit events. None of those new positive-path assertions ran in the blocked staging E2E.
+- The current reconciliation endpoint does not provide a Finance journal posting path. The inspected staging schema has no general chart-of-accounts table; `fiscal_periods`, `payment_settlements` and `finance_journal_entries` each currently contain zero rows. The POS E2E does not create/review a `cash_reconciliations` record or verify a posted Finance journal.
+- Therefore split tender, immutable receipt, expected cash-drawer delta, inventory, KDS and audit reconciliation remain NOT ACCEPTED on staging. Cash reconciliation and POS-to-Finance journal integration are additional implementation gaps; do not fabricate account mappings or journal entries.
+
+### Canonical 189-feature matrix
+
+The canonical machine-readable ledger and matrix currently agree on 189 unique feature IDs:
+
+| Audit status | Count |
+|---|---:|
+| PARTIAL | 188 |
+| NOT VERIFIED | 0 |
+| BLOCKED | 1 |
+| DONE | 0 |
+| **Total** | **189** |
+
+53 features have numeric scores; 136 remain unscored. The single BLOCKED row remains an explicit blocker, and 0/189 meet the complete E2E + reconciliation gate. PR #155's canonical-rollup correction derives matrix totals and scoring counts from the evidence ledger; its exact-head Free quality run `46120733474` passed. It remains a draft and has not been merged.
+
+### Execution boundary
+
+This re-check made no staging database, Auth, Storage, Edge Function secret, deployment or release mutation. No production resource was changed. Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`; keep `BRANCH_OPS_WORKFLOWS_RELEASED=false` until live acceptance is complete.
