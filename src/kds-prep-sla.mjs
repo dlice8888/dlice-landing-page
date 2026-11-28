@@ -10,6 +10,6 @@ export async function evaluateKitchenPrepSla(input,deps){
  if(!result||!Array.isArray(result.tickets)||!Array.isArray(result.escalations)||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId)
   fail("KDS_SLA_RESULT_INVALID","SLA evaluation result is incomplete");
  const seen=new Set();
- for(const e of result.escalations){if(!e.ticketId||seen.has(e.ticketId)||e.created!==true)fail("KDS_SLA_DUPLICATE_ESCALATION","Each overdue ticket may escalate once");seen.add(e.ticketId);}
+ for(const e of result.escalations){const key=e.ticketId+":"+e.stage;if(!e.ticketId||!e.stage||seen.has(key)||e.created!==true)fail("KDS_SLA_DUPLICATE_ESCALATION","Each overdue ticket stage may escalate once");seen.add(key);}
  return Object.freeze(result);
 }
