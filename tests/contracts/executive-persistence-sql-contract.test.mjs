@@ -9,6 +9,8 @@ test("T01 payment recognition stores immutable payment time and branch-local bus
  assert.match(migration,/add column if not exists business_date date/i);
  assert.match(migration,/at time zone v_timezone/i);
  assert.match(migration,/legacy_created_at_backfill/i);
+ assert.match(migration,/payment_status in \('paid','refunded'\)[\s\S]{0,80}paid_at is null/i);
+ assert.match(migration,/POS_SALE_REFUND_REQUIRES_PAID_SOURCE/i);
  assert.match(migration,/POS_SALE_PAYMENT_RECOGNITION_IMMUTABLE/i);
  assert.match(migration,/revoke all on function public\.set_pos_sale_payment_recognition\(\) from public,anon,authenticated,service_role/i);
  assert.match(migration,/POS_SALE_PAID_BRANCH_IMMUTABLE/i);
@@ -33,6 +35,7 @@ test("T01 persisted read model is tenant-bound, versioned and idempotent",()=>{
  assert.match(migration,/formula_version integer not null/i);
  assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
  assert.match(migration,/executive_persist_command_center_snapshot/i);
+ assert.match(migration,/EXECUTIVE_SNAPSHOT_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED/i);
  assert.match(migration,/where case[\s\S]*?EXECUTIVE_SNAPSHOT_BRANCH_SCOPE_MISMATCH/i);
  assert.match(migration,/insert into public\.executive_command_center_snapshots[\s\S]*?on conflict\(tenant_id,idempotency_key\) do nothing/i);
@@ -46,6 +49,7 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
  assert.match(migration,/for update/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_STALE_VERSION/i);
  assert.match(migration,/p_expected_version is null or p_expected_version<0/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_BRANCH_SCOPE_DENIED/i);
  assert.match(migration,/executive_approval_claim_events/i);
  assert.match(migration,/executive\.approval\.claimed/i);
