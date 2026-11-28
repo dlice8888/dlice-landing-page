@@ -91,8 +91,9 @@ Deno.serve(async (req: Request) => {
       if (!allowedMime.has(uploadFile.type) || uploadFile.size < 1 || uploadFile.size > 8 * 1024 * 1024) return fail("File harus JPG, PNG, atau PDF maksimal 8 MB.", 422, origin);
       const extension = uploadFile.type === "image/jpeg" ? "jpg" : uploadFile.type === "image/png" ? "png" : "pdf";
       const path = `${tenantId}/${branchId}/${actorId}/${crypto.randomUUID()}.${extension}`;
-      const userStorage = createClient(URL, PUBLIC_KEY, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
-      const { error: uploadError } = await userStorage.storage.from("branch-ops-evidence").upload(path, uploadFile, { contentType: uploadFile.type, upsert: false });
+      // Upload only after server-side Auth + tenant membership + branch assignment checks.
+      // The bucket has no anon/authenticated Storage policies and is never public.
+      const { error: uploadError } = await service.storage.from("branch-ops-evidence").upload(path, uploadFile, { contentType: uploadFile.type, upsert: false });
       if (uploadError) return fail("Upload bukti ditolak oleh kebijakan Storage.", 403, origin);
       const registered = await repo.registerEvidenceAsset({ objectPath: path, purpose, mimeType: uploadFile.type, sizeBytes: uploadFile.size });
       return reply({ ok: true, evidence_asset_id: registered, object_path: path }, 201, origin);
