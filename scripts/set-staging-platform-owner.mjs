@@ -42,6 +42,18 @@ export async function setStagingPlatformOwnerClaim({ supabaseUrl, serviceRoleKey
   if (before.id !== ownerUserId) fail("OWNER_AUTH_ADMIN_IDENTITY_MISMATCH", "Auth user UUID did not match the verified Owner UUID");
   if (before.banned_until && Date.parse(before.banned_until) > Date.now()) fail("OWNER_AUTH_ADMIN_USER_BANNED", "Existing Owner Auth user is currently banned; no change was made");
 
+  // Verify the same existing identity is an active Owner in the staging application database.
+  const profileUrl = new URL("/rest/v1/admin_profiles", url.origin);
+  profileUrl.searchParams.set("select", "user_id,role,is_active");
+  profileUrl.searchParams.set("user_id", `eq.${ownerUserId}`);
+  const profileResponse = await fetchImpl(profileUrl.toString(), { method: "GET", headers });
+  if (!profileResponse.ok) fail("OWNER_AUTH_ADMIN_PROFILE_LOOKUP_FAILED", `Owner profile lookup failed (HTTP ${profileResponse.status})`);
+  const profiles = await profileResponse.json();
+  const profile = Array.isArray(profiles) ? profiles.find((row) => row?.user_id === ownerUserId) : null;
+  if (!profile || profile.role !== "owner" || profile.is_active !== true) {
+    fail("OWNER_AUTH_ADMIN_PROFILE_NOT_ACTIVE_OWNER", "The existing Auth identity is not an active owner profile; no metadata change was made");
+  }
+
   const previousMetadata = safeObject(before.app_metadata);
   const nextMetadata = { ...previousMetadata, platform_owner: true };
   const updateResponse = await fetchImpl(endpoint, { method: "PUT", headers, body: JSON.stringify({ app_metadata: nextMetadata }) });
