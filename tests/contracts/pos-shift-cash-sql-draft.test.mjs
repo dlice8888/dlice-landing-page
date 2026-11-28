@@ -24,7 +24,7 @@ test("drawer expected cash is derived from source sales, tenders, refunds and ca
 test("cash movement and reconciliation require shift ownership or supervisor and write audit",()=>{
  assert.match(sql,/pos_shift_actor_scope_denied/);
  assert.match(sql,/pos_cash_reconciled/);
- assert.match(sql,/pos_cash_\|\|p_movement_type/);
+ assert.ok(sql.includes("'pos_cash_'||p_movement_type"));
  assert.match(sql,/pos_cash_reconciliation_snapshots/);
  assert.match(sql,/rollback;\s*$/i);
 });
