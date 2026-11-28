@@ -14231,8 +14231,8 @@
       "reconciliation_and_observability": 10
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
-    "scored_partial_features": 50,
-    "unscored_partial_features": 138,
+    "scored_partial_features": 53,
+    "unscored_partial_features": 135,
     "status": "50 PARTIAL features have evidence-weighted progress scores; 138 PARTIAL features remain unscored pending six-dimension evidence. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero."
   },
   "source_user_distribution_2026_11_21": {
