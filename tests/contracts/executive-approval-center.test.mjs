@@ -59,3 +59,21 @@ test("approval decision expiry persists status and audit instead of raising a ro
  assert.match(sql,/executive\.approval\.expired/);
  assert.match(sql,/return jsonb_build_object\(/);
 });
+
+
+test("tenant-wide approvals are visible only to tenant owners",async()=>{
+ const tenantWide={...approval,branchId:null};
+ const owner={tenantId:"t1",branchIds:[],categories:["procurement"],roles:["tenant_owner"],maxApprovalAmountIdr:10000};
+ const ownerDeps={...base,resolveApproverScope:async()=>owner,loadPendingApprovalSources:async()=>[tenantWide],
+  lockApproval:async()=>tenantWide,loadApprovalDecisionHistory:async()=>[{id:"d-tenant",decision:"approve"}]};
+ const rows=await listPendingApprovals({tenantId:"t1",actorId:"owner"},ownerDeps);
+ assert.equal(rows.length,1);
+ const history=await listApprovalHistory({tenantId:"t1",actorId:"owner",approvalId:"a1"},ownerDeps);
+ assert.equal(history.length,1);
+ await assert.rejects(listPendingApprovals({tenantId:"t1",actorId:"branch-manager"},{
+  ...base,loadPendingApprovalSources:async()=>[tenantWide]
+ }),{code:"APPROVAL_SOURCE_SCOPE_MISMATCH"});
+ await assert.rejects(listApprovalHistory({tenantId:"t1",actorId:"branch-manager",approvalId:"a1"},{
+  ...base,lockApproval:async()=>tenantWide
+ }),{code:"APPROVAL_SCOPE_DENIED"});
+});
