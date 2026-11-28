@@ -120,3 +120,11 @@ Some controls cannot be enforced by repository code alone:
 - Migration `20261025115812_fix_pos_idempotency_digest_schema.sql` qualifies the call as `extensions.digest(...)` without relaxing transaction idempotency or authorization.
 - Applied and recorded on staging project `higoadrzxnhzbbwhdbmh`; a SHA-256 smoke query passed.
 - Production was not changed. Staging E2E must pass the POS/payment → KDS → recipe stock → offline replay → report reconciliation checks before acceptance.
+
+
+## 2026-11-28 — Immutable POS receipt trigger ACL correction
+
+- Forward-only migration `20261128040000_revoke_service_role_receipt_trigger_execute.sql` revokes direct `EXECUTE` on `public.prevent_pos_sale_receipt_mutation()` from `PUBLIC`, `anon`, `authenticated`, and `service_role`.
+- PostgreSQL invokes this function through the receipt trigger binding; API roles do not require direct invocation rights. The existing pgTAP ACL contract asserts that all four roles lack direct `EXECUTE`.
+- Applied to `dlice-staging` on 2026-11-28 as migration version `20261128083515` (Supabase-generated migration history version). Disposable local migration replay passed on PR #156 merge candidate. Direct staging verification: `proacl={postgres=X/postgres}`; `anon`, `authenticated`, and `service_role` all have `EXECUTE=false`; the immutable `BEFORE UPDATE OR DELETE` trigger remains attached to `public.pos_sale_receipts`. The migration source filename in this PR is aligned to the applied version.
+- `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged. No production changes or operational data mutations are authorized by this PR.
