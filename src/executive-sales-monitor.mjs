@@ -27,7 +27,9 @@ export async function getExecutiveSalesMonitor(input,deps){
     result.formula_version!=="sales-net-v1"||!result.totals||!Array.isArray(result.daily)||
     !Array.isArray(result.transactions)||!result.finance_reconciliation||!result.payment_reconciliation)
   fail("EXEC_SALES_SNAPSHOT_INVALID","Server returned an incomplete or mismatched snapshot");
- if(!Number.isSafeInteger(Number(result.payment_reconciliation.tender_mismatch_count))||Number(result.payment_reconciliation.tender_mismatch_count)<0)\n  fail("EXEC_SALES_PAYMENT_RECONCILIATION_INVALID","tender_mismatch_count");\n for(const key of ["gross_idr","discount_idr","refund_idr","net_sales_idr","matched_settlement_idr","transaction_count"])
+ if(!Number.isSafeInteger(Number(result.payment_reconciliation.tender_mismatch_count))||Number(result.payment_reconciliation.tender_mismatch_count)<0)
+  fail("EXEC_SALES_PAYMENT_RECONCILIATION_INVALID","tender_mismatch_count");
+ for(const key of ["gross_idr","discount_idr","refund_idr","net_sales_idr","matched_settlement_idr","transaction_count"])
   if(!Number.isSafeInteger(Number(result.totals[key]))||Number(result.totals[key])<0)
    fail("EXEC_SALES_TOTAL_INVALID",key);
  return Object.freeze(result);
