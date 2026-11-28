@@ -66,3 +66,26 @@ These cover RPC scope binding, evidence ownership, maintenance evidence, idempot
 7. Compliance snapshot source revision currently fingerprints approved Branch Operations check/evidence rows. Cross-domain operational reconciliation (POS/Inventory/HR/Finance) still requires its own verified source adapters.
 
 No staging or production database, Auth metadata, Storage bucket, Edge deployment, release flag, merge or release was changed in this candidate batch.
+
+
+## Cross-domain maintenance cost close — candidate adapter
+
+Added `src/branch-operations-costing-integration.mjs` and contract coverage in
+`tests/contracts/branch-operations-costing-integration.test.mjs`.
+
+- Cost close derives IDR values from persisted inventory issues, historically valued
+  against approved GRNs/transfers/opening balances, approved HR labour entries and
+  approved external costs on the work order. Client-supplied totals are not accepted.
+- All source records must match tenant and branch; inventory, procurement and labour
+  evidence must be reconciled/approved before a close can proceed.
+- The close is idempotent and requires one tenant transaction for source reads,
+  cost-close persistence, Finance journal posting, independent balanced-journal
+  verification and audit append.
+- The Finance adapter must post both sides and return an independently verified
+  posted/balanced journal; a missing or unbalanced journal aborts the transaction.
+
+**Not yet runtime accepted:** the repository-specific adapters that bind these
+contracts to the canonical Inventory, Procurement, HR and Finance tables/RPCs
+must be implemented and reviewed against their actual schemas. No new migration,
+staging mutation, provider call or release was performed. This adapter is
+candidate code and does not move D08 feature scores or mark Branch Operations DONE.
