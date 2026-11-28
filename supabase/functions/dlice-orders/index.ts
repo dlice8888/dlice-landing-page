@@ -2566,7 +2566,7 @@ if(action==="erp-executive-branch-kpis"){
     const period=safeText(body.period,10),anchorDate=safeText(body.anchor_date,10),requestedBranch=safeText(body.branch_id,80);
     if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate))return fail("Periode atau tanggal laporan tidak valid.",422,origin);
     const allowedIds:string[]=await branchIdsForActor().catch(()=>[] as string[]);
-    if(!allowedIds.length)return json({ok:true,kpi_definition_version:"sales-monitor.v1",branches:[],totals:{gross_sales_idr:0,discounts_idr:0,refunds_idr:0,net_sales_idr:0,paid_transactions:0,reconciled_settlement_allocations_idr:0},sources:{sales:[],refunds:[],settlements:[],finance_journals:[]}},200,origin);
+    if(!allowedIds.length)return json({ok:true,kpi_definition_version:"sales-monitor.v2",branches:[],totals:{gross_sales_idr:0,discounts_idr:0,refunds_idr:0,net_sales_idr:0,paid_transactions:0,reconciled_settlement_allocations_idr:0},sources:{sales:[],refunds:[],settlements:[],finance_journals:[]}},200,origin);
     if(requestedBranch&&!allowedIds.includes(requestedBranch))return fail("Cabang laporan tidak berada dalam scope aktor.",403,origin);
     let branchQuery=admin.from("branches").select("id,tenant_id,code,name,timezone").in("id",requestedBranch?[requestedBranch]:allowedIds).order("code").limit(500);
     const branchResult=await branchQuery;
