@@ -92,6 +92,7 @@ create table if not exists public.branch_ops_work_orders (
   scheduled_at timestamptz not null,
   description text not null check (length(btrim(description)) between 1 and 4000),
   assigned_to uuid null references auth.users(id) on delete restrict,
+  evidence_asset_ids uuid[] not null default '{}',
   idempotency_key text not null check (length(idempotency_key) between 8 and 120),
   created_by uuid not null references auth.users(id) on delete restrict,
   created_at timestamptz not null default now(),
@@ -273,7 +274,7 @@ end $$;
 
 create or replace function public.branch_ops_create_maintenance_order(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_equipment_id uuid,p_idempotency_key text,
- p_maintenance_type text,p_scheduled_at timestamptz,p_description text,p_assigned_to uuid
+ p_maintenance_type text,p_scheduled_at timestamptz,p_description text,p_assigned_to uuid,p_evidence_asset_ids uuid[]
 ) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_row public.branch_ops_work_orders;
 begin
@@ -285,10 +286,17 @@ begin
  if p_assigned_to is not null and not exists(select 1 from public.branch_assignments ba
    where ba.branch_id=p_branch_id and ba.user_id=p_assigned_to and ba.employment_status='active'
    and (ba.ends_on is null or ba.ends_on>=current_date)) then raise exception 'BRANCH_OPS_ASSIGNEE_INVALID'; end if;
+ if coalesce(cardinality(p_evidence_asset_ids),0)>0 and
+   (select count(*) from public.branch_ops_evidence_assets e
+    where e.tenant_id=p_tenant_id and e.branch_id=p_branch_id and e.owner_user_id=p_actor_id
+      and e.purpose='branch_maintenance' and e.retention_until>now()
+      and e.id=any(p_evidence_asset_ids))<>cardinality(p_evidence_asset_ids) then
+   raise exception 'BRANCH_MAINTENANCE_EVIDENCE_UNVERIFIED' using errcode='42501';
+ end if;
  select * into v_row from public.branch_ops_work_orders where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then return jsonb_build_object('status','duplicate','workOrderId',v_row.id); end if;
- insert into public.branch_ops_work_orders(tenant_id,branch_id,equipment_id,maintenance_type,scheduled_at,description,assigned_to,idempotency_key,created_by)
- values(p_tenant_id,p_branch_id,p_equipment_id,p_maintenance_type,p_scheduled_at,p_description,p_assigned_to,p_idempotency_key,p_actor_id)
+ insert into public.branch_ops_work_orders(tenant_id,branch_id,equipment_id,maintenance_type,scheduled_at,description,assigned_to,evidence_asset_ids,idempotency_key,created_by)
+ values(p_tenant_id,p_branch_id,p_equipment_id,p_maintenance_type,p_scheduled_at,p_description,p_assigned_to,coalesce(p_evidence_asset_ids,'{}'::uuid[]),p_idempotency_key,p_actor_id)
  returning * into v_row;
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_id,'branch.maintenance.created','branch_ops_work_order',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'equipment_id',p_equipment_id));
@@ -486,7 +494,7 @@ revoke all on function public.branch_ops_assert_actor(uuid,uuid,uuid) from publi
 revoke all on function public.branch_ops_assert_approver(uuid,uuid,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) from public,anon,authenticated;
-revoke all on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) from public,anon,authenticated;
+revoke all on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid,uuid[]) from public,anon,authenticated;
 revoke all on function public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint) from public,anon,authenticated;
 revoke all on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text) from public,anon,authenticated;
 revoke all on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) from public,anon,authenticated;
