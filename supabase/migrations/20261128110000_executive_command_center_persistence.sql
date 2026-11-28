@@ -244,7 +244,21 @@ begin
   end if;
   if exists(
     select 1 from jsonb_array_elements(p_branch_facts) fact
-    where coalesce(fact->>'branchId','') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}  ) values(
+    where case
+      when coalesce(fact->>'branchId','') ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      then not exists(
+        select 1 from public.branches b
+        where b.id=(fact->>'branchId')::uuid and b.tenant_id=p_tenant_id and b.status='active'
+      )
+      else true
+    end
+  ) then
+    raise exception using errcode='42501',message='EXECUTIVE_SNAPSHOT_BRANCH_SCOPE_MISMATCH';
+  end if;
+  insert into public.executive_command_center_snapshots(
+    tenant_id,period_start,period_end,as_of,formula_version,expected_branch_count,
+    active_branch_count,reconciled_branch_count,status,totals,branch_facts,source_gaps,idempotency_key,created_by
+  ) values(
     p_tenant_id,p_period_start,p_period_end,p_as_of,p_formula_version,p_expected_branch_count,
     p_active_branch_count,p_reconciled_branch_count,p_status,p_totals,p_branch_facts,p_source_gaps,p_idempotency_key,p_actor_user_id
   ) on conflict(tenant_id,idempotency_key) do nothing;
@@ -380,204 +394,6 @@ begin
   select r.branch_id,coalesce(sum(r.amount_idr),0)::bigint refund_idr
   from public.refund_records r join public.branches b on b.id=r.branch_id and b.tenant_id=p_tenant_id
   where r.branch_id=any(p_branch_ids) and r.pos_sale_id is not null and r.status='processed'
-    and (r.processed_at at time zone b.timezone)::date between p_from_date and p_through_date
-  group by r.branch_id
- ), branch_settlements as (
-  -- Allocate only the source item amount to a branch. Provider-level fee/net/
-  -- received totals are calculated once per distinct settlement below.
-  select s.branch_id,coalesce(sum(psi.amount_idr),0)::bigint settlement_gross_idr,
-   count(distinct ps.id)::integer matched_settlements
-  from public.payment_settlement_items psi
-  join public.pos_sales s on s.id=psi.pos_sale_id
-  join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
-  join public.payment_settlements ps on ps.id=psi.settlement_id
-  where s.branch_id=any(p_branch_ids) and ps.status='matched'
-    and ps.settlement_date between p_from_date and p_through_date
-  group by s.branch_id
- ), settlement_totals as (
-  select coalesce(sum(ps.gross_amount_idr),0)::bigint gross_idr,
-   coalesce(sum(ps.fee_amount_idr),0)::bigint fee_idr,
-   coalesce(sum(ps.net_amount_idr),0)::bigint net_idr,
-   coalesce(sum(ps.received_amount_idr),0)::bigint received_idr,
-   count(*)::integer settlement_count
-  from public.payment_settlements ps
-  where ps.status='matched' and ps.settlement_date between p_from_date and p_through_date
-   and exists(select 1 from public.payment_settlement_items psi
-    join public.pos_sales s on s.id=psi.pos_sale_id
-    join public.branches b on b.id=s.branch_id
-    where psi.settlement_id=ps.id and b.tenant_id=p_tenant_id and s.branch_id=any(p_branch_ids))
-   and not exists(select 1 from public.payment_settlement_items psi
-    join public.pos_sales s on s.id=psi.pos_sale_id
-    join public.branches b on b.id=s.branch_id
-    where psi.settlement_id=ps.id and (b.tenant_id<>p_tenant_id or not (s.branch_id=any(p_branch_ids))))
- )
- select jsonb_build_object(
-  'tenant_id',p_tenant_id,'from_date',p_from_date,'through_date',p_through_date,
-  'branch_count',count(*),
-  'gross_sales_idr',coalesce(sum(bs.gross_sales_idr),0),
-  'discount_idr',coalesce(sum(bs.discount_idr),0),
-  'refund_idr',coalesce(sum(coalesce(br.refund_idr,0)),0),
-  'net_sales_idr',coalesce(sum(bs.net_before_refund_idr-coalesce(br.refund_idr,0)),0),
-  'paid_transactions',coalesce(sum(bs.paid_transactions),0),
-  'legacy_paid_at_count',coalesce(sum(bs.legacy_paid_at_count),0),
-  'settlement_item_gross_idr',coalesce(sum(coalesce(bt.settlement_gross_idr,0)),0),
-  'settlement_fee_idr',(select fee_idr from settlement_totals),
-  'settlement_net_idr',(select net_idr from settlement_totals),
-  'settlement_received_idr',(select received_idr from settlement_totals),
-  'settlement_gross_idr',(select gross_idr from settlement_totals),
-  'matched_settlements',(select settlement_count from settlement_totals),
-  'branches',coalesce(jsonb_agg(jsonb_build_object(
-    'branch_id',bs.branch_id,'code',bs.code,'name',bs.name,'timezone',bs.timezone,
-    'gross_sales_idr',bs.gross_sales_idr,'discount_idr',bs.discount_idr,
-    'refund_idr',coalesce(br.refund_idr,0),'net_sales_idr',bs.net_before_refund_idr-coalesce(br.refund_idr,0),
-    'paid_transactions',bs.paid_transactions,'legacy_paid_at_count',bs.legacy_paid_at_count,'settlement_item_gross_idr',coalesce(bt.settlement_gross_idr,0),
-    'matched_settlements',coalesce(bt.matched_settlements,0)
-  ) order by bs.code),'[]'::jsonb)
- ) into v_result
- from branch_sales bs left join branch_refunds br on br.branch_id=bs.branch_id
- left join branch_settlements bt on bt.branch_id=bs.branch_id;
- insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
- values(p_actor_user_id,'executive.sales_monitor.read','executive_sales_monitor',p_tenant_id::text,
-  jsonb_build_object('tenant_id',p_tenant_id,'from_date',p_from_date,'through_date',p_through_date,
-   'branch_ids',p_branch_ids,'paid_transactions',v_result->'paid_transactions',
-   'legacy_paid_at_count',v_result->'legacy_paid_at_count'));
- return v_result;
-end $$;
-revoke all on function public.executive_get_sales_monitor(uuid,uuid,uuid[],date,date) from public,anon,authenticated;
-grant execute on function public.executive_get_sales_monitor(uuid,uuid,uuid[],date,date) to service_role;
-
-      or not exists(select 1 from public.branches b
-        where b.id=(fact->>'branchId')::uuid and b.tenant_id=p_tenant_id and b.status='active')
-  ) then
-    raise exception using errcode='42501',message='EXECUTIVE_SNAPSHOT_BRANCH_SCOPE_MISMATCH';
-  end if;
-  insert into public.executive_command_center_snapshots(
-    tenant_id,period_start,period_end,as_of,formula_version,expected_branch_count,
-    active_branch_count,reconciled_branch_count,status,totals,branch_facts,source_gaps,idempotency_key,created_by
-  ) values(
-    p_tenant_id,p_period_start,p_period_end,p_as_of,p_formula_version,p_expected_branch_count,
-    p_active_branch_count,p_reconciled_branch_count,p_status,p_totals,p_branch_facts,p_source_gaps,p_idempotency_key,p_actor_user_id
-  ) on conflict(tenant_id,idempotency_key) do nothing;
-  get diagnostics v_inserted = row_count;
-  select * into v from public.executive_command_center_snapshots
-    where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
-  if v_inserted=1 then
-    insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
-    values(p_actor_user_id,'executive.command_center.snapshot_built','executive_command_center_snapshots',v.id::text,
-      jsonb_build_object('tenant_id',p_tenant_id,'period_start',p_period_start,'period_end',p_period_end,
-        'status',v.status,'formula_version',v.formula_version,'reconciled_branch_count',v.reconciled_branch_count));
-  end if;
-  return jsonb_build_object('id',v.id,'status',v.status,'duplicate',v_inserted=0);
-end $$;
-revoke all on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) from public,anon,authenticated;
-grant execute on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) to service_role;
-
--- Atomic claim: row lock + optimistic version + idempotency + immutable event.
-create or replace function public.executive_claim_approval(
-  p_tenant_id uuid,p_approval_id uuid,p_actor_user_id uuid,p_expected_version bigint,
-  p_idempotency_key text,p_claim_ttl_seconds integer default 300
-) returns jsonb
-language plpgsql security definer set search_path=''
-as $$
-declare v public.executive_approval_items%rowtype; v_prior public.executive_approval_claim_events%rowtype;
-begin
-  if p_tenant_id is null or p_approval_id is null or p_actor_user_id is null
-     or p_expected_version is null or p_expected_version<0
-     or p_claim_ttl_seconds is null or p_claim_ttl_seconds not between 30 and 3600
-     or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
-    raise exception using errcode='22023',message='EXECUTIVE_CLAIM_INPUT_INVALID';
-  end if;
-  if not exists(
-    select 1 from public.tenant_memberships m
-    where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
-      and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.approvals.claim')
-  ) and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true then
-    raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_CLAIM_PERMISSION_REQUIRED';
-  end if;
-  if length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 or p_claim_ttl_seconds not between 30 and 3600 then
-    raise exception using errcode='22023',message='EXECUTIVE_CLAIM_INPUT_INVALID';
-  end if;
-  select * into v_prior from public.executive_approval_claim_events
-   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
-  if found then return jsonb_build_object('duplicate',true,'approval_id',v_prior.approval_id,'version',v_prior.version); end if;
-  select * into v from public.executive_approval_items
-   where tenant_id=p_tenant_id and id=p_approval_id for update;
-  if not found then raise exception using errcode='P0002',message='EXECUTIVE_APPROVAL_NOT_FOUND'; end if;
-  if v.version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_STALE_VERSION'; end if;
-  if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active' and m.role in ('tenant_owner','tenant_admin'))
-     and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true
-     and not exists(select 1 from public.branch_assignments ba where ba.branch_id=v.branch_id and ba.user_id=p_actor_user_id and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)) then
-    raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_BRANCH_SCOPE_DENIED';
-  end if;
-  if v.status not in ('pending','claimed') or (v.expires_at is not null and v.expires_at<=now()) then
-    raise exception using errcode='23514',message='EXECUTIVE_APPROVAL_NOT_CLAIMABLE';
-  end if;
-  if v.status='claimed' and v.claim_expires_at>now() and v.claimed_by<>p_actor_user_id then
-    raise exception using errcode='55P03',message='EXECUTIVE_APPROVAL_ALREADY_CLAIMED';
-  end if;
-  update public.executive_approval_items set status='claimed',claimed_by=p_actor_user_id,
-    claimed_at=now(),claim_expires_at=now()+make_interval(secs=>p_claim_ttl_seconds),
-    version=version+1,updated_at=now()
-   where tenant_id=p_tenant_id and id=p_approval_id returning * into v;
-  insert into public.executive_approval_claim_events(tenant_id,approval_id,actor_user_id,event_type,version,idempotency_key)
-  values(p_tenant_id,p_approval_id,p_actor_user_id,'claimed',v.version,p_idempotency_key);
-  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
-  values(p_actor_user_id,'executive.approval.claimed','executive_approval_item',p_approval_id::text,
-    jsonb_build_object('tenant_id',p_tenant_id,'branch_id',v.branch_id,'version',v.version));
-  return jsonb_build_object('approval_id',v.id,'status',v.status,'claimed_by',v.claimed_by,'version',v.version,'claim_expires_at',v.claim_expires_at,'duplicate',false);
-end $$;
-revoke all on function public.executive_claim_approval(uuid,uuid,uuid,bigint,text,integer) from public,anon,authenticated;
-grant execute on function public.executive_claim_approval(uuid,uuid,uuid,bigint,text,integer) to service_role;
-
-comment on table public.executive_approval_decisions is
-  'Decision persistence only. A decision is not accepted as complete until a source-domain adapter applies exactly one source mutation in the same transaction.';
-
-
--- T01: authoritative paid-sales, processed-refund and settlement facts by branch-local date.
-create or replace function public.executive_get_sales_monitor(
- p_tenant_id uuid,p_actor_user_id uuid,p_branch_ids uuid[],p_from_date date,p_through_date date
-) returns jsonb
-language plpgsql security definer set search_path=''
-as $$
-declare v_allowed boolean; v_count integer; v_result jsonb;
-begin
- select exists(
-  select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
-   and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.command_center.read')
- ) or coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false)
- into v_allowed;
- if not v_allowed then raise exception using errcode='42501',message='EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED'; end if;
- if p_branch_ids is null or cardinality(p_branch_ids)<1 or cardinality(p_branch_ids)>150
-    or p_from_date is null or p_through_date is null or p_through_date<p_from_date
-    or p_through_date-p_from_date>92 then
-  raise exception using errcode='22023',message='EXECUTIVE_SALES_MONITOR_INPUT_INVALID';
- end if;
- if exists(select 1 from public.branches b where b.id=any(p_branch_ids) and b.tenant_id<>p_tenant_id) then
-  raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_TENANT_SCOPE_DENIED';
- end if;
- if not (coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false)
-   or exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active' and m.role in ('tenant_owner','tenant_admin'))) then
-  if exists(select 1 from unnest(p_branch_ids) bid where not exists(
-    select 1 from public.branch_assignments ba where ba.branch_id=bid and ba.user_id=p_actor_user_id
-      and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)
-  )) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
- end if;
- select count(*) into v_count from public.branches b where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id;
- if v_count<>cardinality(p_branch_ids) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
- with branch_sales as (
-  select b.id branch_id,b.code,b.name,b.timezone,
-   coalesce(sum(s.subtotal_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint gross_sales_idr,
-   coalesce(sum(s.discount_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint discount_idr,
-   coalesce(sum(s.total_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint net_before_refund_idr,
-   count(s.id) filter(where s.payment_status in ('paid','refunded'))::integer paid_transactions,
-   count(s.id) filter(where s.payment_status in ('paid','refunded') and s.paid_at_source='legacy_created_at_backfill')::integer legacy_paid_at_count
-  from public.branches b left join public.pos_sales s on s.branch_id=b.id
-   and s.paid_at is not null and s.business_date between p_from_date and p_through_date
-  where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id group by b.id,b.code,b.name,b.timezone
- ), branch_refunds as (
-  select r.branch_id,coalesce(sum(r.amount_idr),0)::bigint refund_idr
-  from public.refund_records r join public.branches b on b.id=r.branch_id and b.tenant_id=p_tenant_id
-  where r.branch_id=any(p_branch_ids) and r.status='processed'
     and (r.processed_at at time zone b.timezone)::date between p_from_date and p_through_date
   group by r.branch_id
  ), branch_settlements as (
