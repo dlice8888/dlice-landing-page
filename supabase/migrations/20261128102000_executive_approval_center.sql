@@ -170,10 +170,31 @@ drop trigger if exists enqueue_branch_compliance_approval on public.branch_ops_c
 create trigger enqueue_branch_compliance_approval after insert or update of status on public.branch_ops_compliance_checks
 for each row execute function public.trg_enqueue_branch_compliance_approval();
 
+create or replace function public.executive_approval_actor_role(
+ p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_required_roles text[]
+) returns text language sql security definer set search_path=''
+as $fn$
+ select coalesce(
+  (select tm.role from public.tenant_memberships tm
+   where tm.tenant_id=p_tenant_id and tm.user_id=p_actor_user_id and tm.status='active'
+    and tm.role=any(coalesce(p_required_roles,'{}'::text[])) limit 1),
+  (select jp.code from public.branch_assignments ba
+   join public.branches b on b.id=ba.branch_id and b.tenant_id=p_tenant_id
+   join public.job_positions jp on jp.id=ba.job_position_id
+   where p_branch_id is not null and ba.branch_id=p_branch_id and ba.user_id=p_actor_user_id
+    and ba.employment_status='active' and ba.starts_on<=current_date
+    and (ba.ends_on is null or ba.ends_on>=current_date)
+    and jp.code=any(coalesce(p_required_roles,'{}'::text[]))
+   order by ba.starts_on desc limit 1)
+ );
+$fn$;
+revoke all on function public.executive_approval_actor_role(uuid,uuid,uuid,text[]) from public,anon,authenticated;
+grant execute on function public.executive_approval_actor_role(uuid,uuid,uuid,text[]) to service_role;
+
 create or replace function public.list_pending_approvals(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_categories text[] default null
 ) returns jsonb language plpgsql security definer set search_path=''
-as $$
+as $
 declare v_rows jsonb;v_role text;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
@@ -200,13 +221,12 @@ begin
  where a.tenant_id=p_tenant_id and a.status in ('pending','claimed')
   and ((a.branch_id is not null and a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (a.branch_id is null and v_role='tenant_owner'))
   and (p_categories is null or a.category=any(p_categories))
-  and (v_role=any(a.required_roles) or exists(
-   select 1 from public.executive_approval_delegations d join public.tenant_memberships dm
-    on dm.tenant_id=d.tenant_id and dm.user_id=d.delegator_user_id and dm.status='active'
+  and (public.executive_approval_actor_role(p_actor_user_id,p_tenant_id,a.branch_id,a.required_roles) is not null or exists(
+   select 1 from public.executive_approval_delegations d
    where d.tenant_id=a.tenant_id and d.delegate_user_id=p_actor_user_id and d.category=a.category
     and (d.branch_id is null or d.branch_id is not distinct from a.branch_id)
     and d.approved_at is not null and d.revoked_at is null and now() between d.starts_at and d.ends_at
-    and dm.role=any(a.required_roles)
+    and public.executive_approval_actor_role(d.delegator_user_id,p_tenant_id,a.branch_id,a.required_roles) is not null
   ));
  return jsonb_build_object('approvals',v_rows);
 end $$;
@@ -215,7 +235,7 @@ create or replace function public.claim_approval(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_approval_id uuid,p_expected_version integer
 ) returns jsonb language plpgsql security definer set search_path=''
 as $$
-declare a public.executive_approval_requests%rowtype;v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;
+declare a public.executive_approval_requests%rowtype;v_role text;v_effective_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
@@ -226,18 +246,19 @@ begin
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION';end if;
  if a.status not in ('pending','claimed') or a.expires_at<=now() then raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';end if;
  if a.created_by=p_actor_user_id and not a.allow_self_approval then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_DENIED';end if;
- if not (v_role=any(a.required_roles)) then
-  select d.delegator_user_id into v_delegator from public.executive_approval_delegations d join public.tenant_memberships dm
-   on dm.tenant_id=d.tenant_id and dm.user_id=d.delegator_user_id and dm.status='active'
+ v_effective_role:=public.executive_approval_actor_role(p_actor_user_id,p_tenant_id,a.branch_id,a.required_roles);
+ if v_effective_role is null then
+  select d.delegator_user_id into v_delegator from public.executive_approval_delegations d
   where d.tenant_id=p_tenant_id and d.delegate_user_id=p_actor_user_id and d.category=a.category
    and (d.branch_id is null or d.branch_id is not distinct from a.branch_id)
    and d.approved_at is not null and d.revoked_at is null and now() between d.starts_at and d.ends_at
-   and dm.role=any(a.required_roles) limit 1;
+   and public.executive_approval_actor_role(d.delegator_user_id,p_tenant_id,a.branch_id,a.required_roles) is not null
+  order by d.ends_at asc limit 1;
   if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_REQUIRED';end if;
-  select role into v_delegator_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=v_delegator and status='active';
+  v_delegator_role:=public.executive_approval_actor_role(v_delegator,p_tenant_id,a.branch_id,a.required_roles);
  end if;
  v_limit:=case
-  when coalesce(v_delegator_role,v_role)='tenant_owner' then 9223372036854775807::bigint
+  when coalesce(v_delegator_role,v_effective_role)='tenant_owner' then 9223372036854775807::bigint
   else coalesce((
    select case when coalesce(tm.permissions->>'approval_limit_idr','') ~ '^[0-9]+$'
     then (tm.permissions->>'approval_limit_idr')::bigint else 0::bigint end
@@ -289,7 +310,7 @@ create or replace function public.decide_approval(
 as $$
 declare
  a public.executive_approval_requests%rowtype;
- v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version bigint;v_current_source_version bigint;
+ v_role text;v_effective_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version bigint;v_current_source_version bigint;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then
   raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';
@@ -336,21 +357,20 @@ begin
  if v_current_source_version is null or v_current_source_version<>a.source_version then
   raise exception using errcode='40001',message='APPROVAL_SOURCE_VERSION_MISMATCH';
  end if;
- if not (v_role=any(a.required_roles)) then
+ v_effective_role:=public.executive_approval_actor_role(p_actor_user_id,p_tenant_id,a.branch_id,a.required_roles);
+ if v_effective_role is null then
   select d.delegator_user_id into v_delegator
   from public.executive_approval_delegations d
-  join public.tenant_memberships dm on dm.tenant_id=d.tenant_id and dm.user_id=d.delegator_user_id and dm.status='active'
   where d.tenant_id=p_tenant_id and d.delegate_user_id=p_actor_user_id and d.category=a.category
    and (d.branch_id is null or d.branch_id is not distinct from a.branch_id)
    and d.approved_at is not null and d.revoked_at is null and now()>=d.starts_at and now()<d.ends_at
-   and dm.role=any(a.required_roles)
+   and public.executive_approval_actor_role(d.delegator_user_id,p_tenant_id,a.branch_id,a.required_roles) is not null
   order by d.ends_at asc limit 1;
   if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_REQUIRED';end if;
-  select role into v_delegator_role from public.tenant_memberships
-   where tenant_id=p_tenant_id and user_id=v_delegator and status='active';
+  v_delegator_role:=public.executive_approval_actor_role(v_delegator,p_tenant_id,a.branch_id,a.required_roles);
  end if;
  v_limit:=case
-  when coalesce(v_delegator_role,v_role)='tenant_owner' then 9223372036854775807::bigint
+  when coalesce(v_delegator_role,v_effective_role)='tenant_owner' then 9223372036854775807::bigint
   else coalesce((
    select case when coalesce(tm.permissions->>'approval_limit_idr','') ~ '^[0-9]+$'
     then (tm.permissions->>'approval_limit_idr')::bigint else 0::bigint end
