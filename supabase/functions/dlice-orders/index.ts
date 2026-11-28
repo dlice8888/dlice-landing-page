@@ -590,6 +590,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-decide-approval": "reports",
     "erp-create-approval-delegation": "reports",
     "erp-revoke-approval-delegation": "reports",
+    "erp-list-approval-history": "reports",
+    "erp-list-approval-delegations": "reports",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
@@ -602,7 +604,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval","erp-create-approval-delegation","erp-revoke-approval-delegation"].includes(action);
+  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval","erp-create-approval-delegation","erp-revoke-approval-delegation","erp-list-approval-history","erp-list-approval-delegations"].includes(action);
   if (requiredPermission && !approvalAction && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
@@ -2542,6 +2544,16 @@ if(action==="erp-executive-branch-kpis"){
     if(!Array.isArray(allowedBranchIds)||!allowedBranchIds.length)return fail("Tidak ada cakupan cabang aktif untuk approval.",403,origin);
     const requestedBranchId=safeText(body.branch_id,80);
     if(requestedBranchId&&!allowedBranchIds.includes(requestedBranchId))return fail("Akses cabang approval tidak diizinkan.",403,origin);
+    if(action==="erp-list-approval-history"){
+      const {data,error}=await admin.rpc("list_approval_history",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null});
+      if(error)return fail("Riwayat approval belum tersedia.",503,origin);
+      return json({history:Array.isArray(data)?data:[]},200,origin);
+    }
+    if(action==="erp-list-approval-delegations"){
+      const {data,error}=await admin.rpc("list_approval_delegations",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null});
+      if(error)return fail("Daftar delegasi belum tersedia.",503,origin);
+      return json({delegations:Array.isArray(data)?data:[]},200,origin);
+    }
     if(action==="erp-create-approval-delegation"){
       const delegateUserId=safeText(body.delegate_user_id,80),domain=safeText(body.domain,40),branchId=safeText(body.branch_id,80);
       const category=safeText(body.category,60),maxAmount=Number(body.max_amount_idr);
