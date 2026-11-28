@@ -33,6 +33,17 @@ jobs:
         run: node scripts/staging-release-contract-tests.mjs
       - name: Run KDS POS stock and offline recovery contract
         run: node --test tests/contracts/kitchen-kds-offline-contract.test.mjs
+      - name: Check KDS and production workflow module syntax
+        run: >-
+          node --check src/kds-station-board.mjs
+          && node --check src/kds-prep-sla.mjs
+          && node --check src/kds-lifecycle.mjs
+          && node --check src/recipe-yield-costing.mjs
+          && node --check src/production-prep-planner.mjs
+          && node --check src/production-consumption-reconciliation.mjs
+          && node --check src/production-mode-router.mjs
+      - name: Run KDS and production workflow acceptance contracts
+        run: node --test tests/contracts/kitchen-production-workflows.test.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
       - name: Verify Owner metadata JSON boolean and current JWT role claim contract
