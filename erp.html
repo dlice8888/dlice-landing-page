@@ -503,7 +503,7 @@ async function enqueueExecutiveApproval(event){
  event.preventDefault();const tenant=$('executiveTenant').value;
  if(!tenant){note('Pilih tenant terlebih dahulu.',true);return}
  const domain=$('executiveApprovalDomain').value,entity=$('executiveApprovalEntity').value;
- if((domain==='procurement'&&entity!=='purchase_requisitions')||(domain==='hr'&&entity!=='hr_leave_requests')||(domain==='inventory'&&entity!=='stock_transfers)){note('Domain dan source entity tidak sesuai.',true);return}
+ if((domain==='procurement'&&entity!=='purchase_requisitions')||(domain==='hr'&&entity!=='hr_leave_requests')||(domain==='inventory'&&entity!=='stock_transfers')){note('Domain dan source entity tidak sesuai.',true);return}
  try{
   await call('erp-executive-enqueue-approval',{tenant_id:tenant,branch_id:$('executiveApprovalBranchId').value.trim(),
    source_domain:domain,source_entity:entity,source_entity_id:$('executiveApprovalSourceId').value.trim(),
