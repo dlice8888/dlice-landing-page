@@ -3,8 +3,8 @@ export function buildStockMovementCommand({tenantId,branchId,itemId,sourceType,s
  if(!tenantId||!branchId||!itemId||!sourceType||!sourceId)throw new Error("STOCK_MOVEMENT_SOURCE_REQUIRED");
  if(!Number.isFinite(quantityBase)||quantityBase<=0||!["in","out"].includes(direction))throw new Error("STOCK_MOVEMENT_QUANTITY_INVALID");
  if(typeof idempotencyKey!=="string"||idempotencyKey.trim().length<16)throw new Error("STOCK_MOVEMENT_IDEMPOTENCY_REQUIRED");
- if(!["pos","production","procurement","transfer","waste","cycle_count","adjustment"].includes(sourceType))throw new Error("STOCK_MOVEMENT_SOURCE_TYPE_INVALID");
  if(!actorDomain||actorDomain==="client")throw new Error("STOCK_MOVEMENT_ACTOR_FORBIDDEN");
+ if(!["pos","production","procurement","transfer","waste","cycle_count","adjustment"].includes(sourceType))throw new Error("STOCK_MOVEMENT_SOURCE_TYPE_INVALID");
  return Object.freeze({tenant_id:tenantId,branch_id:branchId,item_id:itemId,source_type:sourceType,source_id:sourceId,quantity_base:quantityBase,direction,idempotency_key:idempotencyKey.trim(),append_only:true});
 }
 export function validateStockReversal({originalMovement,reversal,actorDomain}){
