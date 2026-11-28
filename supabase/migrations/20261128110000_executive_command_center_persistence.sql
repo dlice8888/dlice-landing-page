@@ -195,9 +195,12 @@ language plpgsql security definer set search_path=''
 as $$
 declare v public.executive_command_center_snapshots%rowtype;
 begin
-  if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active')
-     and coalesce((select (u.raw_app_meta_data->>'platform_owner')='true' from auth.users u where u.id=p_actor_user_id),false) is not true then
-    raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';
+  if not exists(
+    select 1 from public.tenant_memberships m
+    where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+      and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.command_center.read')
+  ) and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true then
+    raise exception using errcode='42501',message='EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED';
   end if;
   if p_period_start is null or p_period_end<p_period_start or p_as_of is null
      or p_formula_version<1 or p_expected_branch_count not between 1 and 150
@@ -232,9 +235,12 @@ language plpgsql security definer set search_path=''
 as $$
 declare v public.executive_approval_items%rowtype; v_prior public.executive_approval_claim_events%rowtype;
 begin
-  if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active')
-     and coalesce((select (u.raw_app_meta_data->>'platform_owner')='true' from auth.users u where u.id=p_actor_user_id),false) is not true then
-    raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';
+  if not exists(
+    select 1 from public.tenant_memberships m
+    where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+      and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.approvals.claim')
+  ) and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true then
+    raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_CLAIM_PERMISSION_REQUIRED';
   end if;
   if length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 or p_claim_ttl_seconds not between 30 and 3600 then
     raise exception using errcode='22023',message='EXECUTIVE_CLAIM_INPUT_INVALID';
@@ -246,6 +252,11 @@ begin
    where tenant_id=p_tenant_id and id=p_approval_id for update;
   if not found then raise exception using errcode='P0002',message='EXECUTIVE_APPROVAL_NOT_FOUND'; end if;
   if v.version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_STALE_VERSION'; end if;
+  if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active' and m.role in ('tenant_owner','tenant_admin'))
+     and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true
+     and not exists(select 1 from public.branch_assignments ba where ba.branch_id=v.branch_id and ba.user_id=p_actor_user_id and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)) then
+    raise exception using errcode='42501',message='EXECUTIVE_APPROVAL_BRANCH_SCOPE_DENIED';
+  end if;
   if v.status not in ('pending','claimed') or (v.expires_at is not null and v.expires_at<=now()) then
     raise exception using errcode='23514',message='EXECUTIVE_APPROVAL_NOT_CLAIMABLE';
   end if;
