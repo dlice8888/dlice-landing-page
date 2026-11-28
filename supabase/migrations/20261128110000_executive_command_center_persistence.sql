@@ -253,6 +253,12 @@ language plpgsql security definer set search_path=''
 as $$
 declare v public.executive_approval_items%rowtype; v_prior public.executive_approval_claim_events%rowtype;
 begin
+  if p_tenant_id is null or p_approval_id is null or p_actor_user_id is null
+     or p_expected_version is null or p_expected_version<0
+     or p_claim_ttl_seconds is null or p_claim_ttl_seconds not between 30 and 3600
+     or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
+    raise exception using errcode='22023',message='EXECUTIVE_CLAIM_INPUT_INVALID';
+  end if;
   if not exists(
     select 1 from public.tenant_memberships m
     where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
