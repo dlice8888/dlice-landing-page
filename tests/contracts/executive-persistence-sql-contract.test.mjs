@@ -57,6 +57,8 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
  assert.match(migration,/p_expected_version is null or p_expected_version<0/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_BRANCH_SCOPE_DENIED/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_BRANCH_INACTIVE_OR_OUT_OF_SCOPE/i);
+ assert.match(migration,/dm\.status='active'/i);
  assert.match(migration,/executive_approval_claim_events/i);
  assert.match(migration,/executive\.approval\.claimed/i);
  assert.match(migration,/decision persistence only/i);
