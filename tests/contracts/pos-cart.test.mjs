@@ -17,5 +17,5 @@ test("POS UI previews discount but submits the exact integer amount for server-a
  assert.match(ui,/discount_idr:Number\(\$\('posDiscount'\)\.value\|\|0\)/);
  assert.match(ui,/Diskon tidak boleh melebihi subtotal/);
  assert.match(ui,/id="posPayment"[^>]*>[\s\S]*?value="card"/);
- assert.match(ui,/id="posTender1Method"[^>]*>[\s\\S]*?value="card"/);
+ assert.ok(ui.includes('id="posTender1Method"><option value="cash">Tunai</option><option value="qris">QRIS</option><option value="card">Kartu</option>'));
 });
