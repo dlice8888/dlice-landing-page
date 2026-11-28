@@ -56,6 +56,21 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
  assert.match(migration,/decision persistence only/i);
 });
 
+test("T02 enqueue and decision mutate supported HR/procurement sources atomically",()=>{
+ assert.match(migration,/executive_enqueue_approval/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_NOT_SUBMITTED/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_ENQUEUE_IDEMPOTENCY_KEY_REUSED/i);
+ assert.match(migration,/executive_decide_approval/i);
+ assert.match(migration,/for update of r/i);
+ assert.match(migration,/for update of l/i);
+ assert.match(migration,/erp_transition_purchase_requisition\(v\.source_entity_id::uuid,p_decision,p_actor_user_id,null\)/i);
+ assert.match(migration,/hr_review_leave_request\(v\.source_entity_id::uuid,p_actor_user_id,p_decision='approved'/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_VERSION_MISMATCH/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_DELEGATION_REQUIRED/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_SELF_APPROVAL_DENIED/i);
+ assert.match(migration,/source mutation are committed in one PostgreSQL transaction/i);
+ assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_ADAPTER_UNSUPPORTED/i);
+});
 test("T02 delegation lifecycle is tenant-bound, time-limited, idempotent and audited",()=>{
  assert.match(migration,/source_domains text\[\] not null check\(cardinality\(source_domains\)>0 and source_domains <@/i);
  assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
