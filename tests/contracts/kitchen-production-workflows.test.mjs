@@ -13,6 +13,7 @@ test("KDS dispatch maps committed order items to active branch stations",()=>{
  const result=dispatchKitchenTicket({order:{id:"o1",branch_id:"b1",version:2},branchId:"b1",items:[{id:"i1",product_id:"p1",quantity:2}],stations:[{id:"st1",branch_id:"b1",is_active:true,product_ids:["p1"]}],idempotencyKey:"kds-dispatch-000001"});
  assert.equal(result.tickets[0].station_id,"st1");
  assert.throws(()=>dispatchKitchenTicket({order:{id:"o1",branch_id:"b1"},branchId:"b1",items:[{id:"i1",product_id:"p1",quantity:1}],stations:[],idempotencyKey:"kds-dispatch-000002"}),/STATION_NOT_CONFIGURED/);
+ assert.throws(()=>dispatchKitchenTicket({order:{id:"o1",branch_id:"b1"},branchId:"b1",items:[{id:"i1",product_id:"p1",quantity:1}],stations:[{id:"st1",branch_id:"b1",is_active:true,product_ids:["p1"]},{id:"st2",branch_id:"b1",is_active:true,product_ids:["p1"]}],idempotencyKey:"kds-dispatch-000003"}),/STATION_ROUTE_AMBIGUOUS/);
  assert.throws(()=>claimKitchenTicket({ticket:{id:"t1",status:"waiting",station_id:"st1",branch_id:"b1",version:2},actor:{user_id:"u1",branch_id:"b1"},assignedStationIds:["st1"],expectedVersion:1}),/STALE_VERSION/);
 });
 
