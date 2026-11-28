@@ -29,7 +29,7 @@ export function validateCashDrawerMovement({
 export function reconcileCashDrawer({
   shift, cashSalesIdr, cashRefundsIdr = 0, movements = [], countedCashIdr,
   pendingSaleCount = 0, varianceApprovalThresholdIdr = Number.MAX_SAFE_INTEGER,
-  varianceApproved = false, actorUserId, assignedBranchIds,
+  varianceApproved = false, varianceApprovedBy, actorUserId, assignedBranchIds,
 }) {
   if (!shift || shift.status !== "open") throw new Error("cash_drawer_shift_not_open");
   if (!assignedBranchIds?.includes(shift.branch_id)) throw new Error("cash_drawer_branch_forbidden");
@@ -44,6 +44,7 @@ export function reconcileCashDrawer({
     if (!movement?.id || seen.has(movement.id)) throw new Error("cash_drawer_duplicate_movement");
     seen.add(movement.id);
     if (movement.shift_id !== shift.id || movement.branch_id !== shift.branch_id) throw new Error("cash_drawer_movement_scope_mismatch");
+    if (movement.status !== "posted") continue;
     const value = amount(movement.amount_idr, "movement_amount");
     if (movement.direction === "in") cashIn += value;
     else if (movement.direction === "out") cashOut += value;
@@ -54,11 +55,12 @@ export function reconcileCashDrawer({
   const counted = amount(countedCashIdr, "counted_cash");
   const variance = counted - expected;
   const threshold = amount(varianceApprovalThresholdIdr, "variance_threshold");
-  if (Math.abs(variance) > threshold && !varianceApproved) throw new Error("cash_drawer_variance_approval_required");
+  if (Math.abs(variance) > threshold && (!varianceApproved || !varianceApprovedBy || varianceApprovedBy === actorUserId)) throw new Error("cash_drawer_variance_approval_required");
   return Object.freeze({
     shift_id: shift.id, expected_cash_idr: expected, counted_cash_idr: counted,
     variance_idr: variance, cash_in_idr: cashIn, cash_out_idr: cashOut,
     cash_sales_idr: sales, cash_refunds_idr: refunds,
     requires_approval: Math.abs(variance) > threshold,
+    variance_approved_by: Math.abs(variance) > threshold ? varianceApprovedBy : null,
   });
 }
