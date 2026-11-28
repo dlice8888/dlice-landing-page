@@ -1045,7 +1045,7 @@ if (action === "admin-set-profile-role") {
       if(projectionError){
         const message=String(projectionError.message||"");
         if(message.includes("SETTLEMENT")||message.includes("REFUND")||message.includes("FINANCE")||
-          message.includes("CASH_RECONCILIATION")||message.includes("SHIFT_CASH"))
+          message.includes("CASH_RECONCILIATION")||message.includes("SHIFT_CASH")||message.includes("TENDER"))
           return fail("Financial close belum lolos rekonsiliasi settlement, refund, kas shift, dan jurnal Finance.",409,origin);
         return fail("Financial close tidak dapat dibentuk dari bukti transaksi sumber.",503,origin);
       }
