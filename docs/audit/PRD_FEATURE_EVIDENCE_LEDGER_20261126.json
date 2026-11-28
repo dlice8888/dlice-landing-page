@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-11-27",
+  "generated_at": "2026-11-28",
   "repository": "dlice8888/dlice-landing-page",
   "source_matrix_commit": "e30ada8df4c49f40bb32e819615a0d791fceb6cb",
   "prd_feature_count": 189,
@@ -13266,5 +13266,7 @@
     "scored_partial_features": 50,
     "unscored_partial_features": 138,
     "status": "50 PARTIAL features have evidence-weighted progress scores (including 43 newly started features); 138 PARTIAL features remain unscored because their six-dimension evidence has not been decomposed. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero."
-  }
+  },
+  "latest_audit_report": "docs/audit/FNB_OS_TOTAL_AUDIT_2026-11-28.md",
+  "latest_implementation_note": "Branch Operations incident/compliance workflows now require private evidence ownership/retention verification before persistence; contract tests added, exact-head execution pending."
 }
