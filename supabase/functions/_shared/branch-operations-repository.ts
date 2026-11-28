@@ -27,6 +27,22 @@ export function createBranchOperationsRepository(
   const scoped = (table: string) => serviceClient.from(table).select("*").eq("tenant_id", tenantId).eq("branch_id", branchId);
 
   return {
+    registerEquipment: (v: any) => call("branch_ops_register_equipment", {
+      p_asset_code: required(v.assetCode, "assetCode"),
+      p_name: required(v.name, "name"),
+    }, "registerEquipment"),
+    updateTaskStatus: (v: any) => call("branch_ops_update_task_status", {
+      p_task_id: required(v.taskId, "taskId"),
+      p_status: required(v.status, "status"),
+    }, "updateTaskStatus"),
+    updateIncidentStatus: (v: any) => call("branch_ops_update_incident_status", {
+      p_incident_id: required(v.incidentId, "incidentId"),
+      p_status: required(v.status, "status"),
+    }, "updateIncidentStatus"),
+    updateWorkOrderStatus: (v: any) => call("branch_ops_update_work_order_status", {
+      p_work_order_id: required(v.workOrderId, "workOrderId"),
+      p_status: required(v.status, "status"),
+    }, "updateWorkOrderStatus"),
     createTask: (v: any) => call("branch_ops_create_task", {
       p_assignee_id: required(v.assigneeId, "assigneeId"),
       p_idempotency_key: required(v.idempotencyKey, "idempotencyKey"),
