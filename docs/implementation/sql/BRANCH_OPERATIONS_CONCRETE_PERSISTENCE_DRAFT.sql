@@ -342,7 +342,7 @@ begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
  select * into v_row from public.branch_ops_compliance_snapshots where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then return jsonb_build_object('status','duplicate','snapshotId',v_row.id,'score',v_row.score); end if;
- select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight),0),array_agg(evidence_asset_id)
+ select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),array_agg(evidence_asset_id)
  into v_count,v_pass,v_weight,v_ids
  from public.branch_ops_compliance_checks
  where tenant_id=p_tenant_id and branch_id=p_branch_id and business_date between p_period_start and p_period_end
@@ -357,7 +357,8 @@ begin
        and e.purpose='branch_compliance' and e.retention_until>now()))) then
    raise exception 'BRANCH_COMPLIANCE_EVIDENCE_UNVERIFIED';
  end if;
- v_score:=round((v_pass/nullif(v_weight,0))*100,2);
+ if v_weight<=0 then raise exception 'BRANCH_COMPLIANCE_NO_APPLICABLE_CHECKS'; end if;
+ v_score:=round((v_pass/v_weight)*100,2);
  insert into public.branch_ops_compliance_snapshots(tenant_id,branch_id,period_start,period_end,score,completed_checks,required_checks,evidence_asset_ids,source_revision,idempotency_key,published_by)
  values(p_tenant_id,p_branch_id,p_period_start,p_period_end,v_score,v_count,v_count,coalesce(v_ids,'{}'::uuid[]),p_source_revision,p_idempotency_key,p_actor_id)
  returning * into v_row;
