@@ -66,3 +66,18 @@ test("equipment registration and lifecycle transitions use server-scoped RPC cal
   ]);
   assert.ok(calls.every((call) => call.args.p_tenant_id === scope.tenantId && call.args.p_branch_id === scope.branchId && call.args.p_actor_id === scope.actorId));
 });
+
+test("maintenance work orders persist only scoped evidence asset IDs", async () => {
+  let args;
+  const client = {
+    rpc: async (_name, value) => { args = value; return { data: { status: "created" }, error: null }; },
+    from: () => ({}),
+  };
+  const repo = createBranchOperationsRepository({ serviceClient: client, ...scope });
+  await repo.createMaintenanceOrder({
+    equipmentId: "equipment-a", idempotencyKey: "maintenance-idem-01",
+    maintenanceType: "corrective", scheduledAt: "2026-11-28T12:00:00Z",
+    description: "Replace seal", evidenceAssetIds: ["asset-a", "asset-a"],
+  });
+  assert.deepEqual(args.p_evidence_asset_ids, ["asset-a"]);
+});
