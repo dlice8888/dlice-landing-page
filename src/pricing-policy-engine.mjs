@@ -3,7 +3,7 @@ const fail=(code,message)=>{throw Object.assign(new Error(message),{code});};
 const req=(v,k)=>{if(typeof v!=="string"||!v.trim())fail("PRICING_INPUT_REQUIRED",k);return v.trim();};
 const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("PRICING_ADAPTER_REQUIRED",k);return d[k];};
 export async function resolveEffectiveProductPrice(input,deps){
- const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),productId:req(input?.productId,"productId"),businessAt:req(input?.businessAt,"businessAt")};
+ const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),productId:req(input?.productId,"productId"),businessAt:req(input?.businessAt,"businessAt")};
  const result=await fn(deps,"resolveEffectiveProductPriceReadOnly")(payload);
  if(!result||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||result.productId!==payload.productId||
   !Number.isSafeInteger(result.priceIdr)||result.priceIdr<0||!["central","regional","branch"].includes(result.scope)||
