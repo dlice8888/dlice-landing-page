@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 const sql=await readFile(new URL("../../docs/implementation/sql/EXECUTIVE_SALES_APPROVAL_DRAFT.sql",import.meta.url),"utf8");
+const approvals=await readFile(new URL("../../docs/implementation/sql/EXECUTIVE_APPROVAL_RPC_DRAFT.sql",import.meta.url),"utf8");
 test("Executive sales draft derives business date from branch timezone and cutoff",()=>{
  assert.match(sql,/business_day_cutoff time without time zone/);
  assert.match(sql,/s\.created_at at time zone b\.timezone/);
@@ -30,4 +31,18 @@ test("approval schema is separated from authoritative source entities",()=>{
   assert.match(sql,new RegExp(name));
  assert.match(sql,/source_entity_id/);
  assert.match(sql,/source_version/);
+});
+
+test("approval draft exposes list, claim and decide RPCs only to service role",()=>{
+ for(const name of ["list_pending_approvals","claim_approval","decide_approval"])
+  assert.match(approvals,new RegExp("function public\\."+name));
+ assert.match(approvals,/executive_approval_actor_has_role/);
+ assert.match(approvals,/APPROVAL_STALE_VERSION/);
+ assert.match(approvals,/APPROVAL_CLAIMED_BY_OTHER/);
+ assert.match(approvals,/APPROVAL_SELF_APPROVAL_DENIED/);
+ assert.match(approvals,/hr_approve_payroll_run/);
+ assert.match(approvals,/erp_transition_purchase_requisition/);
+ assert.match(approvals,/branch_operation_checklist_runs/);
+ assert.doesNotMatch(approvals,/grant execute on function public\\.decide_approval[^;]*to authenticated/i);
+ assert.match(approvals,/rollback;\\s*$/i);
 });
