@@ -134,6 +134,10 @@ jobs:
         run: node --test tests/contracts/admin-access-review-recovery-support-workflows.test.mjs
       - name: Run Kitchen routing food safety and allergen contracts
         run: node --test tests/contracts/kitchen-routing-food-safety-allergens.test.mjs
+      - name: Check Delivery fulfilment reconciliation syntax
+        run: node --check src/delivery-fulfillment-reconciliation.mjs
+      - name: Run Delivery fulfilment reconciliation contracts
+        run: node --test tests/contracts/delivery-fulfillment-reconciliation.test.mjs
       - name: Run Order external channel ETA and SLA contracts
         run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
       - name: Run Executive stock waste and anomaly alert contracts
