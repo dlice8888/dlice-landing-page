@@ -70,7 +70,7 @@ Disposition:
 - **Unique acceptance scenarios retained:** #31's historical 21 PASS scenarios are not current runtime proof. A safe subset is carried in #114; remaining Owner-positive, no-permission, inactive-account and two-tenant execution evidence remains required.
 - **Production source carry-forward:** #63 is still represented by open #104 against `main`; this is separate from staging and must not be treated as completed production parity.
 
-The earlier row-by-row rationale remains in `docs/audit/CLOSED_UNMERGED_PR_CARRY_FORWARD_20261120.md` and `docs/audit/PR_HISTORY_AND_FILE_OVERLAP_20261120.md`; those documents are historical snapshots and must not override this 28-Nov live inventory.
+The detailed 20-Nov row-by-row historical archive remains on the still-open PR #108 branch and has not been copied into `staging`; this 28-Nov document is the current source of truth for disposition and merge decisions. Keep #108 open until its historical archive is preserved or intentionally retired.
 
 ## 4. Staging database — post-merge migration snapshot
 
