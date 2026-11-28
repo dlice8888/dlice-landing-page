@@ -89,7 +89,8 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   const maintenanceForm = el("form", { className: "branch-ops-form" });
   maintenanceForm.append(el("h3", {}, "Buat work order"), field("ID equipment", "equipment_id"),
     field("Jenis", "maintenance_type"), field("Jadwal", "scheduled_at", "datetime-local"),
-    field("Deskripsi", "description", "textarea"), field("Assignee (opsional)", "assigned_to", "text", false));
+    field("Deskripsi", "description", "textarea"), field("Assignee (opsional)", "assigned_to", "text", false),
+    field("Bukti maintenance (JPG/PNG/PDF, maks. 8 MB)", "file", "file", false));
   maintenanceForm.querySelector('[name="maintenance_type"]').value = "preventive";
   maintenanceForm.append(formButton("Simpan work order"));
 
@@ -150,7 +151,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       if (item.description) info.append(el("small", {}, String(item.description)));
       row.append(info);
       const controls = el("div");
-      if (kind === "incidents" && Array.isArray(item.evidence_asset_ids)) {
+      if (["incidents", "maintenance"].includes(kind) && Array.isArray(item.evidence_asset_ids)) {
         item.evidence_asset_ids.forEach((evidenceId, index) => {
           const evidenceButton = el("button", { type: "button", className: "branch-ops-review" }, `Bukti ${index + 1}`);
           evidenceButton.addEventListener("click", async () => {
@@ -252,11 +253,14 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
     await request({ action: "register-equipment", asset_code: data.get("asset_code"), name: data.get("name") });
   });
   submit(maintenanceForm, async (data) => {
+    const file = data.get("file");
+    const evidenceIds = file instanceof File && file.size > 0 ? [await uploadEvidence(file, "branch_maintenance")] : [];
     await request({
       action: "create-maintenance-order", equipment_id: data.get("equipment_id"),
       maintenance_type: data.get("maintenance_type"),
       scheduled_at: new Date(String(data.get("scheduled_at"))).toISOString(),
       description: data.get("description"), assigned_to: data.get("assigned_to") || null,
+      evidence_asset_ids: evidenceIds,
       idempotency_key: `branch-maintenance:${crypto.randomUUID()}`,
     });
   });
