@@ -18,7 +18,7 @@ export function validatePosCart(input){
  });
  const discountIdr=amount(input?.discountIdr??0,"discountIdr");
  const paymentMethod=req(input?.paymentMethod,"paymentMethod");
- if(!["cash","bank_transfer","qris","split"].includes(paymentMethod))fail("POS_CART_PAYMENT_METHOD_INVALID","Unsupported payment method");
+ if(!["cash","bank_transfer","qris","card","split"].includes(paymentMethod))fail("POS_CART_PAYMENT_METHOD_INVALID","Unsupported payment method");
  const tenders=input?.tenders??[];
  if(!Array.isArray(tenders)||tenders.length>5)fail("POS_CART_TENDERS_INVALID","At most five tenders are supported");
  if(paymentMethod==="split"&&tenders.length<2)fail("POS_CART_TENDERS_INVALID","Split payment requires at least two tenders");
@@ -28,7 +28,7 @@ export function validatePosCart(input){
   amount_idr:amount(t?.amountIdr,"tenders["+i+"].amountIdr"),
   reference:typeof t?.reference==="string"?t.reference.trim().slice(0,120):null
  }));
- if(canonicalTenders.some(t=>!["cash","bank_transfer","qris"].includes(t.payment_method)||t.amount_idr<1))
+ if(canonicalTenders.some(t=>!["cash","bank_transfer","qris","card"].includes(t.payment_method)||t.amount_idr<1))
   fail("POS_CART_TENDERS_INVALID","Tender methods and amounts must be valid");
  if(canonicalTenders.length>0&&new Set(canonicalTenders.map(t=>t.payment_method)).size<2)
   fail("POS_CART_TENDERS_INVALID","Split tender requires distinct payment methods");
