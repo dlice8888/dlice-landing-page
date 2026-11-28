@@ -412,6 +412,16 @@ begin
   select * into v from public.executive_approval_items
    where tenant_id=p_tenant_id and id=p_approval_id for update;
   if not found then raise exception using errcode='P0002',message='EXECUTIVE_APPROVAL_NOT_FOUND'; end if;
+  -- Recheck after acquiring the row lock so concurrent retries with the same
+  -- idempotency key return the original claim rather than a stale-version error.
+  select * into v_prior from public.executive_approval_claim_events
+   where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+  if found then
+    if v_prior.approval_id is distinct from p_approval_id or v_prior.actor_user_id is distinct from p_actor_user_id then
+      raise exception using errcode='23505',message='EXECUTIVE_APPROVAL_IDEMPOTENCY_KEY_REUSED';
+    end if;
+    return jsonb_build_object('duplicate',true,'approval_id',v_prior.approval_id,'version',v_prior.version);
+  end if;
   if v.version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_STALE_VERSION'; end if;
   if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active' and m.role in ('tenant_owner','tenant_admin'))
      and coalesce((select u.raw_app_meta_data->'platform_owner' = 'true'::jsonb from auth.users u where u.id=p_actor_user_id),false) is not true
@@ -662,6 +672,16 @@ begin
  end if;
  select * into v from public.executive_approval_items where tenant_id=p_tenant_id and id=p_approval_id for update;
  if not found then raise exception using errcode='P0002',message='EXECUTIVE_APPROVAL_NOT_FOUND'; end if;
+ -- Recheck after the item lock to make concurrent decision retries idempotent.
+ select * into v_prior from public.executive_approval_decisions where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+ if found then
+  if v_prior.approval_id is distinct from p_approval_id or v_prior.actor_user_id is distinct from p_actor_user_id
+   or v_prior.decision is distinct from p_decision or v_prior.reason is distinct from btrim(p_reason) then
+   raise exception using errcode='23505',message='EXECUTIVE_APPROVAL_DECISION_IDEMPOTENCY_KEY_REUSED';
+  end if;
+  return jsonb_build_object('approval_id',v_prior.approval_id,'decision',v_prior.decision,'duplicate',true,
+   'source_mutation_id',v_prior.source_mutation_id);
+ end if;
  if v.version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_STALE_VERSION'; end if;
  if v.status<>'claimed' or v.claimed_by<>p_actor_user_id or v.claim_expires_at<=now()
   or (v.expires_at is not null and v.expires_at<=now()) then
