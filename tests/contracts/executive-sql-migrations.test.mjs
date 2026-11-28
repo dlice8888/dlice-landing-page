@@ -20,4 +20,5 @@ test("T02 delegation approval and revocation fail closed when actor membership i
  const sql=await read("20261128102000_executive_approval_center.sql");
  assert.ok(sql.includes("v_role is distinct from 'tenant_owner'"));
  assert.ok(sql.includes("v_row.delegator_user_id<>p_actor_user_id and v_role is distinct from 'tenant_owner'"));
+ assert.ok(sql.includes("APPROVAL_DELEGATION_SELF_APPROVAL_DENIED"));
 });
