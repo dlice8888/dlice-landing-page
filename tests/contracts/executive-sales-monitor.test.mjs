@@ -5,7 +5,8 @@ const snapshot=(overrides={})=>({snapshot_id:"snap1",tenant_id:"t1",period_type:
  totals:{gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,matched_settlement_idr:85000,transaction_count:1},
  daily:[{business_date:"2026-11-28",gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,transaction_count:1}],
  transactions:[{sale_id:"s1",branch_id:"b1",business_date:"2026-11-28",timezone:"Asia/Jakarta",gross_idr:100000,discount_idr:10000,processed_refund_idr:5000,net_sales_idr:85000}],
- payment_reconciliation:{sale_count:1,tender_mismatch_count:0,tender_allocations_balanced:true},\n finance_reconciliation:{sale_count:1,sale_without_journal_count:0,linked_journal_entry_count:1,status:"journal_links_present"},...overrides});
+ payment_reconciliation:{sale_count:1,tender_mismatch_count:0,tender_allocations_balanced:true},
+ finance_reconciliation:{sale_count:1,sale_without_journal_count:0,linked_journal_entry_count:1,status:"journal_links_present"},...overrides});
 const input={tenantId:"t1",actorId:"u1",period:"day",startDate:"2026-11-28",endDate:"2026-11-28"};
 const deps=(value=snapshot())=>({loadSalesMonitorSnapshot:async()=>value});
 test("returns the authoritative snapshot with gross, discount, processed refund and net totals",async()=>{
