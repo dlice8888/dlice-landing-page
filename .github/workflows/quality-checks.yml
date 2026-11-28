@@ -104,7 +104,7 @@ jobs:
       - name: Run Executive approval center UI contract
         run: node --test tests/contracts/executive-approval-ui-contract.test.mjs
       - name: Run Executive sales monitor timezone and reconciliation acceptance tests
-        run: node --test tests/contracts/executive-sales-monitor-acceptance.test.mjs
+        run: node --test tests/contracts/executive-sales-monitor-acceptance.test.mjs tests/contracts/executive-sales-monitor-attribution.test.mjs
       - name: Check POS cash drawer workflow syntax
         run: node --check src/pos-cash-drawer.mjs
       - name: Run POS cash drawer reconciliation contracts
