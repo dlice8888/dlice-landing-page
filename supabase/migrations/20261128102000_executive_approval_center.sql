@@ -68,7 +68,7 @@ on conflict(tenant_id,category) do nothing;
 
 create or replace function public.trg_seed_executive_approval_policies()
 returns trigger language plpgsql security definer set search_path=''
-as $ begin
+as $$ begin
  insert into public.executive_approval_policies(tenant_id,category,required_roles,allow_self_approval)
  values
  (new.id,'procurement',array['tenant_owner','branch_manager']::text[],false),
@@ -77,7 +77,7 @@ as $ begin
  (new.id,'branch_ops',array['tenant_owner','branch_manager']::text[],false)
  on conflict(tenant_id,category) do nothing;
  return new;
-end $;
+end $$;
 drop trigger if exists seed_executive_approval_policies on public.tenants;
 create trigger seed_executive_approval_policies after insert on public.tenants
 for each row execute function public.trg_seed_executive_approval_policies();
@@ -108,13 +108,13 @@ end $$;
 
 create or replace function public.trg_enqueue_purchase_requisition_approval()
 returns trigger language plpgsql security definer set search_path=''
-as $ declare v_tenant_id uuid;begin
+as $$ declare v_tenant_id uuid;begin
  if new.status='submitted' and (tg_op='INSERT' or old.status is distinct from new.status) then
   select tenant_id into v_tenant_id from public.branches where id=new.branch_id;
   if v_tenant_id is not null then
    perform public.enqueue_executive_approval(v_tenant_id,'procurement','purchase_requisition',new.id,new.branch_id,new.requested_by,new.estimated_total_idr,new.purpose);
   end if;
- end if;return new;end $;
+ end if;return new;end $$;
 drop trigger if exists enqueue_purchase_requisition_approval on public.purchase_requisitions;
 create trigger enqueue_purchase_requisition_approval after insert or update of status on public.purchase_requisitions
 for each row execute function public.trg_enqueue_purchase_requisition_approval();
@@ -309,7 +309,7 @@ end $$;
 create or replace function public.create_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegate_user_id uuid,p_category text,p_branch_id uuid,p_starts_at timestamptz,p_ends_at timestamptz
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_id uuid;begin
+as $$ declare v_role text;v_id uuid;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  if p_category not in ('procurement','finance','hr','branch_ops') or p_ends_at<=p_starts_at or p_ends_at<=now() or p_ends_at-p_starts_at>interval '30 days' then
   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INPUT_INVALID';end if;
@@ -324,12 +324,12 @@ as $ declare v_role text;v_id uuid;begin
  values(p_actor_user_id,'executive.approval.delegation.created','executive_approval_delegations',v_id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'delegate_user_id',p_delegate_user_id,'category',p_category,'branch_id',p_branch_id,'starts_at',p_starts_at,'ends_at',p_ends_at));
  return jsonb_build_object('delegation_id',v_id,'status','awaiting_owner_approval');
-end $;
+end $$;
 
 create or replace function public.approve_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role<>'tenant_owner' then raise exception using errcode='42501',message='APPROVAL_DELEGATION_OWNER_REQUIRED';end if;
@@ -341,12 +341,12 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.approved','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v_row.delegator_user_id,'delegate_user_id',v_row.delegate_user_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','approved');
-end $;
+end $$;
 
 create or replace function public.revoke_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select * into v_row from public.executive_approval_delegations where id=p_delegation_id and tenant_id=p_tenant_id for update;
@@ -355,12 +355,12 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
-end $;
+end $$;
 
 create or replace function public.list_approval_delegations(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[]
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_rows jsonb;begin
+as $$ declare v_role text;v_rows jsonb;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role is null then raise exception using errcode='42501',message='APPROVAL_TENANT_MEMBERSHIP_REQUIRED';end if;
@@ -371,7 +371,7 @@ as $ declare v_role text;v_rows jsonb;begin
  and (v_role='tenant_owner' or d.delegator_user_id=p_actor_user_id or d.delegate_user_id=p_actor_user_id)
  and (d.branch_id is null and v_role='tenant_owner' or d.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[])));
  return jsonb_build_object('delegations',v_rows);
-end $;
+end $$;
 
 revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
 revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
@@ -488,7 +488,7 @@ end $$;
 create or replace function public.create_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegate_user_id uuid,p_category text,p_branch_id uuid,p_starts_at timestamptz,p_ends_at timestamptz
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_id uuid;begin
+as $$ declare v_role text;v_id uuid;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  if p_category not in ('procurement','finance','hr','branch_ops') or p_ends_at<=p_starts_at or p_ends_at<=now() or p_ends_at-p_starts_at>interval '30 days' then
   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INPUT_INVALID';end if;
@@ -503,12 +503,12 @@ as $ declare v_role text;v_id uuid;begin
  values(p_actor_user_id,'executive.approval.delegation.created','executive_approval_delegations',v_id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'delegate_user_id',p_delegate_user_id,'category',p_category,'branch_id',p_branch_id,'starts_at',p_starts_at,'ends_at',p_ends_at));
  return jsonb_build_object('delegation_id',v_id,'status','awaiting_owner_approval');
-end $;
+end $$;
 
 create or replace function public.approve_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role<>'tenant_owner' then raise exception using errcode='42501',message='APPROVAL_DELEGATION_OWNER_REQUIRED';end if;
@@ -519,12 +519,12 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.approved','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v_row.delegator_user_id,'delegate_user_id',v_row.delegate_user_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','approved');
-end $;
+end $$;
 
 create or replace function public.revoke_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select * into v_row from public.executive_approval_delegations where id=p_delegation_id and tenant_id=p_tenant_id for update;
@@ -533,7 +533,7 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
-end $;
+end $$;
 
 revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
 revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
@@ -613,7 +613,7 @@ end $$;
 create or replace function public.create_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegate_user_id uuid,p_category text,p_branch_id uuid,p_starts_at timestamptz,p_ends_at timestamptz
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_id uuid;begin
+as $$ declare v_role text;v_id uuid;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  if p_category not in ('procurement','finance','hr','branch_ops') or p_ends_at<=p_starts_at or p_ends_at<=now() or p_ends_at-p_starts_at>interval '30 days' then
   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INPUT_INVALID';end if;
@@ -628,12 +628,12 @@ as $ declare v_role text;v_id uuid;begin
  values(p_actor_user_id,'executive.approval.delegation.created','executive_approval_delegations',v_id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'delegate_user_id',p_delegate_user_id,'category',p_category,'branch_id',p_branch_id,'starts_at',p_starts_at,'ends_at',p_ends_at));
  return jsonb_build_object('delegation_id',v_id,'status','awaiting_owner_approval');
-end $;
+end $$;
 
 create or replace function public.approve_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role<>'tenant_owner' then raise exception using errcode='42501',message='APPROVAL_DELEGATION_OWNER_REQUIRED';end if;
@@ -645,12 +645,12 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.approved','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v_row.delegator_user_id,'delegate_user_id',v_row.delegate_user_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','approved');
-end $;
+end $$;
 
 create or replace function public.revoke_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select * into v_row from public.executive_approval_delegations where id=p_delegation_id and tenant_id=p_tenant_id for update;
@@ -659,7 +659,7 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
-end $;
+end $$;
 
 revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
 revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
@@ -776,7 +776,7 @@ end $$;
 create or replace function public.create_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegate_user_id uuid,p_category text,p_branch_id uuid,p_starts_at timestamptz,p_ends_at timestamptz
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_id uuid;begin
+as $$ declare v_role text;v_id uuid;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  if p_category not in ('procurement','finance','hr','branch_ops') or p_ends_at<=p_starts_at or p_ends_at<=now() or p_ends_at-p_starts_at>interval '30 days' then
   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INPUT_INVALID';end if;
@@ -791,12 +791,12 @@ as $ declare v_role text;v_id uuid;begin
  values(p_actor_user_id,'executive.approval.delegation.created','executive_approval_delegations',v_id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'delegate_user_id',p_delegate_user_id,'category',p_category,'branch_id',p_branch_id,'starts_at',p_starts_at,'ends_at',p_ends_at));
  return jsonb_build_object('delegation_id',v_id,'status','awaiting_owner_approval');
-end $;
+end $$;
 
 create or replace function public.approve_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role<>'tenant_owner' then raise exception using errcode='42501',message='APPROVAL_DELEGATION_OWNER_REQUIRED';end if;
@@ -807,12 +807,12 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.approved','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v_row.delegator_user_id,'delegate_user_id',v_row.delegate_user_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','approved');
-end $;
+end $$;
 
 create or replace function public.revoke_approval_delegation(
  p_actor_user_id uuid,p_tenant_id uuid,p_delegation_id uuid
 ) returns jsonb language plpgsql security definer set search_path=''
-as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
+as $$ declare v_role text;v_row public.executive_approval_delegations%rowtype;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  select * into v_row from public.executive_approval_delegations where id=p_delegation_id and tenant_id=p_tenant_id for update;
@@ -821,7 +821,7 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegations',v_row.id::text,jsonb_build_object('tenant_id',p_tenant_id));
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
-end $;
+end $$;
 
 revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
 revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
