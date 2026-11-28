@@ -103,7 +103,7 @@ begin
 
  create temporary table _exec_sales_rows on commit drop as
  with sales as (
-  select s.id sale_id,s.transaction_code,s.branch_id,s.subtotal_idr gross_idr,s.discount_idr,
+  select s.id sale_id,s.transaction_code,s.branch_id,s.shift_id,b.code branch_code,s.subtotal_idr gross_idr,s.discount_idr,
    s.total_idr,s.created_at,b.timezone,coalesce(p.cutoff_time,time '00:00') cutoff_time,
    (s.created_at at time zone b.timezone - coalesce(p.cutoff_time,time '00:00'))::date business_date
   from public.pos_sales s join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
@@ -122,7 +122,7 @@ begin
   select j.source_id,count(*)::integer entry_count from public.finance_journal_entries j
   where j.status='posted' and j.source_id is not null group by j.source_id
  )
- select s.sale_id,s.transaction_code,s.branch_id,s.business_date,s.timezone,s.cutoff_time,
+ select s.sale_id,s.transaction_code,s.branch_id,s.shift_id,s.branch_code,s.business_date,s.timezone,s.cutoff_time,
   s.gross_idr,s.discount_idr,coalesce(r.amount_idr,0)::bigint processed_refund_idr,
   greatest(s.total_idr-coalesce(r.amount_idr,0),0)::bigint net_sales_idr,
   coalesce(t.amount_idr,0)::bigint tender_allocated_idr,coalesce(st.amount_idr,0)::bigint matched_settlement_idr,
@@ -146,20 +146,20 @@ begin
   v_gross,v_discount,v_refund,v_net,v_settlement,v_count,v_finance_count,v_missing_journal,v_journal_count)
  returning * into v_snapshot;
 
- insert into public.executive_sales_monitor_snapshot_rows(snapshot_id,tenant_id,sale_id,branch_id,transaction_code,
+ insert into public.executive_sales_monitor_snapshot_rows(snapshot_id,tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,
   business_date,timezone,cutoff_time,gross_idr,discount_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,
   matched_settlement_idr,finance_journal_entry_count)
- select v_snapshot.id,p_tenant_id,sale_id,branch_id,transaction_code,business_date,timezone,cutoff_time,gross_idr,
+ select v_snapshot.id,p_tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,business_date,timezone,cutoff_time,gross_idr,
   discount_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,matched_settlement_idr,finance_journal_entry_count
  from _exec_sales_rows;
 
  select coalesce(jsonb_agg(jsonb_build_object('business_date',d.business_date,'gross_idr',d.gross_idr,
-  'discount_idr',d.discount_idr,'refund_idr',d.refund_idr,'net_sales_idr',d.net_sales_idr,'transaction_count',d.transaction_count)
+  'discount_idr',d.discount_idr,'refund_idr',d.refund_idr,'net_sales_idr',d.net_sales_idr,'matched_settlement_idr',d.matched_settlement_idr,'transaction_count',d.transaction_count)
   order by d.business_date),'[]'::jsonb) into v_daily
  from (select business_date,sum(gross_idr)::bigint gross_idr,sum(discount_idr)::bigint discount_idr,
-  sum(processed_refund_idr)::bigint refund_idr,sum(net_sales_idr)::bigint net_sales_idr,count(*)::integer transaction_count
+  sum(processed_refund_idr)::bigint refund_idr,sum(net_sales_idr)::bigint net_sales_idr,sum(matched_settlement_idr)::bigint matched_settlement_idr,count(*)::integer transaction_count
   from _exec_sales_rows group by business_date) d;
- select coalesce(jsonb_agg(jsonb_build_object('sale_id',sale_id,'transaction_code',transaction_code,'branch_id',branch_id,
+ select coalesce(jsonb_agg(jsonb_build_object('sale_id',sale_id,'transaction_code',transaction_code,'branch_id',branch_id,'branch_code',branch_code,'shift_id',shift_id,
   'business_date',business_date,'timezone',timezone,'cutoff_time',cutoff_time,'gross_idr',gross_idr,'discount_idr',discount_idr,
   'processed_refund_idr',processed_refund_idr,'net_sales_idr',net_sales_idr,'tender_allocated_idr',tender_allocated_idr,
   'matched_settlement_idr',matched_settlement_idr,'finance_journal_entry_count',finance_journal_entry_count)
