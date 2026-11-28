@@ -76,23 +76,42 @@ Disposition:
 
 The earlier row-by-row rationale remains in `docs/audit/CLOSED_UNMERGED_PR_CARRY_FORWARD_20261120.md` and `docs/audit/PR_HISTORY_AND_FILE_OVERLAP_20261120.md`; those documents are historical snapshots and must not override this 28-Nov live inventory.
 
-## 4. Staging database — read-only snapshot
+## 4. Staging database — post-merge migration snapshot
 
-Project `higoadrzxnhzbbwhdbmh`:
+Project `dlice-staging` / `higoadrzxnhzbbwhdbmh` is `ACTIVE_HEALTHY` (PostgreSQL 17.11, ap-southeast-1).
 
-| Evidence | Observed result |
-|---|---:|
-| Applied migration history | 63 versions |
-| Latest applied version | `20261124134222_pos_checkout_fk_supporting_indexes` |
-| Public tables with RLS enabled | 68 / 68 |
-| Branch rows | 155 |
-| Active branches | 5 |
-| Planned/pending branches | 150 |
-| Auth users with `app_metadata.platform_owner` boolean true | **0** |
+| Evidence | Before integration | After integration |
+|---|---:|---:|
+| Applied migration history | 63 | **72** |
+| Public tables with RLS enabled | 68 / 68 | **146 / 146** |
+| Branch rows | 155 | 155 |
+| Active branches | 5 | 5 |
+| Planned/pending branches | 150 | 150 |
+| Branch Operations tables | 0 | **7** |
+| Private `branch-ops-evidence` bucket | absent | **present** |
 
-The following required domain tables were not found in the current staging catalog at this audit: `bi_metric_definitions`, `branch_ops_compliance_checks`, `branch_ops_compliance_snapshots`, `branch_ops_equipment`, `branch_ops_evidence_assets`, `branch_ops_incidents`, `branch_ops_tasks`, `branch_ops_work_orders`, `crm_customers`, `delivery_fulfillment_events`, `franchise_applications`, `hr_payroll_runs`, `procurement_supplier_links`, and `saas_plan_versions`.
+Nine migrations were applied to staging, one at a time, through the Supabase migration tool, after the candidate PR #153 was merged:
+- `20261128025950` — CRM/Loyalty financial close
+- `20261128030011` — HR workforce/payroll/Finance
+- `20261128030020` — Delivery fulfillment/provider
+- `20261128030021` — Franchise expansion
+- `20261128030024` — Procurement supplier
+- `20261128030026` — BI analytics
+- `20261128030028` — SaaS tenant billing
+- `20261128030031` — Executive Command Center
+- `20261128030033` — Branch Operations persistence
 
-The eight-domain migration set and the Branch Operations migration are candidate source changes and are not in the current 63-row staging migration ledger. The Branch Operations private evidence bucket is also not yet present in staging.
+All nine apply operations returned success. Staging schema checks confirm all 17 CRM tables, HR payroll tables, canonical Delivery tables (`delivery_dispatches`, `delivery_provider_events`, `delivery_outbox`, etc.), Franchise, BI, SaaS, Procurement (`procurement_supplier_invoices`, `procurement_approval_events`, etc.) and all seven Branch Operations tables exist. Earlier probes used two noncanonical table-name guesses (`delivery_fulfillment_events`, `procurement_supplier_links`); their absence is not a migration failure because the actual schema uses the canonical names above.
+
+Branch Operations security checks on staging:
+- All seven Branch Operations tables have RLS enabled.
+- `anon` and `authenticated` cannot SELECT those tables; `service_role` can.
+- All 14 Branch Operations functions (including internal guards and immutable trigger) deny EXECUTE to `anon` and `authenticated`; `service_role` has EXECUTE.
+- Evidence bucket is private, limited to 8 MiB and JPEG/PNG/PDF.
+- Query of public functions found no function with EXECUTE granted to `anon` or `authenticated`.
+- Overall public table RLS is 146/146.
+
+The Supabase apply tool generated actual version numbers different from the candidate filenames. This PR reconciles all ten source filenames (nine new migrations plus the earlier POS lifecycle source) to the exact staging migration ledger versions/names. Do not reapply any of these migrations; this is source-history reconciliation only.
 
 ### Owner / runtime gate
 
@@ -105,27 +124,28 @@ A read-only query of `auth.users.raw_app_meta_data` returned zero users whose `p
 - 150 planned branches are not 150 operationally active branches or evidence of 150-branch transaction throughput.
 - Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
 
-## 5. Exact-head validation evidence and current candidate
+## 5. Exact-head validation and staging deployment evidence
 
-- PR #152 head `3dda8d1c6dce3b0a68d4ce95afaae059af3101a0`: Free quality checks PASS and full CRM/HR/eight-domain disposable migration + pgTAP suite PASS.
-- PR #153 parent head `cd16892ba129c15293956e7597f3673065a102e0`: Free quality checks PASS; full CRM/HR/eight-domain disposable suite PASS; Branch Operations CLI-generated migration + complete migration replay + 92 pgTAP assertions PASS; disposable stack stopped and discarded.
-- The CLI-generated migration file was committed as `supabase/migrations/20261128024514_branch_operations_persistence.sql`, byte-identical to the reviewed draft (artifact SHA-256 `b83b477f44ae5581a8bf018422024d2f6189c77b015c9093887818379a1519ba`).
-- A later workflow-only commit removes duplicate migration generation after the official migration was committed. The first rerun after that change has not yet completed; require fresh exact-head quality, CRM replay and Branch Operations replay before merge.
-- No shared staging migration, Edge Function deployment, business data mutation, production change or release flag change has occurred in this audit.
+- PR #153 was squash-merged to `staging` as commit `2f661ee30f95f09f6d32f0f749189f7ae95ed433`.
+- Exact pre-merge head `b107f20b1629b8b20e7359da0e644c9da99809fb`: quality checks, full CRM/HR/eight-domain disposable replay and Branch Operations disposable replay all PASS.
+- The CLI-generated Branch Operations migration was committed and its 92 pgTAP assertions passed in disposable replay.
+- After the merge and nine staging migrations, three Edge Functions were deployed to the staging project:
+  - `branch-operations` v1, `verify_jwt=true`.
+  - `hr-payroll-provider-webhook` v1, `verify_jwt=false` (HMAC/provider signature is the function's auth boundary).
+  - `dlice-orders` v74, `verify_jwt=false` (preserves the existing setting; function code performs its own authenticated actor/tenant authorization).
+- No Production function or database was changed.
+- Vercel Preview remains blocked by the Free build/deployment quota; no Preview success is claimed.
 
-## 6. Merge, migration and staging acceptance order
+## 6. Remaining staging acceptance and release gates
 
-1. Finish exact-head CI and disposable replay on PR #153 after the workflow-only fix.
-2. Reconcile PR #152/#153 dependency chain, retarget the tested top-level migration candidate to `staging`, and merge only with exact expected head SHA.
-3. Merge the Branch Operations candidate after its own exact-head test suite is green; do not merge #144/#145/#151 separately if their accepted content is included in the tested descendant.
-4. Apply the eight-domain migrations and Branch Operations migration to **staging only**, in source dependency order, one at a time; record the actual Supabase-generated versions and reconcile repository filenames to the live migration ledger.
-5. Re-run Security and Performance Advisors; inspect new RLS/ACL/Storage policies, function EXECUTE grants, immutable triggers, and service-role-only boundaries.
-6. Verify staging schema and all 17 CRM tables, HR payroll, Delivery, Franchise, Procurement, BI, SaaS and Executive tables/RPCs, plus seven Branch Operations tables and private Storage bucket.
-7. Run tenant A/B own-read/write and cross-tenant read/write denial, branch isolation, Storage and background-job probes. Require zero BLOCKED/SKIPPED and verify postconditions.
-8. Re-run POS staging E2E only after Owner Auth boolean claim and protected allowlist are verified. Reconcile sale totals, tender allocations, cash drawer, stock movements, KDS tickets, immutable receipt and audit events.
-9. Run Delivery and Payroll provider E2E (including signed webhook/idempotency, payout items, settlement and bank reconciliation); no provider success is inferred from adapter contracts.
-10. Run Owner Command Center company → region → branch → shift → transaction drill-down; reconcile POS/Finance/Inventory/Delivery/HR/KDS totals and freshness.
-11. Execute backup/restore drill and 150-branch concurrency/tenant-isolation probes. Keep planned branch count distinct from active operational acceptance.
-12. Only after every gate passes and all reconciliations balance may release flags be considered; no production deployment is authorized by this staging audit.
+1. Complete source filename ↔ Supabase migration ledger parity PR #154; verify all 72 source files map exactly to the 72 applied versions. This PR does not execute DDL.
+2. Re-run Security and Performance Advisors after the staging migration set. Current Security Advisor: leaked-password protection disabled (WARN). Current Performance Advisor: 82 unused-index INFO findings; do not delete indexes based only on zero scans.
+3. Verify Auth Owner through official Supabase Auth Admin and protected allowlist. Current read-only Auth query still returns **zero** users with `raw_app_meta_data.platform_owner` JSON boolean true. No SQL metadata mutation and no allowlist guessing.
+4. Run authenticated tenant A/B own-read/write, cross-tenant read/write denial, branch isolation, Storage and background-job probes; require zero BLOCKED/SKIPPED and verify postconditions.
+5. Run POS staging E2E only after Owner Auth and allowlist are independently verified. Reconcile sale totals, tender allocations, cash drawer, stock movements, KDS tickets, immutable receipt and audit events.
+6. Run Delivery and Payroll provider E2E (signed webhook/idempotency, payout items, settlement and bank reconciliation). Deployment alone is not provider E2E proof.
+7. Run Owner Command Center company → region → branch → shift → transaction drill-down; reconcile POS/Finance/Inventory/Delivery/HR/KDS totals and freshness.
+8. Execute backup/restore drill and 150-branch concurrency/tenant-isolation probes. The current 150 branches are planned/pending, not operationally active.
+9. Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`. No release or Production promotion is authorized by this staging integration.
 
-**Decision:** candidate implementation and disposable database proof have advanced, but shared staging migration/merge and operational acceptance remain gated by the latest exact-head rerun, dependency/PR disposition, and the verified Owner Auth/allowlist blocker. No production action is authorized.
+**Decision:** PR #153 and nine schema migrations are merged/applied to staging, and the three relevant Edge Functions are deployed. Schema/RLS/ACL/Storage checks are passing. Full operational reconciliation is still blocked by the unverified Owner Auth boolean/allowlist and outstanding tenant A/B, POS, provider, backup/restore and scale runtime tests. No feature is promoted to DONE based on migration or deployment alone.
