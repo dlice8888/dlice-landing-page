@@ -8,10 +8,13 @@ const url = `https://${STAGING_PROJECT_REF}.supabase.co`;
 test("updates only the existing staging Owner app_metadata and preserves other claims", async () => {
   const calls = [];
   const existing = { provider: "email", providers: ["email"], legacy_claim: "preserve" };
-  const fetchImpl = async (_url, options) => {
-    calls.push(options);
+  const fetchImpl = async (requestUrl, options) => {
+    calls.push({ requestUrl, ...options });
+    if (requestUrl.includes("/rest/v1/admin_profiles")) {
+      return { ok: true, status: 200, json: async () => [{ user_id: ownerId, role: "owner", is_active: true }] };
+    }
     if (options.method === "GET") {
-      return { ok: true, status: 200, json: async () => ({ id: ownerId, app_metadata: calls.length === 1 ? existing : { ...existing, platform_owner: true } }) };
+      return { ok: true, status: 200, json: async () => ({ id: ownerId, app_metadata: calls.filter(x => !x.requestUrl.includes("/rest/v1/")).length === 1 ? existing : { ...existing, platform_owner: true } }) };
     }
     const body = JSON.parse(options.body);
     assert.deepEqual(body.app_metadata, { ...existing, platform_owner: true });
@@ -20,7 +23,9 @@ test("updates only the existing staging Owner app_metadata and preserves other c
   const result = await setStagingPlatformOwnerClaim({ supabaseUrl: url, serviceRoleKey: "test-secret", ownerUserId: ownerId, fetchImpl });
   assert.equal(result.updated, true);
   assert.equal(result.platformOwnerBoolean, true);
-  assert.deepEqual(calls.map(x => x.method), ["GET", "PUT", "GET"]);
+  assert.deepEqual(calls.map(x => x.method), ["GET", "GET", "PUT", "GET"]);
+  assert.ok(calls[1].requestUrl.includes("/rest/v1/admin_profiles"));
+  assert.ok(calls[1].requestUrl.includes("user_id=eq." + ownerId));
   assert.equal(JSON.parse(calls[1].body).app_metadata.platform_owner, true);
 });
 
@@ -44,6 +49,21 @@ test("rejects malformed UUID and banned account before updating metadata", async
     },
   }), { code: "OWNER_AUTH_ADMIN_USER_BANNED" });
   assert.deepEqual(methods, ["GET"]);
+});
+
+test("refuses to update Auth metadata when the database profile is not an active Owner", async () => {
+  const methods = [];
+  await assert.rejects(setStagingPlatformOwnerClaim({
+    supabaseUrl: url, serviceRoleKey: "secret", ownerUserId: ownerId,
+    fetchImpl: async (requestUrl, options) => {
+      methods.push({ requestUrl, method: options.method });
+      if (requestUrl.includes("/rest/v1/admin_profiles")) {
+        return { ok: true, status: 200, json: async () => [{ user_id: ownerId, role: "manager", is_active: true }] };
+      }
+      return { ok: true, status: 200, json: async () => ({ id: ownerId, banned_until: null, app_metadata: {} }) };
+    },
+  }), { code: "OWNER_AUTH_ADMIN_PROFILE_NOT_ACTIVE_OWNER" });
+  assert.equal(methods.some(x => x.method === "PUT"), false);
 });
 
 import { readFileSync } from "node:fs";
