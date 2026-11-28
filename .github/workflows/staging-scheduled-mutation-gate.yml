@@ -1,0 +1,32 @@
+name: Staging scheduled-mutation safety contract
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - ".github/workflows/staging-procurement-positive-e2e.yml"
+      - ".github/workflows/staging-scheduled-mutation-gate.yml"
+      - "tests/contracts/staging-scheduled-mutation-gate.test.mjs"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/staging-kds-pos-stock-positive-e2e.yml"
+      - ".github/workflows/staging-procurement-positive-e2e.yml"
+      - ".github/workflows/staging-scheduled-mutation-gate.yml"
+      - "tests/contracts/staging-scheduled-mutation-gate.test.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/contracts/staging-scheduled-mutation-gate.test.mjs
