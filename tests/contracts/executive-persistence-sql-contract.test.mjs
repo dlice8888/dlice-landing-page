@@ -81,6 +81,8 @@ test("T02 enqueue and decision mutate supported HR/procurement sources atomicall
  assert.match(migration,/EXECUTIVE_APPROVAL_SELF_APPROVAL_DENIED/i);
  assert.match(migration,/source mutation are committed in one PostgreSQL transaction/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_ADAPTER_UNSUPPORTED/i);
+ assert.match(migration,/stock_transfers st[\s\S]{0,500}st\.status='draft'/i);
+ assert.match(migration,/erp_transition_stock_transfer\([\s\S]{0,180}case when p_decision='approved' then 'approve' else 'cancel' end/i);
 });
 test("T02 delegation lifecycle is tenant-bound, time-limited, idempotent and audited",()=>{
  assert.match(migration,/source_domains text\[\] not null check\(cardinality\(source_domains\)>0 and source_domains <@/i);
@@ -90,7 +92,7 @@ test("T02 delegation lifecycle is tenant-bound, time-limited, idempotent and aud
  assert.match(migration,/p_valid_until>now\(\)\+interval '90 days'/i);
  assert.match(migration,/EXECUTIVE_DELEGATION_MEMBERSHIP_REQUIRED/i);
  assert.match(migration,/m\.permissions \?\| p_source_domains/i);
- assert.match(migration,/p_source_domains <@ array\['procurement','hr'\]/i);
+ assert.match(migration,/p_source_domains <@ array\['procurement','hr','inventory'\]/i);
  assert.match(migration,/EXECUTIVE_DELEGATION_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/executive\.approval\.delegation\.created/i);
  assert.match(migration,/executive\.approval\.delegation\.revoked/i);
