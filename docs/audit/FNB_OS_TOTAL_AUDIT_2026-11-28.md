@@ -300,3 +300,14 @@ Candidate branch `feat/branch-ops-evidence-workflows-20261127`, PR #153, now inc
 - No authenticated staging test, tenant A/B cross-read/write denial, Storage object ownership/retention test, browser/device E2E or workflow reconciliation has run.
 - D08-F04/F07/F08/F09/F10 weighted progress scores remain unchanged (33% each where previously scored). Database, runtime and E2E dimensions remain unverified. This batch adds implementation source but does not justify DONE.
 - PR #153 remains Draft/unmerged. Production remains read-only. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
+
+
+## 12. Exact-head Branch Operations quality result
+
+- Exact head tested: `01255157a504800612982e908e11b1c9061a822f`.
+- Free quality checks run `46089862837`: **PASS**.
+- Branch Operations evidence workflow contracts, browser UI/repository syntax, Supabase repository tests, SQL/Auth/Storage/UI static contracts, and Deno type-check of the authenticated Edge Function all completed successfully.
+- Existing global quality checks, feature matrix consistency, tenant/release contracts and migration/documentation coverage also passed in that run.
+- Disposable CRM migration replay run `46089862887` was still pending at the latest check. It is a disposable replay of the existing official candidate migration set; it does not apply the new Branch Operations SQL draft and does not mutate staging.
+- Matrix automated-test evidence for D08-F04/F07/F08/F09/F10 now references the exact-head run. Weighted scores remain unchanged because database migration, live authorization, E2E and reconciliation dimensions remain unverified.
+- Matrix refresh itself creates a newer documentation-only head and will need its own CI run before the refreshed exact head is considered fully validated.
