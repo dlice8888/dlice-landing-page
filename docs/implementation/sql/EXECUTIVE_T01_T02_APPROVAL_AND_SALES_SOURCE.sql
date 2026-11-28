@@ -675,11 +675,92 @@ begin
 end;
 $$;
 
+create or replace function public.create_approval_delegation(
+ p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_delegate_user_id uuid,
+ p_domain text,p_branch_id uuid,p_category text,p_max_amount_idr bigint,
+ p_starts_at timestamptz,p_expires_at timestamptz
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare v_role text;v_active boolean;v_tenant_id uuid;v_delegation public.approval_delegations%rowtype;
+begin
+ if p_delegate_user_id is null or p_delegate_user_id=p_actor_user_id
+    or p_domain not in ('procurement','finance','hr','branch_ops')
+    or p_max_amount_idr is null or p_max_amount_idr<0
+    or p_starts_at is null or p_expires_at is null
+    or p_starts_at<now() or p_expires_at<=p_starts_at
+    or p_expires_at>p_starts_at+interval '90 days' then
+   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INVALID';
+ end if;
+ if not (p_branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then
+   raise exception using errcode='42501',message='APPROVAL_BRANCH_FORBIDDEN';
+ end if;
+ select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
+ if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
+ select tenant_id into v_tenant_id from public.branches where id=p_branch_id;
+ if v_tenant_id is null then raise exception using errcode='P0002',message='APPROVAL_BRANCH_NOT_FOUND'; end if;
+ if not exists(select 1 from public.approval_policies p
+   where p.tenant_id=v_tenant_id and p.domain=p_domain and p.active
+     and p.eligible_roles @> array[v_role]) then
+   raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_FORBIDDEN';
+ end if;
+ if not exists(select 1 from public.admin_profiles a where a.user_id=p_delegate_user_id and a.is_active)
+    or not (
+      exists(select 1 from public.tenant_memberships m where m.tenant_id=v_tenant_id
+        and m.user_id=p_delegate_user_id and m.status='active')
+      or exists(select 1 from public.branch_assignments ba where ba.branch_id=p_branch_id
+        and ba.user_id=p_delegate_user_id and ba.employment_status='active'
+        and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date))
+    ) then
+   raise exception using errcode='42501',message='APPROVAL_DELEGATE_NOT_ACTIVE_IN_SCOPE';
+ end if;
+ insert into public.approval_delegations(tenant_id,delegator_user_id,delegate_user_id,domain,branch_id,
+   category,max_amount_idr,starts_at,expires_at)
+ values(v_tenant_id,p_actor_user_id,p_delegate_user_id,p_domain,p_branch_id,
+   nullif(btrim(coalesce(p_category,'')),''),p_max_amount_idr,p_starts_at,p_expires_at)
+ returning * into v_delegation;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.approval.delegation.created','approval_delegation',v_delegation.id::text,
+  jsonb_build_object('tenant_id',v_tenant_id,'branch_id',p_branch_id,'delegate_user_id',p_delegate_user_id,
+   'domain',p_domain,'category',p_category,'max_amount_idr',p_max_amount_idr,
+   'starts_at',p_starts_at,'expires_at',p_expires_at));
+ return jsonb_build_object('id',v_delegation.id,'tenant_id',v_tenant_id,'branch_id',p_branch_id,
+   'delegate_user_id',p_delegate_user_id,'domain',p_domain,'expires_at',p_expires_at);
+end;
+$;
+
+create or replace function public.revoke_approval_delegation(
+ p_delegation_id uuid,p_actor_user_id uuid,p_allowed_branch_ids uuid[]
+) returns jsonb
+language plpgsql security invoker set search_path=''
+as $
+declare d public.approval_delegations%rowtype;
+begin
+ select * into d from public.approval_delegations where id=p_delegation_id for update;
+ if not found then raise exception using errcode='P0002',message='APPROVAL_DELEGATION_NOT_FOUND'; end if;
+ if d.delegator_user_id<>p_actor_user_id
+    or not (d.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then
+   raise exception using errcode='42501',message='APPROVAL_DELEGATION_FORBIDDEN';
+ end if;
+ if d.revoked_at is null then
+   update public.approval_delegations set revoked_at=now() where id=d.id;
+   insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+   values(p_actor_user_id,'executive.approval.delegation.revoked','approval_delegation',d.id::text,
+     jsonb_build_object('tenant_id',d.tenant_id,'branch_id',d.branch_id,'delegate_user_id',d.delegate_user_id));
+ end if;
+ return jsonb_build_object('id',d.id,'revoked',true);
+end;
+$;
+
 revoke all on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) from public,anon,authenticated;
 revoke all on function public.claim_approval(uuid,uuid,uuid[],integer) from public,anon,authenticated;
 revoke all on function public.decide_approval(uuid,uuid,uuid[],integer,text,text,text) from public,anon,authenticated;
 grant execute on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) to service_role;
 grant execute on function public.claim_approval(uuid,uuid,uuid[],integer) to service_role;
 grant execute on function public.decide_approval(uuid,uuid,uuid[],integer,text,text,text) to service_role;
+revoke all on function public.create_approval_delegation(uuid,uuid[],uuid,text,uuid,text,bigint,timestamptz,timestamptz) from public,anon,authenticated;
+revoke all on function public.revoke_approval_delegation(uuid,uuid,uuid[]) from public,anon,authenticated;
+grant execute on function public.create_approval_delegation(uuid,uuid[],uuid,text,uuid,text,bigint,timestamptz,timestamptz) to service_role;
+grant execute on function public.revoke_approval_delegation(uuid,uuid,uuid[]) to service_role;
 
 commit;
