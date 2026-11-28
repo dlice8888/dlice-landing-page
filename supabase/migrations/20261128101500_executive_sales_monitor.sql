@@ -179,6 +179,31 @@ begin
    'refund_idr',v_refund,'net_sales_idr',v_net,'matched_settlement_idr',v_settlement,'transaction_count',v_count),
   'daily',v_daily,'transactions',v_rows,'payment_reconciliation',v_payment,'finance_reconciliation',v_finance);
 end $$;
+create or replace function public.set_branch_business_day_cutoff(
+ p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[],p_cutoff_time time without time zone,p_expected_version integer
+) returns jsonb language plpgsql security definer set search_path=''
+as $ declare v_role text;v_version integer;begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
+ select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
+ if v_role is null then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
+ if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id) then raise exception using errcode='42501',message='EXECUTIVE_BRANCH_SCOPE_DENIED';end if;
+ if v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
+  raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_UPDATE_DENIED';end if;
+ select policy_version into v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id for update;
+ if not found then v_version:=0;end if;
+ if v_version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_CUTOFF_STALE_VERSION';end if;
+ insert into public.branch_business_day_policies(tenant_id,branch_id,cutoff_time,policy_version,updated_by)
+ values(p_tenant_id,p_branch_id,p_cutoff_time,v_version+1,p_actor_user_id)
+ on conflict(tenant_id,branch_id) do update set cutoff_time=excluded.cutoff_time,policy_version=excluded.policy_version,
+  updated_by=excluded.updated_by,updated_at=now();
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.branch_business_day_cutoff.updated','branches',p_branch_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'cutoff_time',p_cutoff_time,'policy_version',v_version+1));
+ return jsonb_build_object('branch_id',p_branch_id,'cutoff_time',p_cutoff_time,'policy_version',v_version+1);
+end $;
+
 revoke all on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) from public,anon,authenticated;
 grant execute on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) to service_role;
+revoke all on function public.set_branch_business_day_cutoff(uuid,uuid,uuid,uuid[],time,integer) from public,anon,authenticated;
+grant execute on function public.set_branch_business_day_cutoff(uuid,uuid,uuid,uuid[],time,integer) to service_role;
 commit;
