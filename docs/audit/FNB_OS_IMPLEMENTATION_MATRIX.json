@@ -14177,9 +14177,9 @@
     "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
-    "PARTIAL": 95,
-    "NOT VERIFIED": 88,
-    "BLOCKED": 6,
+    "PARTIAL": 188,
+    "NOT VERIFIED": 0,
+    "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
   },
@@ -14233,7 +14233,12 @@
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 53,
     "unscored_partial_features": 135,
-    "status": "50 PARTIAL features have evidence-weighted progress scores; 138 PARTIAL features remain unscored pending six-dimension evidence. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero."
+    "status": "53 PARTIAL features have evidence-weighted progress scores; 135 PARTIAL features remain unscored pending six-dimension evidence. Counts are derived from the canonical feature ledger. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero.",
+    "scoring_status_counts": {
+      "NOT_SCORED_FEATURE_LEVEL": 136,
+      "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT": 46,
+      "SCORED_PROVISIONAL": 7
+    }
   },
   "source_user_distribution_2026_11_21": {
     "PARTIAL": 82,
@@ -15752,9 +15757,9 @@
   "audit_method": "189 PRD rows reviewed against staging source matrix, open implementation PRs #143/#145/#146, live Supabase staging catalog/advisors, and Vercel deployment metadata. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open PRs and BLOCKED preflight workflows are not staging/runtime acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 141,
-    "not_verified": 43,
-    "blocked": 5,
+    "partial": 188,
+    "not_verified": 0,
+    "blocked": 1,
     "done": 0
   },
   "crosswalk_ledger": {
@@ -15765,18 +15770,18 @@
     "validation": "All 189 matrix rows matched exactly one ledger row by domain and requirement; feature IDs are unique; audit_status values match. Statuses remain PARTIAL/NOT VERIFIED/BLOCKED; no feature promoted to DONE."
   },
   "status_counts": {
-    "PARTIAL": 145,
-    "NOT VERIFIED": 39,
-    "BLOCKED": 5,
+    "PARTIAL": 188,
+    "NOT VERIFIED": 0,
+    "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
   },
   "reconciliation_note": "Candidate crosswalk snapshot. All 189 feature IDs are stable and matched one-to-one to PRD_FEATURE_EVIDENCE_LEDGER_20261126.json by domain and requirement. Counts reflect the candidate ledger, not an acceptance release; PARTIAL means implementation started but acceptance evidence is incomplete. NOT VERIFIED and BLOCKED remain open. No feature is DONE. Promotion to the staging source of truth requires independent review and acceptance of this PR.",
   "feature_totals": {
     "total": 189,
-    "partial": 145,
-    "not_verified": 39,
-    "blocked": 5,
+    "partial": 188,
+    "not_verified": 0,
+    "blocked": 1,
     "done": 0
   },
   "latest_platform_audit": {
