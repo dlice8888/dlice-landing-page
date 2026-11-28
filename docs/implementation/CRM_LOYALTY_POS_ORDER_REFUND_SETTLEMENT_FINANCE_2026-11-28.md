@@ -31,3 +31,25 @@ The existing CRM migration already defines customer identity linking, transactio
 - The existing Edge Function source has explicit Platform Owner and tenant/branch authorization gates; current staging runtime version has not been deployed with this candidate.
 - Customer LTV snapshots remain a separate open integration item; they are not claimed complete by the financial-close work.
 - No feature score is increased until exact-head tests and staging E2E/reconciliation prove the workflow.
+
+
+## Customer LTV projection — candidate implementation
+
+Added `src/crm-customer-ltv-projection.mjs` with contract coverage in
+`tests/contracts/crm-customer-ltv-projection.test.mjs`.
+
+- LTV is rebuilt only from reconciled financial-close rows and processed refunds
+  linked to those closes; cross-tenant rows and duplicate source IDs are rejected.
+- Net lifetime value is calculated as eligible paid net sales less processed
+  refunds, with safe-integer IDR arithmetic and refund-over-sales protection.
+- Loyalty points are read from the immutable customer ledger, including negative
+  reversal/debt adjustments; the projection does not mutate points.
+- Marketing consent is evaluated separately. Revoked/missing consent disables
+  campaign eligibility but does not erase the financial LTV projection.
+- Snapshot persistence, deterministic source revision and audit append are
+  required to share the same tenant transaction and idempotency key.
+
+**Not yet runtime accepted:** canonical Supabase adapters/RPCs must bind the
+projection to the existing CRM financial-close, refund and loyalty tables, and
+the resulting snapshot must be verified in staging. No schema, staging or
+production mutation was made; no CRM feature score is increased.
