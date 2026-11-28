@@ -3060,18 +3060,24 @@ if(action==="erp-executive-branch-kpis"){
     const {data:sale,error:saleError}=await admin.from("pos_sales").select("id,transaction_code,branch_id,shift_id,cashier_user_id,subtotal_idr,discount_idr,total_idr,payment_method,payment_status,customer_reference,notes,created_at").eq("id",saleId).eq("branch_id",branchId).maybeSingle();
     if(saleError)return fail("Rekonsiliasi transaksi POS gagal dimuat.",503,origin);
     if(!sale)return fail("Transaksi POS tidak ditemukan di cabang ini.",404,origin);
-    const [itemsResult,ticketResult,movementsResult]=await Promise.all([
+    const [itemsResult,ticketResult,movementsResult,tendersResult,receiptResult,journalResult,shiftResult,cashResult]=await Promise.all([
       admin.from("pos_sale_items").select("id,product_id,product_name_snapshot,quantity,unit_price_idr,line_total_idr,modifier_snapshot,substitution_snapshot").eq("sale_id",saleId).order("id"),
       admin.from("kitchen_tickets").select("id,ticket_number,branch_id,status,version,created_at,served_at,kitchen_ticket_items(id,product_name_snapshot,quantity,modifier_snapshot,substitution_snapshot,status)").eq("pos_sale_id",saleId).maybeSingle(),
-      admin.from("stock_movements").select("id,inventory_item_id,movement_type,quantity,reference_type,reference_id,notes,created_at").eq("branch_id",branchId).eq("reference_type","pos_sale").eq("reference_id",saleId).order("created_at")
+      admin.from("stock_movements").select("id,inventory_item_id,movement_type,quantity,reference_type,reference_id,notes,created_at").eq("branch_id",branchId).eq("reference_type","pos_sale").eq("reference_id",saleId).order("created_at"),
+      admin.from("pos_sale_tenders").select("id,sale_id,branch_id,tender_sequence,payment_method,amount_idr,reference,created_by,created_at").eq("branch_id",branchId).eq("sale_id",saleId).order("tender_sequence"),
+      admin.from("pos_sale_receipts").select("id,sale_id,branch_id,receipt_version,snapshot,created_by,created_at").eq("branch_id",branchId).eq("sale_id",saleId).order("receipt_version",{ascending:false}).limit(1).maybeSingle(),
+      admin.from("finance_journal_entries").select("id,entry_code,branch_id,source_type,source_id,entry_date,debit_account,credit_account,amount_idr,status,created_at").eq("branch_id",branchId).eq("source_id",saleId).order("created_at"),
+      admin.from("pos_shifts").select("id,branch_id,opening_cash_idr,expected_cash_idr,counted_cash_idr,cash_variance_idr,status,opened_at,closed_at").eq("id",sale.shift_id).eq("branch_id",branchId).maybeSingle(),
+      admin.from("cash_reconciliations").select("id,reconciliation_code,branch_id,shift_id,business_date,cash_expected_idr,cash_counted_idr,cash_variance_idr,bank_expected_idr,bank_received_idr,qris_expected_idr,qris_received_idr,status,prepared_by,reviewed_by,reviewed_at,created_at").eq("branch_id",branchId).eq("shift_id",sale.shift_id).order("created_at",{ascending:false}).limit(10)
     ]);
-    if(itemsResult.error||ticketResult.error||movementsResult.error)return fail("Detail rekonsiliasi POS/KDS/stok gagal dimuat.",503,origin);
+    if(itemsResult.error||ticketResult.error||movementsResult.error||tendersResult.error||receiptResult.error||journalResult.error||shiftResult.error||cashResult.error)return fail("Detail rekonsiliasi POS, tender, receipt, cash, Finance, KDS atau stok gagal dimuat.",503,origin);
     const entityIds=[saleId,...(ticketResult.data?.id?[ticketResult.data.id]:[])];
     const {data:audit,error:auditError}=await admin.from("admin_audit_logs").select("actor_user_id,action,entity_type,entity_id,metadata,created_at").in("entity_id",entityIds).order("created_at");
     if(auditError)return fail("Audit trail rekonsiliasi tidak tersedia.",503,origin);
     const {data:balances,error:balanceError}=await admin.from("branch_inventory").select("inventory_item_id,on_hand,updated_at").eq("branch_id",branchId);
     if(balanceError)return fail("Saldo stok rekonsiliasi tidak tersedia.",503,origin);
-    return json({ok:true,sale,items:itemsResult.data||[],kitchen_ticket:ticketResult.data||null,stock_movements:movementsResult.data||[],stock_balances:balances||[],audit_events:audit||[]},200,origin);
+    const tenderTotal=(tendersResult.data||[]).reduce((sum:any,t:any)=>sum+Number(t.amount_idr||0),0);
+    return json({ok:true,sale,items:itemsResult.data||[],tenders:tendersResult.data||[],tender_total_idr:tenderTotal,tender_matches_sale_total:tenderTotal===Number(sale.total_idr),receipt:receiptResult.data||null,finance_journal_entries:journalResult.data||[],shift_snapshot:shiftResult.data||null,cash_reconciliations:cashResult.data||[],kitchen_ticket:ticketResult.data||null,stock_movements:movementsResult.data||[],stock_balances:balances||[],audit_events:audit||[]},200,origin);
   }
 
   if (action === "erp-list-sales") {
