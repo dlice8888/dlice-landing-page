@@ -33,7 +33,9 @@ begin
     raise exception using errcode='23503', message='POS_SALE_BRANCH_TIMEZONE_REQUIRED';
   end if;
 
-  if tg_op = 'INSERT' and new.payment_status = 'paid' then
+  if tg_op = 'INSERT' and new.payment_status = 'refunded' then
+    raise exception using errcode='23514', message='POS_SALE_REFUND_REQUIRES_PAID_SOURCE';
+  elsif tg_op = 'INSERT' and new.payment_status = 'paid' then
     -- Payment recognition is server-timestamped; clients cannot backdate a new sale.
     new.paid_at := now();
     new.paid_at_source := 'payment_transition';
