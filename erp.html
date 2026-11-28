@@ -193,10 +193,10 @@ function showView(view){if(!navItems.some(x=>x[0]===view&&allowedNav(x)))view='d
 function branchId(){return $('branchSelect').value}function activeBranch(){return branches.find(b=>b.id===branchId())}
 async function loadBranchOpsWorkflows(){
  const root=$('branchOpsWorkflowRoot');if(!root)return;
- if(branchOpsWorkflowUnmount){branchOpsWorkflowUnmount();branchOpsWorkflowUnmount=null;branchOpsWorkflowKey=''}
- if(!BRANCH_OPS_WORKFLOWS_RELEASED){root.textContent='Workflow tersedia di branch kandidat, tetapi tetap nonaktif sampai migration resmi, deployment Edge Function staging, dan validasi RLS/Storage tenant A/B disetujui.';return}
- const branch=activeBranch();if(!branch?.tenant_id||branch.status!=='active'){root.textContent='Pilih cabang aktif dengan tenant yang valid.';return}
+ if(!BRANCH_OPS_WORKFLOWS_RELEASED){if(branchOpsWorkflowUnmount){branchOpsWorkflowUnmount();branchOpsWorkflowUnmount=null;branchOpsWorkflowKey=''}root.textContent='Workflow tersedia di branch kandidat, tetapi tetap nonaktif sampai migration resmi, deployment Edge Function staging, dan validasi RLS/Storage tenant A/B disetujui.';return}
+ const branch=activeBranch();if(!branch?.tenant_id||branch.status!=='active'){if(branchOpsWorkflowUnmount){branchOpsWorkflowUnmount();branchOpsWorkflowUnmount=null;branchOpsWorkflowKey=''}root.textContent='Pilih cabang aktif dengan tenant yang valid.';return}
  const key=branch.tenant_id+':'+branch.id;if(branchOpsWorkflowKey===key&&branchOpsWorkflowUnmount)return;
+ if(branchOpsWorkflowUnmount){branchOpsWorkflowUnmount();branchOpsWorkflowUnmount=null}
  branchOpsWorkflowUnmount=mountBranchOperationsUI({root,supabase,tenantId:branch.tenant_id,branchId:branch.id,onError:error=>note(error.message||'Branch Operations gagal.',true)});
  branchOpsWorkflowKey=key;
 }
