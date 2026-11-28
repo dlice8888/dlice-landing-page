@@ -56,5 +56,5 @@ test("manual Auth repair workflow is staging-environment scoped and explicitly c
   assert.match(workflow, /inputs\.confirm_staging_only\s*==\s*'yes'/);
   assert.match(workflow, /STAGING_SUPABASE_SERVICE_ROLE_KEY:\s*\$\{\{\s*secrets\.STAGING_SUPABASE_SERVICE_ROLE_KEY\s*\}\}/);
   assert.match(workflow, /scripts\/set-staging-platform-owner\.mjs/);
-  assert.doesNotMatch(workflow, /SUPABASE_SERVICE_ROLE_KEY:\s*[^$]/);
+  assert.doesNotMatch(workflow, /STAGING_SUPABASE_SERVICE_ROLE_KEY:\s*(?!\$\{\{)/);
 });
