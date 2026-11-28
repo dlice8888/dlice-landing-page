@@ -3,7 +3,7 @@ const fail=(code,message)=>{throw Object.assign(new Error(message),{code});};
 const req=(v,k)=>{if(typeof v!=="string"||!v.trim())fail("POS_PAYMENT_INPUT_REQUIRED",k);return v.trim();};
 const amount=(v,k)=>{if(!Number.isSafeInteger(v)||v<=0)fail("POS_PAYMENT_AMOUNT_INVALID",k);return v;};
 const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("POS_PAYMENT_ADAPTER_REQUIRED",k);return d[k];};
-const METHODS=new Set(["cash","qris","bank_transfer","card","split"]);
+const METHODS=new Set(["cash","qris","bank_transfer","split"]);
 export async function createPosPaymentIntent(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
   saleId:req(input?.saleId,"saleId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),paymentMethod:input.paymentMethod,providerId:input.providerId??null};
