@@ -45,6 +45,8 @@ Deno.serve(async (req: Request) => {
   let body: Record<string, unknown> = {};
   let uploadFile: File | null = null;
   let isMultipart = false;
+  const requestBytes = Number(req.headers.get("content-length") ?? "0");
+  if (requestBytes > 8 * 1024 * 1024 + 64 * 1024) return fail("Payload terlalu besar.", 413, origin);
   try {
     const contentType = req.headers.get("content-type") ?? "";
     if (contentType.includes("multipart/form-data")) {
@@ -89,6 +91,11 @@ Deno.serve(async (req: Request) => {
       if (!["branch_incident", "branch_compliance", "branch_maintenance"].includes(purpose)) return fail("Tujuan bukti tidak valid.", 422, origin);
       const allowedMime = new Set(["image/jpeg", "image/png", "application/pdf"]);
       if (!allowedMime.has(uploadFile.type) || uploadFile.size < 1 || uploadFile.size > 8 * 1024 * 1024) return fail("File harus JPG, PNG, atau PDF maksimal 8 MB.", 422, origin);
+      const header = new Uint8Array(await uploadFile.slice(0, 8).arrayBuffer());
+      const isJpeg = header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff;
+      const isPng = header.length === 8 && header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47 && header[4] === 0x0d && header[5] === 0x0a && header[6] === 0x1a && header[7] === 0x0a;
+      const isPdf = new TextDecoder().decode(header.slice(0, 5)) === "%PDF-";
+      if (!(uploadFile.type === "image/jpeg" && isJpeg) && !(uploadFile.type === "image/png" && isPng) && !(uploadFile.type === "application/pdf" && isPdf)) return fail("Isi file tidak sesuai dengan MIME type.", 422, origin);
       const extension = uploadFile.type === "image/jpeg" ? "jpg" : uploadFile.type === "image/png" ? "png" : "pdf";
       const path = `${tenantId}/${branchId}/${actorId}/${crypto.randomUUID()}.${extension}`;
       // Upload only after server-side Auth + tenant membership + branch assignment checks.
