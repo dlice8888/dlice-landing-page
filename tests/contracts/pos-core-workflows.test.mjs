@@ -51,6 +51,7 @@ test("refund requires branch match, remaining paid balance, reason and separatio
  assert.equal(validateRefundRequest(input).amount_idr,3000);
  assert.throws(()=>validateRefundRequest({...input,approvedBy:"u1"}),/refund_self_approval_forbidden/);
  assert.throws(()=>validateRefundRequest({...input,refundAmountIdr:9000}),/refund_exceeds_remaining_paid_amount/);
+ assert.throws(()=>validateRefundRequest({...input,returnItems:[{saleItemId:"i1",quantity:1,restock:true},{saleItemId:"i1",quantity:1,restock:true}]}),/return_item_duplicate/);
  assert.throws(()=>assertRefundProcessable({status:"approved",idempotencyKey:"short",approvalRequired:true,approved:true,actorUserId:"u2",requestedBy:"u1"}),/refund_idempotency_key_required/);
 });
 test("order, payment and fulfillment state transitions are independent and versioned",()=>{
