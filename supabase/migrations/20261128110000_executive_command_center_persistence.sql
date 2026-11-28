@@ -267,6 +267,13 @@ begin
   get diagnostics v_inserted = row_count;
   select * into v from public.executive_command_center_snapshots
     where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
+  if v_inserted=0 and (
+    v.period_start is distinct from p_period_start or v.period_end is distinct from p_period_end
+    or v.formula_version is distinct from p_formula_version or v.totals is distinct from p_totals
+    or v.branch_facts is distinct from p_branch_facts or v.source_gaps is distinct from p_source_gaps
+  ) then
+    raise exception using errcode='23505',message='EXECUTIVE_SNAPSHOT_IDEMPOTENCY_KEY_REUSED';
+  end if;
   if v_inserted=1 then
     insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
     values(p_actor_user_id,'executive.command_center.snapshot_built','executive_command_center_snapshots',v.id::text,
@@ -305,7 +312,12 @@ begin
   end if;
   select * into v_prior from public.executive_approval_claim_events
    where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
-  if found then return jsonb_build_object('duplicate',true,'approval_id',v_prior.approval_id,'version',v_prior.version); end if;
+  if found then
+    if v_prior.approval_id is distinct from p_approval_id or v_prior.actor_user_id is distinct from p_actor_user_id then
+      raise exception using errcode='23505',message='EXECUTIVE_APPROVAL_IDEMPOTENCY_KEY_REUSED';
+    end if;
+    return jsonb_build_object('duplicate',true,'approval_id',v_prior.approval_id,'version',v_prior.version);
+  end if;
   select * into v from public.executive_approval_items
    where tenant_id=p_tenant_id and id=p_approval_id for update;
   if not found then raise exception using errcode='P0002',message='EXECUTIVE_APPROVAL_NOT_FOUND'; end if;
