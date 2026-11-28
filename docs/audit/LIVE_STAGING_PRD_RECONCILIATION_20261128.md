@@ -2,7 +2,7 @@
 **Audit date:** 28 November 2026 (Asia/Jakarta)  
 **Repository:** `dlice8888/dlice-landing-page`  
 **Code branch:** `staging`  
-**Vercel preview commit:** `5893589d22cce9a891ad065c808867db2f6a7e37`  
+**Vercel preview commit:** `243ca3e3237d9a233258fa56719325b860ccafdb`  
 **Supabase project:** `dlice-staging` (`higoadrzxnhzbbwhdbmh`, ACTIVE_HEALTHY, PostgreSQL 17.11)
 
 ## 1. Executive result
@@ -67,11 +67,11 @@ This is not a positive POS reconciliation. The six sales cannot be called reconc
 
 ## 4. Migration source/ledger drift discovered after PR #154
 
-PR #154 recorded a parity checkpoint of 72 source migration files / 72 applied versions. A fresh live Supabase read on 2026-11-28 now returns **73 applied migration versions**. The additional ledger entry is version `20261128083515`, name `revoke_service_role_receipt_trigger_execute`. The corresponding migration source is part of open PR #156, which is still unmerged, and the file is not present on the `staging` branch. The live ACL query confirms that `prevent_pos_sale_receipt_mutation()` is non-executable by anon, authenticated and service_role, so the live privilege result is hardened; however, source-to-database migration parity is currently **72 source files vs 73 applied versions** until the exact migration is merged/reconciled. Do not reapply the DDL or create a duplicate migration. Resolve the source-history mismatch in a forward-only, reviewed source change and re-check the exact version/name mapping.
+PR #154 recorded an earlier parity checkpoint of 72 source migration files / 72 applied versions. PR #156 was subsequently squash-merged into `staging` as commit `243ca3e3237d9a233258fa56719325b860ccafdb`. The merged source file is `20261128083515_revoke_service_role_receipt_trigger_execute.sql`, matching the live ledger version `20261128083515` and name `revoke_service_role_receipt_trigger_execute`. A fresh source listing now contains **73 migration files** and the live Supabase ledger contains **73 applied versions**. The ACL was independently queried after merge: `anon`, `authenticated`, and `service_role` cannot directly execute `public.prevent_pos_sale_receipt_mutation()`; `postgres` retains execution, and the immutable receipt trigger remains attached. The migration was already applied to staging before the source merge, so **no DDL was re-applied**. Source/ledger count and the final migration version/name now align; continue exact per-version parity checks as part of release validation.
 
 ## 4. Vercel evidence
 
-The latest staging Preview deployment is READY at commit `5893589d22cce9a891ad065c808867db2f6a7e37` (message: migration filename alignment). READY establishes build/deployment success only; it does not establish runtime workflow acceptance. No production deployment or release action is authorized by this audit.
+The latest staging Preview deployment is READY at commit `243ca3e3237d9a233258fa56719325b860ccafdb` (PR #156 receipt-trigger ACL source merge). READY establishes build/deployment success only; it does not establish runtime workflow acceptance. No production deployment or release action is authorized by this audit.
 
 ## 5. Supabase Advisor findings
 
@@ -207,7 +207,7 @@ The latest staging Preview deployment is READY at commit `5893589d22cce9a891ad06
 - Scope all implementation and validation mutations to `dlice-staging`.
 - Production remains read-only.
 - Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
-- No auto-merge, no force-push, no release, and no production changes.
+- No automatic merge, no force-push, no release, and no production changes. The manually authorized staging-only merge of PR #156 was completed after disposable migration replay and ACL verification.
 - Do not apply further staging migrations or run business-data mutation E2E until the final validation batch is explicitly authorized; use disposable replay for schema/test iteration first.
 - This document is an audit reconciliation. It does not mark any feature DONE or claim unrun tests as PASS.
 
@@ -216,4 +216,4 @@ The latest staging Preview deployment is READY at commit `5893589d22cce9a891ad06
 - Canonical feature ledger: `docs/audit/PRD_FEATURE_EVIDENCE_LEDGER_20261126.json` on `staging`.
 - Feature matrix: `docs/audit/FNB_OS_IMPLEMENTATION_MATRIX.json` on `staging`.
 - Live Supabase project catalog, migration history, RLS/function privilege queries and Advisor results captured 2026-11-28.
-- Vercel staging Preview deployment metadata for commit `5893589d22cce9a891ad065c808867db2f6a7e37`.
+- Vercel staging Preview deployment metadata for commit `243ca3e3237d9a233258fa56719325b860ccafdb`.
