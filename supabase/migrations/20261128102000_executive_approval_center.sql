@@ -213,8 +213,14 @@ begin
   if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_REQUIRED';end if;
   select role into v_delegator_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=v_delegator and status='active';
  end if;
- v_limit:=case when coalesce(v_delegator_role,v_role)='tenant_owner' then 9223372036854775807
-  when coalesce((select permissions->>'approval_limit_idr' from public.tenant_memberships where tenant_id=p_tenant_id and user_id=coalesce(v_delegator,p_actor_user_id)),'') ~ '^[0-9]+
+ v_limit:=case
+  when coalesce(v_delegator_role,v_role)='tenant_owner' then 9223372036854775807::bigint
+  else coalesce((
+   select case when coalesce(tm.permissions->>'approval_limit_idr','') ~ '^[0-9]+$'
+    then (tm.permissions->>'approval_limit_idr')::bigint else 0::bigint end
+   from public.tenant_memberships tm where tm.tenant_id=p_tenant_id and tm.user_id=coalesce(v_delegator,p_actor_user_id)
+  ),0::bigint)
+ end;
  if a.amount_idr>v_limit then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT';end if;
  if a.status='claimed' and a.claimed_by<>p_actor_user_id and a.claim_expires_at>now() then raise exception using errcode='55P03',message='APPROVAL_CLAIMED_BY_OTHER';end if;
  update public.executive_approval_requests set status='claimed',claimed_by=p_actor_user_id,claimed_at=now(),
