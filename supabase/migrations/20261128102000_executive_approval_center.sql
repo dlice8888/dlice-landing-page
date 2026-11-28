@@ -194,7 +194,7 @@ grant execute on function public.executive_approval_actor_role(uuid,uuid,uuid,te
 create or replace function public.list_pending_approvals(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_categories text[] default null
 ) returns jsonb language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_rows jsonb;v_role text;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
