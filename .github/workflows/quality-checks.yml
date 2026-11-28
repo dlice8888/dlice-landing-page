@@ -203,6 +203,17 @@ jobs:
         run: node --test tests/contracts/blocked-acceptance-remediation-workflows.test.mjs
       - name: Run Menu Recipe nested BOM and unit economics contracts
         run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
+      - name: Check catalog pricing and recipe lifecycle module syntax
+        run: >-
+          node --check src/product-catalog-admin.mjs
+          && node --check src/branch-product-availability.mjs
+          && node --check src/pricing-policy-engine.mjs
+          && node --check src/recipe-bom-editor.mjs
+          && node --check src/recipe-version-lifecycle.mjs
+          && node --check src/menu-stock-availability.mjs
+          && node --check src/recipe-change-workflow.mjs
+      - name: Run catalog pricing and recipe lifecycle acceptance contracts
+        run: node --test tests/contracts/menu-recipe-engineering-workflows.test.mjs
       - name: Run Procurement supplier pricing demand and return contracts
         run: node --test tests/contracts/procurement-supplier-workflows.test.mjs
       - name: Run atomic admin permission audit contract tests
