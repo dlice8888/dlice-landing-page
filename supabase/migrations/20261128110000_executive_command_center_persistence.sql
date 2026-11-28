@@ -209,7 +209,7 @@ create or replace function public.executive_persist_command_center_snapshot(
 ) returns jsonb
 language plpgsql security definer set search_path=''
 as $$
-declare v public.executive_command_center_snapshots%rowtype;
+declare v public.executive_command_center_snapshots%rowtype; v_inserted integer;
 begin
   if not exists(
     select 1 from public.tenant_memberships m
@@ -237,9 +237,16 @@ begin
     p_tenant_id,p_period_start,p_period_end,p_as_of,p_formula_version,p_expected_branch_count,
     p_active_branch_count,p_reconciled_branch_count,p_status,p_totals,p_branch_facts,p_source_gaps,p_idempotency_key,p_actor_user_id
   ) on conflict(tenant_id,idempotency_key) do nothing;
+  get diagnostics v_inserted = row_count;
   select * into v from public.executive_command_center_snapshots
     where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
-  return jsonb_build_object('id',v.id,'status',v.status,'duplicate',v.created_at<>transaction_timestamp());
+  if v_inserted=1 then
+    insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+    values(p_actor_user_id,'executive.command_center.snapshot_built','executive_command_center_snapshots',v.id::text,
+      jsonb_build_object('tenant_id',p_tenant_id,'period_start',p_period_start,'period_end',p_period_end,
+        'status',v.status,'formula_version',v.formula_version,'reconciled_branch_count',v.reconciled_branch_count));
+  end if;
+  return jsonb_build_object('id',v.id,'status',v.status,'duplicate',v_inserted=0);
 end $$;
 revoke all on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) from public,anon,authenticated;
 grant execute on function public.executive_persist_command_center_snapshot(uuid,uuid,date,date,timestamptz,integer,integer,integer,integer,text,jsonb,jsonb,jsonb,text) to service_role;
