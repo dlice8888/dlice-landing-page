@@ -32,7 +32,7 @@ const tables = new Set(draftFiles.flatMap(name =>
 test("all eight domain SQL drafts are represented by official timestamped migrations",()=>{
  const files=new Set(readdirSync(migrationDir));
  for(const name of domainMigrations)assert.ok(files.has(name),name+" is missing");
- assert.ok(files.has("20261124134101_pos_checkout_lifecycle.sql"));
+ assert.ok(files.has("20261124134101_20261124193500_pos_checkout_lifecycle.sql"));
  assert.ok(files.has("20261124134222_pos_checkout_fk_supporting_indexes.sql"));
  assert.equal(tables.size,71);
 });
