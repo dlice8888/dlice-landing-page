@@ -246,8 +246,12 @@ begin
    and (ba.ends_on is null or ba.ends_on>=current_date)) then
    raise exception 'BRANCH_OPS_ASSIGNEE_INVALID' using errcode='23514';
  end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_idempotency_key,0));
  select * into v_row from public.branch_ops_tasks where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','taskId',v_row.id); end if;
+ if found then
+   if v_row.branch_id<>p_branch_id then raise exception 'BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' using errcode='42501'; end if;
+   return jsonb_build_object('status','duplicate','taskId',v_row.id);
+ end if;
  insert into public.branch_ops_tasks(tenant_id,branch_id,title,description,due_at,assignee_user_id,priority,source_type,source_id,idempotency_key,created_by)
  values(p_tenant_id,p_branch_id,p_title,p_description,p_due_at,p_assignee_id,p_priority,coalesce(p_source_type,'manual'),p_source_id,p_idempotency_key,p_actor_id)
  returning * into v_row;
@@ -263,8 +267,12 @@ create or replace function public.branch_ops_record_incident(
 declare v_incident public.branch_ops_incidents; v_task public.branch_ops_tasks; v_count integer;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_idempotency_key,0));
  select * into v_incident from public.branch_ops_incidents where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','incidentId',v_incident.id,'escalationTaskId',v_incident.escalation_task_id); end if;
+ if found then
+   if v_incident.branch_id<>p_branch_id then raise exception 'BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' using errcode='42501'; end if;
+   return jsonb_build_object('status','duplicate','incidentId',v_incident.id,'escalationTaskId',v_incident.escalation_task_id);
+ end if;
  if p_severity='critical' and coalesce(cardinality(p_evidence_asset_ids),0)=0 then raise exception 'BRANCH_INCIDENT_EVIDENCE_REQUIRED'; end if;
  select count(*) into v_count from public.branch_ops_evidence_assets e
  where e.tenant_id=p_tenant_id and e.branch_id=p_branch_id and e.owner_user_id=p_actor_id
@@ -306,8 +314,12 @@ begin
       and e.id=any(p_evidence_asset_ids))<>cardinality(p_evidence_asset_ids) then
    raise exception 'BRANCH_MAINTENANCE_EVIDENCE_UNVERIFIED' using errcode='42501';
  end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_idempotency_key,0));
  select * into v_row from public.branch_ops_work_orders where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','workOrderId',v_row.id); end if;
+ if found then
+   if v_row.branch_id<>p_branch_id then raise exception 'BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' using errcode='42501'; end if;
+   return jsonb_build_object('status','duplicate','workOrderId',v_row.id);
+ end if;
  insert into public.branch_ops_work_orders(tenant_id,branch_id,equipment_id,maintenance_type,scheduled_at,description,assigned_to,evidence_asset_ids,idempotency_key,created_by)
  values(p_tenant_id,p_branch_id,p_equipment_id,p_maintenance_type,p_scheduled_at,p_description,p_assigned_to,coalesce(p_evidence_asset_ids,'{}'::uuid[]),p_idempotency_key,p_actor_id)
  returning * into v_row;
@@ -344,8 +356,12 @@ create or replace function public.branch_ops_publish_compliance_snapshot(
 declare v_count integer; v_pass integer; v_weight numeric; v_score numeric; v_ids uuid[]; v_source_revision text; v_row public.branch_ops_compliance_snapshots;
 begin
  perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_idempotency_key,0));
  select * into v_row from public.branch_ops_compliance_snapshots where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
- if found then return jsonb_build_object('status','duplicate','snapshotId',v_row.id,'score',v_row.score); end if;
+ if found then
+   if v_row.branch_id<>p_branch_id then raise exception 'BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' using errcode='42501'; end if;
+   return jsonb_build_object('status','duplicate','snapshotId',v_row.id,'score',v_row.score);
+ end if;
  select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),
    array_agg(evidence_asset_id),
    md5(coalesce(string_agg(concat_ws('|',id::text,check_key,title,weight::text,result,status,
