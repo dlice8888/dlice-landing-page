@@ -1,7 +1,7 @@
 /** Cancellation and customer-history authorization/compensation contract. */
 export function validateOrderCancellation({order,actor,customerId,reason,alreadyCancelled=false,refundRequired=false,refundIdempotencyKey,compensationAdaptersReady=false}){
  if(!order?.id||!actor?.user_id)throw new Error("ORDER_CANCEL_CONTEXT_REQUIRED");
- if(actor.kind==="customer"&&order.customer_id!==customerId)throw new Error("ORDER_HISTORY_CUSTOMER_FORBIDDEN");
+ if(actor.kind==="customer"&&(actor.user_id!==customerId||order.customer_id!==actor.user_id))throw new Error("ORDER_HISTORY_CUSTOMER_FORBIDDEN");
  if(actor.kind==="staff"&&!actor.allowed_branch_ids?.includes(order.branch_id))throw new Error("ORDER_CANCEL_BRANCH_FORBIDDEN");
  if(alreadyCancelled||order.order_status==="cancelled")throw new Error("ORDER_ALREADY_CANCELLED");
  if(!["received","confirmed","preparing","ready"].includes(order.order_status))throw new Error("ORDER_CANCEL_STATE_FORBIDDEN");
