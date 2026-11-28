@@ -158,7 +158,7 @@ begin
  select * into v_branch from public.branches where id=p_branch_id and tenant_id=p_tenant_id for share;
  select * into v_shift from public.pos_shifts where id=p_shift_id and branch_id=p_branch_id for update;
  if not found or v_shift.status<>'open' then raise exception 'pos_shift_not_open'; end if;
- select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
+ select (ap.role='owner' or exists(select 1 from public.tenant_memberships tm where tm.user_id=p_actor_user_id and tm.tenant_id=p_tenant_id and tm.status='active' and tm.role='tenant_owner') or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
   where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active' and jp.code in ('branch_manager','supervisor','finance_manager')))
  into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
  if v_shift.opened_by<>p_actor_user_id and not coalesce(v_supervisor,false) then raise exception using errcode='42501',message='pos_shift_actor_scope_denied'; end if;
@@ -210,7 +210,7 @@ begin
  if not found then raise exception using errcode='42501',message='pos_branch_access_denied';end if;
  select * into v_shift from public.pos_shifts where id=p_shift_id and branch_id=p_branch_id and status='open' for update;
  if not found then raise exception 'open_shift_required'; end if;
- select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
+ select (ap.role='owner' or exists(select 1 from public.tenant_memberships tm where tm.user_id=p_actor_user_id and tm.tenant_id=p_tenant_id and tm.status='active' and tm.role='tenant_owner') or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
   where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active' and jp.code in ('branch_manager','supervisor','finance_manager')))
  into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
  if v_shift.opened_by<>p_actor_user_id and not coalesce(v_supervisor,false) then raise exception using errcode='42501',message='pos_shift_actor_scope_denied'; end if;
