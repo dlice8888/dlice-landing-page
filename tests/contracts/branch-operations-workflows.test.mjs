@@ -58,6 +58,15 @@ test("critical incident requires evidence and creates escalation task atomically
   let escalated = false;
   const deps = common({
     findBranchIncidentByIdempotencyKey: async () => null,
+    verifyPrivateEvidenceOwnership: async (_tx, proof) => {
+      assert.equal(proof.tenantId, "tenant-a");
+      assert.equal(proof.branchId, "branch-a");
+      assert.equal(proof.purpose, "branch_incident");
+      assert.equal(proof.requirePrivate, true);
+      assert.equal(proof.requireRetained, true);
+      assert.deepEqual(proof.references, ["private://incident/photo"]);
+      return true;
+    },
     persistBranchIncident: async (tx, row) => { assert.ok(tx.transaction); assert.deepEqual(row.evidenceReferences, ["private://incident/photo"]); return { id: "incident-a" }; },
     createIncidentEscalationTask: async (_tx, row) => { escalated = true; assert.equal(row.priority, "critical"); return { id: "task-escalation" }; },
   });
@@ -65,6 +74,23 @@ test("critical incident requires evidence and creates escalation task atomically
     evidenceReferences: ["private://incident/photo"] }, deps);
   assert.deepEqual(result, { status: "recorded", incidentId: "incident-a", escalationTaskId: "task-escalation" });
   assert.equal(escalated, true);
+});
+
+test("incident evidence must be proven private and owned by the same tenant/branch before persistence", async () => {
+  let persisted = false;
+  const deps = common({
+    findBranchIncidentByIdempotencyKey: async () => null,
+    verifyPrivateEvidenceOwnership: async (_tx, proof) => {
+      assert.equal(proof.tenantId, "tenant-a");
+      assert.equal(proof.branchId, "branch-a");
+      return false;
+    },
+    persistBranchIncident: async () => { persisted = true; return { id: "incident-unverified" }; },
+  });
+  await assert.rejects(recordBranchIncident({ ...base, category: "safety", description: "Hazard",
+    severity: "critical", evidenceReferences: ["private://other-tenant/object"] }, deps),
+    { code: "BRANCH_EVIDENCE_OWNERSHIP_UNVERIFIED" });
+  assert.equal(persisted, false);
 });
 
 test("critical incident fails closed without evidence", async () => {
@@ -106,7 +132,18 @@ test("compliance snapshot publishes only complete approved reconciled evidence",
     findBranchComplianceSnapshotByIdempotencyKey: async () => null,
     loadBranchComplianceEvidence: async () => ({ approved: true, reconciled: true, requiredChecks: 2,
       completedChecks: 2, score: 96, evidenceReferences: ["private://1", "private://2"], sourceRevision: "branch-a:2026-11-30:v3" }),
-    persistBranchComplianceSnapshot: async (_tx, row) => { assert.equal(row.score, 96); return { id: "snapshot-a" }; },
+    verifyPrivateEvidenceOwnership: async (_tx, proof) => {
+      assert.equal(proof.purpose, "branch_compliance");
+      assert.equal(proof.tenantId, "tenant-a");
+      assert.equal(proof.branchId, "branch-a");
+      assert.deepEqual(proof.references, ["private://1", "private://2"]);
+      return true;
+    },
+    persistBranchComplianceSnapshot: async (_tx, row) => {
+      assert.equal(row.score, 96);
+      assert.deepEqual(row.evidenceReferences, ["private://1", "private://2"]);
+      return { id: "snapshot-a" };
+    },
   });
   const result = await publishBranchComplianceScore({ ...base, periodStart: "2026-11-01", periodEnd: "2026-11-30" }, deps);
   assert.deepEqual(result, { status: "published", snapshotId: "snapshot-a", score: 96 });
