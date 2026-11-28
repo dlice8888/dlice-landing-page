@@ -35,6 +35,8 @@ test("T01 persisted read model is tenant-bound, versioned and idempotent",()=>{
  assert.match(migration,/create table if not exists public\.executive_command_center_snapshots/i);
  assert.match(migration,/formula_version integer not null/i);
  assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
+ assert.match(migration,/check\(expected_branch_count >= active_branch_count\)/i);
+ assert.match(migration,/v\.reconciled_branch_count is distinct from p_reconciled_branch_count/i);
  assert.match(migration,/executive_persist_command_center_snapshot/i);
  assert.match(migration,/EXECUTIVE_SNAPSHOT_IDEMPOTENCY_KEY_REUSED/i);
  assert.match(migration,/EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED/i);
