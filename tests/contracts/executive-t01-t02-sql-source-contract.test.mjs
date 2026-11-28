@@ -94,3 +94,9 @@ test("T02 delegation cannot exceed policy amount or category", () => {
   assert.match(sql, /APPROVAL_DELEGATION_POLICY_LIMIT_EXCEEDED/);
   assert.match(sql, /p\.tenant_id=a\.tenant_id and p\.active/i);
 });
+
+test("T02 decision history is append-only and idempotent replay is actor-bound", () => {
+  assert.match(sql, /revoke update,delete on public\.approval_claim_events,public\.approval_decisions from service_role/i);
+  assert.match(sql, /APPROVAL_IDEMPOTENCY_ACTOR_MISMATCH/);
+  assert.match(sql, /v_existing_decision\.actor_user_id<>p_actor_user_id/);
+});
