@@ -1012,8 +1012,8 @@ begin
  end if;
 
  -- Cash POS is reconciled by the approved shift cash count. Bank/QRIS POS
- -- must match provider settlement items; split tender remains blocked until
- -- its cash/provider allocation is represented explicitly.
+ -- must match provider settlement items. Split tender reconciles the cash
+ -- portion to the shift drawer and each non-cash method to provider settlement.
  if p_source_type='pos_sale' and v_payment_method='cash' then
   v_settled:=v_paid;
   v_settlement_status:='cash_reconciled';
