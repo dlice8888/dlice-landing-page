@@ -1,0 +1,234 @@
+# D’Lice FnB OS — Total PRD Audit & Remediation Update
+
+**Audit timestamp:** 2026-11-28 (Asia/Jakarta)  
+**Repository:** dlice8888/dlice-landing-page  
+**Candidate PR:** #153 — OPEN / DRAFT / NOT MERGED  
+**Candidate branch:** feat/branch-ops-evidence-workflows-20261127  
+**Candidate head at audit:** 3e8314fb232168981d16969051ba77176f09b39c  
+**Supabase staging:** dlice-staging / higoadrzxnhzbbwhdbmh  
+**Vercel project:** dlice-landing-page
+
+## 1. Canonical status after the 2026-11-27 implementation-start batch
+
+| Status | Count | Interpretation |
+|---|---:|---|
+| PARTIAL | 188 | Implementation has started with traceable artifacts; not accepted end-to-end |
+| NOT VERIFIED | 0 | All 39 features from the user-provided baseline have implementation-start artifacts |
+| BLOCKED | 1 | D01-F09 Owner drill-down awaits official Auth Admin + allowlist proof |
+| DONE | 0 | No feature has passed all six acceptance dimensions |
+| **TOTAL** | **189** | **18 domains** |
+
+Coverage PARTIAL is 188/189 = 99.47%. This is implementation-start coverage, not weighted completion or production readiness.
+
+## 2. Updated 18-domain status matrix
+
+| Domain | Total | Partial | Not verified | Blocked |
+|---|---:|---:|---:|---:|
+| Executive Command Center | 10 | 9 | 0 | 1 |
+| POS & Checkout | 13 | 13 | 0 | 0 |
+| Order Management | 10 | 10 | 0 | 0 |
+| Kitchen & Production | 10 | 10 | 0 | 0 |
+| Menu, Recipe & Product Engineering | 11 | 11 | 0 | 0 |
+| Inventory & Warehouse | 12 | 12 | 0 | 0 |
+| Procurement & Supplier | 10 | 10 | 0 | 0 |
+| Branch Operations | 10 | 10 | 0 | 0 |
+| Delivery & Fulfillment | 8 | 8 | 0 | 0 |
+| CRM, Loyalty & Marketing | 9 | 9 | 0 | 0 |
+| Finance & Accounting | 12 | 12 | 0 | 0 |
+| HR & Workforce | 9 | 9 | 0 | 0 |
+| Franchise & Expansion | 8 | 8 | 0 | 0 |
+| BI & Analytics | 10 | 10 | 0 | 0 |
+| Admin, Identity & Access Control | 10 | 10 | 0 | 0 |
+| SaaS Tenant Management | 8 | 8 | 0 | 0 |
+| Integrations & Automation | 9 | 9 | 0 | 0 |
+| Quality, Compliance & Security | 20 | 20 | 0 | 0 |
+| **TOTAL** | **189** | **188** | **0** | **1** |
+
+## 3. Weighted progress and evidence quality
+
+- 50 PARTIAL features have numeric weighted scores.
+- 138 PARTIAL features remain UNSCORED pending feature-level six-dimension evidence decomposition.
+- The 43 newest implementation-start features are reported at 33–38%.
+- The 50 scored features have an aggregate average near 40%; this is not the average of all 188 PARTIAL features and must not be presented as overall completion.
+- Weights: Code/UI 20%, Database 20%, Authorization 15%, Automated tests 15%, Workflow E2E 20%, Reconciliation/observability 10%.
+- DONE requires 100%, with all six dimensions PASS and no blocked/skipped/unrun acceptance.
+
+## 4. Fresh live-system evidence
+
+### GitHub
+
+- Repository exists and is accessible: dlice8888/dlice-landing-page.
+- PR #153 is OPEN, DRAFT, not merged; head SHA: 3e8314fb232168981d16969051ba77176f09b39c.
+- PR #153 includes the updated 189-feature matrix, evidence ledger, audit report, implementation notes, workflow source modules and contract tests.
+- Exact-head workflow lookup returned successful runs for Free quality checks and Free CRM disposable database replay.
+- PR #152 remains OPEN/DRAFT/not merged. Its PR description reports disposable replay, 17 pgTAP files and 1,547 assertions PASS; this is candidate evidence, not staging migration evidence.
+
+### Supabase staging
+
+- Project dlice-staging is ACTIVE_HEALTHY; PostgreSQL 17.11.
+- 68 public base tables were listed; all 68 have RLS enabled.
+- Read-only aggregate: 0 public tables matching the candidate domain extension prefixes/names (crm_, hr_, delivery_, franchise_, bi_, saas_, executive_, supplier_tenant_links, procurement_supplier_invoices).
+- 63 applied migrations; latest version 20261124134222.
+- 49 public functions.
+- Edge Function dlice-orders is ACTIVE, version 73, verify_jwt=false. Its source manually validates bearer tokens with Auth getUser, checks active admin profile, and requires both UUID allowlist membership and app_metadata.platform_owner === true for Owner elevation. This manual path still requires positive/negative runtime tests across all protected actions.
+- Read-only Auth aggregate: 0 users with raw_app_meta_data.platform_owner=true; 0 users with any platform_owner claim. The allowlist secret value cannot be independently inspected through this read-only evidence. D01-F09 remains BLOCKED.
+- Security Advisor: one WARN — leaked password protection disabled.
+- Performance Advisor: 82 INFO findings for unused indexes. These are candidates for workload review, not automatic deletion instructions.
+
+### Vercel
+
+- Project dlice-landing-page is connected to the expected GitHub repository.
+- Recent Preview deployments are READY, but the newest observed deployment SHA is 7322d765c6772469783ab98c7d0cd8fbae174fd8, not PR #153 head 3e8314fb232168981d16969051ba77176f09b39c.
+- No Preview for the exact PR #153 head was found in the branch-filtered recent deployment results. READY previews for older commits do not prove current business workflows.
+
+## 5. Existing POS staging reconciliation evidence and gaps
+
+Previously audited staging snapshot:
+- 6 POS sales totaling Rp600; 6 sale-item rows totaling Rp600.
+- Tender allocation: 0 rows / Rp0.
+- Immutable receipts: 0.
+- KDS tickets: 6, but lifecycle not proven.
+- Stock movements: 26, not reconciled per sale/order/recipe/item/quantity.
+- Stock transfers: 0.
+- Closed shifts: 7; cash expected Rp600, counted Rp600, variance Rp0, but only aggregate evidence.
+
+Therefore POS E2E is not accepted. Required: per-sale tender split, payment status, cash drawer delta, shift close, stock movement and recipe consumption, KDS state transitions, immutable receipt snapshot and audit-event linkage. Add split tender, duplicate/idempotent checkout, held/resume, offline replay, failed payment, refund/void and network-fault scenarios.
+
+## 6. Detailed remaining gap register
+
+### D01 Executive Command Center — D01-F09 BLOCKED
+- Owner drill-down remains blocked until the correct Owner account has app_metadata.platform_owner as a JSON boolean true and the same user UUID is present in the server-side DLICE_PLATFORM_OWNER_USER_IDS allowlist.
+- Use official Supabase Auth Admin only; preserve other metadata; no SQL Auth metadata mutation.
+- Then prove company → region → branch → shift → transaction drill-down with tenant/branch authorization and source reconciliation.
+- Remaining work for other Executive features: canonical POS/Finance/Inventory/KDS source collectors, KPI formula/version and business-date cutoffs, branch rankings, alert assignment/resolution/audit lifecycle, schedules and 150-branch completeness.
+
+### D02 POS & Checkout
+- Link sale, sale items, tender allocations, payment provider references, cash drawer and shift close atomically.
+- Add split tender, idempotency, offline sync, held/resume, payment failure compensation, refund/void and device/browser E2E.
+- Persist immutable receipt snapshots and verify receipt-to-sale-to-tender hashes/references.
+- Reconcile every sale against stock movement, recipe version/consumption, KDS ticket lifecycle and audit events.
+
+### D03 Order Management
+- Prove external channel ingestion with signed webhook, replay protection, idempotency and tenant/branch mapping.
+- Link order edits/cancellation/refunds to POS, capacity reservation, KDS, inventory and Finance.
+- Verify SLA/ETA calculation from authoritative event timestamps and complete transition history.
+
+### D04 Kitchen & Production
+- Prove station routing and ticket transitions from accepted through prepared/ready/served/cancelled.
+- Link KDS ticket items to immutable POS/order item and recipe version.
+- Reconcile theoretical BOM consumption against actual production consumption and stock movements.
+- Enforce allergen controls, temperature/shelf-life quarantine and evidence retention.
+
+### D05 Menu, Recipe & Product Engineering
+- Convert draft BOM/recipe behavior into canonical schema/RPC and UI.
+- Enforce effective-dated immutable recipe versions, UOM conversions, yield/prep loss, serving cost and allergen declarations.
+- Verify POS and production consume the exact approved recipe version.
+- Reconcile ingredient cost and actual stock consumption.
+
+### D06 Inventory & Warehouse
+- Prove FIFO/FEFO lot allocation, expiry and historical valuation using actual movements.
+- Complete transfer lifecycle Draft → Approved → Picked → Shipped → Received → Reconciled with independent approval and branch isolation.
+- Link production/POS/order consumption, waste, stock counts and valuation to immutable movement references.
+- Validate concurrent reservations and idempotent movement posting.
+
+### D07 Procurement & Supplier
+- Enforce tenant-owned supplier relationship and supplier approval; no accidental cross-tenant supplier visibility.
+- Complete requisition → approval → PO → GRN/inspection → invoice three-way match.
+- Link returns/credit notes, AP journal, supplier payment/settlement and supplier scorecard.
+- Reconcile PO, accepted quantities, invoice, AP ledger, bank settlement and Finance journal.
+
+### D08 Branch Operations
+- Current source modules define task, incident, maintenance and compliance workflows with tenant transaction, authorization, idempotency and audit adapter contracts.
+- Concrete database adapters, canonical schema/RPC, private Storage ownership verification, UI routes and authenticated staging E2E remain unproven.
+- Verify same-branch assignee and equipment, critical-incident escalation, evidence object ownership/retention, independent compliance approval and immutable compliance snapshots.
+- Complete opening/closing checklist, handover, escalation, maintenance lifecycle, incident resolution and audit trail.
+
+### D09 Delivery & Fulfillment
+- Validate address and quote through an approved provider contract.
+- Persist booking/provider reference/tracking with transactional outbox and idempotent worker.
+- Verify webhook signature over raw body, timestamp, replay window and duplicate event.
+- Prove private proof-of-delivery Storage ownership, MIME/size/hash and tenant/branch access.
+- Add retry/backoff/dead-letter, cancellation/compensation, customer notification, COD and Finance fee/subsidy/courier-cost reconciliation.
+- Do not claim Biteship is live without approved credentials and contract tests.
+
+### D10 CRM, Loyalty & Marketing
+- Canonical customer identity and deduplication across POS and online orders.
+- Append-only per-purpose/per-channel consent with revocation before campaign dispatch.
+- Earn points only from reconciled net sales after settlement/cash close and Finance reconciliation.
+- Atomic idempotent redemption, nonnegative balance, lot expiry/FIFO and one-time reversal.
+- Campaign provider contract, signed receipt, unsubscribe, retries/dead-letter, attribution/ROI, referral and support SLA.
+- Customer LTV and segments must use deduplicated, reconciled transactions.
+
+### D11 Finance & Accounting
+- Canonical balanced journal entries with open fiscal period, source references and independent approval.
+- Reconcile sale/tender, refunds, settlement/provider fees, bank statement and cash drawer per transaction.
+- HR payroll must post to Finance only from approved immutable payroll snapshots.
+- Validate intercompany eliminations, branch budgets, revenue-vs-cash and period close/reopen audit.
+- Provider payouts remain unaccepted until signed callbacks and bank reconciliation pass.
+
+### D12 HR & Workforce
+- Employee lifecycle, effective-dated position/branch transfer, attendance, timesheet, scheduling, leave, overtime and offboarding.
+- Compensation policies must be approved and effective-dated; statutory rates must come from verified policy sources.
+- Payroll recalculation from approved snapshots, independent approval, idempotency and balanced Finance journal.
+- Provider payout/beneficiary contract, signed callback and bank reconciliation remain required.
+- Complete recruitment, onboarding, training certification and performance review workflow.
+
+### D13 Franchise & Expansion
+- Application, due diligence, site feasibility, agreement versioning, independent approval and signature evidence.
+- Atomic tenant/branch provisioning with server-resolved tenant identity.
+- Opening activation only after every required evidence gate passes with independent verifier.
+- Royalty calculation only from reconciled eligible net sales, followed by invoice/payment/settlement.
+- Ongoing compliance audit, corrective action and franchise performance reporting.
+
+### D14 BI & Analytics
+- Each KPI requires owner, unit, formula version, source entities, freshness SLA and lineage.
+- Source ingestion needs watermarks, expected/observed counts and reconciliation review.
+- Food cost links theoretical recipe usage to actual stock consumption; labor cost to approved payroll; waste to posted waste events.
+- Forecast accuracy, anomaly detection, exports, schedules and action-outcome loop.
+- 150-branch cohort benchmarks require active branch completeness and reconciled facts.
+
+### D15 Admin, Identity & Access Control
+- Complete action-by-action authorization inventory and positive/negative tests.
+- Validate Auth metadata, allowlist, role/membership intersection, branch assignment and session revocation.
+- Device/session review, permission-change audit, recovery and JIT support require independent approval and immutable audit.
+- No user_metadata authorization, service-role exposure or client-controlled tenant ID.
+
+### D16 SaaS Tenant Management
+- Versioned plan/entitlements/quotas, committed usage metering and invoice lifecycle.
+- Payment settlement only from verified provider callbacks; dunning, proration and reactivation guards.
+- Offboarding, legal hold, export/deletion executor and retention evidence.
+- Support access requires tenant-owner approval, least privilege, time bound and read-only JIT evidence.
+- Tenant isolation and API-wide enforcement must pass two-tenant A/B positive/negative E2E.
+
+### D17 Integrations & Automation
+- Provider-specific approved contracts, secret references/rotation and no credential disclosure.
+- Signed callbacks, durable outbox, retry/backoff/dead-letter and replay protection.
+- Health monitoring, authoritative alerts, catalog sync and import conflict resolution.
+- Prove each integration with provider sandbox and staging runtime, not mocks alone.
+
+### D18 Quality, Compliance & Security
+- Complete RLS, RPC ACL, Storage policy and Edge Function action authorization tests.
+- Backup/restore evidence must distinguish local disposable rehearsal from managed Supabase PITR and Auth/Storage recovery.
+- Verify 150-branch load, tenant A/B isolation, concurrency, latency and recovery objectives.
+- Accessibility, release pilot/rollback gates, audit retention, incident response and compliance evidence.
+- Review 82 unused-index INFO findings against actual query plans before any index removal; enable leaked-password protection through approved Auth configuration after impact review.
+
+## 7. Execution order
+
+1. Resolve Owner Auth/allowlist blocker using official Auth Admin and explicit Owner approval.
+2. Finish Branch Operations concrete adapter/schema/RPC/UI/evidence workflow work.
+3. Finish CRM/loyalty and HR/payroll integration to POS/Order/Refund/Settlement/Finance.
+4. Complete Delivery, Procurement, Franchise, BI, SaaS, Executive and Integration workflows.
+5. Reconcile POS, KDS, Inventory, Finance, immutable receipts and audit events.
+6. Update feature-level evidence scores after each batch; keep unscored values null rather than guessing.
+7. At the final validation stage only: exact-head CI, disposable migration replay, pgTAP/ACL/RLS/Storage, tenant A/B E2E, browser/device acceptance, provider tests, 150-branch load, merge review and approved staging migration.
+
+## 8. Guardrails
+
+- Staging/disposable only. Production read-only.
+- Keep TENANT_ISOLATION_RELEASED=false and PUBLIC_TENANT_ROUTING_RELEASED=false.
+- No auto-merge, force push, production deployment, production secret/environment/data change.
+- No SQL mutation of Auth metadata.
+- No service-role key in browser or logs.
+- No DONE based only on PR, source file, contract test, migration file, or READY Preview.
+- Migration candidate files are not evidence that staging schema has changed.
