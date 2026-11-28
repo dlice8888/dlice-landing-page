@@ -15,3 +15,9 @@ test("T02 migration persists inbox, delegation, expiry and atomic source transit
   assert.ok(sql.includes(token),"missing T02 contract: "+token);
  assert.ok(sql.includes("revoke all on function public.decide_approval")&&sql.includes("grant execute on function public.decide_approval")&&sql.includes("to service_role"));
 });
+
+test("T02 delegation approval and revocation fail closed when actor membership is absent",async()=>{
+ const sql=await read("20261128102000_executive_approval_center.sql");
+ assert.ok(sql.includes("v_role is distinct from 'tenant_owner'"));
+ assert.ok(sql.includes("v_row.delegator_user_id<>p_actor_user_id and v_role is distinct from 'tenant_owner'"));
+});
