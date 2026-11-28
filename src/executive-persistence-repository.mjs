@@ -35,8 +35,8 @@ export function createExecutivePersistenceRepository({serviceClient,tenantId,act
    },"claimApproval");
   },
   async enqueueApproval({branchId,sourceDomain,sourceEntity,sourceEntityId,requestedAction="approve_or_reject",requestPayload={},idempotencyKey,expiresAt=null}){
-   if(!["procurement","hr"].includes(sourceDomain)||
-      !((sourceDomain==="procurement"&&sourceEntity==="purchase_requisitions")||(sourceDomain==="hr"&&sourceEntity==="hr_leave_requests")))
+   if(!["procurement","hr","inventory"].includes(sourceDomain)||
+      !((sourceDomain==="procurement"&&sourceEntity==="purchase_requisitions")||(sourceDomain==="hr"&&sourceEntity==="hr_leave_requests")||(sourceDomain==="inventory"&&sourceEntity==="stock_transfers")))
      fail("EXEC_PERSIST_SOURCE_UNSUPPORTED","No verified source adapter exists for this domain/entity");
    if(!requestPayload||typeof requestPayload!=="object"||Array.isArray(requestPayload))
      fail("EXEC_PERSIST_REQUEST_PAYLOAD_INVALID","requestPayload must be an object");
