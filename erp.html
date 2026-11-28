@@ -253,7 +253,7 @@ async function loadExecutiveSalesMonitor(){
  if(!$('executiveSalesDate').value)$('executiveSalesDate').value=localDate();
  fillSelect('executiveSalesBranch',branches,'id',b=>b.code+' · '+b.name,'Semua cabang dalam scope');
  const selected=branches.find(b=>b.id===$('executiveSalesBranch').value);
- $('executiveSalesTimezone').textContent=selected?selected.timezone:'Timezone lokal masing-masing cabang';
+ $('executiveSalesTimezone').textContent=selected?selected.timezone:($('executiveSalesTimezoneFilter').value||'Timezone lokal masing-masing cabang');
  $('executiveSalesMetrics').innerHTML='';
  $('executiveSalesSources').innerHTML='';
  $('executiveSalesText').textContent='Mengambil transaksi dan refund dari sumber otoritatif…';
