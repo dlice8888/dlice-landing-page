@@ -18,7 +18,7 @@ test("approval can be claimed and history is scoped",async()=>{
 test("approved active delegation can satisfy role eligibility",async()=>{
  const delegatedActor={...actor,roles:[]};
  const delegatedDeps={...base,resolveApproverScope:async()=>delegatedActor,
-  resolveActiveDelegation:async()=>({valid:true,delegatorUserId:"manager",delegatorRole:"finance_approver"})};
+  resolveActiveDelegation:async(_tx,q)=>{assert.deepEqual(q.requiredRoles,["finance_approver"]);assert.equal("delegatorUserIds" in q,false);return {valid:true,delegatorUserId:"manager",delegatorRole:"finance_approver"};}};
  const r=await decideApproval({tenantId:"t1",actorId:"delegate",approvalId:"a1",decision:"approve",reason:"Delegated reviewer checked source",expectedVersion:2},delegatedDeps);
  assert.equal(r.decision,"approve");
 });
