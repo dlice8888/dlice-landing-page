@@ -140,6 +140,10 @@ jobs:
         run: node --test tests/contracts/delivery-fulfillment-reconciliation.test.mjs
       - name: Run Order external channel ETA and SLA contracts
         run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
+      - name: Check reconciled Executive Command Center read model syntax
+        run: node --check src/executive-command-center-reconciled-read-model.mjs
+      - name: Run reconciled Executive Command Center read model contracts
+        run: node --test tests/contracts/executive-command-center-reconciled-read-model.test.mjs
       - name: Run Executive stock waste and anomaly alert contracts
         run: node --test tests/contracts/executive-stock-waste-anomaly-alerts.test.mjs
       - name: Run Finance budget variance and consolidation contracts
