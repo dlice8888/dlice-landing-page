@@ -153,7 +153,7 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
         p_period_start: required(input.periodStart, "periodStart"),
         p_period_end: required(input.periodEnd, "periodEnd"),
         p_idempotency_key: required(input.idempotencyKey, "idempotencyKey"),
-        p_source_revision: required(input.sourceRevision, "sourceRevision"),
+        p_source_revision: input.sourceRevision == null ? null : String(input.sourceRevision),
       }, "publishComplianceSnapshot");
     },
     async listTasks({ status, limit = 100 } = {}) {
