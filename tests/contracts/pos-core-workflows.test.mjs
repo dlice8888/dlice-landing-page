@@ -17,6 +17,8 @@ test("shift open and close enforce assignment, pending sales and variance approv
  const shift={id:"s",branch_id:"b1",opened_by:"u1",status:"open",expected_cash_idr:1000};
  assert.throws(()=>assertShiftCloseAllowed({shift,actorUserId:"u1",assignedBranchIds:["b1"],pendingSaleCount:1,countedCashIdr:1000}),/shift_has_pending_sales/);
  assert.throws(()=>assertShiftCloseAllowed({shift,actorUserId:"u1",assignedBranchIds:["b1"],countedCashIdr:1100,varianceApprovalRequired:true}),/variance_approval_required/);
+ assert.throws(()=>assertShiftCloseAllowed({shift,actorUserId:"u2",assignedBranchIds:["b1"],countedCashIdr:1000,varianceApprovalRequired:true,varianceApproved:true}),/shift_actor_forbidden/);
+ assert.equal(assertShiftCloseAllowed({shift,actorUserId:"u2",assignedBranchIds:["b1"],countedCashIdr:1000,supervisorAuthorized:true}).closed_by,"u2");
  assert.equal(assertShiftCloseAllowed({shift,actorUserId:"u1",assignedBranchIds:["b1"],countedCashIdr:900}).cash_variance_idr,-100);
 });
 test("cart pricing comes from active server catalog, validates stock and modifiers",()=>{
