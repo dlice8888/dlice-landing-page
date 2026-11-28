@@ -280,6 +280,9 @@ create table if not exists public.approval_delegations (
 create index if not exists approval_delegations_active_idx
   on public.approval_delegations(tenant_id,delegate_user_id,domain,branch_id,expires_at)
   where revoked_at is null;
+create unique index if not exists approval_delegations_active_unique_idx
+  on public.approval_delegations(tenant_id,delegator_user_id,delegate_user_id,domain,branch_id,(coalesce(category,'')))
+  where revoked_at is null;
 
 create table if not exists public.approval_claim_events (
   id uuid primary key default gen_random_uuid(),
