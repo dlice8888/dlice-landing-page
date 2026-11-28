@@ -261,3 +261,42 @@ Therefore POS E2E is not accepted. Required: per-sale tender split, payment stat
 - Feature status and numeric progress are unchanged: 188 PARTIAL / 0 NOT VERIFIED / 1 BLOCKED / 0 DONE. No feature score is increased by this checkpoint. The 138 unscored PARTIAL features remain unscored.
 - Next implementation batch: add Branch Ops canonical schema + server-only persistence adapter + private Storage metadata verifier + authenticated UI/Edge routes; then integrate CRM ledger events with reconciled POS/order/refund/settlement/Finance sources and HR approved payroll snapshots with balanced Finance journals. These changes must remain candidate-only until final validation.
 - Final merge and staging migration remain explicitly deferred pending user approval after exact-head CI, disposable replay, pgTAP, RLS/ACL/Storage, tenant A/B, provider, browser/device E2E and reconciliation.
+
+
+## 11. Branch Operations concrete persistence/API/UI batch — 2026-11-28
+
+Candidate branch `feat/branch-ops-evidence-workflows-20261127`, PR #153, now includes:
+
+1. **Persistence schema draft** — `docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql`
+   - Seven tenant/branch-keyed tables: equipment, tasks, evidence assets, incidents, work orders, compliance checks and compliance snapshots.
+   - Composite FKs to `branches(tenant_id,id)`, idempotency constraints, state constraints and RLS enabled on every new table.
+   - No anon/authenticated table grants. Mutation RPCs have PUBLIC/anon/authenticated execute revoked and service_role execute granted.
+   - Private `branch-ops-evidence` bucket, 8 MiB file limit, JPG/PNG/PDF allowlist. No direct browser Storage policies: upload is server-only after auth and branch authorization.
+   - 13 PostgreSQL functions with balanced dollar delimiters: actor/approver assertions, equipment registration, task create/status, incident create/status, maintenance create/status, evidence registration, compliance submit/review/publish.
+   - Each mutation writes `admin_audit_logs` in the same database transaction. Compliance review and publication require approver authority; submitter cannot self-approve.
+
+2. **Server adapter and Edge API**
+   - `supabase/functions/_shared/branch-operations-repository.ts` calls one atomic RPC per mutation and tenant/branch-filters reads.
+   - `supabase/functions/branch-operations/index.ts` verifies bearer token with Auth `getUser`, active admin profile, active tenant membership, active branch and branch assignment or tenant-admin/manager permission before using service-role access.
+   - Evidence upload is server-side only, checks actual file signature and MIME, caps at 8 MiB, uses a private bucket and registers actor/tenant/branch/purpose/retention metadata.
+   - Intended deployment configuration: `verify_jwt=true`; function has not been deployed.
+
+3. **ERP UI**
+   - `src/branch-operations-ui.mjs` implements task, incident/evidence, equipment, maintenance, compliance submission/review and snapshot screens.
+   - `erp.html` imports and mounts this UI in Operations view.
+   - `BRANCH_OPS_WORKFLOWS_RELEASED=false` remains enforced, so users cannot invoke an un-deployed Edge Function or missing schema.
+
+4. **Tests and CI**
+   - Added repository adapter tests and SQL/Auth/Storage/UI static contract tests.
+   - Added CI steps for Node syntax, adapter tests, SQL contract tests and Deno type-check of the new Edge Function.
+   - At latest reviewed head `a3172ede17ba709bbfd683641a1c9015ac9f6259`, GitHub connector returned no associated exact-head workflow run. Vercel status is failure due the existing Free daily deployment limit, not an application test result. Therefore no test PASS is claimed for this batch.
+
+### Acceptance status and remaining work
+
+- SQL remains a **candidate draft**, not a CLI-generated official migration. The official migration must be created with Supabase CLI after code review.
+- The live staging schema still does not contain the new `branch_ops_*` tables/functions. No DDL or data was applied.
+- New Edge Function has not been deployed; `dlice-orders` version 73 was not modified.
+- ERP mount is intentionally disabled behind the false release flag.
+- No authenticated staging test, tenant A/B cross-read/write denial, Storage object ownership/retention test, browser/device E2E or workflow reconciliation has run.
+- D08-F04/F07/F08/F09/F10 weighted progress scores remain unchanged (33% each where previously scored). Database, runtime and E2E dimensions remain unverified. This batch adds implementation source but does not justify DONE.
+- PR #153 remains Draft/unmerged. Production remains read-only. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged.
