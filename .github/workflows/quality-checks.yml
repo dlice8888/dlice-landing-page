@@ -169,6 +169,17 @@ jobs:
         run: node --test tests/contracts/delivery-fulfillment-reconciliation.test.mjs
       - name: Run Order external channel ETA and SLA contracts
         run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
+      - name: Check Order Management workflow module syntax
+        run: >-
+          node --check src/order-unified-queue.mjs
+          && node --check src/order-availability-policy.mjs
+          && node --check src/order-branch-router.mjs
+          && node --check src/business-order-number.mjs
+          && node --check src/order-timeline.mjs
+          && node --check src/order-cancellation-history.mjs
+          && node --check src/order-notification-dispatcher.mjs
+      - name: Run Order Management workflow acceptance contracts
+        run: node --test tests/contracts/order-management-workflows.test.mjs
       - name: Check reconciled Executive Command Center read model syntax
         run: node --check src/executive-command-center-reconciled-read-model.mjs
       - name: Run reconciled Executive Command Center read model contracts
