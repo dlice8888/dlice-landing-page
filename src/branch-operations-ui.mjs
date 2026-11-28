@@ -103,7 +103,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
 
   const complianceForm = el("form", { className: "branch-ops-form" });
   complianceForm.append(el("h3", {}, "Publikasikan audit kepatuhan"), field("Mulai periode", "period_start", "date"),
-    field("Akhir periode", "period_end", "date"), field("Source revision", "source_revision"));
+    field("Akhir periode", "period_end", "date"), el("small", {}, "Source revision dihitung server dari seluruh pemeriksaan dan bukti yang telah disetujui."));
   complianceForm.append(formButton("Publikasikan snapshot"));
   forms.append(taskForm, incidentForm, equipmentForm, maintenanceForm, complianceCheckForm, complianceForm);
   shell.append(forms);
@@ -277,7 +277,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   submit(complianceForm, async (data) => {
     await request({
       action: "publish-compliance", period_start: data.get("period_start"), period_end: data.get("period_end"),
-      source_revision: data.get("source_revision"), idempotency_key: `branch-compliance:${crypto.randomUUID()}`,
+      source_revision: null, idempotency_key: `branch-compliance:${crypto.randomUUID()}`,
     });
   });
   refreshButton.addEventListener("click", refresh);
