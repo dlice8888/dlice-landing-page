@@ -91,6 +91,8 @@ jobs:
           && node --check src/order-payment-fulfillment-state.mjs
       - name: Run POS core workflow invariants
         run: node --test tests/contracts/pos-core-workflows.test.mjs
+      - name: Run POS split tender Edge integration contract
+        run: node --test tests/contracts/pos-split-tender-edge-contract.test.mjs
       - name: Check Executive approval center policy and service syntax
         run: node --check src/executive-approval-center.mjs && node --check src/executive-approval-service.mjs
       - name: Run Executive approval inbox, decision policy and service contracts
