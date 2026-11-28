@@ -275,7 +275,7 @@ end $$;
 
 -- Seed conservative tenant-owner-only policies; expand roles only through a reviewed policy change.
 insert into public.approval_policies(tenant_id,domain,source_entity_type,eligible_roles,max_amount_idr)
-select t.id,src.domain,src.entity_type,array['tenant_owner']::text[],1000000000
+select t.id,src.domain,src.entity_type,array['owner']::text[],1000000000
 from public.tenants t
 cross join (values
  ('procurement','purchase_requisition'),
@@ -291,10 +291,10 @@ as $
 begin
  insert into public.approval_policies(tenant_id,domain,source_entity_type,eligible_roles,max_amount_idr)
  values
-  (new.id,'procurement','purchase_requisition',array['tenant_owner']::text[],1000000000),
-  (new.id,'procurement','purchase_order',array['tenant_owner']::text[],1000000000),
-  (new.id,'finance','branch_expense',array['tenant_owner']::text[],1000000000),
-  (new.id,'hr','hr_timesheet',array['tenant_owner']::text[],1000000000)
+  (new.id,'procurement','purchase_requisition',array['owner']::text[],1000000000),
+  (new.id,'procurement','purchase_order',array['owner']::text[],1000000000),
+  (new.id,'finance','branch_expense',array['owner']::text[],1000000000),
+  (new.id,'hr','hr_timesheet',array['owner']::text[],1000000000)
  on conflict(tenant_id,source_entity_type,policy_version) do nothing;
  return new;
 end;
