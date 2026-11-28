@@ -797,7 +797,7 @@ create or replace function public.list_approval_history(
  p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_branch_id uuid default null
 ) returns setof jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_active boolean;
 begin
  select is_active into v_active from public.admin_profiles where user_id=p_actor_user_id;
@@ -812,13 +812,13 @@ begin
    and (p_branch_id is null or a.branch_id=p_branch_id)
  order by d.created_at desc limit 250;
 end;
-$;
+$$;
 
 create or replace function public.list_approval_delegations(
  p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_branch_id uuid default null
 ) returns setof jsonb
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare v_active boolean;
 begin
  select is_active into v_active from public.admin_profiles where user_id=p_actor_user_id;
@@ -833,7 +833,7 @@ begin
    and (p_branch_id is null or d.branch_id=p_branch_id)
  order by d.revoked_at nulls first,d.expires_at desc;
 end;
-$;
+$$;
 revoke all on function public.list_pending_approvals(uuid,uuid[],uuid,text,text) from public,anon,authenticated;
 revoke all on function public.claim_approval(uuid,uuid,uuid[],integer) from public,anon,authenticated;
 revoke all on function public.decide_approval(uuid,uuid,uuid[],integer,text,text,text) from public,anon,authenticated;
