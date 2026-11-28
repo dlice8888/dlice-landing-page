@@ -3,14 +3,14 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const migrationPaths = [
-  "../../supabase/migrations/20261126192455_crm_loyalty_financial_close.sql",
-  "../../supabase/migrations/20261126192458_hr_workforce_payroll_finance.sql",
-  "../../supabase/migrations/20261126192501_delivery_fulfillment_provider.sql",
-  "../../supabase/migrations/20261126192504_franchise_expansion.sql",
-  "../../supabase/migrations/20261126192506_procurement_supplier.sql",
-  "../../supabase/migrations/20261126192509_bi_analytics.sql",
-  "../../supabase/migrations/20261126192512_saas_tenant_billing.sql",
-  "../../supabase/migrations/20261126192514_executive_command_center.sql",
+  "../../supabase/migrations/20261128025950_20261126192455_crm_loyalty_financial_close.sql",
+  "../../supabase/migrations/20261128030011_20261126192458_hr_workforce_payroll_finance.sql",
+  "../../supabase/migrations/20261128030020_20261126192501_delivery_fulfillment_provider.sql",
+  "../../supabase/migrations/20261128030021_20261126192504_franchise_expansion.sql",
+  "../../supabase/migrations/20261128030024_20261126192506_procurement_supplier.sql",
+  "../../supabase/migrations/20261128030026_20261126192509_bi_analytics.sql",
+  "../../supabase/migrations/20261128030028_20261126192512_saas_tenant_billing.sql",
+  "../../supabase/migrations/20261128030031_20261126192514_executive_command_center.sql",
 ];
 
 function normalize(value) {

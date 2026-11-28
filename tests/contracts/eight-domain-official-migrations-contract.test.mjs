@@ -5,14 +5,14 @@ import { readFileSync, readdirSync } from "node:fs";
 const migrationDir = new URL("../../supabase/migrations/", import.meta.url);
 const testDir = new URL("../../supabase/tests/", import.meta.url);
 const domainMigrations = [
-  "20261126192455_crm_loyalty_financial_close.sql",
-  "20261126192458_hr_workforce_payroll_finance.sql",
-  "20261126192501_delivery_fulfillment_provider.sql",
-  "20261126192504_franchise_expansion.sql",
-  "20261126192506_procurement_supplier.sql",
-  "20261126192509_bi_analytics.sql",
-  "20261126192512_saas_tenant_billing.sql",
-  "20261126192514_executive_command_center.sql"
+  "20261128025950_20261126192455_crm_loyalty_financial_close.sql",
+  "20261128030011_20261126192458_hr_workforce_payroll_finance.sql",
+  "20261128030020_20261126192501_delivery_fulfillment_provider.sql",
+  "20261128030021_20261126192504_franchise_expansion.sql",
+  "20261128030024_20261126192506_procurement_supplier.sql",
+  "20261128030026_20261126192509_bi_analytics.sql",
+  "20261128030028_20261126192512_saas_tenant_billing.sql",
+  "20261128030031_20261126192514_executive_command_center.sql"
 ];
 const draftFiles = [
   "CRM_LOYALTY_SCHEMA_DRAFT.sql",
