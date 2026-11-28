@@ -610,7 +610,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   ]);
   // This broad action gate is only the first layer: the approval RPC still checks
   // tenant role, branch, category, SoD, amount limit, delegation and expiry.
-  if (executiveApprovalActions.has(action) && !isPlatformOwner && !actor.profile.permissions.includes("*") &&
+  if (!isPlatformOwner && executiveApprovalActions.has(action) && !actor.profile.permissions.includes("*") &&
       !["finance","procurement","staff","branches"].some((p) => actor.profile.permissions.includes(p))) {
     return fail("Akses ditolak. Tidak ada izin domain untuk pusat persetujuan.",403,origin);
   }
