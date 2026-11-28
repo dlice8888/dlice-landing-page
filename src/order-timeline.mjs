@@ -5,7 +5,7 @@ const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("ORDER_TIMELINE_ADAPTER_REQU
 const TYPES=new Set(["payment","operational","fulfillment","reservation"]);
 export async function appendOrderTimelineEvent(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),orderId:req(input?.orderId,"orderId"),
-  source:req(input?.source,"source"),sourceEventId:req(input?.sourceEventId,"sourceEventId"),actorId:input.actorId??null,
+  source:req(input?.source,"source"),sourceEventId:req(input?.sourceEventId,"sourceEventId"),actorId:req(input?.actorId,"actorId"),
   statusType:input.statusType,oldStatus:input.oldStatus??null,newStatus:req(input?.newStatus,"newStatus"),
   reason:input.reason??null,expectedVersion:input.expectedVersion,idempotencyKey:req(input?.idempotencyKey,"idempotencyKey")};
  if(!TYPES.has(payload.statusType))fail("ORDER_TIMELINE_TYPE_INVALID","Invalid timeline status type");
@@ -16,8 +16,8 @@ export async function appendOrderTimelineEvent(input,deps){
  return Object.freeze(result);
 }
 export async function listOrderTimeline(input,deps){
- const tenantId=req(input?.tenantId,"tenantId"),branchId=req(input?.branchId,"branchId"),orderId=req(input?.orderId,"orderId");
- const rows=await fn(deps,"listOrderTimelineReadOnly")({tenantId,branchId,orderId});
+ const tenantId=req(input?.tenantId,"tenantId"),branchId=req(input?.branchId,"branchId"),actorId=req(input?.actorId,"actorId"),orderId=req(input?.orderId,"orderId");
+ const rows=await fn(deps,"listOrderTimelineReadOnly")({tenantId,branchId,actorId,orderId});
  if(!Array.isArray(rows)||rows.some(x=>x.tenantId!==tenantId||x.orderId!==orderId))fail("ORDER_TIMELINE_SCOPE_INVALID","Timeline contains an out-of-scope event");
  return Object.freeze(rows);
 }
