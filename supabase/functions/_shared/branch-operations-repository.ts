@@ -59,6 +59,17 @@ export function createBranchOperationsRepository(
       p_mime_type: required(v.mimeType, "mimeType"),
       p_size_bytes: v.sizeBytes,
     }, "registerEvidenceAsset"),
+    submitComplianceCheck: (v: any) => call("branch_ops_submit_compliance_check", {
+      p_check_key: required(v.checkKey, "checkKey"),
+      p_title: required(v.title, "title"),
+      p_weight: Number(v.weight),
+      p_business_date: required(v.businessDate, "businessDate"),
+      p_evidence_asset_id: required(v.evidenceAssetId, "evidenceAssetId"),
+    }, "submitComplianceCheck"),
+    reviewComplianceCheck: (v: any) => call("branch_ops_review_compliance_check", {
+      p_check_id: required(v.checkId, "checkId"),
+      p_result: required(v.result, "result"),
+    }, "reviewComplianceCheck"),
     publishComplianceSnapshot: (v: any) => call("branch_ops_publish_compliance_snapshot", {
       p_period_start: required(v.periodStart, "periodStart"),
       p_period_end: required(v.periodEnd, "periodEnd"),
@@ -71,6 +82,8 @@ export function createBranchOperationsRepository(
         incidents: ["branch_ops_incidents", "created_at"],
         maintenance: ["branch_ops_work_orders", "scheduled_at"],
         compliance: ["branch_ops_compliance_snapshots", "period_end"],
+        "compliance-checks": ["branch_ops_compliance_checks", "business_date"],
+        equipment: ["branch_ops_equipment", "name"],
       };
       const selected = map[kind];
       if (!selected) throw new Error("Unsupported list kind");
