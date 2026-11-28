@@ -166,6 +166,7 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
     }
     const normalized = {
       id: sale.id,
+      transaction_code: sale.transaction_code || null,
       branch_id: sale.branch_id,
       created_at: sale.created_at,
       gross_idr: gross,
