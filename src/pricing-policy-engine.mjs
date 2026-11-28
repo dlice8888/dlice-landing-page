@@ -2,7 +2,7 @@
 export function resolveEffectivePrice({productId,branchId,regionId,at,pricePolicies}){
  const instant=Date.parse(at);if(!productId||!branchId||!Number.isFinite(instant))throw new Error("PRICING_CONTEXT_INVALID");
  const rank={central:1,regional:2,branch:3};
- const eligible=(pricePolicies||[]).filter(p=>p.product_id===productId&&p.approval_status==="approved"&&p.price_idr>=0&&Date.parse(p.effective_from)<=instant&&(!p.effective_to||Date.parse(p.effective_to)>instant)&&((p.scope==="central"&&!p.branch_id&&!p.region_id)||(p.scope==="regional"&&p.region_id===regionId)||(p.scope==="branch"&&p.branch_id===branchId)));
+ const eligible=(pricePolicies||[]).filter(p=>p.product_id===productId&&p.approval_status==="approved"&&Number.isSafeInteger(p.price_idr)&&p.price_idr>=0&&Number.isFinite(Date.parse(p.effective_from))&&Date.parse(p.effective_from)<=instant&&(!p.effective_to||Date.parse(p.effective_to)>instant)&&((p.scope==="central"&&!p.branch_id&&!p.region_id)||(p.scope==="regional"&&p.region_id===regionId)||(p.scope==="branch"&&p.branch_id===branchId)));
  eligible.sort((a,b)=>rank[b.scope]-rank[a.scope]||Date.parse(b.effective_from)-Date.parse(a.effective_from));
  if(!eligible.length)throw new Error("PRICING_POLICY_NOT_FOUND");
  return Object.freeze({product_id:productId,branch_id:branchId,price_idr:eligible[0].price_idr,policy_id:eligible[0].id,scope:eligible[0].scope,effective_from:eligible[0].effective_from});
