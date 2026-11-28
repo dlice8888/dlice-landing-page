@@ -332,10 +332,15 @@ begin
   raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';
  end if;
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION';end if;
- if a.status not in ('pending','claimed') or a.expires_at<=now() then
-  if a.status in ('pending','claimed') and a.expires_at<=now() then
-   update public.executive_approval_requests set status='expired',version=version+1,updated_at=now() where id=a.id;
-  end if;
+ if a.status in ('pending','claimed') and a.expires_at<=now() then
+  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
+   where id=a.id returning version into a.version;
+  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+  values(p_actor_user_id,'executive.approval.expired',a.entity_type,a.entity_id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'approval_id',a.id,'branch_id',a.branch_id,'version',a.version));
+  return jsonb_build_object('approval_id',a.id,'status','expired','version',a.version);
+ end if;
+ if a.status not in ('pending','claimed') then
   raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';
  end if;
  if a.created_by=p_actor_user_id and not a.allow_self_approval then
