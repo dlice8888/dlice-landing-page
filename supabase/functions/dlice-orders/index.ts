@@ -600,7 +600,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
+  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval"].includes(action);
+  if (requiredPermission && !approvalAction && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
