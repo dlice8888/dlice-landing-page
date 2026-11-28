@@ -59,10 +59,10 @@ end $$;
 
 insert into public.executive_approval_policies(tenant_id,category,required_roles,allow_self_approval)
 select t.id,p.category,p.roles,false from public.tenants t cross join (values
- ('procurement',array['procurement_manager','finance_manager','owner']::text[]),
- ('finance',array['finance_manager','owner']::text[]),
- ('hr',array['hr_manager','owner']::text[]),
- ('branch_ops',array['branch_manager','operations_manager','owner']::text[])
+ ('procurement',array['tenant_owner','branch_manager']::text[]),
+ ('finance',array['tenant_owner']::text[]),
+ ('hr',array['tenant_owner']::text[]),
+ ('branch_ops',array['tenant_owner','branch_manager']::text[])
 ) p(category,roles)
 on conflict(tenant_id,category) do nothing;
 
@@ -158,7 +158,7 @@ begin
   order by a.expires_at asc,a.amount_idr desc),'[]'::jsonb) into v_rows
  from public.executive_approval_requests a
  where a.tenant_id=p_tenant_id and a.status in ('pending','claimed')
-  and (a.branch_id is null or a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[])))
+  and ((a.branch_id is not null and a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (a.branch_id is null and v_role='tenant_owner'))
   and (p_categories is null or a.category=any(p_categories))
   and (v_role=any(a.required_roles) or exists(
    select 1 from public.executive_approval_delegations d join public.tenant_memberships dm
@@ -182,7 +182,7 @@ begin
  if v_role is null then raise exception using errcode='42501',message='APPROVAL_TENANT_MEMBERSHIP_REQUIRED';end if;
  select * into a from public.executive_approval_requests where id=p_approval_id and tenant_id=p_tenant_id for update;
  if not found then raise exception using errcode='P0002',message='APPROVAL_NOT_FOUND';end if;
- if a.branch_id is not null and not (a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
+ if (a.branch_id is not null and not (a.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[])))) or (a.branch_id is null and v_role<>'tenant_owner') then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION';end if;
  if a.status not in ('pending','claimed') or a.expires_at<=now() then raise exception using errcode='55000',message='APPROVAL_NOT_PENDING_OR_EXPIRED';end if;
  if a.created_by=p_actor_user_id and not a.allow_self_approval then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_DENIED';end if;
@@ -195,7 +195,7 @@ begin
    and dm.role=any(a.required_roles) limit 1;
   if v_delegator is null then raise exception using errcode='42501',message='APPROVAL_ROLE_OR_DELEGATION_REQUIRED';end if;
  end if;
- v_limit:=case when v_role='owner' then 9223372036854775807
+ v_limit:=case when v_role='tenant_owner' then 9223372036854775807
   when coalesce((select permissions->>'approval_limit_idr' from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id),'') ~ '^[0-9]+$'
   then (select (permissions->>'approval_limit_idr')::bigint from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id)
   else 0 end;
