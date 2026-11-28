@@ -88,9 +88,16 @@ export async function getExecutiveSalesMonitor(input,deps){
   ?"source_reconciled":"reconciliation_incomplete";
  const allowedBranches=branchIds?new Set(branchIds):null;
  for(const row of result.transactions){
-  if(!row||!row.sale_id||!row.branch_id||!row.business_date||
-     (allowedBranches&&!allowedBranches.has(row.branch_id))||
-     row.business_date<startDate||row.business_date>endDate)
+  if(!row||!row.sale_id||!row.branch_id||!row.business_date)
+   fail("EXEC_SALES_SOURCE_SCOPE_INVALID","Source transaction identity and business date are required");
+  // Recompute from the immutable payment timestamp and the branch policy snapshot.
+  // Never trust a client-supplied timezone or a stored business_date without provenance.
+  const computedBusinessDate=expectedBusinessDate(row.paid_at,row.timezone,row.cutoff_time);
+  if(!Number.isSafeInteger(Number(row.business_day_policy_version))||Number(row.business_day_policy_version)<1)
+   fail("EXEC_SALES_SOURCE_CUTOFF_INVALID","A versioned branch business-day cutoff is required");
+  if(row.business_date!==computedBusinessDate)
+   fail("EXEC_SALES_BUSINESS_DATE_MISMATCH","Stored business date differs from branch timezone/cutoff calculation");
+  if((allowedBranches&&!allowedBranches.has(row.branch_id))||row.business_date<startDate||row.business_date>endDate)
    fail("EXEC_SALES_SOURCE_SCOPE_INVALID","Source transaction is outside requested branch/date scope");
  }
  return Object.freeze({...result,reconciliation_status:reconciliationStatus});
