@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {saveRecipeBom} from "../../src/recipe-bom-editor.mjs";
+const input={tenantId:"t1",branchId:"b1",actorId:"u1",recipeId:"r1",version:2,expectedVersion:1,lines:[{inventoryItemId:"i1",quantity:2}]};
+test("saves a draft BOM version with explicit components",async()=>{const r=await saveRecipeBom(input,{saveRecipeBomAtomically:async x=>({recipeId:x.recipeId,version:x.version,status:"draft"})});assert.equal(r.version,2);});
+test("rejects cyclic/ambiguous component representation and invalid quantity",async()=>{await assert.rejects(saveRecipeBom({...input,lines:[{inventoryItemId:"i1",childRecipeId:"r2",quantity:1}]},{}),{code:"RECIPE_BOM_COMPONENT_INVALID"});await assert.rejects(saveRecipeBom({...input,lines:[{inventoryItemId:"i1",quantity:0}]},{}),{code:"RECIPE_BOM_QUANTITY_INVALID"});});
