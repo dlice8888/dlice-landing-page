@@ -19,7 +19,7 @@ export async function recordPosTender(input,deps){
   saleId:req(input?.saleId,"saleId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),
   paymentMethod:input.paymentMethod,amountIdr:amount(input.amountIdr,"amountIdr"),
   verifiedProviderEventId:input.verifiedProviderEventId??null,reference:input.reference??null};
- if(!METHODS.has(payload.paymentMethod))fail("POS_PAYMENT_METHOD_INVALID","Payment method is unsupported");
+ if(!["cash","qris","bank_transfer"].includes(payload.paymentMethod))fail("POS_PAYMENT_METHOD_INVALID","Tender allocation must be cash, qris or bank_transfer; split is an aggregate sale method");
  if(payload.paymentMethod!=="cash"&&!payload.verifiedProviderEventId)fail("POS_PAYMENT_PROVIDER_PROOF_REQUIRED","Non-cash tender requires a verified provider event");
  const result=await fn(deps,"recordTenderAtomically")(payload);
  if(!result?.tenderId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
