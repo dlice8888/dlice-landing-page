@@ -26,7 +26,7 @@ test("updates only the existing staging Owner app_metadata and preserves other c
   assert.deepEqual(calls.map(x => x.method), ["GET", "GET", "PUT", "GET"]);
   assert.ok(calls[1].requestUrl.includes("/rest/v1/admin_profiles"));
   assert.ok(calls[1].requestUrl.includes("user_id=eq." + ownerId));
-  assert.equal(JSON.parse(calls[1].body).app_metadata.platform_owner, true);
+  assert.equal(JSON.parse(calls[2].body).app_metadata.platform_owner, true);
 });
 
 test("refuses non-staging project before making an Auth request", async () => {
