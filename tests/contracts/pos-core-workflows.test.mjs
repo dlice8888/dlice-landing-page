@@ -25,6 +25,12 @@ test("cart pricing comes from active server catalog, validates stock and modifie
  assert.equal(cart.subtotal_idr,24000);
  assert.throws(()=>buildValidatedCart({requestedItems:[{productId:"p1",quantity:3}],catalogItems:catalog,branchId:"b1",availableStockByProduct:{p1:2}}),/insufficient_available_stock/);
  assert.throws(()=>buildValidatedCart({requestedItems:[{productId:"p1",quantity:1}],catalogItems:catalog,branchId:"b1"}),/required_modifier_missing/);
+ const variantCatalog=[{id:"p2",name:"Tea",is_active:true,unit_price_idr:5000,allowed_branch_ids:["b1"],modifiers:[{id:"m1",name:"Less sugar",price_idr:0,is_active:true},{id:"m2",name:"Extra shot",price_idr:3000,is_active:true}]}];
+ const separate=buildValidatedCart({requestedItems:[{productId:"p2",quantity:1,modifierIds:["m1"]},{productId:"p2",quantity:1,modifierIds:["m2"]}],catalogItems:variantCatalog,branchId:"b1",availableStockByProduct:{p2:2}});
+ assert.equal(separate.items.length,2);
+ assert.equal(separate.subtotal_idr,13000);
+ assert.throws(()=>buildValidatedCart({requestedItems:[{productId:"p2",quantity:2,modifierIds:["m1"]},{productId:"p2",quantity:1,modifierIds:["m2"]}],catalogItems:variantCatalog,branchId:"b1",availableStockByProduct:{p2:2}}),/insufficient_available_stock/);
+ assert.throws(()=>buildValidatedCart({requestedItems:[{productId:"p2",quantity:1},{productId:"p2",quantity:1}],catalogItems:variantCatalog,branchId:"b1"}),/cart_duplicate_line/);
 });
 test("order type enforces type-specific data and routes fulfillment separately",()=>{
  assert.throws(()=>validatePosOrderType({type:"dine_in",branchEnabledTypes:["dine_in"]}),/dine_in_table_required/);
