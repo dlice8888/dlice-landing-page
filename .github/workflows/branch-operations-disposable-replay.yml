@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql"
+      - "supabase/migrations/20261128024514_branch_operations_persistence.sql"
       - "supabase/tests/branch_operations.test.sql"
       - "scripts/prepare-branch-operations-migration.sh"
       - ".github/workflows/branch-operations-disposable-replay.yml"
