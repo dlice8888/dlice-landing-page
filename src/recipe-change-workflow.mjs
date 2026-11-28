@@ -4,7 +4,7 @@ export function prepareRecipeChange({request,author,costSnapshot,approver,rollou
  if(approver?.user_id===author.user_id)throw new Error("RECIPE_CHANGE_SELF_APPROVAL_FORBIDDEN");
  if(!Array.isArray(rolloutBranches)||!rolloutBranches.length)throw new Error("RECIPE_CHANGE_ROLLOUT_BRANCHES_REQUIRED");
  if(Date.parse(costSnapshot.calculated_at)>Date.parse(now))throw new Error("RECIPE_CHANGE_COST_TIMESTAMP_INVALID");
- return Object.freeze({change_request_id:request.id,product_id:request.product_id,author_user_id:author.user_id,cost_snapshot_version:costSnapshot.version,cost_snapshot_idr:costSnapshot.total_cost_idr,approval_required:true,approved:approver?.decision==="approved",rollout_branch_ids:Object.freeze([...new Set(rolloutBranches)]),activation_allowed:approver?.decision==="approved"&&rolloutBranches.every(b=>b.acknowledged===true)});
+ return Object.freeze({change_request_id:request.id,product_id:request.product_id,author_user_id:author.user_id,cost_snapshot_version:costSnapshot.version,cost_snapshot_idr:costSnapshot.total_cost_idr,approval_required:true,approved:approver?.decision==="approved",rollout_branch_ids:Object.freeze([...new Set(rolloutBranches.map(b=>typeof b==="string"?b:b.branch_id).filter(Boolean))]),activation_allowed:approver?.decision==="approved"&&rolloutBranches.every(b=>b.acknowledged===true)});
 }
 export function assertRecipeRolloutComplete({branchAcks,requiredBranchIds}){
  const acked=new Set((branchAcks||[]).filter(x=>x.status==="applied").map(x=>x.branch_id));
