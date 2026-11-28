@@ -8,6 +8,7 @@ export async function createPosPaymentIntent(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
   saleId:req(input?.saleId,"saleId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),paymentMethod:input.paymentMethod,providerId:input.providerId??null};
  if(!METHODS.has(payload.paymentMethod))fail("POS_PAYMENT_METHOD_INVALID","Payment method is unsupported");
+ if(payload.paymentMethod==="card"&&!payload.providerId)fail("POS_PAYMENT_PROVIDER_REQUIRED","Card payment requires a configured provider or terminal");
  const result=await fn(deps,"createPaymentIntentAtomically")(payload);
  if(!result?.intentId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
   result.status!=="pending"||!Number.isSafeInteger(result.amountIdr)||result.amountIdr<=0)
@@ -31,8 +32,10 @@ export async function recordPosTender(input,deps){
 export async function ingestPosProviderCallback(input,deps){
  const eventId=req(input?.eventId,"eventId"),providerId=req(input?.providerId,"providerId"),timestamp=Number(input?.timestamp);
  if(!Number.isSafeInteger(timestamp))fail("POS_PAYMENT_TIMESTAMP_INVALID","Provider timestamp is invalid");
- const now=Number(input.nowMs??Date.now()),maxSkew=Number(input.maxSkewMs??300000);
- if(Math.abs(now-timestamp)>maxSkew)fail("POS_PAYMENT_REPLAY_WINDOW_EXCEEDED","Provider callback is outside replay window");
+ // Replay-window time is server-owned. Never accept now/max-skew overrides from the callback payload.
+ const now=typeof deps?.nowMs==="function"?Number(deps.nowMs()):Date.now(),maxSkew=300000;
+ if(!Number.isSafeInteger(now)||Math.abs(now-timestamp)>maxSkew)
+  fail("POS_PAYMENT_REPLAY_WINDOW_EXCEEDED","Provider callback is outside the five-minute replay window");
  const rawBody=req(input.rawBody,"rawBody");
  const verified=await fn(deps,"verifyProviderSignature")({providerId,eventId,timestamp,signature:req(input.signature,"signature"),rawBody});
  if(verified!==true&&(!verified||verified.valid!==true||typeof verified.payloadHash!=="string"))
