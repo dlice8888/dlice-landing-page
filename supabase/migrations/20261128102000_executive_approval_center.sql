@@ -300,7 +300,7 @@ as $ declare v_role text;v_id uuid;begin
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
  if v_role is null or not exists(select 1 from public.executive_approval_policies p where p.tenant_id=p_tenant_id and p.category=p_category and p.enabled and v_role=any(p.required_roles)) then
   raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_DENIED';end if;
- if p_branch_id is not null and not (p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_DELEGATION_BRANCH_DENIED';end if;
+ if (p_branch_id is not null and not (p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[])))) or (p_branch_id is null and v_role<>'tenant_owner') then raise exception using errcode='42501',message='APPROVAL_DELEGATION_BRANCH_DENIED';end if;
  if not exists(select 1 from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_delegate_user_id and status='active') then raise exception using errcode='42501',message='APPROVAL_DELEGATE_NOT_MEMBER';end if;
  insert into public.executive_approval_delegations(tenant_id,delegator_user_id,delegate_user_id,category,branch_id,starts_at,ends_at)
  values(p_tenant_id,p_actor_user_id,p_delegate_user_id,p_category,p_branch_id,p_starts_at,p_ends_at) returning id into v_id;
@@ -341,6 +341,22 @@ as $ declare v_role text;v_row public.executive_approval_delegations%rowtype;beg
  return jsonb_build_object('delegation_id',v_row.id,'status','revoked');
 end $;
 
+create or replace function public.list_approval_delegations(
+ p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[]
+) returns jsonb language plpgsql security definer set search_path=''
+as $ declare v_role text;v_rows jsonb;begin
+ if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
+ select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
+ if v_role is null then raise exception using errcode='42501',message='APPROVAL_TENANT_MEMBERSHIP_REQUIRED';end if;
+ select coalesce(jsonb_agg(jsonb_build_object('id',d.id,'delegator_user_id',d.delegator_user_id,'delegate_user_id',d.delegate_user_id,
+  'category',d.category,'branch_id',d.branch_id,'starts_at',d.starts_at,'ends_at',d.ends_at,'approved_by',d.approved_by,
+  'approved_at',d.approved_at,'revoked_at',d.revoked_at,'created_at',d.created_at) order by d.created_at desc),'[]'::jsonb)
+ into v_rows from public.executive_approval_delegations d where d.tenant_id=p_tenant_id
+ and (v_role='tenant_owner' or d.delegator_user_id=p_actor_user_id or d.delegate_user_id=p_actor_user_id)
+ and (d.branch_id is null and v_role='tenant_owner' or d.branch_id=any(coalesce(p_branch_ids,'{}'::uuid[])));
+ return jsonb_build_object('delegations',v_rows);
+end $;
+
 revoke all on function public.enqueue_executive_approval(uuid,text,text,uuid,uuid,uuid,bigint,text) from public,anon,authenticated;
 revoke all on function public.list_pending_approvals(uuid,uuid,uuid[],text[]) from public,anon,authenticated;
 revoke all on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) from public,anon,authenticated;
@@ -350,7 +366,7 @@ grant execute on function public.list_pending_approvals(uuid,uuid,uuid[],text[])
 grant execute on function public.claim_approval(uuid,uuid,uuid[],uuid,integer) to service_role;
 grant execute on function public.decide_approval(uuid,uuid,uuid[],uuid,text,text,integer) to service_role;
 grant execute on function public.list_approval_decision_history(uuid,uuid,uuid[],uuid) to service_role;
-revoke all on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
+revoke all on function public.list_approval_delegations(uuid,uuid,uuid[]) from public,anon,authenticated;\ngrant execute on function public.list_approval_delegations(uuid,uuid,uuid[]) to service_role;\nrevoke all on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
 revoke all on function public.approve_approval_delegation(uuid,uuid,uuid[],uuid) from public,anon,authenticated;
 revoke all on function public.revoke_approval_delegation(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.create_approval_delegation(uuid,uuid,uuid[],uuid,text,uuid,timestamptz,timestamptz) to service_role;
