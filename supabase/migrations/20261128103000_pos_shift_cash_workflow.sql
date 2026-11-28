@@ -111,7 +111,7 @@ create or replace function public.pos_record_cash_movement_atomic(
  p_movement_type text,p_amount_idr bigint,p_reason text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint; v_supervisor boolean;
+declare v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint; v_supervisor boolean; v_sales bigint; v_in bigint; v_out bigint; v_refunds bigint;
 begin
  if coalesce(auth.jwt()->>'role','')<>'service_role' then raise exception using errcode='42501',message='POS_SERVICE_ROLE_REQUIRED'; end if;
  if p_movement_type not in ('cash_in','cash_out') or p_amount_idr<=0 or length(btrim(coalesce(p_reason,'')))<3
@@ -132,7 +132,17 @@ begin
   if v_prior.payload_fingerprint<>v_fingerprint then raise exception 'cash_movement_idempotency_mismatch'; end if;
   return jsonb_build_object('movementId',v_prior.id,'tenantId',p_tenant_id,'branchId',p_branch_id,'shiftId',p_shift_id,'amountIdr',v_prior.amount_idr,'replayed',true);
  end if;
- v_next:=case when p_movement_type='cash_in' then v_shift.expected_cash_idr+p_amount_idr else v_shift.expected_cash_idr-p_amount_idr end;
+ select coalesce(sum(case when t.id is not null then case when t.payment_method='cash' then t.amount_idr else 0 end
+  when s.payment_method='cash' then s.total_idr else 0 end),0)::bigint into v_sales
+ from public.pos_sales s left join public.pos_sale_tenders t on t.sale_id=s.id
+ where s.shift_id=p_shift_id and s.payment_status in ('paid','refunded');
+ select coalesce(sum(amount_idr) filter(where movement_type='cash_in'),0)::bigint,
+  coalesce(sum(amount_idr) filter(where movement_type='cash_out'),0)::bigint into v_in,v_out
+ from public.pos_shift_cash_movements where shift_id=p_shift_id;
+ select coalesce(sum(rr.amount_idr),0)::bigint into v_refunds from public.refund_records rr
+ join public.pos_sales s on s.id=rr.pos_sale_id where s.shift_id=p_shift_id and s.payment_method='cash' and rr.status='processed';
+ v_next:=v_shift.opening_cash_idr+v_sales+v_in-v_out-v_refunds+
+  case when p_movement_type='cash_in' then p_amount_idr else -p_amount_idr end;
  if v_next<0 then raise exception 'cash_drawer_insufficient_balance'; end if;
  insert into public.pos_shift_cash_movements(tenant_id,branch_id,shift_id,actor_user_id,movement_type,amount_idr,reason,idempotency_key,payload_fingerprint)
  values(p_tenant_id,p_branch_id,p_shift_id,p_actor_user_id,p_movement_type,p_amount_idr,left(p_reason,500),p_idempotency_key,v_fingerprint)
