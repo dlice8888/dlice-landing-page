@@ -4,6 +4,6 @@ export function evaluateBranchProductAvailability({productId,branchId,branchEnab
  if(override!==undefined&&!actorCanOverride)throw new Error("BRANCH_PRODUCT_OVERRIDE_FORBIDDEN");
  const availableStock=stockTracked?Number(onHand)-Number(reserved)-Number(safetyStock):Number.POSITIVE_INFINITY;
  if(stockTracked&&(!Number.isFinite(availableStock)||availableStock<0))throw new Error("BRANCH_PRODUCT_STOCK_INVALID");
- const available=override===true?true:override===false?false:branchEnabled===true&&productActive===true&&scheduleAvailable===true&&availableStock>0;
+ const policyEnabled=override===false?false:(override===true||branchEnabled===true);\n const available=productActive===true&&policyEnabled&&scheduleAvailable===true&&availableStock>0;
  return Object.freeze({product_id:productId,branch_id:branchId,available,reason:available?null:!productActive?"product_inactive":!branchEnabled?"branch_disabled":!scheduleAvailable?"outside_schedule":"stock_unavailable",available_stock:stockTracked?availableStock:null});
 }
