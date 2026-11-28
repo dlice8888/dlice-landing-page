@@ -88,3 +88,9 @@ test("T02 prevents employee self-approval even when another creator submitted th
   assert.match(sql, /APPROVAL_EMPLOYEE_SELF_APPROVAL_FORBIDDEN/);
   assert.match(sql, /employee_user_id=p_actor_user_id/);
 });
+
+test("T02 delegation cannot exceed policy amount or category", () => {
+  assert.match(sql, /p_max_amount_idr>v_policy\.max_amount_idr/i);
+  assert.match(sql, /APPROVAL_DELEGATION_POLICY_LIMIT_EXCEEDED/);
+  assert.match(sql, /p\.tenant_id=a\.tenant_id and p\.active/i);
+});
