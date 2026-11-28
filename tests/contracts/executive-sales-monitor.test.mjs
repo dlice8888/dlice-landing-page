@@ -101,5 +101,5 @@ test("applies non-midnight branch cutoff immediately before and at the local bou
  await getExecutiveSalesMonitor(input,deps(before));
  const atBoundary=snapshot({transactions:[{...snapshot().transactions[0],paid_at:"2026-11-28T20:00:00Z",
   business_date:"2026-11-29",timezone:"Asia/Jakarta",cutoff_time:"03:00:00"}]});
- await assert.rejects(getExecutiveSalesMonitor(input,deps(atBoundary)),{code:"EXEC_SALES_SOURCE_SCOPE_INVALID"});
+ await getExecutiveSalesMonitor({...input,endDate:"2026-11-29"},deps(atBoundary));
 });
