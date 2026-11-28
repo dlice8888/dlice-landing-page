@@ -197,6 +197,7 @@ for each row execute function public.branch_ops_prevent_immutable_record_mutatio
 create trigger branch_ops_compliance_snapshots_immutable
 before update or delete on public.branch_ops_compliance_snapshots
 for each row execute function public.branch_ops_prevent_immutable_record_mutation();
+revoke all on function public.branch_ops_prevent_immutable_record_mutation() from public,anon,authenticated;
 
 create or replace function public.branch_ops_assert_actor(p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid)
 returns void language plpgsql security invoker set search_path=public,pg_temp as $$
