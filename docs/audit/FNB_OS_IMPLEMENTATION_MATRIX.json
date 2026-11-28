@@ -1,9 +1,9 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; Branch Ops schema/RPC draft + server adapter/Edge API + ERP UI mount added; UI release gate false; exact-head CI not yet returned; no score increase)",
+  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; Branch Ops candidate implementation added; exact-head Free quality checks PASS at 01255157; disposable replay pending; no score increase)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
-  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence. Branch Operations candidate batch adds a canonical SQL persistence draft, service-role-only atomic RPCs, explicit Edge Auth/tenant/branch authorization, private server-uploaded evidence, lifecycle UI and contract tests. Draft is not a CLI-generated migration and is not applied; Edge Function is not deployed; ERP mount remains behind BRANCH_OPS_WORKFLOWS_RELEASED=false. No progress score changes until exact-head CI and staging runtime acceptance.",
+  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence. Branch Operations candidate batch adds a canonical SQL persistence draft, service-role-only atomic RPCs, explicit Edge Auth/tenant/branch authorization, private server-uploaded evidence, lifecycle UI and contract tests. Draft is not a CLI-generated migration and is not applied; Edge Function is not deployed; ERP mount remains behind BRANCH_OPS_WORKFLOWS_RELEASED=false. No progress score changes until exact-head CI and staging runtime acceptance. Exact-head Free quality checks run 46089862837 completed PASS on commit 01255157a504800612982e908e11b1c9061a822f, including Node syntax, repository/static contracts and Deno type-check for Branch Operations. Disposable migration replay is separate and pending; no branch_ops migration was applied.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
     "PUBLIC_TENANT_ROUTING_RELEASED": false
@@ -5211,7 +5211,7 @@
           "requirement": "Daily tasks, due dates and escalation",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Daily tasks, due dates and escalation now have tenant/branch composite-FK schema draft, unique idempotency, active same-branch assignee validation, atomic create/status RPCs, append-only audit and ERP form/list/actions. Official migration, exact-head tests and staging runtime still pending.",
+          "evidence_or_gap": "Daily tasks, due dates and escalation now have tenant/branch composite-FK schema draft, unique idempotency, active same-branch assignee validation, atomic create/status RPCs, append-only audit and ERP form/list/actions. Official migration, exact-head tests and staging runtime still pending. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 139
@@ -5249,7 +5249,8 @@
               "status": "PASS",
               "evidence": [
                 "Contract tests authored; exact-head CI result pending",
-                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite.",
+                "Exact-head GitHub Actions Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46089862837 (adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check)."
               ],
               "score": 15
             },
@@ -5281,7 +5282,7 @@
             153
           ],
           "work_started_at": "2026-11-27",
-          "work_evidence": "Candidate artifacts: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; erp.html; tests/contracts/branch-operations-supabase-repository.test.mjs. Schema is draft only; no staging table/runtime evidence.",
+          "work_evidence": "Candidate artifacts: docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql; supabase/functions/_shared/branch-operations-repository.ts; supabase/functions/branch-operations/index.ts; src/branch-operations-ui.mjs; erp.html; tests/contracts/branch-operations-supabase-repository.test.mjs. Schema is draft only; no staging table/runtime evidence. Exact-head Free quality checks PASS on 01255157a504800612982e908e11b1c9061a822f; schema remains un-applied and runtime acceptance is pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
         },
@@ -5397,7 +5398,7 @@
           "requirement": "Photo evidence",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Private evidence upload now has server-only private bucket draft, tenant/branch/actor path validation, MIME signature and 8 MiB checks, evidence metadata/365-day retention and audit registration. Bucket migration and upload have not been applied/tested on staging.",
+          "evidence_or_gap": "Private evidence upload now has server-only private bucket draft, tenant/branch/actor path validation, MIME signature and 8 MiB checks, evidence metadata/365-day retention and audit registration. Bucket migration and upload have not been applied/tested on staging. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 142
@@ -5435,7 +5436,8 @@
               "status": "PASS",
               "evidence": [
                 "Contract tests authored; exact-head CI result pending",
-                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite.",
+                "Exact-head GitHub Actions Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46089862837 (adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check)."
               ],
               "score": 15
             },
@@ -5467,7 +5469,7 @@
             153
           ],
           "work_started_at": "2026-11-27",
-          "work_evidence": "Candidate artifacts: SQL draft branch_ops_evidence_assets + private bucket; authenticated Edge upload-evidence route; UI photo/PDF upload. No direct browser Storage policy; server uploads after Auth/membership/branch assignment checks. Runtime ownership/retention test pending.",
+          "work_evidence": "Candidate artifacts: SQL draft branch_ops_evidence_assets + private bucket; authenticated Edge upload-evidence route; UI photo/PDF upload. No direct browser Storage policy; server uploads after Auth/membership/branch assignment checks. Runtime ownership/retention test pending. Exact-head Free quality checks PASS on 01255157a504800612982e908e11b1c9061a822f; schema remains un-applied and runtime acceptance is pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
         },
@@ -5475,7 +5477,7 @@
           "requirement": "Incidents and corrective actions",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Incident persistence now has tenant/branch-scoped atomic record + critical evidence requirement + high/critical escalation task + audit; independent manager transitions open→investigating/resolved→closed. Staging database/runtime acceptance pending.",
+          "evidence_or_gap": "Incident persistence now has tenant/branch-scoped atomic record + critical evidence requirement + high/critical escalation task + audit; independent manager transitions open→investigating/resolved→closed. Staging database/runtime acceptance pending. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 143
@@ -5513,7 +5515,8 @@
               "status": "PASS",
               "evidence": [
                 "Contract tests authored; exact-head CI result pending",
-                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite.",
+                "Exact-head GitHub Actions Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46089862837 (adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check)."
               ],
               "score": 15
             },
@@ -5545,7 +5548,7 @@
             153
           ],
           "work_started_at": "2026-11-27",
-          "work_evidence": "Candidate artifacts: branch_ops_incidents/tasks schema; branch_ops_record_incident and branch_ops_update_incident_status RPCs; Edge actions; ERP incident form/evidence upload/status controls. No staging apply or E2E yet.",
+          "work_evidence": "Candidate artifacts: branch_ops_incidents/tasks schema; branch_ops_record_incident and branch_ops_update_incident_status RPCs; Edge actions; ERP incident form/evidence upload/status controls. No staging apply or E2E yet. Exact-head Free quality checks PASS on 01255157a504800612982e908e11b1c9061a822f; schema remains un-applied and runtime acceptance is pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
         },
@@ -5553,7 +5556,7 @@
           "requirement": "Equipment maintenance",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Equipment registry and maintenance work orders now have tenant/branch schema, approver-only asset registration, retired-asset guard, idempotent create, assigned technician/approver lifecycle transitions and audit. No runtime validation yet.",
+          "evidence_or_gap": "Equipment registry and maintenance work orders now have tenant/branch schema, approver-only asset registration, retired-asset guard, idempotent create, assigned technician/approver lifecycle transitions and audit. No runtime validation yet. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 144
@@ -5591,7 +5594,8 @@
               "status": "PASS",
               "evidence": [
                 "Contract tests authored; exact-head CI result pending",
-                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite.",
+                "Exact-head GitHub Actions Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46089862837 (adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check)."
               ],
               "score": 15
             },
@@ -5623,7 +5627,7 @@
             153
           ],
           "work_started_at": "2026-11-27",
-          "work_evidence": "Candidate artifacts: branch_ops_equipment/work_orders schema; branch_ops_register_equipment, branch_ops_create_maintenance_order and branch_ops_update_work_order_status RPCs; Edge actions; ERP equipment/work-order forms and lists. Official migration and staging E2E pending.",
+          "work_evidence": "Candidate artifacts: branch_ops_equipment/work_orders schema; branch_ops_register_equipment, branch_ops_create_maintenance_order and branch_ops_update_work_order_status RPCs; Edge actions; ERP equipment/work-order forms and lists. Official migration and staging E2E pending. Exact-head Free quality checks PASS on 01255157a504800612982e908e11b1c9061a822f; schema remains un-applied and runtime acceptance is pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
         },
@@ -5631,7 +5635,7 @@
           "requirement": "Branch audit and compliance score",
           "source_status": "NOT EVIDENCED",
           "audit_status": "PARTIAL",
-          "evidence_or_gap": "Compliance checks now support evidence-backed submission, independent approver review (submitter cannot self-approve), approved-only weighted score snapshot, evidence retention checks and audit. Snapshot/approval RPCs remain candidate-only pending replay and runtime.",
+          "evidence_or_gap": "Compliance checks now support evidence-backed submission, independent approver review (submitter cannot self-approve), approved-only weighted score snapshot, evidence retention checks and audit. Snapshot/approval RPCs remain candidate-only pending replay and runtime. Exact-head contract/syntax/type-check suite PASS; DB replay, Edge deployment, Storage and tenant A/B runtime remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 145
@@ -5669,7 +5673,8 @@
               "status": "PASS",
               "evidence": [
                 "Contract tests authored; exact-head CI result pending",
-                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite."
+                "PR #153 exact-head Free quality checks PASS (be7ae30f5e4352444f71458ab490fac5ae774beb), including this feature's contract suite.",
+                "Exact-head GitHub Actions Free quality checks PASS: https://github.com/dlice8888/dlice-landing-page/actions/runs/46089862837 (adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check)."
               ],
               "score": 15
             },
@@ -5701,7 +5706,7 @@
             153
           ],
           "work_started_at": "2026-11-27",
-          "work_evidence": "Candidate artifacts: branch_ops_compliance_checks/snapshots schema; submit/review/publish RPCs; server adapter and Edge routes; ERP submit/review/snapshot UI. No pgTAP or staging runtime evidence yet.",
+          "work_evidence": "Candidate artifacts: branch_ops_compliance_checks/snapshots schema; submit/review/publish RPCs; server adapter and Edge routes; ERP submit/review/snapshot UI. No pgTAP or staging runtime evidence yet. Exact-head Free quality checks PASS on 01255157a504800612982e908e11b1c9061a822f; schema remains un-applied and runtime acceptance is pending.",
           "progress_status": "IN_PROGRESS_EVIDENCE_WEIGHTED",
           "score_method": "PASS=100% of dimension weight; PARTIAL=50%; UNVERIFIED=0%; weighted total rounded to nearest integer."
         }
