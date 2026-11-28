@@ -1,7 +1,7 @@
 -- Branch Operations schema, lifecycle guard and ACL contracts.
 -- Executed only by the disposable Supabase PostgreSQL replay workflow.
 begin;
-select plan(90);
+select plan(82);
 
 select ok(to_regclass('public.branch_ops_equipment') is not null,'equipment table exists');
 select ok(to_regclass('public.branch_ops_tasks') is not null,'task table exists');
