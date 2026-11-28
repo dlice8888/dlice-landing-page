@@ -13,17 +13,15 @@ const asTime = (value, field) => {
 
 export function rankPendingApprovals(items, now = new Date().toISOString()) {
   const instant = asTime(now, "now");
+  const urgency = { critical: 0, high: 1, normal: 2, low: 3 };
   return [...(items || [])]
     .filter((item) => item && item.status === "pending" && asTime(item.expires_at, "expires_at") > instant)
-    .sort((a, b) => {
-      const urgencyA = asTime(a.expires_at, "expires_at") - instant;
-      const urgencyB = asTime(b.expires_at, "expires_at") - instant;
-      if (urgencyA !== urgencyB) return urgencyA - urgencyB;
-      const amountA = Number(a.amount_idr || 0);
-      const amountB = Number(b.amount_idr || 0);
-      if (amountA !== amountB) return amountB - amountA;
-      return asTime(a.created_at, "created_at") - asTime(b.created_at, "created_at");
-    });
+    .sort((a, b) =>
+      (urgency[a.urgency] ?? urgency.normal) - (urgency[b.urgency] ?? urgency.normal) ||
+      Number(b.amount_idr || 0) - Number(a.amount_idr || 0) ||
+      asTime(a.expires_at, "expires_at") - asTime(b.expires_at, "expires_at") ||
+      asTime(a.created_at, "created_at") - asTime(b.created_at, "created_at")
+    );
 }
 
 export function assertApprovalClaim({ approval, actor, expectedVersion, now = new Date().toISOString() }) {
@@ -145,4 +143,41 @@ export function assertApprovalDelegation({ actor, approval, now = new Date().toI
   );
   if (!valid) throw new Error("approval_delegation_invalid");
   return true;
+}
+
+
+/**
+ * Shared server-side eligibility predicate for inbox visibility and claim.
+ * The database RPC must repeat these checks under row lock; this helper is
+ * not a substitute for authorization or concurrency control.
+ */
+export function assertApprovalEligibility({ approval, actor, now = new Date().toISOString() }) {
+  if (!approval || !actor?.user_id) throw new TypeError("approval_and_actor_required");
+  if (approval.status !== "pending") throw new Error("approval_not_pending");
+  if (asTime(approval.expires_at, "expires_at") <= asTime(now, "now")) throw new Error("approval_expired");
+  if (!actor.allowed_branch_ids?.includes(approval.branch_id)) throw new Error("approval_branch_forbidden");
+  if (!actor.allowed_domains?.includes(approval.domain)) throw new Error("approval_domain_forbidden");
+  if (!actor.allowed_roles?.includes(actor.role) ||
+      !approval.eligible_roles?.includes(actor.role)) throw new Error("approval_role_forbidden");
+  if (approval.category && Array.isArray(actor.allowed_categories) &&
+      !actor.allowed_categories.includes(approval.category)) throw new Error("approval_category_forbidden");
+  const amount = Number(approval.amount_idr);
+  const maximum = Number(actor.max_approval_amount_idr);
+  if (!Number.isSafeInteger(amount) || amount < 0) throw new Error("approval_amount_invalid");
+  if (!Number.isSafeInteger(maximum) || amount > maximum) throw new Error("approval_amount_limit_exceeded");
+  if (approval.created_by === actor.user_id && approval.separation_of_duties === true) {
+    throw new Error("self_approval_forbidden");
+  }
+  assertApprovalDelegation({ actor, approval, now });
+  if (approval.claimed_by && approval.claimed_by !== actor.user_id &&
+      approval.claim_expires_at && asTime(approval.claim_expires_at, "claim_expires_at") > asTime(now, "now")) {
+    throw new Error("approval_already_claimed");
+  }
+  return Object.freeze({
+    approval_id: approval.id,
+    source_entity_type: approval.source_entity_type,
+    source_entity_id: approval.source_entity_id,
+    source_version: approval.source_version,
+    policy_version: APPROVAL_POLICY_VERSION,
+  });
 }
