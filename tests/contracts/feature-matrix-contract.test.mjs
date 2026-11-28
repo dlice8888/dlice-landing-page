@@ -52,15 +52,37 @@ test("the evidence ledger is the single canonical source for all 189 stable PRD 
   }
 });
 
-test("matrix progress metadata matches feature-level weighted scores", () => {
+test("all matrix status rollups and scoring counts are derived from the canonical ledger", () => {
   const features = matrix.domains.flatMap((domain) => domain.features);
-  const scoredPartial = features.filter(
+  const ledgerFeatures = ledger.feature_rows;
+  const canonicalCounts = statusCounts(ledgerFeatures);
+  const expectedRollup = { ...canonicalCounts, TOTAL: ledgerFeatures.length };
+  const expectedTotals = {
+    total: ledgerFeatures.length,
+    partial: canonicalCounts.PARTIAL,
+    not_verified: canonicalCounts["NOT VERIFIED"],
+    blocked: canonicalCounts.BLOCKED,
+    done: canonicalCounts.DONE,
+  };
+
+  assert.deepEqual(matrix.feature_status_counts_current, expectedRollup);
+  assert.deepEqual(matrix.status_counts, expectedRollup);
+  assert.deepEqual(matrix.current_totals, expectedTotals);
+  assert.deepEqual(matrix.feature_totals, expectedTotals);
+
+  const scoredPartial = ledgerFeatures.filter(
     (feature) => feature.audit_status === "PARTIAL" && Number.isFinite(feature.progress_pct),
   ).length;
+  const unscoredPartial = canonicalCounts.PARTIAL - scoredPartial;
+  const scoringStatusCounts = Object.fromEntries(
+    [...new Set(ledgerFeatures.map((feature) => feature.scoring_status))]
+      .sort()
+      .map((status) => [status, ledgerFeatures.filter((feature) => feature.scoring_status === status).length]),
+  );
 
   assert.equal(matrix.progress_scoring.scored_partial_features, scoredPartial);
-  assert.equal(matrix.progress_scoring.unscored_partial_features,
-    features.filter((feature) => feature.audit_status === "PARTIAL").length - scoredPartial);
+  assert.equal(matrix.progress_scoring.unscored_partial_features, unscoredPartial);
+  assert.deepEqual(matrix.progress_scoring.scoring_status_counts, scoringStatusCounts);
 });
 
 test("matrix scoring weights match the canonical scoring standard", () => {
