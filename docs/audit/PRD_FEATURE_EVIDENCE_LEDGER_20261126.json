@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "generated_at": "2026-11-28",
   "repository": "dlice8888/dlice-landing-page",
-  "source_matrix_commit": "40143add3890a48b9f0837a107307737e47eee15",
+  "source_matrix_commit": "5cd77aa5eb927485d69fa8c5d601dca244fadb92",
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
@@ -13365,7 +13365,7 @@
     "status": "53 PARTIAL features have evidence-weighted progress scores; 135 PARTIAL features remain unscored. Latest batch adds evidence-backed scores for CRM unified identity, refund-aware loyalty and HR payroll/Finance integration; Branch Operations scores remain unchanged pending canonical migration and runtime evidence."
   },
   "latest_audit_report": "docs/audit/FNB_OS_TOTAL_AUDIT_2026-11-28.md",
-  "latest_implementation_note": "Branch Operations now has concrete tenant/branch-scoped server adapters, private Storage upload/download verification, evidence-linked maintenance, immutable compliance snapshots and ERP UI behind a false release gate. CRM split-tender financial close and refund-aware loyalty adjustments plus HR payroll Finance/payment reconciliation API/UI are implemented in candidate source. Exact-head quality checks pass; disposable CRM/HR replay and pgTAP passed on the prior migration-equivalent head, latest replay is running. No staging migration, Edge deployment, merge or release.",
+  "latest_implementation_note": "Branch Operations now has concrete tenant/branch-scoped server adapters, private Storage upload/download verification, evidence-linked maintenance, immutable compliance snapshots and ERP UI behind a false release gate. CRM split-tender financial close and refund-aware loyalty adjustments plus HR payroll Finance/payment reconciliation API/UI are implemented in candidate source. Exact-head Free quality checks PASS (run 46093311446) and exact-head disposable canonical migration replay/schema verification plus CRM/HR/eight-domain pgTAP PASS (run 46093311274). Branch Operations SQL remains a draft; no staging migration, Edge deployment, merge or release.",
   "latest_pr_heads": {
     "152": "3dda8d1c6dce3b0a68d4ce95afaae059af3101a0",
     "153": "40143add3890a48b9f0837a107307737e47eee15"
@@ -13407,8 +13407,8 @@
       "processed refunds create immutable negative loyalty adjustments, reverse unspent points and record spent-points debt",
       "original earning-rule version retained on each earn entry"
     ],
-    "disposable_replay": "PASS_46091245841_ON_7E7BC872; latest candidate replay 46093311274 pending",
-    "pgTap": "CRM_AND_HR_EIGHT_DOMAIN_PGTAP_PASS_ON_7E7BC872",
+    "disposable_replay": "PASS_46093311274_ON_C9A3065_EXACT_HEAD",
+    "pgTap": "CRM_AND_HR_EIGHT_DOMAIN_PGTAP_PASS_46093311274",
     "exact_head_quality": "PASS_46093311446_ON_C9A3065",
     "staging_migration": "NOT_APPLIED",
     "staging_pos_e2e": "NOT_RUN",
@@ -13435,13 +13435,14 @@
       "generic raw-body HMAC-SHA256 provider event webhook with idempotent RPC"
     ],
     "exact_head_quality": "PASS_46093311446_ON_C9A3065",
-    "disposable_replay": "PASS_46091245841_ON_7E7BC872; latest candidate replay 46093311274 pending",
+    "disposable_replay": "PASS_46093311274_ON_C9A3065_EXACT_HEAD",
     "staging_migration": "NOT_APPLIED",
     "provider_payout_dispatch": "NOT_IMPLEMENTED_PROVIDER_SPECIFIC",
     "provider_credentials": "NOT_CONFIGURED",
     "staging_provider_e2e": "NOT_RUN",
     "feature_ids": [
       "D12-F06"
-    ]
+    ],
+    "pgTap": "CRM_AND_HR_EIGHT_DOMAIN_PGTAP_PASS_46093311274"
   }
 }
