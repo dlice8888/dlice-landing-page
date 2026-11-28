@@ -6,13 +6,13 @@
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 188,
-    "NOT VERIFIED": 0,
+    "PARTIAL": 123,
+    "NOT VERIFIED": 65,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
   },
-  "status_semantics": "Preserve source matrix classifications. Cross-walk active PRs by stable feature_id before reclassification; count each feature once. Score PARTIAL features only from evidence dimensions weighted 20/20/15/15/20/10. DONE requires 100%, exact-head code/database/auth/workflow/E2E/reconciliation evidence, with no blocked or skipped acceptance.",
+  "status_semantics": "PARTIAL requires a feature-specific active implementation PR or concrete code/schema/auth/test evidence. NOT VERIFIED remains for features without a mapped implementation path or evidence. BLOCKED is an explicit acceptance prerequisite. Score PARTIAL features only from evidence dimensions weighted 20/20/15/15/20/10. DONE requires exact-head code/database/auth/workflow/E2E/reconciliation evidence, with no blocked or skipped acceptance.",
   "feature_rows": [
     {
       "feature_id": "D01-F01",
@@ -13275,8 +13275,8 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 188,
-    "NOT VERIFIED": 0,
+    "PARTIAL": 123,
+    "NOT VERIFIED": 65,
     "BLOCKED": 1,
     "DONE": 0
   },
