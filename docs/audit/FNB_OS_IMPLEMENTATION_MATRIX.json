@@ -1,7 +1,7 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-28 (implementation head c9a3065 exact-head quality PASS and disposable canonical migration replay/pgTAP PASS; audit/matrix documentation refreshed separately; Branch Ops SQL draft remains not migrated; 188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE)",
+  "snapshot_at": "2026-11-28 (implementation head c9a3065 exact-head quality PASS and disposable canonical migration replay/pgTAP PASS; audit/matrix documentation refreshed separately; Branch Ops SQL draft remains not migrated; 124 PARTIAL, 64 NOT VERIFIED, 1 BLOCKED, 0 DONE)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
   "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence. Branch Operations candidate batch adds a canonical SQL persistence draft, service-role-only atomic RPCs, explicit Edge Auth/tenant/branch authorization, private server-uploaded evidence, lifecycle UI and contract tests. Draft is not a CLI-generated migration and is not applied; Edge Function is not deployed; ERP mount remains behind BRANCH_OPS_WORKFLOWS_RELEASED=false. No progress score changes until exact-head CI and staging runtime acceptance. Exact-head Free quality checks run 46089862837 completed PASS on commit 01255157a504800612982e908e11b1c9061a822f, including Node syntax, repository/static contracts and Deno type-check for Branch Operations. Disposable migration replay is separate and pending; no branch_ops migration was applied. New Branch Ops evidence download route uses 60-second signed URLs after tenant/branch-scoped metadata and retention lookup. Exact-head Free quality check steps through migration/docs coverage all PASS on 02a072bb99ffdba131e0aa1e3384c17e19316dbc; final cleanup step was still running at snapshot. Latest batch: exact-head Free quality checks PASS and CRM/HR disposable replay + pgTAP PASS; Branch Operations now has concrete server adapter, private Storage verification, UI and workflow source, but its SQL remains a draft and has not been migrated/replayed. Exact-head implementation validation at c9a3065: Free quality checks PASS and disposable canonical migration replay/schema verification/CRM+HR+eight-domain pgTAP PASS. Branch Operations remains a SQL draft and is intentionally excluded from canonical replay until the final migration batch.",
   "release_flags": {
@@ -1038,13 +1038,13 @@
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
           "source_status": "PARTIAL",
-          "audit_status": "NOT VERIFIED",
-          "evidence_or_gap": "Payment-proof/status foundations exist; live provider confirmation and settlement parity not proven.",
+          "audit_status": "PARTIAL",
+          "evidence_or_gap": "PR #161 adds POS split-tender UI and authenticated Edge routing to the existing atomic staging RPC. Exact-head Free quality checks PASS (run 46136067124), including the new split-tender contract and Deno type-check. Live staging catalog confirms the RPC signature and service_role-only EXECUTE (authenticated/anon denied). Provider-confirmation/settlement parity, positive staging POS E2E and tender/receipt/cash/Finance reconciliation remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 51
           },
-          "work_status": "GAP_REMEDIATION_REQUIRED",
+          "work_status": "IN_PROGRESS",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
           "feature_id": "D02-F06",
           "progress_pct": null,
@@ -1052,23 +1052,35 @@
           "evidence_dimensions": {
             "code_ui": {
               "weight": 20,
-              "status": "UNVERIFIED",
-              "evidence": []
+              "status": "PARTIAL",
+              "evidence": [
+                "erp.html: POS split tender selector and two tender allocations (PR #161)",
+                "supabase/functions/dlice-orders/index.ts: server routes split payment through atomic RPC (PR #161)"
+              ]
             },
             "database": {
               "weight": 20,
-              "status": "UNVERIFIED",
-              "evidence": []
+              "status": "PARTIAL",
+              "evidence": [
+                "Staging catalog: public.erp_create_pos_sale_split_tender_idempotent(uuid,uuid,jsonb,bigint,text,text,uuid,text,jsonb) exists",
+                "Staging ACL probe: service_role EXECUTE=true; authenticated=false; anon=false"
+              ]
             },
             "authorization": {
               "weight": 15,
-              "status": "UNVERIFIED",
-              "evidence": []
+              "status": "PARTIAL",
+              "evidence": [
+                "Edge action checks branchAccess(branchId) and passes authenticated actor.user.id to server RPC",
+                "RPC requires auth.jwt role service_role; direct authenticated/anon EXECUTE denied in staging"
+              ]
             },
             "automated_tests": {
               "weight": 15,
-              "status": "UNVERIFIED",
-              "evidence": []
+              "status": "PASS",
+              "evidence": [
+                "tests/contracts/pos-split-tender-contract.test.mjs passes on exact PR #161 head; Free quality run 46136067124 step 8 SUCCESS",
+                "Deno type-check for supabase/functions/dlice-orders/index.ts passed in Free quality run 46136067124 step 44"
+              ]
             },
             "e2e_workflow": {
               "weight": 20,
@@ -1082,12 +1094,24 @@
             }
           },
           "crosswalk": {
-            "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-            "matched_prs": [],
+            "status": "MATCHED_ACTIVE_PR",
+            "matched_prs": [
+              161
+            ],
             "audit_pr": 147,
-            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
-            "pr_evidence": []
-          }
+            "notes": "Source and automated contract implementation has started. No E5/E6 credit until positive staging E2E and reconciliation pass.",
+            "pr_evidence": [
+              {
+                "pr": 161,
+                "kind": "POS split tender UI, server RPC integration, offline replay and contract tests",
+                "limitation": "PR is draft; no positive staging E2E, provider settlement reconciliation or full POS reconciliation yet."
+              }
+            ],
+            "latest_implementation_commit": "acc1c9de52c42713304e708abcd4b117b20f0cba"
+          },
+          "active_prs": [
+            161
+          ]
         },
         {
           "requirement": "Split bill, partial payment, final settlement",
@@ -1620,8 +1644,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 13,
-        "partial": 6,
-        "not_verified": 7,
+        "partial": 7,
+        "not_verified": 6,
         "blocked": 0,
         "done": 0
       },
@@ -14177,8 +14201,8 @@
     "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
-    "PARTIAL": 123,
-    "NOT VERIFIED": 65,
+    "PARTIAL": 124,
+    "NOT VERIFIED": 64,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
@@ -15757,8 +15781,8 @@
   "audit_method": "189 PRD rows cross-checked against the canonical evidence ledger and feature-specific implementation PR/evidence. PARTIAL is assigned only where a concrete implementation path is mapped; features with no feature-specific PR or evidence remain NOT VERIFIED. BLOCKED remains explicit. No feature is DONE without complete E0-E6 acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 123,
-    "not_verified": 65,
+    "partial": 124,
+    "not_verified": 64,
     "blocked": 1,
     "done": 0
   },
@@ -15770,8 +15794,8 @@
     "validation": "All 189 matrix rows matched exactly one ledger row by domain and requirement; feature IDs are unique; audit_status values match. Statuses remain PARTIAL/NOT VERIFIED/BLOCKED; no feature promoted to DONE."
   },
   "status_counts": {
-    "PARTIAL": 123,
-    "NOT VERIFIED": 65,
+    "PARTIAL": 124,
+    "NOT VERIFIED": 64,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
@@ -15779,8 +15803,8 @@
   "reconciliation_note": "All 189 stable feature IDs are matched one-to-one between matrix and canonical ledger. Counts are derived from feature-level audit_status. 65 features have no feature-specific active implementation PR or concrete six-dimension evidence and remain NOT VERIFIED; PARTIAL indicates concrete implementation work exists but acceptance remains incomplete. No feature is DONE.",
   "feature_totals": {
     "total": 189,
-    "partial": 123,
-    "not_verified": 65,
+    "partial": 124,
+    "not_verified": 64,
     "blocked": 1,
     "done": 0
   },

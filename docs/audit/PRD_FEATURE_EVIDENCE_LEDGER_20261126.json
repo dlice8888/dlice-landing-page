@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "generated_at": "2026-11-28",
+  "generated_at": "2026-11-28T10:40:00Z",
   "repository": "dlice8888/dlice-landing-page",
   "source_matrix_commit": "5cd77aa5eb927485d69fa8c5d601dca244fadb92",
   "prd_feature_count": 189,
   "status": "CROSSWALK_FIRST_PASS_REVIEW_REQUIRED",
   "source_counts": {
-    "PARTIAL": 123,
-    "NOT VERIFIED": 65,
+    "PARTIAL": 124,
+    "NOT VERIFIED": 64,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
@@ -1024,9 +1024,9 @@
       "domain": "POS & Checkout",
       "requirement": "Cash, QRIS, card, transfer and other provider methods",
       "source_status": "PARTIAL",
-      "audit_status": "NOT VERIFIED",
-      "work_status": "GAP_REMEDIATION_REQUIRED",
-      "evidence_or_gap": "Payment-proof/status foundations exist; live provider confirmation and settlement parity not proven.",
+      "audit_status": "PARTIAL",
+      "work_status": "IN_PROGRESS",
+      "evidence_or_gap": "PR #161 adds POS split-tender UI and authenticated Edge routing to the existing atomic staging RPC. Exact-head Free quality checks PASS (run 46136067124), including the new split-tender contract and Deno type-check. Live staging catalog confirms the RPC signature and service_role-only EXECUTE (authenticated/anon denied). Provider-confirmation/settlement parity, positive staging POS E2E and tender/receipt/cash/Finance reconciliation remain unverified.",
       "source": {
         "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
         "line": 51
@@ -1036,23 +1036,35 @@
       "evidence_dimensions": {
         "code_ui": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "erp.html: POS split tender selector and two tender allocations (PR #161)",
+            "supabase/functions/dlice-orders/index.ts: server routes split payment through atomic RPC (PR #161)"
+          ]
         },
         "database": {
           "weight": 20,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Staging catalog: public.erp_create_pos_sale_split_tender_idempotent(uuid,uuid,jsonb,bigint,text,text,uuid,text,jsonb) exists",
+            "Staging ACL probe: service_role EXECUTE=true; authenticated=false; anon=false"
+          ]
         },
         "authorization": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PARTIAL",
+          "evidence": [
+            "Edge action checks branchAccess(branchId) and passes authenticated actor.user.id to server RPC",
+            "RPC requires auth.jwt role service_role; direct authenticated/anon EXECUTE denied in staging"
+          ]
         },
         "automated_tests": {
           "weight": 15,
-          "status": "UNVERIFIED",
-          "evidence": []
+          "status": "PASS",
+          "evidence": [
+            "tests/contracts/pos-split-tender-contract.test.mjs passes on exact PR #161 head; Free quality run 46136067124 step 8 SUCCESS",
+            "Deno type-check for supabase/functions/dlice-orders/index.ts passed in Free quality run 46136067124 step 44"
+          ]
         },
         "e2e_workflow": {
           "weight": 20,
@@ -1065,13 +1077,22 @@
           "evidence": []
         }
       },
-      "deduplication": "PENDING_ACTIVE_PR_CROSSWALK",
+      "deduplication": "MATCHED_ACTIVE_PR_CROSSWALK",
       "crosswalk": {
-        "status": "NO_DIRECT_ACTIVE_PR_MATCH",
-        "matched_prs": [],
+        "status": "MATCHED_ACTIVE_PR",
+        "matched_prs": [
+          161
+        ],
         "audit_pr": 147,
-        "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until code/schema/auth/tests/workflow evidence is linked.",
-        "pr_evidence": []
+        "notes": "Source and automated contract implementation has started. No E5/E6 credit until positive staging E2E and reconciliation pass.",
+        "pr_evidence": [
+          {
+            "pr": 161,
+            "kind": "POS split tender UI, server RPC integration, offline replay and contract tests",
+            "limitation": "PR is draft; no positive staging E2E, provider settlement reconciliation or full POS reconciliation yet."
+          }
+        ],
+        "latest_implementation_commit": "acc1c9de52c42713304e708abcd4b117b20f0cba"
       }
     },
     {
@@ -13275,10 +13296,11 @@
     "source_matrix_commit": "530d46bccc955976bfd6383e18de2d5f98e4c00b"
   },
   "current_audit_status_counts": {
-    "PARTIAL": 123,
-    "NOT VERIFIED": 65,
+    "PARTIAL": 124,
+    "NOT VERIFIED": 64,
     "BLOCKED": 1,
-    "DONE": 0
+    "DONE": 0,
+    "TOTAL": 189
   },
   "latest_platform_audit": {
     "project_id": "higoadrzxnhzbbwhdbmh",
