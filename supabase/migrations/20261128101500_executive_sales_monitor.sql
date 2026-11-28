@@ -93,6 +93,8 @@ create table if not exists public.executive_kpi_formula_versions (
  created_at timestamptz not null default now(),
  primary key(formula_key,formula_version)
 );
+create unique index if not exists executive_kpi_formula_one_active_idx
+ on public.executive_kpi_formula_versions(formula_key) where is_active;
 insert into public.executive_kpi_formula_versions(formula_key,formula_version,definition,is_active)
 values('sales_net','sales-net-v1',
  '{"gross":"sum(pos_sales.subtotal_idr)","discount":"sum(pos_sales.discount_idr)","refund":"sum(processed refund_records linked to paid sale cohort)","net":"sum(pos_sales.total_idr)-processed_refunds","eligibility":"pos_sales.payment_status in (paid,refunded) and paid_at is not null","business_date":"immutable pos_sales.business_date captured at paid_at using branch timezone and cutoff policy version","settlement":"sum matched payment_settlement_items.amount_idr linked to sale cohort","finance":"posted finance_journal_entries linked to sale and refund source ids; expose missing and amount totals"}'::jsonb,true)
@@ -325,6 +327,7 @@ as $fn$ declare v_role text;v_platform_owner boolean;v_version integer;begin
  if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id) then raise exception using errcode='42501',message='EXECUTIVE_BRANCH_SCOPE_DENIED';end if;
  if not v_platform_owner and v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
   raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_UPDATE_DENIED';end if;
+ perform pg_advisory_xact_lock(hashtextextended(p_tenant_id::text||':'||p_branch_id::text,0));
  select policy_version into v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id for update;
  if not found then v_version:=0;end if;
  if v_version<>p_expected_version then raise exception using errcode='40001',message='EXECUTIVE_CUTOFF_STALE_VERSION';end if;
