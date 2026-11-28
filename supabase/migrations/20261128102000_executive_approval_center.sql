@@ -13,7 +13,7 @@ create table if not exists public.executive_approval_requests(
  category text not null check(category in ('procurement','finance','hr','branch_ops')),entity_type text not null,
  entity_id uuid not null,branch_id uuid,created_by uuid not null references auth.users(id) on delete restrict,
  amount_idr bigint not null default 0 check(amount_idr>=0),reason text,required_roles text[] not null,
- allow_self_approval boolean not null default false,source_version integer not null default 1,
+ allow_self_approval boolean not null default false,source_version bigint not null default 1,
  status text not null default 'pending' check(status in ('pending','claimed','approved','rejected','expired')),
  expires_at timestamptz not null,claimed_by uuid references auth.users(id),claimed_at timestamptz,claim_expires_at timestamptz,
  decided_by uuid references auth.users(id),decided_at timestamptz,decision_reason text,version integer not null default 1 check(version>0),
@@ -36,7 +36,7 @@ create table if not exists public.executive_approval_decisions(
  id uuid primary key default gen_random_uuid(),tenant_id uuid not null references public.tenants(id) on delete restrict,
  approval_id uuid not null references public.executive_approval_requests(id) on delete restrict,
  actor_user_id uuid not null references auth.users(id) on delete restrict,decision text not null check(decision in ('approve','reject')),
- reason text not null,source_version integer not null,delegated_by uuid references auth.users(id),created_at timestamptz not null default now()
+ reason text not null,source_version bigint not null,delegated_by uuid references auth.users(id),created_at timestamptz not null default now()
 );
 create index if not exists executive_approval_decisions_history_idx on public.executive_approval_decisions(tenant_id,approval_id,created_at);
 
@@ -85,20 +85,36 @@ for each row execute function public.trg_seed_executive_approval_policies();
 create or replace function public.enqueue_executive_approval(
  p_tenant_id uuid,p_category text,p_entity_type text,p_entity_id uuid,p_branch_id uuid,p_created_by uuid,p_amount_idr bigint,p_reason text
 ) returns uuid language plpgsql security definer set search_path=''
-as $$
-declare v_policy public.executive_approval_policies%rowtype;v_id uuid;
+as $
+declare v_policy public.executive_approval_policies%rowtype;v_id uuid;v_source_version bigint;
 begin
  select * into v_policy from public.executive_approval_policies where tenant_id=p_tenant_id and category=p_category and enabled;
  if not found then return null;end if;
+ if p_entity_type='purchase_requisition' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_source_version from public.purchase_requisitions r
+   where r.id=p_entity_id and r.branch_id=p_branch_id and r.status='submitted';
+ elsif p_entity_type='refund_record' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_source_version from public.refund_records r
+   where r.id=p_entity_id and r.branch_id=p_branch_id and r.status='requested';
+ elsif p_entity_type='hr_payroll_run' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_source_version from public.hr_payroll_runs r
+   where r.id=p_entity_id and r.tenant_id=p_tenant_id and r.status='submitted';
+ elsif p_entity_type='branch_ops_compliance_check' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_source_version from public.branch_ops_compliance_checks r
+   where r.id=p_entity_id and r.tenant_id=p_tenant_id and r.status='submitted';
+ else
+  raise exception using errcode='22023',message='APPROVAL_SOURCE_TYPE_UNSUPPORTED';
+ end if;
+ if v_source_version is null then raise exception using errcode='40001',message='APPROVAL_SOURCE_NOT_SUBMITTED_OR_SCOPE_MISMATCH';end if;
  insert into public.executive_approval_requests(tenant_id,category,entity_type,entity_id,branch_id,created_by,amount_idr,reason,
-  required_roles,allow_self_approval,expires_at)
+  required_roles,allow_self_approval,source_version,expires_at)
  values(p_tenant_id,p_category,p_entity_type,p_entity_id,p_branch_id,p_created_by,greatest(coalesce(p_amount_idr,0),0),
-  left(coalesce(p_reason,''),1000),v_policy.required_roles,v_policy.allow_self_approval,now()+v_policy.expiry_after)
+  left(coalesce(p_reason,''),1000),v_policy.required_roles,v_policy.allow_self_approval,v_source_version,now()+v_policy.expiry_after)
  on conflict(tenant_id,entity_type,entity_id) do update set
   status='pending',created_by=excluded.created_by,amount_idr=excluded.amount_idr,reason=excluded.reason,
   required_roles=excluded.required_roles,allow_self_approval=excluded.allow_self_approval,
   expires_at=excluded.expires_at,claimed_by=null,claimed_at=null,claim_expires_at=null,decided_by=null,decided_at=null,
-  decision_reason=null,source_version=public.executive_approval_requests.source_version+1,
+  decision_reason=null,source_version=excluded.source_version,
   version=public.executive_approval_requests.version+1,updated_at=now()
  where public.executive_approval_requests.status in ('rejected','expired')
  returning id into v_id;
@@ -165,9 +181,16 @@ begin
  if v_role is null then raise exception using errcode='42501',message='APPROVAL_TENANT_MEMBERSHIP_REQUIRED';end if;
  if exists(select 1 from unnest(coalesce(p_branch_ids,'{}'::uuid[])) x where not exists(select 1 from public.branches b where b.id=x and b.tenant_id=p_tenant_id))
   then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
- update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
- where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now()
-  and ((branch_id is not null and branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (branch_id is null and v_role='tenant_owner'));
+ with expired as (
+  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
+  where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now()
+   and ((branch_id is not null and branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (branch_id is null and v_role='tenant_owner'))
+  returning id,entity_type,entity_id,branch_id
+ )
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ select p_actor_user_id,'executive.approval.expired',e.entity_type,e.entity_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'approval_id',e.id,'branch_id',e.branch_id)
+ from expired e;
  select coalesce(jsonb_agg(jsonb_build_object('id',a.id,'tenant_id',a.tenant_id,'category',a.category,'source_entity',a.entity_type,
   'source_entity_id',a.entity_id,'branch_id',a.branch_id,'created_by',a.created_by,'amount_idr',a.amount_idr,'status',a.status,
   'source_version',a.source_version,'version',a.version,'expires_at',a.expires_at,'claimed_by',a.claimed_by,
@@ -226,6 +249,10 @@ begin
  update public.executive_approval_requests set status='claimed',claimed_by=p_actor_user_id,claimed_at=now(),
   claim_expires_at=least(expires_at,now()+interval '5 minutes'),version=version+1,updated_at=now()
  where id=a.id returning * into a;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.approval.claimed','executive_approval_request',a.id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'source_entity',a.entity_type,'source_entity_id',a.entity_id,
+   'version',a.version,'delegated_by',v_delegator,'claim_expires_at',a.claim_expires_at));
  return jsonb_build_object('approval_id',a.id,'claimed_by',a.claimed_by,'claim_expires_at',a.claim_expires_at,'version',a.version,'delegated_by',v_delegator);
 end $$;
 
@@ -262,7 +289,7 @@ create or replace function public.decide_approval(
 as $$
 declare
  a public.executive_approval_requests%rowtype;
- v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version integer;
+ v_role text;v_delegator uuid;v_delegator_role text;v_limit bigint;v_updated integer:=0;v_source_version bigint;v_current_source_version bigint;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then
   raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';
@@ -292,6 +319,22 @@ begin
  end if;
  if a.created_by=p_actor_user_id and not a.allow_self_approval then
   raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_DENIED';
+ end if;
+ if a.entity_type='purchase_requisition' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_current_source_version from public.purchase_requisitions r
+   where r.id=a.entity_id and r.branch_id=a.branch_id and r.status='submitted';
+ elsif a.entity_type='refund_record' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_current_source_version from public.refund_records r
+   where r.id=a.entity_id and r.branch_id=a.branch_id and r.status='requested';
+ elsif a.entity_type='hr_payroll_run' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_current_source_version from public.hr_payroll_runs r
+   where r.id=a.entity_id and r.tenant_id=p_tenant_id and r.status='submitted';
+ elsif a.entity_type='branch_ops_compliance_check' then
+  select hashtextextended(to_jsonb(r)::text,0) into v_current_source_version from public.branch_ops_compliance_checks r
+   where r.id=a.entity_id and r.tenant_id=p_tenant_id and r.status='submitted';
+ end if;
+ if v_current_source_version is null or v_current_source_version<>a.source_version then
+  raise exception using errcode='40001',message='APPROVAL_SOURCE_VERSION_MISMATCH';
  end if;
  if not (v_role=any(a.required_roles)) then
   select d.delegator_user_id into v_delegator
