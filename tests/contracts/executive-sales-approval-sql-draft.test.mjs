@@ -43,6 +43,6 @@ test("approval draft exposes list, claim and decide RPCs only to service role",(
  assert.match(approvals,/hr_approve_payroll_run/);
  assert.match(approvals,/erp_transition_purchase_requisition/);
  assert.match(approvals,/branch_operation_checklist_runs/);
- assert.doesNotMatch(approvals,/grant execute on function public\\.decide_approval[^;]*to authenticated/i);
- assert.match(approvals,/rollback;\\s*$/i);
+ assert.doesNotMatch(approvals,/grant execute on function public\.decide_approval[^;]*to authenticated/i);
+ assert.match(approvals,/rollback;\s*$/i);
 });
