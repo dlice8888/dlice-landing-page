@@ -2536,7 +2536,7 @@ if(action==="erp-executive-branch-kpis"){
   if (["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval"].includes(action)) {
     const canReviewDomain= isOwner || hasPerm("procurement") || hasPerm("finance") || hasPerm("hr") || hasPerm("branches");
     if(!canReviewDomain)return fail("Izin approval center tidak diizinkan.",403,origin);
-    const allowedBranchIds=await branchIdsForActor().catch(()=>[]);
+    const allowedBranchIds: string[]=await branchIdsForActor().catch(()=>[] as string[]);
     if(!Array.isArray(allowedBranchIds)||!allowedBranchIds.length)return fail("Tidak ada cakupan cabang aktif untuk approval.",403,origin);
     const requestedBranchId=safeText(body.branch_id,80);
     if(requestedBranchId&&!allowedBranchIds.includes(requestedBranchId))return fail("Akses cabang approval tidak diizinkan.",403,origin);
