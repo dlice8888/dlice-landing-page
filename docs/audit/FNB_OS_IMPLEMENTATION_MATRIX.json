@@ -1,9 +1,9 @@
 {
   "repository": "dlice8888/dlice-landing-page",
   "target_branch": "staging",
-  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; 50 PARTIAL scored, 138 PARTIAL unscored; Branch Ops evidence-ownership guard added, exact-head contract execution pending)",
+  "snapshot_at": "2026-11-28 (188 PARTIAL, 0 NOT VERIFIED, 1 BLOCKED, 0 DONE; exact-head Free quality checks PASS; CRM disposable replay IN_PROGRESS; Branch Ops concrete adapter/schema/UI still GAP; no score increase)",
   "baseline_commit": "aed9353d2d2daac57462a108beb43d983ec54946",
-  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score.",
+  "method": "Stable PRD feature IDs reconciled row-by-row against PRD_FEATURE_EVIDENCE_LEDGER_20261126.json; current GitHub PR/code/CI, live Supabase staging schema/data/Auth/Edge Function/Advisor, and Vercel preview/deployment evidence checked. Draft PRs and READY previews do not earn DONE. PARTIAL coverage is not a weighted completion score. Live checkpoint 2026-11-28: exact-head CI and Vercel status rechecked; no feature progress awarded without concrete integration/runtime evidence.",
   "release_flags": {
     "TENANT_ISOLATION_RELEASED": false,
     "PUBLIC_TENANT_ROUTING_RELEASED": false
