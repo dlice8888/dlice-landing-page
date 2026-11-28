@@ -46,5 +46,7 @@ test("POS reconciliation endpoint includes tender, immutable receipt, shift, cas
   }
   assert.match(reconciliation, /tender_total_idr/);
   assert.match(reconciliation, /tender_matches_sale_total/);
+  assert.match(reconciliation, /pos_sales_single_method/);
+  assert.match(reconciliation, /missing_split_tender_rows/);
   assert.match(reconciliation, /branchAccess\(branchId\)/);
 });
