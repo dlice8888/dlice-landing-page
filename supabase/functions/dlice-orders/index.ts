@@ -2021,7 +2021,7 @@ if (action === "admin-set-profile-role") {
     if(requested&&requested.some((id:string)=>!allowedBranchIds.includes(id)))return fail("Filter cabang di luar penugasan ditolak.",403,origin);
     if(action==="erp-executive-sales-monitor"){
       const period=safeText(body.period,12)||"day",start=safeText(body.start_date,10),end=safeText(body.end_date,10);
-      if(!["day","week","month"].includes(period)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)
+      if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(start)||!/^\d{4}-\d{2}-\d{2}$/.test(end)||end<start)
         return fail("Periode penjualan tidak valid.",422,origin);
       const {data,error}=await admin.rpc("executive_sales_monitor_snapshot",{
         p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:requested??allowedBranchIds,
