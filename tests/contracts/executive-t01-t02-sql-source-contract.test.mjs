@@ -100,3 +100,8 @@ test("T02 decision history is append-only and idempotent replay is actor-bound",
   assert.match(sql, /APPROVAL_IDEMPOTENCY_ACTOR_MISMATCH/);
   assert.match(sql, /v_existing_decision\.actor_user_id<>p_actor_user_id/);
 });
+
+test("T01 marks settlement net incomplete when any allocation is missing", () => {
+  assert.match(sql, /count\(\*\)=count\(sa\.allocated_net_idr\)/i);
+  assert.match(sql, /settlement_allocation_complete/i);
+});
