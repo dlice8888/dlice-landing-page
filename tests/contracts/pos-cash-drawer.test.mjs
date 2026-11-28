@@ -30,8 +30,8 @@ test("drawer reconciliation replays tender and movements and records positive or
   const result = reconcileCashDrawer({
     shift, cashSalesIdr: 250000, cashRefundsIdr: 10000,
     movements: [
-      { id: "m1", shift_id: shift.id, branch_id: shift.branch_id, direction: "in", amount_idr: 20000 },
-      { id: "m2", shift_id: shift.id, branch_id: shift.branch_id, direction: "out", amount_idr: 5000 },
+      { id: "m1", shift_id: shift.id, branch_id: shift.branch_id, direction: "in", amount_idr: 20000, status: "posted" },
+      { id: "m2", shift_id: shift.id, branch_id: shift.branch_id, direction: "out", amount_idr: 5000, status: "posted" },
     ],
     countedCashIdr: 354000, actorUserId: "cashier-1", assignedBranchIds: scope,
     varianceApprovalThresholdIdr: 1000,
@@ -44,10 +44,25 @@ test("drawer reconciliation replays tender and movements and records positive or
     countedCashIdr: 400000, actorUserId: "cashier-1", assignedBranchIds: scope,
     varianceApprovalThresholdIdr: 1000,
   }), /cash_drawer_variance_approval_required/);
+  const approved = reconcileCashDrawer({
+    shift, cashSalesIdr: 250000, cashRefundsIdr: 10000,
+    movements: [
+      { id: "m1", shift_id: shift.id, branch_id: shift.branch_id, direction: "in", amount_idr: 20000, status: "posted" },
+      { id: "m2", shift_id: shift.id, branch_id: shift.branch_id, direction: "out", amount_idr: 5000, status: "posted" },
+    ],
+    countedCashIdr: 400000, actorUserId: "cashier-1", assignedBranchIds: scope,
+    varianceApprovalThresholdIdr: 1000, varianceApproved: true, varianceApprovedBy: "supervisor-1",
+  });
+  assert.equal(approved.variance_approved_by, "supervisor-1");
+  assert.throws(() => reconcileCashDrawer({
+    shift, cashSalesIdr: 250000, cashRefundsIdr: 10000,
+    movements: [], countedCashIdr: 400000, actorUserId: "cashier-1", assignedBranchIds: scope,
+    varianceApprovalThresholdIdr: 1000, varianceApproved: true, varianceApprovedBy: "cashier-1",
+  }), /cash_drawer_variance_approval_required/);
 });
 
 test("drawer close rejects duplicate or cross-shift movements and pending sales", () => {
-  const movement = { id: "m1", shift_id: shift.id, branch_id: shift.branch_id, direction: "in", amount_idr: 1000 };
+  const movement = { id: "m1", shift_id: shift.id, branch_id: shift.branch_id, direction: "in", amount_idr: 1000, status: "posted" };
   const common = {
     shift, cashSalesIdr: 0, movements: [movement], countedCashIdr: 101000,
     actorUserId: "cashier-1", assignedBranchIds: scope,
