@@ -2003,7 +2003,6 @@ if (action === "admin-set-profile-role") {
       return json({subscription:data},200,origin);
     }
    }
-  }
 
   const biExecutiveActions=new Set(["erp-bi-list-snapshots","erp-bi-list-reconciliations","erp-bi-review-reconciliation","erp-bi-publish-snapshot","erp-bi-register-source-lineage","erp-executive-list-alerts","erp-executive-verify-alert","erp-executive-transition-alert","erp-executive-branch-kpis","erp-executive-publish-branch-ranking","erp-executive-list-branch-rankings"]);
   if(biExecutiveActions.has(action)){
