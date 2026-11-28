@@ -3,7 +3,7 @@ const fail=(code,message)=>{throw Object.assign(new Error(message),{code});};
 const req=(v,k)=>{if(typeof v!=="string"||!v.trim())fail("ORDER_ROUTER_INPUT_REQUIRED",k);return v.trim();};
 const fn=(d,k)=>{if(typeof d?.[k]!=="function")fail("ORDER_ROUTER_ADAPTER_REQUIRED",k);return d[k];};
 export async function routeOrderToBranch(input,deps){
- const payload={tenantId:req(input?.tenantId,"tenantId"),orderId:req(input?.orderId,"orderId"),postalCode:req(input?.postalCode,"postalCode"),
+ const payload={tenantId:req(input?.tenantId,"tenantId"),actorId:req(input?.actorId,"actorId"),orderId:req(input?.orderId,"orderId"),postalCode:req(input?.postalCode,"postalCode"),
   serviceDate:req(input?.serviceDate,"serviceDate"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),items:input.items};
  if(!Array.isArray(payload.items)||!payload.items.length)fail("ORDER_ROUTER_ITEMS_REQUIRED","Order items required");
  const result=await fn(deps,"reserveOrderBranchAtomically")(payload);
