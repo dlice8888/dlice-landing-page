@@ -81,7 +81,7 @@ language plpgsql security definer set search_path=''
 as $$
 declare
  v_snapshot public.executive_sales_monitor_snapshots%rowtype;
- v_rows jsonb;v_daily jsonb;v_finance jsonb;v_branch_count integer;
+ v_rows jsonb;v_daily jsonb;v_finance jsonb;v_payment jsonb;v_branch_count integer;v_tender_mismatch integer;v_refund_overrun integer;
  v_gross bigint;v_discount bigint;v_refund bigint;v_net bigint;v_settlement bigint;v_count integer;
  v_finance_count integer;v_missing_journal integer;v_journal_count integer;
 begin
@@ -124,14 +124,14 @@ begin
  )
  select s.sale_id,s.transaction_code,s.branch_id,s.shift_id,s.branch_code,s.business_date,s.timezone,s.cutoff_time,
   s.gross_idr,s.discount_idr,coalesce(r.amount_idr,0)::bigint processed_refund_idr,
-  greatest(s.total_idr-coalesce(r.amount_idr,0),0)::bigint net_sales_idr,
+  (s.total_idr-coalesce(r.amount_idr,0))::bigint net_sales_idr,
   coalesce(t.amount_idr,0)::bigint tender_allocated_idr,coalesce(st.amount_idr,0)::bigint matched_settlement_idr,
   coalesce(j.entry_count,0)::integer finance_journal_entry_count
  from sales s left join refunds r on r.pos_sale_id=s.sale_id left join tenders t on t.sale_id=s.sale_id
  left join settlements st on st.pos_sale_id=s.sale_id left join journals j on j.source_id=s.sale_id
  where s.business_date between p_period_start and p_period_end;
 
- select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
+ select count(*) filter(where net_sales_idr<0)::integer into v_refund_overrun from _exec_sales_rows;\n if v_refund_overrun>0 then raise exception using errcode='23514',message='EXECUTIVE_REFUND_EXCEEDS_SALE_TOTAL';end if;\n select count(*) filter(where tender_allocated_idr<>gross_idr-discount_idr)::integer into v_tender_mismatch from _exec_sales_rows;\n select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
   coalesce(sum(net_sales_idr),0),coalesce(sum(matched_settlement_idr),0),count(*)::integer,
   count(*) filter(where finance_journal_entry_count>0)::integer,
   count(*) filter(where finance_journal_entry_count=0)::integer,
@@ -164,7 +164,7 @@ begin
   'processed_refund_idr',processed_refund_idr,'net_sales_idr',net_sales_idr,'tender_allocated_idr',tender_allocated_idr,
   'matched_settlement_idr',matched_settlement_idr,'finance_journal_entry_count',finance_journal_entry_count)
   order by business_date,transaction_code),'[]'::jsonb) into v_rows from _exec_sales_rows;
- v_finance:=jsonb_build_object('sale_count',v_count,'sale_without_journal_count',v_missing_journal,
+ v_payment:=jsonb_build_object('sale_count',v_count,'tender_mismatch_count',v_tender_mismatch,'tender_allocations_balanced',v_tender_mismatch=0);\n v_finance:=jsonb_build_object('sale_count',v_count,'sale_without_journal_count',v_missing_journal,
   'linked_journal_entry_count',v_journal_count,'status',case when v_missing_journal=0 then 'journal_links_present' else 'journal_links_incomplete' end);
  insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
  values(p_actor_user_id,'executive.sales_monitor.snapshot','executive_sales_monitor_snapshots',v_snapshot.id::text,
@@ -173,7 +173,7 @@ begin
  return jsonb_build_object('snapshot_id',v_snapshot.id,'tenant_id',p_tenant_id,'period_type',p_period_type,
   'formula_version','sales-net-v1','totals',jsonb_build_object('gross_idr',v_gross,'discount_idr',v_discount,
    'refund_idr',v_refund,'net_sales_idr',v_net,'matched_settlement_idr',v_settlement,'transaction_count',v_count),
-  'daily',v_daily,'transactions',v_rows,'finance_reconciliation',v_finance);
+  'daily',v_daily,'transactions',v_rows,'payment_reconciliation',v_payment,'finance_reconciliation',v_finance);
 end $$;
 revoke all on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) from public,anon,authenticated;
 grant execute on function public.executive_sales_monitor_snapshot(uuid,uuid,uuid[],text,date,date) to service_role;
