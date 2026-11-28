@@ -204,6 +204,22 @@ begin
   if not v_allowed then raise exception 'BRANCH_OPS_FORBIDDEN' using errcode='42501'; end if;
 end $$;
 
+
+create or replace function public.branch_ops_assert_approver(p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid)
+returns void language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_allowed boolean;
+begin
+ perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ select exists(select 1 from public.tenant_memberships tm
+   where tm.tenant_id=p_tenant_id and tm.user_id=p_actor_id and tm.status='active'
+   and (
+     tm.role in ('tenant_owner','tenant_admin','branch_manager','manager')
+     or tm.permissions @> '["branch_operations_approve"]'::jsonb
+     or tm.permissions @> '["*"]'::jsonb
+   )) into v_allowed;
+ if not v_allowed then raise exception 'BRANCH_OPS_APPROVAL_FORBIDDEN' using errcode='42501'; end if;
+end $;
+
 create or replace function public.branch_ops_create_task(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_assignee_id uuid,p_idempotency_key text,
  p_title text,p_description text,p_due_at timestamptz,p_priority text,p_source_type text,p_source_id uuid
@@ -302,7 +318,7 @@ create or replace function public.branch_ops_publish_compliance_snapshot(
 ) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare v_count integer; v_pass integer; v_weight numeric; v_score numeric; v_ids uuid[]; v_row public.branch_ops_compliance_snapshots;
 begin
- perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
  select * into v_row from public.branch_ops_compliance_snapshots where tenant_id=p_tenant_id and idempotency_key=p_idempotency_key;
  if found then return jsonb_build_object('status','duplicate','snapshotId',v_row.id,'score',v_row.score); end if;
  select count(*),coalesce(sum(weight) filter(where result='pass'),0),coalesce(sum(weight) filter(where result in ('pass','fail')),0),array_agg(evidence_asset_id)
@@ -363,7 +379,7 @@ create or replace function public.branch_ops_review_compliance_check(
 ) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
 declare v_row public.branch_ops_compliance_checks;
 begin
- perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
  select * into v_row from public.branch_ops_compliance_checks
  where id=p_check_id and tenant_id=p_tenant_id and branch_id=p_branch_id for update;
  if not found then raise exception 'BRANCH_COMPLIANCE_CHECK_NOT_FOUND' using errcode='P0002'; end if;
@@ -379,6 +395,7 @@ begin
 end $;
 
 revoke all on function public.branch_ops_assert_actor(uuid,uuid,uuid) from public,anon,authenticated;
+revoke all on function public.branch_ops_assert_approver(uuid,uuid,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) from public,anon,authenticated;
@@ -387,6 +404,7 @@ revoke all on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,u
 revoke all on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.branch_ops_assert_actor(uuid,uuid,uuid) to service_role;
+grant execute on function public.branch_ops_assert_approver(uuid,uuid,uuid) to service_role;
 grant execute on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) to service_role;
 grant execute on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) to service_role;
 grant execute on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) to service_role;
