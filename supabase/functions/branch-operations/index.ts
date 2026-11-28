@@ -106,6 +106,22 @@ Deno.serve(async (req: Request) => {
       const registered = await repo.registerEvidenceAsset({ objectPath: path, purpose, mimeType: uploadFile.type, sizeBytes: uploadFile.size });
       return reply({ ok: true, evidence_asset_id: registered, object_path: path }, 201, origin);
     }
+    if (action === "register-equipment") {
+      const result = await repo.registerEquipment({ assetCode: safe(body.asset_code, 80), name: safe(body.name, 160) });
+      return reply(result, 201, origin);
+    }
+    if (action === "update-task-status") {
+      const result = await repo.updateTaskStatus({ taskId: safe(body.task_id, 80), status: safe(body.status, 30) });
+      return reply(result, 200, origin);
+    }
+    if (action === "update-incident-status") {
+      const result = await repo.updateIncidentStatus({ incidentId: safe(body.incident_id, 80), status: safe(body.status, 30) });
+      return reply(result, 200, origin);
+    }
+    if (action === "update-work-order-status") {
+      const result = await repo.updateWorkOrderStatus({ workOrderId: safe(body.work_order_id, 80), status: safe(body.status, 30) });
+      return reply(result, 200, origin);
+    }
     if (action === "create-task") {
       const result = await repo.createTask({
         assigneeId: safe(body.assignee_id, 80), idempotencyKey: idempotency(body.idempotency_key),
