@@ -17,7 +17,7 @@ test("T01 sales monitor separates paid sales, processed refunds and reconciled s
  assert.match(migration,/executive_get_sales_monitor/i);
  assert.match(migration,/s\.payment_status in \('paid','refunded'\)/i);
  assert.match(migration,/r\.status='processed'/i);
- assert.match(migration,/ps\.status='reconciled'/i);
+ assert.match(migration,/ps\.status='matched'/i);
  assert.match(migration,/EXECUTIVE_SALES_MONITOR_TENANT_SCOPE_DENIED/i);
  assert.match(migration,/EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED/i);
  assert.match(migration,/not exists\(select 1 from public\.payment_settlement_items/i);
