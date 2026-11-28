@@ -74,6 +74,8 @@ create trigger pos_sales_payment_recognition
 before insert or update of payment_status, branch_id, paid_at, business_date, paid_at_source
 on public.pos_sales
 for each row execute function public.set_pos_sale_payment_recognition();
+-- Trigger execution is managed by PostgreSQL; never expose the trigger function as an RPC.
+revoke all on function public.set_pos_sale_payment_recognition() from public,anon,authenticated,service_role;
 
 create index if not exists pos_sales_branch_business_date_paid_idx
   on public.pos_sales(branch_id,business_date,paid_at)
