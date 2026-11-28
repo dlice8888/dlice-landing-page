@@ -318,7 +318,10 @@ begin
     execute format('revoke all on public.%I from public,anon,authenticated',t);
     execute format('grant select,insert,update,delete on public.%I to service_role',t);
   end loop;
-end $$;
+end $;
+-- Decision and claim event history is append-only, including for service-role RPC callers.
+revoke update,delete on public.approval_claim_events,public.approval_decisions from service_role;
+grant select,insert on public.approval_claim_events,public.approval_decisions to service_role;
 
 -- Seed conservative tenant-owner-only policies; expand roles only through a reviewed policy change.
 insert into public.approval_policies(tenant_id,domain,source_entity_type,eligible_roles,max_amount_idr)
@@ -604,6 +607,7 @@ create or replace function public.decide_approval(
 language plpgsql security invoker set search_path=''
 as $$
 declare a public.approval_inbox_items%rowtype; p public.approval_policies%rowtype;
+ v_existing_decision public.approval_decisions%rowtype;
  v_role text; v_active boolean; v_updated integer;
 begin
  if p_decision not in ('approved','rejected') or length(btrim(coalesce(p_reason,'')))<8
@@ -617,9 +621,14 @@ begin
  end if;
  select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
- if exists(select 1 from public.approval_decisions where approval_id=a.id and idempotency_key=p_idempotency_key) then
-   return (select jsonb_build_object('approval_id',d.approval_id,'decision',d.decision,'duplicate',true)
-     from public.approval_decisions d where d.approval_id=a.id and d.idempotency_key=p_idempotency_key);
+ select * into v_existing_decision from public.approval_decisions
+   where approval_id=a.id and idempotency_key=p_idempotency_key;
+ if found then
+   if v_existing_decision.actor_user_id<>p_actor_user_id then
+     raise exception using errcode='42501',message='APPROVAL_IDEMPOTENCY_ACTOR_MISMATCH';
+   end if;
+   return jsonb_build_object('approval_id',v_existing_decision.approval_id,
+     'decision',v_existing_decision.decision,'duplicate',true);
  end if;
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION'; end if;
  if a.status<>'claimed' or a.claimed_by<>p_actor_user_id or a.claim_expires_at<=now() or a.expires_at<=now() then
