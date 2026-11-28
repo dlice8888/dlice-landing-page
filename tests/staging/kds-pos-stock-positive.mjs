@@ -123,10 +123,50 @@ async function closeCreatedShift() {
     const shifts = await call("erp-list-shifts", { branch_id: branchId });
     const shift = (shifts.shifts || []).find((row) => row.id === createdShiftId);
     if (shift?.status === "open") {
-      await call("erp-close-shift", {
+      await expectStatus("erp-create-cash-reconciliation", {
+        branch_id: branchId,
+        shift_id: createdShiftId,
+        business_date: new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit",
+        }).format(new Date()),
+        cash_expected_idr: 1,
+        cash_counted_idr: Number(shift.expected_cash_idr),
+        bank_expected_idr: 2,
+        bank_received_idr: 0,
+        qris_expected_idr: 3,
+        qris_received_idr: 0,
+      }, managerToken, 409);
+      const closed = await call("erp-close-shift", {
         shift_id: createdShiftId,
         counted_cash_idr: Number(shift.expected_cash_idr),
         notes: `AUTOMATED QA E2E close; ${suffix}`,
+      });
+      assert.equal(closed.shift?.status, "closed", "Shift must close before reconciliation");
+      const businessDate = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jakarta", year: "numeric", month: "2-digit", day: "2-digit",
+      }).format(new Date());
+      const reconciliation = await call("erp-create-cash-reconciliation", {
+        branch_id: branchId,
+        shift_id: createdShiftId,
+        business_date: businessDate,
+        // These expected values are intentionally false. The server must ignore them.
+        cash_expected_idr: 1,
+        bank_expected_idr: 2,
+        qris_expected_idr: 3,
+        cash_counted_idr: Number(closed.shift.expected_cash_idr),
+        bank_received_idr: 0,
+        qris_received_idr: 0,
+        notes: `AUTOMATED QA source-derived cash reconciliation; ${suffix}`,
+      });
+      assert.equal(Number(reconciliation.reconciliation?.cash_expected_idr), Number(closed.shift.expected_cash_idr));
+      assert.equal(Number(reconciliation.reconciliation?.bank_expected_idr), 0);
+      assert.equal(Number(reconciliation.reconciliation?.qris_expected_idr), 0);
+      assert.equal(reconciliation.source_summary?.sale_count, 1);
+      pass("Closed shift cash reconciliation derives expected amounts from source ledgers", {
+        reconciliation_id: reconciliation.reconciliation.id,
+        expected_cash_idr: reconciliation.reconciliation.cash_expected_idr,
+        bank_expected_idr: reconciliation.reconciliation.bank_expected_idr,
+        qris_expected_idr: reconciliation.reconciliation.qris_expected_idr,
       });
     }
   } catch (error) {
