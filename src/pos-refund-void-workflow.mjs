@@ -6,10 +6,13 @@ export function validateRefundRequest({saleId,branchId,requestedBranchId,paidAmo
   if(typeof reason!=="string"||reason.trim().length<8)throw new Error("refund_reason_required");
   if(!requestedBy)throw new Error("refund_actor_required");
   if(separationOfDuties&&approvedBy===requestedBy)throw new Error("refund_self_approval_forbidden");
+  const seenReturnItems=new Set();
   const returned=returnItems.map(item=>{
     if(!item?.saleItemId||!Number.isInteger(item.quantity)||item.quantity<1)throw new Error("return_item_invalid");
+    if(seenReturnItems.has(item.saleItemId))throw new Error("return_item_duplicate");
+    seenReturnItems.add(item.saleItemId);
     const sold=soldQuantities[item.saleItemId];
-    if(!Number.isInteger(sold)||item.quantity>sold)throw new Error("return_quantity_exceeds_sold");
+    if(!Number.isInteger(sold)||sold<0||item.quantity>sold)throw new Error("return_quantity_exceeds_sold");
     return Object.freeze({sale_item_id:item.saleItemId,quantity:item.quantity,restock:item.restock===true});
   });
   return Object.freeze({sale_id:saleId,branch_id:branchId,amount_idr:refundAmountIdr,reason:reason.trim().slice(0,500),return_items:Object.freeze(returned)});
