@@ -140,9 +140,11 @@ function insideWindow(timestamp, window) {
 }
 
 /**
- * Reconcile source transactions. Sales are recognized on their paid timestamp;
- * processed refunds are recognized on processed_at. Settlement is reported
- * independently and never substituted for revenue recognition.
+ * Reconcile source transactions using the fields currently present in staging.
+ * IMPORTANT: pos_sales has created_at + payment_status but no paid_at/business_date.
+ * Therefore this is a created_at-attributed paid-sales proxy, not a certified
+ * paid-time business-date ledger. Refunds use processed_at. Settlement remains
+ * a separate cash-reconciliation measure and is never substituted for revenue.
  */
 export function aggregateSalesMonitor({ sales, refunds, settlements = [], window, branchIds }) {
   if (!window?.starts_at || !window?.ends_at) throw new TypeError("window is required");
@@ -241,6 +243,9 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
 
   return Object.freeze({
     kpi_definition_version: KPI_DEFINITION_VERSION,
+    sales_recognition_semantics: "paid_status_at_created_at_branch_timezone_proxy",
+    sales_recognition_timestamp_field: "created_at",
+    sales_business_date_certified: false,
     window,
     totals: Object.freeze({
       gross_sales_idr: grossSales,
