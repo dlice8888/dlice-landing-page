@@ -5,7 +5,9 @@ export function convertInventoryQuantity({quantity,fromUom,toUom,conversions,at,
  const active=(conversions||[]).filter(x=>x.status==="active"&&Date.parse(x.effective_from)<=Date.parse(at)&&(!x.effective_to||Date.parse(x.effective_to)>Date.parse(at)));
  const graph=new Map();
  for(const row of active){
-  if(!row.from_uom||!row.to_uom||!Number.isFinite(row.factor)||row.factor<=0||!row.from_dimension||row.from_dimension!==row.to_dimension)throw new Error("INVENTORY_UOM_CONVERSION_INVALID");
+  if(!row.from_uom||!row.to_uom||!row.from_dimension||!row.to_dimension)throw new Error("INVENTORY_UOM_CONVERSION_INVALID");
+  if(row.from_dimension!==row.to_dimension)continue;
+  if(!Number.isFinite(row.factor)||row.factor<=0)throw new Error("INVENTORY_UOM_CONVERSION_INVALID");
   const edges=graph.get(row.from_uom)||[];edges.push({to:row.to_uom,factor:row.factor,version:row.version||"unversioned"});graph.set(row.from_uom,edges);
  }
  const visiting=new Set(),visited=new Set();
