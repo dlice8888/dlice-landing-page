@@ -102,6 +102,10 @@ jobs:
         run: node --check src/crm-referral-support-ltv-workflows.mjs
       - name: Run CRM referral support and LTV workflow contracts
         run: node --test tests/contracts/crm-referral-support-ltv-workflows.test.mjs
+      - name: Verify CRM POS refund settlement and Finance integration contracts
+        run: node --test tests/contracts/crm-pos-refund-settlement-finance-integration.test.mjs
+      - name: Type-check authenticated ERP Edge API
+        run: deno check supabase/functions/dlice-orders/index.ts
       - name: Run BI forecasting reporting and KPI alert workflow contracts
         run: node --test tests/contracts/bi-forecast-report-alert-workflows.test.mjs
       - name: Run Integration connector health and catalog sync contracts
