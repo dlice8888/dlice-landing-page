@@ -2049,7 +2049,7 @@ if (action === "admin-set-profile-role") {
       if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
         return fail("Claim approval tidak valid.",422,origin);
       const {data,error}=await admin.rpc("claim_approval",{
-        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_approval_id:approvalId,p_expected_version:expectedVersion,
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,p_expected_version:expectedVersion,
       });
       if(error)return fail("Approval tidak dapat diklaim. Periksa scope, expiry, dan versi sumber.",409,origin);
       return json({claim:data},200,origin);
@@ -2059,7 +2059,7 @@ if (action === "admin-set-profile-role") {
       if(!/^[0-9a-f-]{36}$/i.test(approvalId)||!["approve","reject"].includes(decision)||reason.length<8||!Number.isSafeInteger(expectedVersion)||expectedVersion<0)
         return fail("Keputusan approval tidak valid.",422,origin);
       const {data,error}=await admin.rpc("decide_approval",{
-        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_approval_id:approvalId,p_decision:decision,p_reason:reason,p_expected_version:expectedVersion,
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,p_decision:decision,p_reason:reason,p_expected_version:expectedVersion,
       });
       if(error)return fail("Keputusan approval ditolak. Periksa separation of duties, delegasi, expiry, dan versi sumber.",409,origin);
       return json({decision:data},200,origin);
