@@ -152,13 +152,14 @@ end $$;
 create or replace function public.executive_sales_monitor_snapshot(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_ids uuid[],p_period_type text,p_period_start date,p_period_end date
 ) returns jsonb
-language plpgsql security definer set search_path=''
+language plpgsql security invoker set search_path=''
 as $$
 declare
  v_snapshot public.executive_sales_monitor_snapshots%rowtype;
  v_rows jsonb;v_daily jsonb;v_finance jsonb;v_payment jsonb;v_branch_count integer;v_tender_mismatch integer;v_refund_overrun integer;
  v_gross bigint;v_discount bigint;v_refund bigint;v_net bigint;v_settlement bigint;v_count integer;
  v_finance_count integer;v_missing_journal integer;v_journal_count integer;v_finance_sale_mismatch integer;v_finance_refund_mismatch integer;
+ v_platform_owner boolean;
 begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then
   raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';
@@ -168,7 +169,9 @@ begin
   or p_period_end-p_period_start>366 then
   raise exception using errcode='22023',message='EXECUTIVE_SALES_INPUT_INVALID';
  end if;
- if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active') then
+ select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false)
+ into v_platform_owner;
+ if not v_platform_owner and not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active') then
   raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';
  end if;
  if coalesce(cardinality(p_branch_ids),0)=0 then raise exception using errcode='22023',message='EXECUTIVE_BRANCH_SCOPE_EMPTY';end if;
@@ -297,14 +300,15 @@ begin
 end $$;
 create or replace function public.get_branch_business_day_cutoff(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[]
-) returns jsonb language plpgsql security definer set search_path=''
-as $$ declare v_role text;v_branch public.branches%rowtype;v_cutoff time;v_version integer;begin
+) returns jsonb language plpgsql security invoker set search_path=''
+as $ declare v_role text;v_platform_owner boolean;v_branch public.branches%rowtype;v_cutoff time;v_version integer;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
- if v_role is null then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
+ select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
+ if v_role is null and not v_platform_owner then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
  select * into v_branch from public.branches where tenant_id=p_tenant_id and id=p_branch_id;
  if not found then raise exception using errcode='42501',message='EXECUTIVE_BRANCH_SCOPE_DENIED';end if;
- if v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
+ if not v_platform_owner and v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
   raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_READ_DENIED';end if;
  select cutoff_time,policy_version into v_cutoff,v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id;
  return jsonb_build_object('branch_id',p_branch_id,'timezone',v_branch.timezone,'cutoff_time',coalesce(v_cutoff,time '00:00'),'policy_version',coalesce(v_version,0));
@@ -312,13 +316,14 @@ end $$;
 
 create or replace function public.set_branch_business_day_cutoff(
  p_actor_user_id uuid,p_tenant_id uuid,p_branch_id uuid,p_branch_ids uuid[],p_cutoff_time time without time zone,p_expected_version integer
-) returns jsonb language plpgsql security definer set search_path=''
-as $$ declare v_role text;v_version integer;begin
+) returns jsonb language plpgsql security invoker set search_path=''
+as $ declare v_role text;v_platform_owner boolean;v_version integer;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='EXECUTIVE_SERVICE_ROLE_REQUIRED';end if;
  select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
- if v_role is null then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
+ select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
+ if v_role is null and not v_platform_owner then raise exception using errcode='42501',message='EXECUTIVE_TENANT_MEMBERSHIP_REQUIRED';end if;
  if not exists(select 1 from public.branches where tenant_id=p_tenant_id and id=p_branch_id) then raise exception using errcode='42501',message='EXECUTIVE_BRANCH_SCOPE_DENIED';end if;
- if v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
+ if not v_platform_owner and v_role<>'tenant_owner' and (v_role<>'branch_manager' or not p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then
   raise exception using errcode='42501',message='EXECUTIVE_CUTOFF_UPDATE_DENIED';end if;
  select policy_version into v_version from public.branch_business_day_policies where tenant_id=p_tenant_id and branch_id=p_branch_id for update;
  if not found then v_version:=0;end if;
