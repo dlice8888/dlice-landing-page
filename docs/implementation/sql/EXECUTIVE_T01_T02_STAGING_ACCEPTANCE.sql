@@ -26,7 +26,8 @@ join public.branches b on b.id=s.branch_id
 left join lateral (
   select sum(rr.amount_idr)::bigint as refund_total_idr
   from public.refund_records rr
-  where rr.pos_sale_id=s.id and rr.branch_id=s.branch_id and rr.status='processed'\n    and (rr.processed_at at time zone b.timezone)::date=s.business_date
+  where rr.pos_sale_id=s.id and rr.branch_id=s.branch_id and rr.status='processed' 
+    and (rr.processed_at at time zone b.timezone)::date=s.business_date
 ) r on true
 where s.payment_status='paid' and s.business_date is not null
 group by b.tenant_id,s.branch_id,s.business_date,b.timezone
