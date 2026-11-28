@@ -14,7 +14,11 @@ const required = (value, field) => {
 const unwrap = ({ data, error }, operation) => {
   if (error) {
     const failure = new Error(`Branch Operations ${operation} failed`);
-    failure.code = error.code ?? "BRANCH_OPS_PERSISTENCE_FAILED";
+    failure.code = error.code === "PGRST202"
+      ? "BRANCH_OPS_RPC_NOT_DEPLOYED"
+      : error.code === "PGRST205"
+        ? "BRANCH_OPS_TABLE_NOT_DEPLOYED"
+        : error.code ?? "BRANCH_OPS_PERSISTENCE_FAILED";
     failure.details = error.message;
     throw failure;
   }
@@ -39,9 +43,31 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
   });
   const scopedQuery = (table, columns = "*") =>
     serviceClient.from(table).select(columns).eq("tenant_id", scope.tenantId).eq("branch_id", scope.branchId);
+  const requiredTables = Object.freeze([
+    "branch_ops_equipment",
+    "branch_ops_tasks",
+    "branch_ops_evidence_assets",
+    "branch_ops_incidents",
+    "branch_ops_work_orders",
+    "branch_ops_compliance_checks",
+    "branch_ops_compliance_snapshots",
+  ]);
+  const assertReady = async () => {
+    for (const table of requiredTables) {
+      const { error } = await serviceClient.from(table).select("id").limit(0);
+      if (error) {
+        const failure = new Error(`Branch Operations schema is unavailable: ${table}`);
+        failure.code = error.code === "PGRST205" ? "BRANCH_OPS_TABLE_NOT_DEPLOYED" : error.code ?? "BRANCH_OPS_SCHEMA_CHECK_FAILED";
+        failure.details = error.message;
+        throw failure;
+      }
+    }
+    return { ready: true, tables: [...requiredTables] };
+  };
 
   return Object.freeze({
     scope,
+    assertReady,
     async registerEquipment(input) {
       return rpc("branch_ops_register_equipment", {
         p_asset_code: required(input.assetCode, "assetCode"),
