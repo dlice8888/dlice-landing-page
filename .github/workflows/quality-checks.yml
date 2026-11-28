@@ -96,6 +96,10 @@ jobs:
         run: node --test tests/contracts/branch-operations-supabase-repository.test.mjs
       - name: Verify Branch Operations persistence, Auth, Storage and UI contracts
         run: node --test tests/contracts/branch-operations-persistence-sql-contract.test.mjs
+      - name: Check HR payroll Finance reconciliation syntax
+        run: node --check src/hr-payroll-finance-reconciliation.mjs
+      - name: Run HR payroll Finance reconciliation contracts
+        run: node --test tests/contracts/hr-payroll-finance-reconciliation.test.mjs
       - name: Verify HR payroll provider batch and signed reconciliation contracts
         run: node --test tests/contracts/hr-payroll-payment-workflows.test.mjs
       - name: Type-check payroll provider webhook Edge Function
