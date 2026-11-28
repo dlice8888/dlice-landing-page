@@ -53,10 +53,13 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   const refreshButton = el("button", { type: "button" }, "Muat ulang");
   header.append(refreshButton);
   shell.append(header, notice);
+  const style = el("style");
+  style.textContent = ".branch-operations{display:grid;gap:18px}.branch-ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.branch-ops-section,.branch-ops-form{background:var(--surface,#fff);border:1px solid var(--border,#ead7d8);border-radius:14px;padding:16px;min-width:0}.branch-ops-section h3,.branch-ops-form h3{margin:0 0 12px}.branch-ops-list{padding-left:20px;margin:0;display:grid;gap:9px}.branch-ops-list li span{display:block;color:var(--muted,#806b70);font-size:12px}.branch-ops-field{display:grid;gap:6px;margin:10px 0;font-size:12px}.branch-ops-field input,.branch-ops-field textarea,.branch-ops-field select{width:100%;min-width:0;padding:10px;border:1px solid var(--border,#ead7d8);border-radius:8px;background:var(--surface,#fff);color:inherit}.branch-ops-submit,.branch-ops-review{border:0;border-radius:8px;padding:10px 14px;background:var(--wine,#59152b);color:#fff;cursor:pointer}.branch-ops-submit:disabled,.branch-ops-review:disabled{opacity:.55;cursor:wait}.branch-ops-check{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--border,#ead7d8)}";
+  shell.append(style);
 
   const grids = el("div", { className: "branch-ops-grid" });
   const lists = {};
-  for (const [key, title] of [["tasks","Tugas"],["incidents","Insiden"],["maintenance","Work order"],["compliance","Snapshot kepatuhan"]]) {
+  for (const [key, title] of [["tasks","Tugas"],["incidents","Insiden"],["maintenance","Work order"],["equipment","Equipment"],["compliance-checks","Pemeriksaan kepatuhan"],["compliance","Snapshot kepatuhan"]]) {
     const panel = section(title);
     lists[key] = el("div");
     panel.append(lists[key]);
@@ -85,11 +88,18 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   maintenanceForm.querySelector('[name="maintenance_type"]').value = "preventive";
   maintenanceForm.append(formButton("Simpan work order"));
 
+  const complianceCheckForm = el("form", { className: "branch-ops-form" });
+  complianceCheckForm.append(el("h3", {}, "Kirim pemeriksaan kepatuhan"), field("Kode pemeriksaan", "check_key"),
+    field("Nama pemeriksaan", "title"), field("Bobot", "weight", "number"), field("Tanggal bisnis", "business_date", "date"),
+    field("Bukti (JPG/PNG/PDF, maks. 8 MB)", "file", "file", false));
+  complianceCheckForm.querySelector('[name="weight"]').value = "1";
+  complianceCheckForm.append(formButton("Unggah bukti & kirim pemeriksaan"));
+
   const complianceForm = el("form", { className: "branch-ops-form" });
   complianceForm.append(el("h3", {}, "Publikasikan audit kepatuhan"), field("Mulai periode", "period_start", "date"),
     field("Akhir periode", "period_end", "date"), field("Source revision", "source_revision"));
   complianceForm.append(formButton("Publikasikan snapshot"));
-  forms.append(taskForm, incidentForm, maintenanceForm, complianceForm);
+  forms.append(taskForm, incidentForm, maintenanceForm, complianceCheckForm, complianceForm);
   shell.append(forms);
   root.replaceChildren(shell);
 
@@ -115,17 +125,51 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       onError(error);
     } finally { button.disabled = false; }
   });
+  const renderComplianceChecks = (items) => {
+    const list = el("div");
+    if (!items.length) list.append(el("p", {}, "Belum ada pemeriksaan."));
+    for (const item of items) {
+      const row = el("div", { className: "branch-ops-check" });
+      const info = el("div");
+      info.append(el("strong", {}, String(item.title || item.check_key || item.id)));
+      info.append(el("div", {}, `${item.business_date} · ${item.status} · hasil: ${item.result}`));
+      row.append(info);
+      if (item.status === "submitted") {
+        const controls = el("div");
+        const result = el("select", { "aria-label": "Hasil pemeriksaan" });
+        for (const [value, label] of [["pass","Lulus"],["fail","Gagal"],["not_applicable","Tidak berlaku"]]) result.append(el("option", { value }, label));
+        const button = el("button", { type: "button", className: "branch-ops-review" }, "Review");
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try { await request({ action: "review-compliance-check", check_id: item.id, result: result.value }); await refresh(); }
+          catch (error) { notice.textContent = error?.message || "Review gagal."; onError(error); }
+          finally { button.disabled = false; }
+        });
+        controls.append(result, button); row.append(controls);
+      }
+      list.append(row);
+    }
+    return list;
+  };
   const refresh = async () => {
     try {
       for (const kind of Object.keys(lists)) {
         const result = await request({ action: "list", kind });
-        lists[kind].replaceChildren(makeList(result.items || [], kind));
+        lists[kind].replaceChildren(kind === "compliance-checks" ? renderComplianceChecks(result.items || []) : makeList(result.items || [], kind));
       }
       if (!destroyed) notice.textContent = "Data cabang berhasil dimuat.";
     } catch (error) {
       notice.textContent = error?.message || "Data cabang belum dapat dimuat.";
       onError(error);
     }
+  };
+  const uploadEvidence = async (file, purpose) => {
+    const form = new FormData();
+    form.set("tenant_id", tenantId); form.set("branch_id", branchId);
+    form.set("action", "upload-evidence"); form.set("purpose", purpose); form.set("file", file);
+    const { data, error } = await supabase.functions.invoke("branch-operations", { body: form });
+    if (error || data?.error) throw error || new Error(data.error);
+    return data.evidence_asset_id;
   };
   submit(taskForm, async (data) => {
     const due = new Date(String(data.get("due_at")));
@@ -139,14 +183,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   submit(incidentForm, async (data) => {
     const file = data.get("file");
     let evidenceIds = [];
-    if (file instanceof File && file.size > 0) {
-      const form = new FormData();
-      form.set("tenant_id", tenantId); form.set("branch_id", branchId);
-      form.set("action", "upload-evidence"); form.set("purpose", "branch_incident"); form.set("file", file);
-      const { data: upload, error } = await supabase.functions.invoke("branch-operations", { body: form });
-      if (error || upload?.error) throw error || new Error(upload.error);
-      evidenceIds = [upload.evidence_asset_id];
-    }
+    if (file instanceof File && file.size > 0) evidenceIds = [await uploadEvidence(file, "branch_incident")];
     await request({
       action: "record-incident", category: data.get("category"), description: data.get("description"),
       severity: data.get("severity"), occurred_at: data.get("occurred_at") ? new Date(String(data.get("occurred_at"))).toISOString() : null,
@@ -160,6 +197,16 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       scheduled_at: new Date(String(data.get("scheduled_at"))).toISOString(),
       description: data.get("description"), assigned_to: data.get("assigned_to") || null,
       idempotency_key: `branch-maintenance:${crypto.randomUUID()}`,
+    });
+  });
+  submit(complianceCheckForm, async (data) => {
+    const file = data.get("file");
+    if (!(file instanceof File) || file.size < 1) throw new Error("Bukti pemeriksaan wajib diunggah.");
+    const evidenceAssetId = await uploadEvidence(file, "branch_compliance");
+    await request({
+      action: "submit-compliance-check", check_key: data.get("check_key"), title: data.get("title"),
+      weight: Number(data.get("weight")), business_date: data.get("business_date"),
+      evidence_asset_id: evidenceAssetId,
     });
   });
   submit(complianceForm, async (data) => {
