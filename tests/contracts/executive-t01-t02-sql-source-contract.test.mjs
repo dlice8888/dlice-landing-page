@@ -105,3 +105,10 @@ test("T01 marks settlement net incomplete when any allocation is missing", () =>
   assert.match(sql, /count\(\*\)=count\(sa\.allocated_net_idr\)/i);
   assert.match(sql, /settlement_allocation_complete/i);
 });
+
+test("T01 paid recognition can only be created by trusted server role and stays immutable", () => {
+  assert.match(sql, /POS_PAYMENT_CONFIRMATION_SERVER_ONLY/);
+  assert.match(sql, /current_user not in \('service_role','postgres','supabase_admin'\)/);
+  assert.match(sql, /before insert or update on public\.pos_sales/i);
+  assert.match(sql, /PAID_POS_SALE_FINANCIAL_FIELDS_IMMUTABLE/);
+});
