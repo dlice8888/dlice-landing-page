@@ -2005,7 +2005,7 @@ if (action === "admin-set-profile-role") {
     }
    }
 
-  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval"]);
+  const executiveSalesActions=new Set(["erp-executive-sales-monitor","erp-executive-list-pending-approvals","erp-executive-claim-approval","erp-executive-decide-approval","erp-executive-approval-history"]);
   if(executiveSalesActions.has(action)){
     if(!isPlatformOwner&&!["reports","procurement","finance","hr","branches"].some(hasPerm))
       return fail("Izin Executive tidak diizinkan.",403,origin);
@@ -2063,6 +2063,15 @@ if (action === "admin-set-profile-role") {
       });
       if(error)return fail("Keputusan approval ditolak. Periksa separation of duties, delegasi, expiry, dan versi sumber.",409,origin);
       return json({decision:data},200,origin);
+    }
+    if(action==="erp-executive-approval-history"){
+      const approvalId=safeText(body.approval_id,64);
+      if(!/^[0-9a-f-]{36}$/i.test(approvalId))return fail("ID approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("list_approval_decision_history",{
+        p_actor_user_id:actor.user.id,p_tenant_id:tenantId,p_branch_ids:allowedBranchIds,p_approval_id:approvalId,
+      });
+      if(error)return fail("Riwayat keputusan tidak dapat dimuat.",403,origin);
+      return json({history:data||[]},200,origin);
     }
   }
 
