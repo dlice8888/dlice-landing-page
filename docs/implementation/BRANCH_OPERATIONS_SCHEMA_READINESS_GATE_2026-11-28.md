@@ -16,18 +16,29 @@ This change makes the authenticated Branch Operations Edge Function fail closed 
 
 ## RPC parity review
 
-The current SQL draft contains only these business RPC definitions:
+The reviewed SQL draft contains all 11 callable business RPCs used by the Node and Edge adapters:
 
+- `branch_ops_register_equipment`
 - `branch_ops_create_task`
+- `branch_ops_update_task_status`
 - `branch_ops_record_incident`
+- `branch_ops_update_incident_status`
+- `branch_ops_create_maintenance_order`
+- `branch_ops_update_work_order_status`
+- `branch_ops_register_evidence_asset`
+- `branch_ops_submit_compliance_check`
+- `branch_ops_review_compliance_check`
+- `branch_ops_publish_compliance_snapshot`
 
-It also defines helper functions `branch_ops_assert_actor`, `branch_ops_assert_approver`, and the immutable-record trigger function.
+The shared leading scope arguments are `p_tenant_id, p_branch_id, p_actor_id`; remaining argument types and order are checked by `tests/contracts/branch-operations-rpc-signature-contract.test.mjs`. The pgTAP suite verifies function presence, service-role EXECUTE, client-role denial and invalid actor rejection for every RPC.
 
-The repository/Edge Function currently calls additional lifecycle, evidence-registration, and compliance RPCs (including `branch_ops_register_equipment`, `branch_ops_update_task_status`, `branch_ops_update_incident_status`, `branch_ops_update_work_order_status`, `branch_ops_create_maintenance_order`, `branch_ops_register_evidence_asset`, `branch_ops_submit_compliance_check`, `branch_ops_review_compliance_check`, and `branch_ops_publish_compliance_snapshot`). Those definitions are not present in the current draft. Therefore the draft is **not migration-ready** and must not be copied into `supabase/migrations` or applied to staging.
+A review also found that the immutable-record trigger function inherited PostgreSQL's default PUBLIC EXECUTE privilege. The draft now explicitly revokes EXECUTE from PUBLIC, `anon`, and `authenticated`; pgTAP asserts that boundary.
+
+The draft is not yet an official migration. Generate its timestamped migration using `bash scripts/prepare-branch-operations-migration.sh`; the script invokes Supabase CLI `migration new`, copies the reviewed SQL, then resets and tests only the local disposable stack. Never run `db push` or link the script to staging/production.
 
 ## Acceptance before official migration
 
-1. Implement each missing RPC with exact parameter/return signatures matching the server adapter.
+1. Re-run signature parity after any adapter or SQL change and review the business rules for each lifecycle RPC.
 2. Validate referenced tables/columns and composite tenant/branch foreign keys against the current schema.
 3. Validate Storage bucket privacy, MIME/size constraints, owner-scoped paths, retention and compensation behavior.
 4. Validate RLS, grants and explicit function EXECUTE ACL for `anon`, `authenticated`, and `service_role`.
