@@ -3220,7 +3220,7 @@ if(action==="erp-executive-branch-kpis"){
 
 
   if (action === "erp-reconcile-pos-sale") {
-    if(!isOwner&&!hasPerm("reports"))return fail("Izin laporan/reconciliaton POS diperlukan.",403,origin);
+    if(!isOwner&&!hasPerm("reports")&&!hasPerm("finance")&&!hasPerm("orders"))return fail("Izin laporan/reconciliaton POS diperlukan.",403,origin);
     const saleId=safeText(body.sale_id,80),branchId=safeText(body.branch_id,80);
     if(!saleId||!branchId)return fail("ID transaksi dan cabang wajib diisi.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
