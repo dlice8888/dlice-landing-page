@@ -56,6 +56,18 @@ test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()
  assert.match(migration,/decision persistence only/i);
 });
 
+test("T02 delegation lifecycle is tenant-bound, time-limited, idempotent and audited",()=>{
+ assert.match(migration,/source_domains text\[\] not null check\(cardinality\(source_domains\)>0 and source_domains <@/i);
+ assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
+ assert.match(migration,/executive_create_approval_delegation/i);
+ assert.match(migration,/executive_revoke_approval_delegation/i);
+ assert.match(migration,/p_valid_until>now\+interval '90 days'/i);
+ assert.match(migration,/EXECUTIVE_DELEGATION_MEMBERSHIP_REQUIRED/i);
+ assert.match(migration,/EXECUTIVE_DELEGATION_IDEMPOTENCY_KEY_REUSED/i);
+ assert.match(migration,/executive\.approval\.delegation\.created/i);
+ assert.match(migration,/executive\.approval\.delegation\.revoked/i);
+ assert.match(migration,/v_platform_owner boolean/i);
+});
 test("new executive tables and RPCs are not directly exposed to browser roles",()=>{
  assert.match(migration,/revoke all on public\.%I from anon,authenticated/i);
  assert.match(migration,/revoke all on function public\.executive_claim_approval/i);
