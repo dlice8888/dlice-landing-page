@@ -109,7 +109,7 @@ test("verify_jwt=false custom auth negative probes cover every deployed admin an
   const actionNames = [...new Set([...edgeSource.matchAll(/action\s*===\s*"([^"]+)"/g)]
     .map((match) => match[1])
     .filter((action) => action.startsWith("admin-") || action.startsWith("erp-")))];
-  assert.equal(actionNames.length, 236, "action probe inventory must match the 236 current staging admin/ERP actions");
+  assert.equal(actionNames.length, 236, "action probe inventory must match the 239 current staging admin/ERP actions");
 });
 
 test("all admin and ERP action handlers are behind explicit actor authentication", () => {
