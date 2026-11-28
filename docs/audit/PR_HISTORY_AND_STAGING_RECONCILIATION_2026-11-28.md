@@ -6,16 +6,16 @@
 
 ## 1. Repository-wide PR totals
 
-GitHub search across the repository returns **151 actual pull requests** (PR numbers 1–153; #34 and #52 are absent):
+GitHub search across the repository returns **152 actual pull requests** (PR numbers 1–154; #34 and #52 are absent):
 
 | Current disposition | Count |
 |---|---:|
-| Merged | 92 |
+| Merged | 93 |
 | Closed without merge | 32 |
 | Open | 27 |
-| **Actual PRs** | **151** |
+| **Actual PRs** | **152** |
 
-The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 46 actual PRs #108–#153, yielding the counts above. The PR count is a repository-history count, not a feature-completion metric.
+The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 47 actual PRs #108–#154, yielding the counts above. The PR count is a repository-history count, not a feature-completion metric.
 
 ## 2. All currently open PRs — disposition and next action
 
@@ -38,16 +38,17 @@ The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 
 | #123 | staging | Online checkout idempotency | Relevant, but merge conflict and exact-head replay required; rebase/resolve before merge |
 | #127 | staging | Atomic payment-proof submission and retry safety | Relevant; includes superseded #125 work; resolve merge conflicts and rerun payment/receipt tests |
 | #143 | staging | POS split tender, hold/resume, immutable receipts | POS disposable replay passed on its historical head; staging E2E was blocked by Owner Auth preflight. Current read-only Auth query still finds zero boolean `platform_owner=true` users, so do not rerun mutation path yet |
-| #144 | staging | Eight-domain workflow kernel | Its historical quality run failed the ERP action authorization coverage contract. Treat #145/#152's tested descendant as the consolidation candidate; do not merge stale head separately |
-| #145 | #144 head | Eight-domain transactional orchestration | Quality CI passed; initial CRM replay failed on CRM SQL syntax later corrected by #151 and carried in #152. Merge only through tested #152 descendant |
+| #144 | staging | Eight-domain workflow kernel | Superseded by merged #153 dependency tree; close as redundant after confirming all changes are carried forward |
+| #145 | #144 head | Eight-domain transactional orchestration | Superseded by merged #153 dependency tree; close as redundant after confirming all changes are carried forward |
 | #146 | #145 base | Xendit Payout v3 payroll adapter | Conflicted candidate; provider E2E and payout reconciliation still required |
 | #147 | staging | 189-feature evidence matrix refresh | Keep as audit source only after refreshing it from this snapshot; no unsupported score promotion |
 | #148 | staging | Disposable PostgreSQL 17 backup/restore drill | Keep; execute and retain restore evidence before staging release acceptance |
 | #149 | staging | 150-branch tenant isolation concurrency probe | Keep; execute with 150 real/planned fixtures only where provisioned, and distinguish planned from active branches |
 | #150 | #145 base | Food safety, recall and supplier CAPA workflows | Conflicted; rebase and run domain pgTAP + workflow/E2E before merge |
-| #151 | #145 base | CRM financial-close SQL syntax correction | Superseded by the byte-identical corrected CRM draft already present in #152 |
-| #152 | #145 head | Eight-domain official migrations and ACL hardening | Quality + full disposable replay passed on head `3dda8d1c6dce3b0a68d4ce95afaae059af3101a0`; retarget to staging only after dependency review and rerun exact-head checks |
-| #153 | #152 head | 39 PRD gaps, Branch Operations persistence and integrations | CLI-generated Branch Operations migration is committed to this candidate branch; parent-head quality and full CRM/HR/eight-domain/BranchOps disposable suites passed. Latest workflow-only correction still requires exact-head rerun before merge |
+| #151 | #145 base | CRM financial-close SQL syntax correction | Superseded by merged #153; corrected SQL is included in the merged dependency tree |
+| #152 | #145 head | Eight-domain official migrations and ACL hardening | Superseded by merged #153; its migration/ACL work is included in the merged dependency tree |
+| #154 | staging | Source migration filenames ↔ applied Supabase ledger parity | Current follow-up candidate; filename-only source reconciliation, no DDL; exact 72/72 mapping verified, disposable/quality tests must pass before merge |
+| #153 | staging | 39 PRD gaps, Branch Operations persistence and integrations | **Merged** to staging as `2f661ee30f95f09f6d32f0f749189f7ae95ed433`; nine schema migrations subsequently applied |
 
 ### Required dependency chain
 
@@ -56,10 +57,11 @@ staging
   └─ PR #144 workflow kernel
        └─ PR #145 eight-domain orchestration
             └─ PR #152 eight-domain migrations + ACL
-                 └─ PR #153 Branch Operations persistence + adapters
+                 └─ PR #153 Branch Operations persistence + adapters (merged)
+                      └─ PR #154 migration filename ↔ ledger parity (pending)
 ```
 
-PR #151's CRM SQL syntax correction is already carried into #152 (the corrected draft file has the same blob SHA on #151 and #152). PR #146 and #150 are sibling candidates based on #145 and are not silently included in #152. PR #143, #123 and #127 are independent staging candidates requiring their own conflict resolution and acceptance.
+PR #151's CRM SQL syntax correction is carried through #152 into merged #153. PR #144/#145/#151/#152 remain open but are superseded by merged #153 and should be closed as redundant after #154 parity is accepted. PR #146 and #150 are sibling candidates based on #145 and are not included in #153. PR #143, #123 and #127 are independent staging candidates requiring their own conflict resolution and acceptance. PR #154 is a follow-up that changes source filenames and contract references only; it must not rerun staging DDL.
 
 ## 3. Closed-unmerged PRs — complete disposition
 
@@ -138,8 +140,8 @@ A read-only query of `auth.users.raw_app_meta_data` returned zero users whose `p
 
 ## 6. Remaining staging acceptance and release gates
 
-1. Complete source filename ↔ Supabase migration ledger parity PR #154; verify all 72 source files map exactly to the 72 applied versions. This PR does not execute DDL.
-2. Re-run Security and Performance Advisors after the staging migration set. Current Security Advisor: leaked-password protection disabled (WARN). Current Performance Advisor: 82 unused-index INFO findings; do not delete indexes based only on zero scans.
+1. Complete source filename ↔ Supabase migration ledger parity PR #154; the current candidate tree has 72 source files / 72 applied versions / zero mismatches / zero orphan files. Complete exact-head quality, CRM, full migration replay and Branch Operations pgTAP before merge. This PR does not execute DDL.
+2. Re-run Security and Performance Advisors after the staging migration set. Current Security Advisor: leaked-password protection disabled (WARN). Current Performance Advisor: 168 unindexed-FK INFO findings plus unused-index INFO findings; do not delete indexes based only on zero scans. Add FK indexes only after query-plan/usage review and confirm they are not already covered by composite indexes.
 3. Verify Auth Owner through official Supabase Auth Admin and protected allowlist. Current read-only Auth query still returns **zero** users with `raw_app_meta_data.platform_owner` JSON boolean true. No SQL metadata mutation and no allowlist guessing.
 4. Run authenticated tenant A/B own-read/write, cross-tenant read/write denial, branch isolation, Storage and background-job probes; require zero BLOCKED/SKIPPED and verify postconditions.
 5. Run POS staging E2E only after Owner Auth and allowlist are independently verified. Reconcile sale totals, tender allocations, cash drawer, stock movements, KDS tickets, immutable receipt and audit events.
