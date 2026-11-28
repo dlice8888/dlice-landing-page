@@ -18,7 +18,8 @@ test("sales monitor reads POS sales, processed refunds, settlement allocations a
  const end=edge.indexOf('if (action === "erp-overview")',start);
  const action=edge.slice(start,end);
  for(const table of ["pos_sales","pos_sale_items","refund_records","payment_settlement_items","payment_settlements","finance_journal_entries"])assert.ok(action.includes('"'+table+'"'),"missing "+table);
- assert.match(action,/processed_at/);\n assert.match(action,/sale_items:saleItems\.filter/);
+ assert.match(action,/processed_at/);
+ assert.match(action,/sale_items:saleItems\.filter/);
  assert.match(action,/aggregateSalesMonitor/);
  assert.match(action,/settlement_net_received_idr:null/);
 });
