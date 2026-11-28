@@ -166,7 +166,7 @@ begin
  if exists(select 1 from unnest(coalesce(p_branch_ids,'{}'::uuid[])) x where not exists(select 1 from public.branches b where b.id=x and b.tenant_id=p_tenant_id))
   then raise exception using errcode='42501',message='APPROVAL_BRANCH_SCOPE_DENIED';end if;
  update public.executive_approval_requests set status='expired',version=version+1,updated_at=now()
- where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now();
+ where tenant_id=p_tenant_id and status in ('pending','claimed') and expires_at<=now()\n  and ((branch_id is not null and branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) or (branch_id is null and v_role='tenant_owner'));
  select coalesce(jsonb_agg(jsonb_build_object('id',a.id,'tenant_id',a.tenant_id,'category',a.category,'source_entity',a.entity_type,
   'source_entity_id',a.entity_id,'branch_id',a.branch_id,'created_by',a.created_by,'amount_idr',a.amount_idr,'status',a.status,
   'source_version',a.source_version,'version',a.version,'expires_at',a.expires_at,'claimed_by',a.claimed_by,
