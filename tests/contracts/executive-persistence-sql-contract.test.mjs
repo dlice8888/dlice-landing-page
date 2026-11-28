@@ -74,8 +74,8 @@ test("T02 enqueue and decision mutate supported HR/procurement sources atomicall
  assert.match(migration,/executive_decide_approval/i);
  assert.match(migration,/for update of r/i);
  assert.match(migration,/for update of l/i);
- assert.match(migration,/erp_transition_purchase_requisition\(v\.source_entity_id::uuid,p_decision,p_actor_user_id,null\)/i);
- assert.match(migration,/hr_review_leave_request\(v\.source_entity_id::uuid,p_actor_user_id,p_decision='approved'/i);
+ assert.match(migration,/erp_transition_purchase_requisition\(\s*v\.source_entity_id::uuid,\s*p_decision,\s*p_actor_user_id,\s*null\)/i);
+ assert.match(migration,/hr_review_leave_request\(\s*v\.source_entity_id::uuid,\s*p_actor_user_id,\s*p_decision='approved'/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_SOURCE_VERSION_MISMATCH/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_DELEGATION_REQUIRED/i);
  assert.match(migration,/EXECUTIVE_APPROVAL_SELF_APPROVAL_DENIED/i);
