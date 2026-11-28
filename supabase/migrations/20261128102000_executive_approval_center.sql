@@ -85,7 +85,7 @@ for each row execute function public.trg_seed_executive_approval_policies();
 create or replace function public.enqueue_executive_approval(
  p_tenant_id uuid,p_category text,p_entity_type text,p_entity_id uuid,p_branch_id uuid,p_created_by uuid,p_amount_idr bigint,p_reason text
 ) returns uuid language plpgsql security definer set search_path=''
-as $
+as $fn$
 declare v_policy public.executive_approval_policies%rowtype;v_id uuid;v_source_version bigint;
 begin
  select * into v_policy from public.executive_approval_policies where tenant_id=p_tenant_id and category=p_category and enabled;
@@ -120,7 +120,7 @@ begin
  returning id into v_id;
  if v_id is null then select id into v_id from public.executive_approval_requests where tenant_id=p_tenant_id and entity_type=p_entity_type and entity_id=p_entity_id;end if;
  return v_id;
-end $$;
+end $fn$;
 
 create or replace function public.trg_enqueue_purchase_requisition_approval()
 returns trigger language plpgsql security definer set search_path=''
