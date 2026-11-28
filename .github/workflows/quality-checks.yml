@@ -104,6 +104,10 @@ jobs:
         run: deno check supabase/functions/branch-operations/index.ts
       - name: Check CRM referral support and LTV module syntax
         run: node --check src/crm-referral-support-ltv-workflows.mjs
+      - name: Check CRM customer LTV projection syntax
+        run: node --check src/crm-customer-ltv-projection.mjs
+      - name: Run reconciled CRM customer LTV projection contracts
+        run: node --test tests/contracts/crm-customer-ltv-projection.test.mjs
       - name: Run CRM referral support and LTV workflow contracts
         run: node --test tests/contracts/crm-referral-support-ltv-workflows.test.mjs
       - name: Verify CRM POS refund settlement and Finance integration contracts
