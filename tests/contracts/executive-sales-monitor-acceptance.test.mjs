@@ -42,7 +42,7 @@ test("paid sales, discounts and processed refunds reconcile with duplicate prote
   assert.equal(result.totals.refunds_idr, 20000);
   assert.equal(result.totals.net_sales_idr, 120000);
   assert.equal(result.totals.paid_transactions, 2);
-  assert.equal(result.sales_recognition_semantics, "paid_status_at_created_at_branch_timezone_proxy");
+  assert.equal(result.sales_recognition_semantics, "created_at_legacy_proxy");
   assert.equal(result.sales_business_date_certified, false);
 });
 
