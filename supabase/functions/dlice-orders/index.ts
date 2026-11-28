@@ -1725,8 +1725,11 @@ if (action === "admin-set-profile-role") {
       const providerId=safeText(body.provider_id,100),secretRef=safeText(body.credential_secret_reference,120);
       if(!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(providerId)||!/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))
         return fail("Provider ID atau secret reference tidak valid.",422,origin);
-      const providerSecret=Deno.env.get(secretRef);
-      if(!providerSecret||providerSecret.length<32)return fail("Secret provider belum terpasang atau terlalu pendek di Edge Function Secrets.",409,origin);
+      const providerSecretValue=Deno.env.get(secretRef);
+      if(!providerSecretValue)return fail("Secret provider belum terpasang di Edge Function Secrets.",409,origin);
+      let providerWebhookSecret=providerSecretValue;
+      try{const credentials=JSON.parse(providerSecretValue);if(typeof credentials.webhook_secret==="string")providerWebhookSecret=credentials.webhook_secret}catch{}
+      if(providerWebhookSecret.length<32)return fail("Webhook secret provider minimal 32 karakter.",409,origin);
       const {data,error}=await admin.from("hr_payroll_payment_provider_configs")
         .insert({tenant_id:branch.tenant_id,provider_id:providerId,credential_secret_reference:secretRef,status:"pending",created_by:actor.user.id})
         .select("id,provider_id,status,credential_secret_reference,created_by").single();
