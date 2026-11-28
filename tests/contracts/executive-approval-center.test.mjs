@@ -137,3 +137,30 @@ test("decision command preserves source identity and optimistic source version",
   assert.equal(command.source_version, 7);
   assert.equal(command.policy_version, "approval-policy.v1");
 });
+
+test("approval eligibility applies amount/category policy and excludes another active claimant", () => {
+  const item = { ...base, category: "purchase_order", claimed_by: "approver" };
+  const scopedActor = {
+    ...actor, allowed_roles: ["procurement_manager"], allowed_categories: ["purchase_order"],
+  };
+  assert.equal(assertApprovalEligibility({ approval: item, actor: scopedActor, now }).source_version, 7);
+  assert.throws(() => assertApprovalEligibility({
+    approval: item, actor: { ...scopedActor, max_approval_amount_idr: 10 }, now,
+  }), /approval_amount_limit_exceeded/);
+  assert.throws(() => assertApprovalEligibility({
+    approval: item, actor: { ...scopedActor, allowed_categories: ["expense"] }, now,
+  }), /approval_category_forbidden/);
+  assert.throws(() => assertApprovalEligibility({
+    approval: { ...item, claimed_by: "another", claim_expires_at: "2026-11-28T10:45:00.000Z" },
+    actor: scopedActor, now,
+  }), /approval_already_claimed/);
+});
+
+test("approval urgency rank is deterministic across urgency, amount and expiry", () => {
+  const rows = [
+    { ...base, id: "low", urgency: "low", amount_idr: 900000 },
+    { ...base, id: "critical", urgency: "critical", amount_idr: 100 },
+    { ...base, id: "high", urgency: "high", amount_idr: 500000 },
+  ];
+  assert.deepEqual(rankPendingApprovals(rows, now).map((item) => item.id), ["critical", "high", "low"]);
+});
