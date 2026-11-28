@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {activateRecipeVersion} from "../../src/recipe-version-lifecycle.mjs";
+const input={tenantId:"t1",branchId:"b1",actorId:"u1",recipeId:"r1",version:3,effectiveFrom:"2026-12-01",expectedActiveVersion:2,approvalId:"a1"};
+test("activates a new immutable recipe version at effective date",async()=>{const r=await activateRecipeVersion(input,{activateRecipeVersionAtomically:async x=>({recipeId:x.recipeId,activeVersion:x.version,effectiveFrom:x.effectiveFrom,historicalVersionsImmutable:true})});assert.equal(r.activeVersion,3);});
+test("rejects missing approval proof from server",async()=>{await assert.rejects(activateRecipeVersion(input,{activateRecipeVersionAtomically:async x=>({recipeId:x.recipeId,activeVersion:x.version,effectiveFrom:x.effectiveFrom,historicalVersionsImmutable:false})}),{code:"RECIPE_VERSION_ACTIVATION_FAILED"});});
