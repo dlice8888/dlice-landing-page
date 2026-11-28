@@ -9,5 +9,9 @@ export function createSupabaseExecutiveApprovalAdapter(client){
   claimApproval:async q=>call("claim_approval",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[],p_approval_id:required(q.approvalId,"approvalId"),p_expected_version:q.expectedVersion}),
   decideApproval:async q=>call("decide_approval",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[],p_approval_id:required(q.approvalId,"approvalId"),p_decision:q.decision,p_reason:required(q.reason,"reason"),p_expected_version:q.expectedVersion}),
   listApprovalHistory:async q=>call("list_approval_decision_history",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[],p_approval_id:required(q.approvalId,"approvalId")}),
+  listDelegations:async q=>call("list_approval_delegations",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[]}),
+  createDelegation:async q=>call("create_approval_delegation",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[],p_delegate_user_id:required(q.delegateUserId,"delegateUserId"),p_category:q.category,p_branch_id:q.branchId??null,p_starts_at:q.startsAt,p_ends_at:q.endsAt}),
+  approveDelegation:async q=>call("approve_approval_delegation",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_branch_ids:q.branchIds??[],p_delegation_id:required(q.delegationId,"delegationId")}),
+  revokeDelegation:async q=>call("revoke_approval_delegation",{p_actor_user_id:required(q.actorId,"actorId"),p_tenant_id:required(q.tenantId,"tenantId"),p_delegation_id:required(q.delegationId,"delegationId")}),
  });
 }
