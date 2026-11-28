@@ -565,6 +565,40 @@ $('hrFinanceMappingForm').onsubmit=async ev=>{ev.preventDefault();try{await call
 $('loadHrPayroll').onclick=()=>loadHrPayroll().catch(e=>note(e.message,true));
 $('hrPayrollForm').onsubmit=async ev=>{ev.preventDefault();try{await call('erp-hr-generate-payroll-run',{branch_id:branchId(),period_start:$('hrPayrollStart').value,period_end:$('hrPayrollEnd').value,idempotency_key:crypto.randomUUID()});await loadHrPayroll();note('Payroll draft dihitung dari timesheet approved dan rate efektif.')}catch(e){note(e.message,true)}};
 
+async function loadHrPaymentProviders(){
+ const branch=branchId();if(!branch)return;
+ const d=await call('erp-hr-list-payroll-payment-provider-configs',{branch_id:branch});
+ const rows=d.provider_configs||[];
+ fillSelect('hrPaymentProviderSelect',rows.filter(x=>x.status==='active'),'id',x=>x.provider_id,'Pilih provider approved');
+ $('hrPaymentProviderList').innerHTML=rows.map(x=>'<div class="listitem"><div><strong>'+esc(x.provider_id)+' · '+esc(x.status)+'</strong><small>Secret ref '+esc(x.credential_secret_reference)+' · Created '+esc(x.created_by)+'</small><small>Approved '+esc(x.approved_by||'—')+'</small></div><div class="actions">'+(x.status==='pending'&&x.created_by!==session.user.id?'<button type="button" data-approve-hr-provider="'+esc(x.id)+'">Approve</button>':'')+'</div></div>').join('')||'<p class="muted">Belum ada provider config.</p>';
+ document.querySelectorAll('[data-approve-hr-provider]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Setujui provider payroll ini? Pastikan secret dan kontrak provider sudah diverifikasi.'))return;try{await call('erp-hr-approve-payroll-payment-provider',{branch_id:branch,provider_config_id:btn.dataset.approveHrProvider});await loadHrPaymentProviders();note('Provider config disetujui secara independen.')}catch(e){note(e.message,true)}});
+}
+async function loadHrBeneficiaries(){
+ const branch=branchId();if(!branch)return;
+ fillSelect('hrBeneficiaryEmployee',hrEmployees.filter(x=>x.employment_status==='active'),'user_id',x=>x.display_name,'Pilih karyawan');
+ const d=await call('erp-hr-list-payroll-beneficiaries',{branch_id:branch});
+ $('hrBeneficiaryList').innerHTML=(d.beneficiaries||[]).map(x=>'<div class="listitem"><div><strong>'+esc(hrEmployees.find(e=>e.user_id===x.employee_user_id)?.display_name||x.employee_user_id)+' · '+esc(x.status)+'</strong><small>Fingerprint '+esc(String(x.beneficiary_fingerprint_sha256||'').slice(0,16))+'… · Secret ref '+esc(x.beneficiary_secret_reference)+'</small><small>Created '+esc(x.created_by)+' · Approved '+esc(x.approved_by||'—')+'</small></div><div class="actions">'+(x.status==='pending'&&x.created_by!==session.user.id&&x.employee_user_id!==session.user.id?'<button type="button" data-approve-hr-beneficiary="'+esc(x.id)+'">Approve</button>':'')+'</div></div>').join('')||'<p class="muted">Belum ada beneficiary profile.</p>';
+ document.querySelectorAll('[data-approve-hr-beneficiary]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Setujui beneficiary profile? Verifikasi rekening melalui secret vault sebelum approval.'))return;try{await call('erp-hr-approve-payroll-beneficiary',{branch_id:branch,beneficiary_profile_id:btn.dataset.approveHrBeneficiary});await loadHrBeneficiaries();note('Beneficiary disetujui oleh reviewer independen.')}catch(e){note(e.message,true)}});
+}
+async function loadHrPaymentItems(batchId){
+ const d=await call('erp-hr-list-payroll-payment-items',{branch_id:branchId(),payment_batch_id:batchId});
+ $('hrPaymentItemList').innerHTML=(d.payment_items||[]).map(x=>'<div class="listitem"><div><strong>'+esc(x.status)+' · '+money(x.amount_idr)+'</strong><small>Item '+esc(x.id)+' · Fingerprint '+esc(String(x.beneficiary_fingerprint_sha256||'').slice(0,16))+'…</small><small>Provider ref '+esc(x.provider_reference||'—')+' · Settled '+esc(x.settled_at||'—')+'</small></div></div>').join('')||'<p class="muted">Belum ada payment items.</p>';
+}
+async function loadHrPaymentBatches(){
+ const branch=branchId();if(!branch)return;
+ const d=await call('erp-hr-list-payroll-payment-batches',{branch_id:branch});
+ $('hrPaymentBatchList').innerHTML=(d.payment_batches||[]).map(x=>'<div class="listitem"><div><strong>'+esc(x.status)+' · '+money(x.amount_idr)+'</strong><small>Batch '+esc(x.id)+' · Payroll '+esc(x.payroll_run_id)+' · '+x.item_count+' item</small><small>Created '+esc(x.created_by)+' · Approved '+esc(x.approved_by||'—')+' · Reconciled '+esc(x.reconciled_by||'—')+'</small><small>Evidence SHA-256 '+esc(x.reconciliation_sha256||'—')+'</small></div><div class="actions"><button type="button" data-hr-payment-items="'+esc(x.id)+'">Items</button>'+(x.status==='draft'&&x.created_by!==session.user.id?'<button type="button" data-hr-approve-payment="'+esc(x.id)+'">Approve</button>':'')+(x.status==='processing'?'<button type="button" data-hr-reconcile-payment="'+esc(x.id)+'">Reconcile</button>':'')+'</div></div>').join('')||'<p class="muted">Belum ada payment batch.</p>';
+ document.querySelectorAll('[data-hr-payment-items]').forEach(btn=>btn.onclick=()=>loadHrPaymentItems(btn.dataset.hrPaymentItems).catch(e=>note(e.message,true)));
+ document.querySelectorAll('[data-hr-approve-payment]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Setujui batch pembayaran payroll ini?'))return;try{await call('erp-hr-approve-payroll-payment-batch',{branch_id:branch,payment_batch_id:btn.dataset.hrApprovePayment});await loadHrPaymentBatches();note('Payment batch disetujui. Menunggu signed provider events.')}catch(e){note(e.message,true)}});
+ document.querySelectorAll('[data-hr-reconcile-payment]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Rekonsiliasi payment batch? Semua item wajib settled dan setiap event provider harus tervalidasi.'))return;try{const r=await call('erp-hr-reconcile-payroll-payment-batch',{branch_id:branch,payment_batch_id:btn.dataset.hrReconcilePayment});await loadHrPaymentBatches();note('Payroll payment reconciled · '+(r.payment_reconciliation?.evidence_sha256||''))}catch(e){note(e.message,true)}});
+}
+$('loadHrPaymentProviders').onclick=()=>loadHrPaymentProviders().catch(e=>note(e.message,true));
+$('loadHrBeneficiaries').onclick=()=>loadHrBeneficiaries().catch(e=>note(e.message,true));
+$('loadHrPaymentBatches').onclick=()=>loadHrPaymentBatches().catch(e=>note(e.message,true));
+$('hrPaymentProviderForm').onsubmit=async ev=>{ev.preventDefault();try{await call('erp-hr-request-payroll-payment-provider',{branch_id:branchId(),provider_id:$('hrPaymentProviderId').value.trim(),credential_secret_reference:$('hrPaymentProviderSecret').value.trim()});$('hrPaymentProviderForm').reset();await loadHrPaymentProviders();note('Provider config diajukan. Tunggu approval independen.')}catch(e){note(e.message,true)}};
+$('hrBeneficiaryForm').onsubmit=async ev=>{ev.preventDefault();try{await call('erp-hr-request-payroll-beneficiary',{branch_id:branchId(),employee_user_id:$('hrBeneficiaryEmployee').value,beneficiary_secret_reference:$('hrBeneficiarySecret').value.trim()});$('hrBeneficiaryForm').reset();await loadHrBeneficiaries();note('Beneficiary profile diajukan; data rekening hanya dibaca server dari secret vault.')}catch(e){note(e.message,true)}};
+$('hrPaymentBatchForm').onsubmit=async ev=>{ev.preventDefault();try{const r=await call('erp-hr-prepare-payroll-payment-batch',{branch_id:branchId(),payroll_run_id:$('hrPaymentPayrollRunId').value.trim(),provider_config_id:$('hrPaymentProviderSelect').value,idempotency_key:'hr-payroll-payment:'+crypto.randomUUID()});await loadHrPaymentBatches();note('Payment batch draft dibuat · '+(r.payment_batch?.payment_batch_id||''))}catch(e){note(e.message,true)}};
+
 $('hrTimesheetForm').onsubmit=async ev=>{ev.preventDefault();try{await call('erp-hr-generate-timesheet',{branch_id:branchId(),employee_user_id:$('hrTimesheetEmployee').value,period_start:$('hrTimesheetStart').value,period_end:$('hrTimesheetEnd').value});await loadHrTimesheets();note('Timesheet draft dihitung dari event absensi.')}catch(e){note(e.message,true)}};
 async function loadHrLeave(){
  const branch=branchId();if(!branch)return;
