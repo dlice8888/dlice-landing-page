@@ -14,6 +14,7 @@ test("T02 migration persists inbox, delegation, expiry and atomic source transit
  for(const token of ["executive_approval_policies","executive_approval_requests","executive_approval_delegations","executive_approval_decisions","expires_at","claim_expires_at","APPROVAL_SELF_APPROVAL_DENIED","APPROVAL_STALE_VERSION","APPROVAL_AMOUNT_LIMIT","APPROVAL_CLAIMED_BY_OTHER","APPROVAL_CLAIM_REQUIRED","a.status<>'claimed' or a.claimed_by is distinct from p_actor_user_id","purchase_requisition","refund_record","hr_payroll_run","branch_ops_compliance_check","get diagnostics v_updated=row_count","if v_updated<>1","admin_audit_logs","list_pending_approvals","claim_approval","decide_approval","list_approval_decision_history","create_approval_delegation","approve_approval_delegation","revoke_approval_delegation","list_approval_delegations","executive_approval_actor_role","branch_assignments","job_positions","tenant_owner","branch_manager"])
   assert.ok(sql.includes(token),"missing T02 contract: "+token);
  assert.ok(sql.includes("revoke all on function public.decide_approval")&&sql.includes("grant execute on function public.decide_approval")&&sql.includes("to service_role"));
+ assert.ok(sql.includes("executive.approval.expired")&&sql.includes("'status','expired'"),"expiry must persist and return from claim/decision RPC");
 });
 
 test("T02 delegation approval and revocation fail closed when actor membership is absent",async()=>{
