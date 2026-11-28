@@ -1,95 +1,68 @@
-# Branch Operations — Evidence Workflows (2026-11-27)
+# Branch Operations — Concrete Persistence, Storage, UI & Workflows (2026-11-28)
 
-## Scope started in this batch
+## Candidate implementation delivered
 
-Feature IDs:
-- D08-F04 — Daily tasks, due dates and escalation.
-- D08-F07 — Photo/evidence references.
-- D08-F08 — Incidents and corrective actions.
-- D08-F09 — Equipment maintenance.
-- D08-F10 — Branch audit and compliance score.
+Feature IDs: D08-F04, D08-F07, D08-F08, D08-F09, D08-F10.
 
-## Implemented source boundary
+### 1. Persistence and server adapter
 
-`src/branch-operations-workflows.mjs` adds transactional orchestration for:
-1. Branch task creation with active same-branch assignee validation and durable idempotency.
-2. Incident capture with mandatory evidence for critical severity and durable escalation tasks for high/critical severity.
-3. Preventive/corrective/inspection work orders against a verified non-retired branch asset.
-4. Compliance snapshot publication only when all approved checks are complete, evidence references are present, and source reconciliation is passed.
+- `docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql` defines seven tenant/branch-scoped tables: equipment, tasks, evidence assets, incidents, maintenance work orders, compliance checks and compliance snapshots.
+- All tables use composite `(tenant_id, branch_id)` foreign keys to `branches(tenant_id,id)`, scoped indexes, constraints and RLS.
+- Direct `anon`/`authenticated` access is denied; service-role-only policies are used. The draft does not create a public bucket or browser Storage policy.
+- RPCs enforce active tenant membership/branch assignment, approver separation, idempotency, valid state transitions and append-only audit records.
+- Evidence metadata and published compliance snapshots have immutable update/delete triggers.
+- Compliance source revision is derived server-side from the ordered approved check/evidence rows; an optional client-supplied revision is rejected if it does not match.
 
-Every write requires:
-- a tenant transaction,
-- authorization inside that transaction,
-- same-tenant/same-branch repository reads,
-- durable idempotency,
-- append-only audit.
+Server-only adapters:
+- `src/branch-operations-supabase-repository.mjs`
+- `supabase/functions/_shared/branch-operations-repository.ts`
 
-Evidence references are opaque private-storage references. A concrete repository adapter must verify object ownership, MIME/type, retention and branch scope before persistence. The orchestration layer does not accept caller-asserted evidence contents as proof.
+Every mutation calls an atomic SQL RPC with server-derived tenant, branch and actor scope. Reads are tenant/branch scoped.
 
-## Tests added
+### 2. Private Storage verification
 
-`tests/contracts/branch-operations-workflows.test.mjs` covers:
-- successful branch task write,
-- cross-branch assignee denial,
-- idempotent duplicate prevention,
-- critical incident evidence and escalation,
-- missing critical evidence rejection,
-- retired equipment rejection,
-- incomplete/unreconciled compliance rejection,
-- complete compliance snapshot publication.
+- Bucket: `branch-ops-evidence`, `public=false`, max 8 MB, MIME allowlist JPEG/PNG/PDF.
+- Upload occurs only after bearer-token Auth validation, active tenant membership, active branch validation and branch assignment/tenant-admin authorization.
+- The Edge Function checks file MIME and magic bytes, then writes to a server-generated path `tenant/branch/actor/uuid.ext`.
+- SQL registration verifies private bucket state, object existence, path scope, MIME/size allowlist, owner and retention metadata.
+- Incident, maintenance and compliance workflows validate evidence IDs against tenant, branch, owner, purpose and retention.
+- Signed download URLs expire after 60 seconds and are created only after tenant/branch-scoped evidence metadata lookup.
+- If metadata registration fails after upload, the Edge Function checks for an ambiguous committed row before deleting the object. It compensates an unregistered upload and reports a specific failure if cleanup itself fails.
+- Evidence retention metadata defaults to 365 days. Automated expiry/purge scheduling remains a final operational task.
 
-## Remaining gaps — not DONE
+### 3. UI and authenticated Edge API
 
-This batch deliberately does not claim database or runtime acceptance. Still required:
-- canonical Supabase migration created through Supabase CLI, with tenant/branch FKs, constraints, RLS, private Storage policy and audit triggers;
-- repository adapter implementing every port with server-side identity and same-tenant/branch predicates;
-- authenticated Edge Function routes and explicit authorization for each action;
-- ERP/mobile UI for task assignment, incident reporting, photo capture, work orders and audit review;
-- staging tests with tenant A/B and branch A/B, including cross-tenant and cross-branch read/write denial;
-- evidence retention/deletion policy and private Storage verification;
-- E2E reconciliation to inventory, HR/maintenance costs and Executive reporting.
+- UI: `src/branch-operations-ui.mjs`, imported by `erp.html`.
+- Edge API: `supabase/functions/branch-operations/index.ts`.
+- UI covers task assignment/status, incident reporting/evidence, equipment registration, maintenance work orders/evidence, compliance check submission/review, snapshot publication and evidence access.
+- Edge API uses `auth.getUser(token)`, checks active `admin_profiles`, tenant membership, branch status and assignment/tenant-admin authorization before using its server-side service client.
+- No service-role key is passed to or stored in browser code.
+- The ERP mount is intentionally gated by `BRANCH_OPS_WORKFLOWS_RELEASED=false`. It remains disabled until the official migration, Edge deployment and tenant A/B acceptance are approved.
 
-No production or staging database was modified. No release flag was changed.
+### 4. Workflow rules
 
+- High/critical incidents create an escalation task; critical incidents require evidence.
+- Task and maintenance transitions are restricted to the assignee or an approver.
+- Incident status and compliance review require an approver; compliance review cannot be performed by the submitter.
+- Maintenance evidence is verified and persisted with the work order.
+- Compliance snapshots require all period checks to be approved and evidenced; the snapshot stores a deterministic source revision derived from the approved source rows.
 
-## Concrete persistence/API/UI implementation batch — 2026-11-28
+## Tests and validation artifacts
 
-Candidate-only artifacts added after the initial orchestration layer:
+- `tests/contracts/branch-operations-workflows.test.mjs`
+- `tests/contracts/branch-operations-supabase-repository.test.mjs`
+- `tests/contracts/branch-operations-persistence-sql-contract.test.mjs`
 
-- `docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql`
-  - Tenant/branch-keyed equipment, tasks, evidence metadata, incidents, maintenance work orders, compliance checks and immutable compliance snapshots.
-  - Composite tenant/branch foreign keys, idempotency uniqueness, state/weight constraints and RLS enabled on every new public table.
-  - Browser roles receive no table privileges. Database mutation RPCs are revoked from PUBLIC/anon/authenticated and granted only to service_role.
-  - Private `branch-ops-evidence` bucket with 8 MiB and MIME restrictions. No direct browser Storage policy is added: uploads are accepted only by the authenticated Edge Function after actor, tenant membership and branch assignment checks. The server registers ownership, scope, purpose and 365-day retention metadata.
-  - Atomic RPCs: task creation, incident + escalation, maintenance order, evidence registration, compliance check submission, independent compliance review and compliance snapshot publication. Every write appends `admin_audit_logs` within the same SQL transaction.
-- `supabase/functions/_shared/branch-operations-repository.ts`: scoped server repository; writes use one atomic RPC each, reads always filter tenant_id and branch_id.
-- `supabase/functions/branch-operations/index.ts`: new Edge API; explicit bearer-token `auth.getUser`, active admin profile, active tenant membership, active branch and branch assignment/tenant-admin permission before using service-role persistence. Evidence MIME signatures and 8 MiB cap are checked server-side. Intended deployment setting is `verify_jwt=true`.
-- `src/branch-operations-ui.mjs`: ERP workflow UI for tasks, incident capture/evidence, equipment work orders, compliance submissions/reviews and snapshots.
-- `erp.html`: UI mount point wired to the Operations view, but `BRANCH_OPS_WORKFLOWS_RELEASED=false` remains enforced until the official migration, Edge deployment and tenant A/B acceptance are approved.
-- Contract tests and CI steps added for adapter scope, persistence/RLS/Storage contracts, UI release gate, Node syntax and Deno type checking.
+These cover RPC scope binding, evidence ownership, maintenance evidence, idempotency, immutable records, state transitions, private upload compensation, UI wiring and the release gate.
 
-### Important acceptance boundary
+## Remaining acceptance gaps — not DONE
 
-This is implementation source, not a completed integration release:
-- The SQL is a reviewed candidate draft, not an official Supabase CLI-generated migration. It has **not** been applied to staging or production.
-- The new Edge Function has **not** been deployed to staging; the existing `dlice-orders` function was not modified.
-- ERP UI remains behind a false release flag.
-- No live database adapter call, Storage upload, Auth/ACL negative test, browser/device E2E, or tenant A/B runtime test has been executed against staging.
-- The existing `branch_ops_*` tables and RPCs are therefore not present in staging at this checkpoint. The adapter will fail closed until the approved migration exists.
-- Contract tests authored in this batch are pending exact-head CI results. Feature scores remain unchanged until the new code is tested and runtime evidence exists.
+1. Generate the official migration with Supabase CLI from the reviewed draft and run disposable replay/pgTAP. The draft is not in `supabase/migrations`.
+2. Deploy the Edge Function to staging only after approval; configure `DLICE_ALLOWED_ORIGINS` and verify its JWT gateway setting.
+3. Create/verify the private bucket and Storage policies in staging; run authenticated upload, signed-download, expiry and orphan-compensation tests.
+4. Run tenant A/B and branch A/B read/write denial tests against the actual staging function and database.
+5. Run browser/tablet/device E2E for task, incident, maintenance and compliance flows.
+6. Add automated evidence retention/purge operations and reconcile maintenance cost/work orders with Inventory, HR and Finance.
+7. Compliance snapshot source revision currently fingerprints approved Branch Operations check/evidence rows. Cross-domain operational reconciliation (POS/Inventory/HR/Finance) still requires its own verified source adapters.
 
-### Security decisions
-
-The candidate deliberately does not add a Storage RLS policy that queries `tenant_memberships` or `branch_assignments`: staging currently denies direct authenticated reads on both tables, so such a policy would fail closed for legitimate users. The bucket remains private with no direct client Storage policy; the Edge Function performs authorization and uploads using its server-only service client. The service-role key never enters ERP/browser code. The new function is configured for JWT verification at deployment and independently validates the bearer token with Auth.
-
-No staging migration, Edge deployment, merge, production mutation, or release flag change was performed.
-
-
-Lifecycle completion added in the same candidate batch:
-- Equipment registry uses an approver-only RPC with same-tenant/branch scope and audit.
-- Tasks support open → in_progress → completed/cancelled. Assignees can advance their own tasks; other actors require approver authorization.
-- Incidents support open → investigating/resolved → closed through approver-only transitions.
-- Maintenance work orders support scheduled → in_progress → completed/cancelled. Assigned technician or an approver may transition the order.
-- Compliance checks support evidence-backed submission followed by independent review; the submitter cannot approve their own check. Snapshot publication and review require tenant/branch approver authority.
-- All lifecycle changes append audit events atomically with the status change.
-- Evidence bucket access is server-only. The Edge Function authenticates the user, verifies membership/assignment, validates file signature/size, then uploads with service_role. No browser service-role key or direct Storage policy is used.
+No staging or production database, Auth metadata, Storage bucket, Edge deployment, release flag, merge or release was changed in this candidate batch.
