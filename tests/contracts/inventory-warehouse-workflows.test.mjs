@@ -62,7 +62,8 @@ test("inventory adjustments require reason, evidence, idempotency and dual contr
 });
 
 test("procurement accepted receipt matches posted stock and resulting balance",()=>{
- const result=reconcileProcurementReceipt({purchaseOrder:{id:"po1",ordered_quantity:10},receipts:[{purchase_order_id:"po1",status:"accepted",accepted_quantity:8,rejected_quantity:2}],movements:[{source_type:"procurement_receipt",source_order_id:"po1",status:"posted",quantity_base:8}],inventoryBalance:8});
+ const result=reconcileProcurementReceipt({purchaseOrder:{id:"po1",ordered_quantity:10},receipts:[{id:"grn1",purchase_order_id:"po1",status:"accepted",accepted_quantity:8,rejected_quantity:2}],movements:[{id:"m1",source_type:"procurement_receipt",source_order_id:"po1",status:"posted",quantity_base:8}],inventoryBalance:8});
  assert.equal(result.reconciled,true);
- assert.throws(()=>reconcileProcurementReceipt({purchaseOrder:{id:"po1",ordered_quantity:10},receipts:[{purchase_order_id:"po1",status:"accepted",accepted_quantity:8}],movements:[],inventoryBalance:8}),/MOVEMENT_MISMATCH/);
+ assert.throws(()=>reconcileProcurementReceipt({purchaseOrder:{id:"po1",ordered_quantity:10},receipts:[{id:"grn2",purchase_order_id:"po1",status:"accepted",accepted_quantity:8}],movements:[],inventoryBalance:8}),/MOVEMENT_MISMATCH/);
+ assert.throws(()=>reconcileProcurementReceipt({purchaseOrder:{id:"po1",ordered_quantity:10},receipts:[{id:"grn3",purchase_order_id:"po1",status:"accepted",accepted_quantity:4},{id:"grn3",purchase_order_id:"po1",status:"accepted",accepted_quantity:4}],movements:[],inventoryBalance:0}),/RECEIPT_DUPLICATE/);
 });
