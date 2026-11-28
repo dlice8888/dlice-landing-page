@@ -161,7 +161,7 @@ alter table public.branch_expenses
   add column if not exists updated_at timestamptz not null default now();
 create or replace function public.touch_branch_expense_updated_at()
 returns trigger language plpgsql security invoker set search_path=''
-as $ begin new.updated_at:=now(); return new; end; $;
+as $$ begin new.updated_at:=now(); return new; end; $$;
 drop trigger if exists branch_expenses_touch_updated_at on public.branch_expenses;
 create trigger branch_expenses_touch_updated_at before update on public.branch_expenses
 for each row execute function public.touch_branch_expense_updated_at();
@@ -287,7 +287,7 @@ on conflict(tenant_id,source_entity_type,policy_version) do nothing;
 
 create or replace function public.seed_approval_policies_for_tenant()
 returns trigger language plpgsql security invoker set search_path=''
-as $
+as $$
 begin
  insert into public.approval_policies(tenant_id,domain,source_entity_type,eligible_roles,max_amount_idr)
  values
@@ -298,7 +298,7 @@ begin
  on conflict(tenant_id,source_entity_type,policy_version) do nothing;
  return new;
 end;
-$;
+$$;
 drop trigger if exists tenants_seed_approval_policies on public.tenants;
 create trigger tenants_seed_approval_policies after insert on public.tenants
 for each row execute function public.seed_approval_policies_for_tenant();
@@ -422,7 +422,7 @@ on conflict(tenant_id,source_entity_type,source_entity_id,source_version) do not
 create or replace function public.approval_source_is_current(p_approval_id uuid)
 returns boolean
 language plpgsql security invoker set search_path=''
-as $
+as $$
 declare a public.approval_inbox_items%rowtype;
 begin
  select * into a from public.approval_inbox_items where id=p_approval_id;
@@ -438,7 +438,7 @@ begin
  end if;
  return false;
 end;
-$;
+$$;
 revoke all on function public.approval_source_is_current(uuid) from public,anon,authenticated;
 grant execute on function public.approval_source_is_current(uuid) to service_role;
 
