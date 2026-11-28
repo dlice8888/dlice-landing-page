@@ -13,7 +13,7 @@ export async function routeOrderToBranch(input,deps){
  return Object.freeze(result);
 }
 export async function releaseOrderBranchCapacity(input,deps){
- const payload={tenantId:req(input?.tenantId,"tenantId"),orderId:req(input?.orderId,"orderId"),reservationId:req(input?.reservationId,"reservationId"),reason:req(input?.reason,"reason")};
+ const payload={tenantId:req(input?.tenantId,"tenantId"),actorId:req(input?.actorId,"actorId"),orderId:req(input?.orderId,"orderId"),reservationId:req(input?.reservationId,"reservationId"),reason:req(input?.reason,"reason")};
  const result=await fn(deps,"releaseOrderBranchCapacityAtomically")(payload);
  if(!result?.released||result.tenantId!==payload.tenantId||result.reservationId!==payload.reservationId)fail("ORDER_ROUTER_RELEASE_FAILED","Capacity release did not commit exactly once");
  return Object.freeze(result);
