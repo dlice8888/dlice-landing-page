@@ -286,3 +286,93 @@ grant execute on function public.executive_claim_approval(uuid,uuid,uuid,bigint,
 
 comment on table public.executive_approval_decisions is
   'Decision persistence only. A decision is not accepted as complete until a source-domain adapter applies exactly one source mutation in the same transaction.';
+
+
+-- T01: authoritative paid-sales, processed-refund and settlement facts by branch-local date.
+create or replace function public.executive_get_sales_monitor(
+ p_tenant_id uuid,p_actor_user_id uuid,p_branch_ids uuid[],p_from_date date,p_through_date date
+) returns jsonb
+language plpgsql security definer set search_path=''
+as $$
+declare v_allowed boolean; v_count integer; v_result jsonb;
+begin
+ select exists(
+  select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+   and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.command_center.read')
+ ) or coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false)
+ into v_allowed;
+ if not v_allowed then raise exception using errcode='42501',message='EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED'; end if;
+ if p_branch_ids is null or cardinality(p_branch_ids)<1 or cardinality(p_branch_ids)>150
+    or p_from_date is null or p_through_date is null or p_through_date<p_from_date
+    or p_through_date-p_from_date>92 then
+  raise exception using errcode='22023',message='EXECUTIVE_SALES_MONITOR_INPUT_INVALID';
+ end if;
+ if exists(select 1 from public.branches b where b.id=any(p_branch_ids) and b.tenant_id<>p_tenant_id) then
+  raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_TENANT_SCOPE_DENIED';
+ end if;
+ if not (coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false)
+   or exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active' and m.role in ('tenant_owner','tenant_admin'))) then
+  if exists(select 1 from unnest(p_branch_ids) bid where not exists(
+    select 1 from public.branch_assignments ba where ba.branch_id=bid and ba.user_id=p_actor_user_id
+      and ba.employment_status='active' and ba.starts_on<=current_date and (ba.ends_on is null or ba.ends_on>=current_date)
+  )) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
+ end if;
+ select count(*) into v_count from public.branches b where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id;
+ if v_count<>cardinality(p_branch_ids) then raise exception using errcode='42501',message='EXECUTIVE_SALES_MONITOR_BRANCH_SCOPE_DENIED'; end if;
+ with branch_sales as (
+  select b.id branch_id,b.code,b.name,b.timezone,
+   coalesce(sum(s.subtotal_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint gross_sales_idr,
+   coalesce(sum(s.discount_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint discount_idr,
+   coalesce(sum(s.total_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint net_before_refund_idr,
+   count(s.id) filter(where s.payment_status in ('paid','refunded'))::integer paid_transactions
+  from public.branches b left join public.pos_sales s on s.branch_id=b.id
+   and s.paid_at is not null and s.business_date between p_from_date and p_through_date
+  where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id group by b.id,b.code,b.name,b.timezone
+ ), branch_refunds as (
+  select r.branch_id,coalesce(sum(r.amount_idr),0)::bigint refund_idr
+  from public.refund_records r join public.branches b on b.id=r.branch_id and b.tenant_id=p_tenant_id
+  where r.branch_id=any(p_branch_ids) and r.status='processed'
+    and (r.processed_at at time zone b.timezone)::date between p_from_date and p_through_date
+  group by r.branch_id
+ ), branch_settlements as (
+  select s.branch_id,coalesce(sum(ps.gross_amount_idr),0)::bigint settlement_gross_idr,
+   coalesce(sum(ps.fee_amount_idr),0)::bigint settlement_fee_idr,
+   coalesce(sum(ps.net_amount_idr),0)::bigint settlement_net_idr,
+   coalesce(sum(ps.received_amount_idr),0)::bigint settlement_received_idr,
+   count(distinct ps.id)::integer reconciled_settlements
+  from public.payment_settlement_items psi
+  join public.pos_sales s on s.id=psi.pos_sale_id
+  join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
+  join public.payment_settlements ps on ps.id=psi.settlement_id
+  where s.branch_id=any(p_branch_ids) and ps.status='reconciled'
+    and ps.settlement_date between p_from_date and p_through_date
+  group by s.branch_id
+ )
+ select jsonb_build_object(
+  'tenant_id',p_tenant_id,'from_date',p_from_date,'through_date',p_through_date,
+  'branch_count',count(*),
+  'gross_sales_idr',coalesce(sum(bs.gross_sales_idr),0),
+  'discount_idr',coalesce(sum(bs.discount_idr),0),
+  'refund_idr',coalesce(sum(coalesce(br.refund_idr,0)),0),
+  'net_sales_idr',coalesce(sum(bs.net_before_refund_idr-coalesce(br.refund_idr,0)),0),
+  'paid_transactions',coalesce(sum(bs.paid_transactions),0),
+  'settlement_gross_idr',coalesce(sum(coalesce(bt.settlement_gross_idr,0)),0),
+  'settlement_fee_idr',coalesce(sum(coalesce(bt.settlement_fee_idr,0)),0),
+  'settlement_net_idr',coalesce(sum(coalesce(bt.settlement_net_idr,0)),0),
+  'settlement_received_idr',coalesce(sum(coalesce(bt.settlement_received_idr,0)),0),
+  'reconciled_settlements',coalesce(sum(coalesce(bt.reconciled_settlements,0)),0),
+  'branches',coalesce(jsonb_agg(jsonb_build_object(
+    'branch_id',bs.branch_id,'code',bs.code,'name',bs.name,'timezone',bs.timezone,
+    'gross_sales_idr',bs.gross_sales_idr,'discount_idr',bs.discount_idr,
+    'refund_idr',coalesce(br.refund_idr,0),'net_sales_idr',bs.net_before_refund_idr-coalesce(br.refund_idr,0),
+    'paid_transactions',bs.paid_transactions,'settlement_gross_idr',coalesce(bt.settlement_gross_idr,0),
+    'settlement_fee_idr',coalesce(bt.settlement_fee_idr,0),'settlement_net_idr',coalesce(bt.settlement_net_idr,0),
+    'settlement_received_idr',coalesce(bt.settlement_received_idr,0),'reconciled_settlements',coalesce(bt.reconciled_settlements,0)
+  ) order by bs.code),'[]'::jsonb)
+ ) into v_result
+ from branch_sales bs left join branch_refunds br on br.branch_id=bs.branch_id
+ left join branch_settlements bt on bt.branch_id=bs.branch_id;
+ return v_result;
+end $$;
+revoke all on function public.executive_get_sales_monitor(uuid,uuid,uuid[],date,date) from public,anon,authenticated;
+grant execute on function public.executive_get_sales_monitor(uuid,uuid,uuid[],date,date) to service_role;
