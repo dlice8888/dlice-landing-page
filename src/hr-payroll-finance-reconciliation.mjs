@@ -46,13 +46,14 @@ export async function reconcileHrPayrollFinance(input,deps){
   if(batch.id!==scope.paymentBatchId||batch.status!=="settled"||batch.payrollRunId!==scope.payrollRunId)
    fail("HR_PAYROLL_PAYMENT_BATCH_NOT_SETTLED","Payment batch must be settled for this payroll run");
   const items=batch.items;
-  if(!Array.isArray(items)||items.length!==lines.length)fail("HR_PAYROLL_PAYMENT_ITEMS_MISMATCH","Every payroll line needs one settled payment item");
+  if(!Array.isArray(items))fail("HR_PAYROLL_PAYMENT_ITEMS_MISMATCH","Every payroll line needs one settled payment item");
   const paidByLine=new Map();
   for(const item of items){
    if(item.status!=="settled"||!lineIds.has(item.payrollLineId)||paidByLine.has(item.payrollLineId))
     fail("HR_PAYROLL_PAYMENT_ITEM_INVALID","Payment items must be unique, settled and mapped to payroll lines");
    money(item.amountIdr,"paymentItem.amountIdr");paidByLine.set(item.payrollLineId,item.amountIdr);
   }
+  if(items.length!==lines.length)fail("HR_PAYROLL_PAYMENT_ITEMS_MISMATCH","Every payroll line needs one settled payment item");
   for(const line of lines)if(paidByLine.get(line.id)!==line.netPayableIdr)
    fail("HR_PAYROLL_PAYMENT_AMOUNT_MISMATCH","Settled payment must equal approved net payable per line");
   const paidIdr=sum(items,item=>item.amountIdr,"paymentItem.amountIdr");
