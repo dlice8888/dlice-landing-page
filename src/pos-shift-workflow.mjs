@@ -16,10 +16,10 @@ export function assertShiftOpenAllowed({ existingOpenShift, actorUserId, assigne
   money(openingCashIdr,"opening_cash");
   return Object.freeze({ branch_id:branchId, opened_by:actorUserId, opening_cash_idr:openingCashIdr });
 }
-export function assertShiftCloseAllowed({ shift, actorUserId, assignedBranchIds, pendingSaleCount=0, countedCashIdr, varianceApprovalRequired=false, varianceApproved=false }) {
+export function assertShiftCloseAllowed({ shift, actorUserId, assignedBranchIds, pendingSaleCount=0, countedCashIdr, varianceApprovalRequired=false, varianceApproved=false, supervisorAuthorized=false }) {
   if (!shift || shift.status!=="open") throw new Error("shift_not_open");
   if (!assignedBranchIds?.includes(shift.branch_id)) throw new Error("shift_branch_forbidden");
-  if (shift.opened_by!==actorUserId && !varianceApprovalRequired) throw new Error("shift_actor_forbidden");
+  if (shift.opened_by!==actorUserId && supervisorAuthorized!==true) throw new Error("shift_actor_forbidden");
   if (!Number.isSafeInteger(pendingSaleCount) || pendingSaleCount<0) throw new TypeError("pending_sale_count_invalid");
   if (pendingSaleCount>0) throw new Error("shift_has_pending_sales");
   const expected=money(shift.expected_cash_idr,"expected_cash");
