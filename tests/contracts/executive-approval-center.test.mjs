@@ -107,3 +107,33 @@ test("approval decision rejects stale concurrent writers and never rewrites sour
   assert.equal(command.source_version, undefined);
   assert.equal(base.status, "pending");
 });
+
+test("delegated claimant must hold an active matching grant before claim", () => {
+  const delegated = { ...base, delegated_from: "manager" };
+  assert.throws(() => assertApprovalClaim({
+    approval: delegated, actor, expectedVersion: 4, now,
+  }), /approval_delegation_invalid/);
+  const delegatedActor = {
+    ...actor,
+    delegations: [{
+      delegator_user_id: "manager", delegate_user_id: "approver",
+      domain: "procurement", branch_id: "b1", active: true,
+      expires_at: "2026-11-28T10:30:00.000Z",
+    }],
+  };
+  assert.equal(assertApprovalClaim({
+    approval: delegated, actor: delegatedActor, expectedVersion: 4, now,
+  }).approval_id, "a1");
+});
+
+test("decision command preserves source identity and optimistic source version", () => {
+  const claimed = { ...base, claimed_by: "approver" };
+  const command = assertApprovalDecision({
+    approval: claimed, actor, decision: "approved",
+    reason: "Evidence checked", expectedVersion: 4, now,
+  });
+  assert.equal(command.source_entity_type, "purchase_requisition");
+  assert.equal(command.source_entity_id, "pr-1");
+  assert.equal(command.source_version, 7);
+  assert.equal(command.policy_version, "approval-policy.v1");
+});
