@@ -2577,13 +2577,16 @@ if(action==="erp-executive-branch-kpis"){
     if(!branchWindows.length)return json({ok:true,branches:[],totals:{}},200,origin);
     const minStart=branchWindows.map((x:any)=>x.window.starts_at).sort()[0];
     const maxEnd=branchWindows.map((x:any)=>x.window.ends_at).sort().slice(-1)[0];
+    const minBusinessDate=branchWindows.map((x:any)=>x.window.from_business_date).sort()[0];
+    const maxBusinessDateExclusive=new Date(Date.parse(branchWindows.map((x:any)=>x.window.through_business_date).sort().slice(-1)[0]+"T00:00:00.000Z")+86400000).toISOString().slice(0,10);
     const readAll=async(makeQuery:any)=>{
       const rows:any[]=[];for(let offset=0;offset<20000;offset+=1000){const page=await makeQuery().range(offset,offset+999);if(page.error)throw page.error;rows.push(...(page.data||[]));if((page.data||[]).length<1000)return rows;}throw new Error("executive_report_row_limit");
     };
     try {
       // Do not filter on created_at: delayed payments must be attributed by paid_at/business_date.
       // Legacy rows without either field remain visible as explicitly uncertified created_at proxies.
-      const periodSales=await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at,paid_at,business_date").in("branch_id",branches.map((b:any)=>b.id)).eq("payment_status","paid").order("created_at"));
+      const salesCutoffFilter=`and(business_date.gte.${minBusinessDate},business_date.lt.${maxBusinessDateExclusive}),and(paid_at.gte.${minStart},paid_at.lt.${maxEnd}),and(paid_at.is.null,created_at.gte.${minStart},created_at.lt.${maxEnd})`;
+      const periodSales=await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at,paid_at,business_date").in("branch_id",branches.map((b:any)=>b.id)).eq("payment_status","paid").or(salesCutoffFilter).order("created_at"));
       const periodRefunds=await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("branch_id",branches.map((b:any)=>b.id)).eq("status","processed").gte("processed_at",minStart).lt("processed_at",maxEnd).not("pos_sale_id","is",null).order("processed_at"));
       const periodSaleIds=periodSales.map((s:any)=>s.id);
       const saleItems=periodSaleIds.length?await readAll(()=>admin.from("pos_sale_items").select("id,sale_id,product_id,product_name_snapshot,quantity,unit_price_idr,line_total_idr,modifier_snapshot,substitution_snapshot").in("sale_id",periodSaleIds)): [];
