@@ -294,7 +294,7 @@ grant execute on function public.executive_persist_command_center_snapshot(uuid,
 create or replace function public.executive_create_approval_delegation(
  p_tenant_id uuid,p_actor_user_id uuid,p_delegator_user_id uuid,p_delegate_user_id uuid,
  p_source_domains text[],p_valid_from timestamptz,p_valid_until timestamptz,p_idempotency_key text
-) returns jsonb language plpgsql security definer set search_path='' as $
+) returns jsonb language plpgsql security definer set search_path='' as $delegation$
 declare v public.executive_approval_delegations%rowtype; v_admin boolean; v_platform_owner boolean; v_platform_owner boolean; v_inserted integer;
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_delegator_user_id is null or p_delegate_user_id is null
@@ -339,13 +339,13 @@ begin
     'source_domains',v.source_domains,'valid_from',p_valid_from,'valid_until',p_valid_until));
  end if;
  return jsonb_build_object('id',v.id,'duplicate',v_inserted=0,'valid_from',v.valid_from,'valid_until',v.valid_until);
-end $;
+end $delegation$;
 revoke all on function public.executive_create_approval_delegation(uuid,uuid,uuid,uuid,text[],timestamptz,timestamptz,text) from public,anon,authenticated;
 grant execute on function public.executive_create_approval_delegation(uuid,uuid,uuid,uuid,text[],timestamptz,timestamptz,text) to service_role;
 
 create or replace function public.executive_revoke_approval_delegation(
  p_tenant_id uuid,p_actor_user_id uuid,p_delegation_id uuid
-) returns jsonb language plpgsql security definer set search_path='' as $
+) returns jsonb language plpgsql security definer set search_path='' as $delegation$
 declare v public.executive_approval_delegations%rowtype; v_admin boolean;
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_delegation_id is null then
@@ -366,7 +366,7 @@ begin
  values(p_actor_user_id,'executive.approval.delegation.revoked','executive_approval_delegation',v.id::text,
   jsonb_build_object('tenant_id',p_tenant_id,'delegator_user_id',v.delegator_user_id,'delegate_user_id',v.delegate_user_id));
  return jsonb_build_object('id',v.id,'revoked',true,'duplicate',false);
-end $;
+end $delegation$;
 revoke all on function public.executive_revoke_approval_delegation(uuid,uuid,uuid) from public,anon,authenticated;
 grant execute on function public.executive_revoke_approval_delegation(uuid,uuid,uuid) to service_role;
 
