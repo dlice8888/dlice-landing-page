@@ -9,7 +9,7 @@ export async function routeProductionMode(input,deps){
  const result=await fn(deps,"routeProductionModeAtomically")(payload);
  if(!result||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
   !["made_to_order","batch"].includes(result.mode)||
-  (result.mode==="made_to_order"&&!result.productionJobId)||(result.mode==="batch"&&!result.batchId))
+  (result.mode==="made_to_order"&&!result.productionJobId)||(result.mode==="batch"&&(!result.batchId||!result.reservationId)))
   fail("PRODUCTION_MODE_ROUTE_INVALID","Production mode did not create its corresponding work item");
  return Object.freeze(result);
 }
