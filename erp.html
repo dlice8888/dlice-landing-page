@@ -314,7 +314,7 @@ function renderSplitTenderRows(){
 async function submitSplitTenderSale(){
  const items=posQuantity();if(!items.length)throw new Error('Pilih minimal satu produk.');
  if(!branchId()||!$('shiftSelect').value)throw new Error('Pilih cabang dan shift terbuka terlebih dahulu.');
- const tenders=Array.from({length:splitTenderCount},(_,i)=>({payment_method:$('[data-split-method="'+i+'"]').value,amount_idr:Number($('[data-split-amount="'+i+'"]').value),reference:$('[data-split-reference="'+i+'"]').value.trim()||null}));
+ const tenders=Array.from({length:splitTenderCount},(_,i)=>({payment_method:document.querySelector('[data-split-method="'+i+'"]').value,amount_idr:Number(document.querySelector('[data-split-amount="'+i+'"]').value),reference:document.querySelector('[data-split-reference="'+i+'"]').value.trim()||null}));
  if(tenders.some(t=>!Number.isSafeInteger(t.amount_idr)||t.amount_idr<=0))throw new Error('Nominal setiap metode harus berupa bilangan bulat positif.');
  if(new Set(tenders.map(t=>t.payment_method)).size<2)throw new Error('Split tender harus memakai minimal dua metode yang berbeda.');
  $('submitSplitSale').disabled=true;$('splitTenderText').textContent='Server sedang memvalidasi harga, stok, dan total alokasi…';
