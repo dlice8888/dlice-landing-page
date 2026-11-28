@@ -149,6 +149,7 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
   const allowedBranches = new Set(branchIds || []);
   const seenSales = new Set();
   const seenRefunds = new Set();
+  const saleById = new Map();
   const includedSales = [];
   const includedRefunds = [];
   const includedSettlements = [];
@@ -156,54 +157,61 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
   for (const sale of sales || []) {
     if (!sale?.id || seenSales.has(sale.id)) continue;
     seenSales.add(sale.id);
-    if (!allowedBranches.has(sale.branch_id) || sale.payment_status !== "paid" ||
-        !insideWindow(sale.created_at, window)) continue;
+    if (!allowedBranches.has(sale.branch_id) || sale.payment_status !== "paid") continue;
     const gross = safeMoney(sale.subtotal_idr, "subtotal_idr");
     const discount = safeMoney(sale.discount_idr, "discount_idr");
     const total = safeMoney(sale.total_idr, "total_idr");
     if (gross - discount !== total) {
       throw new Error(`sale_total_mismatch:${sale.id}`);
     }
-    includedSales.push({
+    const normalized = {
       id: sale.id,
       branch_id: sale.branch_id,
       created_at: sale.created_at,
       gross_idr: gross,
       discount_idr: discount,
       net_before_refunds_idr: total,
-    });
+    };
+    saleById.set(sale.id, normalized);
+    if (insideWindow(sale.created_at, window)) includedSales.push({ ...normalized });
   }
 
-  const includedSaleIds = new Set(includedSales.map((sale) => sale.id));
+  const allProcessedRefundsBySale = new Map();
   for (const refund of refunds || []) {
     if (!refund?.id || seenRefunds.has(refund.id)) continue;
     seenRefunds.add(refund.id);
-    if (
-      refund.status !== "processed" ||
-      !includedSaleIds.has(refund.pos_sale_id) ||
-      !insideWindow(refund.processed_at, window)
-    ) continue;
-    includedRefunds.push({
-      id: refund.id,
-      pos_sale_id: refund.pos_sale_id,
-      branch_id: refund.branch_id,
-      processed_at: refund.processed_at,
-      amount_idr: safeMoney(refund.amount_idr, "refund.amount_idr"),
-    });
+    if (refund.status !== "processed") continue;
+    const sourceSale = saleById.get(refund.pos_sale_id);
+    if (!sourceSale || sourceSale.branch_id !== refund.branch_id) {
+      throw new Error(`refund_source_scope_mismatch:${refund.id}`);
+    }
+    const amount = safeMoney(refund.amount_idr, "refund.amount_idr");
+    allProcessedRefundsBySale.set(
+      refund.pos_sale_id,
+      (allProcessedRefundsBySale.get(refund.pos_sale_id) || 0) + amount,
+    );
+    if (insideWindow(refund.processed_at, window)) {
+      includedRefunds.push({
+        id: refund.id,
+        pos_sale_id: refund.pos_sale_id,
+        branch_id: refund.branch_id,
+        processed_at: refund.processed_at,
+        amount_idr: amount,
+      });
+    }
   }
-
+  for (const [saleId, refunded] of allProcessedRefundsBySale) {
+    const sourceSale = saleById.get(saleId);
+    if (refunded > sourceSale.net_before_refunds_idr) {
+      throw new Error(`refund_exceeds_sale:${saleId}`);
+    }
+  }
   const refundBySale = new Map();
   for (const refund of includedRefunds) {
-    refundBySale.set(
-      refund.pos_sale_id,
-      (refundBySale.get(refund.pos_sale_id) || 0) + refund.amount_idr,
-    );
+    refundBySale.set(refund.pos_sale_id, (refundBySale.get(refund.pos_sale_id) || 0) + refund.amount_idr);
   }
   for (const sale of includedSales) {
     sale.refund_idr = refundBySale.get(sale.id) || 0;
-    if (sale.refund_idr > sale.net_before_refunds_idr) {
-      throw new Error(`refund_exceeds_sale:${sale.id}`);
-    }
     sale.net_sales_idr = sale.net_before_refunds_idr - sale.refund_idr;
   }
 
@@ -211,7 +219,7 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
   for (const settlement of settlements || []) {
     if (!settlement?.id || settlementIds.has(settlement.id)) continue;
     settlementIds.add(settlement.id);
-    if (!insideWindow(settlement.created_at, window)) continue;
+    if (!allowedBranches.has(settlement.branch_id) || !insideWindow(settlement.created_at, window)) continue;
     includedSettlements.push({
       id: settlement.id,
       provider_reference: settlement.provider_reference || null,
@@ -225,7 +233,7 @@ export function aggregateSalesMonitor({ sales, refunds, settlements = [], window
   const grossSales = includedSales.reduce((sum, sale) => sum + sale.gross_idr, 0);
   const discounts = includedSales.reduce((sum, sale) => sum + sale.discount_idr, 0);
   const refundsTotal = includedRefunds.reduce((sum, refund) => sum + refund.amount_idr, 0);
-  const netSales = includedSales.reduce((sum, sale) => sum + sale.net_sales_idr, 0);
+  const netSales = includedSales.reduce((sum, sale) => sum + sale.net_before_refunds_idr, 0) - refundsTotal;
   const settlementNet = includedSettlements
     .filter((item) => item.status === "reconciled")
     .reduce((sum, item) => sum + item.net_amount_idr, 0);
