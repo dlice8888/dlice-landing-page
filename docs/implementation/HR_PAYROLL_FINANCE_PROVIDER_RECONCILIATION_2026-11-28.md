@@ -29,3 +29,21 @@ The HR migration already provides payroll calculation, approval, Finance posting
 - Configure webhook function deployment with JWT gateway verification disabled only because provider callbacks use HMAC authentication; the function independently verifies the signature before any database write. All HR management actions remain behind the authenticated `dlice-orders` API and Platform Owner gate.
 - Provider credentials and beneficiary details are not present in staging. No provider E2E has been run.
 - No staging migration, Edge deployment, merge or release was performed.
+
+
+## Payroll-to-Finance-to-provider close — candidate orchestration
+
+Added `src/hr-payroll-finance-reconciliation.mjs` and
+`tests/contracts/hr-payroll-finance-reconciliation.test.mjs`.
+
+- Requires an approved payroll run and approved payroll lines.
+- Rechecks the posted Finance journal against the payroll payable amount.
+- Requires a settled provider payment batch for the same payroll run.
+- Enforces one-to-one payroll-line/payment-item mapping and exact IDR amount
+  equality, then persists an idempotent reconciliation and audit event.
+- Does not read or expose beneficiary account details or provider secrets.
+
+**Not yet runtime accepted:** canonical adapters to the HR payroll, Finance journal
+and payout tables/RPCs still need to be bound and tested against disposable
+PostgreSQL and staging provider evidence. This is candidate orchestration code,
+not proof of a completed payroll payout or reconciliation.
