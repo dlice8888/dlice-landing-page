@@ -956,6 +956,7 @@ declare
  v_branch_tenant uuid; v_existing public.crm_financial_close_projections%rowtype;
  v_ref record; v_count integer; v_finance_total bigint; v_refund_finance bigint;
  v_order_payment_count integer;
+ v_tender_total bigint:=0; v_cash_tender bigint:=0; v_non_cash_tender bigint:=0; v_tender_count integer:=0;
 begin
  if p_tenant_id is null or p_branch_id is null or p_source_id is null
    or p_source_type not in ('pos_sale','online_order') or p_actor_user_id is null then
@@ -974,11 +975,24 @@ begin
   select id,status into v_cash_id,v_cash_status from public.cash_reconciliations
    where branch_id=p_branch_id and shift_id=(select shift_id from public.pos_sales where id=p_source_id)
      and status='approved' and reviewed_by is not null and reviewed_at is not null
+     and cash_counted_idr=cash_expected_idr
+     and bank_received_idr=bank_expected_idr
+     and qris_received_idr=qris_expected_idr
    order by created_at desc limit 1 for share;
   if v_cash_id is null or v_cash_status<>'approved' then
    raise exception using errcode='23514',message='APPROVED_SHIFT_CASH_RECONCILIATION_REQUIRED';
   end if;
   v_paid:=v_gross;
+  if v_payment_method='split' then
+   select count(*),coalesce(sum(amount_idr),0),
+     coalesce(sum(amount_idr) filter(where payment_method='cash'),0),
+     coalesce(sum(amount_idr) filter(where payment_method in ('bank_transfer','qris')),0)
+    into v_tender_count,v_tender_total,v_cash_tender,v_non_cash_tender
+    from public.pos_sale_tenders where sale_id=p_source_id and branch_id=p_branch_id;
+   if v_tender_count<2 or v_tender_total<>v_gross or v_cash_tender<=0 or v_non_cash_tender<=0 then
+    raise exception using errcode='23514',message='POS_SPLIT_TENDER_ALLOCATION_DOES_NOT_RECONCILE';
+   end if;
+  end if;
  else
   select product_subtotal_idr into v_subtotal from public.orders
    where id=p_source_id and branch_id=p_branch_id and payment_status='paid' and currency='IDR';
@@ -999,7 +1013,52 @@ begin
   v_settled:=v_paid;
   v_settlement_status:='cash_reconciled';
  elsif p_source_type='pos_sale' and v_payment_method='split' then
-  raise exception using errcode='23514',message='POS_SPLIT_TENDER_ALLOCATION_EVIDENCE_REQUIRED';
+  if exists(select 1 from public.payment_settlement_items psi
+    join public.payment_settlements ps on ps.id=psi.settlement_id
+    where psi.pos_sale_id=p_source_id and
+      (ps.status<>'matched' or ps.received_amount_idr is distinct from ps.net_amount_idr
+       or ps.reconciled_by is null or ps.reconciled_at is null)) then
+   raise exception using errcode='23514',message='POS_SPLIT_SETTLEMENT_BATCH_NOT_RECONCILED';
+  end if;
+  if exists(select 1 from public.payment_settlement_items psi
+    join public.payment_settlements ps on ps.id=psi.settlement_id
+    where psi.pos_sale_id=p_source_id and ps.payment_method='cash') then
+   raise exception using errcode='23514',message='POS_CASH_TENDER_MUST_RECONCILE_TO_SHIFT_DRAWER';
+  end if;
+  if exists(
+    select 1 from (
+      select payment_method,sum(amount_idr) as amount_idr
+      from public.pos_sale_tenders
+      where sale_id=p_source_id and branch_id=p_branch_id
+        and payment_method in ('bank_transfer','qris')
+      group by payment_method
+    ) t
+    full join (
+      select ps.payment_method,sum(psi.amount_idr) as amount_idr
+      from public.payment_settlement_items psi
+      join public.payment_settlements ps on ps.id=psi.settlement_id
+      where psi.pos_sale_id=p_source_id and ps.payment_method in ('bank_transfer','qris')
+        and ps.status='matched' and ps.received_amount_idr=ps.net_amount_idr
+        and ps.reconciled_by is not null and ps.reconciled_at is not null
+      group by ps.payment_method
+    ) s on s.payment_method=t.payment_method
+    where coalesce(t.amount_idr,0)<>coalesce(s.amount_idr,0)
+  ) then
+   raise exception using errcode='23514',message='POS_SPLIT_TENDER_METHOD_ALLOCATION_MISMATCH';
+  end if;
+  select coalesce(array_agg(distinct ps.id order by ps.id),'{}'::uuid[]),
+         coalesce(sum(psi.amount_idr),0)
+   into v_settlement_ids,v_settled
+   from public.payment_settlement_items psi
+   join public.payment_settlements ps on ps.id=psi.settlement_id
+   where psi.pos_sale_id=p_source_id and ps.payment_method in ('bank_transfer','qris')
+     and ps.status='matched' and ps.received_amount_idr=ps.net_amount_idr
+     and ps.reconciled_by is not null and ps.reconciled_at is not null;
+  if v_settled<>v_non_cash_tender then
+   raise exception using errcode='23514',message='POS_SPLIT_NON_CASH_SETTLEMENT_TOTAL_MISMATCH';
+  end if;
+  v_settled:=v_settled+v_cash_tender;
+  v_settlement_status:='cash_reconciled';
  elsif p_source_type='pos_sale' then
   select coalesce(array_agg(distinct ps.id order by ps.id),'{}'::uuid[]),
          coalesce(sum(psi.amount_idr),0)
