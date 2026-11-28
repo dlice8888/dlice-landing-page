@@ -178,46 +178,9 @@ insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 values ('branch-ops-evidence','branch-ops-evidence',false,8388608,array['image/jpeg','image/png','application/pdf'])
 on conflict (id) do update set public=false,file_size_limit=8388608,allowed_mime_types=excluded.allowed_mime_types;
 
-create policy branch_ops_evidence_upload_scope on storage.objects
-for insert to authenticated
-with check (
-  bucket_id='branch-ops-evidence'
-  and owner_id=(select auth.uid())::text
-  and exists (
-    select 1 from public.branches b
-    join public.tenant_memberships tm on tm.tenant_id=b.tenant_id
-    where b.id::text=(storage.foldername(name))[2]
-      and b.tenant_id::text=(storage.foldername(name))[1]
-      and tm.user_id=(select auth.uid()) and tm.status='active'
-      and (
-        tm.role in ('tenant_owner','tenant_admin')
-        or exists (select 1 from public.branch_assignments ba
-          where ba.branch_id=b.id and ba.user_id=(select auth.uid())
-            and ba.employment_status='active'
-            and (ba.ends_on is null or ba.ends_on>=current_date))
-      )
-  )
-);
-create policy branch_ops_evidence_read_scope on storage.objects
-for select to authenticated
-using (
-  bucket_id='branch-ops-evidence'
-  and owner_id=(select auth.uid())::text
-  and exists (
-    select 1 from public.branches b
-    join public.tenant_memberships tm on tm.tenant_id=b.tenant_id
-    where b.id::text=(storage.foldername(name))[2]
-      and b.tenant_id::text=(storage.foldername(name))[1]
-      and tm.user_id=(select auth.uid()) and tm.status='active'
-      and (
-        tm.role in ('tenant_owner','tenant_admin')
-        or exists (select 1 from public.branch_assignments ba
-          where ba.branch_id=b.id and ba.user_id=(select auth.uid())
-            and ba.employment_status='active'
-            and (ba.ends_on is null or ba.ends_on>=current_date))
-      )
-  )
-);
+-- No anon/authenticated Storage policies are created. All uploads and downloads
+-- go through the authenticated server function using service_role; the bucket
+-- remains private and direct client Storage access is denied by default.
 
 -- RPCs are intentionally service_role-only. The Edge Function must authenticate
 -- the bearer token, resolve tenant membership and branch assignment, then call
@@ -319,12 +282,12 @@ end $$;
 create or replace function public.branch_ops_register_evidence_asset(
  p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_object_path text,p_purpose text,p_mime_type text,p_size_bytes bigint
 ) returns uuid language plpgsql security invoker set search_path=public,pg_temp as $$
-declare v_id uuid; v_owner text; v_metadata jsonb;
+declare v_id uuid; v_metadata jsonb;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
  if p_object_path not like p_tenant_id::text||'/'||p_branch_id::text||'/'||p_actor_id::text||'/%' then raise exception 'BRANCH_EVIDENCE_PATH_SCOPE_INVALID'; end if;
- select owner_id,metadata into v_owner,v_metadata from storage.objects where bucket_id='branch-ops-evidence' and name=p_object_path;
- if not found or v_owner<>p_actor_id::text then raise exception 'BRANCH_EVIDENCE_STORAGE_OWNER_INVALID' using errcode='42501'; end if;
+ select metadata into v_metadata from storage.objects where bucket_id='branch-ops-evidence' and name=p_object_path;
+ if not found then raise exception 'BRANCH_EVIDENCE_STORAGE_OBJECT_MISSING' using errcode='P0002'; end if;
  if p_mime_type not in ('image/jpeg','image/png','application/pdf') or p_size_bytes not between 1 and 8388608 then raise exception 'BRANCH_EVIDENCE_FILE_INVALID'; end if;
  insert into public.branch_ops_evidence_assets(tenant_id,branch_id,object_path,owner_user_id,purpose,mime_type,size_bytes,retention_until)
  values(p_tenant_id,p_branch_id,p_object_path,p_actor_id,p_purpose,p_mime_type,p_size_bytes,now()+interval '365 days')
