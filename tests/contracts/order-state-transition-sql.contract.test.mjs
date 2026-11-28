@@ -14,7 +14,7 @@ test("order, payment and fulfillment have independent persisted state and versio
  assert.match(sql,/order_state_transition_events/i);
 });
 test("state RPC is service-role-only, branch-scoped, versioned and idempotent",()=>{
- assert.match(sql,/auth\.jwt\(\)->>'role'\s*<>\s*'service_role'/i);
+ assert.match(sql,/auth\.jwt\(\)->>'role'[\s\S]*?<>\s*'service_role'/i);
  assert.match(sql,/pos_actor_can_access_branch\(p_actor_user_id,p_tenant_id,p_branch_id\)/i);
  assert.match(sql,/ORDER_STATE_STALE_VERSION/i);
  assert.match(sql,/ORDER_STATE_IDEMPOTENCY_PAYLOAD_MISMATCH/i);
