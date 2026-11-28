@@ -1,7 +1,7 @@
 -- Branch Operations schema, lifecycle guard and ACL contracts.
 -- Executed only by the disposable Supabase PostgreSQL replay workflow.
 begin;
-select plan(86);
+select plan(92);
 
 select ok(to_regclass('public.branch_ops_equipment') is not null,'equipment table exists');
 select ok(to_regclass('public.branch_ops_tasks') is not null,'task table exists');
@@ -60,6 +60,28 @@ select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_
 select ok(position('pg_advisory_xact_lock' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0
   and position('BRANCH_OPS_IDEMPOTENCY_SCOPE_MISMATCH' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0,
   'compliance snapshot retries are serialized and cannot replay across branches');
+select ok(position('BRANCH_TASK_TRANSITION_INVALID' in pg_get_functiondef('public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('in_progress' in pg_get_functiondef('public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('completed' in pg_get_functiondef('public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0,
+  'task lifecycle enforces open to in-progress/completed/cancelled and in-progress to terminal states');
+select ok(position('BRANCH_INCIDENT_TRANSITION_INVALID' in pg_get_functiondef('public.branch_ops_update_incident_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('investigating' in pg_get_functiondef('public.branch_ops_update_incident_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('closed' in pg_get_functiondef('public.branch_ops_update_incident_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0,
+  'incident lifecycle enforces investigation, resolution and closure transitions');
+select ok(position('BRANCH_WORK_ORDER_TRANSITION_INVALID' in pg_get_functiondef('public.branch_ops_update_work_order_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('scheduled' in pg_get_functiondef('public.branch_ops_update_work_order_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('completed' in pg_get_functiondef('public.branch_ops_update_work_order_status(uuid,uuid,uuid,uuid,text)'::regprocedure))>0,
+  'maintenance lifecycle enforces scheduled, in-progress and terminal transitions');
+select ok(position('BRANCH_COMPLIANCE_SEPARATION_OF_DUTIES' in pg_get_functiondef('public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text)'::regprocedure))>0
+  and position('BRANCH_COMPLIANCE_CHECK_NOT_SUBMITTED' in pg_get_functiondef('public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text)'::regprocedure))>0,
+  'compliance review enforces submitted state and independent approver');
+select ok(position('BRANCH_EVIDENCE_PATH_SCOPE_INVALID' in pg_get_functiondef('public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint)'::regprocedure))>0
+  and position('BRANCH_EVIDENCE_STORAGE_OBJECT_MISSING' in pg_get_functiondef('public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint)'::regprocedure))>0
+  and position('BRANCH_EVIDENCE_FILE_INVALID' in pg_get_functiondef('public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint)'::regprocedure))>0,
+  'evidence registration enforces private object existence, tenant path, MIME and size');
+select ok(position('BRANCH_COMPLIANCE_EVIDENCE_INCOMPLETE' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0
+  and position('BRANCH_COMPLIANCE_SOURCE_REVISION_MISMATCH' in pg_get_functiondef('public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text)'::regprocedure))>0,
+  'compliance publication requires complete approved evidence and matching source revision');
 
 select ok(has_function_privilege('service_role','public.branch_ops_register_equipment(uuid,uuid,uuid,text,text)','EXECUTE'),'service role can register equipment');
 select ok(has_function_privilege('service_role','public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid)','EXECUTE'),'service role can create tasks');
