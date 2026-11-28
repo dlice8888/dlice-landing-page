@@ -35,6 +35,8 @@ begin
 
   if tg_op = 'INSERT' and new.payment_status = 'refunded' then
     raise exception using errcode='23514', message='POS_SALE_REFUND_REQUIRES_PAID_SOURCE';
+  elsif tg_op = 'UPDATE' and new.payment_status = 'refunded' and old.payment_status <> 'paid' and old.payment_status <> 'refunded' then
+    raise exception using errcode='23514', message='POS_SALE_REFUND_REQUIRES_PAID_SOURCE';
   elsif tg_op = 'INSERT' and new.payment_status = 'paid' then
     -- Payment recognition is server-timestamped; clients cannot backdate a new sale.
     new.paid_at := now();
