@@ -3,6 +3,10 @@ set -euo pipefail
 
 # Generate the timestamped migration with Supabase CLI, never hand-pick its name.
 supabase --version
+supabase init --help >/dev/null
+if [[ ! -f supabase/config.toml ]]; then
+  supabase init
+fi
 supabase migration --help >/dev/null
 supabase migration new --help >/dev/null
 supabase db reset --help >/dev/null
