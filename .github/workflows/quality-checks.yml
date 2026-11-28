@@ -33,6 +33,17 @@ jobs:
         run: node scripts/staging-release-contract-tests.mjs
       - name: Run KDS POS stock and offline recovery contract
         run: node --test tests/contracts/kitchen-kds-offline-contract.test.mjs
+      - name: Check KDS and production workflow module syntax
+        run: >-
+          node --check src/kds-station-board.mjs
+          && node --check src/kds-prep-sla.mjs
+          && node --check src/kds-lifecycle.mjs
+          && node --check src/recipe-yield-costing.mjs
+          && node --check src/production-prep-planner.mjs
+          && node --check src/production-consumption-reconciliation.mjs
+          && node --check src/production-mode-router.mjs
+      - name: Run KDS and production workflow acceptance contracts
+        run: node --test tests/contracts/kitchen-production-workflows.test.mjs
       - name: Verify atomic tenant bootstrap contract
         run: node --test tests/contracts/tenant-bootstrap-atomic-contract.test.mjs
       - name: Verify Owner metadata JSON boolean and current JWT role claim contract
@@ -69,6 +80,39 @@ jobs:
         run: node --test tests/contracts/command-center-contract.test.mjs
       - name: Run branch checklist atomic audit contract tests
         run: node --test tests/contracts/branch-checklist-audit-contract.test.mjs
+      - name: Check POS shift cart order payment refund and lifecycle modules
+        run: >-
+          node --check src/pos-shift-workflow.mjs
+          && node --check src/pos-cart.mjs
+          && node --check src/pos-order-type.mjs
+          && node --check src/pos-payment-methods.mjs
+          && node --check src/pos-refund-void-workflow.mjs
+          && node --check src/pos-cash-drawer.mjs
+          && node --check src/order-payment-fulfillment-state.mjs
+      - name: Run POS core workflow invariants
+        run: node --test tests/contracts/pos-core-workflows.test.mjs
+      - name: Run POS split tender Edge integration contract
+        run: node --test tests/contracts/pos-split-tender-edge-contract.test.mjs
+      - name: Run POS split tender UI contract
+        run: node --test tests/contracts/pos-split-tender-ui-contract.test.mjs
+      - name: Check Executive approval center policy and service syntax
+        run: node --check src/executive-approval-center.mjs && node --check src/executive-approval-service.mjs
+      - name: Run Executive approval inbox, decision policy and service contracts
+        run: node --test tests/contracts/executive-approval-center.test.mjs tests/contracts/executive-approval-service.test.mjs tests/contracts/executive-approval-center-ui-contract.test.mjs
+      - name: Run Executive approval Edge authorization contract
+        run: node --test tests/contracts/executive-approval-edge-contract.test.mjs
+      - name: Run Executive approval center UI contract
+        run: node --test tests/contracts/executive-approval-ui-contract.test.mjs
+      - name: Run Executive sales monitor timezone and reconciliation acceptance tests
+        run: node --test tests/contracts/executive-sales-monitor-acceptance.test.mjs tests/contracts/executive-sales-monitor-attribution.test.mjs tests/contracts/executive-t01-t02-sql-source-contract.test.mjs
+      - name: Check POS cash drawer workflow syntax
+        run: node --check src/pos-cash-drawer.mjs
+      - name: Run POS cash drawer reconciliation contracts
+        run: node --test tests/contracts/pos-cash-drawer.test.mjs
+      - name: Run Executive sales monitor Edge authorization and source contracts
+        run: node --test tests/contracts/executive-sales-monitor-edge-contract.test.mjs
+      - name: Run Executive live sales monitor ERP UI contracts
+        run: node --test tests/contracts/executive-sales-monitor-ui-contract.test.mjs
       - name: Check new domain workflow module syntax
         run: >-
           node --check src/branch-operations-workflows.mjs
@@ -130,6 +174,19 @@ jobs:
         run: node --test tests/contracts/quality-release-accessibility-gates.test.mjs
       - name: Run Inventory lot allocation and valuation contracts
         run: node --test tests/contracts/inventory-lot-valuation-workflows.test.mjs
+      - name: Check inventory and warehouse workflow module syntax
+        run: >-
+          node --check src/inventory-balance-service.mjs
+          && node --check src/stock-movement-ledger.mjs
+          && node --check src/warehouse-location-tree.mjs
+          && node --check src/inventory-uom-conversion.mjs
+          && node --check src/inventory-stock-buckets.mjs
+          && node --check src/inventory-reorder-planner.mjs
+          && node --check src/inventory-cycle-count.mjs
+          && node --check src/inventory-adjustment-approval.mjs
+          && node --check src/procurement-stock-reconciliation.mjs
+      - name: Run inventory and warehouse acceptance contracts
+        run: node --test tests/contracts/inventory-warehouse-workflows.test.mjs
       - name: Run POS promotion and voucher workflow contracts
         run: node --test tests/contracts/pos-promotion-voucher-workflows.test.mjs
       - name: Run HR recruitment training and performance contracts
@@ -144,6 +201,17 @@ jobs:
         run: node --test tests/contracts/delivery-fulfillment-reconciliation.test.mjs
       - name: Run Order external channel ETA and SLA contracts
         run: node --test tests/contracts/order-channel-eta-workflows.test.mjs
+      - name: Check Order Management workflow module syntax
+        run: >-
+          node --check src/order-unified-queue.mjs
+          && node --check src/order-availability-policy.mjs
+          && node --check src/order-branch-router.mjs
+          && node --check src/business-order-number.mjs
+          && node --check src/order-timeline.mjs
+          && node --check src/order-cancellation-history.mjs
+          && node --check src/order-notification-dispatcher.mjs
+      - name: Run Order Management workflow acceptance contracts
+        run: node --test tests/contracts/order-management-workflows.test.mjs
       - name: Check reconciled Executive Command Center read model syntax
         run: node --check src/executive-command-center-reconciled-read-model.mjs
       - name: Run reconciled Executive Command Center read model contracts
@@ -156,6 +224,17 @@ jobs:
         run: node --test tests/contracts/blocked-acceptance-remediation-workflows.test.mjs
       - name: Run Menu Recipe nested BOM and unit economics contracts
         run: node --test tests/contracts/recipe-bom-unit-economics.test.mjs
+      - name: Check catalog pricing and recipe lifecycle module syntax
+        run: >-
+          node --check src/product-catalog-admin.mjs
+          && node --check src/branch-product-availability.mjs
+          && node --check src/pricing-policy-engine.mjs
+          && node --check src/recipe-bom-editor.mjs
+          && node --check src/recipe-version-lifecycle.mjs
+          && node --check src/menu-stock-availability.mjs
+          && node --check src/recipe-change-workflow.mjs
+      - name: Run catalog pricing and recipe lifecycle acceptance contracts
+        run: node --test tests/contracts/menu-recipe-engineering-workflows.test.mjs
       - name: Run Procurement supplier pricing demand and return contracts
         run: node --test tests/contracts/procurement-supplier-workflows.test.mjs
       - name: Run atomic admin permission audit contract tests

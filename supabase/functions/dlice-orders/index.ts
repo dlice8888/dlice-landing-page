@@ -6,6 +6,7 @@ import {
   resolveTenantScopedPermissions,
 } from "./tenant-permissions.ts";
 import { checkPwnedPassword } from "./password-security.ts";
+import { aggregateSalesMonitor, resolveBusinessWindow } from "../_shared/executive-sales-monitor.mjs";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
@@ -583,6 +584,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-open-shift": "pos",
     "erp-close-shift": "pos",
     "erp-create-pos-sale": "pos",
+    "erp-create-pos-sale-split-tender": "pos",
+    "erp-list-pending-approvals": "reports",
+    "erp-claim-approval": "reports",
+    "erp-decide-approval": "reports",
+    "erp-create-approval-delegation": "reports",
+    "erp-revoke-approval-delegation": "reports",
+    "erp-list-approval-history": "reports",
+    "erp-list-approval-delegations": "reports",
     "erp-list-expenses": "finance",
     "erp-create-expense": "finance",
     "erp-review-expense": "finance",
@@ -595,7 +604,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     "erp-update-purchase-order": "procurement",
   };
   const requiredPermission = permissionForAction[action];
-  if (requiredPermission && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
+  const approvalAction = ["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval","erp-create-approval-delegation","erp-revoke-approval-delegation","erp-list-approval-history","erp-list-approval-delegations"].includes(action);
+  if (requiredPermission && !approvalAction && !isPlatformOwner && !actor.profile.permissions.includes("*") && !actor.profile.permissions.includes(requiredPermission)) {
     return fail("Akses ditolak. Pemilik belum memberikan izin untuk bagian ini.", 403, origin);
   }
 
@@ -2527,6 +2537,166 @@ if(action==="erp-executive-branch-kpis"){
     return json({ok:true,run,execution:"metadata_only_external_backup_job_required"},202,origin);
   }
 
+  if (["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval"].includes(action)) {
+    const canReviewDomain= isOwner || hasPerm("procurement") || hasPerm("finance") || hasPerm("hr") || hasPerm("branches");
+    if(!canReviewDomain)return fail("Izin approval center tidak diizinkan.",403,origin);
+    const allowedBranchIds: string[]=await branchIdsForActor().catch(()=>[] as string[]);
+    if(!Array.isArray(allowedBranchIds)||!allowedBranchIds.length)return fail("Tidak ada cakupan cabang aktif untuk approval.",403,origin);
+    const requestedBranchId=safeText(body.branch_id,80);
+    if(requestedBranchId&&!allowedBranchIds.includes(requestedBranchId))return fail("Akses cabang approval tidak diizinkan.",403,origin);
+    if(action==="erp-list-approval-history"){
+      const {data,error}=await admin.rpc("list_approval_history",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null});
+      if(error)return fail("Riwayat approval belum tersedia.",503,origin);
+      return json({history:Array.isArray(data)?data:[]},200,origin);
+    }
+    if(action==="erp-list-approval-delegations"){
+      const {data,error}=await admin.rpc("list_approval_delegations",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null});
+      if(error)return fail("Daftar delegasi belum tersedia.",503,origin);
+      return json({delegations:Array.isArray(data)?data:[]},200,origin);
+    }
+    if(action==="erp-create-approval-delegation"){
+      const delegateUserId=safeText(body.delegate_user_id,80),domain=safeText(body.domain,40),branchId=safeText(body.branch_id,80);
+      const category=safeText(body.category,60),maxAmount=Number(body.max_amount_idr);
+      const startsAt=safeText(body.starts_at,40),expiresAt=safeText(body.expires_at,40);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(delegateUserId)
+        ||!["procurement","finance","hr","branch_ops"].includes(domain)
+        ||!branchId||!Number.isSafeInteger(maxAmount)||maxAmount<0
+        ||!Number.isFinite(Date.parse(startsAt))||!Number.isFinite(Date.parse(expiresAt)))
+        return fail("Delegasi approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("create_approval_delegation",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_delegate_user_id:delegateUserId,p_domain:domain,p_branch_id:branchId,p_category:category||null,p_max_amount_idr:maxAmount,p_starts_at:startsAt,p_expires_at:expiresAt});
+      if(error)return fail("Delegasi tidak dapat dibuat. Periksa role, cabang, pengguna, dan masa berlaku.",409,origin);
+      return json({ok:true,delegation:data},200,origin);
+    }
+    if(action==="erp-revoke-approval-delegation"){
+      const delegationId=safeText(body.delegation_id,80);
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(delegationId))return fail("Referensi delegasi tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("revoke_approval_delegation",{p_delegation_id:delegationId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds});
+      if(error)return fail("Delegasi tidak dapat dicabut.",409,origin);
+      return json({ok:true,delegation:data},200,origin);
+    }
+    if(action==="erp-list-pending-approvals"){
+      const domain=safeText(body.domain,40),category=safeText(body.category,60);
+      if(domain&&!["procurement","finance","hr","branch_ops"].includes(domain))return fail("Domain approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("list_pending_approvals",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null,p_domain:domain||null,p_category:category||null});
+      if(error)return fail("Approval inbox belum tersedia. Siapkan migrasi approval workflow terlebih dahulu.",503,origin);
+      return json({approvals:Array.isArray(data)?data:[],scope_branch_ids:allowedBranchIds},200,origin);
+    }
+    const approvalId=safeText(body.approval_id,80),expectedVersion=Number(body.expected_version);
+    if(!approvalId||!Number.isSafeInteger(expectedVersion)||expectedVersion<1)return fail("Referensi approval atau versi tidak valid.",422,origin);
+    if(action==="erp-claim-approval"){
+      const {data,error}=await admin.rpc("claim_approval",{p_approval_id:approvalId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_expected_version:expectedVersion});
+      if(error)return fail("Approval tidak dapat diklaim. Periksa role, delegasi, expiry, scope, dan versi terbaru.",409,origin);
+      return json({ok:true,claim:data},200,origin);
+    }
+    const decision=safeText(body.decision,20),reason=safeText(body.reason,500),idempotencyKey=safeText(body.idempotency_key,120);
+    if(!["approved","rejected"].includes(decision)||reason.length<8||!idempotencyKey||idempotencyKey.length<16)return fail("Keputusan, alasan, atau kunci idempotensi tidak valid.",422,origin);
+    const {data,error}=await admin.rpc("decide_approval",{p_approval_id:approvalId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_expected_version:expectedVersion,p_decision:decision,p_reason:reason,p_idempotency_key:idempotencyKey});
+    if(error)return fail("Keputusan approval gagal. Periksa pemisahan tugas, delegasi, expiry, limit nominal, dan versi sumber.",409,origin);
+    return json({ok:true,decision:data},200,origin);
+  }
+
+  if (action === "erp-executive-sales-monitor") {
+    if (!hasPerm("finance") && !hasPerm("orders") && !isOwner) return fail("Izin Executive Sales Monitor tidak diizinkan.",403,origin);
+    const period=safeText(body.period,10),anchorDate=safeText(body.anchor_date,10),requestedBranch=safeText(body.branch_id,80),requestedTimezone=safeText(body.timezone,40);
+    if(!["day","week","month"].includes(period)||!/^\d{4}-\d{2}-\d{2}$/.test(anchorDate))return fail("Periode atau tanggal laporan tidak valid.",422,origin);
+    const allowedIds:string[]=await branchIdsForActor().catch(()=>[] as string[]);
+    if(!allowedIds.length)return json({ok:true,kpi_definition_version:"sales-monitor.v2",branches:[],totals:{gross_sales_idr:0,discounts_idr:0,refunds_idr:0,net_sales_idr:0,paid_transactions:0,reconciled_settlement_allocations_idr:0},sources:{sales:[],refunds:[],settlements:[],finance_journals:[]}},200,origin);
+    if(requestedBranch&&!allowedIds.includes(requestedBranch))return fail("Cabang laporan tidak berada dalam scope aktor.",403,origin);
+    if(requestedTimezone&&!SUPPORTED_BRANCH_TIMEZONES.has(requestedTimezone))return fail("Timezone filter tidak didukung.",422,origin);
+    let branchQuery=admin.from("branches").select("id,tenant_id,code,name,timezone").in("id",requestedBranch?[requestedBranch]:allowedIds).order("code").limit(500);
+    if(requestedTimezone)branchQuery=branchQuery.eq("timezone",requestedTimezone);
+    const branchResult=await branchQuery;
+    if(branchResult.error)return fail("Scope cabang laporan gagal dimuat.",500,origin);
+    const branches=branchResult.data||[];
+    if(branches.some((b:any)=>!SUPPORTED_BRANCH_TIMEZONES.has(b.timezone)))return fail("Zona waktu cabang tidak didukung.",422,origin);
+    const branchWindows=branches.map((b:any)=>({branch:b,window:resolveBusinessWindow({period,anchorDate,timeZone:b.timezone})}));
+    if(!branchWindows.length)return json({ok:true,branches:[],totals:{}},200,origin);
+    const minStart=branchWindows.map((x:any)=>x.window.starts_at).sort()[0];
+    const maxEnd=branchWindows.map((x:any)=>x.window.ends_at).sort().slice(-1)[0];
+    const minBusinessDate=branchWindows.map((x:any)=>x.window.from_business_date).sort()[0];
+    const maxBusinessDateExclusive=new Date(Date.parse(branchWindows.map((x:any)=>x.window.through_business_date).sort().slice(-1)[0]+"T00:00:00.000Z")+86400000).toISOString().slice(0,10);
+    const readAll=async(makeQuery:any)=>{
+      const rows:any[]=[];for(let offset=0;offset<20000;offset+=1000){const page=await makeQuery().range(offset,offset+999);if(page.error)throw page.error;rows.push(...(page.data||[]));if((page.data||[]).length<1000)return rows;}throw new Error("executive_report_row_limit");
+    };
+    try {
+      // Do not filter on created_at: delayed payments must be attributed by paid_at/business_date.
+      // Legacy rows without either field remain visible as explicitly uncertified created_at proxies.
+      const salesCutoffFilter=`and(business_date.gte.${minBusinessDate},business_date.lt.${maxBusinessDateExclusive}),and(paid_at.gte.${minStart},paid_at.lt.${maxEnd}),and(paid_at.is.null,created_at.gte.${minStart},created_at.lt.${maxEnd})`;
+      const periodSales=await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at,paid_at,business_date").in("branch_id",branches.map((b:any)=>b.id)).eq("payment_status","paid").or(salesCutoffFilter).order("created_at"));
+      const periodRefunds=await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("branch_id",branches.map((b:any)=>b.id)).eq("status","processed").gte("processed_at",minStart).lt("processed_at",maxEnd).not("pos_sale_id","is",null).order("processed_at"));
+      const periodSaleIds=periodSales.map((s:any)=>s.id);
+      const saleItems=periodSaleIds.length?await readAll(()=>admin.from("pos_sale_items").select("id,sale_id,product_id,product_name_snapshot,quantity,unit_price_idr,line_total_idr,modifier_snapshot,substitution_snapshot").in("sale_id",periodSaleIds)): [];
+      const refundSaleIds=[...new Set(periodRefunds.map((r:any)=>r.pos_sale_id).filter(Boolean))];
+      const sourceSales=refundSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,transaction_code,branch_id,subtotal_idr,discount_idr,total_idr,payment_status,created_at,paid_at,business_date").in("id",refundSaleIds)): [];
+      const salesById=new Map([...periodSales,...sourceSales].map((s:any)=>[s.id,s]));
+      const allRefunds=refundSaleIds.length?await readAll(()=>admin.from("refund_records").select("id,pos_sale_id,branch_id,amount_idr,status,processed_at").in("pos_sale_id",refundSaleIds).eq("status","processed")):periodRefunds;
+      const matchedSettlementItems=periodSales.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("pos_sale_id",periodSales.map((s:any)=>s.id))):[];
+      const settlementIds=[...new Set(matchedSettlementItems.map((x:any)=>x.settlement_id))];
+      // Load every allocation in each touched settlement before allocating net proceeds.
+      const settlementItems=settlementIds.length?await readAll(()=>admin.from("payment_settlement_items").select("id,settlement_id,pos_sale_id,amount_idr").in("settlement_id",settlementIds)): [];
+      const settlements=settlementIds.length?await readAll(()=>admin.from("payment_settlements").select("id,status,provider_reference,net_amount_idr,gross_amount_idr,fee_amount_idr,settlement_date,created_at").in("id",settlementIds)): [];
+      const settlementById=new Map(settlements.map((s:any)=>[s.id,s]));
+      const settlementSaleIds=[...new Set(settlementItems.map((item:any)=>item.pos_sale_id).filter(Boolean))];
+      const settlementSourceSales=settlementSaleIds.length?await readAll(()=>admin.from("pos_sales").select("id,branch_id").in("id",settlementSaleIds)):[];
+      const settlementSourceBranchIds=[...new Set(settlementSourceSales.map((sale:any)=>sale.branch_id))];
+      const settlementSourceBranches=settlementSourceBranchIds.length?await readAll(()=>admin.from("branches").select("id,tenant_id").in("id",settlementSourceBranchIds)):[];
+      const settlementSaleBranch=new Map(settlementSourceSales.map((sale:any)=>[sale.id,sale.branch_id]));
+      const settlementBranchTenant=new Map(settlementSourceBranches.map((branch:any)=>[branch.id,branch.tenant_id]));
+      const settlementNetAllocationByItem=new Map<string,number>();
+      const settlementAllocationCompleteById=new Map<string,boolean>();
+      for(const settlement of settlements){
+        const rows=settlementItems.filter((item:any)=>item.settlement_id===settlement.id).sort((a:any,b:any)=>String(a.id).localeCompare(String(b.id)));
+        const settlementTenants=new Set(rows.map((item:any)=>settlementBranchTenant.get(settlementSaleBranch.get(item.pos_sale_id))).filter(Boolean));
+        const allSourceRowsResolved=rows.length>0&&rows.every((item:any)=>settlementSaleBranch.has(item.pos_sale_id)&&settlementBranchTenant.has(settlementSaleBranch.get(item.pos_sale_id)));
+        const singleTenantSettlement=allSourceRowsResolved&&settlementTenants.size===1;
+        const gross=Number(settlement.gross_amount_idr),net=Number(settlement.net_amount_idr);
+        const allocatedGross=rows.reduce((sum:number,item:any)=>sum+Number(item.amount_idr||0),0);
+        const valid=singleTenantSettlement&&settlement.status==="reconciled"&&settlement.net_amount_idr!=null&&Number.isSafeInteger(gross)&&gross>0&&Number.isSafeInteger(net)&&net>=0&&net<=gross&&allocatedGross===gross&&rows.length>0;
+        settlementAllocationCompleteById.set(settlement.id,valid);
+        if(!valid)continue;
+        let allocatedNet=0;
+        const bases=rows.map((item:any)=>{
+          const value=Number((BigInt(item.amount_idr)*BigInt(net))/BigInt(gross));
+          allocatedNet+=value;
+          return {id:item.id,value};
+        });
+        let remainder=net-allocatedNet;
+        for(const base of bases){
+          const allocation=base.value+(remainder>0?1:0);
+          if(remainder>0)remainder-=1;
+          settlementNetAllocationByItem.set(base.id,allocation);
+        }
+        if(remainder!==0)throw new Error("settlement_net_allocation_rounding_mismatch");
+      }
+      const financeSourceIds=[...new Set([...periodSales.map((s:any)=>s.id),...periodRefunds.map((r:any)=>r.id)])];
+      const financeJournals=financeSourceIds.length?await readAll(()=>admin.from("finance_journal_entries").select("id,source_id,source_type,entry_date,amount_idr,status,branch_id").in("source_id",financeSourceIds).in("branch_id",branches.map((b:any)=>b.id)).eq("status","posted")):[];
+      const branchSummaries=branchWindows.map(({branch,window}:any)=>{
+        const scopedSales=[...salesById.values()].filter((s:any)=>s.branch_id===branch.id);
+        const scopedRefunds=allRefunds.filter((r:any)=>r.branch_id===branch.id);
+        const result=aggregateSalesMonitor({sales:scopedSales,refunds:scopedRefunds,window,branchIds:[branch.id]});
+        const ids=new Set(result.sources.sales.map((s:any)=>s.id));
+        const branchSettlementItems=settlementItems.filter((i:any)=>ids.has(i.pos_sale_id));
+        const reconciledItems=branchSettlementItems.filter((i:any)=>settlementById.get(i.settlement_id)?.status==="reconciled");
+        const allocated=reconciledItems.reduce((sum:number,i:any)=>sum+Number(i.amount_idr||0),0);
+        const netAllocation=branchSettlementItems.reduce((sum:number,i:any)=>sum+(settlementNetAllocationByItem.get(i.id)||0),0);
+        const completeSettlementNet=branchSettlementItems.length>0&&branchSettlementItems.every((i:any)=>settlementAllocationCompleteById.get(i.settlement_id)===true);
+        const branchJournals=financeJournals.filter((j:any)=>ids.has(j.source_id));
+        const refundIds=new Set(result.sources.refunds.map((r:any)=>r.id));
+        const branchRefundJournals=financeJournals.filter((j:any)=>refundIds.has(j.source_id));
+        const journalSalesTotal=branchJournals.reduce((sum:number,j:any)=>sum+Number(j.amount_idr||0),0);
+        const journalRefundTotal=branchRefundJournals.reduce((sum:number,j:any)=>sum+Number(j.amount_idr||0),0);
+        const allBranchJournals=[...branchJournals.map((j:any)=>({...j,source_kind:"sale"})),...branchRefundJournals.map((j:any)=>({...j,source_kind:"refund"}))];
+        // Journal rows are exposed for traceability, but net revenue is not asserted
+        // until the tenant's debit/credit account mapping is explicitly configured.
+        return {branch:{id:branch.id,tenant_id:branch.tenant_id,code:branch.code,name:branch.name,timezone:branch.timezone},window,totals:{...result.totals,settlement_net_received_idr:completeSettlementNet?netAllocation:null,settlement_vs_net_sales_idr:completeSettlementNet?netAllocation-result.totals.net_sales_idr:null,reconciled_settlement_allocations_idr:allocated,posted_finance_sales_journal_idr:journalSalesTotal,posted_finance_refund_journal_idr:journalRefundTotal,posted_finance_journal_amount_idr:journalSalesTotal+journalRefundTotal,posted_finance_journal_net_idr:null,finance_journal_vs_net_sales_delta_idr:null,finance_journal_reconciliation_status:"account_mapping_unverified",posted_finance_journal_entries:allBranchJournals.length},sources:{...result.sources,sale_items:saleItems.filter((item:any)=>ids.has(item.sale_id)),settlements:branchSettlementItems.map((i:any)=>({id:i.id,pos_sale_id:i.pos_sale_id,settlement_id:i.settlement_id,amount_idr:i.amount_idr,status:settlementById.get(i.settlement_id)?.status||"unknown",provider_reference:settlementById.get(i.settlement_id)?.provider_reference||null,allocated_net_idr:settlementNetAllocationByItem.get(i.id)??null})),finance_journals:allBranchJournals}};
+      });
+      const sum=(key:string)=>branchSummaries.reduce((n:number,b:any)=>n+Number(b.totals[key]||0),0);
+      return json({ok:true,kpi_definition_version:"sales-monitor.v2",sales_recognition_policy:"business_date_then_paid_at_then_legacy_created_at_proxy",sales_business_date_certified:branchSummaries.every((b:any)=>b.totals.paid_transactions===0||b.sources.sales.every((s:any)=>s.recognition_field==="business_date"||s.recognition_field==="paid_at")),period,anchor_date:anchorDate,branches:branchSummaries,totals:{gross_sales_idr:sum("gross_sales_idr"),discounts_idr:sum("discounts_idr"),refunds_idr:sum("refunds_idr"),net_sales_idr:sum("net_sales_idr"),paid_transactions:sum("paid_transactions"),settlement_net_received_idr:branchSummaries.every((b:any)=>b.totals.settlement_net_received_idr!==null)?sum("settlement_net_received_idr"):null,reconciled_settlement_allocations_idr:sum("reconciled_settlement_allocations_idr"),posted_finance_sales_journal_idr:sum("posted_finance_sales_journal_idr"),posted_finance_refund_journal_idr:sum("posted_finance_refund_journal_idr"),posted_finance_journal_amount_idr:sum("posted_finance_journal_amount_idr"),posted_finance_journal_net_idr:null,finance_journal_vs_net_sales_delta_idr:null,finance_journal_reconciliation_status:"account_mapping_unverified",posted_finance_journal_entries:sum("posted_finance_journal_entries")},source_row_counts:{sales:branchSummaries.reduce((n:number,b:any)=>n+b.sources.sales.length,0),refunds:branchSummaries.reduce((n:number,b:any)=>n+b.sources.refunds.length,0),settlement_items:settlementItems.length,finance_journals:financeJournals.length}},200,origin);
+    } catch(error) {
+      return fail(error instanceof Error&&error.message==="executive_report_row_limit"?"Data laporan melebihi batas; persempit rentang atau pilih cabang.":"Rekonsiliasi penjualan gagal; sumber transaksi perlu diperiksa.",409,origin);
+    }
+  }
+
   if (action === "erp-overview") {
     if (!isOwner) return fail("Ringkasan lintas cabang hanya tersedia untuk Owner; gunakan laporan cabang untuk data operasional.",403,origin);
     const fromDate=safeText(body.from_date,10),throughDate=safeText(body.through_date,10);
@@ -2960,6 +3130,23 @@ if(action==="erp-executive-branch-kpis"){
     return json({ok:true,shift:data},200,origin);
   }
 
+  if (action === "erp-create-pos-sale-split-tender") {
+    const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
+    const discount=Number(body.discount_idr||0),rawTenders=body.tenders;
+    if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
+    if(!Array.isArray(items)||!items.length||items.length>50)return fail("Pilih minimal satu menu.",422,origin);
+    if(!Number.isSafeInteger(discount)||discount<0||(!isOwner&&discount>0))return fail("Diskon hanya dapat diberikan Owner sampai alur persetujuan diskon diaktifkan.",403,origin);
+    if(!Array.isArray(rawTenders)||rawTenders.length<2||rawTenders.length>5)return fail("Split tender harus memiliki 2 sampai 5 alokasi.",422,origin);
+    const cleanItems=items.map((x:any)=>({slug:safeText(x?.slug,80),quantity:Number(x?.quantity),modifiers:Array.isArray(x?.modifiers)?x.modifiers.map((m:any)=>({code:safeText(m?.code,40)})):[],substitutions:Array.isArray(x?.substitutions)?x.substitutions.map((sub:any)=>({recipe_ingredient_id:safeText(sub?.recipe_ingredient_id,80),substitute_inventory_item_id:safeText(sub?.substitute_inventory_item_id,80)})):[]}));
+    if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
+    const tenders=rawTenders.map((x:any)=>({payment_method:safeText(x?.payment_method,30),amount_idr:Number(x?.amount_idr),reference:safeText(x?.reference,120)||null}));
+    if(tenders.some((x:any)=>!["cash","bank_transfer","qris"].includes(x.payment_method)||!Number.isSafeInteger(x.amount_idr)||x.amount_idr<=0))return fail("Metode atau nominal tender tidak valid. Kartu belum didukung oleh RPC staging.",422,origin);
+    const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
+    const {data,error}=await admin.rpc("erp_create_pos_sale_split_tender_idempotent",{p_branch_id:branchId,p_shift_id:shiftId,p_items:cleanItems,p_discount_idr:Math.round(discount),p_customer_reference:safeText(body.customer_reference,120),p_notes:safeText(body.notes,500),p_actor_user_id:actor.user.id,p_idempotency_key:idempotencyKey,p_tenders:tenders});
+    if(error)return fail(error.message.includes("split_tender_total_mismatch")?"Total alokasi tender harus sama dengan total transaksi.":error.message.includes("open_shift_required")?"Buka shift kasir terlebih dahulu.":error.message.includes("idempotency_key_payload_mismatch")?"Kunci transaksi sudah digunakan untuk payload berbeda.":"Transaksi split tender gagal. Periksa shift, harga, stok, dan alokasi pembayaran.",409,origin);
+    return json({...data,idempotency_key:idempotencyKey},data?.idempotent_replay?200:201,origin);
+  }
+
   if (action === "erp-create-pos-sale") {
     const branchId=safeText(body.branch_id,80),shiftId=safeText(body.shift_id,80),items=body.items;
     const method=safeText(body.payment_method,20),discount=Number(body.discount_idr||0);
@@ -3033,7 +3220,7 @@ if(action==="erp-executive-branch-kpis"){
 
 
   if (action === "erp-reconcile-pos-sale") {
-    if(!isOwner&&!hasPerm("reports"))return fail("Izin laporan/reconciliaton POS diperlukan.",403,origin);
+    if(!isOwner&&!hasPerm("reports")&&!hasPerm("finance")&&!hasPerm("orders"))return fail("Izin laporan/reconciliaton POS diperlukan.",403,origin);
     const saleId=safeText(body.sale_id,80),branchId=safeText(body.branch_id,80);
     if(!saleId||!branchId)return fail("ID transaksi dan cabang wajib diisi.",422,origin);
     if(!await branchAccess(branchId))return fail("Akses cabang tidak diizinkan.",403,origin);
