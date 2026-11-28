@@ -114,6 +114,27 @@ test("maintenance order rejects retired equipment", async () => {
   assert.equal(persisted, false);
 });
 
+test("maintenance evidence is ownership-verified before persistence", async () => {
+  let persisted = null;
+  let verified = false;
+  const deps = common({
+    findMaintenanceOrderByIdempotencyKey: async () => null,
+    loadBranchEquipmentForUpdate: async () => ({ tenantId: "tenant-a", branchId: "branch-a", status: "active" }),
+    verifyPrivateEvidenceOwnership: async (_tx, _scope, refs, purpose) => {
+      verified = true;
+      assert.deepEqual(refs, ["asset-a"]);
+      assert.equal(purpose, "branch_maintenance");
+      return true;
+    },
+    persistMaintenanceOrder: async (_tx, value) => { persisted = value; return { id: "work-a" }; },
+  });
+  const result = await createEquipmentMaintenanceOrder({ ...base, equipmentId: "fridge-a", maintenanceType: "corrective",
+    scheduledAt: "2026-11-29T09:00:00Z", description: "Replace seal", evidenceReferences: ["asset-a"] }, deps);
+  assert.equal(result.workOrderId, "work-a");
+  assert.equal(verified, true);
+  assert.deepEqual(persisted.evidenceReferences, ["asset-a"]);
+});
+
 test("compliance snapshot cannot publish incomplete or unreconciled evidence", async () => {
   let persisted = false;
   const deps = common({
