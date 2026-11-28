@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const migration = readFileSync(new URL("../../supabase/migrations/20261126192455_crm_loyalty_financial_close.sql", import.meta.url), "utf8");
+const migration = readFileSync(new URL("../../supabase/migrations/20261128025950_20261126192455_crm_loyalty_financial_close.sql", import.meta.url), "utf8");
 const pgTap = readFileSync(new URL("../../supabase/tests/crm_loyalty.test.sql", import.meta.url), "utf8");
 const edge = readFileSync(new URL("../../supabase/functions/dlice-orders/index.ts", import.meta.url), "utf8");
 const erp = readFileSync(new URL("../../erp.html", import.meta.url), "utf8");
