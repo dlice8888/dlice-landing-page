@@ -2528,6 +2528,34 @@ if(action==="erp-executive-branch-kpis"){
     return json({ok:true,run,execution:"metadata_only_external_backup_job_required"},202,origin);
   }
 
+  if (["erp-list-pending-approvals","erp-claim-approval","erp-decide-approval"].includes(action)) {
+    const canReviewDomain= isOwner || hasPerm("procurement") || hasPerm("finance") || hasPerm("hr") || hasPerm("branches");
+    if(!canReviewDomain)return fail("Izin approval center tidak diizinkan.",403,origin);
+    const allowedBranchIds=await branchIdsForActor().catch(()=>[]);
+    if(!Array.isArray(allowedBranchIds)||!allowedBranchIds.length)return fail("Tidak ada cakupan cabang aktif untuk approval.",403,origin);
+    const requestedBranchId=safeText(body.branch_id,80);
+    if(requestedBranchId&&!allowedBranchIds.includes(requestedBranchId))return fail("Akses cabang approval tidak diizinkan.",403,origin);
+    if(action==="erp-list-pending-approvals"){
+      const domain=safeText(body.domain,40),category=safeText(body.category,60);
+      if(domain&&!["procurement","finance","hr","branch_ops"].includes(domain))return fail("Domain approval tidak valid.",422,origin);
+      const {data,error}=await admin.rpc("list_pending_approvals",{p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_branch_id:requestedBranchId||null,p_domain:domain||null,p_category:category||null});
+      if(error)return fail("Approval inbox belum tersedia. Siapkan migrasi approval workflow terlebih dahulu.",503,origin);
+      return json({approvals:Array.isArray(data)?data:[],scope_branch_ids:allowedBranchIds},200,origin);
+    }
+    const approvalId=safeText(body.approval_id,80),expectedVersion=Number(body.expected_version);
+    if(!approvalId||!Number.isSafeInteger(expectedVersion)||expectedVersion<1)return fail("Referensi approval atau versi tidak valid.",422,origin);
+    if(action==="erp-claim-approval"){
+      const {data,error}=await admin.rpc("claim_approval",{p_approval_id:approvalId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_expected_version:expectedVersion});
+      if(error)return fail("Approval tidak dapat diklaim. Periksa role, delegasi, expiry, scope, dan versi terbaru.",409,origin);
+      return json({ok:true,claim:data},200,origin);
+    }
+    const decision=safeText(body.decision,20),reason=safeText(body.reason,500),idempotencyKey=safeText(body.idempotency_key,120);
+    if(!["approved","rejected"].includes(decision)||reason.length<8||!idempotencyKey||idempotencyKey.length<16)return fail("Keputusan, alasan, atau kunci idempotensi tidak valid.",422,origin);
+    const {data,error}=await admin.rpc("decide_approval",{p_approval_id:approvalId,p_actor_user_id:actor.user.id,p_allowed_branch_ids:allowedBranchIds,p_expected_version:expectedVersion,p_decision:decision,p_reason:reason,p_idempotency_key:idempotencyKey});
+    if(error)return fail("Keputusan approval gagal. Periksa pemisahan tugas, delegasi, expiry, limit nominal, dan versi sumber.",409,origin);
+    return json({ok:true,decision:data},200,origin);
+  }
+
   if (action === "erp-executive-sales-monitor") {
     if (!hasPerm("finance") && !hasPerm("orders") && !isOwner) return fail("Izin Executive Sales Monitor tidak diizinkan.",403,origin);
     const period=safeText(body.period,10),anchorDate=safeText(body.anchor_date,10),requestedBranch=safeText(body.branch_id,80);
