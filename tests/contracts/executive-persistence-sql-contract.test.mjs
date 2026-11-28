@@ -33,8 +33,8 @@ test("T01 persisted read model is tenant-bound, versioned and idempotent",()=>{
  assert.match(migration,/unique\(tenant_id,idempotency_key\)/i);
  assert.match(migration,/executive_persist_command_center_snapshot/i);
  assert.match(migration,/EXECUTIVE_COMMAND_CENTER_PERMISSION_REQUIRED/i);
- assert.match(migration,/where case[\\s\\S]*?EXECUTIVE_SNAPSHOT_BRANCH_SCOPE_MISMATCH/i);
- assert.match(migration,/insert into public\\.executive_command_center_snapshots[\\s\\S]*?on conflict\\(tenant_id,idempotency_key\\) do nothing/i);
+ assert.match(migration,/where case[\s\S]*?EXECUTIVE_SNAPSHOT_BRANCH_SCOPE_MISMATCH/i);
+ assert.match(migration,/insert into public\.executive_command_center_snapshots[\s\S]*?on conflict\\(tenant_id,idempotency_key\\) do nothing/i);
  assert.match(migration,/get diagnostics v_inserted = row_count/i);
 });
 
