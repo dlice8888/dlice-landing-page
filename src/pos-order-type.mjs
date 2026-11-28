@@ -13,10 +13,15 @@ export function normalizePosOrderType(input){
 }
 export async function createPosOrderWithFulfillment(input,deps){
  const payload={tenantId:req(input?.tenantId,"tenantId"),branchId:req(input?.branchId,"branchId"),actorId:req(input?.actorId,"actorId"),
-  idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),fulfillment:normalizePosOrderType(input),items:input.items??[]};
+  shiftId:req(input?.shiftId,"shiftId"),idempotencyKey:req(input?.idempotencyKey,"idempotencyKey"),
+  paymentMethod:req(input?.paymentMethod,"paymentMethod"),discountIdr:input.discountIdr??0,
+  customerReference:input.customerReference??null,notes:input.notes??null,tenders:input.tenders??null,
+  fulfillment:normalizePosOrderType(input),items:input.items??[]};
+ if(!Array.isArray(payload.items)||payload.items.length<1)fail("POS_ORDER_TYPE_ITEMS_REQUIRED","At least one sale item is required");
+ if(!["cash","bank_transfer","qris"].includes(payload.paymentMethod))fail("POS_ORDER_TYPE_PAYMENT_METHOD_INVALID","Unsupported POS payment method");
  const result=await fn(deps,"createPosOrderAtomically")(payload);
  if(!result?.orderId||result.tenantId!==payload.tenantId||result.branchId!==payload.branchId||
-  result.orderType!==payload.fulfillment.orderType||result.paymentStatus!=="pending"||!result.fulfillmentStatus||
+  result.orderType!==payload.fulfillment.orderType||!["pending","paid"].includes(result.paymentStatus)||!result.fulfillmentStatus||
   !result.fulfillmentId)fail("POS_ORDER_TYPE_CREATE_FAILED","Atomic order creation must persist independent payment and fulfillment states");
  return Object.freeze(result);
 }
