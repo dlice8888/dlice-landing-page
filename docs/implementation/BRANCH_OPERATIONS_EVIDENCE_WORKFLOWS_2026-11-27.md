@@ -83,3 +83,13 @@ This is implementation source, not a completed integration release:
 The candidate deliberately does not add a Storage RLS policy that queries `tenant_memberships` or `branch_assignments`: staging currently denies direct authenticated reads on both tables, so such a policy would fail closed for legitimate users. The bucket remains private with no direct client Storage policy; the Edge Function performs authorization and uploads using its server-only service client. The service-role key never enters ERP/browser code. The new function is configured for JWT verification at deployment and independently validates the bearer token with Auth.
 
 No staging migration, Edge deployment, merge, production mutation, or release flag change was performed.
+
+
+Lifecycle completion added in the same candidate batch:
+- Equipment registry uses an approver-only RPC with same-tenant/branch scope and audit.
+- Tasks support open → in_progress → completed/cancelled. Assignees can advance their own tasks; other actors require approver authorization.
+- Incidents support open → investigating/resolved → closed through approver-only transitions.
+- Maintenance work orders support scheduled → in_progress → completed/cancelled. Assigned technician or an approver may transition the order.
+- Compliance checks support evidence-backed submission followed by independent review; the submitter cannot approve their own check. Snapshot publication and review require tenant/branch approver authority.
+- All lifecycle changes append audit events atomically with the status change.
+- Evidence bucket access is server-only. The Edge Function authenticates the user, verifies membership/assignment, validates file signature/size, then uploads with service_role. No browser service-role key or direct Storage policy is used.
