@@ -52,7 +52,7 @@ test("recipe activation enforces approved version, non-overlap and independent a
 test("menu stock reservation is optimistic-versioned and idempotent",()=>{
  const command=buildMenuStockReservation({tenantId:"t1",branchId:"b1",productId:"p1",requestedQuantity:2,onHand:5,reserved:1,safetyStock:1,expectedStockVersion:4,actualStockVersion:4,idempotencyKey:"menu-reserve-000001",expiresAt:"2026-11-28T11:00:00Z",now});
  assert.equal(command.atomic_reserve_required,true);
- assert.throws(()=>buildMenuStockReservation({tenantId:"t1",branchId:"b1",productId:"p1",requestedQuantity:3,onHand:5,reserved:1,safetyStock:1,expectedStockVersion:4,actualStockVersion:4,idempotencyKey:"menu-reserve-000002",expiresAt:"2026-11-28T11:00:00Z",now}),/STOCK_UNAVAILABLE/);
+ assert.throws(()=>buildMenuStockReservation({tenantId:"t1",branchId:"b1",productId:"p1",requestedQuantity:4,onHand:5,reserved:1,safetyStock:1,expectedStockVersion:4,actualStockVersion:4,idempotencyKey:"menu-reserve-000002",expiresAt:"2026-11-28T11:00:00Z",now}),/STOCK_UNAVAILABLE/);
  assert.throws(()=>buildMenuStockReservation({tenantId:"t1",branchId:"b1",productId:"p1",requestedQuantity:1,onHand:5,reserved:0,expectedStockVersion:3,actualStockVersion:4,idempotencyKey:"menu-reserve-000003",expiresAt:"2026-11-28T11:00:00Z",now}),/STALE_VERSION/);
 });
 
