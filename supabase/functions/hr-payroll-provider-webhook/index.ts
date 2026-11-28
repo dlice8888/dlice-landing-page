@@ -58,8 +58,14 @@ Deno.serve(async (req: Request) => {
     .eq("id", batch.provider_config_id).eq("tenant_id", tenantId).eq("status", "active").maybeSingle();
   if (providerError || !provider) return json({ error: "Approved provider configuration unavailable" }, 409);
   if (event.provider_id != null && String(event.provider_id) !== provider.provider_id) return json({ error: "Provider identity mismatch" }, 403);
-  const secret = Deno.env.get(provider.credential_secret_reference);
-  if (!secret || secret.length < 32) return json({ error: "Provider webhook secret unavailable" }, 503);
+  const secretValue = Deno.env.get(provider.credential_secret_reference);
+  if (!secretValue) return json({ error: "Provider webhook secret unavailable" }, 503);
+  let secret = secretValue;
+  try {
+    const credentials = JSON.parse(secretValue);
+    if (typeof credentials.webhook_secret === "string") secret = credentials.webhook_secret;
+  } catch { /* Plain HMAC secret is also supported. */ }
+  if (secret.length < 32) return json({ error: "Provider webhook secret unavailable" }, 503);
   const expected = await hmacSha256(secret, raw);
   if (!constantTimeEqual(signature, expected)) return json({ error: "Provider signature verification failed" }, 401);
 
