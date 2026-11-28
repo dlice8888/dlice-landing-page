@@ -262,7 +262,7 @@ begin
  returning * into v_incident;
  if p_severity in ('high','critical') then
    insert into public.branch_ops_tasks(tenant_id,branch_id,title,description,due_at,assignee_user_id,priority,source_type,source_id,idempotency_key,created_by)
-   values(p_tenant_id,p_branch_id,'Incident escalation: '||p_category,p_description,now()+interval '1 hour',p_actor_id,p_severity,'branch_incident',v_incident.id,p_idempotency_key||':escalation',p_actor_id)
+   values(p_tenant_id,p_branch_id,'Incident escalation: '||p_category,p_description,now()+interval '1 hour',p_actor_id,p_severity,'branch_incident',v_incident.id,left(p_idempotency_key,88)||':escalation:'||substr(md5(p_idempotency_key),1,16),p_actor_id)
    returning * into v_task;
    update public.branch_ops_incidents set escalation_task_id=v_task.id where id=v_incident.id;
  end if;
