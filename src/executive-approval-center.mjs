@@ -69,6 +69,7 @@ export function assertApprovalDecision({
   if (approval.created_by === actor.user_id && approval.separation_of_duties === true) {
     throw new Error("self_approval_forbidden");
   }
+  assertApprovalDelegation({ actor, approval, now });
   const amount = Number(approval.amount_idr);
   if (!Number.isSafeInteger(amount) || amount < 0) throw new Error("approval_amount_invalid");
   const maxAmount = Number(actor.max_approval_amount_idr);
