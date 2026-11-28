@@ -13,7 +13,7 @@ set paid_at = s.created_at,
     paid_at_source = 'legacy_created_at_backfill'
 from public.branches b
 where b.id = s.branch_id
-  and s.payment_status = 'paid'
+  and s.payment_status in ('paid','refunded')
   and s.paid_at is null;
 
 alter table public.pos_sales
