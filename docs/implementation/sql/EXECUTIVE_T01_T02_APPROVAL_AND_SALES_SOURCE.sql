@@ -421,16 +421,16 @@ $$;
 revoke all on function public.enqueue_approval_source() from public,anon,authenticated;
 
 drop trigger if exists approval_enqueue_purchase_requisitions on public.purchase_requisitions;
-create trigger approval_enqueue_purchase_requisitions after insert or update of status on public.purchase_requisitions
+create trigger approval_enqueue_purchase_requisitions after insert or update on public.purchase_requisitions
 for each row execute function public.enqueue_approval_source();
 drop trigger if exists approval_enqueue_purchase_orders on public.purchase_orders;
-create trigger approval_enqueue_purchase_orders after insert or update of status on public.purchase_orders
+create trigger approval_enqueue_purchase_orders after insert or update on public.purchase_orders
 for each row execute function public.enqueue_approval_source();
 drop trigger if exists approval_enqueue_branch_expenses on public.branch_expenses;
-create trigger approval_enqueue_branch_expenses after insert or update of status on public.branch_expenses
+create trigger approval_enqueue_branch_expenses after insert or update on public.branch_expenses
 for each row execute function public.enqueue_approval_source();
 drop trigger if exists approval_enqueue_hr_timesheets on public.hr_timesheets;
-create trigger approval_enqueue_hr_timesheets after insert or update of status on public.hr_timesheets
+create trigger approval_enqueue_hr_timesheets after insert or update on public.hr_timesheets
 for each row execute function public.enqueue_approval_source();
 
 -- Backfill currently pending source entities into the read model without changing source status.
