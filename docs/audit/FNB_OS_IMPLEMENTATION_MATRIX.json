@@ -87,7 +87,7 @@
         {
           "requirement": "Live sales monitor (day/week/month)",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Basic reporting UI exists; verify against source orders and business-date cutoff.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -134,7 +134,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -429,7 +429,7 @@
         {
           "requirement": "Approval center and pending approvals",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Some PO/expense/refund approvals exist; unified queue and delegated policies not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -476,7 +476,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -688,8 +688,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 9,
-        "not_verified": 0,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 1,
         "done": 0
       },
@@ -708,7 +708,7 @@
         {
           "requirement": "POS workspace, shifts, cash reconciliation",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "POS sales/shifts and cash reconciliation structures exist; complete operating-day E2E still needed.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -755,14 +755,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Cart, product selection, quantity updates",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Checkout/cart foundations exist; full modifier and concurrency coverage not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -809,14 +809,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Dine-in, takeaway, pickup, delivery parity",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Pickup/delivery fields exist; all order types and downstream behavior need E2E.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -863,7 +863,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -1038,7 +1038,7 @@
         {
           "requirement": "Cash, QRIS, card, transfer and other provider methods",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Payment-proof/status foundations exist; live provider confirmation and settlement parity not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1085,7 +1085,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -1274,7 +1274,7 @@
         {
           "requirement": "Void, refund, return with reason and approval",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Refund records/request/approval/processing exist; POS void/return policy and positive E2E are incomplete.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1321,7 +1321,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -1419,7 +1419,7 @@
         {
           "requirement": "Cash in/out, drawer reconciliation, shift close",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Cash reconciliation/shift structures exist; positive and variance fixtures need end-to-end proof.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1466,7 +1466,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -1564,7 +1564,7 @@
         {
           "requirement": "Separate order, payment, fulfillment statuses",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Status separation foundations exist; all transitions and retry/idempotency cases need positive E2E.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1611,7 +1611,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         }
@@ -1620,8 +1620,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 13,
-        "partial": 13,
-        "not_verified": 0,
+        "partial": 6,
+        "not_verified": 7,
         "blocked": 0,
         "done": 0
       },
@@ -1640,7 +1640,7 @@
         {
           "requirement": "Online and POS orders / shared queue",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Online order flow and ERP queue foundations exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1687,7 +1687,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -1771,7 +1771,7 @@
         {
           "requirement": "Hours, cutoff, menu availability, branch capacity",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Branch routing/capacity and WIB/WITA/WIT cutoff contract exist; full browser E2E still needed.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1818,14 +1818,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Branch assignment by area/capacity",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Routing foundation exists; overload/failover cases not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1872,14 +1872,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Unique business order number",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "DLC date/sequence formatter exists; uniqueness and concurrency acceptance needed.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1926,14 +1926,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Consistent status/timeline across channels",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Order status history exists; cross-channel parity not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -1980,7 +1980,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -2138,7 +2138,7 @@
         {
           "requirement": "Cancellation/refund and customer order history",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Status/refund/history foundations exist; complete lifecycle and notification proof missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2185,14 +2185,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Customer notifications on each state",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Notification log/retry foundations exist; actual delivery and idempotent event handling unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2239,7 +2239,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         }
@@ -2248,8 +2248,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 10,
-        "not_verified": 0,
+        "partial": 3,
+        "not_verified": 7,
         "blocked": 0,
         "done": 0
       },
@@ -2268,7 +2268,7 @@
         {
           "requirement": "KDS and kitchen order tickets",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "KDS tables and dispatch/transition RPCs exist; staging has 6 tickets and 6 items. Station routing and positive live workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2317,7 +2317,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -2401,7 +2401,7 @@
         {
           "requirement": "Queue priority and prep SLA",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "kitchen_tickets.priority exists and is persisted; SLA targets, overdue escalation and station-level queue behavior are not implemented/proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2450,14 +2450,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Waiting → in progress → ready → handed over",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Fulfillment/status foundations exist; kitchen-specific state machine and E2E missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2504,14 +2504,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Recipes, portion/yield and waste tolerance",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Recipe/BOM and actual consumption structures exist; yield/tolerance calculations incomplete.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2558,14 +2558,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Prep lists and batch planning",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Production batches exist; forecast-driven prep planning not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2612,14 +2612,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Actual material consumption",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Atomic production consumption RPC exists; positive recipe-to-stock reconciliation needed.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2666,7 +2666,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -2750,7 +2750,7 @@
         {
           "requirement": "Made-to-order vs batch production separation",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Batch/consumption foundations exist; distinct planning/fulfillment paths need acceptance.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2797,7 +2797,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -2883,8 +2883,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 10,
-        "not_verified": 0,
+        "partial": 3,
+        "not_verified": 7,
         "blocked": 0,
         "done": 0
       },
@@ -2903,7 +2903,7 @@
         {
           "requirement": "Central product catalog and categories",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Product catalog exists; full category/variant/modifier lifecycle needs proof.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -2950,14 +2950,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Per-branch availability",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Branch capacity/availability foundations exist; real branch parity unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3004,14 +3004,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Central, regional and branch-specific pricing",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "branch_settings has a pricing category and branch settings read/write handlers exist; central/regional hierarchy, effective-date approvals and branch parity remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3060,14 +3060,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Recipe/BOM and ingredient mapping",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Recipe ingredients and version activation exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3114,7 +3114,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -3196,7 +3196,7 @@
         {
           "requirement": "Recipe versions and effective dates",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Atomic activation exists; historical version immutability/effective-date tests missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3243,7 +3243,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -3402,7 +3402,7 @@
         {
           "requirement": "Availability by schedule and stock",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Capacity/availability foundations exist; stock-aware availability not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3449,14 +3449,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Recipe change request → costing → approval → rollout",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Version activation exists; full approval/simulation/branch verification missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3503,7 +3503,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -3589,8 +3589,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 11,
-        "partial": 11,
-        "not_verified": 0,
+        "partial": 4,
+        "not_verified": 7,
         "blocked": 0,
         "done": 0
       },
@@ -3609,7 +3609,7 @@
         {
           "requirement": "Inventory item and branch stock",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Inventory items and branch inventory exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3656,14 +3656,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Stock movement ledger",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Stock movement table and atomic receiving/production flows exist; all movement sources need reconciliation.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3710,14 +3710,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Warehouse/storage/bin hierarchy",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "warehouses table and ERP list/create handlers exist; storage zones/bins, location hierarchy and transfer integration remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3766,14 +3766,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Purchase/use units and conversions",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Item/recipe quantity structures exist; conversion and rounding policy incomplete.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3820,7 +3820,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -3904,7 +3904,7 @@
         {
           "requirement": "Available/reserved/in-transit/blocked balances",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Transfer lifecycle exists; full stock-bucket accounting not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -3951,14 +3951,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Min/max, safety stock and reorder point",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "inventory_items.min_stock exists; safety stock, reorder policy, supplier lead-time calculations and replenishment workflow remain unproven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4007,7 +4007,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -4079,7 +4079,7 @@
         {
           "requirement": "Stock count/cycle count and variance adjustment",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Count/posting foundations exist; full positive reconciliation and approval limits required.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4126,7 +4126,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -4210,7 +4210,7 @@
         {
           "requirement": "Adjustments with reasons/approvals/audit",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Restricted workflow/audit foundations exist; risk thresholds and full review trail missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4257,14 +4257,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "PO receipt → stock ledger → balance reconciliation",
           "source_status": "PARTIAL / GATE",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Receipt-reconciliation endpoint exists; positive procurement workflow has not been run.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4311,7 +4311,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         }
@@ -4320,8 +4320,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 12,
-        "not_verified": 0,
+        "partial": 3,
+        "not_verified": 9,
         "blocked": 0,
         "done": 0
       },
@@ -4484,7 +4484,7 @@
         {
           "requirement": "Purchase requisition from branch/warehouse/central kitchen",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "PR #36 adds branch-scoped multi-line requisitions, draft/submit/Owner approve-or-reject/convert-to-PO, service-role-only atomic RPCs, audit trail, and ERP UI. Positive runtime E2E has not yet run; warehouse/central-kitchen consolidation remains missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4531,7 +4531,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -4615,7 +4615,7 @@
         {
           "requirement": "Purchase order draft, submit, approval, ordered",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "PO state transitions exist; positive-path test still needed.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4662,14 +4662,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Approval limits by value/category",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Approval actions exist; configurable thresholds/delegation not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -4716,7 +4716,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -5005,8 +5005,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 10,
-        "not_verified": 0,
+        "partial": 7,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
@@ -5025,7 +5025,7 @@
         {
           "requirement": "Branch directory, status, timezone and assignments",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Branch master, timezone and job assignments exist; 150 branch data readiness is not established.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -5072,14 +5072,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Opening and closing checklists",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Checklist runs, item status and critical-item completion gates exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -5126,7 +5126,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -5293,7 +5293,7 @@
         {
           "requirement": "SOP and work instructions",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Operating model/docs exist; in-app versioned SOP delivery not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -5340,14 +5340,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Cleanliness, equipment and safety checks",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Checklist foundations exist; calibrated evidence and full templates missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -5394,7 +5394,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -5735,8 +5735,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 10,
-        "not_verified": 0,
+        "partial": 6,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
@@ -6486,13 +6486,13 @@
         {
           "requirement": "Customer segments",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Segment rules and refresh jobs missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 164
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds source-level orchestration/schema/UI drafts for CRM consent/segmentation/loyalty/campaign ROI; HR payroll-to-Finance posting; Delivery quote/booking, dispatch/webhook, POD and cost reconciliation; Franchise due diligence/agreement/royalty/territory; BI facts/snapshots/ranking; Procurement AP payment intent; Executive branch ranking/targets; SaaS entitlement and usage metering. Draft PR only; no schema replay or staging E2E yet.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
@@ -6535,7 +6535,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": [],
             "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
           }
@@ -6637,13 +6637,13 @@
         {
           "requirement": "Rewards and vouchers/coupons",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "PR #145 base CRM schema contains rewards/vouchers, atomic reward redemption and voucher consume/void paths. Expiry extension now allocates redeemed points to source lots; reward lifecycle E2E and staging persistence remain unverified.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 166
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds reward/voucher entities and eligibility, redemption, consume/void RPC contracts. Provider delivery, staging replay and redemption workflow remain open.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
@@ -6686,7 +6686,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": [],
             "latest_implementation_commit": "e8858252242ed0e2f7525fee63f403ee8485d1f5"
           }
@@ -6998,8 +6998,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 9,
-        "not_verified": 0,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
@@ -7018,7 +7018,7 @@
         {
           "requirement": "Finance overview, expenses and approvals",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Branch expense approval foundations exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -7065,7 +7065,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -7222,13 +7222,13 @@
         {
           "requirement": "AR/AP subledgers and aging",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Complete AR/AP workflows and control-account tie-out missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
             "line": 178
           },
-          "work_status": "IN_PROGRESS",
+          "work_status": "GAP_REMEDIATION_REQUIRED",
           "work_started_at": "2026-11-25",
           "work_evidence": "PR #145 adds supplier invoice/AP evidence and payment-intent orchestration. Full AR/AP subledger and aging reports remain incomplete.",
           "progress_status": "UNSCORED_EVIDENCE_BREAKDOWN_REQUIRED",
@@ -7271,7 +7271,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -7491,7 +7491,7 @@
         {
           "requirement": "Tax and invoicing",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Tax settings exist; tax calculations, invoice numbering and compliance tests missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -7538,7 +7538,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -7699,7 +7699,7 @@
         {
           "requirement": "Period close/reopen and backdated-posting controls",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Fiscal period guards exist; close/reopen and full GL acceptance missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -7746,7 +7746,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -7830,8 +7830,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 12,
-        "partial": 12,
-        "not_verified": 0,
+        "partial": 8,
+        "not_verified": 4,
         "blocked": 0,
         "done": 0
       },
@@ -9924,7 +9924,7 @@
         {
           "requirement": "User/admin profiles, role and permission actions",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Admin profile and action-level permission foundations exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -9971,14 +9971,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Branch assignments and scope enforcement",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Server-side branch checks exist; full matrix testing is ongoing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10025,14 +10025,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Owner/manager/no-permission/inactive identity probes",
           "source_status": "PASS (negative/role suite)",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "An existing negative/role suite reports 21 PASS / 0 FAIL. This is concrete test work, but it is not complete positive business E2E or live acceptance for all roles and inactive identities.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10080,14 +10080,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Audit logs for sensitive actions",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Audit log table and events exist; coverage of all sensitive mutations not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10134,14 +10134,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Delegated approval policies and separation of duties",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Some approval gates exist; configurable policy matrix missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10188,7 +10188,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -10349,7 +10349,7 @@
         {
           "requirement": "API/database deny-by-default and direct-table protection",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "All 45 public tables have RLS; most internal tables have no direct anon/authenticated SELECT. Public catalog access is intentionally exposed and still requires policy review.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10396,14 +10396,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Cross-tenant isolation",
           "source_status": "NOT EVIDENCED",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "P01-P09 live staging acceptance passes 9/9 on commit 666f2a4; supplemental direct RLS/RPC checks 6/6 and 230/230 missing/invalid-auth action probes pass. Cross-tenant writes return 403 with verified zero transfer/item/stock-movement side effects. Remaining gaps: complete mutation/API route coverage, Storage, cache, background jobs, invitation lifecycle, multi-branch/150-branch concurrency, browser E2E and broader operational reconciliation.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10460,14 +10460,14 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
         {
           "requirement": "Permission changes themselves audited",
           "source_status": "GATE",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "PR #120 exact head 471f4a330a4da0cb13afe60ddeeb520e28dc0e88 passes all six CI/migration workflows. Audited RPCs cover permission changes, staff profile creation, role and active-state changes; forced audit-failure tests prove rollback. Password reset now writes a durable audit intent before Auth Admin mutation and finalizes success/failure; pending intent survives finalization failure. Live staging mutation-path regression remains NOT RUN.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -10516,7 +10516,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         }
@@ -10525,8 +10525,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 10,
-        "partial": 10,
-        "not_verified": 0,
+        "partial": 2,
+        "not_verified": 8,
         "blocked": 0,
         "done": 0
       },
@@ -11224,7 +11224,7 @@
         {
           "requirement": "Edge Function API and payment proof flow",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Shared \\dlice-orders\\ endpoint and payment proof/status paths exist.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -11271,7 +11271,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -11725,7 +11725,7 @@
         {
           "requirement": "Secret storage/rotation",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Secret-based CORS config is active; integration credential rotation/least privilege not audited end-to-end.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -11772,7 +11772,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -11858,8 +11858,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 9,
-        "partial": 9,
-        "not_verified": 0,
+        "partial": 7,
+        "not_verified": 2,
         "blocked": 0,
         "done": 0
       },
@@ -12146,7 +12146,7 @@
         {
           "requirement": "Leaked-password protection",
           "source_status": "GATE / WARN",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "The application-layer k-anonymity Pwned Password guard is integrated into official Owner bootstrap, staff creation and staff password reset flows; unit and source-contract tests pass in PR #120. Native Supabase Auth leaked-password protection remains disabled on the current plan and direct Auth password changes can bypass the Edge Function guard; the feature is not DONE.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -12197,7 +12197,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -12407,7 +12407,7 @@
         {
           "requirement": "Monitoring, system health and incident runbooks",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Rate limits and logs exist; production-grade alert/runbook acceptance missing.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -12454,7 +12454,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -12828,7 +12828,7 @@
         {
           "requirement": "Forecast-to-Production",
           "source_status": "PARTIAL",
-          "audit_status": "PARTIAL",
+          "audit_status": "NOT VERIFIED",
           "evidence_or_gap": "Forecast → recipe requirements → available/expiry-valid stock → PR/transfer → batch/prep → actual consumption/waste → stock and cost reconciliation. Forecasting itself is not proven.",
           "source": {
             "file": "docs/FNB_OS_PRD_FEATURE_REGISTER_2026-10-23.md",
@@ -12875,7 +12875,7 @@
             "status": "NO_DIRECT_ACTIVE_PR_MATCH",
             "matched_prs": [],
             "audit_pr": 147,
-            "notes": "No direct feature-specific match identified in reviewed active PR set #143-#150 and #123/#127. Keep original status; do not infer progress from adjacent domain work.",
+            "notes": "No feature-specific active implementation PR or concrete six-dimension evidence is mapped. Keep NOT VERIFIED until implementation and evidence are linked.",
             "pr_evidence": []
           }
         },
@@ -13255,8 +13255,8 @@
       "acceptance": "NOT VERIFIED: no domain has complete current runtime acceptance across frontend, backend, database, authorization, tests and operational reconciliation.",
       "current_feature_counts": {
         "total": 20,
-        "partial": 20,
-        "not_verified": 0,
+        "partial": 17,
+        "not_verified": 3,
         "blocked": 0,
         "done": 0
       },
@@ -14177,8 +14177,8 @@
     "updated_at": "2026-11-24 after PR #136 merge; PR #137 inventory refresh"
   },
   "feature_status_counts_current": {
-    "PARTIAL": 188,
-    "NOT VERIFIED": 0,
+    "PARTIAL": 123,
+    "NOT VERIFIED": 65,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
@@ -14232,8 +14232,8 @@
     },
     "award_rule": "Award points only where repository, database, authorization and test evidence exists; missing evidence scores zero. A feature becomes DONE only when all six layers and release acceptance pass.",
     "scored_partial_features": 53,
-    "unscored_partial_features": 135,
-    "status": "53 PARTIAL features have evidence-weighted progress scores; 135 PARTIAL features remain unscored pending six-dimension evidence. Counts are derived from the canonical feature ledger. PASS=full weight, PARTIAL=half weight, UNVERIFIED=zero.",
+    "unscored_partial_features": 70,
+    "status": "53 PARTIAL features have numeric evidence-weighted scores; 70 PARTIAL features remain unscored. NOT VERIFIED rows without feature-specific implementation PR/evidence remain outside PARTIAL.",
     "scoring_status_counts": {
       "NOT_SCORED_FEATURE_LEVEL": 136,
       "SCORED_WITH_EXPLICIT_PARTIAL_CREDIT": 46,
@@ -15754,11 +15754,11 @@
     "status": "SOURCE_AHEAD_OF_DATABASE",
     "action": "All 58 source migrations pass exact-head disposable replay. Nine remain unapplied in shared staging. Review and apply separately, one migration at a time, only after explicit staging approval; never apply to production."
   },
-  "audit_method": "189 PRD rows reviewed against staging source matrix, open implementation PRs #143/#145/#146, live Supabase staging catalog/advisors, and Vercel deployment metadata. NOT VERIFIED rows move to PARTIAL only where a concrete implementation PR and source evidence exists; open PRs and BLOCKED preflight workflows are not staging/runtime acceptance.",
+  "audit_method": "189 PRD rows cross-checked against the canonical evidence ledger and feature-specific implementation PR/evidence. PARTIAL is assigned only where a concrete implementation path is mapped; features with no feature-specific PR or evidence remain NOT VERIFIED. BLOCKED remains explicit. No feature is DONE without complete E0-E6 acceptance.",
   "current_totals": {
     "total": 189,
-    "partial": 188,
-    "not_verified": 0,
+    "partial": 123,
+    "not_verified": 65,
     "blocked": 1,
     "done": 0
   },
@@ -15770,17 +15770,17 @@
     "validation": "All 189 matrix rows matched exactly one ledger row by domain and requirement; feature IDs are unique; audit_status values match. Statuses remain PARTIAL/NOT VERIFIED/BLOCKED; no feature promoted to DONE."
   },
   "status_counts": {
-    "PARTIAL": 188,
-    "NOT VERIFIED": 0,
+    "PARTIAL": 123,
+    "NOT VERIFIED": 65,
     "BLOCKED": 1,
     "DONE": 0,
     "TOTAL": 189
   },
-  "reconciliation_note": "Candidate crosswalk snapshot. All 189 feature IDs are stable and matched one-to-one to PRD_FEATURE_EVIDENCE_LEDGER_20261126.json by domain and requirement. Counts reflect the candidate ledger, not an acceptance release; PARTIAL means implementation started but acceptance evidence is incomplete. NOT VERIFIED and BLOCKED remain open. No feature is DONE. Promotion to the staging source of truth requires independent review and acceptance of this PR.",
+  "reconciliation_note": "All 189 stable feature IDs are matched one-to-one between matrix and canonical ledger. Counts are derived from feature-level audit_status. 65 features have no feature-specific active implementation PR or concrete six-dimension evidence and remain NOT VERIFIED; PARTIAL indicates concrete implementation work exists but acceptance remains incomplete. No feature is DONE.",
   "feature_totals": {
     "total": 189,
-    "partial": 188,
-    "not_verified": 0,
+    "partial": 123,
+    "not_verified": 65,
     "blocked": 1,
     "done": 0
   },
