@@ -194,13 +194,22 @@ grant select on public.executive_sales_reconciliation_v to service_role;
 -- collide with an earlier approval attempt.
 alter table public.branch_expenses
   add column if not exists updated_at timestamptz not null default now();
-create or replace function public.touch_branch_expense_updated_at()
+create or replace function public.touch_approval_source_updated_at()
 returns trigger language plpgsql security invoker set search_path=''
-as $$ begin new.updated_at:=now(); return new; end; $$;
+as $ begin new.updated_at:=now(); return new; end; $;
 drop trigger if exists branch_expenses_touch_updated_at on public.branch_expenses;
+drop trigger if exists purchase_requisitions_touch_updated_at on public.purchase_requisitions;
+drop trigger if exists purchase_orders_touch_updated_at on public.purchase_orders;
+drop trigger if exists hr_timesheets_touch_updated_at on public.hr_timesheets;
 create trigger branch_expenses_touch_updated_at before update on public.branch_expenses
-for each row execute function public.touch_branch_expense_updated_at();
-revoke all on function public.touch_branch_expense_updated_at() from public,anon,authenticated;
+for each row execute function public.touch_approval_source_updated_at();
+create trigger purchase_requisitions_touch_updated_at before update on public.purchase_requisitions
+for each row execute function public.touch_approval_source_updated_at();
+create trigger purchase_orders_touch_updated_at before update on public.purchase_orders
+for each row execute function public.touch_approval_source_updated_at();
+create trigger hr_timesheets_touch_updated_at before update on public.hr_timesheets
+for each row execute function public.touch_approval_source_updated_at();
+revoke all on function public.touch_approval_source_updated_at() from public,anon,authenticated;
 
 -- T02: approval policy and inbox are references to source entities, not replacement statuses.
 create table if not exists public.approval_policies (
