@@ -144,9 +144,9 @@ begin
  v_sale_id:=(v_sale->>'sale_id')::uuid;
  select payment_status into v_payment_status from public.pos_sales where id=v_sale_id and branch_id=p_branch_id for update;
  if v_payment_status is null then raise exception using errcode='P0002',message='POS_FULFILLMENT_SALE_NOT_FOUND';end if;
- v_response:=jsonb_build_object('order_id',v_sale_id,'sale_id',v_sale_id,'fulfillment_id',v_fulfillment_id,
+ v_response:=v_sale||jsonb_build_object('order_id',v_sale_id,'sale_id',v_sale_id,'fulfillment_id',v_fulfillment_id,
   'order_type',v_type,'payment_status',v_payment_status,'order_status','received','fulfillment_status','queued',
-  'transaction_code',v_sale->>'transaction_code','idempotent_replay',false);
+  'idempotent_replay',false);
  insert into public.pos_sale_fulfillments(id,tenant_id,branch_id,sale_id,actor_user_id,idempotency_key,payload_fingerprint,
   order_type,table_code,pickup_at,delivery_address,delivery_area_id,order_status,fulfillment_status,version,response)
  values(v_fulfillment_id,p_tenant_id,p_branch_id,v_sale_id,p_actor_user_id,p_idempotency_key,v_fingerprint,
