@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { setStagingPlatformOwnerClaim, STAGING_PROJECT_REF } from "../../scripts/set-staging-platform-owner.mjs";
 
-const ownerId = "378f02bc-2719-4b07-9107-4ce94299aa27";
+const ownerId = "11111111-1111-4111-8111-111111111111";
 const url = `https://${STAGING_PROJECT_REF}.supabase.co`;
 
 test("updates only the existing staging Owner app_metadata and preserves other claims", async () => {
