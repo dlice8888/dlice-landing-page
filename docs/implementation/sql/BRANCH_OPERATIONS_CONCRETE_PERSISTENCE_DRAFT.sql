@@ -526,7 +526,7 @@ grant execute on function public.branch_ops_assert_actor(uuid,uuid,uuid) to serv
 grant execute on function public.branch_ops_assert_approver(uuid,uuid,uuid) to service_role;
 grant execute on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) to service_role;
 grant execute on function public.branch_ops_record_incident(uuid,uuid,uuid,text,text,text,text,timestamptz,uuid[]) to service_role;
-grant execute on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid) to service_role;
+grant execute on function public.branch_ops_create_maintenance_order(uuid,uuid,uuid,uuid,text,text,timestamptz,text,uuid,uuid[]) to service_role;
 grant execute on function public.branch_ops_register_evidence_asset(uuid,uuid,uuid,text,text,text,bigint) to service_role;
 grant execute on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text) to service_role;
 grant execute on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) to service_role;
