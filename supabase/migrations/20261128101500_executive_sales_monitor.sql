@@ -50,7 +50,7 @@ create table if not exists public.executive_sales_monitor_snapshot_rows (
  sale_id uuid not null references public.pos_sales(id) on delete restrict,
  branch_id uuid not null,shift_id uuid not null,branch_code text not null,
  transaction_code text not null,business_date date not null,timezone text not null,cutoff_time time without time zone not null,
- gross_idr bigint not null,discount_idr bigint not null,processed_refund_idr bigint not null,net_sales_idr bigint not null,
+ gross_idr bigint not null,discount_idr bigint not null,sale_total_idr bigint not null,processed_refund_idr bigint not null,net_sales_idr bigint not null,
  tender_allocated_idr bigint not null,matched_settlement_idr bigint not null,finance_journal_entry_count integer not null,
  primary key(snapshot_id,sale_id),
  foreign key(tenant_id,branch_id) references public.branches(tenant_id,id) on delete restrict
@@ -123,7 +123,7 @@ begin
   where j.status='posted' and j.source_id is not null group by j.source_id
  )
  select s.sale_id,s.transaction_code,s.branch_id,s.shift_id,s.branch_code,s.business_date,s.timezone,s.cutoff_time,
-  s.gross_idr,s.discount_idr,coalesce(r.amount_idr,0)::bigint processed_refund_idr,
+  s.gross_idr,s.discount_idr,s.total_idr sale_total_idr,coalesce(r.amount_idr,0)::bigint processed_refund_idr,
   (s.total_idr-coalesce(r.amount_idr,0))::bigint net_sales_idr,
   coalesce(t.amount_idr,0)::bigint tender_allocated_idr,coalesce(st.amount_idr,0)::bigint matched_settlement_idr,
   coalesce(j.entry_count,0)::integer finance_journal_entry_count
@@ -131,7 +131,7 @@ begin
  left join settlements st on st.pos_sale_id=s.sale_id left join journals j on j.source_id=s.sale_id
  where s.business_date between p_period_start and p_period_end;
 
- select count(*) filter(where net_sales_idr<0)::integer into v_refund_overrun from _exec_sales_rows;\n if v_refund_overrun>0 then raise exception using errcode='23514',message='EXECUTIVE_REFUND_EXCEEDS_SALE_TOTAL';end if;\n select count(*) filter(where tender_allocated_idr<>gross_idr-discount_idr)::integer into v_tender_mismatch from _exec_sales_rows;\n select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
+ select count(*) filter(where net_sales_idr<0)::integer into v_refund_overrun from _exec_sales_rows;\n if v_refund_overrun>0 then raise exception using errcode='23514',message='EXECUTIVE_REFUND_EXCEEDS_SALE_TOTAL';end if;\n select count(*) filter(where tender_allocated_idr<>sale_total_idr)::integer into v_tender_mismatch from _exec_sales_rows;\n select coalesce(sum(gross_idr),0),coalesce(sum(discount_idr),0),coalesce(sum(processed_refund_idr),0),
   coalesce(sum(net_sales_idr),0),coalesce(sum(matched_settlement_idr),0),count(*)::integer,
   count(*) filter(where finance_journal_entry_count>0)::integer,
   count(*) filter(where finance_journal_entry_count=0)::integer,
@@ -147,10 +147,10 @@ begin
  returning * into v_snapshot;
 
  insert into public.executive_sales_monitor_snapshot_rows(snapshot_id,tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,
-  business_date,timezone,cutoff_time,gross_idr,discount_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,
+  business_date,timezone,cutoff_time,gross_idr,discount_idr,sale_total_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,
   matched_settlement_idr,finance_journal_entry_count)
  select v_snapshot.id,p_tenant_id,sale_id,branch_id,shift_id,branch_code,transaction_code,business_date,timezone,cutoff_time,gross_idr,
-  discount_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,matched_settlement_idr,finance_journal_entry_count
+  discount_idr,sale_total_idr,processed_refund_idr,net_sales_idr,tender_allocated_idr,matched_settlement_idr,finance_journal_entry_count
  from _exec_sales_rows;
 
  select coalesce(jsonb_agg(jsonb_build_object('business_date',d.business_date,'gross_idr',d.gross_idr,
@@ -160,7 +160,7 @@ begin
   sum(processed_refund_idr)::bigint refund_idr,sum(net_sales_idr)::bigint net_sales_idr,sum(matched_settlement_idr)::bigint matched_settlement_idr,count(*)::integer transaction_count
   from _exec_sales_rows group by business_date) d;
  select coalesce(jsonb_agg(jsonb_build_object('sale_id',sale_id,'transaction_code',transaction_code,'branch_id',branch_id,'branch_code',branch_code,'shift_id',shift_id,
-  'business_date',business_date,'timezone',timezone,'cutoff_time',cutoff_time,'gross_idr',gross_idr,'discount_idr',discount_idr,
+  'business_date',business_date,'timezone',timezone,'cutoff_time',cutoff_time,'gross_idr',gross_idr,'discount_idr',discount_idr,'sale_total_idr',sale_total_idr,
   'processed_refund_idr',processed_refund_idr,'net_sales_idr',net_sales_idr,'tender_allocated_idr',tender_allocated_idr,
   'matched_settlement_idr',matched_settlement_idr,'finance_journal_entry_count',finance_journal_entry_count)
   order by business_date,transaction_code),'[]'::jsonb) into v_rows from _exec_sales_rows;
