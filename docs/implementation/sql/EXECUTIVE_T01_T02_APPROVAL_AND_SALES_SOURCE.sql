@@ -555,6 +555,11 @@ begin
  end if;
  select * into a from public.approval_inbox_items where id=p_approval_id for update;
  if not found then raise exception using errcode='P0002',message='APPROVAL_NOT_FOUND'; end if;
+ if not (a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then
+   raise exception using errcode='42501',message='APPROVAL_BRANCH_FORBIDDEN';
+ end if;
+ select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
+ if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
  if exists(select 1 from public.approval_decisions where approval_id=a.id and idempotency_key=p_idempotency_key) then
    return (select jsonb_build_object('approval_id',d.approval_id,'decision',d.decision,'duplicate',true)
      from public.approval_decisions d where d.approval_id=a.id and d.idempotency_key=p_idempotency_key);
