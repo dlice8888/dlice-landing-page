@@ -28,7 +28,7 @@ test("rejects duplicate branch IDs, invalid date, reversed range and unsupported
  await assert.rejects(getExecutiveSalesMonitor({...input,startDate:"2026-11-29",endDate:"2026-11-28"},deps()),{code:"EXEC_SALES_RANGE_INVALID"});
  await assert.rejects(getExecutiveSalesMonitor({...input,period:"quarter"},deps()),{code:"EXEC_SALES_PERIOD_INVALID"});
 });
-test("rejects incomplete snapshot and mismatched tenant",async()=>{
+test("accepts valid ISO calendar dates and rejects malformed date strings",async()=>{\n await getExecutiveSalesMonitor(input,deps());\n await assert.rejects(getExecutiveSalesMonitor({...input,startDate:"28-11-2026"},deps()),{code:"EXEC_SALES_DATE_INVALID"});\n});\ntest("rejects incomplete snapshot and mismatched tenant",async()=>{
  await assert.rejects(getExecutiveSalesMonitor(input,deps({snapshot_id:"x"})),{code:"EXEC_SALES_SNAPSHOT_INVALID"});
  await assert.rejects(getExecutiveSalesMonitor(input,deps(snapshot({tenant_id:"t2"}))),{code:"EXEC_SALES_SNAPSHOT_INVALID"});
 });
