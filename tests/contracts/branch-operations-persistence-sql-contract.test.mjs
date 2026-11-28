@@ -35,6 +35,8 @@ test("Branch Operations RPCs are atomic server-only entry points with audit even
   assert.match(sql, /BRANCH_INCIDENT_TRANSITION_INVALID/);
   assert.match(sql, /BRANCH_WORK_ORDER_TRANSITION_INVALID/);
   assert.match(sql, /BRANCH_EVIDENCE_OWNERSHIP_UNVERIFIED/);
+  assert.match(sql, /BRANCH_MAINTENANCE_EVIDENCE_UNVERIFIED/);
+  assert.match(sql, /left\(p_idempotency_key,88\).*escalation/);
 });
 
 test("Edge API validates Auth, tenant membership and branch assignment before server-role writes", () => {
@@ -45,6 +47,8 @@ test("Edge API validates Auth, tenant membership and branch assignment before se
   assert.match(edge, /service\.storage\.from\("branch-ops-evidence"\)\.upload/);
   assert.match(edge, /createBranchOperationsRepository\(service/);
   assert.match(edge, /createSignedUrl\(asset\.object_path, 60\)/);
+  assert.match(edge, /branch_ops_upload_compensation_failed/);
+  assert.match(edge, /\.remove\(\[path\]\)/);
   for (const action of ["register-equipment","update-task-status","update-incident-status","update-work-order-status"]) assert.match(edge, new RegExp(action));
 });
 
@@ -58,4 +62,5 @@ test("ERP Branch Operations UI is wired but remains closed behind the release ga
   assert.match(ui, /get-evidence-url/);
   assert.match(ui, /register-equipment/);
   assert.match(ui, /update-work-order-status/);
+  assert.match(ui, /branch_maintenance/);
 });
