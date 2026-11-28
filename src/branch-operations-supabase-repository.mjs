@@ -97,6 +97,7 @@ export function createBranchOperationsRepository({ serviceClient, tenantId, bran
         p_scheduled_at: required(input.scheduledAt, "scheduledAt"),
         p_description: required(input.description, "description"),
         p_assigned_to: input.assignedTo ?? null,
+        p_evidence_asset_ids: Array.isArray(input.evidenceAssetIds) ? [...new Set(input.evidenceAssetIds)] : [],
       }, "createMaintenanceOrder");
     },
     async registerEvidenceAsset(input) {
