@@ -18,10 +18,11 @@ export function validatePosCart(input){
  });
  const discountIdr=amount(input?.discountIdr??0,"discountIdr");
  const paymentMethod=req(input?.paymentMethod,"paymentMethod");
- if(!["cash","bank_transfer","qris"].includes(paymentMethod))fail("POS_CART_PAYMENT_METHOD_INVALID","Unsupported payment method");
+ if(!["cash","bank_transfer","qris","split"].includes(paymentMethod))fail("POS_CART_PAYMENT_METHOD_INVALID","Unsupported payment method");
  const tenders=input?.tenders??[];
  if(!Array.isArray(tenders)||tenders.length>5)fail("POS_CART_TENDERS_INVALID","At most five tenders are supported");
- if(tenders.length===1)fail("POS_CART_TENDERS_INVALID","Use paymentMethod for a single tender; split requires at least two");
+ if(paymentMethod==="split"&&tenders.length<2)fail("POS_CART_TENDERS_INVALID","Split payment requires at least two tenders");
+ if(paymentMethod!=="split"&&tenders.length>0)fail("POS_CART_TENDERS_INVALID","Tender allocations require paymentMethod split");
  const canonicalTenders=tenders.map((t,i)=>({
   payment_method:req(t?.paymentMethod,"tenders["+i+"].paymentMethod"),
   amount_idr:amount(t?.amountIdr,"tenders["+i+"].amountIdr"),
