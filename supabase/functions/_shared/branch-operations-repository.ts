@@ -104,7 +104,7 @@ export function createBranchOperationsRepository(
       p_period_start: required(v.periodStart, "periodStart"),
       p_period_end: required(v.periodEnd, "periodEnd"),
       p_idempotency_key: required(v.idempotencyKey, "idempotencyKey"),
-      p_source_revision: required(v.sourceRevision, "sourceRevision"),
+      p_source_revision: v.sourceRevision == null ? null : String(v.sourceRevision),
     }, "publishComplianceSnapshot"),
     async list(kind: string) {
       const map: Record<string, [string, string]> = {
