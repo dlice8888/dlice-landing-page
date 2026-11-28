@@ -310,6 +310,9 @@ begin
  on conflict(object_path) do nothing returning id into v_id;
  if v_id is null then select id into v_id from public.branch_ops_evidence_assets where object_path=p_object_path and tenant_id=p_tenant_id and branch_id=p_branch_id and owner_user_id=p_actor_id; end if;
  if v_id is null then raise exception 'BRANCH_EVIDENCE_REGISTER_FAILED'; end if;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.evidence.registered','branch_ops_evidence_asset',v_id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'purpose',p_purpose,'object_path',p_object_path,'retention_until',now()+interval '365 days'));
  return v_id;
 end $$;
 
