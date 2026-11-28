@@ -6,16 +6,16 @@
 
 ## 1. Repository-wide PR totals
 
-GitHub search across the repository returns **152 actual pull requests** (PR numbers 1–154; #34 and #45 are absent):
+GitHub search across the repository returns **155 actual pull requests** (PR numbers 1–157; #34 and #45 are absent):
 
 | Current disposition | Count |
 |---|---:|
 | Merged | 94 |
 | Closed without merge | 38 |
-| Open | 20 |
-| **Actual PRs** | **152** |
+| Open | 23 |
+| **Actual PRs** | **155** |
 
-The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 47 actual PRs #108–#154, yielding 152 actual PRs overall. PR #52 exists and is merged; the two missing numbers are #34 and #45. The PR count is a repository-history count, not a feature-completion metric.
+The historical PR #108 audit covered 105 actual PRs through #107 (75 merged, 25 closed-unmerged, 5 open). The current inventory adds 47 actual PRs #108–#154 and three actual PRs #155–#157, yielding 155 actual PRs overall. PR #52 exists and is merged; the two missing numbers are #34 and #45. The PR count is a repository-history count, not a feature-completion metric.
 
 Merged PR numbers (94): `#4 #5 #6 #7 #8 #10–#20 #23–#30 #32 #33 #35–#37 #39–#44 #46–#70 #72 #75 #78 #81 #84 #88–#92 #94 #96–#100 #102 #103 #105 #106 #110 #120 #121 #128–#138 #141 #142 #153 #154`.
 
@@ -43,6 +43,9 @@ Merged PR numbers (94): `#4 #5 #6 #7 #8 #10–#20 #23–#30 #32 #33 #35–#37 #3
 | #148 | staging | Disposable PostgreSQL 17 backup/restore drill | Keep; execute and retain restore evidence before staging release acceptance |
 | #149 | staging | 150-branch tenant isolation concurrency probe | Keep; execute with 150 real/planned fixtures only where provisioned, and distinguish planned from active branches |
 | #150 | #145 base | Food safety, recall and supplier CAPA workflows | Conflicted; rebase and run domain pgTAP + workflow/E2E before merge |
+| #155 | staging | Canonical 189-feature matrix rollup correction | Open Draft; exact-head CI pending; retain until ledger parity and scoring rollups are verified |
+| #156 | staging | Revoke direct EXECUTE on immutable receipt trigger | Open; live staging ACL is already denied to service_role/anon/authenticated, but its migration is recorded in the 73-row DB ledger and source is not yet on staging; reconcile source parity, do not reapply DDL |
+| #157 | staging | Live PRD/staging reconciliation report | Open documentation PR; captures 2026-11-28 post-merge evidence and corrects stale audit snapshot |
 
 ### Required dependency chain
 
@@ -78,7 +81,7 @@ Project `dlice-staging` / `higoadrzxnhzbbwhdbmh` is `ACTIVE_HEALTHY` (PostgreSQL
 
 | Evidence | Before integration | After integration |
 |---|---:|---:|
-| Applied migration history | 63 | **72** |
+| Applied migration history | 63 | **73** |
 | Public tables with RLS enabled | 68 / 68 | **146 / 146** |
 | Branch rows | 155 | 155 |
 | Active branches | 5 | 5 |
@@ -134,7 +137,7 @@ A read-only query of `auth.users.raw_app_meta_data` returned zero users whose `p
 
 ## 6. Remaining staging acceptance and release gates
 
-1. Source filename ↔ Supabase migration ledger parity PR #154 is merged as `5893589d22cce9a891ad065c808867db2f6a7e37`; the staging tree has 72 source files / 72 applied versions / zero mismatches / zero orphan files. Exact-head quality, CRM/HR/eight-domain replay, full migration replay and Branch Operations pgTAP passed. PR #154 did not execute DDL.
+1. Source filename ↔ Supabase migration ledger parity PR #154 is merged as `5893589d22cce9a891ad065c808867db2f6a7e37`; the staging tree has 72 source files / 73 applied versions / zero mismatches / zero orphan files. Exact-head quality, CRM/HR/eight-domain replay, full migration replay and Branch Operations pgTAP passed. PR #154 did not execute DDL.
 2. Re-run Security and Performance Advisors after the staging migration set. Security Advisor recheck completed: leaked-password protection disabled (WARN). Performance Advisor recheck completed: 168 unindexed-FK INFO findings and 132 unused-index INFO findings; do not delete indexes based only on zero scans. Add FK indexes only after query-plan/usage review and confirm they are not already covered by composite indexes.
 3. Verify Auth Owner through official Supabase Auth Admin and protected allowlist. Current read-only Auth query still returns **zero** users with `raw_app_meta_data.platform_owner` JSON boolean true. No SQL metadata mutation and no allowlist guessing.
 4. Tenant A/B P01–P09 acceptance after both migrations and filename-parity merge, on staging commit `5893589d22cce9a891ad065c808867db2f6a7e37`, **PASS**: both existing identities authenticated via passwordless magic link; own-branch reads passed; cross-tenant reads and writes denied; zero DB side effects verified; RLS direct-client reads exposed no branch rows; direct mutation RPC denied; 9/9 PASS, 0 failed, 0 blocked, 0 skipped. The separate legacy negative-probe workflow remains BLOCKED because it expects obsolete username/password and branch-ID secrets; do not treat that as an authorization failure or bypass the gate.
