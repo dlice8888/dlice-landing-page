@@ -39,8 +39,8 @@ test("sales monitor fails closed on unauthorized branch and invalid timezone",()
 });
 
 test("Executive sales monitor timezone filter is validated and cannot widen branch scope", () => {
-  assert.match(source, /requestedTimezone=safeText\(body\.timezone,40\)/);
-  assert.match(source, /!SUPPORTED_BRANCH_TIMEZONES\.has\(requestedTimezone\)/);
-  assert.match(source, /branchQuery=branchQuery\.eq\("timezone",requestedTimezone\)/);
-  assert.match(source, /requestedBranch&&!allowedIds\.includes\(requestedBranch\)/);
+  assert.match(edge, /requestedTimezone=safeText\(body\.timezone,40\)/);
+  assert.match(edge, /!SUPPORTED_BRANCH_TIMEZONES\.has\(requestedTimezone\)/);
+  assert.match(edge, /branchQuery=branchQuery\.eq\("timezone",requestedTimezone\)/);
+  assert.match(edge, /requestedBranch&&!allowedIds\.includes\(requestedBranch\)/);
 });
