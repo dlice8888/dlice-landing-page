@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import {getExecutiveSalesMonitor} from "../../src/executive-sales-monitor.mjs";
 const snapshot=(overrides={})=>({snapshot_id:"snap1",tenant_id:"t1",period_type:"day",formula_version:"sales-net-v1",
  totals:{gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,matched_settlement_idr:85000,transaction_count:1},
- daily:[{business_date:"2026-11-28",gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,transaction_count:1}],
- transactions:[{sale_id:"s1",branch_id:"b1",business_date:"2026-11-28",timezone:"Asia/Jakarta",gross_idr:100000,discount_idr:10000,processed_refund_idr:5000,net_sales_idr:85000}],
+ daily:[{business_date:"2026-11-28",gross_idr:100000,discount_idr:10000,refund_idr:5000,net_sales_idr:85000,matched_settlement_idr:85000,transaction_count:1}],
+ transactions:[{sale_id:"s1",branch_id:"b1",business_date:"2026-11-28",timezone:"Asia/Jakarta",gross_idr:100000,discount_idr:10000,processed_refund_idr:5000,net_sales_idr:85000,matched_settlement_idr:85000}],
  payment_reconciliation:{sale_count:1,tender_mismatch_count:0,tender_allocations_balanced:true},
  finance_reconciliation:{sale_count:1,sale_without_journal_count:0,linked_journal_entry_count:1,status:"journal_links_present"},...overrides});
 const input={tenantId:"t1",actorId:"u1",period:"day",startDate:"2026-11-28",endDate:"2026-11-28"};
@@ -34,4 +34,16 @@ test("rejects incomplete snapshot and mismatched tenant",async()=>{
 });
 test("rejects negative or unsafe aggregate totals",async()=>{
  await assert.rejects(getExecutiveSalesMonitor(input,deps(snapshot({totals:{...snapshot().totals,net_sales_idr:-1}}))),{code:"EXEC_SALES_TOTAL_INVALID"});
+});
+
+test("rejects aggregate totals that do not reconcile to daily and source transaction rows",async()=>{
+ const bad=snapshot({totals:{...snapshot().totals,net_sales_idr:86000}});
+ await assert.rejects(getExecutiveSalesMonitor(input,deps(bad)),{code:"EXEC_SALES_RECONCILIATION_MISMATCH"});
+});
+test("rejects a source transaction outside the requested branch/date scope",async()=>{
+ const bad=snapshot({transactions:[{...snapshot().transactions[0],branch_id:"b2"}]});
+ await assert.rejects(getExecutiveSalesMonitor({...input,branchIds:["b1"]},deps(bad)),{code:"EXEC_SALES_SOURCE_SCOPE_INVALID"});
+});
+test("rejects a snapshot period that differs from the requested period",async()=>{
+ await assert.rejects(getExecutiveSalesMonitor({...input,period:"week"},deps(snapshot())),{code:"EXEC_SALES_SNAPSHOT_INVALID"});
 });
