@@ -17,6 +17,7 @@ test("unified order queue deduplicates canonical records and enforces tenant and
  assert.equal(rows.length,1);assert.deepEqual(rows[0].channels,["pos","online"]);
  assert.throws(()=>buildUnifiedOrderQueue({posOrders:pos,tenantId:"t1",allowedBranchIds:[],now}),/ORDER_QUEUE_SCOPE_REQUIRED/);
  assert.throws(()=>buildUnifiedOrderQueue({posOrders:[{...pos[0],id:"o3",external_order_id:"x"},{...pos[0],id:"o4",external_order_id:"x"}],tenantId:"t1",allowedBranchIds:["b1"],now}),/ORDER_QUEUE_EXTERNAL_ID_COLLISION/);
+ assert.throws(()=>buildUnifiedOrderQueue({posOrders:[pos[0]],onlineOrders:[{...pos[0],order_status:"cancelled"}],tenantId:"t1",allowedBranchIds:["b1"],now}),/ORDER_QUEUE_SOURCE_STATUS_MISMATCH/);
 });
 
 test("availability enforces branch timezone, holiday, operating hours, cutoff and capacity",()=>{
@@ -38,6 +39,8 @@ test("branch router selects nearest eligible same-tenant branch and rejects clie
  const result=chooseOrderBranch({tenantId:"t1",latitude:-6.201,longitude:106.8,branches});
  assert.equal(result.branch_id,"near");
  assert.throws(()=>chooseOrderBranch({tenantId:"t1",latitude:-6.2,longitude:106.8,branches,requestedBranchId:"far"}),/OVERRIDE_FORBIDDEN/);
+ const polygonBranch={id:"poly",tenant_id:"t1",status:"active",latitude:-6.2,longitude:106.8,service_area_polygon:[{latitude:-6.21,longitude:106.79},{latitude:-6.19,longitude:106.79},{latitude:-6.19,longitude:106.81},{latitude:-6.21,longitude:106.81}],capacity_used:0,capacity_limit:5};
+ assert.equal(chooseOrderBranch({tenantId:"t1",latitude:-6.2,longitude:106.8,branches:[polygonBranch]}).branch_id,"poly");
 });
 
 test("business order number is deterministic and idempotent retry does not regenerate",()=>{
@@ -61,6 +64,7 @@ test("paid cancellation requires refund compensation and customer history is own
  const result=validateOrderCancellation({order,actor:{kind:"staff",user_id:"u1",allowed_branch_ids:["b1"]},reason:"Customer requested cancellation",refundRequired:true,compensationAdaptersReady:true,refundIdempotencyKey:"refund-key-0000001"});
  assert.equal(result.refund_required,true);
  assert.throws(()=>buildCustomerOrderHistory({orders:[order],customerId:"cust-1",actor:{kind:"customer",user_id:"cust-2"}}),/CUSTOMER_FORBIDDEN/);
+ assert.throws(()=>validateOrderCancellation({order,actor:{kind:"customer",user_id:"attacker"},customerId:"cust-1",reason:"Customer requested cancellation"}),/HISTORY_CUSTOMER_FORBIDDEN/);
  assert.equal(buildCustomerOrderHistory({orders:[order],customerId:"cust-1",actor:{kind:"customer",user_id:"cust-1"}}).length,1);
 });
 
