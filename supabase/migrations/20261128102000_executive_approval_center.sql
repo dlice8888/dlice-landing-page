@@ -359,8 +359,9 @@ begin
   ),0::bigint)
  end;
  if a.amount_idr>v_limit then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT';end if;
- if a.status='claimed' and a.claimed_by is distinct from p_actor_user_id and a.claim_expires_at>now() then
-  raise exception using errcode='55P03',message='APPROVAL_CLAIMED_BY_OTHER';
+ if a.status<>'claimed' or a.claimed_by is distinct from p_actor_user_id
+   or a.claim_expires_at is null or a.claim_expires_at<=now() then
+  raise exception using errcode='42501',message='APPROVAL_CLAIM_REQUIRED';
  end if;
  if a.entity_type='purchase_requisition' then
   update public.purchase_requisitions set status=case when p_decision='approve' then 'approved' else 'rejected' end,
