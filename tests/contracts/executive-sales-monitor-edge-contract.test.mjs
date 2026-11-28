@@ -21,7 +21,7 @@ test("sales monitor reads POS sales, processed refunds, settlement allocations a
  assert.match(action,/processed_at/);
  assert.match(action,/sale_items:saleItems\.filter/);
  assert.match(action,/aggregateSalesMonitor/);
- assert.match(action,/settlement_net_received_idr:null/);
+ assert.match(action,/settlement_net_received_idr:completeSettlementNet\?netAllocation:null/);\n assert.match(action,/settlementNetAllocationByItem/);\n assert.match(action,/business_date\.gte/);\n assert.match(action,/paid_at\.gte/);
 });
 test("sales monitor fails closed on unauthorized branch and invalid timezone",()=>{
  const start=edge.indexOf('if (action === "erp-executive-sales-monitor")');
