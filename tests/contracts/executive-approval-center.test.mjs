@@ -103,8 +103,8 @@ test("approval decision rejects stale concurrent writers and never rewrites sour
     expectedVersion: 4, now,
   });
   assert.equal(command.approval_id, "a1");
-  assert.equal(command.source_entity_id, undefined);
-  assert.equal(command.source_version, undefined);
+  assert.equal(command.source_entity_id, "pr-1");
+  assert.equal(command.source_version, 7);
   assert.equal(base.status, "pending");
 });
 
