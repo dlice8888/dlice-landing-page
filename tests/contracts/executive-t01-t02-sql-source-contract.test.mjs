@@ -112,3 +112,10 @@ test("T01 paid recognition can only be created by trusted server role and stays 
   assert.match(sql, /before insert or update on public\.pos_sales/i);
   assert.match(sql, /PAID_POS_SALE_FINANCIAL_FIELDS_IMMUTABLE/);
 });
+
+test("T02 history and delegation list RPCs are scoped to authorized branches", () => {
+  assert.match(sql, /function public\.list_approval_history/i);
+  assert.match(sql, /function public\.list_approval_delegations/i);
+  assert.match(sql, /a\.branch_id=any\(coalesce\(p_allowed_branch_ids/i);
+  assert.match(sql, /d\.branch_id=any\(coalesce\(p_allowed_branch_ids/i);
+});
