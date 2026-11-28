@@ -48,6 +48,6 @@ test("refund requires branch match, remaining paid balance, reason and separatio
 test("order, payment and fulfillment state transitions are independent and versioned",()=>{
  assert.equal(assertLifecycleTransition({axis:"payment",from:"pending",to:"paid",actorDomain:"trusted_provider",expectedVersion:2,currentVersion:2,eventId:"evt-1"}).append_only,true);
  assert.throws(()=>assertLifecycleTransition({axis:"payment",from:"pending",to:"paid",actorDomain:"customer",expectedVersion:2,currentVersion:2,eventId:"evt-1"}),/lifecycle_actor_forbidden/);
- assert.throws(()=>assertLifecycleTransition({axis:"fulfillment",from:"preparing",to:"fulfilled",actorDomain:"kitchen",expectedVersion:1,currentVersion:2,eventId:"evt-2"}),/lifecycle_stale_version/);
+ assert.throws(()=>assertLifecycleTransition({axis:"fulfillment",from:"preparing",to:"failed",actorDomain:"delivery",expectedVersion:1,currentVersion:2,eventId:"evt-2"}),/lifecycle_stale_version/);
  assert.throws(()=>assertLifecycleConsistency({orderStatus:"cancelled",paymentStatus:"paid",fulfillmentStatus:"preparing"}),/requires_compensation/);
 });
