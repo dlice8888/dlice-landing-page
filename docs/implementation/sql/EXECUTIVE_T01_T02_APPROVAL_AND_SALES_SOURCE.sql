@@ -162,6 +162,7 @@ create table if not exists public.approval_policies (
   domain text not null check(domain in ('procurement','finance','hr','branch_ops')),
   source_entity_type text not null check(source_entity_type in ('purchase_requisition','purchase_order','branch_expense','hr_timesheet')),
   eligible_roles text[] not null check(cardinality(eligible_roles)>0),
+  allowed_categories text[] not null default array['*']::text[] check(cardinality(allowed_categories)>0),
   max_amount_idr bigint not null default 1000000000 check(max_amount_idr>=0),
   separation_of_duties boolean not null default true,
   claim_ttl_minutes integer not null default 10 check(claim_ttl_minutes between 1 and 120),
@@ -406,6 +407,29 @@ on conflict(tenant_id,source_entity_type,source_entity_id,source_version) do not
 
 -- RPCs are service-role-only and called by the authenticated Edge Function, which
 -- derives actor identity and branch scope from the verified JWT. No client scope is trusted.
+create or replace function public.approval_source_is_current(p_approval_id uuid)
+returns boolean
+language plpgsql security invoker set search_path=''
+as $
+declare a public.approval_inbox_items%rowtype;
+begin
+ select * into a from public.approval_inbox_items where id=p_approval_id;
+ if not found then return false; end if;
+ if a.source_entity_type='purchase_requisition' then
+  return exists(select 1 from public.purchase_requisitions r where r.id=a.source_entity_id and r.branch_id=a.branch_id and r.status='submitted' and r.updated_at=a.source_version);
+ elsif a.source_entity_type='purchase_order' then
+  return exists(select 1 from public.purchase_orders o where o.id=a.source_entity_id and o.branch_id=a.branch_id and o.status='submitted' and o.updated_at=a.source_version);
+ elsif a.source_entity_type='branch_expense' then
+  return exists(select 1 from public.branch_expenses e where e.id=a.source_entity_id and e.branch_id=a.branch_id and e.status='pending_approval' and e.created_at=a.source_version);
+ elsif a.source_entity_type='hr_timesheet' then
+  return exists(select 1 from public.hr_timesheets t where t.id=a.source_entity_id and t.branch_id=a.branch_id and t.status='submitted' and t.updated_at=a.source_version);
+ end if;
+ return false;
+end;
+$;
+revoke all on function public.approval_source_is_current(uuid) from public,anon,authenticated;
+grant execute on function public.approval_source_is_current(uuid) to service_role;
+
 create or replace function public.list_pending_approvals(
  p_actor_user_id uuid,p_allowed_branch_ids uuid[],p_branch_id uuid default null,
  p_domain text default null,p_category text default null
@@ -432,6 +456,8 @@ begin
    and (p_branch_id is null or a.branch_id=p_branch_id)
    and (p_domain is null or a.domain=p_domain)
    and (p_category is null or a.category=p_category)
+   and (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[])
+   and public.approval_source_is_current(a.id)
    and (p.eligible_roles @> array[v_role] or exists(
      select 1 from public.approval_delegations d
      join public.admin_profiles delegator on delegator.user_id=d.delegator_user_id and delegator.is_active
@@ -459,12 +485,14 @@ begin
  if not found then raise exception using errcode='P0002',message='APPROVAL_NOT_FOUND'; end if;
  if a.version<>p_expected_version then raise exception using errcode='40001',message='APPROVAL_STALE_VERSION'; end if;
  if a.status not in ('pending','claimed') or a.expires_at<=now() then raise exception using errcode='23514',message='APPROVAL_NOT_CLAIMABLE'; end if;
+ if not public.approval_source_is_current(a.id) then raise exception using errcode='40001',message='APPROVAL_SOURCE_STALE'; end if;
  if not (a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_BRANCH_FORBIDDEN'; end if;
  select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
  select * into p from public.approval_policies where id=a.policy_id and tenant_id=a.tenant_id and active;
  if not found then raise exception using errcode='23514',message='APPROVAL_POLICY_INACTIVE'; end if;
  if p.separation_of_duties and a.created_by=p_actor_user_id then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_FORBIDDEN'; end if;
+ if not (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[]) then raise exception using errcode='42501',message='APPROVAL_CATEGORY_FORBIDDEN'; end if;
  if a.amount_idr>p.max_amount_idr then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT_EXCEEDED'; end if;
  if not (p.eligible_roles @> array[v_role]) then
    select d.delegator_user_id into v_delegator from public.approval_delegations d
@@ -520,7 +548,7 @@ begin
  select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
  select * into p from public.approval_policies where id=a.policy_id and active;
- if not found or (p.separation_of_duties and a.created_by=p_actor_user_id) or a.amount_idr>p.max_amount_idr then
+ if not found or (p.separation_of_duties and a.created_by=p_actor_user_id) or a.amount_idr>p.max_amount_idr or not (p.allowed_categories @> array['*']::text[] or p.allowed_categories @> array[a.category]::text[]) then
    raise exception using errcode='42501',message='APPROVAL_POLICY_OR_SEPARATION_OF_DUTIES_FAILED';
  end if;
  if not (p.eligible_roles @> array[v_role]) and a.delegated_from is distinct from (
