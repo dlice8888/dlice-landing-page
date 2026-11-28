@@ -22,4 +22,6 @@ These changes are **not a staging release**. No production mutation, staging mig
 
 ## Known limitations
 
-The current work is source and contract-test progress. Executive sales/approval UI integration and full runtime reconciliation still require implementation and acceptance. Do not infer schema readiness, successful migration application, or E6 from the presence of migration files.
+Executive sales monitor, branch-local business-day cutoff, Unified Approval Inbox, claim/decision/history/delegation actions, POS order-type checkout, and fulfillment history are now wired through the ERP UI and authenticated Edge API. Their database migrations remain source-only until the final migration batch is explicitly scheduled.
+
+The current branch's contract suite and staging CORS/KDS probes have passed at the latest observed head. Disposable migration replay is still running. Staging schema inspection confirms the T01/T02/POS-fulfillment objects are not yet present, so authenticated staging workflow E2E and E6 transaction reconciliation remain blocked until the final migration/deployment window. Do not infer schema readiness, successful staging migration application, or E6 from source/CI evidence alone.
