@@ -116,6 +116,45 @@ join public.branches b on b.id=s.branch_id;
 revoke all on public.executive_sales_source_v from public,anon,authenticated;
 grant select on public.executive_sales_source_v to service_role;
 
+-- Read-only per-sale reconciliation: settlement allocation and Finance journal remain
+-- separate dimensions. A missing settlement/journal is visible as zero rows, not inferred as paid.
+create or replace view public.executive_sales_reconciliation_v
+with (security_invoker=true)
+as
+select s.sale_id,s.transaction_code,s.tenant_id,s.branch_id,s.business_date,s.paid_at,
+       s.subtotal_idr,s.discount_idr,s.total_idr,
+       coalesce(r.refund_total_idr,0)::bigint as processed_refund_total_idr,
+       coalesce(st.allocated_gross_idr,0)::bigint as settlement_allocated_gross_idr,
+       coalesce(st.allocated_net_idr,0)::bigint as settlement_allocated_net_idr,
+       coalesce(st.reconciled_settlement_count,0)::integer as reconciled_settlement_count,
+       coalesce(j.posted_journal_total_idr,0)::bigint as posted_journal_total_idr,
+       coalesce(j.posted_journal_count,0)::integer as posted_journal_count
+from public.executive_sales_source_v s
+left join lateral (
+  select sum(rr.amount_idr)::bigint as refund_total_idr
+  from public.refund_records rr
+  where rr.pos_sale_id=s.sale_id and rr.branch_id=s.branch_id and rr.status='processed'
+) r on true
+left join lateral (
+  select sum(i.amount_idr)::bigint as allocated_gross_idr,
+         sum(case when ps.status='reconciled' and ps.net_amount_idr is not null and ps.gross_amount_idr>0
+             then round(i.amount_idr::numeric*ps.net_amount_idr/ps.gross_amount_idr)::bigint
+             else 0 end)::bigint as allocated_net_idr,
+         count(*) filter(where ps.status='reconciled')::integer as reconciled_settlement_count
+  from public.payment_settlement_items i
+  join public.payment_settlements ps on ps.id=i.settlement_id
+  where i.pos_sale_id=s.sale_id
+) st on true
+left join lateral (
+  select sum(j.amount_idr)::bigint as posted_journal_total_idr,count(*)::integer as posted_journal_count
+  from public.finance_journal_entries j
+  where j.source_id=s.sale_id and j.branch_id=s.branch_id and j.status='posted'
+) j on true
+where s.payment_status='paid';
+
+revoke all on public.executive_sales_reconciliation_v from public,anon,authenticated;
+grant select on public.executive_sales_reconciliation_v to service_role;
+
 -- T02: approval policy and inbox are references to source entities, not replacement statuses.
 create table if not exists public.approval_policies (
   id uuid primary key default gen_random_uuid(),
