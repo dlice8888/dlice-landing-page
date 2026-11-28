@@ -444,9 +444,10 @@ as $$ declare v_role text;v_id uuid;begin
  if coalesce(current_setting('request.jwt.claim.role',true),'')<>'service_role' then raise exception using errcode='42501',message='APPROVAL_SERVICE_ROLE_REQUIRED';end if;
  if p_category not in ('procurement','finance','hr','branch_ops') or p_ends_at<=p_starts_at or p_ends_at<=now() or p_ends_at-p_starts_at>interval '30 days' then
   raise exception using errcode='22023',message='APPROVAL_DELEGATION_INPUT_INVALID';end if;
- select role into v_role from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_actor_user_id and status='active';
- if v_role is null or not exists(select 1 from public.executive_approval_policies p where p.tenant_id=p_tenant_id and p.category=p_category and p.enabled and v_role=any(p.required_roles)) then
-  raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_DENIED';end if;
+ select public.executive_approval_actor_role(p_actor_user_id,p_tenant_id,p_branch_id,p.required_roles)
+ into v_role from public.executive_approval_policies p
+ where p.tenant_id=p_tenant_id and p.category=p_category and p.enabled;
+ if v_role is null then raise exception using errcode='42501',message='APPROVAL_DELEGATOR_ROLE_DENIED';end if;
  if p_branch_id is not null and not (p_branch_id=any(coalesce(p_branch_ids,'{}'::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_DELEGATION_BRANCH_DENIED';end if;
  if not exists(select 1 from public.tenant_memberships where tenant_id=p_tenant_id and user_id=p_delegate_user_id and status='active') then raise exception using errcode='42501',message='APPROVAL_DELEGATE_NOT_MEMBER';end if;
  insert into public.executive_approval_delegations(tenant_id,delegator_user_id,delegate_user_id,category,branch_id,starts_at,ends_at)
