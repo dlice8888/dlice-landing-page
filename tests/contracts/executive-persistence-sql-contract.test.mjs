@@ -11,6 +11,7 @@ test("T01 payment recognition stores immutable payment time and branch-local bus
  assert.match(migration,/legacy_created_at_backfill/i);
  assert.match(migration,/payment_status in \('paid','refunded'\)[\s\S]{0,80}paid_at is null/i);
  assert.match(migration,/POS_SALE_REFUND_REQUIRES_PAID_SOURCE/i);
+ assert.match(migration,/new\.payment_status = 'refunded' and old\.payment_status <> 'paid'/i);
  assert.match(migration,/POS_SALE_PAYMENT_RECOGNITION_IMMUTABLE/i);
  assert.match(migration,/revoke all on function public\.set_pos_sale_payment_recognition\(\) from public,anon,authenticated,service_role/i);
  assert.match(migration,/POS_SALE_PAID_BRANCH_IMMUTABLE/i);
@@ -44,6 +45,7 @@ test("T01 persisted read model is tenant-bound, versioned and idempotent",()=>{
 
 test("T02 approval claim is row-locked, versioned, branch-scoped and audited",()=>{
  assert.match(migration,/create table if not exists public\.executive_approval_items/i);
+ assert.match(migration,/executive_approval_one_active_source_idx/i);
  assert.match(migration,/create table if not exists public\.executive_approval_delegations/i);
  assert.match(migration,/create table if not exists public\.executive_approval_decisions/i);
  assert.match(migration,/for update/i);
