@@ -820,7 +820,7 @@ grant execute on function public.executive_get_sales_monitor(uuid,uuid,uuid[],da
  elsif v.source_domain='hr' and v.source_entity='hr_leave_requests' then
   perform 1 from public.hr_leave_requests l where l.id=v.source_entity_id::uuid and l.tenant_id=p_tenant_id
    and l.branch_id=v.branch_id and l.status='submitted'
-   and floor(extract(epoch from l.updated_at)*1000000)::bigint=v.source_version for update;
+   and floor(extract(epoch from l.updated_at)*1000000)::bigint=v.source_version for update of l;
   if not found then raise exception using errcode='40001',message='EXECUTIVE_APPROVAL_SOURCE_VERSION_MISMATCH'; end if;
   v_source_version:=v.source_version;
   v_mutation:=public.hr_review_leave_request(v.source_entity_id::uuid,p_actor_user_id,p_decision='approved',btrim(p_reason));
