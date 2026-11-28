@@ -124,11 +124,52 @@ grant select on public.executive_sales_source_v to service_role;
 create or replace view public.executive_sales_reconciliation_v
 with (security_invoker=true)
 as
+with settlement_tenant_totals as (
+  select i.settlement_id,
+         sum(i.amount_idr)::bigint as allocated_gross_idr,
+         count(distinct b.tenant_id)::integer as tenant_count
+  from public.payment_settlement_items i
+  join public.pos_sales psale on psale.id=i.pos_sale_id
+  join public.branches b on b.id=psale.branch_id
+  group by i.settlement_id
+),
+settlement_allocation_base as (
+  select i.id as settlement_item_id,i.pos_sale_id,i.settlement_id,
+         ps.net_amount_idr,
+         floor(i.amount_idr::numeric*ps.net_amount_idr/ps.gross_amount_idr)::bigint as base_net_idr,
+         row_number() over(partition by i.settlement_id order by i.id) as allocation_order,
+         sum(floor(i.amount_idr::numeric*ps.net_amount_idr/ps.gross_amount_idr))
+           over(partition by i.settlement_id) as base_net_total_idr,
+         st.allocated_gross_idr,st.tenant_count,ps.gross_amount_idr
+  from public.payment_settlement_items i
+  join public.payment_settlements ps on ps.id=i.settlement_id
+  join settlement_tenant_totals st on st.settlement_id=i.settlement_id
+  where ps.status='reconciled' and ps.net_amount_idr is not null
+    and ps.gross_amount_idr>0 and st.tenant_count=1
+    and st.allocated_gross_idr=ps.gross_amount_idr
+),
+settlement_allocations as (
+  select settlement_item_id,pos_sale_id,
+         (base_net_idr + case
+           when allocation_order <= (net_amount_idr-base_net_total_idr) then 1 else 0
+          end)::bigint as allocated_net_idr
+  from settlement_allocation_base
+),
+settlement_by_sale as (
+  select i.pos_sale_id,
+         sum(i.amount_idr)::bigint as allocated_gross_idr,
+         sum(sa.allocated_net_idr)::bigint as allocated_net_idr,
+         count(*) filter(where ps.status='reconciled')::integer as reconciled_settlement_count
+  from public.payment_settlement_items i
+  join public.payment_settlements ps on ps.id=i.settlement_id
+  left join settlement_allocations sa on sa.settlement_item_id=i.id
+  group by i.pos_sale_id
+)
 select s.sale_id,s.transaction_code,s.tenant_id,s.branch_id,s.business_date,s.paid_at,
        s.subtotal_idr,s.discount_idr,s.total_idr,
        coalesce(r.refund_total_idr,0)::bigint as processed_refund_total_idr,
        coalesce(st.allocated_gross_idr,0)::bigint as settlement_allocated_gross_idr,
-       coalesce(st.allocated_net_idr,0)::bigint as settlement_allocated_net_idr,
+       st.allocated_net_idr as settlement_allocated_net_idr,
        coalesce(st.reconciled_settlement_count,0)::integer as reconciled_settlement_count,
        coalesce(j.posted_journal_total_idr,0)::bigint as posted_journal_total_idr,
        coalesce(j.posted_journal_count,0)::integer as posted_journal_count
@@ -138,16 +179,7 @@ left join lateral (
   from public.refund_records rr
   where rr.pos_sale_id=s.sale_id and rr.branch_id=s.branch_id and rr.status='processed'
 ) r on true
-left join lateral (
-  select sum(i.amount_idr)::bigint as allocated_gross_idr,
-         sum(case when ps.status='reconciled' and ps.net_amount_idr is not null and ps.gross_amount_idr>0
-             then round(i.amount_idr::numeric*ps.net_amount_idr/ps.gross_amount_idr)::bigint
-             else 0 end)::bigint as allocated_net_idr,
-         count(*) filter(where ps.status='reconciled')::integer as reconciled_settlement_count
-  from public.payment_settlement_items i
-  join public.payment_settlements ps on ps.id=i.settlement_id
-  where i.pos_sale_id=s.sale_id
-) st on true
+left join settlement_by_sale st on st.pos_sale_id=s.sale_id
 left join lateral (
   select sum(j.amount_idr)::bigint as posted_journal_total_idr,count(*)::integer as posted_journal_count
   from public.finance_journal_entries j
