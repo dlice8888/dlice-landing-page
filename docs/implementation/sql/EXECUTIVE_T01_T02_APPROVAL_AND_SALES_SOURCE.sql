@@ -5,6 +5,11 @@
 
 begin;
 
+-- Purchase orders need an explicit rejected terminal state; cancellation remains separate.
+alter table public.purchase_orders drop constraint if exists purchase_orders_status_check;
+alter table public.purchase_orders add constraint purchase_orders_status_check
+  check(status = any(array['draft','submitted','approved','rejected','ordered','partially_received','received','cancelled']::text[]));
+
 -- T01: capture actual server-side paid transition and branch-local business date.
 alter table public.pos_sales
   add column if not exists paid_at timestamptz,
@@ -228,6 +233,25 @@ cross join (values
 ) as src(domain,entity_type)
 on conflict(tenant_id,source_entity_type,policy_version) do nothing;
 
+create or replace function public.seed_approval_policies_for_tenant()
+returns trigger language plpgsql security invoker set search_path=''
+as $
+begin
+ insert into public.approval_policies(tenant_id,domain,source_entity_type,eligible_roles,max_amount_idr)
+ values
+  (new.id,'procurement','purchase_requisition',array['tenant_owner']::text[],1000000000),
+  (new.id,'procurement','purchase_order',array['tenant_owner']::text[],1000000000),
+  (new.id,'finance','branch_expense',array['tenant_owner']::text[],1000000000),
+  (new.id,'hr','hr_timesheet',array['tenant_owner']::text[],1000000000)
+ on conflict(tenant_id,source_entity_type,policy_version) do nothing;
+ return new;
+end;
+$;
+drop trigger if exists tenants_seed_approval_policies on public.tenants;
+create trigger tenants_seed_approval_policies after insert on public.tenants
+for each row execute function public.seed_approval_policies_for_tenant();
+revoke all on function public.seed_approval_policies_for_tenant() from public,anon,authenticated;
+
 -- The trigger only creates a pending inbox reference; source status remains authoritative.
 create or replace function public.enqueue_approval_source()
 returns trigger
@@ -371,7 +395,7 @@ begin
  if not (a.branch_id=any(coalesce(p_allowed_branch_ids,array[]::uuid[]))) then raise exception using errcode='42501',message='APPROVAL_BRANCH_FORBIDDEN'; end if;
  select role,is_active into v_role,v_active from public.admin_profiles where user_id=p_actor_user_id;
  if not found or not v_active then raise exception using errcode='42501',message='APPROVAL_ACTOR_INACTIVE'; end if;
- select * into p from public.approval_policies where id=a.policy_id and active;
+ select * into p from public.approval_policies where id=a.policy_id and tenant_id=a.tenant_id and active;
  if not found then raise exception using errcode='23514',message='APPROVAL_POLICY_INACTIVE'; end if;
  if p.separation_of_duties and a.created_by=p_actor_user_id then raise exception using errcode='42501',message='APPROVAL_SELF_APPROVAL_FORBIDDEN'; end if;
  if a.amount_idr>p.max_amount_idr then raise exception using errcode='42501',message='APPROVAL_AMOUNT_LIMIT_EXCEEDED'; end if;
@@ -387,6 +411,10 @@ begin
  end if;
  if a.status='claimed' and a.claim_expires_at>now() and a.claimed_by<>p_actor_user_id then
    raise exception using errcode='55P03',message='APPROVAL_ALREADY_CLAIMED';
+ end if;
+ if a.status='claimed' and a.claim_expires_at>now() and a.claimed_by=p_actor_user_id then
+   return jsonb_build_object('approval_id',a.id,'status',a.status,'version',a.version,
+     'claimed_by',a.claimed_by,'claim_expires_at',a.claim_expires_at,'delegated_from',a.delegated_from,'duplicate',true);
  end if;
  update public.approval_inbox_items set status='claimed',claimed_by=p_actor_user_id,
    delegated_from=v_delegator,claim_expires_at=now()+make_interval(mins=>p.claim_ttl_minutes),
@@ -446,13 +474,13 @@ begin
    where id=a.source_entity_id and branch_id=a.branch_id and status='submitted' and updated_at=a.source_version;
    get diagnostics v_updated=row_count;
  elsif a.source_entity_type='purchase_order' then
-   update public.purchase_orders set status=case when p_decision='approved' then 'approved' else 'cancelled' end,
+   update public.purchase_orders set status=p_decision,
      approved_by=case when p_decision='approved' then p_actor_user_id else approved_by end,updated_at=now()
    where id=a.source_entity_id and branch_id=a.branch_id and status='submitted' and updated_at=a.source_version;
    get diagnostics v_updated=row_count;
  elsif a.source_entity_type='branch_expense' then
    update public.branch_expenses set status=p_decision,reviewed_by=p_actor_user_id,reviewed_at=now()
-   where id=a.source_entity_id and branch_id=a.branch_id and status='pending_approval';
+   where id=a.source_entity_id and branch_id=a.branch_id and status='pending_approval' and created_at=a.source_version;
    get diagnostics v_updated=row_count;
  elsif a.source_entity_type='hr_timesheet' then
    update public.hr_timesheets set status=p_decision,approved_by=case when p_decision='approved' then p_actor_user_id else null end,
