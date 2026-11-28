@@ -1752,7 +1752,8 @@ if (action === "admin-set-profile-role") {
       if(!/^[0-9a-f-]{36}$/i.test(employeeId)||!/^[A-Z][A-Z0-9_]{2,119}$/.test(secretRef))
         return fail("Karyawan atau secret reference beneficiary tidak valid.",422,origin);
       const {data:assignment,error:assignmentError}=await admin.from("branch_assignments").select("id")
-        .eq("branch_id",branchId).eq("user_id",employeeId).eq("employment_status","active").maybeSingle();
+        .eq("branch_id",branchId).eq("user_id",employeeId).eq("employment_status","active")
+        .or("ends_on.is.null,ends_on.gte."+new Date().toISOString().slice(0,10)).maybeSingle();
       if(assignmentError||!assignment)return fail("Beneficiary hanya dapat dibuat untuk karyawan dengan assignment aktif pada cabang ini.",403,origin);
       const beneficiaryRaw=Deno.env.get(secretRef);
       if(!beneficiaryRaw)return fail("Secret beneficiary belum tersedia di Edge Function Secrets.",409,origin);
