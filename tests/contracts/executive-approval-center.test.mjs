@@ -16,7 +16,7 @@ const base = {
 };
 const actor = {
   user_id: "approver", role: "procurement_manager", allowed_branch_ids: ["b1"],
-  allowed_domains: ["procurement"], max_approval_amount_idr: 500000,
+  allowed_domains: ["procurement"], allowed_roles: ["procurement_manager"], max_approval_amount_idr: 500000,
 };
 
 test("approval inbox filters scope, expiry, duplicate ids and ranks urgency/value", () => {
@@ -164,4 +164,20 @@ test("approval urgency rank is deterministic across urgency, amount and expiry",
     { ...base, id: "high", urgency: "high", amount_idr: 500000 },
   ];
   assert.deepEqual(rankPendingApprovals(rows, now).map((item) => item.id), ["critical", "high", "low"]);
+});
+
+test("claim enforces the same role, category and amount ceiling as inbox eligibility", () => {
+  assert.throws(() => assertApprovalClaim({
+    approval: base, actor: { ...actor, allowed_roles: ["branch_manager"] },
+    expectedVersion: 4, now,
+  }), /approval_role_forbidden/);
+  assert.throws(() => assertApprovalClaim({
+    approval: { ...base, category: "high_risk" },
+    actor: { ...actor, allowed_categories: ["routine"] },
+    expectedVersion: 4, now,
+  }), /approval_category_forbidden/);
+  assert.throws(() => assertApprovalClaim({
+    approval: { ...base, amount_idr: 600000 }, actor,
+    expectedVersion: 4, now,
+  }), /approval_amount_limit_exceeded/);
 });
