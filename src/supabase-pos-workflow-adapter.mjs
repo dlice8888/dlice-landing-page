@@ -28,13 +28,19 @@ export function createSupabasePosWorkflowAdapter(client,options={}){
    return {tenantId,branchId,saleId,totalIdr:Number(row.total_idr),paymentStatus:row.payment_status,
     receiptId,receiptImmutable,transactionCode:sale?.transaction_code??null,idempotentReplay:sale?.idempotent_replay===true};
   },
-  createPosOrderAtomically:i=>call("pos_create_order_with_fulfillment_atomic",{
-   p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),
-   p_actor_user_id:required(i.actorId,"actorId"),p_shift_id:required(i.shiftId,"shiftId"),
-   p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_fulfillment:i.fulfillment,p_items:i.items,
-   p_payment_method:required(i.paymentMethod,"paymentMethod"),p_discount_idr:i.discountIdr??0,
-   p_customer_reference:i.customerReference??null,p_notes:i.notes??null,p_tenders:i.tenders??null
-  },"POS_ORDER_CREATE_RPC_FAILED"),
+  createPosOrderAtomically:async i=>{
+   const result=await call("pos_create_order_with_fulfillment_atomic",{
+    p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),
+    p_actor_user_id:required(i.actorId,"actorId"),p_shift_id:required(i.shiftId,"shiftId"),
+    p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_fulfillment:i.fulfillment,p_items:i.items,
+    p_payment_method:required(i.paymentMethod,"paymentMethod"),p_discount_idr:i.discountIdr??0,
+    p_customer_reference:i.customerReference??null,p_notes:i.notes??null,p_tenders:i.tenders??null
+   },"POS_ORDER_CREATE_RPC_FAILED");
+   return {tenantId:i.tenantId,branchId:i.branchId,orderId:result?.order_id,fulfillmentId:result?.fulfillment_id,
+    orderType:result?.order_type,paymentStatus:result?.payment_status,fulfillmentStatus:result?.fulfillment_status,
+    saleId:result?.sale_id,transactionCode:result?.transaction_code,totalIdr:result?.total_idr,
+    idempotentReplay:result?.idempotent_replay===true};
+  },
   createPaymentIntentAtomically:i=>call("pos_create_payment_intent_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_sale_id:required(i.saleId,"saleId"),p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_payment_method:i.paymentMethod,p_provider_id:i.providerId},"POS_PAYMENT_INTENT_RPC_FAILED"),
   recordTenderAtomically:i=>call("pos_record_tender_atomic",{p_tenant_id:required(i.tenantId,"tenantId"),p_branch_id:required(i.branchId,"branchId"),p_actor_user_id:required(i.actorId,"actorId"),p_sale_id:required(i.saleId,"saleId"),p_idempotency_key:required(i.idempotencyKey,"idempotencyKey"),p_payment_method:i.paymentMethod,p_amount_idr:i.amountIdr,p_provider_event_id:i.verifiedProviderEventId,p_reference:i.reference},"POS_TENDER_RPC_FAILED"),
   verifyProviderSignature:async i=>{if(typeof verify!=="function")throw Object.assign(new Error("Provider signature verifier is not configured"),{code:"POS_PROVIDER_VERIFIER_REQUIRED"});return verify(i);},
