@@ -1832,7 +1832,7 @@ if (action === "admin-set-profile-role") {
       if(error)return fail("Rekonsiliasi payroll ditolak. Setiap item harus settled, event provider bertanda tangan harus cocok, dan reconciler harus independen.",409,origin);
       return json({payment_reconciliation:data},200,origin);
     }
-  }  }
+  }
 
     const procurementInvoiceActions=new Set(["erp-procurement-list-invoices","erp-procurement-match-invoice","erp-procurement-approve-invoice"]);
   if(procurementInvoiceActions.has(action)){
