@@ -94,6 +94,8 @@ jobs:
         run: node --check src/branch-operations-ui.mjs && node --check src/branch-operations-supabase-repository.mjs
       - name: Run Branch Operations Supabase repository contracts
         run: node --test tests/contracts/branch-operations-supabase-repository.test.mjs
+      - name: Verify Branch Operations RPC signature and ACL parity
+        run: node --test tests/contracts/branch-operations-rpc-signature-contract.test.mjs
       - name: Verify Branch Operations persistence, Auth, Storage and UI contracts
         run: node --test tests/contracts/branch-operations-persistence-sql-contract.test.mjs
       - name: Check HR payroll Finance reconciliation syntax
