@@ -11,8 +11,11 @@ test("Executive UI invokes authenticated server action and exposes source transa
  assert.match(html,/sources\?\.sales/);
  assert.match(html,/sources\?\.refunds/);
  assert.match(html,/sources\?\.sale_items/);
- assert.match(html,/created_at legacy/);\n assert.match(html,/business_date\/paid_at cabang/);\n assert.match(html,/Settlement net teralokasi/);
- assert.match(html,/Alokasi settlement cocok/);\n assert.match(html,/Waktu pengakuan/);
+ assert.match(html,/created_at legacy/);
+ assert.match(html,/business_date\/paid_at cabang/);
+ assert.match(html,/Settlement net teralokasi/);
+ assert.match(html,/Alokasi settlement cocok/);
+ assert.match(html,/Waktu pengakuan/);
 });
 test("Executive sales monitor uses branch-configured timezone instead of client timezone override",()=>{
  assert.match(html,/Timezone lokal masing-masing cabang/);
