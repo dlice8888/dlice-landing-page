@@ -295,7 +295,7 @@ create or replace function public.executive_create_approval_delegation(
  p_tenant_id uuid,p_actor_user_id uuid,p_delegator_user_id uuid,p_delegate_user_id uuid,
  p_source_domains text[],p_valid_from timestamptz,p_valid_until timestamptz,p_idempotency_key text
 ) returns jsonb language plpgsql security definer set search_path='' as $
-declare v public.executive_approval_delegations%rowtype; v_admin boolean; v_inserted integer;
+declare v public.executive_approval_delegations%rowtype; v_admin boolean; v_platform_owner boolean; v_platform_owner boolean; v_inserted integer;
 begin
  if p_tenant_id is null or p_actor_user_id is null or p_delegator_user_id is null or p_delegate_user_id is null
   or p_delegator_user_id=p_delegate_user_id or p_valid_from is null or p_valid_until is null
@@ -306,12 +306,13 @@ begin
   or length(btrim(coalesce(p_idempotency_key,''))) not between 8 and 160 then
   raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
  end if;
+ select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
  select exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
   and m.role in ('tenant_owner','tenant_admin')) into v_admin;
- if not v_admin and p_actor_user_id<>p_delegator_user_id then
+ if not v_admin and not v_platform_owner and p_actor_user_id<>p_delegator_user_id then
   raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_ACTOR_MISMATCH';
  end if;
- if not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
+ if not v_platform_owner and not exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id and m.status='active'
    and (m.role in ('tenant_owner','tenant_admin') or m.permissions ? 'executive.approvals.delegate')) then
   raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_PERMISSION_REQUIRED';
  end if;
@@ -350,11 +351,12 @@ begin
  if p_tenant_id is null or p_actor_user_id is null or p_delegation_id is null then
   raise exception using errcode='22023',message='EXECUTIVE_DELEGATION_INPUT_INVALID';
  end if;
+ select coalesce((select u.raw_app_meta_data->'platform_owner'='true'::jsonb from auth.users u where u.id=p_actor_user_id),false) into v_platform_owner;
  select exists(select 1 from public.tenant_memberships m where m.tenant_id=p_tenant_id and m.user_id=p_actor_user_id
   and m.status='active' and m.role in ('tenant_owner','tenant_admin')) into v_admin;
  select * into v from public.executive_approval_delegations where tenant_id=p_tenant_id and id=p_delegation_id for update;
  if not found then raise exception using errcode='P0002',message='EXECUTIVE_DELEGATION_NOT_FOUND'; end if;
- if not v_admin and v.delegator_user_id<>p_actor_user_id then
+ if not v_admin and not v_platform_owner and v.delegator_user_id<>p_actor_user_id then
   raise exception using errcode='42501',message='EXECUTIVE_DELEGATION_REVOKE_FORBIDDEN';
  end if;
  if v.revoked_at is not null then return jsonb_build_object('id',v.id,'revoked',true,'duplicate',true); end if;
