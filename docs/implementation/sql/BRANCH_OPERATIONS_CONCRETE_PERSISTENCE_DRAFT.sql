@@ -394,6 +394,90 @@ begin
  return jsonb_build_object('status','approved','checkId',v_row.id,'result',p_result);
 end $;
 
+
+create or replace function public.branch_ops_register_equipment(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_asset_code text,p_name text
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_equipment;
+begin
+ perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
+ insert into public.branch_ops_equipment(tenant_id,branch_id,asset_code,name)
+ values(p_tenant_id,p_branch_id,p_asset_code,p_name)
+ on conflict(tenant_id,branch_id,asset_code) do update set name=excluded.name,updated_at=now()
+ where public.branch_ops_equipment.status<>'retired'
+ returning * into v_row;
+ if v_row.id is null then raise exception 'BRANCH_EQUIPMENT_RETIRED_OR_CONFLICT' using errcode='55000'; end if;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.equipment.registered','branch_ops_equipment',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'asset_code',p_asset_code));
+ return jsonb_build_object('status','registered','equipmentId',v_row.id);
+end $;
+
+create or replace function public.branch_ops_update_task_status(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_task_id uuid,p_status text
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_tasks;
+begin
+ perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ select * into v_row from public.branch_ops_tasks where id=p_task_id and tenant_id=p_tenant_id and branch_id=p_branch_id for update;
+ if not found then raise exception 'BRANCH_TASK_NOT_FOUND' using errcode='P0002'; end if;
+ if v_row.assignee_user_id<>p_actor_id then perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id); end if;
+ if not ((v_row.status='open' and p_status in ('in_progress','completed','cancelled'))
+   or (v_row.status='in_progress' and p_status in ('completed','cancelled'))) then
+   raise exception 'BRANCH_TASK_TRANSITION_INVALID' using errcode='55000';
+ end if;
+ update public.branch_ops_tasks set status=p_status,completed_at=case when p_status='completed' then now() else null end,updated_at=now()
+ where id=p_task_id returning * into v_row;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.task.status_changed','branch_ops_task',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
+ return jsonb_build_object('status',v_row.status,'taskId',v_row.id);
+end $;
+
+create or replace function public.branch_ops_update_incident_status(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_incident_id uuid,p_status text
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_incidents;
+begin
+ perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id);
+ select * into v_row from public.branch_ops_incidents where id=p_incident_id and tenant_id=p_tenant_id and branch_id=p_branch_id for update;
+ if not found then raise exception 'BRANCH_INCIDENT_NOT_FOUND' using errcode='P0002'; end if;
+ if not ((v_row.status='open' and p_status in ('investigating','resolved'))
+   or (v_row.status='investigating' and p_status='resolved')
+   or (v_row.status='resolved' and p_status='closed')) then
+   raise exception 'BRANCH_INCIDENT_TRANSITION_INVALID' using errcode='55000';
+ end if;
+ update public.branch_ops_incidents set status=p_status,updated_at=now() where id=p_incident_id returning * into v_row;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.incident.status_changed','branch_ops_incident',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
+ return jsonb_build_object('status',v_row.status,'incidentId',v_row.id);
+end $;
+
+create or replace function public.branch_ops_update_work_order_status(
+ p_tenant_id uuid,p_branch_id uuid,p_actor_id uuid,p_work_order_id uuid,p_status text
+) returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $
+declare v_row public.branch_ops_work_orders;
+begin
+ perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ select * into v_row from public.branch_ops_work_orders where id=p_work_order_id and tenant_id=p_tenant_id and branch_id=p_branch_id for update;
+ if not found then raise exception 'BRANCH_WORK_ORDER_NOT_FOUND' using errcode='P0002'; end if;
+ if v_row.assigned_to is distinct from p_actor_id then perform public.branch_ops_assert_approver(p_tenant_id,p_branch_id,p_actor_id); end if;
+ if not ((v_row.status='scheduled' and p_status in ('in_progress','cancelled'))
+   or (v_row.status='in_progress' and p_status in ('completed','cancelled'))) then
+   raise exception 'BRANCH_WORK_ORDER_TRANSITION_INVALID' using errcode='55000';
+ end if;
+ update public.branch_ops_work_orders set status=p_status,updated_at=now() where id=p_work_order_id returning * into v_row;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_id,'branch.maintenance.status_changed','branch_ops_work_order',v_row.id::text,
+   jsonb_build_object('tenant_id',p_tenant_id,'branch_id',p_branch_id,'status',p_status));
+ return jsonb_build_object('status',v_row.status,'workOrderId',v_row.id);
+end $;
+
+revoke all on function public.branch_ops_register_equipment(uuid,uuid,uuid,text,text) from public,anon,authenticated;
+revoke all on function public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
+revoke all on function public.branch_ops_update_incident_status(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
+revoke all on function public.branch_ops_update_work_order_status(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
 revoke all on function public.branch_ops_assert_actor(uuid,uuid,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_assert_approver(uuid,uuid,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) from public,anon,authenticated;
@@ -403,6 +487,10 @@ revoke all on function public.branch_ops_register_evidence_asset(uuid,uuid,uuid,
 revoke all on function public.branch_ops_publish_compliance_snapshot(uuid,uuid,uuid,date,date,text,text) from public,anon,authenticated;
 revoke all on function public.branch_ops_submit_compliance_check(uuid,uuid,uuid,text,text,integer,date,uuid) from public,anon,authenticated;
 revoke all on function public.branch_ops_review_compliance_check(uuid,uuid,uuid,uuid,text) from public,anon,authenticated;
+grant execute on function public.branch_ops_register_equipment(uuid,uuid,uuid,text,text) to service_role;
+grant execute on function public.branch_ops_update_task_status(uuid,uuid,uuid,uuid,text) to service_role;
+grant execute on function public.branch_ops_update_incident_status(uuid,uuid,uuid,uuid,text) to service_role;
+grant execute on function public.branch_ops_update_work_order_status(uuid,uuid,uuid,uuid,text) to service_role;
 grant execute on function public.branch_ops_assert_actor(uuid,uuid,uuid) to service_role;
 grant execute on function public.branch_ops_assert_approver(uuid,uuid,uuid) to service_role;
 grant execute on function public.branch_ops_create_task(uuid,uuid,uuid,uuid,text,text,text,timestamptz,text,text,uuid) to service_role;
