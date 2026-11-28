@@ -2,8 +2,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { createBranchOperationsRepository } from "../_shared/branch-operations-repository.ts";
 
 const URL = Deno.env.get("SUPABASE_URL") ?? "";
-const PUBLIC_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
+const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS");
+const PUBLIC_KEY = publishableKeysRaw ? JSON.parse(publishableKeysRaw)["default"] : Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+const SERVICE_KEY = secretKeysRaw ? JSON.parse(secretKeysRaw)["default"] : Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const allowedOrigins = new Set((Deno.env.get("DLICE_ALLOWED_ORIGINS") ?? "").split(",").map(v => v.trim()).filter(Boolean));
 const cors = (origin: string | null) => ({
   ...(origin && allowedOrigins.has(origin) ? { "Access-Control-Allow-Origin": origin } : {}),
@@ -125,6 +127,20 @@ Deno.serve(async (req: Request) => {
       const result = await repo.publishComplianceSnapshot({
         periodStart: safe(body.period_start, 10), periodEnd: safe(body.period_end, 10),
         idempotencyKey: idempotency(body.idempotency_key), sourceRevision: safe(body.source_revision, 160),
+      });
+      return reply(result, 200, origin);
+    }
+    if (action === "submit-compliance-check") {
+      const result = await repo.submitComplianceCheck({
+        checkKey: safe(body.check_key, 100), title: safe(body.title, 200),
+        weight: Number(body.weight), businessDate: safe(body.business_date, 10),
+        evidenceAssetId: safe(body.evidence_asset_id, 80),
+      });
+      return reply(result, 201, origin);
+    }
+    if (action === "review-compliance-check") {
+      const result = await repo.reviewComplianceCheck({
+        checkId: safe(body.check_id, 80), result: safe(body.result, 30),
       });
       return reply(result, 200, origin);
     }
