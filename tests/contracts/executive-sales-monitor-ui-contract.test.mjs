@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 const html=await readFile(new URL("../../erp.html",import.meta.url),"utf8");
 test("Executive live sales monitor exposes day/week/month, date and branch controls",()=>{
- for(const id of ["executiveSalesPeriod","executiveSalesDate","executiveSalesBranch","executiveSalesTimezone","loadExecutiveSales","executiveSalesMetrics","executiveSalesSources"])assert.ok(html.includes('id="'+id+'"'),"missing "+id);
- assert.match(html,/value="day"/);assert.match(html,/value="week"/);assert.match(html,/value="month"/);
+ for(const id of ["executiveSalesPeriod","executiveSalesDate","executiveSalesBranch","executiveSalesTimezone","executiveSalesTimezoneFilter","loadExecutiveSales","executiveSalesMetrics","executiveSalesSources"])assert.ok(html.includes('id="'+id+'"'),"missing "+id);
+ assert.match(html,/value="day"/);assert.match(html,/value="week"/);assert.match(html,/value="month"/);assert.match(html,/Asia\/Jakarta/);assert.match(html,/Asia\/Makassar/);assert.match(html,/Asia\/Jayapura/);
 });
 test("Executive UI invokes authenticated server action and exposes source transaction rows",()=>{
  assert.match(html,/call\('erp-executive-sales-monitor'/);
