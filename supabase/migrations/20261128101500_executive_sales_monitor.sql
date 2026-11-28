@@ -108,7 +108,7 @@ begin
    (s.created_at at time zone b.timezone - coalesce(p.cutoff_time,time '00:00'))::date business_date
   from public.pos_sales s join public.branches b on b.id=s.branch_id and b.tenant_id=p_tenant_id
   left join public.branch_business_day_policies p on p.tenant_id=b.tenant_id and p.branch_id=b.id
-  where b.id=any(p_branch_ids) and s.payment_status='paid'
+  where b.id=any(p_branch_ids) and s.payment_status in ('paid','refunded')
  ), refunds as (
   select r.pos_sale_id,sum(r.amount_idr)::bigint amount_idr from public.refund_records r
   where r.status='processed' and r.pos_sale_id is not null group by r.pos_sale_id
@@ -117,7 +117,7 @@ begin
  ), settlements as (
   select i.pos_sale_id,sum(i.amount_idr)::bigint amount_idr
   from public.payment_settlement_items i join public.payment_settlements s on s.id=i.settlement_id
-  where s.status='reconciled' and i.pos_sale_id is not null group by i.pos_sale_id
+  where s.status='matched' and i.pos_sale_id is not null group by i.pos_sale_id
  ), journals as (
   select j.source_id,count(*)::integer entry_count from public.finance_journal_entries j
   where j.status='posted' and j.source_id is not null group by j.source_id
