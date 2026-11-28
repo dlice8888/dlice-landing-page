@@ -39,3 +39,16 @@ After both steps:
 5. Do not run mutation POS E2E until all four checks pass.
 
 No feature is DONE based on the metadata update alone. Keep `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false`.
+
+## Run through GitHub Actions instead
+
+After this PR is reviewed and the workflow file is available on the selected branch:
+
+1. Open repository **Actions** → **Staging Owner Auth Admin repair**.
+2. Select **Run workflow** and choose branch `fix/staging-owner-auth-admin-20261128` (or the reviewed branch containing this workflow).
+3. Enter the UUID of the already-verified existing Owner.
+4. Set `confirm_staging_only` to `yes`.
+5. The job uses GitHub Environment `staging`; its protection rules and environment-scoped `STAGING_SUPABASE_URL` / `STAGING_SUPABASE_SERVICE_ROLE_KEY` secrets apply.
+6. Inspect the job result. A successful script run proves only the Auth metadata update, not allowlist or runtime access.
+
+Do not add these secrets at repository scope. If the staging Environment does not contain both exact secret names, stop and configure the Environment first.
