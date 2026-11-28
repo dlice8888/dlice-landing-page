@@ -14,7 +14,7 @@ async function assertApprovalEligibility(tx,approval,actor,actorId,deps){
  let delegation=null;
  if(!direct){
   delegation=await fn(deps,"resolveActiveDelegation")(tx,{tenantId:approval.tenantId,delegateUserId:actorId,
-   delegatorUserIds:approval.requiredRoles??[],category:approval.category,branchId:approval.branchId,now:new Date().toISOString()});
+   requiredRoles:approval.requiredRoles??[],category:approval.category,branchId:approval.branchId,now:new Date().toISOString()});
   if(!delegation?.valid||!delegation.delegatorUserId||!approval.requiredRoles?.includes(delegation.delegatorRole))
    fail("APPROVAL_ROLE_DENIED","Required role or active approved delegation missing");
  }
