@@ -3159,7 +3159,7 @@ if(action==="erp-executive-branch-kpis"){
     if(cleanItems.some((x:any)=>!/^[a-z0-9-]+$/.test(x.slug)||!Number.isInteger(x.quantity)||x.quantity<1||x.quantity>1000||x.modifiers.length>20||x.substitutions.length>100))return fail("Item, modifier, substitusi, atau jumlah tidak valid.",422,origin);
     const idempotencyKey=safeText(body.idempotency_key,120)||crypto.randomUUID();
     let data:any=null,error:any=null;
-    const fulfillmentInput=body.fulfillment&&typeof body.fulfillment==="object"?body.fulfillment:{};
+    const fulfillmentInput=(body.fulfillment&&typeof body.fulfillment==="object"?body.fulfillment:{}) as Record<string,unknown>;
     const fulfillment={order_type:safeText(fulfillmentInput.order_type,20)||"takeaway",
       table_code:safeText(fulfillmentInput.table_code,40),pickup_at_local:safeText(fulfillmentInput.pickup_at_local,40),
       pickup_at:safeText(fulfillmentInput.pickup_at,50),delivery_address:safeText(fulfillmentInput.delivery_address,500),
@@ -3225,7 +3225,7 @@ if(action==="erp-executive-branch-kpis"){
     const key=operationId;
     const {data:branchMeta,error:branchMetaError}=await admin.from("branches").select("tenant_id").eq("id",branchId).maybeSingle();
     if(branchMetaError||!branchMeta?.tenant_id)return fail("Tenant cabang tidak dapat diverifikasi untuk sinkronisasi.",503,origin);
-    const fulfillmentInput=(operation.fulfillment&&typeof operation.fulfillment==="object")?operation.fulfillment:{order_type:"takeaway"};
+    const fulfillmentInput=((operation.fulfillment&&typeof operation.fulfillment==="object")?operation.fulfillment:{order_type:"takeaway"}) as Record<string,unknown>;
     const fulfillment={order_type:safeText(fulfillmentInput.order_type,20)||"takeaway",table_code:safeText(fulfillmentInput.table_code,40),
       pickup_at_local:safeText(fulfillmentInput.pickup_at_local,40),pickup_at:safeText(fulfillmentInput.pickup_at,50),
       delivery_address:safeText(fulfillmentInput.delivery_address,500),delivery_area_id:safeText(fulfillmentInput.delivery_area_id,80)};
