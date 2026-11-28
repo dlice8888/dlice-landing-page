@@ -113,7 +113,7 @@ create or replace function public.pos_record_cash_movement_atomic(
  p_movement_type text,p_amount_idr bigint,p_reason text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint;
+declare v_shift public.pos_shifts%rowtype; v_prior public.pos_shift_cash_movements%rowtype; v_fingerprint text; v_row public.pos_shift_cash_movements%rowtype; v_next bigint; v_supervisor boolean;
 begin
  if coalesce(auth.jwt()->>'role','')<>'service_role' then raise exception using errcode='42501',message='POS_SERVICE_ROLE_REQUIRED'; end if;
  if p_movement_type not in ('cash_in','cash_out') or p_amount_idr<=0 or length(btrim(coalesce(p_reason,'')))<3
@@ -122,6 +122,10 @@ begin
  perform pg_advisory_xact_lock(hashtextextended(p_shift_id::text||':'||p_idempotency_key,0));
  select * into v_shift from public.pos_shifts where id=p_shift_id and branch_id=p_branch_id and status='open' for update;
  if not found then raise exception 'open_shift_required'; end if;
+ select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
+  where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active' and jp.code in ('branch_manager','supervisor','finance_manager')))
+ into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
+ if v_shift.opened_by<>p_actor_user_id and not coalesce(v_supervisor,false) then raise exception using errcode='42501',message='pos_shift_actor_scope_denied'; end if;
  v_fingerprint:=encode(extensions.digest(jsonb_build_object('movement_type',p_movement_type,'amount_idr',p_amount_idr,'reason',p_reason)::text,'sha256'),'hex');
  select * into v_prior from public.pos_shift_cash_movements where tenant_id=p_tenant_id and branch_id=p_branch_id and shift_id=p_shift_id and idempotency_key=p_idempotency_key;
  if found then
@@ -154,6 +158,10 @@ begin
  select * into v_branch from public.branches where id=p_branch_id and tenant_id=p_tenant_id for share;
  select * into v_shift from public.pos_shifts where id=p_shift_id and branch_id=p_branch_id for update;
  if not found or v_shift.status<>'open' then raise exception 'pos_shift_not_open'; end if;
+ select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
+  where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active' and jp.code in ('branch_manager','supervisor','finance_manager')))
+ into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
+ if v_shift.opened_by<>p_actor_user_id and not coalesce(v_supervisor,false) then raise exception using errcode='42501',message='pos_shift_actor_scope_denied'; end if;
  select count(*)::integer into v_pending from public.pos_sales where shift_id=p_shift_id and payment_status='pending';
  if v_pending>0 then raise exception 'pos_shift_pending_payments'; end if;
  select coalesce(sum(case when t.id is not null then case when t.payment_method='cash' then t.amount_idr else 0 end
@@ -169,15 +177,11 @@ begin
  v_expected:=v_shift.opening_cash_idr+v_sales+v_in-v_out-v_refunds;
  if v_expected<0 then raise exception 'pos_cash_ledger_negative'; end if;
  v_variance:=p_counted_cash_idr-v_expected;
- select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
-   where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active'
-    and jp.code in ('branch_manager','supervisor','finance_manager')))
- into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
  if abs(v_variance)>v_branch.pos_shift_variance_threshold_idr and not coalesce(v_supervisor,false) then
   raise exception using errcode='42501',message='pos_shift_variance_approval_required'; end if;
  v_ledger:=jsonb_build_object('openingCashIdr',v_shift.opening_cash_idr,'cashSalesIdr',v_sales,'cashInIdr',v_in,
   'cashOutIdr',v_out,'cashRefundsIdr',v_refunds,'pendingPaymentCount',v_pending,'pendingOrderCount',0);
- update public.pos_shifts set status='closed',counted_cash_idr=p_counted_cash_idr,cash_variance_idr=v_variance,
+ update public.pos_shifts set status='closed',expected_cash_idr=v_expected,counted_cash_idr=p_counted_cash_idr,cash_variance_idr=v_variance,
   closed_by=p_actor_user_id,closed_at=now(),notes=left(p_reason,500)
  where id=p_shift_id and branch_id=p_branch_id and status='open' returning * into v_closed;
  if not found then raise exception 'pos_shift_close_race'; end if;
@@ -197,13 +201,17 @@ create or replace function public.pos_reconcile_cash_drawer_atomic(
  p_tenant_id uuid,p_branch_id uuid,p_actor_user_id uuid,p_shift_id uuid,p_counted_cash_idr bigint,p_reason text
 ) returns jsonb language plpgsql security invoker set search_path=''
 as $$
-declare v_shift public.pos_shifts%rowtype; v_sales bigint; v_in bigint; v_out bigint; v_refunds bigint; v_pending integer; v_expected bigint; v_variance bigint; v_ledger jsonb; v_id uuid;
+declare v_shift public.pos_shifts%rowtype; v_sales bigint; v_in bigint; v_out bigint; v_refunds bigint; v_pending integer; v_expected bigint; v_variance bigint; v_ledger jsonb; v_id uuid; v_supervisor boolean;
 begin
  if coalesce(auth.jwt()->>'role','')<>'service_role' then raise exception using errcode='42501',message='POS_SERVICE_ROLE_REQUIRED'; end if;
  if p_counted_cash_idr<0 or length(btrim(coalesce(p_reason,'')))<3 then raise exception 'invalid_cash_reconciliation_input'; end if;
  if not public.pos_actor_can_access_branch(p_actor_user_id,p_tenant_id,p_branch_id) then raise exception using errcode='42501',message='pos_branch_access_denied'; end if;
  select * into v_shift from public.pos_shifts where id=p_shift_id and branch_id=p_branch_id and status='open' for update;
  if not found then raise exception 'open_shift_required'; end if;
+ select (ap.role='owner' or exists(select 1 from public.branch_assignments ba join public.job_positions jp on jp.id=ba.job_position_id
+  where ba.user_id=p_actor_user_id and ba.branch_id=p_branch_id and ba.employment_status='active' and jp.code in ('branch_manager','supervisor','finance_manager')))
+ into v_supervisor from public.admin_profiles ap where ap.user_id=p_actor_user_id and ap.is_active=true;
+ if v_shift.opened_by<>p_actor_user_id and not coalesce(v_supervisor,false) then raise exception using errcode='42501',message='pos_shift_actor_scope_denied'; end if;
  select count(*)::integer into v_pending from public.pos_sales where shift_id=p_shift_id and payment_status='pending';
  if v_pending>0 then raise exception 'pos_shift_pending_payments'; end if;
  select coalesce(sum(case when t.id is not null then case when t.payment_method='cash' then t.amount_idr else 0 end
@@ -213,7 +221,7 @@ begin
  into v_in,v_out from public.pos_shift_cash_movements where shift_id=p_shift_id;
  select coalesce(sum(rr.amount_idr),0)::bigint into v_refunds from public.refund_records rr join public.pos_sales s on s.id=rr.pos_sale_id
  where s.shift_id=p_shift_id and s.payment_method='cash' and rr.status='processed';
- v_expected:=v_shift.opening_cash_idr+v_sales+v_in-v_out-v_refunds;v_variance:=p_counted_cash_idr-v_expected;
+ v_expected:=v_shift.opening_cash_idr+v_sales+v_in-v_out-v_refunds;if v_expected<0 then raise exception 'pos_cash_ledger_negative'; end if;v_variance:=p_counted_cash_idr-v_expected;
  v_ledger:=jsonb_build_object('openingCashIdr',v_shift.opening_cash_idr,'cashSalesIdr',v_sales,'cashInIdr',v_in,'cashOutIdr',v_out,
   'cashRefundsIdr',v_refunds,'pendingPaymentCount',v_pending,'pendingOrderCount',0);
  insert into public.pos_cash_reconciliation_snapshots(tenant_id,branch_id,shift_id,actor_user_id,expected_cash_idr,counted_cash_idr,variance_idr,ledger_snapshot,reason)
