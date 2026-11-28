@@ -36,3 +36,9 @@ test("Executive sales transaction drill-down includes refunds, settlement alloca
  assert.match(html,/Finance journal \(/);
  assert.match(html,/Settlement \(/);
 });
+
+test("Executive sales source rows provide an authorized POS reconciliation drill-down", () => {
+  assert.match(ui, /data-exec-sale-drilldown/);
+  assert.match(ui, /erp-reconcile-pos-sale/);
+  assert.match(ui, /Detail rekonsiliasi POS \/ KDS \/ stok \/ audit/);
+});
