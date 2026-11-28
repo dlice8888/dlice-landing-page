@@ -321,3 +321,65 @@ Candidate branch `feat/branch-ops-evidence-workflows-20261127`, PR #153, now inc
 - Latest candidate commit before this documentation refresh: `02a072bb99ffdba131e0aa1e3384c17e19316dbc`. Free quality-check steps 1–58, including Branch Ops adapter, SQL/Auth/Storage/UI contracts and Deno Edge Function type-check, all reported PASS; the final post-job cleanup was still running when checked.
 - CRM disposable replay run `46090021604` was still pending. It does not apply Branch Operations draft SQL or modify staging.
 - Branch Ops remains PARTIAL, not DONE: official CLI migration, replay of the new SQL, staging deployment, authenticated tenant A/B/Storage E2E and browser/device acceptance remain outstanding. Progress scores unchanged.
+
+
+## 11. Implementation batch — Branch Operations, CRM/Loyalty and HR/Payroll (2026-11-28)
+
+### Exact implementation validation
+
+Implementation code head: `c9a3065bf3fec94e961538167b60cd0e58b9f19a`.
+
+- Free quality checks: **PASS** — run [46093311446](https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311446). Includes contract suites, ERP Edge Function type-check and authenticated action-probe inventory updated to 233 actions.
+- Canonical migration replay on disposable Supabase: **PASS** — run [46093311274](https://github.com/dlice8888/dlice-landing-page/actions/runs/46093311274).
+- Canonical CRM schema verification: **PASS** in that disposable environment.
+- CRM, HR and eight-domain pgTAP workflow contracts: **PASS** in that disposable environment.
+- The disposable environment was stopped/discarded. No shared staging or production database was changed.
+- Subsequent PR #153 commits `5cd77aa` and `d54f93c` update only the audit matrix and evidence ledger; no application code or migration changed after the validated implementation head.
+
+### Branch Operations — concrete source delivered, migration still held
+
+Implemented candidate source:
+- SQL schema/RPC draft: `docs/implementation/sql/BRANCH_OPERATIONS_CONCRETE_PERSISTENCE_DRAFT.sql`.
+- Repository adapters: `src/branch-operations-supabase-repository.mjs` and `supabase/functions/_shared/branch-operations-repository.ts`.
+- Authenticated Edge API: `supabase/functions/branch-operations/index.ts`.
+- UI: `src/branch-operations-ui.mjs`, mounted from `erp.html`.
+- Contracts: workflow, adapter, persistence SQL, UI, Storage and Deno Edge checks.
+
+Implemented source paths cover task creation/escalation, incidents, equipment, maintenance work orders (including private evidence IDs), compliance check submission/review/snapshot, private evidence upload and short-lived signed download. Storage upload now compensates failed metadata registration without deleting an object if the metadata RPC may have committed. Compliance source revision is derived from approved check/evidence rows; evidence metadata and published snapshots are append-only.
+
+**Still not accepted:** the Branch Operations SQL is a draft, not a canonical `supabase/migrations` file. It has not been replayed, applied to staging, or tested against live Storage. The UI release flag remains false. Tenant A/B, branch A/B, signed upload/download, browser/device and cross-domain maintenance-cost E2E remain open. Retention metadata is set to 365 days, but automated purge scheduling is not implemented.
+
+### CRM/Loyalty ↔ POS, Order, Refund, Settlement and Finance
+
+- Paid POS/online order identity is linked to tenant CRM customer records.
+- POS split tender now validates sale tender total, cash portion against approved shift drawer, and each bank/QRIS portion against provider settlement items by method.
+- Reconciliation rechecks both the cash and provider settlement dimensions and Finance journal state.
+- Loyalty points are awarded only from reconciled net sales.
+- A later processed refund creates an immutable negative loyalty adjustment, reverses unspent points from the original lot, records debt for points already spent, and retains the original earning-rule version.
+- Disposable migration replay, schema verification and CRM pgTAP passed; exact-head quality checks passed.
+
+Remaining CRM gaps: no staging Auth/tenant A/B or POS/Finance E2E, full customer deduplication/merge is incomplete, customer LTV snapshot integration remains incomplete, and no feature is DONE.
+
+### HR/Payroll ↔ Finance journal and payment reconciliation
+
+- HR management API now includes provider configuration and beneficiary profile request/approval, payroll payment batch prepare/approve, payment-item listing and independent reconciliation.
+- Beneficiary bank details are read server-side from Edge Function Secrets; only secret reference and SHA-256 fingerprint are persisted.
+- New `hr-payroll-provider-webhook` verifies HMAC-SHA256 over raw request body before invoking the idempotent provider-event RPC.
+- Payment batch preparation requires reconciled payroll and Finance posting, approved provider and beneficiary profiles; batch approval and reconciliation require independent actors.
+- ERP UI includes provider, beneficiary, batch and item review panels; panel visibility uses strict boolean `app_metadata.platform_owner === true`.
+- Exact-head quality checks and disposable HR pgTAP/replay passed.
+
+Remaining HR gaps: no provider-specific outbound payout dispatcher, no provider credentials or fixtures, no staging provider webhook E2E, no bank-statement reconciliation E2E, and no branch labor-cost BI acceptance. The generic webhook is not deployed; its JWT gateway setting must be disabled only for that endpoint after provider contract approval, while HMAC verification remains mandatory.
+
+### Updated feature scoring
+
+- Total: 189.
+- PARTIAL: 188; NOT VERIFIED: 0; BLOCKED: 1; DONE: 0.
+- Scored PARTIAL features: 53; unscored PARTIAL features: 135.
+- Newly scored at 53%: D10-F01 (unified customer identity), D10-F04 (refund-aware loyalty) and D12-F06 (payroll/Finance integration). The 53% reflects code/UI PARTIAL (10), disposable database PASS (20), authorization PARTIAL (7.5), automated tests PASS (15), E2E UNVERIFIED (0), reconciliation/observability UNVERIFIED (0).
+- D08-F04/F07/F08/F09/F10 remain at 33% because the schema is not canonical/replayed and staging/runtime dimensions remain unverified.
+- Mean of the 53 scored features: 40.58%. This is not overall FnB OS completion.
+
+### Release and staging guardrails
+
+PR #153 remains OPEN/DRAFT. No merge, shared staging migration, Edge deployment, Storage bucket creation, Auth metadata change, production mutation or release occurred. `TENANT_ISOLATION_RELEASED=false` and `PUBLIC_TENANT_ROUTING_RELEASED=false` remain unchanged. The Owner strict-boolean claim remains a separate staging blocker; no SQL Auth metadata mutation was performed.
