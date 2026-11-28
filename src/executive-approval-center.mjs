@@ -44,6 +44,7 @@ export function assertApprovalClaim({ approval, actor, expectedVersion, now = ne
   if (approval.created_by === actor.user_id && approval.separation_of_duties === true) {
     throw new Error("self_approval_forbidden");
   }
+  assertApprovalDelegation({ actor, approval, now });
   if (approval.claimed_by && approval.claimed_by !== actor.user_id &&
       asTime(approval.claim_expires_at, "claim_expires_at") > asTime(now, "now")) {
     throw new Error("approval_already_claimed");
@@ -83,6 +84,9 @@ export function assertApprovalDecision({
     decision,
     reason: typeof reason === "string" ? reason.trim().slice(0, 1000) : null,
     expected_version: expectedVersion,
+    source_entity_type: approval.source_entity_type,
+    source_entity_id: approval.source_entity_id,
+    source_version: approval.source_version,
     policy_version: APPROVAL_POLICY_VERSION,
   });
 }
@@ -106,6 +110,11 @@ export function buildApprovalInbox({ items, actor, now = new Date().toISOString(
     if (!actor.allowed_branch_ids.includes(item.branch_id) ||
         !actor.allowed_domains.includes(item.domain) ||
         !item.eligible_roles?.some((role) => actor.allowed_roles.includes(role))) return false;
+    if (item.created_by === actor.user_id && item.separation_of_duties === true) return false;
+    if (item.delegated_from) {
+      try { assertApprovalDelegation({ actor, approval: item, now }); }
+      catch { return false; }
+    }
     return true;
   }).sort((a, b) =>
     (urgency[a.urgency] ?? urgency.normal) - (urgency[b.urgency] ?? urgency.normal) ||
