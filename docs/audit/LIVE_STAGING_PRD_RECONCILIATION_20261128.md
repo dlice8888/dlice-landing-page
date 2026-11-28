@@ -246,7 +246,7 @@ Do not edit `auth.users` metadata through SQL. Do not infer allowlist membership
 
 ### POS, cash drawer and Finance reconciliation
 
-PR #143 remains open at head `0e3539b02c65a6411ccca0d37bb3ee94d912c740`; it is not the current staging HEAD.
+PR #143 remains open at head `0e3539b02c65a6411ccca0d37bb3ee94d912c740`; it is not the current staging HEAD. The branch has diverged from staging: 69 commits ahead and 7 behind the current staging head, with a non-mergeable status. It must be reconciled onto the current base and revalidated before merge.
 
 - Static checks and disposable migration replay for the PR candidate passed, but its positive staging POS E2E failed before business mutations with `STAGING_AUTH_BLOCKED`.
 - The current six persisted QA sales have six items and six KDS tickets, but zero tender rows, zero immutable receipts, zero cash reconciliations and zero Finance journal entries.
@@ -266,7 +266,7 @@ The canonical machine-readable ledger and matrix currently agree on 189 unique f
 | DONE | 0 |
 | **Total** | **189** |
 
-53 features have numeric scores; 136 remain unscored. The single BLOCKED row remains an explicit blocker, and 0/189 meet the complete E2E + reconciliation gate. PR #155's canonical-rollup correction derives matrix totals and scoring counts from the evidence ledger; its exact-head Free quality run `46120733474` passed. It remains a draft and has not been merged.
+53 features have numeric scores; 136 remain unscored. The single BLOCKED row is **D01-F09 — Company → region → branch → shift → transaction drill-down** in Executive Command Center. The Owner authorization prerequisite is part of the live gate for this drill-down. The row remains an explicit blocker, and 0/189 meet the complete E2E + reconciliation gate. PR #155's canonical-rollup correction derives matrix totals and scoring counts from the evidence ledger; its exact-head Free quality run `46120733474` passed. It remains a draft and has not been merged.
 
 ### Execution boundary
 
