@@ -51,12 +51,28 @@ export async function getExecutiveSalesMonitor(input,deps){
     (result.period_start!==undefined&&result.period_start!==startDate)||
     (result.period_end!==undefined&&result.period_end!==endDate))
   fail("EXEC_SALES_SNAPSHOT_INVALID","Server returned an incomplete or mismatched snapshot");
- if(!Number.isSafeInteger(Number(result.payment_reconciliation.tender_mismatch_count))||Number(result.payment_reconciliation.tender_mismatch_count)<0)
-  fail("EXEC_SALES_PAYMENT_RECONCILIATION_INVALID","tender_mismatch_count");
+ const payment=result.payment_reconciliation,finance=result.finance_reconciliation;
+ const countFields=["sale_count","tender_mismatch_count","legacy_paid_at_count"];
+ for(const key of countFields)if(!Number.isSafeInteger(Number(payment[key]))||Number(payment[key])<0)
+  fail("EXEC_SALES_PAYMENT_RECONCILIATION_INVALID",key);
+ const financeCountFields=["sale_count","sale_without_journal_count","linked_journal_entry_count",
+  "refunds_without_journal_count","sale_journal_mismatch_count","refund_journal_mismatch_count"];
+ for(const key of financeCountFields)if(!Number.isSafeInteger(Number(finance[key]))||Number(finance[key])<0)
+  fail("EXEC_SALES_FINANCE_RECONCILIATION_INVALID",key);
+ for(const key of ["sale_journal_amount_idr","refund_journal_amount_idr"])
+  if(!Number.isSafeInteger(Number(finance[key]))||Number(finance[key])<0)
+   fail("EXEC_SALES_FINANCE_RECONCILIATION_INVALID",key);
  for(const key of [...moneyKeys,"transaction_count"])
   if(!Number.isSafeInteger(Number(result.totals[key]))||Number(result.totals[key])<0)
    fail("EXEC_SALES_TOTAL_INVALID",key);
+ if(Number(payment.sale_count)!==Number(result.totals.transaction_count)||
+    Number(finance.sale_count)!==Number(result.totals.transaction_count))
+  fail("EXEC_SALES_RECONCILIATION_MISMATCH","Payment and Finance source sale counts must equal POS source transactions");
  assertAggregateParity(result);
+ const reconciliationStatus=Number(payment.tender_mismatch_count)===0&&Number(payment.legacy_paid_at_count)===0&&
+  Number(finance.sale_without_journal_count)===0&&Number(finance.refunds_without_journal_count)===0&&
+  Number(finance.sale_journal_mismatch_count)===0&&Number(finance.refund_journal_mismatch_count)===0&&finance.status==="reconciled"
+  ?"source_reconciled":"reconciliation_incomplete";
  const allowedBranches=branchIds?new Set(branchIds):null;
  for(const row of result.transactions){
   if(!row||!row.sale_id||!row.branch_id||!row.business_date||
@@ -64,5 +80,5 @@ export async function getExecutiveSalesMonitor(input,deps){
      row.business_date<startDate||row.business_date>endDate)
    fail("EXEC_SALES_SOURCE_SCOPE_INVALID","Source transaction is outside requested branch/date scope");
  }
- return Object.freeze(result);
+ return Object.freeze({...result,reconciliation_status:reconciliationStatus});
 }
