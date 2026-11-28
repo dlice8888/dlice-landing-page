@@ -332,7 +332,8 @@ begin
    coalesce(sum(s.subtotal_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint gross_sales_idr,
    coalesce(sum(s.discount_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint discount_idr,
    coalesce(sum(s.total_idr) filter(where s.payment_status in ('paid','refunded')),0)::bigint net_before_refund_idr,
-   count(s.id) filter(where s.payment_status in ('paid','refunded'))::integer paid_transactions
+   count(s.id) filter(where s.payment_status in ('paid','refunded'))::integer paid_transactions,
+   count(s.id) filter(where s.payment_status in ('paid','refunded') and s.paid_at_source='legacy_created_at_backfill')::integer legacy_paid_at_count
   from public.branches b left join public.pos_sales s on s.branch_id=b.id
    and s.paid_at is not null and s.business_date between p_from_date and p_through_date
   where b.id=any(p_branch_ids) and b.tenant_id=p_tenant_id group by b.id,b.code,b.name,b.timezone
@@ -379,6 +380,7 @@ begin
   'refund_idr',coalesce(sum(coalesce(br.refund_idr,0)),0),
   'net_sales_idr',coalesce(sum(bs.net_before_refund_idr-coalesce(br.refund_idr,0)),0),
   'paid_transactions',coalesce(sum(bs.paid_transactions),0),
+  'legacy_paid_at_count',coalesce(sum(bs.legacy_paid_at_count),0),
   'settlement_item_gross_idr',coalesce(sum(coalesce(bt.settlement_gross_idr,0)),0),
   'settlement_fee_idr',(select fee_idr from settlement_totals),
   'settlement_net_idr',(select net_idr from settlement_totals),
@@ -389,12 +391,17 @@ begin
     'branch_id',bs.branch_id,'code',bs.code,'name',bs.name,'timezone',bs.timezone,
     'gross_sales_idr',bs.gross_sales_idr,'discount_idr',bs.discount_idr,
     'refund_idr',coalesce(br.refund_idr,0),'net_sales_idr',bs.net_before_refund_idr-coalesce(br.refund_idr,0),
-    'paid_transactions',bs.paid_transactions,'settlement_item_gross_idr',coalesce(bt.settlement_gross_idr,0),
+    'paid_transactions',bs.paid_transactions,'legacy_paid_at_count',bs.legacy_paid_at_count,'settlement_item_gross_idr',coalesce(bt.settlement_gross_idr,0),
     'reconciled_settlements',coalesce(bt.reconciled_settlements,0)
   ) order by bs.code),'[]'::jsonb)
  ) into v_result
  from branch_sales bs left join branch_refunds br on br.branch_id=bs.branch_id
  left join branch_settlements bt on bt.branch_id=bs.branch_id;
+ insert into public.admin_audit_logs(actor_user_id,action,entity_type,entity_id,metadata)
+ values(p_actor_user_id,'executive.sales_monitor.read','executive_sales_monitor',p_tenant_id::text,
+  jsonb_build_object('tenant_id',p_tenant_id,'from_date',p_from_date,'through_date',p_through_date,
+   'branch_ids',p_branch_ids,'paid_transactions',v_result->'paid_transactions',
+   'legacy_paid_at_count',v_result->'legacy_paid_at_count'));
  return v_result;
 end $$;
 revoke all on function public.executive_get_sales_monitor(uuid,uuid,uuid[],date,date) from public,anon,authenticated;
