@@ -301,6 +301,7 @@ create or replace function public.branch_ops_register_evidence_asset(
 declare v_id uuid; v_metadata jsonb;
 begin
  perform public.branch_ops_assert_actor(p_tenant_id,p_branch_id,p_actor_id);
+ if not exists(select 1 from storage.buckets where id='branch-ops-evidence' and public=false) then raise exception 'BRANCH_EVIDENCE_BUCKET_NOT_PRIVATE'; end if;
  if p_object_path not like p_tenant_id::text||'/'||p_branch_id::text||'/'||p_actor_id::text||'/%' then raise exception 'BRANCH_EVIDENCE_PATH_SCOPE_INVALID'; end if;
  select metadata into v_metadata from storage.objects where bucket_id='branch-ops-evidence' and name=p_object_path;
  if not found then raise exception 'BRANCH_EVIDENCE_STORAGE_OBJECT_MISSING' using errcode='P0002'; end if;
