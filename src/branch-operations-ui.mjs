@@ -81,6 +81,11 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   incidentForm.querySelector('[name="severity"]').value = "medium";
   incidentForm.append(formButton("Unggah bukti & catat insiden"));
 
+  const equipmentForm = el("form", { className: "branch-ops-form" });
+  equipmentForm.append(el("h3", {}, "Daftarkan equipment"), field("Kode aset", "asset_code"),
+    field("Nama equipment", "name"));
+  equipmentForm.append(formButton("Simpan equipment"));
+
   const maintenanceForm = el("form", { className: "branch-ops-form" });
   maintenanceForm.append(el("h3", {}, "Buat work order"), field("ID equipment", "equipment_id"),
     field("Jenis", "maintenance_type"), field("Jadwal", "scheduled_at", "datetime-local"),
@@ -99,7 +104,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
   complianceForm.append(el("h3", {}, "Publikasikan audit kepatuhan"), field("Mulai periode", "period_start", "date"),
     field("Akhir periode", "period_end", "date"), field("Source revision", "source_revision"));
   complianceForm.append(formButton("Publikasikan snapshot"));
-  forms.append(taskForm, incidentForm, maintenanceForm, complianceCheckForm, complianceForm);
+  forms.append(taskForm, incidentForm, equipmentForm, maintenanceForm, complianceCheckForm, complianceForm);
   shell.append(forms);
   root.replaceChildren(shell);
 
@@ -129,6 +134,40 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       onError(error);
     } finally { button.disabled = false; }
   });
+  const renderActionList = (items, kind) => {
+    const list = el("div");
+    if (!items.length) list.append(el("p", {}, "Belum ada data."));
+    const transitions = {
+      tasks: { open: [["in_progress","Mulai"],["completed","Selesaikan"]], in_progress: [["completed","Selesaikan"]] },
+      incidents: { open: [["investigating","Investigasi"],["resolved","Selesaikan"]], investigating: [["resolved","Selesaikan"]], resolved: [["closed","Tutup"]] },
+      maintenance: { scheduled: [["in_progress","Mulai"],["cancelled","Batalkan"]], in_progress: [["completed","Selesai"],["cancelled","Batalkan"]] },
+    };
+    for (const item of items) {
+      const row = el("div", { className: "branch-ops-check" });
+      const info = el("div");
+      info.append(el("strong", {}, String(item.title || item.category || item.id)));
+      info.append(el("div", {}, `${item.status} · ${item.due_at || item.scheduled_at || item.created_at || ""}`));
+      if (item.description) info.append(el("small", {}, String(item.description)));
+      row.append(info);
+      const controls = el("div");
+      for (const [status, label] of transitions[kind]?.[item.status] || []) {
+        const button = el("button", { type: "button", className: "branch-ops-review" }, label);
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try {
+            const action = kind === "tasks" ? "update-task-status" : kind === "incidents" ? "update-incident-status" : "update-work-order-status";
+            const idKey = kind === "tasks" ? "task_id" : kind === "incidents" ? "incident_id" : "work_order_id";
+            await request({ action, [idKey]: item.id, status });
+            await refresh();
+          } catch (error) { notice.textContent = error?.message || "Perubahan status ditolak."; onError(error); }
+          finally { button.disabled = false; }
+        });
+        controls.append(button);
+      }
+      row.append(controls); list.append(row);
+    }
+    return list;
+  };
   const renderComplianceChecks = (items) => {
     const list = el("div");
     if (!items.length) list.append(el("p", {}, "Belum ada pemeriksaan."));
@@ -159,7 +198,7 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
     try {
       for (const kind of Object.keys(lists)) {
         const result = await request({ action: "list", kind });
-        lists[kind].replaceChildren(kind === "compliance-checks" ? renderComplianceChecks(result.items || []) : makeList(result.items || [], kind));
+        lists[kind].replaceChildren(kind === "compliance-checks" ? renderComplianceChecks(result.items || []) : ["tasks","incidents","maintenance"].includes(kind) ? renderActionList(result.items || [], kind) : makeList(result.items || [], kind));
       }
       if (!destroyed) notice.textContent = "Data cabang berhasil dimuat.";
     } catch (error) {
@@ -193,6 +232,9 @@ export function mountBranchOperationsUI({ root, supabase, tenantId, branchId, on
       severity: data.get("severity"), occurred_at: data.get("occurred_at") ? new Date(String(data.get("occurred_at"))).toISOString() : null,
       evidence_asset_ids: evidenceIds, idempotency_key: `branch-incident:${crypto.randomUUID()}`,
     });
+  });
+  submit(equipmentForm, async (data) => {
+    await request({ action: "register-equipment", asset_code: data.get("asset_code"), name: data.get("name") });
   });
   submit(maintenanceForm, async (data) => {
     await request({
